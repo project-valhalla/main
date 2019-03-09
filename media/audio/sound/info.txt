@@ -1,0 +1,18 @@
+The sounds in this directory, except for:
+
+the ones contained in ambient/freesound.org,
+the ones in ambient/kaiser,
+the ones in ambient/q009,
+the ones in ambient/soundtransit,
+the ones in announcer,
+the ones in misc/free,
+the ones in misc/soundsnap,
+the ones in uphys,
+
+unless otherwise stated with text files, are either original (created with my own recordings) or created by mixing and heavily processing public domain samples found on freesound.org.
+These sounds are licensed under the Creative Commons 0 License (public domain).
+https://creativecommons.org/publicdomain/zero/1.0/
+
+If you use these sounds outside this project I would appreciate if you let me know but you are not obliged to do so.
+
+-garsipal

@@ -1,0 +1,1 @@
+All files in this folder are licensed under CC-BY-SA.

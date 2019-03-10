@@ -1,0 +1,40 @@
+Author: Ognjen "7YearBitch" Robovich
+Maptitle: Forgotten Shrine Of Azag
+Mapname: azag
+Date: 02.06.2018.
+Gamemode: FFA, iDM, eDM
+Players: 6-8
+
+Boosts:     Ammo:       Other:
+QD =  1		RI =  8		PS = 46
+HB =  1		SG = 10		Ports = 3
+YA =  1		GL =  4		Jpads = 6
+GA =  2		RL =  6
+HP = 12		CG =  6
+			PI =  2
+
+//Thanks to Nobiax for 'pattern045' texture! :)
+
+About Map:
+- Inspired by Quake and Lovecraft's stories. Quake 1 rocks!
+- Main idea of this map is minimalism. I used only old diffuse textures and no mapmodels.
+- Made with quick porting to Tesseract in mind, so lighting is medium quality in Sauerbraten.
+
+Installation:
+1) Locate your Sauerbraten folder:
+    1a) Linux: home/username/.sauerbraten/
+    1b) Windows: C:\Users\username\Documents\My Games\sauerbraten
+    1c) MacOS: Mac HD/Users/username/Library/Application Support/sauerbraten
+//It can be little different depending on OS version...
+2) Extract content of downloaded .zip file into Sauerbraten folder mentioned above.
+//If asked to Merge and Replace, click "Yes"
+
+License: MIT
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+https://opensource.org/licenses/MIT
+
+Have fun bois & gals ;)

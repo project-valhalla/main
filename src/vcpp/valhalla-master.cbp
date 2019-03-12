@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="valhalla-project-master" />
+		<Option default_target="client64" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="client64">
+				<Option output="../../bin64/tesseract.exe" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="../../" />
+				<Option object_output=".objs/client64" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="-t0 -w640 -h480 -qhome" />
+				<Compiler>
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-O3" />
+					<Add option="-ffast-math" />
+					<Add option="-Wall" />
+					<Add option="-m64" />
+					<Add option="-fsigned-char" />
+					<Add option="-fno-exceptions" />
+					<Add option="-fno-rtti" />
+					<Add directory="../enet/include" />
+					<Add directory="../include" />
+					<Add directory="../engine" />
+					<Add directory="../shared" />
+					<Add directory="../vcpp" />
+					<Add directory="../game" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="../vcpp" />
+				</ResourceCompiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-m64" />
+					<Add option="-mwindows" />
+					<Add library="SDL2" />
+					<Add library="SDL2_image" />
+					<Add library="SDL2_mixer" />
+					<Add library="zlib1" />
+					<Add library="opengl32" />
+					<Add library="enet" />
+					<Add library="ws2_32" />
+					<Add library="winmm" />
+					<Add directory="../../bin64" />
+					<Add directory="../lib64" />
+				</Linker>
+				<Environment>
+					<Variable name="WINDRES_TARGET" value="pe-x86-64" />
+				</Environment>
+			</Target>
+			<Target title="client32">
+				<Option output="../../bin/tesseract.exe" prefix_auto="0" extension_auto="0" />
+				<Option working_dir="../../" />
+				<Option object_output=".objs/client32" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Option parameters="-t0 -w640 -h480 -qhome" />
+				<Compiler>
+					<Add option="-fomit-frame-pointer" />
+					<Add option="-O3" />
+					<Add option="-ffast-math" />
+					<Add option="-Wall" />
+					<Add option="-m32" />
+					<Add option="-fsigned-char" />
+					<Add option="-fno-exceptions" />
+					<Add option="-fno-rtti" />
+					<Add directory="../enet/include" />
+					<Add directory="../include" />
+					<Add directory="../engine" />
+					<Add directory="../shared" />
+					<Add directory="../vcpp" />
+					<Add directory="../game" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="../vcpp" />
+				</ResourceCompiler>
+				<Linker>
+					<Add option="-s" />
+					<Add option="-m32" />
+					<Add option="-mwindows" />
+					<Add library="SDL2" />
+					<Add library="SDL2_image" />
+					<Add library="SDL2_mixer" />
+					<Add library="zlib1" />
+					<Add library="opengl32" />
+					<Add library="enet" />
+					<Add library="ws2_32" />
+					<Add library="winmm" />
+					<Add directory="../../bin" />
+					<Add directory="../lib" />
+				</Linker>
+				<Environment>
+					<Variable name="WINDRES_TARGET" value="pe-i386" />
+				</Environment>
+			</Target>
+		</Build>
+		<VirtualTargets>
+			<Add alias="All" targets="client32;client64;" />
+		</VirtualTargets>
+		<Unit filename="../engine/aa.cpp" />
+		<Unit filename="../engine/animmodel.h" />
+		<Unit filename="../engine/bih.cpp" />
+		<Unit filename="../engine/bih.h" />
+		<Unit filename="../engine/blend.cpp" />
+		<Unit filename="../engine/client.cpp" />
+		<Unit filename="../engine/command.cpp" />
+		<Unit filename="../engine/console.cpp" />
+		<Unit filename="../engine/dynlight.cpp" />
+		<Unit filename="../engine/engine.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="../engine/explosion.h" />
+		<Unit filename="../engine/grass.cpp" />
+		<Unit filename="../engine/hitzone.h" />
+		<Unit filename="../engine/iqm.h" />
+		<Unit filename="../engine/lensflare.h" />
+		<Unit filename="../engine/light.cpp" />
+		<Unit filename="../engine/light.h" />
+		<Unit filename="../engine/lightning.h" />
+		<Unit filename="../engine/main.cpp" />
+		<Unit filename="../engine/material.cpp" />
+		<Unit filename="../engine/md2.h" />
+		<Unit filename="../engine/md3.h" />
+		<Unit filename="../engine/md5.h" />
+		<Unit filename="../engine/menus.cpp" />
+		<Unit filename="../engine/model.h" />
+		<Unit filename="../engine/movie.cpp" />
+		<Unit filename="../engine/mpr.h" />
+		<Unit filename="../engine/normal.cpp" />
+		<Unit filename="../engine/obj.h" />
+		<Unit filename="../engine/octa.cpp" />
+		<Unit filename="../engine/octa.h" />
+		<Unit filename="../engine/octaedit.cpp" />
+		<Unit filename="../engine/octarender.cpp" />
+		<Unit filename="../engine/physics.cpp" />
+		<Unit filename="../engine/pvs.cpp" />
+		<Unit filename="../engine/ragdoll.h" />
+		<Unit filename="../engine/rendergl.cpp" />
+		<Unit filename="../engine/renderlights.cpp" />
+		<Unit filename="../engine/rendermodel.cpp" />
+		<Unit filename="../engine/renderparticles.cpp" />
+		<Unit filename="../engine/rendersky.cpp" />
+		<Unit filename="../engine/rendertext.cpp" />
+		<Unit filename="../engine/renderva.cpp" />
+		<Unit filename="../engine/server.cpp" />
+		<Unit filename="../engine/serverbrowser.cpp" />
+		<Unit filename="../engine/shader.cpp" />
+		<Unit filename="../engine/skelmodel.h" />
+		<Unit filename="../engine/smd.h" />
+		<Unit filename="../engine/sound.cpp" />
+		<Unit filename="../engine/stain.cpp" />
+		<Unit filename="../engine/textedit.h" />
+		<Unit filename="../engine/texture.cpp" />
+		<Unit filename="../engine/texture.h" />
+		<Unit filename="../engine/ui.cpp" />
+		<Unit filename="../engine/vertmodel.h" />
+		<Unit filename="../engine/water.cpp" />
+		<Unit filename="../engine/world.cpp" />
+		<Unit filename="../engine/world.h" />
+		<Unit filename="../engine/worldio.cpp" />
+		<Unit filename="../game/ai.cpp" />
+		<Unit filename="../game/ai.h" />
+		<Unit filename="../game/aiman.h" />
+		<Unit filename="../game/client.cpp" />
+		<Unit filename="../game/ctf.h" />
+		<Unit filename="../game/elimination.h" />
+		<Unit filename="../game/entity.cpp" />
+		<Unit filename="../game/extinfo.h" />
+		<Unit filename="../game/game.cpp" />
+		<Unit filename="../game/game.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="../game/gamemode.h" />
+		<Unit filename="../game/render.cpp" />
+		<Unit filename="../game/scoreboard.cpp" />
+		<Unit filename="../game/server.cpp" />
+		<Unit filename="../game/waypoint.cpp" />
+		<Unit filename="../game/weapon.cpp" />
+		<Unit filename="../shared/command.h" />
+		<Unit filename="../shared/crypto.cpp" />
+		<Unit filename="../shared/cube.h">
+			<Option compile="1" />
+			<Option weight="0" />
+		</Unit>
+		<Unit filename="../shared/ents.h" />
+		<Unit filename="../shared/geom.cpp" />
+		<Unit filename="../shared/geom.h" />
+		<Unit filename="../shared/glemu.cpp" />
+		<Unit filename="../shared/glemu.h" />
+		<Unit filename="../shared/glexts.h" />
+		<Unit filename="../shared/iengine.h" />
+		<Unit filename="../shared/igame.h" />
+		<Unit filename="../shared/stream.cpp" />
+		<Unit filename="../shared/tools.cpp" />
+		<Unit filename="../shared/tools.h" />
+		<Unit filename="../shared/zip.cpp" />
+		<Unit filename="mingw.rc">
+			<Option compilerVar="WINDRES" />
+			<Option compiler="gcc" use="1" buildCommand="$rescomp -F $WINDRES_TARGET -i $file -J rc -o $resource_output -O coff $res_includes" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<envvars />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

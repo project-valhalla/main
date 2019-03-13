@@ -13,7 +13,7 @@ the aim is to create a well-balanced arena-style shooter with casual, fun modes 
 
 - try to revolutionate the arena fps genre with new ideas;
 
-- colorful graphics (if not a little bit cartoonish): spooky maps are welcome from time to time but let's avoid too much hyper-realistic stuff (or at least the gloominess) we don't need ANOTHER gritty sci-fi shooter.
+- colorful graphics (if not a little bit cartoonish): spooky maps are welcome from time to time but let's avoid too much hyper-realistic stuff (or at least the gloominess), we don't need ANOTHER gritty sci-fi shooter.
 
 - create competitive modes aswell as casual modes, like zombie mode and invasion mode (online Sauerbraten DMSP) to let newbies and casual players have fun with their friends, too;
 

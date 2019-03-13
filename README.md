@@ -7,8 +7,6 @@ Anything written below is not set in stone, the project is open to discussion, s
 
 the aim is to create a well-balanced arena-style shooter with casual, fun modes such as Infection, Gunball, Invasion (online Sauerbraten DMSP), boss mode and other cool stuff!
 
-Things I'd like to do add to the game sometime in the future:
-
 - create a gameplay which is more complex, interesting and various than Sauerbraten's gameplay but in the same time as simple, polished and fun as possible;
 
 - create a not too complicated yet interesting movement system, add mutators and other variables to make every game even more unique;

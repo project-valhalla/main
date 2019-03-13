@@ -1,4 +1,4 @@
-# vp-project
+# Valhalla project
 An arena shooter project based on Tesseract which focuses on both competitive and casual gameplay.
 
 Anything written below is not set in stone, the project is open to discussion, suggestions and ideas.

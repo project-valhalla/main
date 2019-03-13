@@ -5,7 +5,7 @@ Anything written below is not set in stone, the project is open to discussion, s
 
 ------------------ GENERAL/GAME DIRECTION --------------------
 
-the aim is to create a well balanced arena-style shooter with casual, fun modes such as Infection, Gunball, Invasion (online Sauerbraten DMSP), boss mode and other cool stuff!
+the aim is to create a well-balanced arena-style shooter with casual, fun modes such as Infection, Gunball, Invasion (online Sauerbraten DMSP), boss mode and other cool stuff!
 
 Things I'd like to do add to the game sometime in the future:
 

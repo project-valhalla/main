@@ -4,7 +4,7 @@ An arena shooter project based on Tesseract which focuses on both competitive an
 I've put together a list of things I would like to do with this project.
 Please note: anything written below is not set in stone and is open to discussion, suggestions and ideas.
 
------------------- GENERAL/GAME DIRECTION --------------------
+## General
 
 the aim is to create a well-balanced arena-style shooter with casual, fun modes such as Infection, Gunball, Invasion (online Sauerbraten DMSP), boss mode and other cool stuff!
 
@@ -35,7 +35,7 @@ the aim is to create a well-balanced arena-style shooter with casual, fun modes 
 
 Some of these points are further explained in the lists below.
 
------------------- USER INTERFACE --------------------
+## User interface
 
 Improve the general user interface: make it as clear as possible, noob-friendly.
 
@@ -55,7 +55,7 @@ Improve the general user interface: make it as clear as possible, noob-friendly.
 
 - player model 3D preview on the left (or right) side in the main menu;
 
------------------- SERVER --------------------
+## Server
 
 - vote kick, allows players to kick a hacker or another abusive player when a master isn't there, and possibly a system that doesn't let players abuse it (example: one player can start only one vote kick per match);
 
@@ -63,7 +63,7 @@ Improve the general user interface: make it as clear as possible, noob-friendly.
 
 - the game recognizes modded servers and let players know they are modified before joining;
 
------------------- GAMEPLAY --------------------
+## Gameplay
 
 trying to revolutionate the arena fps genre: big NO to the fear of creating and experimenting particular and original weapons, attack combinations and modes (as long as they're not too complicated); adding classic FFA mode (which relies heavily on map control and is not that noob-friendly) as a mutator; suggestions are welcome!
 
@@ -89,7 +89,7 @@ trying to revolutionate the arena fps genre: big NO to the fear of creating and 
 
 - movement and weapons tutorials for newcomers;
 
------------------- AESTHETICS --------------------
+## Aesthetics
 
 - cartoonish and/or colourful graphics, without exaggerating... avoid the grittiness/darkness of Quake and of most maps in Sauerbraten;
 
@@ -99,7 +99,7 @@ trying to revolutionate the arena fps genre: big NO to the fear of creating and 
 
 - player model customization: variables that allow players to attach vanity items to their player model and change its colours, same for weapons;
 
------------------- EDITOR & ENGINE --------------------
+## Editor & engine
 
 - being open to tweak the engine and add features;
 

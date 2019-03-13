@@ -1,7 +1,8 @@
 # Valhalla project
 An arena shooter project based on Tesseract which focuses on both competitive and casual gameplay.
 
-Anything written below is not set in stone, the project is open to discussion, suggestions and ideas.
+I've put together a list of things I would like to do with this project.
+Please note: anything written below is not set in stone and is open to discussion, suggestions and ideas.
 
 ------------------ GENERAL/GAME DIRECTION --------------------
 
@@ -64,11 +65,11 @@ Improve the general user interface: make it as clear as possible, noob-friendly.
 
 ------------------ GAMEPLAY --------------------
 
-Trying to revolutionate the arena fps genre: big NO to the fear of creating and experimenting particular and original weapons, attack combinations and modes (as long as they're not too complicated); adding classic FFA mode (which relies heavily on map control and is not that noob-friendly) as a mutator; suggestions are welcome!
+trying to revolutionate the arena fps genre: big NO to the fear of creating and experimenting particular and original weapons, attack combinations and modes (as long as they're not too complicated); adding classic FFA mode (which relies heavily on map control and is not that noob-friendly) as a mutator; suggestions are welcome!
 
-- Create a not too complex yet interesting movement system: adding, for example, slide (jump + crouch), wall jump and dodge as mutators is more than enough;
+- create a not too complex yet interesting movement system: adding, for example, slide (jump + crouch), wall jump and dodge as mutators is more than enough;
 
-- Pulse rifle combo mines that stick to players like in Red Eclipse;
+- pulse rifle combo mines that stick to players like in Red Eclipse;
 
 - new casual modes: race mode, invasion mode (online Sauerbraten DMSP), football mode (Gunball), side scroller mode (Side Scroller Deathmatch/SSD), online boss mode;
 

@@ -3,11 +3,11 @@ An arena shooter project based on Tesseract which focuses on both competitive an
 
 Anything written below is not set in stone, the project is open to discussion, suggestions and ideas.
 
-Things I'd like to do add to the game sometime in the future:
-
 ------------------ GENERAL/GAME DIRECTION --------------------
 
 the aim is to create a well balanced arena-style shooter with casual, fun modes such as Infection, Gunball, Invasion (online Sauerbraten DMSP), boss mode and other cool stuff!
+
+Things I'd like to do add to the game sometime in the future:
 
 - create a gameplay which is more complex, interesting and various than Sauerbraten's gameplay but in the same time as simple, polished and fun as possible;
 

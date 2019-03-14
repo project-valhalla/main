@@ -3,7 +3,7 @@ An arena shooter project based on Tesseract which focuses on both competitive an
 
 
 I've put together a list of things I would like to do with this project.
-Please note: anything written below is not set in stone and is open to discussion, suggestions and ideas.
+Please note: anything written below is not set in stone, the project is open to discussion, suggestions and ideas.
 
 ## General
 

@@ -1,7 +1,6 @@
 # Valhalla project
 An arena shooter project based on Tesseract which focuses on both competitive and casual gameplay.
 
-
 I've put together a list of things I would like to do with this project.
 Please note: anything written below is not set in stone, the project is open to discussion, suggestions and ideas.
 
@@ -15,7 +14,7 @@ the aim is to create a well-balanced arena-style shooter with casual, fun modes 
 
 - try to revolutionate the arena fps genre with new ideas;
 
-- colorful graphics (if not a little bit cartoonish): spooky maps are welcome from time to time but let's avoid too much hyper realistic (since the gameplay isn't realistic) or gloomy stuff, we don't need ANOTHER gritty sci-fi shooter.
+- colorful graphics (if not a little bit cartoony): spooky maps are welcome from time to time but let's avoid too much hyper realistic (since the gameplay isn't realistic) or gloomy stuff, we don't need ANOTHER gritty sci-fi shooter.
 
 - create competitive modes aswell as casual modes, like zombie mode and invasion mode (online Sauerbraten DMSP) to let newbies and casual players have fun with their friends, too;
 

@@ -1,5 +1,5 @@
 # Valhalla project
-An arena shooter project based on Tesseract which focuses on both competitive and casual gameplay.
+an arena shooter project based on Tesseract which focuses on both competitive and casual gameplay.
 
 I've put together a list of things I would like to do with this project.
 Please note: anything written below is not set in stone and is open to discussion, suggestions and ideas.

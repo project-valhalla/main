@@ -2,7 +2,8 @@
 An arena shooter project based on Tesseract which focuses on both competitive and casual gameplay.
 
 I've put together a list of things I would like to do with this project.
-Please note: anything written below is not set in stone, the project is open to discussion, suggestions and ideas.
+If you think you can help with these feel free to join the project!
+Please note: anything written below is not set in stone, everything is open to discussion, suggestions and ideas.
 
 ## General
 

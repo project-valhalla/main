@@ -282,7 +282,7 @@ namespace ai
 
     extern avoidset obstacles;
     extern vec aitarget;
-    extern vector<const char *> botnames;
+    //extern vector<const char *> botnames;
 
     extern float viewdist(int x = 101);
     extern float viewfieldx(int x = 101);

@@ -17,7 +17,7 @@ namespace ai
 
     ICOMMAND(addbot, "s", (char *s), addmsg(N_ADDBOT, "ri", *s ? clamp(parseint(s), 1, 101) : -1));
     ICOMMAND(delbot, "", (), addmsg(N_DELBOT, "r"));
-    ICOMMAND(registerbot, "s", (const char *name), { /*ai::botnames.add(newstring(name));*/ });
+    //ICOMMAND(registerbot, "s", (const char *name), { /*ai::botnames.add(newstring(name));*/ });
     ICOMMAND(botlimit, "i", (int *n), addmsg(N_BOTLIMIT, "ri", *n));
     ICOMMAND(botbalance, "i", (int *n), addmsg(N_BOTBALANCE, "ri", *n));
 

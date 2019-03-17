@@ -183,7 +183,6 @@ namespace server
             lastspawn = -1;
             lastshot = 0;
             kills = spree = 0;
-            sovietmillis = 0;
         }
 
         void reassign()
@@ -4444,7 +4443,7 @@ namespace server
 
     int laninfoport() { return TESSERACT_LANINFO_PORT; }
     int serverport() { return TESSERACT_SERVER_PORT; }
-    const char *defaultmaster() { return ""; }
+    const char *defaultmaster() { return "142.93.225.153"; }
     int masterport() { return TESSERACT_MASTER_PORT; }
     int numchannels() { return 3; }
 

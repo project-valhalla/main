@@ -814,7 +814,7 @@ namespace server
     {
         switch(type)
         {
-            case PRIV_ADMIN: return "admin";
+            case PRIV_ADMIN: return "administrator";
             case PRIV_AUTH: return "auth";
             case PRIV_MASTER: return "master";
             default: return "unknown";

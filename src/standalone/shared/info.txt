@@ -1,0 +1,1 @@
+This folder is necessary to correctly compile the project on Linux

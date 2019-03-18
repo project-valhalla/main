@@ -1,0 +1,5 @@
+Original md5 by geartrooper
+
+I converted the model into .obj (wip)
+
+-garsipal

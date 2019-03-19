@@ -142,7 +142,7 @@ bool resolverwait(const char *name, ENetAddress *address)
 {
     if(resolverthreads.empty()) resolverinit();
 
-    defformatstring(text, "resolving %s... (esc to abort)", name);
+    defformatstring(text, "Resolving %s... (press ESC to abort)", name);
     renderprogress(0, text);
 
     SDL_LockMutex(resolvermutex);
@@ -183,7 +183,7 @@ bool resolverwait(const char *name, ENetAddress *address)
 
 int connectwithtimeout(ENetSocket sock, const char *hostname, const ENetAddress &address)
 {
-    defformatstring(text, "connecting to %s... (esc to abort)", hostname);
+    defformatstring(text, "Connecting to %s... (press ESC to abort)", hostname);
     renderprogress(0, text);
 
     ENetSocketSet readset, writeset;
@@ -540,7 +540,7 @@ void checkpings()
         getstring(text, p);
         filtertext(si->map, text, false);
         getstring(text, p);
-        filtertext(si->desc, text);
+        copystring(si->desc, text);
     }
 }
 
@@ -625,7 +625,7 @@ void retrieveservers(vector<char> &data)
     if(sock == ENET_SOCKET_NULL) return;
 
     extern char *mastername;
-    defformatstring(text, "retrieving servers from %s... (esc to abort)", mastername);
+    defformatstring(text, "Retrieving servers from %s... (press ESC to abort)", mastername);
     renderprogress(0, text);
 
     int starttime = SDL_GetTicks(), timeout = 0;
@@ -679,7 +679,7 @@ void updatefrommaster()
 {
     vector<char> data;
     retrieveservers(data);
-    if(data.empty()) conoutf("master server not replying");
+    if(data.empty()) conoutf("\f3Master server not replying");
     else
     {
         clearservers();

@@ -814,9 +814,9 @@ namespace server
     {
         switch(type)
         {
-            case PRIV_ADMIN: return "administrator";
+            case PRIV_ADMIN: return "\f6administrator\ff";
             case PRIV_AUTH: return "auth";
-            case PRIV_MASTER: return "master";
+            case PRIV_MASTER: return "\f0master\ff";
             default: return "unknown";
         }
     }
@@ -1249,8 +1249,8 @@ namespace server
         else
         {
             lilswap(&hdr.version, 2);
-            if(hdr.version!=DEMO_VERSION) formatstring(msg, "demo \"%s\" requires an %s version of Tesseract", file, hdr.version<DEMO_VERSION ? "older" : "newer");
-            else if(hdr.protocol!=PROTOCOL_VERSION) formatstring(msg, "demo \"%s\" requires an %s version of Tesseract", file, hdr.protocol<PROTOCOL_VERSION ? "older" : "newer");
+            if(hdr.version!=DEMO_VERSION) formatstring(msg, "demo \"%s\" requires an %s version of Valhalla Project", file, hdr.version<DEMO_VERSION ? "older" : "newer");
+            else if(hdr.protocol!=PROTOCOL_VERSION) formatstring(msg, "demo \"%s\" requires an %s version of Valhalla Project", file, hdr.protocol<PROTOCOL_VERSION ? "older" : "newer");
         }
         if(msg[0])
         {
@@ -1470,7 +1470,7 @@ namespace server
             if(authdesc && authdesc[0]) formatstring(msg, "%s claimed %s as '\fs\f5%s\fr' [\fs\f0%s\fr]", colorname(ci), name, authname, authdesc);
             else formatstring(msg, "%s claimed %s as '\fs\f5%s\fr'", colorname(ci), name, authname);
         }
-        else formatstring(msg, "%s %s %s", colorname(ci), val ? "claimed" : "relinquished", name);
+        else formatstring(msg, "%s %s %s privileges", colorname(ci), val ? "claimed" : "relinquished", name);
         packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
         putint(p, N_SERVMSG);
         sendstring(msg, p);
@@ -3742,7 +3742,7 @@ namespace server
             }
 
             case N_TRYSPAWN:
-                if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath < 1500)) break;
+                if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (!m_edit && cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath < 1500)) break;
                 if((smode && !smode->canspawn(cq)) || (m_infection && zombiechosen) || (m_round && !m_infection && numclients(-1, true, false) > 1))
                 {
                     if(cq->state.aitype==AI_NONE)

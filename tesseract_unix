@@ -50,10 +50,10 @@ then
   MACHINE_NAME=
 fi
 
-if [ -x ${TESS_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ]
+if [ -x ./bin_unix/tess_client ]
 then
   cd ${TESS_DATA}
-  exec ${TESS_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ${TESS_OPTIONS} "$@"
+  exec ./bin_unix/tess_client ${TESS_OPTIONS} "$@"
 else
   echo "Your platform does not have a pre-compiled Tesseract client."
   echo "Please follow the following steps to build a native client:"

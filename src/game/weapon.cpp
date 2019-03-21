@@ -545,8 +545,8 @@ namespace game
                 extern int hitsound;
                 if(hitsound && at->lasthit != lastmillis)
                     playsound(isally(f, at) ? S_HIT_ALLY : (hitsound == 1 ? S_HIT1 : S_HIT2));
+                at->lasthit = lastmillis;
             }
-            at->lasthit = lastmillis;
         }
         if(!m_mp(gamemode) || f==at) f->hitpush(damage, vel, at, atk);
 

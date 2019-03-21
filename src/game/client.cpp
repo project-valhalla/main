@@ -1765,7 +1765,7 @@ namespace game
                 if(!s || !validatk(atk)) break;
                 int gun = attacks[atk].gun;
                 if(gun >= 0) s->gunselect = gun;
-                s->ammo[gun] -= attacks[atk].use;
+                if(!s->ammomillis) s->ammo[gun] -= attacks[atk].use;
                 s->gunwait = attacks[atk].attackdelay;
                 s->lastattack = atk;
                 break;

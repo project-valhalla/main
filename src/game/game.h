@@ -350,7 +350,7 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
     { GUN_RAIL,     ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL1,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,   70,  70,   0,   0,    0,  50, 5000,  1, 110,  0,    0, 1 },
     //grenade launcher
     { GUN_GL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_GL1,           -1,           -1,  500,   80,   0,   0,   1,  200,   0,  800,  1, 100, 25, 1800, 1 },
-    { GUN_GL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_GL2,           -1,           -1, 2200,    0,   0,   0,   1,  180,   0,  500,  1,   0, 25, 2200, 1 },
+    { GUN_GL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_GL2,           -1,           -1,  800,   80,   0,   0,   1,  180,   0,  500,  1,   0, 25, 2200, 1 },
     //instagib
     { GUN_INSTA,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL2,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,  150,   0,   0,   0,    0, 100, 5000,  1,  30,  0,    0, 0 },
     //zombie

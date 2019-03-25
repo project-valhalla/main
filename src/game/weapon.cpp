@@ -138,33 +138,6 @@ namespace game
         loopi(attacks[atk].rays) offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i]);
     }
 
-    void teleportplayer(gameent *d, vec &o)
-    {
-        if(lookupmaterial(o)&MAT_CLIP) return;
-        d->o = o;
-        vec dir;
-        vecfromyawpitch(d->yaw, 0, 1, 0, dir);
-        float speed = d->vel.magnitude2();
-        d->vel.x = dir.x*speed;
-        d->vel.y = dir.y*speed;
-        entinmap(d);
-        updatedynentcache(d);
-        specialattack(d, ATK_TELEPORT, d->o, worldpos);
-        d->gunwait = 0;
-        d->attacking = ACT_IDLE;
-        if(d->clientnum >= 0)
-        {
-            sendposition(d);
-            packetbuf p(32, ENET_PACKET_FLAG_RELIABLE);
-            putint(p, N_TELEPORT);
-            putint(p, d->clientnum);
-            putint(p, -1);
-            putint(p, -1);
-            sendclientpacket(p.finalize(), 0);
-            flushclient();
-        }
-    }
-
     enum { BNC_GRENADE1, BNC_GRENADE2, BNC_GRENADE3, BNC_SAW, BNC_ROCKET, BNC_GIB1, BNC_GIB2, BNC_AMMO };
 
     struct bouncer : physent
@@ -324,16 +297,8 @@ namespace game
                     }
                     case BNC_GRENADE3:
                     {
-                        gravity = 0.8f;
-                        elasticity = 0.7f;
-                        if(bnc.bounces > 0) elasticity = 0;
-                        destroyed = bnc.owner->attacking == ACT_PRIMARY;
-                        if(lastmillis-bnc.owner->lastaction> 200 && bnc.owner->attacking == ACT_SECONDARY)
-                        {
-                            bnc.owner->attacking = ACT_IDLE;
-                            bnc.owner->gunwait = 0;
-                            delete bouncers.remove(i--);
-                        }
+                        elasticity = 0;
+                        if(bnc.bounces >= 1) gravity = 0;
                         break;
                     }
                     case BNC_ROCKET:
@@ -358,7 +323,6 @@ namespace game
                         addmsg(N_EXPLODE, "rci3iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime,
                                                     hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
                 }
-                if(bnc.bouncetype==BNC_GRENADE3) teleportplayer(bnc.owner, bnc.o);
                 delete bouncers.remove(i--);
             }
             else

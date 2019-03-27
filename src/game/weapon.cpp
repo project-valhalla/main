@@ -1605,5 +1605,5 @@ namespace game
             obstacles.avoidnear(NULL, bnc.o.z + attacks[bnc.atk].exprad + 1, bnc.o, radius + attacks[bnc.atk].exprad);
         }
     }
-}
+};
 

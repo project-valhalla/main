@@ -2276,7 +2276,7 @@ namespace server
         serverweapon = forceweapon;
     }
 
-    void changemap(const char *s, int mode, int muts, int tl = Timelimit, int sl = Scorelimit)
+    void changemap(const char *s, int mode, int muts, int tl = Timelimit, int sl = -1)
     {
         stopdemo();
         pausegame(false);
@@ -2295,15 +2295,10 @@ namespace server
             gamelimit = roundlimit*60000;
         }
         else gamelimit = Timelimit*60000;
-        if(sl == Scorelimit)
-        {
-            if(m_teammode) Scorelimit = 60;
-            else if(m_ctf) Scorelimit = 5;
-            else if(m_elimination || m_lms) Scorelimit = 8;
-            else if(m_infection) Scorelimit = 15;
-            else Scorelimit = 30;
-        }
-        else Scorelimit = sl;
+        if(m_ctf) Scorelimit = 5;
+        else if(m_elimination || m_lms) Scorelimit = 8;
+        else if(m_teammode) Scorelimit = 60;
+        else Scorelimit = 30;
         rounds = interm = 0;
         nextexceeded = 0;
         copystring(smapname, s);

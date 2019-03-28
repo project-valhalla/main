@@ -478,7 +478,7 @@ struct ctfclientmode : clientmode
             else
             {
                 stopsound(S_FLAGLOOP, f.chan);
-                f.chan = -1
+                f.chan = -1;
             }
         }
     }

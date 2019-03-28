@@ -17,7 +17,7 @@ struct ctfclientmode : clientmode
     {
         int id, version;
         vec droploc, spawnloc;
-        int team, droptime, owntime;
+        int team, droptime, owntime, chan;
 #ifdef SERVMODE
         int owner, dropcount, dropper;
 #else
@@ -48,6 +48,7 @@ struct ctfclientmode : clientmode
 #endif
             team = 0;
             droptime = owntime = 0;
+            chan = -1;
         }
 
 #ifndef SERVMODE
@@ -468,6 +469,17 @@ struct ctfclientmode : clientmode
             rendermodel(flagname, ANIM_MAPMODEL|ANIM_LOOP,
                         pos, angle, 0, 0,
                         MDL_CULL_VFC | MDL_CULL_OCCLUDED);
+            vec color;
+            if(f.team==1) color = vec(0.25f, 0.25f, 1);
+            else if(f.team==2) color = vec(1, 0.25f, 0.25f);
+            else color = vec(0.80f, 0.80f, 0.80f);
+            adddynlight(pos, 30, color, 1, 20);
+            if(player1->state!=CS_EDITING) f.chan = playsound(S_FLAGLOOP, NULL, f.owner == player1? NULL: &pos, NULL, 0, -1, 500, f.chan, 200);
+            else
+            {
+                stopsound(S_FLAGLOOP, f.chan);
+                f.chan = -1;
+            }
         }
     }
 

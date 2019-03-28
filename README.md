@@ -77,8 +77,6 @@ trying to revolutionate the arena fps genre: big NO to the fear of creating and 
 
 - weapon and power up drops by dead players;
 
-- flags in CTF that make a looped sound (?) and emit lights, to make the players as aware as possible they're holding the flag!
-
 - EXP points gains to level up after every match (online multiplayer only) for players who have an account (?);
 
 - game points gains to unlock player skins and vanity items after every match (online multiplayer only) for players who have an account (?);

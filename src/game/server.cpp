@@ -675,7 +675,7 @@ namespace server
     VAR(restrictpausegame, 0, 1, 1);
     VAR(restrictgamespeed, 0, 1, 1);
 
-    SVAR(serverdesc, "");
+    SVAR(servername, "");
     SVAR(serverpass, "");
     SVAR(adminpass, "");
     VARF(publicserver, 0, 0, 2, {
@@ -3161,7 +3161,7 @@ namespace server
 
     void sendservinfo(clientinfo *ci)
     {
-        sendf(ci->clientnum, 1, "ri5ss", N_SERVINFO, ci->clientnum, PROTOCOL_VERSION, ci->sessionid, serverpass[0] ? 1 : 0, serverdesc, serverauth);
+        sendf(ci->clientnum, 1, "ri5ss", N_SERVINFO, ci->clientnum, PROTOCOL_VERSION, ci->sessionid, serverpass[0] ? 1 : 0, servername, serverauth);
     }
 
     void noclients()
@@ -3337,7 +3337,7 @@ namespace server
         ci->cleanauth();
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
-        filtertext(ci->authname, user, false, false, 100);
+        filtertext(ci->authname, user, true, true, false, false, 100);
         copystring(ci->authdesc, desc);
         if(ci->authdesc[0])
         {
@@ -3500,7 +3500,7 @@ namespace server
                 case N_CONNECT:
                 {
                     getstring(text, p);
-                    filtertext(text, text, true, false, MAXNAMELEN);
+                    filtertext(text, text, true, true, true, false, MAXNAMELEN);
                     if(!text[0]) copystring(text, "player");
                     copystring(ci->name, text, MAXNAMELEN+1);
                     ci->playermodel = getint(p);
@@ -3924,7 +3924,7 @@ namespace server
                 QUEUE_AI;
                 QUEUE_MSG;
                 getstring(text, p);
-                filtertext(text, text, true, true);
+                filtertext(text, text, true, true, true, true);
                 QUEUE_STR(text);
                 if(isdedicatedserver() && cq) logoutf("%s: %s", colorname(cq), text);
                 break;
@@ -3934,7 +3934,7 @@ namespace server
             {
                 getstring(text, p);
                 if(!ci || !cq || (ci->state.state==CS_SPECTATOR && !ci->local && !ci->privilege) || !m_teammode || !validteam(cq->team)) break;
-                filtertext(text, text, true, true);
+                filtertext(text, text, true, true, true, true);
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
@@ -3964,7 +3964,7 @@ namespace server
             {
                 QUEUE_MSG;
                 getstring(text, p);
-                filtertext(ci->name, text, true, false, MAXNAMELEN);
+                filtertext(ci->name, text, true, true, true, false, MAXNAMELEN);
                 if(!ci->name[0]) copystring(ci->name, "player");
                 QUEUE_STR(ci->name);
                 break;
@@ -4007,7 +4007,7 @@ namespace server
             case N_MAPVOTE:
             {
                 getstring(text, p);
-                filtertext(text, text, false);
+                filtertext(text, text, true, true, true, false);
                 fixmapname(text);
                 int reqmode = getint(p), reqmuts = getint(p);
                 vote(text, reqmode, reqmuts, sender);
@@ -4465,7 +4465,7 @@ namespace server
             putint(p, gamespeed);
         }
         sendstring(smapname, p);
-        sendstring(serverdesc, p);
+        sendstring(servername, p);
         sendserverinforeply(p);
     }
 

@@ -1784,7 +1784,7 @@ static void compilestatements(vector<uint> &code, const char *&p, int rettype, i
                     case 'V': comtype = CODE_COMV; if(more) while(numargs < MAXARGS && (more = compilearg(code, p, VAL_CANY, prevargs+numargs))) numargs++; goto compilecomv;
                     case '1': case '2': case '3': case '4':
                         if(more && numargs < MAXARGS)
-                        { 
+                        {
                             int numrep = *fmt-'0'+1;
                             fmt -= numrep;
                             rep = true;
@@ -3531,7 +3531,7 @@ ICOMMAND(stripcolors, "s", (char *s),
 {
     int len = strlen(s);
     char *d = newstring(len);
-    filtertext(d, s, true, false, len);
+    filtertext(d, s, true, false, true, false, len);
     stringret(d);
 });
 
@@ -3837,7 +3837,7 @@ void findfile_(char *name)
     path(fname);
     intret(
 #ifndef STANDALONE
-        findzipfile(fname) || 
+        findzipfile(fname) ||
 #endif
         fileexists(fname, "e") || findfile(fname, "e") ? 1 : 0
     );
@@ -4099,7 +4099,7 @@ ICOMMAND(round, "ff", (float *n, float *k),
     }
     else r = r < 0 ? ceil(r - 0.5) : floor(r + 0.5);
     floatret(float(r));
-}); 
+});
 
 ICOMMAND(cond, "ee2V", (tagval *args, int numargs),
 {

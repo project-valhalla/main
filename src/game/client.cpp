@@ -183,7 +183,7 @@ namespace game
 
     void switchname(const char *name)
     {
-        filtertext(player1->name, name, true, false, MAXNAMELEN);
+        filtertext(player1->name, name, true, true, true, false, MAXNAMELEN);
         if(!player1->name[0]) copystring(player1->name, "player");
         addmsg(N_SWITCHNAME, "rs", player1->name);
     }
@@ -496,6 +496,13 @@ namespace game
         if(vn>=0 && vn!=player1->clientnum) addmsg(N_KICK, "ris", vn, reason);
     }
     COMMAND(kick, "ss");
+
+    void mute(const char *victim, const char *reason)
+    {
+        int vn = parseplayer(victim);
+        if(vn>=0 && vn!=player1->clientnum) addmsg(N_MUTE, "ris", vn, reason);
+    }
+    COMMAND(mute, "ss");
 
     void authkick(const char *desc, const char *victim, const char *reason)
     {
@@ -1101,7 +1108,7 @@ namespace game
     void toserver(char *text)
     {
         bool waiting = m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue));
-        conoutf(CON_CHAT, "%s:%s%s %s", colorname(player1), teamtextcode[0], waiting? "\f4": "", text); addmsg(N_TEXT, "rcs", player1, text);
+        conoutf(CON_CHAT, "%s:%s %s", colorname(player1), waiting? "\f4": "", text); addmsg(N_TEXT, "rcs", player1, text);
     }
     COMMANDN(say, toserver, "C");
 
@@ -1555,12 +1562,12 @@ namespace game
             {
                 if(!d) return;
                 getstring(text, p);
-                filtertext(text, text, true, true);
+                filtertext(text, text, true, true, true, true);
                 if(isignored(d->clientnum)) break;
                 if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
                     particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
-                bool waiting = m_round && (d->state==CS_DEAD || (d->state==CS_SPECTATOR && d->queue));
-                conoutf(CON_CHAT, "%s:%s %s%s", colorname(d), teamtextcode[0], waiting? "\f4": "", text);
+                bool waiting = m_round && ((d->state==CS_SPECTATOR && d->queue) || d->state==CS_DEAD);
+                conoutf(CON_CHAT, "%s:%s %s", colorname(d), waiting? "\f4": "", text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }
@@ -1570,13 +1577,12 @@ namespace game
                 int tcn = getint(p);
                 gameent *t = getclient(tcn);
                 getstring(text, p);
-                filtertext(text, text, true, true);
-                if(!t || isignored(t->clientnum)) break;
+                filtertext(text, text, true, true, true, true);
+                if(!t || isignored(t->clientnum) || t->state == CS_SPECTATOR || (m_round && (t->queue || t->state == CS_DEAD))) break;
                 int team = validteam(t->team) ? t->team : 0;
                 if(t->state!=CS_DEAD && t->state!=CS_SPECTATOR)
                     particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8);
-                bool waiting = m_round && (d->state==CS_DEAD || (d->state==CS_SPECTATOR && d->queue));
-                conoutf(CON_TEAMCHAT, "%s:%s%s %s", colorname(t), teamtextcode[team], waiting? "\f4": "", text);
+                conoutf(CON_TEAMCHAT, "%s:%s %s", colorname(t), teamtextcode[team], text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }
@@ -1586,7 +1592,7 @@ namespace game
                 int scn = getint(p);
                 gameent *s = getclient(scn);
                 getstring(text, p);
-                filtertext(text, text, true, true);
+                filtertext(text, text, true, true, true, true);
                 if(!s || isignored(s->clientnum)) break;
                 conoutf(CON_CHAT, "%s: \f5%s", colorname(s), text);
                 if(chatsound) playsound(S_CHAT);
@@ -1652,7 +1658,7 @@ namespace game
                     break;
                 }
                 getstring(text, p);
-                filtertext(text, text, true, false, MAXNAMELEN);
+                filtertext(text, text, true, true, true, false, MAXNAMELEN);
                 if(!text[0]) copystring(text, "player");
                 if(d->name[0])          // already connected
                 {
@@ -1678,7 +1684,7 @@ namespace game
                 getstring(text, p);
                 if(d)
                 {
-                    filtertext(text, text, true, false, MAXNAMELEN);
+                    filtertext(text, text, true, true, true, false, MAXNAMELEN);
                     if(!text[0]) copystring(text, "player");
                     if(strcmp(text, d->name))
                     {
@@ -2112,7 +2118,7 @@ namespace game
                 int type = getint(p);
                 getstring(text, p);
                 string name;
-                filtertext(name, text, false);
+                filtertext(name, text, true, true, false);
                 ident *id = getident(name);
                 switch(type)
                 {
@@ -2368,7 +2374,7 @@ namespace game
                 int bn = getint(p), on = getint(p), at = getint(p), sk = clamp(getint(p), 1, 101), pm = getint(p), col = getint(p), team = getint(p);
                 string name;
                 getstring(text, p);
-                filtertext(name, text, false, false, MAXNAMELEN);
+                filtertext(name, text, true, true, false, false, MAXNAMELEN);
                 gameent *b = newclient(bn);
                 if(!b) break;
                 ai::init(b, at, on, sk, bn, pm, col, name, team);

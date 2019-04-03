@@ -666,7 +666,7 @@ namespace game
     void initclient()
     {
         player1 = spawnstate(new gameent);
-        filtertext(player1->name, "player", true, false, MAXNAMELEN);
+        filtertext(player1->name, "player", true, true, true, false, MAXNAMELEN);
         players.add(player1);
     }
 

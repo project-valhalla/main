@@ -238,7 +238,7 @@ namespace server
         int team, playermodel, playercolor; //, playertype;
         int modevote, mutsvote;
         int privilege;
-        bool connected, local, timesync, queue;
+        bool connected, local, timesync, queue, mute;
         int gameoffset, lastevent, pushed, exceeded;
         servstate state;
         vector<gameevent *> events;
@@ -369,7 +369,7 @@ namespace server
             playermodel = -1;
             playercolor = 0; //playertype = 0;
             privilege = PRIV_NONE;
-            connected = local = queue = false;
+            connected = local = queue = mute = false;
             connectauth = 0;
             position.setsize(0);
             messages.setsize(0);
@@ -815,7 +815,7 @@ namespace server
         switch(type)
         {
             case PRIV_ADMIN: return "\f6administrator\ff";
-            case PRIV_AUTH: return "auth";
+            case PRIV_AUTH: return "\f5auth\f";
             case PRIV_MASTER: return "\f0master\ff";
             default: return "unknown";
         }
@@ -1467,8 +1467,8 @@ namespace server
         string msg;
         if(val && authname)
         {
-            if(authdesc && authdesc[0]) formatstring(msg, "%s claimed %s as '\fs\f5%s\fr' [\fs\f0%s\fr]", colorname(ci), name, authname, authdesc);
-            else formatstring(msg, "%s claimed %s as '\fs\f5%s\fr'", colorname(ci), name, authname);
+            if(authdesc && authdesc[0]) formatstring(msg, "%s claimed %s privileges as '\fs\f5%s\fr' [\fs\f0%s\fr]", colorname(ci), name, authname, authdesc);
+            else formatstring(msg, "%s claimed %s privileges as '\fs\f5%s\fr'", colorname(ci), name, authname);
         }
         else formatstring(msg, "%s %s %s privileges", colorname(ci), val ? "claimed" : "relinquished", name);
         packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
@@ -1516,6 +1516,22 @@ namespace server
             }
         }
         return false;
+    }
+
+    void mute(clientinfo *ci, int victim, int val, const char *reason = NULL)
+    {
+        if((ci->privilege || ci->local) && ci->clientnum!=victim)
+        {
+            clientinfo *vinfo = (clientinfo *)getclientinfo(victim);
+            if(vinfo && vinfo->connected && (ci->privilege >= vinfo->privilege || ci->local) && vinfo->privilege < PRIV_ADMIN && !vinfo->local)
+            {
+                string muter;
+                copystring(muter, colorname(ci));
+                if(reason && reason[0]) sendservmsgf("%s %smuted %s because: %s", muter, val>0? "" : "un", colorname(vinfo), reason);
+                else sendservmsgf("%s %smuted %s", muter, val>0? "" : "un", colorname(vinfo));
+                vinfo->mute = val;
+            }
+        }
     }
 
     savedscore *findscore(clientinfo *ci, bool insert)
@@ -3485,6 +3501,8 @@ namespace server
         if(shouldcheckplayers()) checkplayers();
     }
 
+    VAR(mutespectators, 0, 0, 1);
+
     void parsepacket(int sender, int chan, packetbuf &p)     // has to parse exactly each byte of the packet
     {
         if(sender<0 || p.packet->flags&ENET_PACKET_FLAG_UNSEQUENCED || chan > 2) return;
@@ -3921,10 +3939,31 @@ namespace server
 
             case N_TEXT:
             {
-                QUEUE_AI;
-                QUEUE_MSG;
                 getstring(text, p);
+                if(cq->mute) break;
                 filtertext(text, text, true, true, true, true);
+                if(mutespectators && cq->state.state!=CS_SPECTATOR)
+                {
+                    loopv(clients) // not working properly, WIP
+                    {
+                        clientinfo *s = clients[i];
+                        if(s == cq || s->state.aitype != AI_NONE || s->state.state!=CS_SPECTATOR) continue;
+                        sendf(s->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
+                    }
+                    break;
+                }
+                if(m_round && (cq->queue || cq->state.state == CS_DEAD))
+                {
+                    loopv(clients) // not working properly, WIP
+                    {
+                        clientinfo *s = clients[i];
+                        if(s == cq || s->state.aitype != AI_NONE || (!s->queue && s->state.state != CS_DEAD)) continue;
+                        sendf(s->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
+                    }
+                    break;
+                }
+                QUEUE_AI;
+                QUEUE_INT(N_TEXT);
                 QUEUE_STR(text);
                 if(isdedicatedserver() && cq) logoutf("%s: %s", colorname(cq), text);
                 break;
@@ -3933,7 +3972,8 @@ namespace server
             case N_SAYTEAM:
             {
                 getstring(text, p);
-                if(!ci || !cq || (ci->state.state==CS_SPECTATOR && !ci->local && !ci->privilege) || !m_teammode || !validteam(cq->team)) break;
+                if(!ci || !cq || cq->mute || (m_round && (cq->queue || cq->state.state==CS_DEAD)) ||
+                   (ci->state.state==CS_SPECTATOR && !ci->local && !ci->privilege) || !m_teammode || !validteam(cq->team)) break;
                 filtertext(text, text, true, true, true, true);
                 loopv(clients)
                 {
@@ -3949,13 +3989,13 @@ namespace server
             {
                 int recipient = getint(p);
                 getstring(text, p);
+                if(!cq || cq->mute) break;
                 filtertext(text, text, true, true);
-                if(!ci || !cq) break;
                 loopv(clients)
                 {
-                    clientinfo *t = clients[i];
-                    if(t==cq || t->state.aitype != AI_NONE || t->clientnum != recipient) continue;
-                    sendf(t->clientnum, 1, "riis", N_WHISPER, cq->clientnum, text);
+                    clientinfo *c = clients[i];
+                    if(c==cq || c->state.aitype != AI_NONE || c->clientnum != recipient) continue;
+                    sendf(c->clientnum, 1, "riis", N_WHISPER, cq->clientnum, text);
                 }
                 break;
             }
@@ -4126,6 +4166,15 @@ namespace server
                 getstring(text, p);
                 filtertext(text, text);
                 trykick(ci, victim, text);
+                break;
+            }
+
+            case N_MUTE:
+            {
+                int victim = getint(p), val = getint(p);
+                getstring(text, p);
+                filtertext(text, text);
+                mute(ci, victim, val, text);
                 break;
             }
 
@@ -4473,4 +4522,3 @@ namespace server
 
     #include "aiman.h"
 }
-

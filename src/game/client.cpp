@@ -500,9 +500,15 @@ namespace game
     void mute(const char *victim, const char *reason)
     {
         int vn = parseplayer(victim);
-        if(vn>=0 && vn!=player1->clientnum) addmsg(N_MUTE, "ris", vn, reason);
+        if(vn>=0 && vn!=player1->clientnum) addmsg(N_MUTE, "riis", vn, 1, reason);
     }
     COMMAND(mute, "ss");
+    void unmute(const char *victim)
+    {
+        int vn = parseplayer(victim);
+        if(vn>=0 && vn!=player1->clientnum) addmsg(N_MUTE, "riis", vn, 0, "");
+    }
+    COMMAND(unmute, "ss");
 
     void authkick(const char *desc, const char *victim, const char *reason)
     {
@@ -1108,7 +1114,7 @@ namespace game
     void toserver(char *text)
     {
         bool waiting = m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue));
-        conoutf(CON_CHAT, "%s:%s %s", colorname(player1), waiting? "\f4": "", text); addmsg(N_TEXT, "rcs", player1, text);
+        conoutf(CON_CHAT, "%s:%s %s", colorname(player1), waiting? "\f4": (player1->state==CS_SPECTATOR? "\f8": ""), text); addmsg(N_TEXT, "rcs", player1, text);
     }
     COMMANDN(say, toserver, "C");
 
@@ -1560,14 +1566,14 @@ namespace game
 
             case N_TEXT:
             {
-                if(!d) return;
                 getstring(text, p);
+                if(!d) return;
                 filtertext(text, text, true, true, true, true);
                 if(isignored(d->clientnum)) break;
                 if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
                     particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
                 bool waiting = m_round && ((d->state==CS_SPECTATOR && d->queue) || d->state==CS_DEAD);
-                conoutf(CON_CHAT, "%s:%s %s", colorname(d), waiting? "\f4": "", text);
+                conoutf(CON_CHAT, "%s:%s %s", colorname(d), waiting? "\f4": (d->state==CS_SPECTATOR? "\f8": ""), text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }

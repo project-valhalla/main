@@ -3942,7 +3942,7 @@ namespace server
                 getstring(text, p);
                 if(cq->mute) break;
                 filtertext(text, text, true, true, true, true);
-                if(mutespectators && cq->state.state!=CS_SPECTATOR)
+                if(mutespectators && cq->state.state==CS_SPECTATOR)
                 {
                     loopv(clients) // not working properly, WIP
                     {

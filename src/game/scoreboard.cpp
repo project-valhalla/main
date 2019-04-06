@@ -139,11 +139,11 @@ namespace game
                 status = 0xFF6060;
             if(d->privilege)
             {
-                if(d->privilege == PRIV_ADMIN)
-                    status = !(d->juggernaut || d->zombie) ? 0xFF8000 : 0xFF4000;
-                else if(d->privilege == PRIV_MASTER) status = !(d->juggernaut || d->zombie) ? 0x40FF80 : 0xFFBB50;
-                else if(d->privilege == PRIV_AUTH) status = !(d->juggernaut || d->zombie) ? 0xC060C2 : 0xFC2592;
-                if(d->state==CS_DEAD) status = (status>>1)&0x7F7F7F;
+                if(d->privilege == PRIV_ADMIN) status = 0xFF8000;
+                else if(d->privilege == PRIV_MASTER) status = 0x40FF80;
+                else if(d->privilege == PRIV_AUTH) status = 0xC060C2;
+                if((m_juggernaut && d->juggernaut) || (m_infection && d->zombie)) status = (status>>1)&0xF42323;
+                else if(d->state==CS_DEAD) status = (status>>1)&0x7F7F7F;
             }
             intret(status);
         }

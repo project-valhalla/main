@@ -1121,8 +1121,8 @@ namespace game
     void sayteam(char *text)
     {
         if(!m_teammode || !validteam(player1->team)) return;
-        bool waiting = m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue));
-        conoutf(CON_TEAMCHAT, "%s:%s%s %s", colorname(player1), teamtextcode[player1->team], waiting? "\f4": "", text);
+        bool notsent = player1->state==CS_SPECTATOR || (m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue)));
+        conoutf(CON_TEAMCHAT, "%s:%s%s %s", colorname(player1), teamtextcode[player1->team], notsent? "\f4": "", text);
         addmsg(N_SAYTEAM, "rcs", player1, text);
     }
     COMMAND(sayteam, "C");
@@ -1566,14 +1566,15 @@ namespace game
 
             case N_TEXT:
             {
+                int cn = getint(p);
+                gameent *d = getclient(cn);
                 getstring(text, p);
-                if(!d) return;
                 filtertext(text, text, true, true, true, true);
-                if(isignored(d->clientnum)) break;
+                if(!d || isignored(d->clientnum)) break;
                 if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
                     particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
                 bool waiting = m_round && ((d->state==CS_SPECTATOR && d->queue) || d->state==CS_DEAD);
-                conoutf(CON_CHAT, "%s:%s %s", colorname(d), waiting? "\f4": (d->state==CS_SPECTATOR? "\f8": ""), text);
+                conoutf(CON_CHAT, "%s: %s%s", colorname(d), waiting? "\f4": (d->state==CS_SPECTATOR? "\f8": ""), text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }
@@ -1588,7 +1589,7 @@ namespace game
                 int team = validteam(t->team) ? t->team : 0;
                 if(t->state!=CS_DEAD && t->state!=CS_SPECTATOR)
                     particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8);
-                conoutf(CON_TEAMCHAT, "%s:%s %s", colorname(t), teamtextcode[team], text);
+                conoutf(CON_TEAMCHAT, "%s: %s%s", colorname(t), teamtextcode[team], text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }

@@ -3942,37 +3942,22 @@ namespace server
                 getstring(text, p);
                 if(cq->mute) break;
                 filtertext(text, text, true, true, true, true);
-                if(mutespectators && cq->state.state==CS_SPECTATOR)
+                bool spectating = cq->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state==CS_DEAD));
+                loopv(clients)
                 {
-                    loopv(clients) // not working properly, WIP
-                    {
-                        clientinfo *s = clients[i];
-                        if(s == cq || s->state.aitype != AI_NONE || s->state.state!=CS_SPECTATOR) continue;
-                        sendf(s->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
-                    }
-                    break;
+                    clientinfo *c = clients[i];
+                    if(c == cq || (mutespectators && cq->state.state == CS_SPECTATOR && c->state.state != CS_SPECTATOR) ||
+                        (m_round && (cq->queue || cq->state.state == CS_DEAD) && !(c->queue || c->state.state == CS_DEAD)) || c->state.aitype != AI_NONE) continue;
+                    sendf(c->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
                 }
-                if(m_round && (cq->queue || cq->state.state == CS_DEAD))
-                {
-                    loopv(clients) // not working properly, WIP
-                    {
-                        clientinfo *s = clients[i];
-                        if(s == cq || s->state.aitype != AI_NONE || (!s->queue && s->state.state != CS_DEAD)) continue;
-                        sendf(s->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
-                    }
-                    break;
-                }
-                QUEUE_AI;
-                QUEUE_INT(N_TEXT);
-                QUEUE_STR(text);
-                if(isdedicatedserver() && cq) logoutf("%s: %s", colorname(cq), text);
+                if(isdedicatedserver() && cq) logoutf("%s %s: %s", colorname(cq), spectating? "<spectator>" : "", text);
                 break;
             }
 
             case N_SAYTEAM:
             {
                 getstring(text, p);
-                if(!ci || !cq || cq->mute || (m_round && (cq->queue || cq->state.state==CS_DEAD)) ||
+                if(!ci || !cq || cq->mute || cq->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state==CS_DEAD)) ||
                    (ci->state.state==CS_SPECTATOR && !ci->local && !ci->privilege) || !m_teammode || !validteam(cq->team)) break;
                 filtertext(text, text, true, true, true, true);
                 loopv(clients)
@@ -3993,9 +3978,9 @@ namespace server
                 filtertext(text, text, true, true);
                 loopv(clients)
                 {
-                    clientinfo *c = clients[i];
-                    if(c==cq || c->state.aitype != AI_NONE || c->clientnum != recipient) continue;
-                    sendf(c->clientnum, 1, "riis", N_WHISPER, cq->clientnum, text);
+                    clientinfo *r = clients[i];
+                    if(r==cq || r->state.aitype != AI_NONE || r->clientnum != recipient) continue;
+                    sendf(r->clientnum, 1, "riis", N_WHISPER, cq->clientnum, text);
                 }
                 break;
             }

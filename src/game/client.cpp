@@ -1120,9 +1120,9 @@ namespace game
 
     void sayteam(char *text)
     {
-        if(!m_teammode || !validteam(player1->team)) return;
-        bool notsent = player1->state==CS_SPECTATOR || (m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue)));
-        conoutf(CON_TEAMCHAT, "%s:%s%s %s", colorname(player1), teamtextcode[player1->team], notsent? "\f4": "", text);
+        if(!m_teammode || !validteam(player1->team) || player1->state == CS_SPECTATOR) return;
+        bool waiting = m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue));
+        conoutf(CON_TEAMCHAT, "%s (%sto team\ff): %s%s", colorname(player1), teamtextcode[player1->team], waiting? "\f4": teamtextcode[player1->team], text);
         addmsg(N_SAYTEAM, "rcs", player1, text);
     }
     COMMAND(sayteam, "C");
@@ -1585,11 +1585,12 @@ namespace game
                 gameent *t = getclient(tcn);
                 getstring(text, p);
                 filtertext(text, text, true, true, true, true);
-                if(!t || isignored(t->clientnum) || t->state == CS_SPECTATOR || (m_round && (t->queue || t->state == CS_DEAD))) break;
+                if(!t || isignored(t->clientnum)) break;
                 int team = validteam(t->team) ? t->team : 0;
                 if(t->state!=CS_DEAD && t->state!=CS_SPECTATOR)
                     particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8);
-                conoutf(CON_TEAMCHAT, "%s: %s%s", colorname(t), teamtextcode[team], text);
+                bool waiting = m_round && ((t->state==CS_SPECTATOR && t->queue) || t->state==CS_DEAD);
+                conoutf(CON_TEAMCHAT, "%s (%sto team\ff): %s%s", colorname(t), teamtextcode[team], waiting? "\f4" : teamtextcode[team], text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }

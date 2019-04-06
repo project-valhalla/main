@@ -3957,13 +3957,14 @@ namespace server
             case N_SAYTEAM:
             {
                 getstring(text, p);
-                if(!ci || !cq || cq->mute || cq->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state==CS_DEAD)) ||
+                if(!ci || !cq || cq->mute || cq->state.state==CS_SPECTATOR ||
                    (ci->state.state==CS_SPECTATOR && !ci->local && !ci->privilege) || !m_teammode || !validteam(cq->team)) break;
                 filtertext(text, text, true, true, true, true);
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
-                    if(t==cq || t->state.state==CS_SPECTATOR || t->state.aitype != AI_NONE || cq->team != t->team) continue;
+                    if(t==cq || t->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state == CS_DEAD) && !(t->queue || t->state.state == CS_DEAD)) ||
+                       t->state.aitype != AI_NONE || cq->team != t->team) continue;
                     sendf(t->clientnum, 1, "riis", N_SAYTEAM, cq->clientnum, text);
                 }
                 if(isdedicatedserver() && cq) logoutf("%s <%s>: %s", colorname(cq), teamnames[cq->team], text);

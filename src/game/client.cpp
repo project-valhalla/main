@@ -1120,9 +1120,9 @@ namespace game
 
     void sayteam(char *text)
     {
-        if(!m_teammode || !validteam(player1->team) || player1->state == CS_SPECTATOR) return;
+        if(!m_teammode || !validteam(player1->team) || (!player1->queue && player1->state == CS_SPECTATOR)) return;
         bool waiting = m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue));
-        conoutf(CON_TEAMCHAT, "%s (%sto team\ff): %s%s", colorname(player1), teamtextcode[player1->team], waiting? "\f4": teamtextcode[player1->team], text);
+        conoutf(CON_TEAMCHAT, "%s (%steam\ff): %s%s", colorname(player1), teamtextcode[player1->team], waiting? "\f4": teamtextcode[player1->team], text);
         addmsg(N_SAYTEAM, "rcs", player1, text);
     }
     COMMAND(sayteam, "C");
@@ -1590,7 +1590,7 @@ namespace game
                 if(t->state!=CS_DEAD && t->state!=CS_SPECTATOR)
                     particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8);
                 bool waiting = m_round && ((t->state==CS_SPECTATOR && t->queue) || t->state==CS_DEAD);
-                conoutf(CON_TEAMCHAT, "%s (%sto team\ff): %s%s", colorname(t), teamtextcode[team], waiting? "\f4" : teamtextcode[team], text);
+                conoutf(CON_TEAMCHAT, "%s (%steam\ff): %s%s", colorname(t), teamtextcode[team], waiting? "\f4" : teamtextcode[team], text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }

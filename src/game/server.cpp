@@ -3957,7 +3957,7 @@ namespace server
             case N_SAYTEAM:
             {
                 getstring(text, p);
-                if(!ci || !cq || cq->mute || cq->state.state==CS_SPECTATOR ||
+                if(!ci || !cq || cq->mute || (!cq->queue && cq->state.state==CS_SPECTATOR) ||
                    (ci->state.state==CS_SPECTATOR && !ci->local && !ci->privilege) || !m_teammode || !validteam(cq->team)) break;
                 filtertext(text, text, true, true, true, true);
                 loopv(clients)

@@ -8,7 +8,7 @@ Please note: anything written below is not set in stone, everything is open to d
 
 ## General
 
-the aim is to create a well-balanced arena-style shooter with casual, fun modes such as Infection, Gunball, Invasion (online Sauerbraten DMSP), boss mode and other cool stuff!
+the aim is to create a well-balanced arena-style shooter with casual, fun modes such as Infection, Gunball (football/rugby mode), Invasion (online Sauerbraten DMSP), boss mode and other cool stuff!
 
 - create a gameplay which is more complex, interesting and various than Sauerbraten's gameplay but in the same time as simple, polished and fun as possible;
 
@@ -69,7 +69,7 @@ Improve the general user interface: make it as clear as possible, noob-friendly.
 
 trying to revolutionate the arena fps genre: big NO to the fear of creating and experimenting particular and original weapons, attack combinations and modes (as long as they're not too complicated); adding classic FFA mode (which relies heavily on map control and is not that noob-friendly) as a mutator; suggestions are welcome!
 
-- create a not too complex yet interesting movement system: adding, for example, slide (jump + crouch), wall jump and dodge as mutators is more than enough;
+- create a not too complex yet interesting movement system: adding, for example, wall jump and dodge as mutators is more than enough;
 
 - pulse rifle combo mines that stick to players like in Red Eclipse;
 
@@ -77,9 +77,9 @@ trying to revolutionate the arena fps genre: big NO to the fear of creating and 
 
 - weapon and power up drops by dead players;
 
-- EXP points gains to level up after every match (online multiplayer only) for players who have an account (?);
+- EXP point gains to level up after every match (online multiplayer only) for players who have an account (?);
 
-- game points gains to unlock player skins and vanity items after every match (online multiplayer only) for players who have an account (?);
+- game point gains to unlock player skins and vanity items after every match (online multiplayer only) for players who have an account (?);
 
 - integrated player statistics, ranking, achievements, progression system with various and unlockable vanity items, skins, etc. (nothing gameplay changing)(?);
 

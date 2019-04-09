@@ -45,7 +45,7 @@ Improve the general user interface: make it as clear as possible, noob-friendly.
 
 - improve server browser: server previews, letting the joining player type the server passwords directly in the browser;
 
-- UI window that allows players to edit server variables in game;
+- launcher that allows players to edit server variables and set up their own server;
 
 - move frag messages regarding the player (you got killed by, you killed, double kill, etc) to the center of the screen;
 

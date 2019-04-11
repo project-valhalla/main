@@ -371,13 +371,9 @@ namespace game
     ICOMMAND(getclientscore, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
-        if(d) intret(m_infection || m_lms? d->points : d->frags);
-    });
-
-    ICOMMAND(getclientflags, "i", (int *cn),
-    {
-        gameent *d = getclient(*cn);
-        if(d) intret(d->flags);
+        int score = d->flags;
+        if(m_lms || m_infection) score = d->points;
+        if(d) intret(score);
     });
 
     ICOMMAND(getclientdeaths, "i", (int *cn),

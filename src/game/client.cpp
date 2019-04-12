@@ -164,6 +164,7 @@ namespace game
             particle_splash(PART_SPARK1, 200, 500, pos, teamtextcolor[s->team], 0.40f, 100, -5);
         }
         adddynlight(s->feetpos(), 65, teamlightcolor[s->team], 700, 100, DL_SHRINK);
+        stopownersounds(s);
         msgsound(S_SPAWN, s);
     }
 

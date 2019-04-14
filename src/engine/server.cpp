@@ -1085,7 +1085,7 @@ void initserver(bool listen, bool dedicated)
 #endif
     }
 
-    execfile("config/server-init.cfg", false);
+    if(!execfile("config/server-init.cfg", false)) execfile("config/server-init_default.cfg", false);
 
     if(listen) setuplistenserver(dedicated);
 

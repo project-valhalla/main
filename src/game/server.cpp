@@ -423,7 +423,7 @@ namespace server
     int gamemode = 0, mutators = 0;
     int gamemillis = 0, gamelimit = 0, nextexceeded = 0, gamespeed = 100;
     bool gamepaused = false, shouldstep = true;
-
+    bool unlockchat = false;
     string smapname = "";
     int interm = 0;
     enet_uint32 lastsend = 0;
@@ -3939,6 +3939,14 @@ namespace server
                 break;
             }
 
+            case N_UNLOCKCHAT:
+            {
+                int value = getint(p);
+                if(!cq || cq->privilege<PRIV_ADMIN) break;
+                unlockchat = value;
+                break;
+            }
+
             case N_TEXT:
             {
                 getstring(text, p);
@@ -3949,7 +3957,7 @@ namespace server
                 {
                     clientinfo *c = clients[i];
                     if(c == cq || (mutespectators && cq->state.state == CS_SPECTATOR && c->state.state != CS_SPECTATOR) ||
-                        (m_round && (cq->queue || cq->state.state == CS_DEAD) && !(c->queue || c->state.state == CS_DEAD)) || c->state.aitype != AI_NONE) continue;
+                        (!unlockchat && (m_round && (cq->queue || cq->state.state == CS_DEAD) && !(c->queue || c->state.state == CS_DEAD))) || c->state.aitype != AI_NONE) continue;
                     sendf(c->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
                 }
                 if(isdedicatedserver() && cq) logoutf("%s %s %s", colorname(cq), ghost? "<spectator>:": ":", text);
@@ -3966,7 +3974,7 @@ namespace server
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
-                    if(t==cq || t->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state == CS_DEAD) && !(t->queue || t->state.state == CS_DEAD)) ||
+                    if(t==cq || t->state.state==CS_SPECTATOR || (!unlockchat && (m_round && (cq->queue || cq->state.state == CS_DEAD) && !(t->queue || t->state.state == CS_DEAD))) ||
                        t->state.aitype != AI_NONE || cq->team != t->team) continue;
                     sendf(t->clientnum, 1, "riis", N_SAYTEAM, cq->clientnum, text);
                 }

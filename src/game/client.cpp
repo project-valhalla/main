@@ -164,7 +164,6 @@ namespace game
             particle_splash(PART_SPARK1, 200, 500, pos, teamtextcolor[s->team], 0.40f, 100, -5);
         }
         adddynlight(s->feetpos(), 65, teamlightcolor[s->team], 700, 100, DL_SHRINK);
-        stopownersounds(s);
         msgsound(S_SPAWN, s);
     }
 
@@ -506,6 +505,12 @@ namespace game
         if(vn>=0 && vn!=player1->clientnum) addmsg(N_MUTE, "riis", vn, 0, "");
     }
     COMMAND(unmute, "ss");
+
+    void unlockchat(int val)
+    {
+        addmsg(N_UNLOCKCHAT, "rci", player1, val);
+    }
+    ICOMMAND(unlockchat, "i", (int *val), unlockchat(*val));
 
     void authkick(const char *desc, const char *victim, const char *reason)
     {

@@ -192,11 +192,11 @@ void getstring(char *text, ucharbuf &p, size_t len)
     while(*t++);
 }
 
-void filtertext(char *dst, const char *src, bool filtercolours, bool filternewlines, bool whitespace, bool forcespace, size_t len)
+void filtertext(char *dst, const char *src, bool colors, bool newlines, bool whitespace, bool forcespace, size_t len)
 {
     for(int c = uchar(*src); c; c = uchar(*++src))
     {
-        if((filtercolours && c == '\f') || (filternewlines && c == '\n'))
+        if((!colors && c == '\f') || (!newlines && c == '\n'))
         {
             if(!*++src) break;
             continue;

@@ -1390,8 +1390,8 @@ extern void sendstring(const char *t, packetbuf &p);
 extern void sendstring(const char *t, vector<uchar> &p);
 extern void getstring(char *t, ucharbuf &p, size_t len);
 template<size_t N> static inline void getstring(char (&t)[N], ucharbuf &p) { getstring(t, p, N); }
-extern void filtertext(char *dst, const char *src, bool filtercolours, bool filternewlines, bool whitespace, bool forcespace, size_t len);
-template<size_t N> static inline void filtertext(char (&dst)[N], const char *src, bool filtercolours = true, bool filternewlines = false, bool whitespace = true, bool forcespace = false) { filtertext(dst, src, filtercolours, filternewlines, whitespace, forcespace, N-1); }
+extern void filtertext(char *dst, const char *src, bool colors, bool newlines, bool whitespace, bool forcespace, size_t len);
+template<size_t N> static inline void filtertext(char (&dst)[N], const char *src, bool colors = false, bool newlines = true, bool whitespace = true, bool forcespace = false) { filtertext(dst, src, colors, newlines, whitespace, forcespace, N-1); }
 
 struct ipmask
 {

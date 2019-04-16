@@ -3355,7 +3355,7 @@ namespace server
         ci->cleanauth();
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
-        filtertext(ci->authname, user, true, true, false, false, 100);
+        filtertext(ci->authname, user, false, false, false, false, 100);
         copystring(ci->authdesc, desc);
         if(ci->authdesc[0])
         {
@@ -3520,7 +3520,7 @@ namespace server
                 case N_CONNECT:
                 {
                     getstring(text, p);
-                    filtertext(text, text, true, true, true, false, MAXNAMELEN);
+                    filtertext(text, text, false, false, true, false, MAXNAMELEN);
                     if(!text[0]) copystring(text, "player");
                     copystring(ci->name, text, MAXNAMELEN+1);
                     ci->playermodel = getint(p);
@@ -3939,19 +3939,11 @@ namespace server
                 break;
             }
 
-            case N_UNLOCKCHAT:
-            {
-                int value = getint(p);
-                if(!cq || cq->privilege<PRIV_ADMIN) break;
-                unlockchat = value;
-                break;
-            }
-
             case N_TEXT:
             {
                 getstring(text, p);
                 if(cq->mute) break;
-                filtertext(text, text, true, true, true, true);
+                filtertext(text, text, false, false, true, true);
                 bool ghost = cq->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state==CS_DEAD));
                 loopv(clients)
                 {
@@ -3969,7 +3961,7 @@ namespace server
                 getstring(text, p);
                 if(!ci || !cq || cq->mute || (!cq->queue && cq->state.state==CS_SPECTATOR) ||
                    (ci->state.state==CS_SPECTATOR && !ci->local && !ci->privilege) || !m_teammode || !validteam(cq->team)) break;
-                filtertext(text, text, true, true, true, true);
+                filtertext(text, text, false, false, true, true);
                 bool ghost = cq->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state==CS_DEAD));
                 loopv(clients)
                 {
@@ -3987,7 +3979,7 @@ namespace server
                 int recipient = getint(p);
                 getstring(text, p);
                 if(!cq || cq->mute) break;
-                filtertext(text, text, true, true);
+                filtertext(text, text, false, false);
                 loopv(clients)
                 {
                     clientinfo *r = clients[i];
@@ -3997,11 +3989,19 @@ namespace server
                 break;
             }
 
+            case N_UNLOCKCHAT:
+            {
+                int value = getint(p);
+                if(!cq || cq->privilege<PRIV_ADMIN) break;
+                unlockchat = value;
+                break;
+            }
+
             case N_SWITCHNAME:
             {
                 QUEUE_MSG;
                 getstring(text, p);
-                filtertext(ci->name, text, true, true, true, false, MAXNAMELEN);
+                filtertext(ci->name, text, false, false, true, false, MAXNAMELEN);
                 if(!ci->name[0]) copystring(ci->name, "player");
                 QUEUE_STR(ci->name);
                 break;
@@ -4044,7 +4044,7 @@ namespace server
             case N_MAPVOTE:
             {
                 getstring(text, p);
-                filtertext(text, text, true, true, true, false);
+                filtertext(text, text, false, false, true, false);
                 fixmapname(text);
                 int reqmode = getint(p), reqmuts = getint(p);
                 vote(text, reqmode, reqmuts, sender);

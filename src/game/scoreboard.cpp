@@ -184,7 +184,7 @@ namespace game
         {
             if(servdesc[0])
             {
-                filtertext(servdesc, servdesc, false, true);
+                filtertext(servdesc, servdesc, true, false);
                 result(servdesc);
             }
             else

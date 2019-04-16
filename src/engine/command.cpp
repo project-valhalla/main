@@ -3531,7 +3531,7 @@ ICOMMAND(stripcolors, "s", (char *s),
 {
     int len = strlen(s);
     char *d = newstring(len);
-    filtertext(d, s, true, false, true, false, len);
+    filtertext(d, s, false, true, true, false, len);
     stringret(d);
 });
 
@@ -4141,6 +4141,22 @@ CASECOMMAND(casef, "f", float, args[0].getfloat(), args[i].type == VAL_NULL || a
 CASECOMMAND(cases, "s", const char *, args[0].getstr(), args[i].type == VAL_NULL || !strcmp(args[i].getstr(), val));
 
 ICOMMAND(rnd, "ii", (int *a, int *b), intret(*a - *b > 0 ? rnd(*a - *b) + *b : *b));
+ICOMMAND(rndstr, "i", (int *len),
+{
+    int n = clamp(*len, 0, 10000);
+    char *s = newstring(n);
+    for(int i = 0; i < n;)
+    {
+        uint r = randomMT();
+        for(int j = min(i + 4, n); i < j; i++)
+        {
+            s[i] = (r%255) + 1;
+            r /= 255;
+        }
+    }
+    s[n] = '\0';
+    stringret(s);
+});
 
 ICOMMAND(tohex, "ii", (int *n, int *p),
 {

@@ -538,9 +538,9 @@ void checkpings()
         si->attr.setsize(0);
         loopj(numattr) { int attr = getint(p); if(p.overread()) break; si->attr.add(attr); }
         getstring(text, p);
-        filtertext(si->map, text, false);
+        filtertext(si->map, text, false, false, false);
         getstring(text, p);
-        filtertext(si->desc, text, false, true);
+        filtertext(si->desc, text, true, false);
     }
 }
 

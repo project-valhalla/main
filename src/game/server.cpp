@@ -2115,8 +2115,8 @@ namespace server
         servstate &gs = ci->state;
         gs.resetitems();
         gs.zombie = 1;
-        int health = gs.maxhealth*10;
-        gs.health = health;
+        int health = gs.maxhealth*1000;
+        gs.maxhealth = gs.health = health;
         gs.ammo[GUN_ZOMBIE] = 1;
         gs.gunselect = GUN_ZOMBIE;
         sendf(-1, 1, "ri4", N_INFECT, ci->clientnum, actor, health);
@@ -2540,7 +2540,7 @@ namespace server
         servstate &gs = ci->state;
         gs.juggernaut = 1;
         int health = gs.maxhealth*2;
-        gs.health = health;
+        gs.maxhealth = gs.health = health;
         if(!m_insta(mutators) && !m_randomweapon(mutators) && !m_oneweapon(mutators))
         {
             if(m_default(mutators))
@@ -2955,11 +2955,12 @@ namespace server
             if(ci->state.invulnmillis) ci->state.invulnmillis = max(ci->state.invulnmillis-curtime, 0);
             if(ci->state.state == CS_ALIVE)
             {
-                if(m_regen(mutators) && !ci->state.juggernaut && !ci->state.zombie)
+                if((m_regen(mutators) || (m_infection && ci->state.zombie)) && !ci->state.juggernaut)
                 {
-                    if(ci->state.health<ci->state.maxhealth && lastmillis-ci->state.lastpain > 2800 && lastmillis-ci->state.lastregeneration>1500)
+                    int paindelay = ci->state.zombie? 8000: 2800, regendelay = ci->state.zombie? 1000: 1500, healthadd = ci->state.zombie? 10: 5;
+                    if(ci->state.health<ci->state.maxhealth && lastmillis-ci->state.lastpain>paindelay && lastmillis-ci->state.lastregeneration>regendelay)
                     {
-                        ci->state.health = min(ci->state.health+5, ci->state.maxhealth);
+                        ci->state.health = min(ci->state.health+healthadd, ci->state.maxhealth);
                         sendf(-1, 1, "ri3", N_REGENERATE, ci->clientnum, ci->state.health);
                         ci->state.lastregeneration = lastmillis;
                     }
@@ -2972,22 +2973,12 @@ namespace server
                 }
                 if((m_juggernaut && ci->state.juggernaut) || m_vampire(mutators))
                 {
-                    if(lastmillis-ci->state.lastregeneration>1000)
+                    if(lastmillis-ci->state.lastpain > 2800 && lastmillis-ci->state.lastregeneration>1000)
                     {
                         int subtract = ci->state.juggernaut ? 5 : 1;
                         ci->state.health = max(ci->state.health-subtract, 0);
                         sendf(-1, 1, "ri3", N_REGENERATE, ci->clientnum, ci->state.health);
                         if(ci->state.health<=0) suicide(ci);
-                        ci->state.lastregeneration = lastmillis;
-                    }
-                }
-                if(m_infection)
-                {
-                    int maxhealth = ci->state.maxhealth*10;
-                    if(ci->state.zombie && lastmillis-ci->state.lastpain > 8000 && ci->state.health<maxhealth && lastmillis-ci->state.lastregeneration>1000)
-                    {
-                        ci->state.health = min(ci->state.health+10, maxhealth);
-                        sendf(-1, 1, "ri3", N_REGENERATE, ci->clientnum, ci->state.health);
                         ci->state.lastregeneration = lastmillis;
                     }
                 }

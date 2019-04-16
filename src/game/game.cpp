@@ -975,8 +975,8 @@ namespace game
 
         if(d->state!=CS_DEAD)
         {
-            draw_textf("%s%d", (x-1.0*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, y/2, (d->health >= 50 ? "\ff" :
-                       (d->health<= 30 ? "\f3" : "\f6")), d->health);
+            draw_textf("%s%d", (x-1.0*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, y/2, (d->health >= d->maxhealth/2 ? "\ff" :
+                       (d->health<= d->maxhealth/4 ? "\f3" : "\f6")), d->health);
             draw_textf("%d", (x+0.9*HICON_STEP - HICON_SIZE - HICON_SPACE)/2, y/2, d->shield);
             draw_textf("%d", (x+2.4*HICON_STEP - HICON_SIZE - HICON_SPACE)/2, y/2, d->ammo[d->gunselect]);
             if(!d->juggernaut)

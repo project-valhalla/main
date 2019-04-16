@@ -164,6 +164,7 @@ namespace game
             particle_splash(PART_SPARK1, 200, 500, pos, teamtextcolor[s->team], 0.40f, 100, -5);
         }
         adddynlight(s->feetpos(), 65, teamlightcolor[s->team], 700, 100, DL_SHRINK);
+        stopownersounds(s);
         msgsound(S_SPAWN, s);
     }
 
@@ -2289,7 +2290,7 @@ namespace game
                 gameent *d = getclient(cn);
                 if(!m_juggernaut || !d) break;
                 d->juggernaut = 1;
-                d->health = health;
+                d->maxhealth = d->health = health;
                 if(!m_insta(mutators) && !m_randomweapon(mutators) && !m_oneweapon(mutators))
                 {
                     if(m_default(mutators))
@@ -2312,7 +2313,7 @@ namespace game
                 if(!m_infection || !d) break;
                 d->resetitems();
                 d->zombie = 1;
-                d->health = health;
+                d->maxhealth = d->health = health;
                 d->ammo[GUN_ZOMBIE] = 1;
                 d->gunselect = GUN_ZOMBIE;
                 d->stoppowerupsound();

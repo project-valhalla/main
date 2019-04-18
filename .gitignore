@@ -2,4 +2,5 @@
 *.gch
 *.layout
 *.depend
+mingw.res
 .objs/

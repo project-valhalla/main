@@ -501,7 +501,7 @@ namespace ai
     {
         static vector<interest> interests;
         interests.setsize(0);
-        if(!hasgoodammo(d) || d->health < min(d->skill - 15, 75))
+        if((!hasgoodammo(d) || d->health < min(d->skill - 15, 75)) && !d->zombie)
             items(d, b, interests);
         else
         {
@@ -616,7 +616,7 @@ namespace ai
                     default:
                     {
                         itemstat &is = itemstats[entities::ents[ent]->type-I_AMMO_SG];
-                        wantsitem = isgoodammo(is.info) && d->ammo[is.info] <= (d->ai->weappref == is.info ? is.add : is.add/2);
+                        wantsitem = !d->zombie && isgoodammo(is.info) && d->ammo[is.info] <= (d->ai->weappref == is.info ? is.add : is.add/2);
                         break;
                     }
                 }
@@ -704,7 +704,7 @@ namespace ai
                 if(entities::ents.inrange(b.target))
                 {
                     extentity &e = *(extentity *)entities::ents[b.target];
-                    if(!e.spawned() || !validitem(e.type) || d->hasmaxammo(e.type)) return 0;
+                    if(!e.spawned() || !validitem(e.type) || d->hasmaxammo(e.type) || d->zombie) return 0;
                     //if(d->feetpos().squaredist(e.o) <= CLOSEDIST*CLOSEDIST)
                     //{
                     //    b.idle = 1;
@@ -898,8 +898,8 @@ namespace ai
     void jumpto(gameent *d, aistate &b, const vec &pos)
     {
         vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
-        bool sequenced = d->ai->blockseq || d->ai->targseq, offground = d->timeinair && !d->inwater,
-            jump = !offground && lastmillis >= d->ai->jumpseed && (sequenced || off.z >= JUMPMIN || lastmillis >= d->ai->jumprand);
+        bool sequenced = d->ai->blockseq || d->ai->targseq, offground = d->timeinair && !d->inwater, canjump = d->zombie || !offground,
+            jump = canjump && lastmillis >= d->ai->jumpseed && (sequenced || off.z >= JUMPMIN || lastmillis >= d->ai->jumprand);
         if(jump)
         {
             vec old = d->o;
@@ -1264,7 +1264,7 @@ namespace ai
                 if(d->ragdoll) cleanragdoll(d);
                 moveplayer(d, 10, true);
                 if(allowmove && !b.idle) timeouts(d, b);
-                if(d->state==CS_ALIVE)
+                if(d->state==CS_ALIVE && !d->zombie)
                 {
                     if(d->haspowerups())
                         entities::updatepowerups(curtime, d);

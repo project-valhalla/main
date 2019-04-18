@@ -66,7 +66,7 @@ bool loadents(const char *fname, vector<entity> &ents, uint *crc)
 {
     string name;
     validmapname(name, fname);
-    defformatstring(ogzname, "media/map/%s.ogz", name);
+    defformatstring(ogzname, "data/map/%s.ogz", name);
     path(ogzname);
     stream *f = opengzfile(ogzname, "rb");
     if(!f) return false;
@@ -143,20 +143,20 @@ void setmapfilenames(const char *fname, const char *cname = NULL)
 {
     string name;
     validmapname(name, fname);
-    formatstring(ogzname, "media/map/%s.ogz", name);
-    formatstring(picname, "media/map/%s.png", name);
-    if(savebak==1) formatstring(bakname, "media/map/%s.BAK", name);
+    formatstring(ogzname, "data/map/%s.ogz", name);
+    formatstring(picname, "data/map/%s.png", name);
+    if(savebak==1) formatstring(bakname, "data/map/%s.BAK", name);
     else
     {
         string baktime;
         time_t t = time(NULL);
         size_t len = strftime(baktime, sizeof(baktime), "%Y-%m-%d_%H.%M.%S", localtime(&t));
         baktime[min(len, sizeof(baktime)-1)] = '\0';
-        formatstring(bakname, "media/map/%s_%s.BAK", name, baktime);
+        formatstring(bakname, "data/map/%s_%s.BAK", name, baktime);
     }
 
     validmapname(name, cname ? cname : fname);
-    formatstring(cfgname, "media/map/%s.cfg", name);
+    formatstring(cfgname, "data/map/%s.cfg", name);
 
     path(ogzname);
     path(bakname);
@@ -169,7 +169,7 @@ void mapcfgname()
     const char *mname = game::getclientmap();
     string name;
     validmapname(name, mname);
-    defformatstring(cfgname, "media/map/%s.cfg", name);
+    defformatstring(cfgname, "data/map/%s.cfg", name);
     path(cfgname);
     result(cfgname);
 }
@@ -885,7 +885,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     clearmainmenu();
 
     identflags |= IDF_OVERRIDDEN;
-    execfile("config/default_map_settings.cfg", false);
+    execfile("data/config/default_map_settings.cfg", false);
     execfile(cfgname, false);
     identflags &= ~IDF_OVERRIDDEN;
 
@@ -1002,7 +1002,7 @@ void writeobj(char *name)
     {
         VSlot &vslot = lookupvslot(usedmtl[i], false);
         f->printf("newmtl slot%d\n", usedmtl[i]);
-        f->printf("map_Kd %s\n", vslot.slot->sts.empty() ? notexture->name : path(makerelpath("media", vslot.slot->sts[0].name)));
+        f->printf("map_Kd %s\n", vslot.slot->sts.empty() ? notexture->name : path(makerelpath("data", vslot.slot->sts[0].name)));
         f->printf("\n");
     }
     delete f;

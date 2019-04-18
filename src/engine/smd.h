@@ -415,7 +415,7 @@ struct smd : skelloader<smd>
         const char *fname = name + strlen(name);
         do --fname; while(fname >= name && *fname!='/' && *fname!='\\');
         fname++;
-        defformatstring(meshname, "media/model/%s/%s.smd", name, fname);
+        defformatstring(meshname, "data/model/%s/%s.smd", name, fname);
         mdl.meshes = sharemeshes(path(meshname));
         if(!mdl.meshes) return false;
         mdl.initanimparts();

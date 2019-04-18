@@ -394,7 +394,7 @@ struct ctfclientmode : clientmode
         float margin = 0.04f, roffset = s*margin, rsize = s + 2*roffset;
         setradartex();
         drawradar(x - roffset, y - roffset, rsize);
-        settexture("media/interface/radar/compass.png", 3);
+        settexture("data/interface/radar/compass.png", 3);
         pushhudmatrix();
         hudmatrix.translate(x - roffset + 0.5f*rsize, y - roffset + 0.5f*rsize, 0);
         hudmatrix.rotate_around_z((camera1->yaw + 180)*-RAD);

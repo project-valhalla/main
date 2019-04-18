@@ -1059,9 +1059,9 @@ namespace game
     {
         switch(index)
         {
-            case 2: return "media/interface/crosshair/default_hit.png";
-            case 1: return "media/interface/crosshair/teammate.png";
-            default: return "media/interface/crosshair/default.png";
+            case 2: return "data/interface/crosshair/default_hit.png";
+            case 1: return "data/interface/crosshair/teammate.png";
+            default: return "data/interface/crosshair/default.png";
         }
     }
 
@@ -1143,16 +1143,16 @@ namespace game
     void writegamedata(vector<char> &extras) {}
     void readgamedata(vector<char> &extras) {}
 
-    const char *gameconfig() { return "config/game.cfg"; }
-    const char *savedconfig() { return "config/saved.cfg"; }
-    const char *restoreconfig() { return "config/restore.cfg"; }
-    const char *defaultconfig() { return "config/default.cfg"; }
-    const char *autoexec() { return "config/autoexec.cfg"; }
-    const char *savedservers() { return "config/servers.cfg"; }
+    const char *gameconfig() { return "data/config/game.cfg"; }
+    const char *savedconfig() { return "data/config/saved.cfg"; }
+    const char *restoreconfig() { return "data/config/restore.cfg"; }
+    const char *defaultconfig() { return "data/config/default.cfg"; }
+    const char *autoexec() { return "data/config/autoexec.cfg"; }
+    const char *savedservers() { return "data/config/servers.cfg"; }
 
     void loadconfigs()
     {
-        execfile("config/auth.cfg", false);
+        execfile("data/config/auth.cfg", false);
     }
 
     bool clientoption(const char *arg) { return false; }

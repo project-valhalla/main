@@ -378,7 +378,7 @@ struct iqm : skelloader<iqm>
         const char *fname = name + strlen(name);
         do --fname; while(fname >= name && *fname!='/' && *fname!='\\');
         fname++;
-        defformatstring(meshname, "media/model/%s/%s.iqm", name, fname);
+        defformatstring(meshname, "data/model/%s/%s.iqm", name, fname);
         mdl.meshes = sharemeshes(path(meshname));
         if(!mdl.meshes) return false;
         mdl.initanimparts();

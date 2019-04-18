@@ -82,7 +82,7 @@ static void renderlightning(Texture *tex, const vec &o, const vec &d, float sz)
 struct lightningrenderer : listrenderer
 {
     lightningrenderer()
-        : listrenderer("media/particle/lightning.jpg", 2, PT_LIGHTNING|PT_BRIGHT|PT_TRACK)
+        : listrenderer("data/particle/lightning.jpg", 2, PT_LIGHTNING|PT_BRIGHT|PT_TRACK)
     {}
 
     void startrender()

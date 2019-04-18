@@ -241,6 +241,22 @@ namespace game
         b->lastbounce = lastmillis;
     }
 
+    void pushbouncer(int id, int force, const vec &dir)
+    {
+        loopv(bouncers)
+        {
+            bouncer &b = *bouncers[i];
+            if(b.bouncetype < BNC_GRENADE1 && b.bouncetype > BNC_ROCKET) break;
+            /*if(b.id == id)
+            {*/
+                vec push(dir);
+                push.mul(force);
+                b.vel.add(push);
+                playsound(S_GRENADE_BOUNCE, NULL, &b.o);
+            //}
+        }
+    }
+
     void updatebouncers(int time)
     {
        loopv(bouncers)
@@ -463,7 +479,7 @@ namespace game
         if(goreeffect <= 0)
         {
             if(blood && d->headless)
-                particle_splash(PART_BLOOD2, damage/2, 280, d->headpos(), d->bloodcolour(), 0.10f, 320, 2, 0.02f);
+                particle_splash(PART_BLOOD2, damage/2, 280, d->headpos(), d->bloodcolour(), 0.2f, 350, 1, 0.02f);
             else
             {
                 loopi(min(damage, 8)+1) spawnbouncer(from, vel, d, BNC_GIB1);
@@ -877,7 +893,7 @@ namespace game
 
     void rayhit(int atk, gameent *d, const vec &from, const vec &to, bool hit = false)
     {
-        if(!validatk(atk) || from.dist(to) > attacks[atk].range +1) return;
+        if(!validatk(atk) || from.dist(to) > attacks[atk].range) return;
         vec dir = vec(from).sub(to).safenormalize();
         int teamcolour = teamtextcolor[d->team], mat = lookupmaterial(to);
         bool water = (mat&MATF_VOLUME) == MAT_WATER;
@@ -887,8 +903,7 @@ namespace game
                 if(water || d->o.dist(to) > attacks[atk].range/2) break;
                  particle_splash(PART_SPARK1, 100, 40, vec(to).madd(dir, 4), teamcoloureffects? teamcolour: 0xB2D3F9, 1.0f);
                  adddynlight(vec(to).madd(dir, 4), 100, vec(1.0f, 3.0f, 4.30f), 800, 100);
-                 if(hit) break;
-                 addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 1.20f+rndscale(1.50f));
+                 if(!hit) addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 1.20f+rndscale(1.50f));
                  break;
 
             case ATK_RAIL:
@@ -983,12 +998,13 @@ namespace game
             particle_splash(PART_STEAM, 30, 120, vec(to).madd(dir, 6), 0xFFFFFF, 1.0f, 80, 100, 0.05f);
             if(oneray) playsound(S_WATER_IMPACT, NULL, &to);
         }
-        else if((mat&MATF_VOLUME) == MAT_GLASS && atk != ATK_PULSE2 && oneray)
+        else if((mat&MATF_VOLUME) == MAT_GLASS && atk != ATK_PULSE2)
         {
             particle_splash(PART_GLASS, 0+rnd(50), 150+rnd(250), to, 0xFFFFFF, 0.20f+rndscale(0.25f), 200, 1);
-            playsound(S_GLASS_IMPACT, NULL, &to);
+            if(oneray) playsound(S_GLASS_IMPACT, NULL, &to);
         }
-        if(attacks[atk].impactsound >= 0 && oneray) playsound(attacks[atk].impactsound, NULL, &to);
+        if(!oneray && d==player1) return;
+        if(attacks[atk].impactsound >= 0) playsound(attacks[atk].impactsound, NULL, &to);
     }
 
     VARP(muzzleflash, 0, 1, 1);
@@ -1299,6 +1315,19 @@ namespace game
         else //if(attacks[atk].action==ACT_MELEE)
         {
             rayhit(atk, d, from, to);
+        }
+        loopv(bouncers)
+        {
+            bouncer *bnc = bouncers[i];
+            dynent *bouncy = (dynent *) bnc;
+            if (intersect(bouncy, from, to, 0, dist))
+            {
+                shorten(from, to, dist);
+                rayhit(atk, d, from, to, true);
+                pushbouncer(bnc->id, attacks[atk].hitpush*attacks[atk].damage/10, vec(to).sub(from).safenormalize());
+                /*addmsg(N_PUSH, "ri7", bnc->id-maptime, (int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
+                       (int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF));*/
+            }
         }
     }
 

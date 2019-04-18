@@ -46,10 +46,10 @@ static struct gamemodeinfo
 #define isteam(a,b)       (m_teammode && a==b)
 #define m_elimination     (m_check(gamemode, M_ELIMINATION))
 #define m_round           (m_check(gamemode, M_ELIMINATION|M_LASTMAN|M_INFECTION))
-#define m_dm              (m_checknot(gamemode, M_EDIT|M_CTF|M_ELIMINATION|M_INFECTION|M_LASTMAN))
+#define m_dm              (m_checknot(gamemode, M_EDIT|M_CTF|M_ELIMINATION|M_LASTMAN|M_INFECTION))
 #define m_lms             (m_check(gamemode, M_LASTMAN))
 #define m_juggernaut      (m_check(gamemode, M_JUGGERNAUT))
-#define m_infection          (m_check(gamemode, M_INFECTION))
+#define m_infection       (m_check(gamemode, M_INFECTION))
 
 #define m_demo            (m_check(gamemode, M_DEMO))
 #define m_edit            (m_check(gamemode, M_EDIT))

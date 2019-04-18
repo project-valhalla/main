@@ -215,6 +215,7 @@ namespace entities
 
     void teleporteffects(gameent *d, int tp, int td, bool local)
     {
+        if(d->state!=CS_ALIVE) return;
         if(ents.inrange(tp) && ents[tp]->type == TELEPORT)
         {
             extentity &e = *ents[tp];
@@ -255,6 +256,7 @@ namespace entities
 
     void jumppadeffects(gameent *d, int jp, bool local)
     {
+        if(d->state!=CS_ALIVE) return;
         if(ents.inrange(jp) && ents[jp]->type == JUMPPAD)
         {
             extentity &e = *ents[jp];
@@ -355,16 +357,20 @@ namespace entities
 
     void checkitems(gameent *d)
     {
-        if(d->state!=CS_ALIVE) return;
+        if(d->state!=CS_ALIVE && d->state!=CS_SPECTATOR) return;
         vec o = d->feetpos();
         loopv(ents)
         {
             extentity &e = *ents[i];
+            if(e.type!=TELEPORT && d->state!=CS_ALIVE) continue;
             if(e.type==NOTUSED) continue;
             if(!e.spawned() && e.type!=TELEPORT && e.type!=JUMPPAD) continue;
             float dist = e.o.dist(o);
             if(dist<(e.type==TELEPORT ? 16 : 12)) trypickup(i, d);
-            if(e.type==TELEPORT && lastmillis-d->lastpickupmillis<=50) // really ugly code, it does nothing for hacks... wrote to test the telefrag concept
+
+            // really ugly code, it does nothing for hacks... wrote to test the telefrag concept
+            if(d->state!=CS_ALIVE) continue;
+            if(e.type==TELEPORT && lastmillis-d->lastpickupmillis<=50)
             {
                 vec v;
                 if(d->aitype==AI_BOT) v = d->ai->target;
@@ -392,7 +398,7 @@ namespace entities
         if(d->damagemillis)
         {
             d->ddamagechan = playsound(S_DDAMAGE_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->ddamagechan, 200);
-            adddynlight(d->muzzle, 30, vec(2, 1, 1), 1, 25, DL_FLASH||L_NOSHADOW, 5, vec(0, 0, 0), d);
+            adddynlight(d->muzzle, 30, vec(2, 1, 1), 1, 25, DL_FLASH|L_NOSHADOW, 5, vec(0, 0, 0), d);
             if((d->damagemillis -= time)<=0)
             {
                 d->damagemillis = 0;

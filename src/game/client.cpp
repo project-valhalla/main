@@ -32,7 +32,7 @@ namespace game
 
     void setradartex()
     {
-        settexture("media/interface/radar/radar.png", 3);
+        settexture("data/interface/radar/radar.png", 3);
     }
 
     void drawradar(float x, float y, float s)
@@ -67,7 +67,7 @@ namespace game
 
     void setbliptex(int team, const char *type = "")
     {
-        defformatstring(blipname, "media/interface/radar/blip%s%s.png", teamblipcolor[validteam(team) ? team : 0], type);
+        defformatstring(blipname, "data/interface/radar/blip%s%s.png", teamblipcolor[validteam(team) ? team : 0], type);
         settexture(blipname, 3);
     }
 
@@ -278,7 +278,7 @@ namespace game
 
     void saveauthkeys()
     {
-        string fname = "config/auth.cfg";
+        string fname = "data/config/auth.cfg";
         stream *f = openfile(path(fname), "w");
         if(!f) { conoutf(CON_ERROR, "failed to open %s for writing", fname); return; }
         loopv(authkeys)
@@ -2427,7 +2427,7 @@ namespace game
                 string oldname;
                 copystring(oldname, getclientmap());
                 defformatstring(mname, "getmap_%d", lastmillis);
-                defformatstring(fname, "media/map/%s.ogz", mname);
+                defformatstring(fname, "data/map/%s.ogz", mname);
                 stream *map = openrawfile(path(fname), "wb");
                 if(!map) return;
                 conoutf("received map");
@@ -2515,7 +2515,7 @@ namespace game
         conoutf("sending map...");
         defformatstring(mname, "sendmap_%d", lastmillis);
         save_world(mname, true);
-        defformatstring(fname, "media/map/%s.ogz", mname);
+        defformatstring(fname, "data/map/%s.ogz", mname);
         stream *map = openrawfile(path(fname), "rb");
         if(map)
         {

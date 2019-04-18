@@ -231,7 +231,7 @@ void startmusic(char *name, char *cmd)
         static const char * const exts[] = { "", ".wav", ".ogg" };
         loopk(sizeof(exts)/sizeof(exts[0]))
         {
-            formatstring(file, "media/audio/music/%s%s", name, exts[k]);
+            formatstring(file, "data/audio/music/%s%s", name, exts[k]);
             if(loadmusic(file))
             {
                 DELETEA(musicfile);
@@ -279,14 +279,14 @@ bool soundsample::load(const char *dir, bool msg)
     string filename;
     loopi(sizeof(exts)/sizeof(exts[0]))
     {
-        formatstring(filename, "media/audio/sound/%s%s%s", dir, name, exts[i]);
+        formatstring(filename, "data/audio/sound/%s%s%s", dir, name, exts[i]);
         if(msg && !i) renderprogress(0, filename);
         path(filename);
         chunk = loadwav(filename);
         if(chunk) return true;
     }
 
-    conoutf(CON_ERROR, "failed to load sample: media/audio/sound/%s%s", dir, name);
+    conoutf(CON_ERROR, "failed to load sample: data/audio/sound/%s%s", dir, name);
     return false;
 }
 

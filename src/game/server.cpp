@@ -2115,7 +2115,7 @@ namespace server
         servstate &gs = ci->state;
         gs.resetitems();
         gs.zombie = 1;
-        int health = gs.maxhealth*1000;
+        int health = gs.maxhealth*10;
         gs.maxhealth = gs.health = health;
         gs.ammo[GUN_ZOMBIE] = 1;
         gs.gunselect = GUN_ZOMBIE;
@@ -2955,7 +2955,7 @@ namespace server
             if(ci->state.invulnmillis) ci->state.invulnmillis = max(ci->state.invulnmillis-curtime, 0);
             if(ci->state.state == CS_ALIVE)
             {
-                if((m_regen(mutators) || (m_infection && ci->state.zombie)) && !ci->state.juggernaut)
+                if((m_regen(mutators) || (!m_vampire(mutators) && m_infection && ci->state.zombie)) && !ci->state.juggernaut)
                 {
                     int paindelay = ci->state.zombie? 8000: 2800, regendelay = ci->state.zombie? 1000: 1500, healthadd = ci->state.zombie? 10: 5;
                     if(ci->state.health<ci->state.maxhealth && lastmillis-ci->state.lastpain>paindelay && lastmillis-ci->state.lastregeneration>regendelay)

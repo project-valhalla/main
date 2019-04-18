@@ -118,7 +118,7 @@ namespace aiman
         ci->state.skill = skill <= 0 ? rnd(50) + 51 : clamp(skill, 1, 101);
         clients.add(ci);
         ci->state.lasttimeplayed = lastmillis;
-        if(!execfile("config/botname.cfg", false)) copystring(ci->name, "BOT", MAXNAMELEN+1);
+        if(!execfile("data/config/botname.cfg", false)) copystring(ci->name, "BOT", MAXNAMELEN+1);
         else copystring(ci->name, newstring(botnames[rnd(botnames.length())]), MAXNAMELEN+1);
         ci->state.state = CS_DEAD;
         ci->team = team;

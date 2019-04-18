@@ -277,27 +277,27 @@ enum
 
 static const char * const iconnames[] =
 {
-    "media/interface/icon/flag_red.png",
-    "media/interface/icon/flag_blue.png",
-    "media/interface/icon/shield.png",
-    "media/interface/icon/health.png",
-    "media/interface/icon/shotgun.png",
-    "media/interface/icon/smg.png",
-    "media/interface/icon/pulse.png",
-    "media/interface/icon/rocket.png",
-    "media/interface/icon/railgun.png",
-    "media/interface/icon/unknown.png",
-    "media/interface/icon/punch.png",
-    "media/interface/icon/skull01.png",
-    "media/interface/icon/pistol.png",
-    "media/interface/icon/zombie.png",
-    "media/interface/icon/ally.png",
-    "media/interface/icon/haste.png",
-    "media/interface/icon/skull02.png",
-    "media/interface/icon/armour.png",
-    "media/interface/icon/infinity.png",
-    "media/interface/icon/asclepius.png",
-    "media/interface/icon/ankh.png"
+    "data/interface/icon/flag_red.png",
+    "data/interface/icon/flag_blue.png",
+    "data/interface/icon/shield.png",
+    "data/interface/icon/health.png",
+    "data/interface/icon/shotgun.png",
+    "data/interface/icon/smg.png",
+    "data/interface/icon/pulse.png",
+    "data/interface/icon/rocket.png",
+    "data/interface/icon/railgun.png",
+    "data/interface/icon/unknown.png",
+    "data/interface/icon/punch.png",
+    "data/interface/icon/skull01.png",
+    "data/interface/icon/pistol.png",
+    "data/interface/icon/zombie.png",
+    "data/interface/icon/ally.png",
+    "data/interface/icon/haste.png",
+    "data/interface/icon/skull02.png",
+    "data/interface/icon/armour.png",
+    "data/interface/icon/infinity.png",
+    "data/interface/icon/asclepius.png",
+    "data/interface/icon/ankh.png"
 };
 
 static struct itemstat { int add, max, sound, info; } itemstats[] =
@@ -515,6 +515,7 @@ struct gamestate
 
     void respawn()
     {
+        maxhealth = 100;
         health = maxhealth;
         gunselect = GUN_GL;
         gunwait = 0;

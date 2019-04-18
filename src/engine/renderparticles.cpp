@@ -847,34 +847,34 @@ struct softquadrenderer : quadrenderer
 
 static partrenderer *parts[] =
 {
-    new quadrenderer("<grey>media/particle/blood01.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4|PT_COLLIDE, STAIN_BLOOD), // blood spats (note: rgb is inverted)
-    new quadrenderer("<grey>media/particle/blood02.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4),
-    new trailrenderer("media/particle/water.png", PT_TRAIL|PT_LERP),                            // water, entity
-    new quadrenderer("media/particle/glass.png", PT_PART|PT_FLIP|PT_RND4),                            // water, entity
-    new quadrenderer("<grey>media/particle/smoke.png", PT_PART|PT_FLIP|PT_LERP),               // smoke
-    new quadrenderer("<grey>media/particle/steam.png", PT_PART|PT_FLIP),                       // steam
-    new quadrenderer("<grey>media/particle/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_BRIGHT),   // flame
-    new taperenderer("media/particle/flare.png", PT_TAPE|PT_BRIGHT),                           // streak
-    new taperenderer("media/particle/rail_trail.png", PT_TAPE|PT_FEW|PT_BRIGHT),               // rail trail
-    new taperenderer("media/particle/pulse_side.png", PT_TAPE|PT_FEW|PT_BRIGHT),               // pulse side
-    new quadrenderer("media/particle/pulse_front.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),      // pulse front
+    new quadrenderer("<grey>data/particle/blood01.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4|PT_COLLIDE, STAIN_BLOOD), // blood spats (note: rgb is inverted)
+    new quadrenderer("<grey>data/particle/blood02.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4),
+    new trailrenderer("data/particle/water.png", PT_TRAIL|PT_LERP),                            // water, entity
+    new quadrenderer("data/particle/glass.png", PT_PART|PT_FLIP|PT_RND4),                            // water, entity
+    new quadrenderer("<grey>data/particle/smoke.png", PT_PART|PT_FLIP|PT_LERP),               // smoke
+    new quadrenderer("<grey>data/particle/steam.png", PT_PART|PT_FLIP),                       // steam
+    new quadrenderer("<grey>data/particle/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_BRIGHT),   // flame
+    new taperenderer("data/particle/flare.png", PT_TAPE|PT_BRIGHT),                           // streak
+    new taperenderer("data/particle/rail_trail.png", PT_TAPE|PT_FEW|PT_BRIGHT),               // rail trail
+    new taperenderer("data/particle/pulse_side.png", PT_TAPE|PT_FEW|PT_BRIGHT),               // pulse side
+    new quadrenderer("data/particle/pulse_front.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),      // pulse front
     &lightnings,                                                                               // lightning
     &fireballs,                                                                                // explosion fireball
     &pulsebursts,                                                                              // pulse burst
-    new quadrenderer("media/particle/spark.png", PT_PART|PT_FLIP|PT_BRIGHT),                   // sparks
-    new trailrenderer("media/particle/spark2.png", PT_TRAIL|PT_BRIGHT),                           // sparks again
-    new quadrenderer("media/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                   // edit mode entities
-    new quadrenderer("media/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE),           // colliding snow
-    new quadrenderer("media/particle/rail_muzzle.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),  // rail muzzle flash
-    new quadrenderer("media/particle/pulse_muzzle.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK), // pulse muzzle flash
-    new quadrenderer("media/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                 // hud icon
-    new quadrenderer("<colorify:1/1/1>media/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON), // grey hud icon
-    new quadrenderer("media/interface/icon/light.png", PT_PART),
-    new quadrenderer("media/interface/icon/model.png", PT_PART),
-    new quadrenderer("media/interface/icon/player.png", PT_PART),
-    new quadrenderer("media/interface/icon/entity.png", PT_PART),
-    new quadrenderer("media/interface/icon/fire.png", PT_PART),
-    new quadrenderer("media/interface/icon/sound.png", PT_PART),
+    new quadrenderer("data/particle/spark.png", PT_PART|PT_FLIP|PT_BRIGHT),                   // sparks
+    new trailrenderer("data/particle/spark2.png", PT_TRAIL|PT_BRIGHT),                           // sparks again
+    new quadrenderer("data/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                   // edit mode entities
+    new quadrenderer("data/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE),           // colliding snow
+    new quadrenderer("data/particle/rail_muzzle.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),  // rail muzzle flash
+    new quadrenderer("data/particle/pulse_muzzle.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK), // pulse muzzle flash
+    new quadrenderer("data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                 // hud icon
+    new quadrenderer("<colorify:1/1/1>data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON), // grey hud icon
+    new quadrenderer("data/interface/icon/light.png", PT_PART),
+    new quadrenderer("data/interface/icon/model.png", PT_PART),
+    new quadrenderer("data/interface/icon/player.png", PT_PART),
+    new quadrenderer("data/interface/icon/entity.png", PT_PART),
+    new quadrenderer("data/interface/icon/fire.png", PT_PART),
+    new quadrenderer("data/interface/icon/sound.png", PT_PART),
     &texts,                                                                                    // text
     &meters,                                                                                   // meter
     &metervs,                                                                                  // meter vs.
@@ -1394,18 +1394,18 @@ void seedparticles()
 
 const char * const enticonnames[] =
 {
-    "media/interface/icon/light.png",
-    "media/interface/icon/model.png",
-    "media/interface/icon/player.png",
-    "media/interface/icon/entity.png",
-    "media/interface/icon/fire.png",
-    "media/interface/icon/sound.png",
-    "media/interface/icon/light.png",
-    "media/interface/icon/entity.png",
-    "media/interface/icon/entity.png",
-    "media/interface/icon/entity.png",
-    "media/interface/icon/spring.png",
-    "media/interface/icon/entity.png"
+    "data/interface/icon/light.png",
+    "data/interface/icon/model.png",
+    "data/interface/icon/player.png",
+    "data/interface/icon/entity.png",
+    "data/interface/icon/fire.png",
+    "data/interface/icon/sound.png",
+    "data/interface/icon/light.png",
+    "data/interface/icon/entity.png",
+    "data/interface/icon/entity.png",
+    "data/interface/icon/entity.png",
+    "data/interface/icon/spring.png",
+    "data/interface/icon/entity.png"
 };
 
 VARP(entityicons, 0, 1, 1);

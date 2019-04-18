@@ -102,7 +102,7 @@ VARFN(screenh, scr_h, SCR_MINH, -1, SCR_MAXH, initwarning("screen resolution"));
 
 void writeinitcfg()
 {
-    stream *f = openutf8file("config/init.cfg", "w");
+    stream *f = openutf8file("data/config/init.cfg", "w");
     if(!f) return;
     f->printf("// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
     extern int fullscreen;
@@ -166,21 +166,21 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     gle::defvertex(2);
     gle::deftexcoord0();
 
-    settexture("media/interface/background.png", 0);
+    settexture("data/interface/background.png", 0);
     float bu = w*0.67f/256.0f, bv = h*0.67f/256.0f;
     bgquad(0, 0, w, h, backgroundu, backgroundv, bu, bv);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    settexture("media/interface/shadow.png", 3);
+    settexture("data/interface/shadow.png", 3);
     bgquad(0, 0, w, h);
 
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     float lh = 0.5f*min(w, h), lw = lh*2,
           lx = 0.5f*(w - lw), ly = 0.5f*(h*0.5f - lh);
-    settexture((maxtexsize ? min(maxtexsize, hwtexsize) : hwtexsize) >= 1024 && (hudw > 1280 || hudh > 800) ? "<premul>media/interface/logo_1024.png" : "<premul>media/interface/logo.png", 3);
+    settexture((maxtexsize ? min(maxtexsize, hwtexsize) : hwtexsize) >= 1024 && (hudw > 1280 || hudh > 800) ? "<premul>data/interface/logo_1024.png" : "<premul>data/interface/logo.png", 3);
     bgquad(lx, ly, lw, lh);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -300,7 +300,7 @@ void renderprogressview(int w, int h, float bar, const char *text)   // also use
     float fh = 0.060f*min(w, h), fw = fh*15,
           fx = renderedframe ? w - fw - fh/4 : 0.5f*(w - fw),
           fy = renderedframe ? fh/4 : h - fh*1.5f;
-    settexture("media/interface/loading_frame.png", 3);
+    settexture("data/interface/loading_frame.png", 3);
     bgquad(fx, fy, fw, fh);
 
     glEnable(GL_BLEND);
@@ -314,7 +314,7 @@ void renderprogressview(int w, int h, float bar, const char *text)   // also use
           ex = bx+sw + max(mw*bar, fw*8/512.0f);
     if(bar > 0)
     {
-        settexture("media/interface/loading_bar.png", 3);
+        settexture("data/interface/loading_bar.png", 3);
         bgquad(bx, by, sw, bh, su1, 0, su2-su1, 1);
         bgquad(bx+sw, by, ex-(bx+sw), bh, su2, 0, eu1-su2, 1);
         bgquad(ex, by, ew, bh, eu1, 0, eu2-eu1, 1);
@@ -608,13 +608,13 @@ void resetgl()
 
     inbetweenframes = false;
     if(!reloadtexture(*notexture) ||
-       !reloadtexture("<premul>media/interface/logo.png") ||
-       !reloadtexture("<premul>media/interface/logo_1024.png") ||
-       !reloadtexture("media/interface/background.png") ||
-       !reloadtexture("media/interface/shadow.png") ||
-       !reloadtexture("media/interface/mapshot_frame.png") ||
-       !reloadtexture("media/interface/loading_frame.png") ||
-       !reloadtexture("media/interface/loading_bar.png"))
+       !reloadtexture("<premul>data/interface/logo.png") ||
+       !reloadtexture("<premul>data/interface/logo_1024.png") ||
+       !reloadtexture("data/interface/background.png") ||
+       !reloadtexture("data/interface/shadow.png") ||
+       !reloadtexture("data/interface/mapshot_frame.png") ||
+       !reloadtexture("data/interface/loading_frame.png") ||
+       !reloadtexture("data/interface/loading_bar.png"))
         fatal("failed to reload core texture");
     reloadfonts();
     inbetweenframes = true;
@@ -1041,7 +1041,7 @@ int main(int argc, char **argv)
         logoutf("Setting log file: %s", file);
         break;
     }
-    execfile("config/init.cfg", false);
+    execfile("data/config/init.cfg", false);
     for(int i = 1; i<argc; i++)
     {
         if(argv[i][0]=='-') switch(argv[i][1])
@@ -1060,7 +1060,7 @@ int main(int argc, char **argv)
             case 'f': fullscreen = atoi(&argv[i][2]); break;
             case 'l':
             {
-                char pkgdir[] = "media/";
+                char pkgdir[] = "data/";
                 load = strstr(path(&argv[i][2]), path(pkgdir));
                 if(load) load += sizeof(pkgdir)-1;
                 else load = &argv[i][2];
@@ -1104,12 +1104,12 @@ int main(int argc, char **argv)
     logoutf("init: gl");
     gl_checkextensions();
     gl_init();
-    notexture = textureload("media/texture/game/notexture.png");
+    notexture = textureload("data/texture/game/notexture.png");
     if(!notexture) fatal("could not find core textures");
 
     logoutf("init: console");
-    if(!execfile("config/stdlib.cfg", false)) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");   // this is the first file we load.
-    if(!execfile("config/font.cfg", false)) fatal("cannot find font definitions");
+    if(!execfile("data/config/stdlib.cfg", false)) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");   // this is the first file we load.
+    if(!execfile("data/config/font.cfg", false)) fatal("cannot find font definitions");
     if(!setfont("default")) fatal("no default font specified");
 
     UI::setup();
@@ -1126,15 +1126,15 @@ int main(int argc, char **argv)
 
     logoutf("init: cfg");
     initing = INIT_LOAD;
-    execfile("config/keymap.cfg");
-    execfile("config/stdedit.cfg");
+    execfile("data/config/keymap.cfg");
+    execfile("data/config/stdedit.cfg");
     execfile(game::gameconfig());
-    execfile("config/sound.cfg");
-    execfile("config/ui.cfg");
-    execfile("config/heightmap.cfg");
-    execfile("config/blendbrush.cfg");
-    execfile("config/botname.cfg");
-    execfile("config/tip.cfg");
+    execfile("data/config/sound.cfg");
+    execfile("data/config/ui.cfg");
+    execfile("data/config/heightmap.cfg");
+    execfile("data/config/blendbrush.cfg");
+    execfile("data/config/botname.cfg");
+    execfile("data/config/tip.cfg");
     if(game::savedservers()) execfile(game::savedservers(), false);
 
     identflags |= IDF_PERSIST;
@@ -1188,7 +1188,7 @@ int main(int argc, char **argv)
 
     if(firstrun)
     {
-        execfile("config/ui/firstrun.cfg");
+        execfile("data/config/ui/firstrun.cfg");
         firstrun = false;
     }
 

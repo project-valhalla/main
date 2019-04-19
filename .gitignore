@@ -4,3 +4,4 @@
 *.depend
 mingw.res
 .objs/
+server-init.cfg

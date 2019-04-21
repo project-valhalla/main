@@ -2677,6 +2677,7 @@ namespace server
         int dam = damage;
         if((m_headhunter(mutators) && !(flags & HIT_HEAD)) || (!selfdam && target==actor) ||
            (!teamdam && isally(target, actor))) dam = 0; // rockets and grenades can still push the player but not deal damage when certain mutators are active
+        if(isally(target, actor)) dam = max(dam/2, 1);
         ts.dodamage(dam, flags&HIT_MATERIAL? true : false);
         target->state.lastpain = lastmillis;
         sendf(-1, 1, "ri8", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield);

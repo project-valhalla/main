@@ -515,6 +515,7 @@ namespace game
         int dam = damage;
         if((m_headhunter(mutators) && !(flags & HIT_HEAD)) || (!selfdam && f==at) ||
            (!teamdam && isally(f, at))) dam = 0;
+        if(isally(f, at)) dam = max(dam/2, 1);
 
         if(dam > 0)
         {

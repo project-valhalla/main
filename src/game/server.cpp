@@ -2680,14 +2680,18 @@ namespace server
         ts.dodamage(dam, flags&HIT_MATERIAL? true : false);
         target->state.lastpain = lastmillis;
         sendf(-1, 1, "ri8", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield);
-        if(target!=actor && !isally(target, actor))
+        if(target!=actor)
         {
-            actor->state.damage += dam;
-            if(m_vampire(mutators))
+            if(!isally(target, actor))
             {
-                actor->state.health = min(actor->state.health+dam/(actor->state.juggernaut? 2 : 1), actor->state.maxhealth*2);
-                sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
+                actor->state.damage += dam;
+                if(m_vampire(mutators))
+                {
+                    actor->state.health = min(actor->state.health+dam/(actor->state.juggernaut? 2 : 1), actor->state.maxhealth*2);
+                    sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
+                }
             }
+            else if(!m_teammode) dodamage(actor, actor, dam, atk, flags);
         }
         if(target==actor) target->setpushed();
         else if(!hitpush.iszero())
@@ -2698,6 +2702,7 @@ namespace server
         }
         if(ts.health<=0)
         {
+            if(isally(target, actor) && !m_teammode) died(actor, actor, atk, dam);
             if(m_infection)
             {
                 if(target != actor && target->state.zombie) actor->state.zombiekills++;
@@ -2786,12 +2791,7 @@ namespace server
             if(target->state.armourmillis) damage /= 2;
             if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
             if(target==ci) damage /= EXP_SELFDAMDIV;
-            if(damage > 0)
-            {
-                dodamage(target, ci, damage, atk, 0, h.dir);
-                if(!m_teammode && isally(target, ci))
-                    dodamage(ci, ci, damage, atk);
-            }
+            if(damage > 0) dodamage(target, ci, damage, atk, 0, h.dir);
         }
     }
 
@@ -2855,7 +2855,6 @@ namespace server
                     {
                         dodamage(target, ci, damage, atk, h.flags, h.dir);
                         if(m_mayhem(mutators) && h.flags & HIT_HEAD && headshot) died(target, ci, atk, damage);
-                        if(!m_teammode && isally(target, ci)) dodamage(ci, ci, damage, atk);
                     }
                     sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, target->clientnum, damage, h.flags,
                                            int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
@@ -2886,11 +2885,7 @@ namespace server
             if(totalrays>maxrays) continue;
             int damage = h.rays*attacks[atk].damage;
             if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
-            if(damage > 0)
-            {
-                dodamage(target, ci, damage, atk, h.flags, h.dir);
-                if(!m_teammode && isally(target, ci)) dodamage(ci, ci, damage, atk);
-            }
+            if(damage > 0) dodamage(target, ci, damage, atk, h.flags, h.dir);
             break;
         }
     }

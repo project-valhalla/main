@@ -372,7 +372,6 @@ namespace game
         if(damage <= 0) return;
 
         if(local) damage = d->dodamage(damage);
-        else if(actor==player1) return;
 
         ai::damaged(d, actor);
 
@@ -388,8 +387,7 @@ namespace game
         if(!d->invulnmillis || (d->invulnmillis && actor->invulnmillis))
         {
             if(d==h) damagecompass(damage, actor->o);
-            if(actor!=player1) // to avoid double damage effect online
-                damageeffect(damage, d, p, atk, d!=h);
+            damageeffect(damage, d, p, atk, d!=h);
             if(flags & HIT_HEAD)
             {
                 d->headless = true;

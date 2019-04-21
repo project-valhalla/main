@@ -1866,7 +1866,7 @@ namespace game
                 target->health = health;
                 target->shield = shield;
                 if(target->state == CS_ALIVE && actor != player1) target->lastpain = lastmillis;
-                if(attacks[atk].projspeed) damaged(damage, target->o, target, actor, atk, flags, false);
+                if(attacks[atk].projspeed || target == actor) damaged(damage, target->o, target, actor, atk, flags, false);
                 break;
             }
 

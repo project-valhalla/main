@@ -382,7 +382,7 @@ namespace game
             if(hitsound && actor->lasthit != lastmillis)
                 playsound(isally(d, actor) ? S_HIT_ALLY : (hitsound == 1 ? S_HIT1 : S_HIT2));
         }
-        actor->lasthit = lastmillis;
+        if(actor!=d) actor->lasthit = lastmillis;
         if(d->invulnmillis && !actor->invulnmillis) playsound(S_INVULNERABILITY_ACTION, d);
         if(!d->invulnmillis || (d->invulnmillis && actor->invulnmillis))
         {

@@ -1674,13 +1674,16 @@ namespace game
                 if(!text[0]) copystring(text, "player");
                 if(d->name[0])          // already connected
                 {
-                    if(strcmp(d->name, text) && !isignored(d->clientnum))
+                    if(strcmp(d->name, text) && !isignored(d->clientnum) && d!=player1)
                         conoutf("%s is now known as %s", colorname(d), colorname(d, text));
                 }
                 else                    // new client
                 {
-                    conoutf(CON_CHAT, "%s \f0joined the game", colorname(d, text));
-                    if(chatsound) playsound(S_CHAT);
+                    if(d!=player1)
+                    {
+                        conoutf(CON_CHAT, "%s \f0joined the game", colorname(d, text));
+                        if(chatsound) playsound(S_CHAT);
+                    }
                     if(needclipboard >= 0) needclipboard++;
                 }
                 copystring(d->name, text, MAXNAMELEN+1);

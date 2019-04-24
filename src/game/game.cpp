@@ -314,6 +314,21 @@ namespace game
 
     // inputs
 
+    void checkaction(int act)
+    {
+        int atk = guns[player1->gunselect].attacks[act];
+        if(act == ACT_SECONDARY && guns[player1->gunselect].attacks[ACT_PRIMARY] == guns[player1->gunselect].attacks[ACT_SECONDARY])
+        {
+            zoom = !zoom? 1: -1;
+            player1->attacking = ACT_IDLE;
+            return;
+        }
+        else if(attacks[atk].attackdelay <= 250 && ((act == ACT_PRIMARY && player1->lastact == ACT_SECONDARY) || (act == ACT_SECONDARY && player1->lastact == ACT_PRIMARY)) &&
+           guns[player1->gunselect].attacks[ACT_COMBO] >= 0)
+            act = ACT_COMBO;
+        doaction(act);
+    }
+
     void doaction(int act)
     {
         if(!connected || intermission) return;
@@ -321,8 +336,8 @@ namespace game
         player1->lastact = act;
     }
 
-    ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
-    ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
+    ICOMMAND(primary, "D", (int *down), checkaction(*down ? ACT_PRIMARY : ACT_IDLE));
+    ICOMMAND(secondary, "D", (int *down), checkaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
 
     VARF(primaryweapon, -1, -1, 5, addmsg(N_SETWEAPONS, "riii", player1->clientnum, primaryweapon, player1->secondary));
@@ -382,7 +397,7 @@ namespace game
             if(hitsound && actor->lasthit != lastmillis)
                 playsound(isally(d, actor) ? S_HIT_ALLY : (hitsound == 1 ? S_HIT1 : S_HIT2));
         }
-        if(actor!=d) actor->lasthit = lastmillis;
+        if(d!=actor) actor->lasthit = lastmillis;
         if(d->invulnmillis && !actor->invulnmillis) playsound(S_INVULNERABILITY_ACTION, d);
         if(!d->invulnmillis || (d->invulnmillis && actor->invulnmillis))
         {

@@ -30,6 +30,7 @@ namespace game
             addmsg(N_GUNSELECT, "rci", d, gun);
             playsound(S_WEAPLOAD, d);
         }
+        disablezoom();
         d->gunselect = gun;
     }
 
@@ -138,7 +139,7 @@ namespace game
         loopi(attacks[atk].rays) offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i]);
     }
 
-    enum { BNC_GRENADE1, BNC_GRENADE2, BNC_GRENADE3, BNC_SAW, BNC_ROCKET, BNC_GIB1, BNC_GIB2, BNC_AMMO };
+    enum { BNC_GRENADE1, BNC_MINE, BNC_GRENADE2, BNC_GRENADE3, BNC_ROCKET, BNC_GIB1, BNC_GIB2, BNC_AMMO };
 
     struct bouncer : physent
     {
@@ -287,7 +288,15 @@ namespace game
                     if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SPARK1, 10, 180, pos, teamcoloureffects? teamtextcolor[bnc.owner->team] : 0x202080, 0.70f, 2, 60);
                     break;
                 }
+
+                case BNC_MINE:
+                {
+                    if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SPARK1, 10, 180, pos, teamcoloureffects? teamtextcolor[bnc.owner->team] : 0xEE88EE, 0.70f, 2, 60);
+                    bnc.bncsound = S_PULSE3_LOOP;
+                    break;
+                }
             }
+            if(bnc.bncsound >= 0) bnc.bouncerchan = playsound(bnc.bncsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerchan);
             vec old(bnc.o);
             bool stopped = false, destroyed = false;
             float gravity = 0.8f, elasticity = 0.6f;
@@ -322,6 +331,22 @@ namespace game
                         elasticity = 0.7f;
                         break;
                     }
+                    case BNC_MINE:
+                    {
+                        elasticity = 0;
+                        if(bnc.bounces >= 1) gravity = 0;
+                        loopi(numdynents())
+                        {
+                            dynent *o = iterdynents(i);
+                            if(o->state!=CS_ALIVE) break;
+                            if(bnc.lifetime > 250 && o != bnc.owner && bnc.o.dist(o->o) < attacks[bnc.atk].exprad)
+                            {
+                                playsound(S_PULSE3_DETO, NULL, &bnc.o);
+                                bnc.lifetime = 180;
+                            }
+                        }
+                        break;
+                    }
                     default: break;
                 }
                 stopped = bounce(&bnc, elasticity, 0.5f, gravity) || (bnc.lifetime -= time)<0;
@@ -339,6 +364,7 @@ namespace game
                         addmsg(N_EXPLODE, "rci3iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime,
                                                     hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
                 }
+                stopsound(bnc.bncsound, bnc.bouncerchan);
                 delete bouncers.remove(i--);
             }
             else
@@ -627,6 +653,17 @@ namespace game
                 playsound(S_PULSE_EXPLODE, NULL, &v);
                 break;
             }
+            case ATK_PULSE3:
+            {
+                particle_splash(PART_SPARK1, attacks[atk].exprad*3, 120, p, teamcoloureffects? teamcolour: 0xEE88EE, 4.80f, 200, 3, 0.02f);
+                particle_splash(PART_SPARK1, 5, 180, p, teamcoloureffects? teamcolour: 0xEE77EE, 0.08f, 100, 200, 0.50f);
+                particle_splash(PART_SPARK1, 100, 80, p, teamcoloureffects? teamcolour: 0xEE66EE, 5.20f, 60, 80);
+                particle_splash(mat&MAT_WATER ? PART_STEAM : PART_SMOKE, 160, 120, v, 0x666666, 6, 500, 200, 0.5f);
+                particle_fireball(v, 1.0f*attacks[atk].exprad, PART_PULSE_BURST, int(attacks[atk].exprad*20), teamcoloureffects? teamcolour: 0xEE88EE, 0.8f);
+                adddynlight(v, 3*attacks[atk].exprad, vec(1.7f, 1, 1.8f), 1000, 50, DL_FLASH, attacks[atk].exprad/2, vec(0.5f, 1.4f, 2.0f));
+                playsound(S_PULSE3_EXPLODE, NULL, &v);
+                break;
+            }
             case ATK_RL1:
             case ATK_RL2:
             case ATK_SG2:
@@ -741,6 +778,7 @@ namespace game
                     }
                 }
                 break;
+            case ATK_PULSE3:
             case ATK_SG2:
             case ATK_RL2:
             case ATK_GL1:
@@ -945,6 +983,7 @@ namespace game
 
             case ATK_SMG1:
             case ATK_SMG2:
+            case ATK_SMG3:
             {
                 adddynlight(vec(to).madd(dir, 4), 20, vec(0.5f, 0.375f, 0.25f), 200, 20);
                 if(hit || water) break;
@@ -1004,8 +1043,15 @@ namespace game
             particle_splash(PART_GLASS, 0+rnd(50), 150+rnd(250), to, 0xFFFFFF, 0.20f+rndscale(0.25f), 200, 1);
             if(oneray) playsound(S_GLASS_IMPACT, NULL, &to);
         }
-        if(!oneray && d==player1) return;
-        if(attacks[atk].impactsound >= 0) playsound(attacks[atk].impactsound, NULL, &to);
+        if(attacks[atk].impactsound >= 0)
+        {
+            if(!oneray)
+            {
+                //int numrays = max(4, 2);
+                //loopi(numrays) playsound(attacks[atk].impactsound, NULL, &rays[i]);
+            }
+            else playsound(attacks[atk].impactsound, NULL, &to);
+        }
     }
 
     VARP(muzzleflash, 0, 1, 1);
@@ -1045,6 +1091,11 @@ namespace game
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }
+
+            case ATK_PULSE3:
+                up.z += dist/8;
+                newbouncer(from, up, local, id, d, atk, BNC_MINE, attacks[atk].lifetime, attacks[atk].projspeed);
+                break;
 
             case ATK_RAIL:
             case ATK_INSTA:
@@ -1096,10 +1147,8 @@ namespace game
             case ATK_SMG1:
             case ATK_SMG2:
             {
-                if(atk != ATK_SMG2)
-                {
-                    if(muzzleflash) particle_flare(d->muzzle, d->muzzle, 80, PART_RAIL_MUZZLE_FLASH, teamcoloureffects? teamcolour: 0xEFE898, 5.0f, d);
-                }
+                if(atk != ATK_SMG2) {
+                    if(muzzleflash) particle_flare(d->muzzle, d->muzzle, 80, PART_RAIL_MUZZLE_FLASH, teamcoloureffects? teamcolour: 0xEFE898, 5.0f, d); }
                 else
                 {
                     if(muzzleflash) particle_flare(d->muzzle, d->muzzle, 120, PART_RAIL_MUZZLE_FLASH, teamcoloureffects? teamcolour: 0xEFE898, 0.30f, d, 0.4f);
@@ -1107,6 +1156,23 @@ namespace game
                 }
                 if(muzzleflash) adddynlight(hudgunorigin(gun, d->o, to, d), 40, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 if(!local) rayhit(atk, d, from, to, hit);
+                break;
+            }
+
+            case ATK_SMG3:
+            {
+                if(muzzleflash)
+                {
+                    particle_flare(d->muzzle, d->muzzle, 120, PART_RAIL_MUZZLE_FLASH, teamcoloureffects? teamcolour: 0xEFE898, 0.30f, d, 0.4f);
+                    adddynlight(hudgunorigin(gun, d->o, to, d), 40, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
+                }
+                if(!local)
+                {
+                    createrays(atk, from, to);
+                    loopi(attacks[atk].rays) rayhit(atk, d, from, rays[i], hit);
+                }
+                if(dist <= attacks[atk].range) {
+                    loopi(attacks[atk].rays) particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), rays[i], 80, PART_STREAK, teamcoloureffects? teamcolour: 0xFFC864, 1.0f); }
                 break;
             }
 
@@ -1462,6 +1528,12 @@ namespace game
                     adddynlight(pos, 12, vec(0.25f, 0.30f, 1));
                     break;
                 }
+
+                case BNC_MINE:
+                {
+                    adddynlight(pos, 15, vec(1.8f, 1, 1.9f));
+                    break;
+                }
             }
         }
     }
@@ -1516,7 +1588,7 @@ namespace game
                 switch(bnc.bouncetype)
                 {
                     case BNC_GRENADE1: mdl = "projectile/grenade01"; break;
-                    case BNC_GRENADE2: case BNC_GRENADE3: mdl = "projectile/grenade02"; break;
+                    case BNC_GRENADE2: case BNC_GRENADE3: case BNC_MINE: mdl = "projectile/grenade02"; break;
                     case BNC_ROCKET: mdl = "projectile/rocket"; break;
                     default: mdl = "projectile/grenade01"; break;
                 }

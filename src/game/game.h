@@ -83,10 +83,11 @@ struct gameentity : extentity
 };
 
 enum { GUN_SG = 0, GUN_SMG, GUN_PULSE, GUN_RL, GUN_RAIL, GUN_GL, GUN_PUNCH, GUN_INSTA, GUN_PISTOL, GUN_ZOMBIE, NUMGUNS };
-enum { ACT_IDLE = 0, ACT_PRIMARY, ACT_SECONDARY, ACT_MELEE, NUMACTS };
+enum { ACT_IDLE = 0, ACT_PRIMARY, ACT_SECONDARY, ACT_MELEE, ACT_COMBO, NUMACTS };
 enum
 {
-    ATK_MELEE = 0, ATK_PUNCH, ATK_SG1, ATK_SG2, ATK_SMG1, ATK_SMG2, ATK_PULSE1, ATK_PULSE2, ATK_RL1, ATK_RL2, ATK_RAIL, ATK_GL1, ATK_GL2, ATK_INSTA, ATK_ZOMBIE, ATK_PISTOL1, ATK_PISTOL2,
+    ATK_MELEE = 0, ATK_PUNCH, ATK_SG1, ATK_SG2, ATK_SMG1, ATK_SMG2, ATK_SMG3, ATK_PULSE1, ATK_PULSE2, ATK_PULSE3, ATK_RL1, ATK_RL2, ATK_RAIL, ATK_GL1, ATK_GL2,
+    ATK_INSTA, ATK_ZOMBIE, ATK_PISTOL1, ATK_PISTOL2,
     ATK_TELEPORT, ATK_STOMP,
     NUMATKS
 };
@@ -126,11 +127,11 @@ enum
     S_INFECTED, S_VOOSH,
 
     S_MELEE1, S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,
-    S_PULSE1, S_PULSE2A, S_PULSE2B, S_PULSE_HIT, S_PULSE_LOOP, S_PULSE_EXPLODE,
+    S_PULSE1, S_PULSE2A, S_PULSE2B, S_PULSE3, S_PULSE_HIT, S_PULSE_LOOP, S_PULSE3_LOOP, S_PULSE3_DETO, S_PULSE_EXPLODE, S_PULSE3_EXPLODE,
     S_RAIL1, S_RAIL2, S_RAIL_HIT1, S_RAIL_HIT2,
     S_ROCKETL1, S_ROCKETL2, S_ROCKET_LOOP, S_ROCKET_EXPLODE,
     S_SG1A, S_SG1B, S_SG2, S_SG_HIT,
-    S_SMG, S_SMG_HIT1, S_SMG_HIT2,
+    S_SMG, S_SMG2, S_SMG_HIT1, S_SMG_HIT2,
     S_GL1, S_GL2, S_GRENADE_EXPLODE,
     S_ZOMBIE_MELEE, S_ZOMBIE_IDLE,
     S_PISTOL1, S_PISTOL2,
@@ -333,51 +334,53 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
                                      attackdelay, damage, bonusdam, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use; } attacks[NUMATKS] =
 {
     //melee: default melee for all weapons and temporary punch "gun"
-    { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,  500,   74,  30,   0,   2,    0,   0,   14,  1,  30,  0,    0, 0 },
-    { GUN_PUNCH,      ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE1, S_MELEE_HIT1, S_MELEE_HIT2,  650,  100,  10,   0,   2,    0,   0,   12,  1,  80,  0,    0, 0 },
+    { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,  500,   74,  30,   0,   2,    0,   0,   14,  1,  30,  0,    0,    0 },
+    { GUN_PUNCH,      ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE1, S_MELEE_HIT1, S_MELEE_HIT2,  650,  100,  10,   0,   2,    0,   0,   12,  1,  80,  0,    0,    0 },
     //shotgun
-    { GUN_SG,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,         S_SG1A,     S_SG_HIT,   S_SMG_HIT2, 1080,    6,   0, 380,   0,    0,   0,  650, 20,  50,  0,    0, 1 },
-    { GUN_SG,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SG2,           -1,           -1,  600,   62,   0,   0,   2,  180,   0,  500,  1,  60, 30, 2000, 2 },
+    { GUN_SG,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,         S_SG1A,     S_SG_HIT,   S_SMG_HIT2, 1080,    6,   0, 380,   0,    0,   0,  650, 20,  50,  0,    0,    1 },
+    { GUN_SG,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SG2,           -1,           -1,  600,   62,   0,   0,   2,  180,   0,  500,  1,  60, 30, 2000,    2 },
     //smg
-    { GUN_SMG,      ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  110,   12,   0,  84,   0,    0,   0, 1000,  1,  20,  0,    0, 1 },
-    { GUN_SMG,    ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  240,   18,   0,  30,   0,    0,   0, 1000,  1,  40,  0,    0, 1 },
+    { GUN_SMG,      ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  110,   12,   0,  84,   0,    0,   0, 1000,  1,  20,  0,    0,    1 },
+    { GUN_SMG,    ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  240,   18,   0,  30,   0,    0,   0, 1000,  1,  40,  0,    0,    1 },
+    { GUN_SMG,        ACT_COMBO, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,         S_SMG2,   S_SMG_HIT1,   S_SMG_HIT2,  580,    9,   0, 100,   0,    0,   0, 1000,  3,  70,  0,    0,    3 },
     //pulse
-    { GUN_PULSE,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE1,           -1,  S_PULSE_HIT,  180,   22,   0,   0,   1, 1000,   0, 1020,  1,  75, 18,    0, 2 },
-    { GUN_PULSE,  ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT,  ANIM_GUN_IDLE,      S_PULSE2A,  S_PULSE_HIT,  S_PULSE_HIT,   80,    8,   0,   0,   0,    0,   0,  200,  1,   1,  0,    0, 1 },
+    { GUN_PULSE,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE1,           -1,  S_PULSE_HIT,  180,   22,   0,   0,   1, 1000,   0, 1020,  1,  75, 18,    0,    2 },
+    { GUN_PULSE,  ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT,  ANIM_GUN_IDLE,      S_PULSE2A,  S_PULSE_HIT,  S_PULSE_HIT,   80,    8,   0,   0,   0,    0,   0,  200,  1,   1,  0,    0,    1 },
+    { GUN_PULSE,      ACT_COMBO, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE3,           -1,  S_PULSE_HIT, 1000,   50,   0,   0,   0,  180,   0,  500,  1, 200, 36, 5000,  100 },
     //rocket
-    { GUN_RL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL1,           -1,           -1,  920,  110,   0,   0,   0,  300,   0, 4025,  1, 120, 33,    0, 1 },
-    { GUN_RL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL2,           -1,           -1,  920,  110,   0,   0,   0,  200,   0, 4025,  1, 120, 33, 1500, 1 },
+    { GUN_RL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL1,           -1,           -1,  920,  110,   0,   0,   0,  300,   0, 4025,  1, 120, 33,    0,    1 },
+    { GUN_RL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL2,           -1,           -1,  920,  110,   0,   0,   0,  200,   0, 4025,  1, 120, 33, 1500,    1 },
     //railgun
-    { GUN_RAIL,     ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL1,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,   70,  70,   0,   0,    0,  50, 5000,  1, 110,  0,    0, 1 },
+    { GUN_RAIL,     ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL1,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,   70,  70,   0,   0,    0,  50, 5000,  1, 110,  0,    0,    1 },
     //grenade launcher
-    { GUN_GL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_GL1,           -1,           -1,  500,   80,   0,   0,   1,  200,   0,  800,  1, 100, 25, 1800, 1 },
-    { GUN_GL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_GL2,           -1,           -1,  800,   80,   0,   0,   1,  180,   0,  500,  1,   0, 25, 2200, 1 },
+    { GUN_GL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_GL1,           -1,           -1,  500,   80,   0,   0,   1,  200,   0,  800,  1, 100, 25, 1800,    1 },
+    { GUN_GL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_GL2,           -1,           -1,  800,   80,   0,   0,   1,  180,   0,  500,  1,   0, 25, 2200,    1 },
     //instagib
-    { GUN_INSTA,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL2,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,  150,   0,   0,   0,    0, 100, 5000,  1,  30,  0,    0, 0 },
+    { GUN_INSTA,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL2,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,  150,   0,   0,   0,    0, 100, 5000,  1,  30,  0,    0,    0 },
     //zombie
-    { GUN_ZOMBIE,     ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE_MELEE, S_MELEE_HIT1, S_MELEE_HIT2,  600,  100,   0,   0,   4,    0,   0,   15,  1,  80,  0,    0, 0 },
+    { GUN_ZOMBIE,     ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE_MELEE, S_MELEE_HIT1, S_MELEE_HIT2,  600,  100,   0,   0,   4,    0,   0,   15,  1,  80,  0,    0,    0 },
     //pistol
-    { GUN_PISTOL,   ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL1,  S_PULSE_HIT,   S_SMG_HIT2,  300,   17,   0,   0,   0,    0,   0, 1000,  1,  80,  0,    0, 1 },
-    { GUN_PISTOL, ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL2,           -1,  S_PULSE_HIT,  600,    8,   0,   0,   2, 4000,   0,  500,  1, 800, 15,    0, 2 },
+    { GUN_PISTOL,   ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL1,  S_PULSE_HIT,   S_SMG_HIT2,  300,   17,   0,   0,   0,    0,   0, 1000,  1,  80,  0,    0,    1 },
+    { GUN_PISTOL, ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL2,           -1,  S_PULSE_HIT,  600,    8,   0,   0,   2, 4000,   0,  500,  1, 800, 15,    0,    2 },
     //telefrag
-    { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, S_MELEE_HIT2, S_MELEE_HIT2,    0, 1050,   0,   0,   8,    0,   0,    6,  1,   0,  0,    0, 0 },
+    { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, S_MELEE_HIT2, S_MELEE_HIT2,    0, 1050,   0,   0,   8,    0,   0,    6,  1,   0,  0,    0,    0 },
     //stomp
-    { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, S_MELEE_HIT2, S_MELEE_HIT2,    0,  100,   0,   0,   3,    0,   0,    2,  1,   0,  0,    0, 0 }
+    { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, S_MELEE_HIT2, S_MELEE_HIT2,    0,  100,   0,   0,   3,    0,   0,    2,  1,   0,  0,    0,    0 }
 
 };
 
 static const struct guninfo { const char *name, *file, *vwep; int attacks[NUMACTS]; } guns[NUMGUNS] =
 {
-    { "shotgun", "sg", "worldgun/sg", { -1, ATK_SG1, ATK_SG2, ATK_MELEE} },
-    { "smg", "smg", "worldgun/pulserifle", { -1, ATK_SMG1, ATK_SMG2, ATK_MELEE}, },
-    { "pulse rifle (upgraded)", "pulserifle", "worldgun/pulserifle", { -1, ATK_PULSE1, ATK_PULSE2, ATK_MELEE}, },
-    { "rocket launcher", "rl", "worldgun/rl", { -1, ATK_RL1, ATK_RL2, ATK_MELEE} },
-    { "railgun", "railgun", "worldgun/railgun", { -1, ATK_RAIL, ATK_RAIL, ATK_MELEE}, },
-    { "grenade launcher", "gl", "worldgun/gl", { -1, ATK_GL1, ATK_GL2, ATK_MELEE}, },
-    { "punch", "punch", NULL, { -1, ATK_PUNCH, ATK_MELEE, ATK_MELEE}, },
-    { "railgun", "railgun", "worldgun/railgun", { -1, ATK_INSTA, ATK_INSTA, ATK_MELEE}, },
-    { "pulse rifle", "pulserifle", "worldgun/pulserifle", { -1, ATK_PISTOL1, ATK_PISTOL2, ATK_MELEE}, },
-    { "zombie", "punch/zombie", NULL, { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE}, }
+    { "shotgun", "sg", "worldgun/sg", { -1, ATK_SG1, ATK_SG2, ATK_MELEE, -1} },
+    { "smg", "smg", "worldgun/pulserifle", { -1, ATK_SMG1, ATK_SMG2, ATK_MELEE, ATK_SMG3 }, },
+    { "pulse rifle (upgraded)", "pulserifle", "worldgun/pulserifle", { -1, ATK_PULSE1, ATK_PULSE2, ATK_MELEE, ATK_PULSE3}, },
+    { "rocket launcher", "rl", "worldgun/rl", { -1, ATK_RL1, ATK_RL2, ATK_MELEE, -1} },
+    { "railgun", "railgun", "worldgun/railgun", { -1, ATK_RAIL, ATK_RAIL, ATK_MELEE, -1}, },
+    { "grenade launcher", "gl", "worldgun/gl", { -1, ATK_GL1, ATK_GL2, ATK_MELEE, -1}, },
+    { "punch", "punch", NULL, { -1, ATK_PUNCH, ATK_MELEE, ATK_MELEE, -1}, },
+    { "railgun", "railgun", "worldgun/railgun", { -1, ATK_INSTA, ATK_INSTA, ATK_MELEE, -1}, },
+    { "pulse rifle", "pulserifle", "worldgun/pulserifle", { -1, ATK_PISTOL1, ATK_PISTOL2, ATK_MELEE, -1}, },
+    { "zombie", "punch/zombie", NULL, { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE, -1}, }
 };
 
 enum { HIT_TORSO = 1<<0, HIT_LEGS = 1<<1, HIT_HEAD = 1<<2, HIT_MATERIAL = 1<<3 };
@@ -658,7 +661,6 @@ struct gameent : dynent, gamestate
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
     {
         vec push(dir);
-        if(timeinair && attacks[atk].gun==GUN_PULSE) damage *= 2;
         if(zombie) damage *= 4;
         push.mul((actor==this && attacks[atk].exprad ? EXP_SELFPUSH : 1.0f)*attacks[atk].hitpush*damage/weight);
         vel.add(push);
@@ -846,6 +848,7 @@ namespace game
     extern gameent *pointatplayer();
     extern gameent *hudplayer();
     extern gameent *followingplayer();
+    extern void taunt(gameent *d);
     extern void stopfollowing();
     extern void checkfollow();
     extern void nextfollow(int dir = 1);

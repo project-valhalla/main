@@ -2767,6 +2767,7 @@ namespace server
             case ATK_PISTOL2:
                 if(!gs.projs.remove(id)) return;
                 break;
+            case ATK_PULSE3:
             case ATK_RL2:
             case ATK_SG2:
             case ATK_GL1: case ATK_GL2:
@@ -2792,7 +2793,12 @@ namespace server
             if(target->state.armourmillis) damage /= 2;
             if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
             if(target==ci) damage /= EXP_SELFDAMDIV;
-            if(damage > 0) dodamage(target, ci, damage, atk, 0, h.dir);
+            if(damage > 0)
+            {
+                dodamage(target, ci, damage, atk, 0, h.dir);
+                if(!m_teammode && isally(target, ci))
+                    dodamage(ci, ci, damage, atk);
+            }
         }
     }
 
@@ -2819,7 +2825,7 @@ namespace server
         switch(atk)
         {
             case ATK_PULSE1: case ATK_RL1: case ATK_PISTOL2: gs.projs.add(id); break;
-            case ATK_RL2: case ATK_SG2: case ATK_GL1: case ATK_GL2: gs.bouncers.add(id); break;
+            case ATK_PULSE3: case ATK_RL2: case ATK_SG2: case ATK_GL1: case ATK_GL2: gs.bouncers.add(id); break;
             default:
             {
                 int totalrays = 0, maxrays = attacks[atk].rays;
@@ -2856,6 +2862,7 @@ namespace server
                     {
                         dodamage(target, ci, damage, atk, h.flags, h.dir);
                         if(m_mayhem(mutators) && h.flags & HIT_HEAD && headshot) died(target, ci, atk, damage);
+                        if(!m_teammode && isally(target, ci)) dodamage(ci, ci, damage, atk);
                     }
                     sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, target->clientnum, damage, h.flags,
                                            int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
@@ -2886,7 +2893,11 @@ namespace server
             if(totalrays>maxrays) continue;
             int damage = h.rays*attacks[atk].damage;
             if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
-            if(damage > 0) dodamage(target, ci, damage, atk, h.flags, h.dir);
+            if(damage > 0)
+            {
+                dodamage(target, ci, damage, atk, h.flags, h.dir);
+                if(!m_teammode && isally(target, ci)) dodamage(ci, ci, damage, atk);
+            }
             break;
         }
     }

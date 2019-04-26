@@ -320,11 +320,9 @@ namespace game
         if(act == ACT_SECONDARY && guns[player1->gunselect].attacks[ACT_PRIMARY] == guns[player1->gunselect].attacks[ACT_SECONDARY])
         {
             zoom = !zoom? 1: -1;
-            player1->attacking = ACT_IDLE;
             return;
         }
-        else if(attacks[atk].attackdelay <= 250 && ((act == ACT_PRIMARY && player1->lastact == ACT_SECONDARY) || (act == ACT_SECONDARY && player1->lastact == ACT_PRIMARY)) &&
-           guns[player1->gunselect].attacks[ACT_COMBO] >= 0)
+        else if(act > ACT_MELEE && player1->lastact > ACT_MELEE && player1->lastact != act && guns[player1->gunselect].attacks[ACT_COMBO] >= 0)
             act = ACT_COMBO;
         doaction(act);
     }

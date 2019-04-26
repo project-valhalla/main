@@ -1047,8 +1047,6 @@ namespace game
         {
             if(!oneray)
             {
-                //int numrays = max(4, 2);
-                //loopi(numrays) playsound(attacks[atk].impactsound, NULL, &rays[i]);
             }
             else playsound(attacks[atk].impactsound, NULL, &to);
         }

@@ -428,8 +428,8 @@ const float STAIRHEIGHT = 4.1f;
 const float FLOORZ = 0.867f;
 const float SLOPEZ = 0.5f;
 const float WALLZ = 0.2f;
-extern const float JUMPVEL = 126.0f;
-extern const float GRAVITY = 195.0f;
+extern const float JUMPVEL = 130.0f;
+extern const float GRAVITY = 194.0f;
 #define MAXJUMPS 0
 
 bool ellipseboxcollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo)

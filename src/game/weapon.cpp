@@ -139,13 +139,13 @@ namespace game
         loopi(attacks[atk].rays) offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i]);
     }
 
-    enum { BNC_GRENADE1, BNC_MINE, BNC_GRENADE2, BNC_GRENADE3, BNC_ROCKET, BNC_GIB1, BNC_GIB2, BNC_AMMO };
+    enum { BNC_GRENADE1, BNC_GRENADE2, BNC_GRENADE3, BNC_MINE, BNC_ROCKET, BNC_GIB1, BNC_GIB2 };
 
     struct bouncer : physent
     {
         int lifetime, bounces;
-        float lastyaw, roll;
-        bool local;
+        float lastyaw, roll, gravity, elasticity;
+        bool local, destroyed;
         gameent *owner;
         int bouncetype, variant;
         vec offset;
@@ -153,13 +153,12 @@ namespace game
         int id;
         int atk;
         int bouncesound, lastbounce;
-        int gun, ammo;
         int bouncerchan, bncsound;
 
-        bouncer() : bounces(0), roll(0), variant(0), bouncesound(-1), lastbounce(0), gun(0), ammo(0)
+        bouncer() : bounces(0), roll(0), gravity(0.8f), elasticity(0.6f), variant(0), bouncesound(-1), lastbounce(0), bouncerchan(-1), bncsound(-1)
         {
             type = ENT_BOUNCE;
-            bouncerchan = bncsound = -1;
+            destroyed = false;
         }
         ~bouncer()
         {
@@ -170,7 +169,7 @@ namespace game
 
     vector<bouncer *> bouncers;
 
-    void newbouncer(const vec &from, const vec &to, bool local, int id, gameent *owner, int atk, int type, int lifetime, int speed, int gun = 0, int ammo = 0)
+    void newbouncer(const vec &from, const vec &to, bool local, int id, gameent *owner, int atk, int type, int lifetime, int speed, float gravity = 0.8f, float elasticity = 0.6f)
     {
         bouncer &bnc = *bouncers.add(new bouncer);
         bnc.o = from;
@@ -178,19 +177,21 @@ namespace game
         bnc.eyeheight = bnc.radius;
         bnc.aboveeye = bnc.radius;
         bnc.lifetime = lifetime;
+        bnc.gravity = gravity;
+        bnc.elasticity = elasticity;
         bnc.local = local;
         bnc.owner = owner;
         bnc.atk = atk;
         bnc.bouncetype = type;
         bnc.id = local ? lastmillis : id;
-        bnc.gun = gun;
-        bnc.ammo = ammo;
 
         switch(type)
         {
+            case BNC_GRENADE1:
             case BNC_GRENADE2:
             case BNC_GRENADE3:
             {
+                bnc.collidetype = COLLIDE_ELLIPSE;
                 bnc.bouncesound = S_GRENADE_BOUNCE;
                 break;
             }
@@ -200,6 +201,7 @@ namespace game
                 bnc.bouncesound = S_ROCKET_BOUNCE;
                 break;
             }
+            case BNC_MINE: bnc.collidetype = COLLIDE_ELLIPSE;
             case BNC_GIB1: bnc.variant = rnd(5); break;
             //case BNC_DEBRIS: bnc.variant = rnd(4); break;
         }
@@ -298,9 +300,8 @@ namespace game
             }
             if(bnc.bncsound >= 0) bnc.bouncerchan = playsound(bnc.bncsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerchan);
             vec old(bnc.o);
-            bool stopped = false, destroyed = false;
-            float gravity = 0.8f, elasticity = 0.6f;
-            if(bnc.bouncetype>=BNC_GIB1 && bnc.bouncetype <= BNC_AMMO)
+            bool stopped = false;
+            if(bnc.bouncetype>=BNC_GIB1 && bnc.bouncetype <= BNC_GIB2)
             {
                 // cheaper variable rate physics for debris, gibs, etc.
                 for(int rtime = time; rtime > 0;)
@@ -316,25 +317,17 @@ namespace game
                 {
                     case BNC_GRENADE1:
                     {
-                        destroyed = bnc.bounces >= 1;
-                        gravity = 1.0f;
+                        bnc.destroyed = bnc.bounces >= 1;
                         break;
                     }
                     case BNC_GRENADE3:
                     {
-                        elasticity = 0;
-                        if(bnc.bounces >= 1) gravity = 0;
-                        break;
-                    }
-                    case BNC_ROCKET:
-                    {
-                        elasticity = 0.7f;
+                        if(bnc.bounces >= 1) bnc.gravity = 0;
                         break;
                     }
                     case BNC_MINE:
                     {
-                        elasticity = 0;
-                        if(bnc.bounces >= 1) gravity = 0;
+                        if(bnc.bounces >= 1) bnc.gravity = 0;
                         loopi(numdynents())
                         {
                             dynent *o = iterdynents(i);
@@ -349,10 +342,10 @@ namespace game
                     }
                     default: break;
                 }
-                stopped = bounce(&bnc, elasticity, 0.5f, gravity) || (bnc.lifetime -= time)<0;
+                stopped = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity) || (bnc.lifetime -= time)<0;
             }
             int material = lookupmaterial(bnc.o);
-            if((stopped || destroyed) || isdeadly(material&MAT_LAVA))
+            if((stopped || bnc.destroyed) || isdeadly(material&MAT_LAVA))
             {
                 if(bnc.bouncetype >= BNC_GRENADE1 && bnc.bouncetype <= BNC_ROCKET)
                 {
@@ -375,12 +368,6 @@ namespace game
         }
     }
 
-    void dropammo(gameent *d, int gun, int ammo)
-    {
-        /*newbouncer(d->o, d->o, true, 0, d, NULL, BNC_AMMO, 5000, 80, gun, ammo);*/
-
-    }
-
     void removebouncers(gameent *owner)
     {
         loopv(bouncers) if(bouncers[i]->owner==owner) { delete bouncers[i]; bouncers.remove(i--); }
@@ -396,15 +383,15 @@ namespace game
         float speed;
         gameent *owner;
         int atk;
-        bool local;
+        bool local, destroyed;
         int offsetmillis;
         int id, lifetime;
         int projtype;
         int projchan, projsound;
 
-        projectile() : projchan(), projsound()
+        projectile() : projchan(-1), projsound(-1)
         {
-            projchan = projsound = -1;
+            destroyed = false;
         }
         ~projectile()
         {
@@ -858,9 +845,9 @@ namespace game
                         exploded = true;
                     }
                 }
-                if(dist<4 || lookupmaterial(p.o)&MAT_LAVA)
+                if(dist<4)
                 {
-                    if(dist<4 && p.o!=p.to) // if original target was moving, reevaluate endpoint
+                    if(p.o!=p.to) // if original target was moving, reevaluate endpoint
                     {
                         if(raycubepos(p.o, p.dir, p.to, 0, RAY_CLIPMAT|RAY_ALPHAPOLY)>=4) continue;
                     }
@@ -917,6 +904,11 @@ namespace game
                     }
                     p.projchan = playsound(p.projsound, NULL, &pos, NULL, 0, -1, 100, p.projchan);
                 }
+            }
+            if(p.destroyed || lookupmaterial(p.o)&MAT_LAVA)
+            {
+                projsplash(p, v, NULL, damage);
+                exploded = true;
             }
             if(exploded || lookupmaterial(p.o)&MAT_LAVA)
             {
@@ -1092,7 +1084,7 @@ namespace game
 
             case ATK_PULSE3:
                 up.z += dist/8;
-                newbouncer(from, up, local, id, d, atk, BNC_MINE, attacks[atk].lifetime, attacks[atk].projspeed);
+                newbouncer(from, up, local, id, d, atk, BNC_MINE, attacks[atk].lifetime, attacks[atk].projspeed, 0.8f, 0);
                 break;
 
             case ATK_RAIL:
@@ -1119,7 +1111,7 @@ namespace game
 
             case ATK_RL2:
                 up.z += dist/8;
-                newbouncer(from, up, local, id, d, atk, BNC_ROCKET, attacks[atk].lifetime, attacks[atk].projspeed);
+                newbouncer(from, up, local, id, d, atk, BNC_ROCKET, attacks[atk].lifetime, attacks[atk].projspeed, 0.8f, 0.7f);
                 break;
 
             case ATK_SG1:
@@ -1139,7 +1131,7 @@ namespace game
 
             case ATK_SG2:
                 up.z += dist/16;
-                newbouncer(from, up, local, id, d, atk, BNC_GRENADE1, attacks[atk].lifetime, attacks[atk].projspeed);
+                newbouncer(from, up, local, id, d, atk, BNC_GRENADE1, attacks[atk].lifetime, attacks[atk].projspeed, 1.0f);
                 break;
 
             case ATK_SMG1:
@@ -1177,7 +1169,7 @@ namespace game
             case ATK_GL1:
             case ATK_GL2:
                 up.z += dist/8;
-                newbouncer(from, up, local, id, d, atk, atk == ATK_GL1 ? BNC_GRENADE2 : BNC_GRENADE3, attacks[atk].lifetime, attacks[atk].projspeed);
+                newbouncer(from, up, local, id, d, atk, atk == ATK_GL1 ? BNC_GRENADE2 : BNC_GRENADE3, attacks[atk].lifetime, 0.8f, attacks[atk].projspeed, atk == ATK_GL1? 0: 0.6f);
                 break;
 
             case ATK_PISTOL1:
@@ -1564,10 +1556,9 @@ namespace game
                 yaw += 90;
                 bnc.lastyaw = yaw;
             }
-            if(bnc.bouncetype != BNC_AMMO) pitch = -bnc.roll;
             const char *mdl = NULL;
             int cull = MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-            if(bnc.bouncetype >= BNC_GIB1 && bnc.bouncetype <= BNC_AMMO)
+            if(bnc.bouncetype >= BNC_GIB1 && bnc.bouncetype <= BNC_GIB2)
             {
                 float fade = 1;
                 if(bnc.lifetime < 400) fade = bnc.lifetime/400.0f;
@@ -1576,7 +1567,6 @@ namespace game
                 {
                     case BNC_GIB1: mdl = gib; break;
                     case BNC_GIB2: mdl = "gib/head"; break;
-                    case BNC_AMMO: mdl = "item/ammo/ammo"; break;
                     default: continue;
                 }
                 rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0, cull, NULL, NULL, 0, 0, fade);

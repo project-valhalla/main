@@ -568,10 +568,15 @@ namespace game
                 if(flags & HIT_HEAD)
                 {
                     f->headless = true;
-                    if(!isally(f, at) && !m_headhunter(mutators) && !m_locationaldam(mutators))
+                    if(!isally(f, at) && !m_headhunter(mutators))
                     {
                         if(validatk(atk))
-                           playsound(attacks[atk].action != ACT_MELEE? S_ANNOUNCER_HEADSHOT: S_ANNOUNCER_FACE_PUNCH, NULL, NULL, NULL, SND_ANNOUNCER);
+                        {
+                            extern int playheadshotsound;
+                            if((playheadshotsound == 1 && attacks[atk].bonusdam) || (playheadshotsound > 1 && lastmillis-lastheadshot > 1000))
+                                playsound(attacks[atk].action != ACT_MELEE? S_ANNOUNCER_HEADSHOT: S_ANNOUNCER_FACE_PUNCH, NULL, NULL, NULL, SND_ANNOUNCER);
+                            lastheadshot = lastmillis;
+                        }
                         playsound(S_HEAD_HIT, NULL, &f->o);
                     }
                 }

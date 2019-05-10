@@ -5,7 +5,7 @@ namespace game
     bool intermission = false, betweenrounds = false;
     bool infection = false;
     int maptime = 0, maprealtime = 0, maplimit = -1;
-    int lastspawnattempt = 0;
+    int lastspawnattempt = 0, lastheadshot = 0;
 
     gameent *player1 = NULL;         // our client
     vector<gameent *> players;       // other clients
@@ -316,7 +316,6 @@ namespace game
 
     void checkaction(int act)
     {
-        int atk = guns[player1->gunselect].attacks[act];
         if(act == ACT_SECONDARY && guns[player1->gunselect].attacks[ACT_PRIMARY] == guns[player1->gunselect].attacks[ACT_SECONDARY])
         {
             zoom = !zoom? 1: -1;
@@ -374,6 +373,7 @@ namespace game
     }
 
     VARP(hitsound, 0, 0, 2);
+    VARP(playheadshotsound, 0, 1, 2);
 
     void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
     {
@@ -404,9 +404,14 @@ namespace game
             if(flags & HIT_HEAD)
             {
                 d->headless = true;
-                if(!isally(d, actor) && !m_headhunter(mutators) && !m_locationaldam(mutators))
+                if(!isally(d, actor) && !m_headhunter(mutators))
                 {
-                    if(actor==h) playsound(attacks[atk].action!=ACT_MELEE? S_ANNOUNCER_HEADSHOT: S_ANNOUNCER_FACE_PUNCH, NULL, NULL, NULL, SND_ANNOUNCER);
+                    if(actor==h)
+                    {
+                        if((playheadshotsound == 1 && attacks[atk].bonusdam) || (playheadshotsound > 1 && lastmillis-lastheadshot > 1000))
+                            playsound(attacks[atk].action!=ACT_MELEE? S_ANNOUNCER_HEADSHOT: S_ANNOUNCER_FACE_PUNCH, NULL, NULL, NULL, SND_ANNOUNCER);
+                        lastheadshot = lastmillis;
+                    }
                     playsound(S_HEAD_HIT, NULL, &d->o);
                 }
             }

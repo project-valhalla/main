@@ -1745,7 +1745,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
     gameent *e = (gameent *)pl;
     float jumpvel = JUMPVEL;
     if(pl->timeinair) jumpvel += 95.0f;
-    if(e->zombie) jumpvel += 18.5f;
+    if(e->zombie) jumpvel += 14.5f;
     bool crouched = pl->crouching && pl->crouched();
     bool canjump = pl->physstate >= PHYS_SLOPE || (m_walljump(game::mutators) && !e->zombie && lastmillis-pl->lastjump < 280 && !crouched) ||
                                                   (e->zombie && lastmillis-pl->lastjump < 800 && !crouched);

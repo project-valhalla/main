@@ -855,7 +855,7 @@ namespace server
         loopv(clients)
         {
             clientinfo *ci = clients[i];
-            if(ci->clientnum!=exclude && (!nospec || ci->state.state!=CS_SPECTATOR || (priv && (ci->privilege || ci->local))) && (!noai || ci->state.aitype == AI_NONE)) n++;
+            if(ci->clientnum!=exclude && (!nospec || ci->queue || ci->state.state!=CS_SPECTATOR || (priv && (ci->privilege || ci->local))) && (!noai || ci->state.aitype == AI_NONE)) n++;
         }
         return n;
     }
@@ -2097,8 +2097,6 @@ namespace server
             }
     }
 
-    bool shouldcheckplayers() { return m_round && !m_elimination && !betweenrounds; }
-
     clientinfo *hostzombie(clientinfo *exclude1 = NULL, clientinfo *exclude2 = NULL)
     {
         if(clients.length() <= (exclude1 ? 1 : 0)) return NULL;
@@ -2193,13 +2191,14 @@ namespace server
         }
         if (zombiechosen)
         {
-            if(survivornum <= 0 && zombienum <= 0)
+            bool timeisup = gamemillis >= gamelimit;
+            if((survivornum <= 0 && zombienum <= 0) || (timeisup && zombienum > 0))
             {
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_SURVIVORS, NULL, "\f2Nobody survived");
+                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_SURVIVORS, NULL, timeisup? "\f2Time is up": "\f2Nobody survived");
                 betweenrounds = true;
                 serverevents::add(&newround, 5000);
             }
-            else if(zombienum <= 0 || (gamemillis >= gamelimit && survivornum > 0))
+            else if(zombienum <= 0 || (timeisup && survivornum > 0))
             {
                 sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_SURVIVOR, S_SURVIVORS, "\f2Survivors win the round");
                 loopv(clients)
@@ -2213,7 +2212,7 @@ namespace server
                 betweenrounds = true;
                 serverevents::add(&newround, 5000);
             }
-            else if(survivornum <= 0)
+            else if(survivornum <= 0 && numclients(-1, true, false) > 1)
             {
                 sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_ZOMBIE, S_ZOMBIES, "\f2Zombies win the round");
                 betweenrounds = true;
@@ -2525,7 +2524,6 @@ namespace server
         {
             if(m_round)
             {
-                if(shouldcheckplayers()) checkplayers();
                 if(smode) smode->endround();
             }
             else gameover();
@@ -2664,7 +2662,6 @@ namespace server
             checkscorelimit(actor, actor->state.points);
         }
         if(m_dm) checkscorelimit(actor, t ? t->frags : actor->state.frags);
-        if(shouldcheckplayers()) checkplayers();
         ts.deadflush = ts.lastdeath + DEATHMILLIS;
         // don't issue respawn yet until DEATHMILLIS has elapsed
         // ts.respawn();
@@ -2715,7 +2712,6 @@ namespace server
                     sendf(-1, 1, "ri3", N_SCORE, actor->clientnum, actor->state.points);
                     checkscorelimit(actor, actor->state.points);
                 }
-                if(shouldcheckplayers()) checkplayers();
             }
             else died(target, actor, atk, damage);
         }
@@ -2749,7 +2745,6 @@ namespace server
         gs.state = CS_DEAD;
         gs.lastdeath = gamemillis;
         gs.respawn();
-        if(shouldcheckplayers()) checkplayers();
     }
 
     void suicideevent::process(clientinfo *ci)
@@ -2989,6 +2984,7 @@ namespace server
             }
         }
         if(Roundlimit && rounds >= Roundlimit && !interm) gameover();
+        if(m_round && !m_elimination && !betweenrounds) checkplayers();
         serverevents::process();
     }
 
@@ -3223,7 +3219,6 @@ namespace server
             aiman::removeai(ci);
             if(!numclients(-1, false, true)) noclients(); // bans clear when server empties
             if(ci->local) checkpausegame();
-            if(shouldcheckplayers()) checkplayers();
         }
         else connects.removeobj(ci);
     }
@@ -3488,7 +3483,6 @@ namespace server
         if(m_demo) setupdemoplayback();
 
         if(servermotd[0]) sendf(ci->clientnum, 1, "ris", N_SERVMSG, servermotd);
-        if(shouldcheckplayers()) checkplayers();
     }
 
     VAR(mutespectators, 0, 0, 1);
@@ -3666,12 +3660,10 @@ namespace server
                     if(val)
                     {
                         smode->leavegame(ci);
-                        if(shouldcheckplayers()) checkplayers();
                     }
                     else
                     {
                         smode->entergame(ci);
-                        if(shouldcheckplayers()) checkplayers();
                     }
 
                 }
@@ -4175,7 +4167,6 @@ namespace server
                 else if(spinfo->state.state==CS_SPECTATOR && !val)
                 {
                     unspectate(spinfo);
-                    if(shouldcheckplayers()) checkplayers();
                 }
                 if(cq && cq != ci && cq->ownernum != ci->clientnum) cq = NULL;
                 break;

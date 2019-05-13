@@ -127,7 +127,6 @@ namespace aiman
         ci->aireinit = 2;
         ci->connected = true;
         dorefresh = true;
-        if(numclients(-1, true, false) > 1 && shouldcheckplayers()) checkplayers();
         return true;
     }
 
@@ -142,7 +141,6 @@ namespace aiman
         clients.removeobj(ci);
         DELETEP(bots[cn]);
         dorefresh = true;
-        if(numclients(-1, true, false) > 1 && shouldcheckplayers()) checkplayers();
     }
 
     bool deleteai()

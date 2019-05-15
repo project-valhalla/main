@@ -2519,6 +2519,7 @@ namespace server
         sendf(-1, 1, "ri2", N_TIMEUP, 0);
         if(smode) smode->intermission();
         changegamespeed(100);
+        serverevents::invalidate();
         interm = gamemillis + 15000;
     }
 

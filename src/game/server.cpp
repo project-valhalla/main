@@ -2140,7 +2140,7 @@ namespace server
 
     static void startzombieround()
     {
-        if(zombiechosen) return;
+        if(zombiechosen || interm) return;
         const int numplayers = numclients(-1, true, false);
         if(numplayers > 0)
         {

@@ -2151,9 +2151,9 @@ namespace server
 
     static void newround()
     {
+        if(interm) return;
         resetgamelimit();
         rounds++;
-        if(interm) return;
         loopv(clients)
         {
             if(clients[i]->state.state!=CS_EDITING && (clients[i]->state.state!=CS_SPECTATOR || clients[i]->queue))

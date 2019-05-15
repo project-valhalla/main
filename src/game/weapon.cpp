@@ -244,22 +244,6 @@ namespace game
         b->lastbounce = lastmillis;
     }
 
-    void pushbouncer(int id, int force, const vec &dir)
-    {
-        loopv(bouncers)
-        {
-            bouncer &b = *bouncers[i];
-            if(b.bouncetype < BNC_GRENADE1 && b.bouncetype > BNC_ROCKET) break;
-            /*if(b.id == id)
-            {*/
-                vec push(dir);
-                push.mul(force);
-                b.vel.add(push);
-                playsound(S_GRENADE_BOUNCE, NULL, &b.o);
-            //}
-        }
-    }
-
     void updatebouncers(int time)
     {
        loopv(bouncers)
@@ -1377,19 +1361,6 @@ namespace game
         else //if(attacks[atk].action==ACT_MELEE)
         {
             rayhit(atk, d, from, to);
-        }
-        loopv(bouncers)
-        {
-            bouncer *bnc = bouncers[i];
-            dynent *bouncy = (dynent *) bnc;
-            if (intersect(bouncy, from, to, 0, dist))
-            {
-                shorten(from, to, dist);
-                rayhit(atk, d, from, to, true);
-                pushbouncer(bnc->id, attacks[atk].hitpush*attacks[atk].damage/10, vec(to).sub(from).safenormalize());
-                /*addmsg(N_PUSH, "ri7", bnc->id-maptime, (int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
-                       (int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF));*/
-            }
         }
     }
 

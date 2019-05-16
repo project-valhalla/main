@@ -2181,23 +2181,32 @@ namespace server
         if(m_randomweapon(mutators)) serverevents::add(&voosh, 15000);
     }
 
-    void checkzombies()
+    void endround()
     {
-        if(!m_infection) return;
-        int zombienum = 0, survivornum = 0;
-        for (int clnum = 0; clnum < clients.length() && (zombienum <= 0 || survivornum <= 0); clnum++)
+        betweenrounds = true;
+        serverevents::add(&newround, 5000);
+    }
+
+    void checkplayers()
+    {
+        int alive = 0, zombienum = 0, survivornum = 0;
+        loopv(clients)
         {
-            if (clients[clnum]->state.state == CS_ALIVE && !clients[clnum]->state.zombie) survivornum++;
-            if (clients[clnum]->state.state == CS_ALIVE && clients[clnum]->state.zombie) zombienum++;
+            if(clients[i]->state.state != CS_ALIVE) continue;
+            if(m_infection)
+            {
+                if(clients[i]->state.zombie) zombienum++;
+                else survivornum++;
+            }
+            else if(m_lms) alive++;
         }
-        if (zombiechosen)
+        bool timeisup = gamemillis >= gamelimit;
+        if (m_infection && zombiechosen)
         {
-            bool timeisup = gamemillis >= gamelimit;
             if((survivornum <= 0 && zombienum <= 0) || (timeisup && survivornum <= 0 && zombienum > 0))
             {
                 sendf(-1, 1, "ri3s", N_ANNOUNCE, S_SURVIVORS, NULL, timeisup? "\f2Time is up": "\f2Nobody survived");
-                betweenrounds = true;
-                serverevents::add(&newround, 5000);
+                endround();
             }
             else if(zombienum <= 0 || (timeisup && survivornum > 0))
             {
@@ -2210,35 +2219,20 @@ namespace server
                     sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
                     checkscorelimit(ci, ci->state.points);
                 }
-                betweenrounds = true;
-                serverevents::add(&newround, 5000);
+                endround();
             }
             else if(survivornum <= 0 && numclients(-1, true, false) > 1)
             {
                 sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_ZOMBIE, S_ZOMBIES, "\f2Zombies win the round");
-                betweenrounds = true;
-                serverevents::add(&newround, 5000);
+                endround();
             }
         }
-    }
-
-    void checkplayers()
-    {
-        if(m_infection) checkzombies();
-        else if (m_lms)
+        else
         {
-            int alive = 0;
-            loopv(clients)
-            {
-                if(clients[i]->state.state != CS_ALIVE) continue;
-                alive++;
-            }
-            bool timeisup = gamemillis >= gamelimit;
             if(alive <= 0 || timeisup)
             {
                 sendf(-1, 1, "ri3s", N_ANNOUNCE, S_LMS_ROUND, NULL, timeisup ? "\f2Time is up" : "\f2Nobody survived");
-                betweenrounds = true;
-                serverevents::add(&newround, 5000);
+                endround();
             }
             else if(alive < 2)
             {
@@ -2259,8 +2253,7 @@ namespace server
                     if(ci->state.aitype != AI_NONE) continue;
                     sendf(ci->clientnum, 1, "ri3s", N_ANNOUNCE, S_LMS_ROUND_WIN, S_ANNOUNCER_WIN_ROUND, "\f2You win the round");
                 }
-                betweenrounds = true;
-                serverevents::add(&newround, 5000);
+                endround();
             }
         }
     }

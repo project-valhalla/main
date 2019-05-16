@@ -2333,7 +2333,8 @@ namespace game
                 loopi(NUMGUNS) d->ammo[i] = 0;
                 d->ammo[gun] = 100;
                 d->gunselect = gun;
-                if(m_randomweapon(mutators)) playsound(S_VOOSH, d, &d->o);
+                if(m_randomweapon(mutators) && player1->zombie)
+                    playsound(S_VOOSH, d, &d->o);
                 break;
             }
 

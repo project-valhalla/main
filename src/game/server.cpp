@@ -2273,9 +2273,10 @@ namespace server
             clientinfo *ci = clients[i];
             if(ci->state.state!=CS_ALIVE || ci->state.zombie) continue;
             loopi(NUMGUNS) ci->state.ammo[i] = 0;
-            ci->state.ammo[gun] = 100;
+            ci->state.baseammo(gun);
             ci->state.gunselect = gun;
             sendf(-1, 1, "ri3", N_FORCEWEAPON, ci->clientnum, gun);
+            if(m_randomweapon(mutators)) sendf(-1, 1, "ri3s", N_ANNOUNCE, S_VOOSH, NULL, "");
         }
     }
 

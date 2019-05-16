@@ -360,7 +360,7 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
     //zombie
     { GUN_ZOMBIE,     ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE_MELEE, S_MELEE_HIT1, S_MELEE_HIT2,  600,  100,   0,   0,   4,    0,   0,   15,  1,  80,  0,    0,    0 },
     //pistol
-    { GUN_PISTOL,   ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL1,  S_PULSE_HIT,   S_SMG_HIT2,  300,   17,   0,   0,   0,    0,   0, 1000,  1,  80,  0,    0,    1 },
+    { GUN_PISTOL,   ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL1,  S_PULSE_HIT,   S_SMG_HIT2,  300,   17,   0,   0,   0,    0,   0, 1000,  1, 200,  0,    0,    1 },
     { GUN_PISTOL, ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL2,           -1,  S_PULSE_HIT,  600,    8,   0,   0,   2, 4000,   0,  500,  1, 800, 15,    0,    2 },
     //telefrag
     { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, S_MELEE_HIT2, S_MELEE_HIT2,    0, 1050,   0,   0,   8,    0,   0,    6,  1,   0,  0,    0,    0 },
@@ -662,6 +662,7 @@ struct gameent : dynent, gamestate
     {
         vec push(dir);
         if(zombie) damage *= 4;
+        else if(atk == ATK_PISTOL2 && actor!=this) damage *= 3;
         push.mul((actor==this && attacks[atk].exprad ? EXP_SELFPUSH : 1.0f)*attacks[atk].hitpush*damage/weight);
         vel.add(push);
     }

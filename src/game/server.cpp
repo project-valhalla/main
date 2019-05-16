@@ -2668,27 +2668,30 @@ namespace server
 
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int atk, int flags = 0, const vec &hitpush = vec(0, 0, 0))
     {
-        if((m_round && betweenrounds) || target->godmode) return;
+        if(target->godmode) return;
         servstate &ts = target->state;
         int dam = damage;
-        if((m_headhunter(mutators) && !(flags & HIT_HEAD)) || (!selfdam && target==actor) ||
+        if((m_round && betweenrounds) || (m_headhunter(mutators) && !(flags & HIT_HEAD)) || (!selfdam && target==actor) ||
            (!teamdam && isally(target, actor))) dam = 0; // rockets and grenades can still push the player but not deal damage when certain mutators are active
-        if(isally(target, actor)) dam = max(dam/2, 1);
-        ts.dodamage(dam, flags&HIT_MATERIAL? true : false);
-        target->state.lastpain = lastmillis;
-        sendf(-1, 1, "ri8", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield);
-        if(target!=actor)
+        if(target!=actor && isally(target, actor)) dam = max(dam/2, 1);
+        if(dam > 0)
         {
-            if(!isally(target, actor))
+            ts.dodamage(dam, flags&HIT_MATERIAL? true : false);
+            target->state.lastpain = lastmillis;
+            sendf(-1, 1, "ri8", N_DAMAGE, target->clientnum, actor->clientnum, atk, dam, flags, ts.health, ts.shield);
+            if(target!=actor)
             {
-                actor->state.damage += dam;
-                if(m_vampire(mutators))
+                if(!isally(target, actor))
                 {
-                    actor->state.health = min(actor->state.health+dam/(actor->state.juggernaut? 2 : 1), actor->state.maxhealth*2);
-                    sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
+                    actor->state.damage += dam;
+                    if(m_vampire(mutators))
+                    {
+                        actor->state.health = min(actor->state.health+dam/(actor->state.juggernaut? 2 : 1), actor->state.maxhealth*2);
+                        sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
+                    }
                 }
+                else if(!m_teammode) dodamage(actor, actor, dam, atk, flags);
             }
-            else if(!m_teammode) dodamage(actor, actor, dam, atk, flags);
         }
         if(target==actor) target->setpushed();
         else if(!hitpush.iszero())

@@ -506,14 +506,12 @@ namespace game
 
     void hit(int damage, dynent *d, gameent *at, const vec &vel, int atk, float info1, int info2 = 1, int flags = HIT_TORSO)
     {
-        if(server::betweenrounds) return;
-
         gameent *f = (gameent *)d;
-        int dam = damage;
-        if((m_headhunter(mutators) && !(flags & HIT_HEAD)) || (!selfdam && f==at) ||
-           (!teamdam && isally(f, at))) dam = 0;
-        if(isally(f, at)) dam = max(dam/2, 1);
 
+        int dam = damage;
+        if((m_round && server::betweenrounds) || (m_headhunter(mutators) && !(flags & HIT_HEAD)) || (!selfdam && f==at) ||
+           (!teamdam && isally(f, at))) dam = 0;
+        if(f!=at && isally(f, at)) dam = max(dam/2, 1);
         if(dam > 0)
         {
             f->lastpain = lastmillis;
@@ -526,8 +524,8 @@ namespace game
                 at->lasthit = lastmillis;
             }
         }
-        if(!m_mp(gamemode) || f==at) f->hitpush(damage, vel, at, atk);
 
+        if(!m_mp(gamemode) || f==at) f->hitpush(damage, vel, at, atk);
         if(!m_mp(gamemode))
         {
             damaged(dam, f->o, f, at, atk, flags);

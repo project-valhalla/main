@@ -346,7 +346,7 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
     //pulse
     { GUN_PULSE,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE1,           -1,  S_PULSE_HIT,  180,   22,   0,   0,   1, 1000,   0, 1020,  1,  75, 18,    0,    2 },
     { GUN_PULSE,  ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT,  ANIM_GUN_IDLE,      S_PULSE2A,  S_PULSE_HIT,  S_PULSE_HIT,   80,    8,   0,   0,   0,    0,   0,  200,  1,   1,  0,    0,    1 },
-    { GUN_PULSE,      ACT_COMBO, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE3,           -1,  S_PULSE_HIT, 1000,   50,   0,   0,   0,  180,   0,  500,  1, 200, 36, 5000,  100 },
+    { GUN_PULSE,      ACT_COMBO, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE3,           -1,  S_PULSE_HIT, 1000,   50,   0,   0,   0,  180,   0,  500,  1, 200, 28, 5000,  100 },
     //rocket
     { GUN_RL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL1,           -1,           -1,  920,  110,   0,   0,   0,  300,   0, 4025,  1, 120, 33,    0,    1 },
     { GUN_RL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL2,           -1,           -1,  920,  110,   0,   0,   0,  200,   0, 4025,  1, 120, 33, 1500,    1 },

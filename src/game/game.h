@@ -484,16 +484,9 @@ struct gamestate
         item = type = 0;
     }
 
-    void baseammo(int gun)
+    void baseammo(int gun, int k = 3, int scale = 1)
     {
-        loopi(gun)
-        {
-            ammo[GUN_SG]    =  35;
-            ammo[GUN_SMG]   =  120;
-            ammo[GUN_PULSE] =  250;
-            ammo[GUN_RL]    =  18;
-            ammo[GUN_RAIL]  =  25;
-        }
+        ammo[gun] = (itemstats[gun-GUN_SG].add*k)/scale;
     }
 
     void addammo(int gun, int k = 1, int scale = 1)

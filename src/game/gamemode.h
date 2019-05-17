@@ -113,5 +113,5 @@ static struct mutatorinfo
 
 #define m_headshot(b)            (b&MUT_HEADHUNTER || b&MUT_LOCATIONALDAMAGE || b&MUT_MAYHEM)
 #define m_regen(b)               (!(b&MUT_CLASSIC) && !(b&MUT_INSTA) && !(b&MUT_EFFIC) && !(b&MUT_VAMPIRE))
-#define m_unlimitedammo(b)       ((b&MUT_INSTA) || (b&MUT_RANDOMWEAPON) || (b&MUT_ONEWEAPON))
+#define m_unlimitedammo(b)       ((b&MUT_INSTA) || (b&MUT_ONEWEAPON))
 

@@ -2331,7 +2331,7 @@ namespace game
                 gameent *d = getclient(cn);
                 if(!d || d->zombie) break;
                 loopi(NUMGUNS) d->ammo[i] = 0;
-                d->ammo[gun] = 100;
+                d->baseammo(gun);
                 d->gunselect = gun;
                 if(m_randomweapon(mutators) && player1->zombie)
                     playsound(S_VOOSH, d, &d->o);

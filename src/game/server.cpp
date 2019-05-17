@@ -2569,7 +2569,7 @@ namespace server
         actor->state.frags += fragvalue;
         if(!isally(target, actor))
         {
-            if(lastmillis-actor->state.lastkill>=5000) actor->state.kills = 0;
+            if(lastmillis-actor->state.lastkill>2000) actor->state.kills = 0;
             else actor->state.kills++;
             actor->state.spree++;
             actor->state.lastkill = lastmillis;

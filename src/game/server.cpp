@@ -2592,8 +2592,8 @@ namespace server
         }
         switch(actor->state.kills)
         {
-            case 2: flags |= K_DOUBLE; break;
-            case 4:
+            case 1: flags |= K_DOUBLE; break;
+            case 3:
             {
                 flags &= ~K_DOUBLE;
                 flags |= K_MULTI;

@@ -2731,10 +2731,9 @@ namespace server
         }
         if(m_juggernaut && gs.juggernaut) nojuggernaut = true;
         teaminfo *t = NULL;
-        int fragvalue;
         if(!betweenrounds && !zombiechosen && !interm)
         {
-            fragvalue = smode ? smode->fragvalue(ci, ci) : -1;
+            int fragvalue = smode ? smode->fragvalue(ci, ci) : -1;
             ci->state.frags += fragvalue;
             ci->state.points--;
             sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);

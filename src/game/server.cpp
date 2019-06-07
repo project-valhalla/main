@@ -688,7 +688,7 @@ namespace server
     });
     SVAR(servermotd, "");
 
-    bool betweenrounds = false, firstblood = false, juggernautdied = true, zombiechosen = false;
+    bool betweenrounds = false, firstblood = false, nojuggernaut = true, zombiechosen = false;
     bool f1warn = true, f5warn = true, f10warn = true;
 
     struct teamkillkick
@@ -2189,26 +2189,26 @@ namespace server
 
     void checkplayers()
     {
-        int alive = 0, zombienum = 0, survivornum = 0;
+        int alive = 0, zombies = 0, survivors = 0;
         loopv(clients)
         {
             if(clients[i]->state.state != CS_ALIVE) continue;
             if(m_infection)
             {
-                if(clients[i]->state.zombie) zombienum++;
-                else survivornum++;
+                if(clients[i]->state.zombie) zombies++;
+                else survivors++;
             }
             else if(m_lms) alive++;
         }
         bool timeisup = gamemillis >= gamelimit;
         if (m_infection && zombiechosen)
         {
-            if((survivornum <= 0 && zombienum <= 0) || (timeisup && survivornum <= 0 && zombienum > 0))
+            if((survivors <= 0 && zombies <= 0) || (timeisup && survivors <= 0 && zombies > 0))
             {
                 sendf(-1, 1, "ri3s", N_ANNOUNCE, S_SURVIVORS, NULL, timeisup? "\f2Time is up": "\f2Nobody survived");
                 endround();
             }
-            else if(zombienum <= 0 || (timeisup && survivornum > 0))
+            else if(zombies <= 0 || (timeisup && survivors > 0))
             {
                 sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_SURVIVOR, S_SURVIVORS, "\f2Survivors win the round");
                 loopv(clients)
@@ -2221,7 +2221,7 @@ namespace server
                 }
                 endround();
             }
-            else if(survivornum <= 0 && numclients(-1, true, false) > 1)
+            else if(survivors <= 0 && numclients(-1, true, false) > 1)
             {
                 sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_ZOMBIE, S_ZOMBIES, "\f2Zombies win the round");
                 endround();
@@ -2328,7 +2328,7 @@ namespace server
         }
 
         firstblood = false;
-        if(m_juggernaut) juggernautdied = true;
+        if(m_juggernaut) nojuggernaut = true;
         if(m_infection)
         {
             zombiechosen = false;
@@ -2533,7 +2533,7 @@ namespace server
 
     void makejuggernaut(clientinfo *ci, int actor = -1)
     {
-        if(!m_juggernaut || !ci || ci->state.state!=CS_ALIVE || !juggernautdied) return;
+        if(!m_juggernaut || !ci || ci->state.state!=CS_ALIVE || !nojuggernaut) return;
         servstate &gs = ci->state;
         gs.juggernaut = 1;
         int health = gs.maxhealth*2;
@@ -2549,7 +2549,7 @@ namespace server
         }
         gs.damagemillis = gs.hastemillis = gs.armourmillis = gs.ammomillis = 1;
         sendf(-1, 1, "ri3", N_JUGGERNAUT, ci->clientnum, health);
-        juggernautdied = false;
+        nojuggernaut = false;
     }
 
     bool isally(clientinfo *target, clientinfo *actor)
@@ -2624,8 +2624,8 @@ namespace server
         }
         if(m_juggernaut)
         {
-            if(target->state.juggernaut) juggernautdied = true;
-            if(target!=actor && (juggernautdied || target->state.juggernaut))
+            if(target->state.juggernaut) nojuggernaut = true;
+            if(target!=actor && (nojuggernaut || target->state.juggernaut))
             {
                 makejuggernaut(actor);
                 flags |= K_JUGGERNAUT;
@@ -2729,14 +2729,15 @@ namespace server
             gs.respawn();
             return;
         }
-        if(m_juggernaut && gs.juggernaut) juggernautdied = true;
+        if(m_juggernaut && gs.juggernaut) nojuggernaut = true;
         teaminfo *t = NULL;
         int fragvalue;
-        if(!betweenrounds || !zombiechosen)
+        if(!betweenrounds && !zombiechosen && !interm)
         {
             fragvalue = smode ? smode->fragvalue(ci, ci) : -1;
             ci->state.frags += fragvalue;
             ci->state.points--;
+            sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
             ci->state.deaths++;
             if(m_teammode && validteam(ci->team)) t = &teaminfos[ci->team-1];
             if(t) t->frags += fragvalue;
@@ -3214,7 +3215,7 @@ namespace server
             if(ci->privilege) setmaster(ci, false);
             if(smode) smode->leavegame(ci, true);
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-            if(m_juggernaut && ci->state.juggernaut) juggernautdied = true;
+            if(m_juggernaut && ci->state.juggernaut) nojuggernaut = true;
             savescore(ci);
             sendf(-1, 1, "ri2", N_CDIS, n);
             clients.removeobj(ci);

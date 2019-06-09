@@ -558,6 +558,11 @@ namespace game
                 conoutf(CON_GAMEINFO, "%s \f2%s unstoppable!", aname, actor==player1 ? "are" : "is");
                 if(actor->aitype==AI_BOT) taunt(actor);
             }
+            if(flags&K_REVENGE)
+            {
+                if(actor==hudplayer()) playsound(S_ANNOUNCER_REVENGE, NULL, NULL, NULL, SND_ANNOUNCER);
+                conoutf(CON_GAMEINFO, "%s \f2took %s revenge on \ff%s", aname, actor==player1? "your": "their", dname);
+            }
             if(flags&K_HEADSHOT)
             {
                 if(actor==hudplayer()) playsound(S_ANNOUNCER_HEAD_HUNTER, NULL, NULL, NULL, SND_ANNOUNCER);

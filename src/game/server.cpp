@@ -139,13 +139,13 @@ namespace server
         int state, editstate;
         int lastdeath, deadflush, lastspawn, lifesequence, lastpain;
         int lastregeneration, lastpistolaction, lastammoregen;
-        int lastshot, lastkill;
+        int lastshot, lastkill, lastkiller;
         projectilestate<8> projs, bouncers;
         int frags, flags, deaths, points, teamkills, shotdamage, damage, kills, spree, headshots, zombiekills;
         int lasttimeplayed, timeplayed;
         float effectiveness;
 
-        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastregeneration(0), lastpistolaction(0), lastammoregen(0), lastkill(0), kills(0), spree(0), headshots(0), zombiekills(0) {}
+        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastregeneration(0), lastpistolaction(0), lastammoregen(0), lastkill(0), lastkiller(-1), kills(0), spree(0), headshots(0), zombiekills(0) {}
 
         bool isalive(int gamemillis)
         {
@@ -2573,6 +2573,7 @@ namespace server
             else actor->state.kills++;
             actor->state.spree++;
             actor->state.lastkill = lastmillis;
+            target->state.lastkiller = actor->clientnum;
         }
         else actor->state.spree = actor->state.kills = 0;
         if(fragvalue>0)
@@ -2609,6 +2610,11 @@ namespace server
                 flags |= K_UNSTOPPABLE;
                 break;
             }
+        }
+        if(lastmillis-actor->state.lastdeath<5500 && actor->state.lastkiller >= 0 && actor->state.lastkiller == target->clientnum)
+        {
+            flags |= K_REVENGE;
+            actor->state.lastkiller = -1;
         }
         if(actor->state.headshots >= 8)
         {

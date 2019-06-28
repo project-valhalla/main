@@ -3824,7 +3824,7 @@ namespace server
                 int damage = getint(p);
                 if(!cq) break;
                 if(cq->state.invulnmillis) damage = 0;
-                if(lastmillis-cq->state.lastdamage<=1000) break;
+                if(lastmillis-cq->state.lastdamage<=800) break;
                 dodamage(cq, cq, damage, -1, HIT_MATERIAL);
                 cq->state.lastdamage = lastmillis;
                 break;

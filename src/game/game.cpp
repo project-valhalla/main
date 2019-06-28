@@ -926,16 +926,14 @@ namespace game
         {
             if(d->state!=CS_ALIVE) return;
             gameent *e = (gameent *)d;
-            if(lastmillis-e->lastdamage <= 1000) return;
             int damage = ENV_DAM;
             if(e->invulnmillis) damage = 0;
-            if(!m_mp(gamemode)) damaged(damage, e->o, e, e, -1);
-            else addmsg(N_HURTPLAYER, "rci", e, damage);
-            if(damage > 0)
+            if(!m_mp(gamemode))
             {
-                damageeffect(damage, e, e->o, -1);
-                //msgsound(S_DAMAGE, e);
+                if(lastmillis-e->lastdamage <= 800) return;
+                damaged(damage, e->o, e, e, -1);
             }
+            else addmsg(N_HURTPLAYER, "rci", e, damage);
             e->lastdamage = lastmillis;
         }
     }

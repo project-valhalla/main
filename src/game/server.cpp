@@ -2949,8 +2949,7 @@ namespace server
             }
             else
             {
-                ci->state.damagemillis = ci->state.hastemillis =
-                ci->state.armourmillis = ci->state.ammomillis = ci->state.health;
+                ci->state.damagemillis = ci->state.hastemillis = ci->state.armourmillis = ci->state.ammomillis = 1;
             }
             if(ci->state.invulnmillis) ci->state.invulnmillis = max(ci->state.invulnmillis-curtime, 0);
             if(ci->state.state == CS_ALIVE)
@@ -2991,9 +2990,12 @@ namespace server
                 }
             }
         }
-        if(Roundlimit && rounds >= Roundlimit && !interm) gameover();
-        if(m_round && !m_elimination && !betweenrounds && !interm) checkplayers();
         serverevents::process();
+        if(!interm)
+        {
+            if(roundlimit && rounds >= roundlimit) gameover();
+            if(m_round && !m_elimination) serverevents::add(&checkplayers, 100);
+        }
     }
 
     void cleartimedevents(clientinfo *ci)

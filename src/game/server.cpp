@@ -2516,7 +2516,7 @@ namespace server
         if(smode) smode->intermission();
         changegamespeed(100);
         serverevents::invalidate();
-        interm = gamemillis + 15000;
+        interm = gamemillis + 20000;
     }
 
     void checkintermission()

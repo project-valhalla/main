@@ -429,7 +429,7 @@ namespace server
     enet_uint32 lastsend = 0;
     int mastermode = MM_OPEN, mastermask = MM_PRIVSERV;
     stream *mapdata = NULL;
-    int Timelimit = 10, Scorelimit = 30, Roundlimit = 20, rounds = 0,
+    int timelimit = 10, scorelimit = 30, roundlimit = 20, rounds = 0,
         selfdam = 1, teamdam = 1, serverweapon = -1;
 
     namespace serverevents
@@ -989,7 +989,7 @@ namespace server
 
     bool pickup(int i, int sender)         // server side item pickup, acknowledge first client that gets it
     {
-        if((Timelimit>0 && m_timed && !m_round && gamemillis>=gamelimit) || !sents.inrange(i) || !sents[i].spawned) return false;
+        if((timelimit>0 && m_timed && !m_round && gamemillis>=gamelimit) || !sents.inrange(i) || !sents[i].spawned) return false;
         clientinfo *ci = getinfo(sender);
         if(!ci || (!ci->local && !ci->state.canpickup(sents[i].type))) return false;
         sents[i].spawned = false;
@@ -1867,7 +1867,7 @@ namespace server
     bool hasmap(clientinfo *ci)
     {
         return (m_edit && (clients.length() > 0 || ci->local)) ||
-               (smapname[0] && (Timelimit<=0 || !m_timed || (m_round && !interm) || (gamemillis < gamelimit) || (ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || numclients(ci->clientnum, true, true, true)));
+               (smapname[0] && (timelimit<=0 || !m_timed || (m_round && !interm) || (gamemillis < gamelimit) || (ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || numclients(ci->clientnum, true, true, true)));
     }
 
     int welcomepacket(packetbuf &p, clientinfo *ci)
@@ -1879,13 +1879,13 @@ namespace server
         putint(p, mutators);
         putint(p, notgotitems ? 1 : 0);
         putint(p, N_SERVERVARIABLES);
-        putint(p, Timelimit);
-        putint(p, Scorelimit);
-        putint(p, Roundlimit);
+        putint(p, timelimit);
+        putint(p, scorelimit);
+        putint(p, roundlimit);
         putint(p, selfdam);
         putint(p, teamdam);
         putint(p, serverweapon);
-        if(!ci || (Timelimit>0 && m_timed && smapname[0]))
+        if(!ci || (timelimit>0 && m_timed && smapname[0]))
         {
             putint(p, N_TIMEUP);
             putint(p, (m_round && !interm) || (gamemillis < gamelimit && !interm) ? max((gamelimit - gamemillis)/1000, 1) : 0);
@@ -2051,12 +2051,12 @@ namespace server
 
     void checkscorelimit(clientinfo *ci, int points)
     {
-        if(!Scorelimit) return;
-        int remain = Scorelimit-points, snd = -1;
+        if(!scorelimit) return;
+        int remain = scorelimit-points, snd = -1;
         if(m_dm)
         {
             //string line1;
-            if(Scorelimit > remain)
+            if(scorelimit > remain)
             {
                 switch(remain)
                 {
@@ -2088,7 +2088,7 @@ namespace server
                     if(f10warn || f5warn || f1warn) sendf(-1, 1, "ri2s", N_ANNOUNCE, snd, line1);*/
                 }
             }
-            if(points >= Scorelimit)
+            if(points >= scorelimit)
             {
                 if(m_dm) startintermission();
                 else if(m_round && !m_elimination && !interm) gameover();
@@ -2283,15 +2283,15 @@ namespace server
         serverevents::add(&voosh, 15000);
     }
 
-    void forcevariables(int roundlimit, int selfdamage, int teamdamage, int forceweapon)
+    void forcevariables(int _roundlimit, int selfdamage, int teamdamage, int forceweapon)
     {
-        Roundlimit = roundlimit;
+        roundlimit = _roundlimit;
         selfdam = selfdamage;
         teamdam = teamdamage;
         serverweapon = forceweapon;
     }
 
-    void changemap(const char *s, int mode, int muts, int tl = Timelimit, int sl = -1)
+    void changemap(const char *s, int mode, int muts, int _timelimit = timelimit, int _scorelimit = -1)
     {
         stopdemo();
         pausegame(false);
@@ -2303,17 +2303,17 @@ namespace server
         gamemode = mode;
         mutators = muts;
         gamemillis = 0;
-        Timelimit = tl;
+        timelimit = _timelimit;
         if(m_round)
         {
-            int roundlimit = max(Timelimit/5, 1);
+            int roundlimit = max(timelimit/5, 1);
             gamelimit = roundlimit*60000;
         }
-        else gamelimit = Timelimit*60000;
-        if(m_ctf) Scorelimit = 5;
-        else if(m_elimination || m_lms) Scorelimit = 8;
-        else if(m_teammode) Scorelimit = 60;
-        else Scorelimit = 30;
+        else gamelimit = timelimit*60000;
+        if(m_ctf) scorelimit = 5;
+        else if(m_elimination || m_lms) scorelimit = 8;
+        else if(m_teammode) scorelimit = 60;
+        else scorelimit = 30;
         rounds = interm = 0;
         nextexceeded = 0;
         copystring(smapname, s);
@@ -2346,7 +2346,7 @@ namespace server
         if(!m_mp(gamemode)) kicknonlocalclients(DISC_LOCAL);
 
         sendf(-1, 1, "risi3", N_MAPCHANGE, smapname, gamemode, mutators, 1);
-        sendf(-1, 1, "ri7", N_SERVERVARIABLES, Timelimit, Scorelimit, Roundlimit, selfdam, teamdam, serverweapon);
+        sendf(-1, 1, "ri7", N_SERVERVARIABLES, timelimit, scorelimit, roundlimit, selfdam, teamdam, serverweapon);
 
         clearteaminfo();
         if(m_teammode) autoteam();
@@ -2355,7 +2355,7 @@ namespace server
         else if(m_elimination) smode = &eliminationmode;
         else smode = NULL;
 
-        if(Timelimit>0 && m_timed && smapname[0])
+        if(timelimit>0 && m_timed && smapname[0])
             sendf(-1, 1, "ri2", N_TIMEUP, (m_round || gamemillis < gamelimit) && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
         loopv(clients)
         {
@@ -2492,12 +2492,12 @@ namespace server
         gamemillis = 0;
         if(m_round)
         {
-            int roundlimit = max(Timelimit/5, 1);
+            int roundlimit = max(timelimit/5, 1);
             gamelimit = roundlimit*60000;
         }
-        else gamelimit = Timelimit*60000;
+        else gamelimit = timelimit*60000;
 
-        if(Timelimit>0 && m_timed && smapname[0])
+        if(timelimit>0 && m_timed && smapname[0])
             sendf(-1, 1, "ri2", N_TIMEUP, m_round && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
 
         loopv(clients)
@@ -3026,7 +3026,7 @@ namespace server
             gamemillis += curtime;
 
             if(m_demo) readdemo();
-            else if(Timelimit <= 0 || !m_timed || (m_round && !interm) || gamemillis < gamelimit)
+            else if(timelimit <= 0 || !m_timed || (m_round && !interm) || gamemillis < gamelimit)
             {
                 processevents();
                 if(curtime)
@@ -3050,7 +3050,7 @@ namespace server
         while(bannedips.length() && bannedips[0].expire-totalmillis <= 0) bannedips.remove(0);
         loopv(connects) if(totalmillis-connects[i]->connectmillis>15000) disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
 
-        if(nextexceeded && gamemillis > nextexceeded && (Timelimit <= 0 || !m_timed || (m_round && !interm) || gamemillis < gamelimit))
+        if(nextexceeded && gamemillis > nextexceeded && (timelimit <= 0 || !m_timed || (m_round && !interm) || gamemillis < gamelimit))
         {
             nextexceeded = 0;
             loopvrev(clients)
@@ -3066,7 +3066,7 @@ namespace server
 
         if(shouldstep && !gamepaused)
         {
-            if(Timelimit>0 && m_timed && smapname[0] && gamemillis-curtime>0) checkintermission();
+            if(timelimit>0 && m_timed && smapname[0] && gamemillis-curtime>0) checkintermission();
             if(interm > 0 && gamemillis>interm)
             {
                 if(demorecord) enddemorecord();
@@ -3718,26 +3718,26 @@ namespace server
 
             case N_SENDVARIABLES:
             {
-                int tm = getint(p), sl = getint(p), rl = getint(p),
+                int _timelimit = getint(p), _scorelimit = getint(p), _roundlimit = getint(p),
                     selfdamage = getint(p), teamdamage = getint(p), weapon = getint(p); // there might be a better way
                 if(ci->privilege || ci->local)
                 {
-                    if(Timelimit != tm)
+                    if(timelimit != _timelimit)
                     {
-                        if(tm>0) sendservmsgf("%s set time limit to %d minutes", ci->name, tm);
+                        if(_timelimit>0) sendservmsgf("%s set time limit to %d minutes", ci->name, _timelimit);
                         else sendservmsgf("%s removed time limit", ci->name);
-                        Timelimit = tm;
+                        timelimit = _timelimit;
                     }
-                    if(Scorelimit != sl)
+                    if(scorelimit != _scorelimit)
                     {
-                        if(tm>0) sendservmsgf("%s set score limit to %d", ci->name, sl);
+                        if(_scorelimit>0) sendservmsgf("%s set score limit to %d", ci->name, _scorelimit);
                         else sendservmsgf("%s removed score limit", ci->name);
-                        Scorelimit = sl;
+                        scorelimit = _scorelimit;
                     }
-                    if(Roundlimit != rl)
+                    if(roundlimit != _roundlimit)
                     {
-                        if(rl>0) sendservmsgf("%s set round limit to %d", ci->name, rl);
-                        Roundlimit = rl;
+                        if(_roundlimit>0) sendservmsgf("%s set round limit to %d", ci->name, _roundlimit);
+                        roundlimit = _roundlimit;
                     }
                     if(selfdam != selfdamage) selfdam = selfdamage;
                     if(teamdam != teamdamage) teamdam = teamdamage;
@@ -4492,7 +4492,7 @@ namespace server
         putint(p, maxclients);
         putint(p, gamepaused || gamespeed != 100 ? 5 : 3); // number of attrs following
         putint(p, gamemode);
-        putint(p, Timelimit>0 && (m_timed || (m_round && !interm)) ? max((gamelimit - gamemillis)/1000, 0) : 0);
+        putint(p, timelimit>0 && (m_timed || (m_round && !interm)) ? max((gamelimit - gamemillis)/1000, 0) : 0);
         putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : (mastermode || mastermask&MM_AUTOAPPROVE ? mastermode : MM_AUTH)));
         if(gamepaused || gamespeed != 100)
         {

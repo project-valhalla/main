@@ -2183,12 +2183,14 @@ namespace server
 
     void endround()
     {
+        if(betweenrounds || interm) return;
         betweenrounds = true;
         serverevents::add(&newround, 5000);
     }
 
     void checkplayers()
     {
+        if(betweenrounds || interm) return;
         int alive = 0, zombies = 0, survivors = 0;
         loopv(clients)
         {

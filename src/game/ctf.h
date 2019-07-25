@@ -289,6 +289,13 @@ struct ctfclientmode : clientmode
                 sendf(-1, 1, "ri3", N_RESETFLAG, i, ++f.version);
             }
         }
+
+        if(gamemillis >= ((gamelimit) - 200) && getteamscore(2) == getteamscore(1) && overt == 1)
+        {
+            conoutf("Teams are tied. Adding 2 minutes of bonus time.");
+            gamelimit += 120000;
+            sendf(-1, 1, "ri2", N_TIMEUP, (m_round || gamemillis < gamelimit) && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
+        }
     }
 
     void initclient(clientinfo *ci, packetbuf &p, bool connecting)
@@ -382,7 +389,21 @@ struct ctfclientmode : clientmode
                 break;
             }
         }
-
+        pushhudscale(2);
+        if(player1->team==2)
+        {
+        draw_textf("%i", w/2.7, 0, getteamscore(1));
+        draw_textf("%i", w/2.2, 0, getteamscore(2));
+        }
+        else
+        {
+        draw_textf("%i", w/2.7, 0, getteamscore(2));
+        draw_textf("%i", w/2.2, 0, getteamscore(1));
+        }
+        pophudmatrix();
+        resethudshader();
+        drawicon(HICON_RED_FLAG_ICON, w/1.5, 0);
+        drawicon(HICON_BLUE_FLAG_ICON, w/1.05, 0);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         int s = 1800/4, x = 1800*w/h - s - s/10, y = s/10;
         gle::colorf(1, 1, 1, minimapalpha);
@@ -646,6 +667,13 @@ struct ctfclientmode : clientmode
 
         if(score >= Scorelimit)
             conoutf(CON_GAMEINFO, "%s captured %d flags", teamcolor("team ", "", team, "a team"), score);
+        if(getteamscore(2) == getteamscore(1))
+        {
+            if(overt == 1)
+            {
+                lastmillis += 100000;
+            }
+        }
     }
 
     void takeflag(gameent *d, int i, int version)

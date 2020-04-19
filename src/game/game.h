@@ -103,7 +103,7 @@ static const char * const mastermodenames[] =  { "Auth",   "Open",   "Veto",    
 static const char * const mastermodecolors[] = { "",       "\f0",    "\f2",        "\f1",        "\f3",        "\f3" };
 static const char * const mastermodeicons[] =  { "server", "server", "serverlock", "serverlock", "serverpriv", "serverpriv" };
 
-enum { VAR_TIMELIMIT = 0, VAR_SCORELIMIT, VAR_MAXROUNDS, VAR_SELFDAMAGE, VAR_TEAMDAMAGE, VAR_WEAPON, VAR_OVERTIME, VAR_TEAM1, VAR_TEAM2 };
+enum { VAR_TIMELIMIT = 0, VAR_SCORELIMIT, VAR_MAXROUNDS, VAR_SELFDAMAGE, VAR_TEAMDAMAGE, VAR_WEAPON, VAR_TEAM1, VAR_TEAM2 };
 
 // hardcoded sounds, defined in sound.cfg
 enum
@@ -266,7 +266,6 @@ enum
     HICON_ALLY,
     HICON_HASTE, HICON_DDAMAGE, HICON_ARMOUR, HICON_UAMMO,
     HICON_MEDKIT, HICON_INVULNERABILITY,
-    HICON_BLUE_FLAG_ICON, HICON_RED_FLAG_ICON,
 
 
     HICON_X       = 20,
@@ -299,9 +298,7 @@ static const char * const iconnames[] =
     "data/interface/icon/armour.png",
     "data/interface/icon/infinity.png",
     "data/interface/icon/asclepius.png",
-    "data/interface/icon/ankh.png",
-    "data/interface/radar/blip_blue_flag.png",
-    "data/interface/radar/blip_red_flag.png"
+    "data/interface/icon/ankh.png"
 };
 
 static struct itemstat { int add, max, sound, info; } itemstats[] =
@@ -825,7 +822,7 @@ namespace game
 
     // game
     extern int nextmode, Timelimit, nexttimelimit, Scorelimit, nextscorelimit;
-    extern int selfdam, teamdam, forceweapon, overt;
+    extern int selfdam, teamdam, forceweapon;
     extern string clientmap;
     extern bool intermission;
     extern int maptime, maprealtime, maplimit;
@@ -863,9 +860,6 @@ namespace game
     extern void doaction(int act);
     const char *mastermodecolor(int n, const char *unknown);
     const char *mastermodeicon(int n, const char *unknown);
-
-    extern void setovertime(int i);
-    extern int getgamemillis();
 
     // client
     extern bool connected, remote, demoplayback;
@@ -950,7 +944,7 @@ namespace server
     extern void startintermission();
     extern void stopdemo();
     extern void forcemap(const char *map, int mode, int muts, int tl, int sl);
-    extern void forcevariables(int roundlimit, int selfdamage, int teamdamage, int forceweapon, int overtime);
+    extern void forcevariables(int roundlimit, int selfdamage, int teamdamage, int forceweapon);
     extern void forcepaused(bool paused);
     extern void forcegamespeed(int speed);
     extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
@@ -961,7 +955,7 @@ namespace server
     extern bool delayspawn(int type);
     extern bool canspawnitem(int type);
     extern bool betweenrounds;
-    extern int teamdamage, selfdamage, overtime;
+    extern int teamdamage, selfdamage;
 }
 
 #endif

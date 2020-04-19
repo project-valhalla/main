@@ -430,7 +430,7 @@ namespace server
     int mastermode = MM_OPEN, mastermask = MM_PRIVSERV;
     stream *mapdata = NULL;
     int timelimit = 10, scorelimit = 30, roundlimit = 20, rounds = 0,
-        selfdam = 1, teamdam = 1, serverweapon = -1, overt = 0;//
+        selfdam = 1, teamdam = 1, serverweapon = -1;
 
     namespace serverevents
     {
@@ -1883,7 +1883,6 @@ namespace server
         putint(p, scorelimit);
         putint(p, roundlimit);
         putint(p, selfdam);
-        putint(p, overt);
         putint(p, teamdam);
         putint(p, serverweapon);
         if(!ci || (timelimit>0 && m_timed && smapname[0]))
@@ -2286,13 +2285,12 @@ namespace server
         serverevents::add(&voosh, 15000);
     }
 
-    void forcevariables(int _roundlimit, int selfdamage, int teamdamage, int forceweapon, int overtime)
+    void forcevariables(int _roundlimit, int selfdamage, int teamdamage, int forceweapon)
     {
-        roundlimit   = _roundlimit;
-        selfdam      = selfdamage;
-        teamdam      = teamdamage;
+        roundlimit = _roundlimit;
+        selfdam = selfdamage;
+        teamdam = teamdamage;
         serverweapon = forceweapon;
-        overt        = overtime;
     }
 
     void changemap(const char *s, int mode, int muts, int _timelimit = timelimit, int _scorelimit = -1)
@@ -2350,7 +2348,7 @@ namespace server
         if(!m_mp(gamemode)) kicknonlocalclients(DISC_LOCAL);
 
         sendf(-1, 1, "risi3", N_MAPCHANGE, smapname, gamemode, mutators, 1);
-        sendf(-1, 1, "ri8", N_SERVERVARIABLES, timelimit, scorelimit, roundlimit, selfdam, teamdam, serverweapon, overt);
+        sendf(-1, 1, "ri7", N_SERVERVARIABLES, timelimit, scorelimit, roundlimit, selfdam, teamdam, serverweapon);
 
         clearteaminfo();
         if(m_teammode) autoteam();
@@ -3723,7 +3721,7 @@ namespace server
             case N_SENDVARIABLES:
             {
                 int _timelimit = getint(p), _scorelimit = getint(p), _roundlimit = getint(p),
-                    selfdamage = getint(p), teamdamage = getint(p), weapon = getint(p), overtime = getint(p); // there might be a better way
+                    selfdamage = getint(p), teamdamage = getint(p), weapon = getint(p); // there might be a better way
                 if(ci->privilege || ci->local)
                 {
                     if(timelimit != _timelimit)
@@ -3743,10 +3741,9 @@ namespace server
                         if(_roundlimit>0) sendservmsgf("%s set round limit to %d", ci->name, _roundlimit);
                         roundlimit = _roundlimit;
                     }
-                    if(selfdam != selfdamage)      selfdam      = selfdamage;
-                    if(teamdam != teamdamage)      teamdam      = teamdamage;
-                    if(serverweapon != weapon)     serverweapon = weapon;
-                    if(overt != overtime)          overt        = overtime;
+                    if(selfdam != selfdamage) selfdam = selfdamage;
+                    if(teamdam != teamdamage) teamdam = teamdamage;
+                    if(serverweapon != weapon) serverweapon = weapon;
                 }
                 break;
             }

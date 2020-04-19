@@ -614,36 +614,28 @@ namespace game
     ICOMMAND(checkmaps, "", (), addmsg(N_CHECKMAPS, "r"));
 
     int Timelimit = 10, Scorelimit = 30, nexttimelimit = 10, nextscorelimit = 30, Roundlimit = 20, nextroundlimit = 20,
-        selfdam = 1, teamdam = 1, forceweapon = -1, overt = 0;
+        selfdam = 1, teamdam = 1, forceweapon = -1;
     const char *team1name = "Blue", *team2name = "Red";
 
     void setvariable(int val, int var, char *s = NULL)
     {
         switch(var)
         {
-            case VAR_TIMELIMIT:  nexttimelimit  = val; break;
+            case VAR_TIMELIMIT: nexttimelimit = val; break;
             case VAR_SCORELIMIT: nextscorelimit = val; break;
-            case VAR_MAXROUNDS:  nextroundlimit = val; break;
-            case VAR_SELFDAMAGE: selfdam        = val; break;
-            case VAR_TEAMDAMAGE: teamdam        = val; break;
-            case VAR_WEAPON:     forceweapon    = val; break;
-            case VAR_OVERTIME:   overt          = val; break;
+            case VAR_MAXROUNDS: nextroundlimit = val; break;
+            case VAR_SELFDAMAGE: selfdam = val; break;
+            case VAR_TEAMDAMAGE: teamdam = val; break;
+            case VAR_WEAPON: forceweapon = val; break;
         }
     }
 
-
-    void setovertime(int i)
-    {
-        overt = i;
-    }
-
-    VARF(timelimit,  0, 10, 60,       setvariable(timelimit, VAR_TIMELIMIT));
-    VARF(scorelimit, 0, 30, 1000,     setvariable(scorelimit, VAR_SCORELIMIT));
-    VARF(roundlimit, 0, 20, 30,       setvariable(roundlimit, VAR_MAXROUNDS));
-    VARF(selfdamage, 0, 1, 1,         setvariable(selfdamage, VAR_SELFDAMAGE));
-    VARF(overtime,   0, 0, 1,         setvariable(overtime, VAR_OVERTIME));
-    VARF(teamdamage, 0, 1, 1,         setvariable(teamdamage, VAR_TEAMDAMAGE));
-    VARF(forceweap,  0, 4, NUMGUNS-1, setvariable(forceweap, VAR_WEAPON));
+    VARF(timelimit, 0, 10, 60, setvariable(timelimit, VAR_TIMELIMIT));
+    VARF(scorelimit, 0, 30, 1000, setvariable(scorelimit, VAR_SCORELIMIT));
+    VARF(roundlimit, 0, 20, 30, setvariable(roundlimit, VAR_MAXROUNDS));
+    VARF(selfdamage, 0, 1, 1, setvariable(selfdamage, VAR_SELFDAMAGE));
+    VARF(teamdamage, 0, 1, 1, setvariable(teamdamage, VAR_TEAMDAMAGE));
+    VARF(forceweap, 0, 4, NUMGUNS-1, setvariable(forceweap, VAR_WEAPON));
 
     void setteamname(char *n, int team)
     {
@@ -735,15 +727,14 @@ namespace game
     }
     ICOMMAND(ismutselected, "i", (int *mut), intret(ismutatorselected(*mut)));
 
-    void getservervariables(int tl, int sl, int rl, int teamdam, int selfdam, int weapon, int overtime) // this is probably still a mess, did not check it out in a while
+    void getservervariables(int tl, int sl, int rl, int teamdam, int selfdam, int weapon) // this is probably still a mess, did not check it out in a while
     {
-        Timelimit   = nexttimelimit = tl;
-        Scorelimit   = nextscorelimit = sl;
-        Roundlimit   = nextroundlimit = rl;
-        teamdam      = teamdam;
-        selfdam      = selfdam;
-        overt        = overtime;
-        forceweapon  = weapon;
+        Timelimit = nexttimelimit = tl;
+        Scorelimit = nextscorelimit = sl;
+        Roundlimit = nextroundlimit = rl;
+        teamdam = teamdam;
+        selfdam = selfdam;
+        forceweapon = weapon;
     }
 
     ICOMMAND(timeremaining, "i", (int *formatted),
@@ -772,13 +763,13 @@ namespace game
         if(!remote)
         {
             server::forcemap(name, mode, muts, tl, sl);
-            server::forcevariables(roundlimit, selfdam, teamdam, forceweapon, overt);
+            server::forcevariables(roundlimit, selfdam, teamdam, forceweapon);
             if(!isconnected()) localconnect();
         }
         else if(player1->state!=CS_SPECTATOR || player1->privilege)
         {
             addmsg(N_MAPVOTE, "rsii", name, mode, muts);
-            addmsg(N_SENDVARIABLES, "ri8", tl, sl, roundlimit, selfdam, teamdam, forceweapon, overt);
+            addmsg(N_SENDVARIABLES, "ri6", tl, sl, roundlimit, selfdam, teamdam, forceweapon);
         }
     }
     void changemap(const char *name)
@@ -1634,8 +1625,8 @@ namespace game
             case N_SERVERVARIABLES:
             {
                 int tl = getint(p), sl = getint(p), rl = getint(p),
-                    selfdam = getint(p), teamdam = getint(p), serverweapon = getint(p), overt = getint(p);
-                getservervariables(tl, sl, rl, selfdam, teamdam, serverweapon, overt);
+                    selfdam = getint(p), teamdam = getint(p), serverweapon = getint(p);
+                getservervariables(tl, sl, rl, selfdam, teamdam, serverweapon);
                 break;
             }
 

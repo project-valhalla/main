@@ -53,7 +53,7 @@ fi
 if [ -x ./bin_unix/${SYSTEM_NAME}client ]
 then
   cd ${TESS_DATA}
-  exec ./bin_unix/${SYSTEM_NAME}client ${TESS_OPTIONS} "$@"
+  exec ./src/tess_client
 else
   echo "Your platform does not have a pre-compiled Tesseract client."
   echo "Please follow the following steps to build a native client:"

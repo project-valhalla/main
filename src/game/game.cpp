@@ -706,11 +706,6 @@ namespace game
 
         setclientmode();
 
-        if(!m_teammode)
-        {
-            setovertime(0);
-        }
-
         intermission = false;
         maptime = maprealtime = 0;
         maplimit = -1;
@@ -1033,16 +1028,10 @@ namespace game
         }
     }
 
-    VARP(showmaptime, 0, 1, 1);
-
     void gameplayhud(int w, int h)
-    { 
+    {
         pushhudscale(h/1800.0f);
-        if(!m_edit && showmaptime==1)
-        {
-        int secs = max(maplimit-lastmillis, 0)/1000;
-        draw_textf("%i:%02i", w*0.81, 30, secs/60, secs%60);
-        }
+
         if(player1->state==CS_SPECTATOR)
         {
             float pw, ph, tw, th, fw, fh;

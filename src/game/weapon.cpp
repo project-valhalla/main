@@ -1386,7 +1386,7 @@ namespace game
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
-        if(attacks[atk].kickamount && d->o.dist(to) <= 25 && !(d->physstate >= PHYS_SLOPE && d->crouching && d->crouched()))
+        if(attacks[atk].kickamount && !(d->physstate >= PHYS_SLOPE && d->crouching && d->crouched()))
         {
             vec kickback = vec(dir).mul(attacks[atk].kickamount*-2.5f);
             d->vel.add(kickback);

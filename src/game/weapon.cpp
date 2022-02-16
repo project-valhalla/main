@@ -936,7 +936,6 @@ namespace game
         int gun = attacks[atk].gun, sound = attacks[atk].sound, teamcolour = teamtextcolor[d->team];
         float dist = from.dist(to);
         vec up = to;
-        vec dir = vec(from).sub(to).safenormalize();
         switch(atk)
         {
             case ATK_PULSE1:

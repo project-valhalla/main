@@ -75,7 +75,7 @@ static struct mutatorinfo
     const char *info;
 } mutator[] =
 {
-    { "default", "", MUT_DEFAULT, MUT_ALL, ""},
+    { "loadout", "Loadout", MUT_DEFAULT, MUT_ALL, "\f6Loadout\ff: open the weapon menu by pressing \f0[B]\ff and choose two weapons to spawn with (default mutator)"},
     { "classic", "Classic", MUT_CLASSIC, MUT_DEFAULT | MUT_INSTA | MUT_EFFIC | MUT_NOITEMS, "\f6Classic\ff: collect items for ammo, shield and health" },
     { "insta", "Instagib", MUT_INSTA, MUT_DEFAULT | MUT_CLASSIC | MUT_EFFIC | MUT_VAMPIRE | MUT_RANDOMWEAPON | MUT_ONEWEAPON, "\n\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot" },
     { "effic", "Efficiency", MUT_EFFIC, MUT_DEFAULT | MUT_CLASSIC | MUT_INSTA | MUT_RANDOMWEAPON | MUT_ONEWEAPON, "\f6Efficiency\ff: you spawn with shield and all weapons" },

@@ -1386,12 +1386,10 @@ namespace game
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
-        bool kicked = false;
         if(attacks[atk].kickamount && d->o.dist(to) <= 25 && !(d->physstate >= PHYS_SLOPE && d->crouching && d->crouched()))
         {
             vec kickback = vec(dir).mul(attacks[atk].kickamount*-2.5f);
             d->vel.add(kickback);
-            kicked = true;
         }
         float shorten = attacks[atk].range && dist > attacks[atk].range ? attacks[atk].range : 0,
               barrier = raycube(d->o, dir, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
@@ -1410,9 +1408,9 @@ namespace game
 
         if(d==player1 || d->ai)
         {
-            addmsg(N_SHOOT, "rci2i7iv", d, lastmillis-maptime, atk,
+            addmsg(N_SHOOT, "rci2i6iv", d, lastmillis-maptime, atk,
                    (int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
-                   (int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF), kicked,
+                   (int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
                    hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
         }
 

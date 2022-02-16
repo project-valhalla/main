@@ -69,7 +69,6 @@ namespace server
     {
         int id, atk;
         vec from, to;
-        bool kickback;
         vector<hitinfo> hits;
 
         void process(clientinfo *ci);
@@ -3842,7 +3841,6 @@ namespace server
                 shot->atk = getint(p);
                 loopk(3) shot->from[k] = getint(p)/DMF;
                 loopk(3) shot->to[k] = getint(p)/DMF;
-                shot->kickback = getint(p);
                 int hits = getint(p);
                 loopk(hits)
                 {
@@ -3858,7 +3856,7 @@ namespace server
                 if(cq)
                 {
                     cq->addevent(shot);
-                    if(shot->kickback) cq->setpushed();
+                    cq->setpushed();
                 }
                 else delete shot;
                 break;

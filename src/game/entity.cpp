@@ -204,13 +204,9 @@ namespace entities
 
     void tpeffects(vec p)
     {
-        vec v = p;
-        v.z += 5.0f;
-        particle_splash(PART_SPARK1, 30, 130, p, 0x89E5FB, 6.5f, 80, -1, -0.04f);
-        particle_splash(PART_EDIT, 200, 115, p, 0x87C5EA, 0.40f+rndscale(0.70f), 500, 60);
-        particle_splash(PART_SPARK1, 10, 100, v, 0x88D5EB, 7.0f, 150, -1, -0.1f);
-        particle_splash(PART_EDIT, 10, 130, v, 0x88D5EB, 8.0f, 100, -10, -0.1f);
-        adddynlight(v, 100, vec(0.50f, 1.0f, 1.4f), 500, 100);
+        particle_splash(PART_SPARK2, 50, 200, p, 0x89E5FB, 0.20f, 250, 8);
+        particle_fireball(p, 10.0f, PART_PULSE_BURST, 500, 0x89E5FB, 1.0f);
+        adddynlight(p, 100, vec(0.50f, 1.0f, 1.4f), 500, 100);
     }
 
     void teleporteffects(gameent *d, int tp, int td, bool local)
@@ -232,7 +228,7 @@ namespace entities
                 else
                 {
                     playsound(snd, NULL, &e.o, NULL, flags);
-                    tpeffects(d->feetpos());
+                    tpeffects(d->o);
                     if(ents.inrange(td) && ents[td]->type == TELEDEST)
                     {
                         playsound(S_TELEDEST, NULL, &ents[td]->o, NULL, flags);

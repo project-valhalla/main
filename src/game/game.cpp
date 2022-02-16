@@ -471,8 +471,8 @@ namespace game
     void juggernauteffect(gameent *d)
     {
         msgsound(S_JUGGERNAUT, d);
-        if(d!=hudplayer() || isthirdperson()) particle_splash(PART_SPARK1, 35, 150, d->feetpos(), 0xFF80FF, 6.0f, 80, -1);
-        adddynlight(d->o, 70, vec(2, 1, 2), 600, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
+        if(d!=hudplayer() || isthirdperson()) particle_splash(PART_SPARK2, 100, 200, d->o, 0xFF80FF, 0.40f, 200, 8);
+        adddynlight(d->headpos(), 50, vec(1.0f, 0.80f, 1.0f), 100, 60, DL_FLASH, 0, vec(0, 0, 0), d);
     }
 
     void killed(gameent *d, gameent *actor, int flags)
@@ -785,26 +785,19 @@ namespace game
             if(material!=MAT_LAVA)
             {
                 playsound(S_SPLASHOUT, NULL, d==player1 ? NULL : &d->o);
-                particle_splash(PART_WATER, 120, 100, o, 0xFFFFFF, 0.10f, 200, 5);
-                particle_splash(PART_WATER, 130, 150, o, 0xFFFFFF, 0.09f+rndscale(0.14f), 300, 1);
-                particle_splash(PART_STEAM, 10, 100, o, 0xFFFFFF, 0.80f);
-                particle_splash(PART_STEAM, 20, 100, o, 0xFFFFFF, 1.0f, 100, 0);
-                particle_splash(PART_STEAM, 30, 80, o, 0xFFFFFF, 0.70f, 110, -1);
-                particle_splash(PART_STEAM, 40, 100, o, 0xFFFFFF, 0.30f, 120, 1);
+                particle_splash(PART_WATER, 30, 100, o, 0xFFFFFF, 0.08f+rndscale(0.15f), 200, 5);
+                particle_splash(PART_STEAM, 50, 100, o, 0xFFFFFF, 0.80f);
+
             }
         }
         else if(waterlevel<0)
         {
             playsound(material==MAT_LAVA ? S_BURN : S_SPLASHIN, NULL, d==player1 ? NULL : &d->o);
-            if(material&MAT_WATER)
+            if(material!=MAT_LAVA)
             {
-                playsound(S_SPLASHOUT, NULL, d==player1 ? NULL : &d->o);
-                particle_splash(PART_WATER, 200, 100, o, 0xFFFFFF, 0.01+rndscale(0.10f));
-                particle_splash(PART_WATER, 180, 130, o, 0xFFFFFF, 0.11f+rndscale(0.17f), 400, 2);
-                particle_splash(PART_WATER, 160, 150, o, 0xFFFFFF, 0.01+rndscale(0.12f), 300, 1);
-                particle_splash(PART_STEAM, 10, 120, o, 0xFFFFFF, 1.0f);
-                particle_splash(PART_STEAM, 30, 100, o, 0xFFFFFF, 2.5f, 100, -1);
-                particle_splash(PART_STEAM, 40, 80, o, 0xFFFFFF, 1.0f, 150, -1);
+                particle_splash(PART_WATER, 30, 200, o, 0xFFFFFF, 0.08f+rndscale(0.15f), 150, 4);
+                particle_splash(PART_STEAM, 50, 100, o, 0xFFFFFF, 0.80f);
+
             }
         }
         if     (floorlevel>0)

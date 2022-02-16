@@ -149,21 +149,7 @@ namespace game
 
     void spawneffect(gameent *s)
     {
-        if(s!=player1 || thirdperson)
-        {
-            particle_fireball(s->feetpos(), 5.0f, PART_PULSE_BURST, 300, teamtextcolor[s->team], 15.0f);
-            particle_splash(PART_SPARK1, 10, 100, s->feetpos(), teamtextcolor[s->team], 5.0f);
-            particle_splash(PART_SPARK1, 20, 130, s->feetpos(), teamtextcolor[s->team], 5.5f, 80, -1, -0.04f);
-            particle_splash(PART_SPARK1, 30, 150, s->feetpos(), teamtextcolor[s->team], 6.0f, 80, -1, 0.08f);
-        }
-        else
-        {
-            removedamageblend();
-            vec pos = s->feetpos();
-            pos.z += 5.0f;
-            particle_splash(PART_SPARK1, 200, 500, pos, teamtextcolor[s->team], 0.40f, 100, -5);
-        }
-        adddynlight(s->feetpos(), 65, teamlightcolor[s->team], 700, 100, DL_SHRINK);
+        removedamageblend();
         stopownersounds(s);
         msgsound(S_SPAWN, s);
     }
@@ -171,9 +157,8 @@ namespace game
     void infected(gameent *d, gameent *actor)
     {
         msgsound(S_INFECTED, d);
-        particle_splash(PART_SPARK1, 80, 180, d->feetpos(), 0x80FF20, 8.0f, 80, -1);
-        particle_flare(d->o, d->o, 400, PART_SPARK1, 0x80FF20, 2.0f, d, 0.30f);
-        adddynlight(d->o, 70, vec(0.90f, 1.0f, 0.90f), 800, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
+        particle_splash(PART_SPARK2, 100, 200, d->o, 0x80FF20, 0.40f, 200, 8);
+        adddynlight(d->headpos(), 50, vec(0.80f, 1.0f, 0.20f), 100, 60, DL_FLASH, 0, vec(0, 0, 0), d);
         if(d==player1)
         {
             conoutf(CON_FRAG_SELF, "\f0You got infected %s %s", actor ? "by" : "", actor ? colorname(actor) : "");

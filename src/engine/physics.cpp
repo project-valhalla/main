@@ -1747,7 +1747,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
     if(pl->timeinair) jumpvel += 95.0f;
     if(e->zombie) jumpvel += 14.5f;
     bool crouched = pl->crouching && pl->crouched();
-    bool canjump = pl->physstate >= PHYS_SLOPE || (m_walljump(game::mutators) && !e->zombie && lastmillis-pl->lastjump < 280 && !crouched) ||
+    bool canjump = pl->physstate >= PHYS_SLOPE || (!e->zombie && lastmillis-pl->lastjump < 280 && !crouched) ||
                                                   (e->zombie && lastmillis-pl->lastjump < 800 && !crouched);
     if(floating)
     {
@@ -1799,7 +1799,6 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
     float speed;
     if(!e->zombie) speed = pl->maxspeed-18; // this section needs to be tweaked a bit
     else speed = pl->maxspeed;
-    if(m_sluggard(game::mutators)) speed -= 19;
     d.mul(speed);
     if(pl->type==ENT_PLAYER)
     {
@@ -1893,8 +1892,6 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
         if(!pl->timeinair && !water) // if we land after long time must have been a high jump, make thud sound
         {
             if(timeinair > 800) game::physicstrigger(pl, local, -1, 0);
-            if(m_falldamage(game::mutators) && timeinair > 1200)
-                game::damage(pl);
         }
         game::footsteps(pl);
     }

@@ -421,7 +421,7 @@ namespace game
 
     void damageeffect(int damage, dynent *d, vec &p, int atk, bool thirdperson)
     {
-        if(damage < 1 || server::betweenrounds || (validatk(atk) && m_headhunter(mutators) && attacks[atk].projspeed)) return;
+        if(damage < 1 || server::betweenrounds) return;
         gameent *f = (gameent *)d, *h = hudplayer();
         vec o = d->o;
         o.z -= d->eyeheight/3;
@@ -484,8 +484,7 @@ namespace game
         gameent *f = (gameent *)d;
 
         int dam = damage;
-        if((m_round && server::betweenrounds) || (m_headhunter(mutators) && !(flags & HIT_HEAD)) || (!selfdam && f==at) ||
-           (!teamdam && isally(f, at))) dam = 0;
+        if((m_round && server::betweenrounds) || (!selfdam && f==at) || (!teamdam && isally(f, at))) dam = 0;
         if(f!=at && isally(f, at)) dam = max(dam/2, 1);
         if(dam > 0)
         {
@@ -525,7 +524,7 @@ namespace game
                 if(flags & HIT_HEAD)
                 {
                     f->headless = true;
-                    if(!isally(f, at) && !m_headhunter(mutators))
+                    if(!isally(f, at))
                     {
                         if(validatk(atk))
                         {
@@ -1200,11 +1199,10 @@ namespace game
                 }
                 if(intersecthead(o, from, rays[i], dist))
                 {
-                    if((m_headhunter(mutators) || m_locationaldam(mutators)) && !attacks[atk].bonusdam)
-                        damage *= 2;
+                    damage += attacks[atk].bonusdam;
+                    flags |= HIT_HEAD;
                 }
-                else if(m_headhunter(mutators)) return;
-                if(m_locationaldam(mutators) && intersectlegs(o, from, rays[i], dist))
+                if(intersectlegs(o, from, rays[i], dist))
                 {
                     damage /= 2;
                     flags |= HIT_LEGS;
@@ -1215,23 +1213,19 @@ namespace game
         }
         else if((o = intersectclosest(from, to, d, margin, dist)))
         {
-            const bool headshot = atk == ATK_STOMP || (validatk(atk) && (attacks[atk].bonusdam || m_headshot(mutators)) && !attacks[atk].projspeed && intersecthead(o, from, to, dist));
+            const bool headshot = atk == ATK_STOMP || (validatk(atk) && attacks[atk].bonusdam && !attacks[atk].projspeed && intersecthead(o, from, to, dist));
             shorten(from, to, dist);
             rayhit(atk, d, from, to, true);
-            if(!headshot && (atk == ATK_STOMP || m_headhunter(mutators))) return;
+            if(!headshot && atk == ATK_STOMP) return;
             if(headshot)
             {
-                if((m_headhunter(mutators) || m_locationaldam(mutators)) && !attacks[atk].bonusdam) damage *= 2;
-                else damage += attacks[atk].bonusdam;
+                damage += attacks[atk].bonusdam;
                 flags = HIT_HEAD;
             }
-            else if(m_locationaldam(mutators))
+            else if(intersectlegs(o, from, to, dist))
             {
-                if(intersectlegs(o, from, to, dist))
-                {
-                    damage /= 2;
-                    flags = HIT_LEGS;
-                }
+                damage /= 2;
+                flags = HIT_LEGS;
             }
             hitpush(attacks[atk].damage, o, d, from, to, atk, 1, flags);
             damageeffect(damage, o, to, atk);

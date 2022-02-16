@@ -379,8 +379,7 @@ namespace game
     {
         if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission || server::betweenrounds) return;
 
-        if((m_headhunter(mutators) && !(flags & HIT_HEAD)) || (!selfdam && d==actor) ||
-           (!teamdam && isally(d, actor))) damage = 0;
+        if((!selfdam && d==actor) || (!teamdam && isally(d, actor))) damage = 0;
 
         if(damage <= 0) return;
 
@@ -404,7 +403,7 @@ namespace game
             if(flags & HIT_HEAD)
             {
                 d->headless = true;
-                if(!isally(d, actor) && !m_headhunter(mutators))
+                if(!isally(d, actor))
                 {
                     if(actor==h)
                     {

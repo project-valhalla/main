@@ -332,11 +332,6 @@ namespace game
         float trans = 1;
         if(d->state == CS_LAGGED) trans = 0.5f;
         else if(d->state == CS_ALIVE && camera1->o.dist(d->o) < d->radius) trans = 0.1f;
-        if(m_ghost(mutators)) // it's completely client side, added just for fun
-        {
-            trans = 0.4f;
-            flags |= MDL_NOSHADOW;
-        }
         else flags &= ~(MDL_NOSHADOW);
         rendermodel(mdlname, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), trans));
     }

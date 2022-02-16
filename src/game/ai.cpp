@@ -113,7 +113,6 @@ namespace ai
     {
         vec o = e->o;
         if(attacks[atk].projspeed) o.z += (e->aboveeye*0.2f)-(0.8f*d->eyeheight);
-        else if(m_headhunter(mutators)) o.z += d->aboveeye;
         else o.z += (e->aboveeye-e->eyeheight)*0.5f;
         if(d->skill <= 100)
         {

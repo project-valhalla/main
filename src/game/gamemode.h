@@ -62,9 +62,8 @@ enum
 {
     MUT_DEFAULT = 1<<0,
     MUT_CLASSIC = 1<<1, MUT_INSTA = 1<<2, MUT_EFFIC = 1<<3, MUT_RANDOMWEAPON = 1<<4, MUT_ONEWEAPON = 1<<5,
-    MUT_VAMPIRE = 1<<6, MUT_HEADHUNTER = 1<<7, MUT_LOCATIONALDAMAGE = 1<<8, MUT_MAYHEM = 1<<9, MUT_NOPOWERUP = 1<<10, MUT_NOITEMS = 1<<11,
-    MUT_GHOST = 1<<12, MUT_SLUGGARD = 1<<13, MUT_WALLJUMP = 1<<14, MUT_FALLDAMAGE = 1<<15,
-    MUT_ALL = MUT_DEFAULT|MUT_CLASSIC|MUT_INSTA|MUT_EFFIC|MUT_RANDOMWEAPON|MUT_ONEWEAPON|MUT_VAMPIRE|MUT_HEADHUNTER|MUT_LOCATIONALDAMAGE|MUT_MAYHEM|MUT_NOPOWERUP|MUT_NOITEMS|MUT_GHOST|MUT_SLUGGARD|MUT_WALLJUMP|MUT_FALLDAMAGE
+    MUT_VAMPIRE = 1<<6, MUT_MAYHEM = 1<<9, MUT_NOPOWERUP = 1<<10, MUT_NOITEMS = 1<<11,
+    MUT_ALL = MUT_DEFAULT|MUT_CLASSIC|MUT_INSTA|MUT_EFFIC|MUT_RANDOMWEAPON|MUT_ONEWEAPON|MUT_VAMPIRE|MUT_MAYHEM|MUT_NOPOWERUP|MUT_NOITEMS
 };
 
 
@@ -75,22 +74,16 @@ static struct mutatorinfo
     const char *info;
 } mutator[] =
 {
-    { "loadout", "Loadout", MUT_DEFAULT, MUT_ALL, "\f6Loadout\ff: open the weapon menu by pressing \f0[B]\ff and choose two weapons to spawn with (default mutator)"},
+    { "loadout", "Loadout", MUT_DEFAULT, MUT_ALL, "\f6Loadout\ff: Press [\f0B\ff] and choose two weapons to spawn with. Health regenerates. Only power-ups spawn (default mutator)"},
     { "classic", "Classic", MUT_CLASSIC, MUT_DEFAULT | MUT_INSTA | MUT_EFFIC | MUT_NOITEMS, "\f6Classic\ff: collect items for ammo, shield and health" },
     { "insta", "Instagib", MUT_INSTA, MUT_DEFAULT | MUT_CLASSIC | MUT_EFFIC | MUT_VAMPIRE | MUT_RANDOMWEAPON | MUT_ONEWEAPON, "\n\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot" },
     { "effic", "Efficiency", MUT_EFFIC, MUT_DEFAULT | MUT_CLASSIC | MUT_INSTA | MUT_RANDOMWEAPON | MUT_ONEWEAPON, "\f6Efficiency\ff: you spawn with shield and all weapons" },
-    { "voosh", "Voosh", MUT_RANDOMWEAPON, MUT_DEFAULT|MUT_INSTA|MUT_EFFIC|MUT_ONEWEAPON, "\f6Voosh\ff: all players switch to one random weapon every 15 seconds" },
-    { "one-weapon", "One Weapon", MUT_ONEWEAPON, MUT_DEFAULT|MUT_INSTA|MUT_EFFIC|MUT_RANDOMWEAPON, "\f6One Weapon\ff: only one weapon is available" },
+    { "voosh", "Voosh", MUT_RANDOMWEAPON, MUT_DEFAULT|MUT_INSTA|MUT_EFFIC|MUT_ONEWEAPON, "\f6Voosh\ff: all players switch to a random weapon every 15 seconds" },
+    { "one-weapon", "One Weapon", MUT_ONEWEAPON, MUT_DEFAULT|MUT_INSTA|MUT_EFFIC|MUT_RANDOMWEAPON, "\f6One Weapon\ff: only one weapon is available (set in server/offline game settings)" },
     { "vamp", "Vampire", MUT_VAMPIRE, MUT_INSTA, "\f6Vampire\ff: deal damage to regenerate health" },
-    { "head-hunter", "Head Hunter", MUT_HEADHUNTER, MUT_LOCATIONALDAMAGE, "\f6Head Hunter\ff: only headshos deal damage" },
-    { "loc-damage", "Locational Damage", MUT_LOCATIONALDAMAGE, MUT_HEADHUNTER|MUT_INSTA, "\f6Locational Damage\ff: damage depends on which body area you hit" },
-    { "mayhem", "Mayhem", MUT_MAYHEM, NULL, "\f6Mayhem\ff: land a headshot with any hitscan weapon to instantly kill enemies" },
-    { "no-power", "No Power-ups", MUT_NOPOWERUP, 0, "\f6No Power-ups\ff: power-ups never spawn in the map" },
-    { "no-items", "No Items", MUT_NOITEMS, MUT_CLASSIC, "\f6No items\ff: items never spawn" },
-    { "ghost", "Ghost", MUT_GHOST, NULL, "\f6Ghost\ff: players are much harder to see" },
-    { "sluggard", "Sluggard", MUT_SLUGGARD, 0, "\f6Sluggard\ff: player speed is decreased" },
-    { "wall-jump", "Wall jump", MUT_WALLJUMP, NULL, "\f6Wall jump\ff: players can wall jump" },
-    { "fall-damage", "Fall damage", MUT_FALLDAMAGE, 0, "\f6Fall damage\ff: damage is applied when a player exceeds the maximum jumping height threshold" }
+    { "mayhem", "Mayhem", MUT_MAYHEM, NULL, "\f6Mayhem\ff: headshots landed with hitscan weapons instantly kill opponents" },
+    { "no-power", "No Power-ups", MUT_NOPOWERUP, 0, "\f6No Power-ups\ff: power-ups do not spawn" },
+    { "no-items", "No Items", MUT_NOITEMS, MUT_CLASSIC, "\f6No items\ff: items do not spawn" }
 };
 
 #define NUMMUTATORS              ((int)(sizeof(mutator)/sizeof(mutator[0])))
@@ -101,17 +94,10 @@ static struct mutatorinfo
 #define m_randomweapon(b)        (b&MUT_RANDOMWEAPON)
 #define m_oneweapon(b)           (b&MUT_ONEWEAPON)
 #define m_vampire(b)             (b&MUT_VAMPIRE)
-#define m_headhunter(b)          (b&MUT_HEADHUNTER)
-#define m_locationaldam(b)       (b&MUT_LOCATIONALDAMAGE)
 #define m_mayhem(b)              (b&MUT_MAYHEM)
 #define m_nopowerups(b)          (b&MUT_NOPOWERUP)
 #define m_noitems(b)             (b&MUT_INSTA || b&MUT_NOITEMS)
-#define m_ghost(b)               (b&MUT_GHOST)
-#define m_sluggard(b)            (b&MUT_SLUGGARD)
-#define m_walljump(b)            (b&MUT_WALLJUMP)
-#define m_falldamage(b)          (b&MUT_FALLDAMAGE)
 
-#define m_headshot(b)            (b&MUT_HEADHUNTER || b&MUT_LOCATIONALDAMAGE || b&MUT_MAYHEM)
 #define m_regen(b)               (!(b&MUT_CLASSIC) && !(b&MUT_INSTA) && !(b&MUT_EFFIC) && !(b&MUT_VAMPIRE))
 #define m_unlimitedammo(b)       ((b&MUT_INSTA) || (b&MUT_ONEWEAPON))
 

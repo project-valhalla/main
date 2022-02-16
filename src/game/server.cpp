@@ -2678,8 +2678,7 @@ namespace server
         if(target->godmode) return;
         servstate &ts = target->state;
         int dam = damage;
-        if((m_round && betweenrounds) || (m_headhunter(mutators) && !(flags & HIT_HEAD)) || (!selfdam && target==actor) ||
-           (!teamdam && isally(target, actor))) dam = 0; // rockets and grenades can still push the player but not deal damage when certain mutators are active
+        if((m_round && betweenrounds) || (!selfdam && target==actor) || (!teamdam && isally(target, actor))) dam = 0;
         if(target!=actor && isally(target, actor)) dam = max(dam/2, 1);
         if(dam > 0)
         {
@@ -2836,7 +2835,7 @@ namespace server
 
                     totalrays += h.rays;
                     if(totalrays>maxrays) continue;
-                    bool headshot = (atk == ATK_STOMP || ((validatk(atk) && (attacks[atk].bonusdam || m_headshot(mutators)) && !attacks[atk].projspeed)));
+                    bool headshot = (atk == ATK_STOMP || ((validatk(atk) && (attacks[atk].bonusdam || m_mayhem(mutators)) && !attacks[atk].projspeed)));
                     int damage = h.rays*attacks[atk].damage;
                     if(gs.damagemillis) damage *= 2;
                     if(h.flags & HIT_HEAD && headshot)
@@ -2846,8 +2845,6 @@ namespace server
                             target->state.shield = 0;
                             damage = target->state.health;
                         }
-                        else if((m_headhunter(mutators) || m_locationaldam(mutators)) && !attacks[atk].bonusdam)
-                            damage *= 2;
                         else if(attacks[atk].rays < 2)
                         {
                             damage += attacks[atk].bonusdam;
@@ -2855,7 +2852,7 @@ namespace server
                         }
                     }
                     if(atk == ATK_STOMP && !(h.flags & HIT_HEAD)) continue;
-                    if(target->state.armourmillis || (h.flags & HIT_LEGS && m_locationaldam(mutators))) damage /= 2;
+                    if(target->state.armourmillis || h.flags & HIT_LEGS) damage /= 2;
                     if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
                     if(damage > 0)
                     {

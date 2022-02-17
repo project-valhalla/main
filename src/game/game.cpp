@@ -406,7 +406,7 @@ namespace game
                     if(actor==h)
                     {
                         if((playheadshotsound == 1 && attacks[atk].headshotdam) || (playheadshotsound > 1 && lastmillis-lastheadshot > 1000))
-                            playsound(attacks[atk].action!=ACT_MELEE? S_ANNOUNCER_HEADSHOT: S_ANNOUNCER_FACE_PUNCH, NULL, NULL, NULL, SND_ANNOUNCER);
+                            playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
                         lastheadshot = lastmillis;
                     }
                     playsound(S_HEAD_HIT, NULL, &d->o);

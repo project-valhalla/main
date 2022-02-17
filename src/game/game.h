@@ -383,9 +383,9 @@ enum { HIT_TORSO = 1<<0, HIT_LEGS = 1<<1, HIT_HEAD = 1<<2, HIT_MATERIAL = 1<<3 }
 
 enum
 {
-    K_NONE = 1<<0, K_FIRST = 1<<1, K_DOUBLE = 1<<2, K_MULTI = 1<<3, K_SPREE = 1<<4, K_UNSTOPPABLE = 1<<5, K_REVENGE = 1<<6, K_HEADSHOT = 1<<7,
-    K_TELEFRAG = 1<<8, K_STOMP = 1<<9,
-    K_ZOMBIE = 1<<10, K_JUGGERNAUT = 1<<11
+    K_NONE = 1<<0, K_FIRST = 1<<1, K_DOUBLE = 1<<2, K_MULTI = 1<<3, K_SPREE = 1<<4, K_UNSTOPPABLE = 1<<5,  K_HEADSHOT = 1<<6,
+    K_TELEFRAG = 1<<7, K_STOMP = 1<<8,
+    K_JUGGERNAUT = 1<<9
 };
 
 #include "ai.h"

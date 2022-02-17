@@ -138,13 +138,13 @@ namespace server
         int state, editstate;
         int lastdeath, deadflush, lastspawn, lifesequence, lastpain;
         int lastregeneration, lastpistolaction, lastammoregen;
-        int lastshot, lastkill, lastkiller;
+        int lastshot, lastkill;
         projectilestate<8> projs, bouncers;
-        int frags, flags, deaths, points, teamkills, shotdamage, damage, kills, spree, headshots, zombiekills;
+        int frags, flags, deaths, points, teamkills, shotdamage, damage, kills, spree;
         int lasttimeplayed, timeplayed;
         float effectiveness;
 
-        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastregeneration(0), lastpistolaction(0), lastammoregen(0), lastkill(0), lastkiller(-1), kills(0), spree(0), headshots(0), zombiekills(0) {}
+        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastregeneration(0), lastpistolaction(0), lastammoregen(0), lastkill(0), kills(0), spree(0) {}
 
         bool isalive(int gamemillis)
         {
@@ -167,7 +167,7 @@ namespace server
             effectiveness = 0;
             frags = flags = deaths = points = teamkills = shotdamage = damage = 0;
             juggernaut = zombie = 0;
-            kills = spree = headshots = zombiekills = 0;
+            kills = spree = 0;
 
             lastdeath = 0;
 
@@ -2559,7 +2559,7 @@ namespace server
                      (!actor->state.zombie && !target->state.zombie)));
     }
 
-    void died(clientinfo *target, clientinfo *actor, int atk, int damage)
+    void died(clientinfo *target, clientinfo *actor, int atk, int damage, int flags = 0)
     {
         if(target->godmode) return;
         servstate &ts = target->state;
@@ -2574,7 +2574,6 @@ namespace server
             else actor->state.kills++;
             actor->state.spree++;
             actor->state.lastkill = lastmillis;
-            target->state.lastkiller = actor->clientnum;
         }
         else actor->state.spree = actor->state.kills = 0;
         if(fragvalue>0)
@@ -2586,56 +2585,34 @@ namespace server
         }
         teaminfo *t = m_teammode && validteam(actor->team) ? &teaminfos[actor->team-1] : NULL;
         if(t) t->frags += fragvalue;
-        int flags = 0;
+        int kflags = 0; // flags = hit flags, kflags = kill flags
         if(!firstblood)
         {
             firstblood = true;
-            flags |= K_FIRST;
+            kflags |= K_FIRST;
         }
         switch(actor->state.kills)
         {
-            case 1: flags |= K_DOUBLE; break;
-            case 3:
-            {
-                flags &= ~K_DOUBLE;
-                flags |= K_MULTI;
-                break;
+            case 1: kflags |= K_DOUBLE; break;
+            case 3: kflags |= K_MULTI; break;
             }
         }
         if(actor->state.spree > 0) switch(actor->state.spree)
         {
-            case 5: flags |= K_SPREE; break;
-            case 10:
-            {
-                flags &= ~K_SPREE;
-                flags |= K_UNSTOPPABLE;
-                break;
-            }
+            case 5: kflags |= K_SPREE; break;
+            case 10: kflags |= K_UNSTOPPABLE; break;
+            case 15: actor->state.spree = 5; break; // restarts
         }
-        if(lastmillis-actor->state.lastdeath<5500 && actor->state.lastkiller >= 0 && actor->state.lastkiller == target->clientnum)
-        {
-            flags |= K_REVENGE;
-            actor->state.lastkiller = -1;
-        }
-        if(actor->state.headshots >= 8)
-        {
-            flags |= K_HEADSHOT;
-            actor->state.headshots = 0;
-        }
-        if(atk == ATK_TELEPORT) flags |= K_TELEFRAG;
-        if(atk == ATK_STOMP) flags |= K_STOMP;
-        if(actor->state.zombiekills >= 8)
-        {
-            flags |= K_ZOMBIE;
-            actor->state.zombiekills = 0;
-        }
+        if(flags & HIT_HEAD) kflags |= K_HEADSHOT;
+        if(atk == ATK_TELEPORT) kflags |= K_TELEFRAG;
+        if(atk == ATK_STOMP) kflags |= K_STOMP;
         if(m_juggernaut)
         {
             if(target->state.juggernaut) nojuggernaut = true;
             if(target!=actor && (nojuggernaut || target->state.juggernaut))
             {
                 makejuggernaut(actor);
-                flags |= K_JUGGERNAUT;
+                kflags |= K_JUGGERNAUT;
             }
             if(!m_vampire(mutators) && actor->state.juggernaut)
             {
@@ -2643,7 +2620,7 @@ namespace server
                 sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
             }
         }
-        sendf(-1, 1, "ri6", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, flags);
+        sendf(-1, 1, "ri6", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, kflags);
         actor->state.item = target->state.item;
         if(target!=actor && !target->state.juggernaut)
         {
@@ -2708,11 +2685,10 @@ namespace server
         }
         if(ts.health<=0)
         {
-            if(isally(target, actor) && !m_teammode) died(actor, actor, atk, dam);
+            if(isally(target, actor) && !m_teammode) died(actor, actor, atk, dam, flags);
             if(m_infection)
             {
-                if(target != actor && target->state.zombie) actor->state.zombiekills++;
-                if(target == actor || target->state.zombie) died(target, actor, atk, damage);
+                if(target == actor || target->state.zombie) died(target, actor, atk, damage, flags);
                 else
                 {
                     infect(target, actor->clientnum);
@@ -2721,7 +2697,7 @@ namespace server
                     checkscorelimit(actor, actor->state.points);
                 }
             }
-            else died(target, actor, atk, damage);
+            else died(target, actor, atk, damage, flags);
         }
     }
 
@@ -2856,7 +2832,7 @@ namespace server
                     if(damage > 0)
                     {
                         dodamage(target, ci, damage, atk, h.flags, h.dir);
-                        if(m_mayhem(mutators) && h.flags & HIT_HEAD && headshot) died(target, ci, atk, damage);
+                        if(m_mayhem(mutators) && h.flags & HIT_HEAD && headshot) died(target, ci, atk, damage, h.flags);
                     }
                     sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, target->clientnum, damage, h.flags,
                                            int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),

@@ -546,21 +546,9 @@ namespace game
                 conoutf(CON_GAMEINFO, "%s \f2%s unstoppable!", aname, actor==player1 ? "are" : "is");
                 if(actor->aitype==AI_BOT) taunt(actor);
             }
-            if(flags&K_REVENGE)
-            {
-                if(actor==hudplayer()) playsound(S_ANNOUNCER_REVENGE, NULL, NULL, NULL, SND_ANNOUNCER);
-                conoutf(CON_GAMEINFO, "%s \f2took %s revenge on \ff%s", aname, actor==player1? "your": "their", dname);
-            }
             if(flags&K_HEADSHOT)
             {
-                if(actor==hudplayer()) playsound(S_ANNOUNCER_HEAD_HUNTER, NULL, NULL, NULL, SND_ANNOUNCER);
-                conoutf(CON_GAMEINFO, "%s \f2%s a head hunter", aname, actor==player1 ? "are" : "is");
-            }
-            if(flags&K_ZOMBIE)
-            {
-                if(actor==hudplayer()) playsound(S_ANNOUNCER_ANNIHILATOR, NULL, NULL, NULL, SND_ANNOUNCER);
-                conoutf(CON_GAMEINFO, "%s \f2%s a zombie annihilator", aname, actor==player1 ? "are" : "is");
-                if(actor->aitype==AI_BOT) taunt(actor);
+                if(actor==hudplayer()) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
             }
             if(actor->aitype==AI_BOT && d->aitype != AI_BOT && actor->skill < 80 && d->frags >= actor->frags)
                 taunt(actor);

@@ -1,0 +1,24 @@
+Valhalla deathmatch map
+
+Author:   Ognjen 'Morti' Robovic
+Title:    Temple of Azag
+Date:     05.06.2019.
+Gamemode: Deathmatch / 4-8 players
+Contact:  daemes@protonmail.com
+Discord:  Daemes#2613
+
+About map:
+Not many people care about this, but I like to write, so here we go... First version of this map was made for Sauerbraten, on 02.06.2018., and it truely sucked, because it was just layout demo made to be ported to Tesseract, which was done just 24 days later. Obviously map was inspired by Quake I (my favorite game after Hexen / Hexen II). In Sauerbraten, it has only diffuse textures and no models at all. It got some love on Tesseract's forum, I saw Patrick made a video with it on YouTube, and I was sappy, because map still looked unfinished. This is heavily modified version of "Forgotten Temple of Azag", with proper usage of models, particles, textures and items. I'm huge fan of FFA (altho I'm not that good), so I balanced items only to fit my playing style, note that not all items are present.
+
+License:
+Previous versions of "azag", made for Sauerbraten and Tesseract use MIT license (actual X11 license, those are legal mess), but this time it's different. Long story short, I decided that this very version of "azag" is exclusively made for Valhalla. You can easily obtain all files you need for porting to other engines, but I would appreciate not to do so, and if you do modify any of files from this .zip file, please keep your changes for yourself, thanks. You can always use those previous versions (MIT ones), or simply go with the flow and create something new and original. So, hereby:
+
+Copyright (C) 2019 Ognjen 'Morti' Robovic
+
+To clear any possible misunderstanding, I'm mapper for several Cube GE based games, and I have habit of using different name for each game I play, both online and offline. In Sauerbraten my name is 7YearBitch (grunge band from Seattle), in Tesseract it's Suiseiseki (character from Rozenmaiden), in Valhalla it's Morti (character from .hack// light novels). There are other less known names as Kasadya and Rapedoll, but that's about it. I'm sokky for inconvenience... :)
+
+Cheers, Morti
+
+
+
+

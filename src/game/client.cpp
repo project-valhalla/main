@@ -622,19 +622,6 @@ namespace game
     VARF(teamdamage, 0, 1, 1, setvariable(teamdamage, VAR_TEAMDAMAGE));
     VARF(forceweap, 0, 4, NUMGUNS-1, setvariable(forceweap, VAR_WEAPON));
 
-    void setteamname(char *n, int team)
-    {
-        switch(team)
-        {
-            case 1: team1name = n; break;
-            case 2: team2name = n; break;
-        }
-    }
-    SVARF(teamname1, "Blue", setteamname(teamname1, 1));
-    SVARF(teamname2, "Red", setteamname(teamname2, 2));
-    ICOMMAND(getteam1name, "", (), result(team1name));
-    ICOMMAND(getteam2name, "", (), result(team2name));
-
     int gamemode = INT_MAX, nextmode = INT_MAX;
     int mutators = 0, nextmutators = 0;
     string clientmap = "";

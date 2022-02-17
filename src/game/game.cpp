@@ -401,16 +401,7 @@ namespace game
             if(flags & HIT_HEAD)
             {
                 d->headless = true;
-                if(!isally(d, actor))
-                {
-                    if(actor==h)
-                    {
-                        if((playheadshotsound == 1 && attacks[atk].headshotdam) || (playheadshotsound > 1 && lastmillis-lastheadshot > 1000))
-                            playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
-                        lastheadshot = lastmillis;
-                    }
-                    playsound(S_HEAD_HIT, NULL, &d->o);
-                }
+                if(playheadshotsound) playsound(S_HEAD_HIT, NULL, &d->o);
             }
             else d->headless = false;
         }

@@ -524,17 +524,8 @@ namespace game
                 if(flags & HIT_HEAD)
                 {
                     f->headless = true;
-                    if(!isally(f, at))
-                    {
-                        if(validatk(atk))
-                        {
-                            extern int playheadshotsound;
-                            if((playheadshotsound == 1 && attacks[atk].headshotdam) || (playheadshotsound > 1 && lastmillis-lastheadshot > 1000))
-                                playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
-                            lastheadshot = lastmillis;
-                        }
-                        playsound(S_HEAD_HIT, NULL, &f->o);
-                    }
+                    extern int playheadshotsound;
+                    if(playheadshotsound) playsound(S_HEAD_HIT, NULL, &f->o);
                 }
                 else f->headless = false;
             }

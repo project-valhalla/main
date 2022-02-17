@@ -824,7 +824,7 @@ namespace game
     extern int maptime, maprealtime, maplimit;
     extern gameent *player1;
     extern vector<gameent *> players, clients;
-    extern int lastspawnattempt, lastheadshot;
+    extern int lastspawnattempt;
     extern int following;
     extern int smoothmove, smoothdist;
     extern int gore;

@@ -2595,7 +2595,6 @@ namespace server
         {
             case 1: kflags |= K_DOUBLE; break;
             case 3: kflags |= K_MULTI; break;
-            }
         }
         if(actor->state.spree > 0) switch(actor->state.spree)
         {

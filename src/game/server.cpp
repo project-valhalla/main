@@ -2836,22 +2836,22 @@ namespace server
                     if(totalrays>maxrays) continue;
                     bool headshot = (atk == ATK_STOMP || ((validatk(atk) && (attacks[atk].headshotdam || m_mayhem(mutators)) && !attacks[atk].projspeed)));
                     int damage = h.rays*attacks[atk].damage;
-                    if(gs.damagemillis) damage *= 2;
-                    if(h.flags & HIT_HEAD && headshot)
+                    if(attacks[atk].headshotdam) // no headshot damage no locational damage
                     {
-                        if(m_mayhem(mutators))
+                        if(h.flags & HIT_HEAD)
                         {
-                            target->state.shield = 0;
-                            damage = target->state.health;
+                            if(m_mayhem(mutators))
+                            {
+                                target->state.shield = 0;
+                                damage = target->state.health;
+                            }
+                            else damage += attacks[atk].headshotdam;
                         }
-                        else if(attacks[atk].rays < 2)
-                        {
-                            damage += attacks[atk].headshotdam;
-                            ci->state.headshots++;
-                        }
+                        if(h.flags & HIT_LEGS) damage /= 2;
                     }
                     if(atk == ATK_STOMP && !(h.flags & HIT_HEAD)) continue;
-                    if(target->state.armourmillis || h.flags & HIT_LEGS) damage /= 2;
+                    if(gs.damagemillis) damage *= 2;
+                    if(target->state.armourmillis) damage /= 2;
                     if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
                     if(damage > 0)
                     {

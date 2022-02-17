@@ -1166,6 +1166,7 @@ namespace game
         dynent *o;
         float dist;
         int maxrays = attacks[atk].rays, margin = attacks[atk].margin, damage = attacks[atk].damage*(d->damagemillis ? 2 : 1), flags = HIT_TORSO;
+        bool hitlegs = false, hithead = false;
         if(attacks[atk].rays > 1)
         {
             dynent *hits[MAXRAYS];
@@ -1173,6 +1174,8 @@ namespace game
             {
                 if((hits[i] = intersectclosest(from, rays[i], d, margin, dist)))
                 {
+                    hitlegs = intersectlegs(hits[i], from, rays[i], dist);
+                    hithead = intersecthead(hits[i], from, rays[i], dist);
                     shorten(from, rays[i], dist);
                     rayhit(atk, d, from, rays[i], true);
                 }
@@ -1188,15 +1191,18 @@ namespace game
                     hits[j] = NULL;
                     numhits++;
                 }
-                if(intersecthead(o, from, rays[i], dist))
+                if(attacks[atk].headshotdam) // if an attack does not have headshot damage, then it does not deal locational damage
                 {
-                    damage += attacks[atk].headshotdam;
-                    flags |= HIT_HEAD;
-                }
-                if(intersectlegs(o, from, rays[i], dist))
-                {
-                    damage /= 2;
-                    flags |= HIT_LEGS;
+                    if(hithead)
+                    {
+                        damage += attacks[atk].headshotdam;
+                        flags |= HIT_HEAD;
+                    }
+                    if(hitlegs)
+                    {
+                        damage /= 2;
+                        flags |= HIT_LEGS;
+                    }
                 }
                 hitpush(numhits*damage, o, d, from, to, atk, numhits, flags);
                 damageeffect(damage, o, rays[i], atk);
@@ -1204,19 +1210,22 @@ namespace game
         }
         else if((o = intersectclosest(from, to, d, margin, dist)))
         {
-            const bool headshot = atk == ATK_STOMP || (validatk(atk) && attacks[atk].headshotdam && !attacks[atk].projspeed && intersecthead(o, from, to, dist));
+            hithead = intersecthead(o, from, to, dist);
+            hitlegs = intersectlegs(o, from, to, dist);
             shorten(from, to, dist);
             rayhit(atk, d, from, to, true);
-            if(!headshot && atk == ATK_STOMP) return;
-            if(headshot)
+            if(attacks[atk].headshotdam) // if an attack does not have headshot damage, then it does not deal locational damage
             {
-                damage += attacks[atk].headshotdam;
-                flags = HIT_HEAD;
-            }
-            else if(intersectlegs(o, from, to, dist))
-            {
-                damage /= 2;
-                flags = HIT_LEGS;
+                if(hithead)
+                {
+                    damage += attacks[atk].headshotdam;
+                    flags |= HIT_HEAD;
+                }
+                else if(hitlegs)
+                {
+                    damage /= 2;
+                    flags |= HIT_LEGS;
+                }
             }
             hitpush(attacks[atk].damage, o, d, from, to, atk, 1, flags);
             damageeffect(damage, o, to, atk);

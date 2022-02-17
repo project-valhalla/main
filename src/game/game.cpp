@@ -5,7 +5,7 @@ namespace game
     bool intermission = false, betweenrounds = false;
     bool infection = false;
     int maptime = 0, maprealtime = 0, maplimit = -1;
-    int lastspawnattempt = 0, lastheadshot = 0;
+    int lastspawnattempt = 0;
 
     gameent *player1 = NULL;         // our client
     vector<gameent *> players;       // other clients

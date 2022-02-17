@@ -243,8 +243,7 @@ namespace game
         else if(d->state==CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-d->lastaction>delay)
         {
             lastaction = d->lasttaunt;
-            int tanim = d->zombie ? ANIM_LAG : ANIM_TAUNT;
-            anim = attack = tanim;
+            anim = attack = ANIM_TAUNT;
             delay = 1000;
         }
         modelattach a[5];
@@ -306,7 +305,7 @@ namespace game
                 else if(dir && game::allowmove(d)) anim |= (dir | ANIM_LOOP) << ANIM_SECONDARY;
             }
 
-            if(d->crouching || lastmillis-d->landmillis < 150 || (!d->zombie && lastmillis-d->lasttaunt<=300)) //using this combination until we get a good taunt animation
+            if(d->crouching || lastmillis-d->landmillis < 150)
                 switch((anim>>ANIM_SECONDARY)&ANIM_INDEX)
             {
                 case ANIM_IDLE: anim &= ~(ANIM_INDEX<<ANIM_SECONDARY); anim |= ANIM_CROUCH<<ANIM_SECONDARY; break;

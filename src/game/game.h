@@ -82,11 +82,11 @@ struct gameentity : extentity
 {
 };
 
-enum { GUN_SG = 0, GUN_SMG, GUN_PULSE, GUN_RL, GUN_RAIL, GUN_GL, GUN_PUNCH, GUN_INSTA, GUN_PISTOL, GUN_ZOMBIE, NUMGUNS };
+enum { GUN_SG = 0, GUN_SMG, GUN_PULSE, GUN_RL, GUN_RAIL, GUN_GL, GUN_INSTA, GUN_PISTOL, GUN_ZOMBIE, NUMGUNS };
 enum { ACT_IDLE = 0, ACT_MELEE, ACT_PRIMARY, ACT_SECONDARY, ACT_COMBO, NUMACTS };
 enum
 {
-    ATK_MELEE = 0, ATK_PUNCH, ATK_SG1, ATK_SG2, ATK_SMG1, ATK_SMG2, ATK_SMG3, ATK_PULSE1, ATK_PULSE2, ATK_PULSE3, ATK_RL1, ATK_RL2, ATK_RAIL, ATK_GL1, ATK_GL2,
+    ATK_MELEE = 0, ATK_SG1, ATK_SG2, ATK_SMG1, ATK_SMG2, ATK_SMG3, ATK_PULSE1, ATK_PULSE2, ATK_PULSE3, ATK_RL1, ATK_RL2, ATK_RAIL, ATK_GL1, ATK_GL2,
     ATK_INSTA, ATK_ZOMBIE, ATK_PISTOL1, ATK_PISTOL2,
     ATK_TELEPORT, ATK_STOMP,
     NUMATKS
@@ -333,9 +333,8 @@ static struct itemstat { int add, max, sound, info; } itemstats[] =
 static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound, impactsound, hitsound,
                                      attackdelay, damage, headshotdam, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use; } attacks[NUMATKS] =
 {
-    //melee: default melee for all weapons and temporary punch "gun"
+    //melee: default melee for all weapons
     { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,  500,   74,  30,   0,   2,    0,   0,   14,  1,  30,  0,    0,    0 },
-    { GUN_PUNCH,      ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE1, S_MELEE_HIT1, S_MELEE_HIT2,  650,  100,  10,   0,   2,    0,   0,   12,  1,  80,  0,    0,    0 },
     //shotgun
     { GUN_SG,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,         S_SG1A,     S_SG_HIT,   S_SMG_HIT2, 1080,    6,   0, 380,   0,    0,   0,  650, 20,  50,  0,    0,    1 },
     { GUN_SG,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SG2,           -1,           -1,  600,   62,   0,   0,   2,  180,   0,  500,  1,  60, 30, 2000,    2 },
@@ -377,7 +376,6 @@ static const struct guninfo { const char *name, *file, *vwep; int attacks[NUMACT
     { "rocket launcher", "rl", "worldgun/rl", { -1, ATK_MELEE, ATK_RL1, ATK_RL2, -1} },
     { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_RAIL, ATK_RAIL, -1}, },
     { "grenade launcher", "gl", "worldgun/gl", { -1, ATK_MELEE, ATK_GL1, ATK_GL2, -1}, },
-    { "punch", "punch", NULL, { -1, ATK_MELEE, ATK_PUNCH, ATK_MELEE, -1}, },
     { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_INSTA, ATK_INSTA, -1}, },
     { "pulse rifle", "pulserifle", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2, -1}, },
     { "zombie", "punch/zombie", NULL, { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE, -1}, }

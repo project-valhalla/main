@@ -530,7 +530,7 @@ struct gamestate
         if(m_classic(mutators) && !(m_randomweapon(mutators) || m_oneweapon(mutators)))
         {
             gunselect = GUN_PISTOL;
-            ammo[GUN_PISTOL] = 30;
+            ammo[GUN_PISTOL] = 50;
             shield = 0;
         }
         else if(m_insta(mutators))

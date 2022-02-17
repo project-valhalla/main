@@ -2980,7 +2980,7 @@ namespace server
                     }
                 }
                 if(!(ci->state.juggernaut || ci->state.zombie) && m_classic(mutators) && !m_randomweapon(mutators) && !ci->state.ammo[GUN_PULSE] && lastmillis-ci->state.lastpistolaction>5000 &&
-                   ci->state.ammo[GUN_PISTOL] < 30 && lastmillis-ci->state.lastammoregen>1000)
+                   ci->state.ammo[GUN_PISTOL] < 50 && lastmillis-ci->state.lastammoregen>1000)
                 {
                     ci->state.lastammoregen = lastmillis;
                     ci->state.ammo[GUN_PISTOL]++;

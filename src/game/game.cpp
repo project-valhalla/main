@@ -321,8 +321,6 @@ namespace game
             zoom = !zoom? 1: -1;
             return;
         }
-        else if(act > ACT_MELEE && player1->lastact > ACT_MELEE && player1->lastact != act && guns[player1->gunselect].attacks[ACT_COMBO] >= 0)
-            act = ACT_COMBO;
         doaction(act);
     }
 

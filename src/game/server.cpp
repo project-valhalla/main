@@ -2770,7 +2770,6 @@ namespace server
             case ATK_PISTOL2:
                 if(!gs.projs.remove(id)) return;
                 break;
-            case ATK_PULSE3:
             case ATK_RL2:
             case ATK_SG2:
             case ATK_GL1: case ATK_GL2:
@@ -2823,7 +2822,7 @@ namespace server
         switch(atk)
         {
             case ATK_PULSE1: case ATK_RL1: case ATK_PISTOL2: gs.projs.add(id); break;
-            case ATK_PULSE3: case ATK_RL2: case ATK_SG2: case ATK_GL1: case ATK_GL2: gs.bouncers.add(id); break;
+            case ATK_RL2: case ATK_SG2: case ATK_GL1: case ATK_GL2: gs.bouncers.add(id); break;
             default:
             {
                 int totalrays = 0, maxrays = attacks[atk].rays;

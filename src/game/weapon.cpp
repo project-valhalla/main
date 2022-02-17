@@ -592,7 +592,6 @@ namespace game
         if(explosioneffect) switch(atk)
         {
             case ATK_PULSE1:
-            case ATK_PULSE3:
             {
                 adddynlight(safe ? v : debrisorigin, 2*attacks[atk].exprad, vec(1.7f, 1, 1.8f), 350, 40, 0, attacks[atk].exprad/2, vec(1.5f, 0.5f, 2.0f));
                 particle_splash(PART_SPARK2, 30, 150, p, 0xEE88EE, 0.45f);
@@ -695,7 +694,6 @@ namespace game
                     }
                 }
                 break;
-            case ATK_PULSE3:
             case ATK_SG2:
             case ATK_RL2:
             case ATK_GL1:
@@ -877,7 +875,6 @@ namespace game
             case ATK_SG1:
             case ATK_SMG1:
             case ATK_SMG2:
-            case ATK_SMG3:
             {
                 adddynlight(vec(to).madd(dir, 4), 14, vec(0.5f, 0.375f, 0.25f), 140, 20);
                 if(hit || water) break;
@@ -958,11 +955,6 @@ namespace game
                 break;
             }
 
-            case ATK_PULSE3:
-                up.z += dist/8;
-                newbouncer(from, up, local, id, d, atk, BNC_MINE, attacks[atk].lifetime, attacks[atk].projspeed, 0.8f, 0);
-                break;
-
             case ATK_RAIL:
             {
                 if(muzzleflash)
@@ -1021,12 +1013,11 @@ namespace game
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }
-            case ATK_SMG3: break;
 
             case ATK_GL1:
             case ATK_GL2:
                 up.z += dist/8;
-                newbouncer(from, up, local, id, d, atk, atk == ATK_GL1 ? BNC_GRENADE2 : BNC_GRENADE3, attacks[atk].lifetime, 0.8f, attacks[atk].projspeed, atk == ATK_GL1? 0: 0.6f);
+                newbouncer(from, up, local, id, d, atk, BNC_MINE, attacks[atk].lifetime, attacks[atk].projspeed, 0.8f, 0);
                 break;
 
             case ATK_PISTOL1:

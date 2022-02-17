@@ -334,16 +334,16 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
                                      attackdelay, damage, headshotdam, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use; } attacks[NUMATKS] =
 {
     //melee: default melee for all weapons
-    { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,  500,   74,  30,   0,   2,    0,   0,   14,  1,  30,  0,    0,    0 },
+    { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,  500,   74,   0,   0,   2,    0,   0,   14,  1,  30,  0,    0,    0 },
     //shotgun
     { GUN_SG,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,         S_SG1A,     S_SG_HIT,   S_SMG_HIT2, 1080,    6,   0, 380,   0,    0,   0,  650, 20,  50,  0,    0,    1 },
     { GUN_SG,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SG2,           -1,           -1,  600,   62,   0,   0,   2,  180,   0,  500,  1,  60, 30, 2000,    2 },
     //smg
-    { GUN_SMG,      ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  110,   12,   0,  84,   0,    0,   0, 1000,  1,  20,  0,    0,    1 },
-    { GUN_SMG,    ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  240,   18,   0,  30,   0,    0,   0, 1000,  1,  40,  0,    0,    1 },
+    { GUN_SMG,      ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  110,   12,  12,  84,   0,    0,   0, 1000,  1,  20,  0,    0,    1 },
+    { GUN_SMG,    ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  240,   18,  10,  30,   0,    0,   0, 1000,  1,  40,  0,    0,    1 },
     //pulse
     { GUN_PULSE,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE1,           -1,  S_PULSE_HIT,  180,   22,   0,   0,   1, 1000,   0, 1020,  1,  75, 18,    0,    2 },
-    { GUN_PULSE,  ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT,  ANIM_GUN_IDLE,      S_PULSE2A,  S_PULSE_HIT,  S_PULSE_HIT,   80,    8,   0,   0,   0,    0,   0,  200,  1,   1,  0,    0,    1 },
+    { GUN_PULSE,  ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT,  ANIM_GUN_IDLE,      S_PULSE2A,  S_PULSE_HIT,  S_PULSE_HIT,   80,    8,   4,   0,   0,    0,   0,  200,  1,   1,  0,    0,    1 },
     //rocket
     { GUN_RL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL1,           -1,           -1,  920,  110,   0,   0,   0,  300,   0, 4025,  1, 120, 33,    0,    1 },
     { GUN_RL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL2,           -1,           -1,  920,  110,   0,   0,   0,  200,   0, 4025,  1, 120, 33, 1500,    1 },
@@ -357,7 +357,7 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
     //zombie
     { GUN_ZOMBIE,     ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE_MELEE, S_MELEE_HIT1, S_MELEE_HIT2,  600,  100,   0,   0,   4,    0,   0,   15,  1,  80,  0,    0,    0 },
     //pistol
-    { GUN_PISTOL,   ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL1,  S_PULSE_HIT,   S_SMG_HIT2,  300,   17,   0,   0,   0,    0,   0, 1000,  1, 200,  0,    0,    1 },
+    { GUN_PISTOL,   ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL1,  S_PULSE_HIT,   S_SMG_HIT2,  300,   15,   3,   0,   0,    0,   0, 1000,  1, 200,  0,    0,    1 },
     { GUN_PISTOL, ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL2,           -1,  S_PULSE_HIT,  600,    8,   0,   0,   3, 4000,   0,  500,  1, 800,  8,    0,    2 },
     //telefrag
     { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, S_MELEE_HIT2, S_MELEE_HIT2,    0, 1050,   0,   0,   8,    0,   0,    6,  1,   0,  0,    0,    0 },

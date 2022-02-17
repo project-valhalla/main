@@ -2835,7 +2835,7 @@ namespace server
 
                     totalrays += h.rays;
                     if(totalrays>maxrays) continue;
-                    bool headshot = (atk == ATK_STOMP || ((validatk(atk) && (attacks[atk].bonusdam || m_mayhem(mutators)) && !attacks[atk].projspeed)));
+                    bool headshot = (atk == ATK_STOMP || ((validatk(atk) && (attacks[atk].headshotdam || m_mayhem(mutators)) && !attacks[atk].projspeed)));
                     int damage = h.rays*attacks[atk].damage;
                     if(gs.damagemillis) damage *= 2;
                     if(h.flags & HIT_HEAD && headshot)
@@ -2847,7 +2847,7 @@ namespace server
                         }
                         else if(attacks[atk].rays < 2)
                         {
-                            damage += attacks[atk].bonusdam;
+                            damage += attacks[atk].headshotdam;
                             ci->state.headshots++;
                         }
                     }

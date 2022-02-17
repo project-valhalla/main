@@ -529,7 +529,7 @@ namespace game
                         if(validatk(atk))
                         {
                             extern int playheadshotsound;
-                            if((playheadshotsound == 1 && attacks[atk].bonusdam) || (playheadshotsound > 1 && lastmillis-lastheadshot > 1000))
+                            if((playheadshotsound == 1 && attacks[atk].headshotdam) || (playheadshotsound > 1 && lastmillis-lastheadshot > 1000))
                                 playsound(attacks[atk].action != ACT_MELEE? S_ANNOUNCER_HEADSHOT: S_ANNOUNCER_FACE_PUNCH, NULL, NULL, NULL, SND_ANNOUNCER);
                             lastheadshot = lastmillis;
                         }
@@ -1199,7 +1199,7 @@ namespace game
                 }
                 if(intersecthead(o, from, rays[i], dist))
                 {
-                    damage += attacks[atk].bonusdam;
+                    damage += attacks[atk].headshotdam;
                     flags |= HIT_HEAD;
                 }
                 if(intersectlegs(o, from, rays[i], dist))
@@ -1213,13 +1213,13 @@ namespace game
         }
         else if((o = intersectclosest(from, to, d, margin, dist)))
         {
-            const bool headshot = atk == ATK_STOMP || (validatk(atk) && attacks[atk].bonusdam && !attacks[atk].projspeed && intersecthead(o, from, to, dist));
+            const bool headshot = atk == ATK_STOMP || (validatk(atk) && attacks[atk].headshotdam && !attacks[atk].projspeed && intersecthead(o, from, to, dist));
             shorten(from, to, dist);
             rayhit(atk, d, from, to, true);
             if(!headshot && atk == ATK_STOMP) return;
             if(headshot)
             {
-                damage += attacks[atk].bonusdam;
+                damage += attacks[atk].headshotdam;
                 flags = HIT_HEAD;
             }
             else if(intersectlegs(o, from, to, dist))

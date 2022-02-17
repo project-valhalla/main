@@ -331,7 +331,7 @@ static struct itemstat { int add, max, sound, info; } itemstats[] =
 #define ENV_DAM 5
 
 static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound, impactsound, hitsound,
-                                     attackdelay, damage, bonusdam, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use; } attacks[NUMATKS] =
+                                     attackdelay, damage, headshotdam, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use; } attacks[NUMATKS] =
 {
     //melee: default melee for all weapons and temporary punch "gun"
     { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,  500,   74,  30,   0,   2,    0,   0,   14,  1,  30,  0,    0,    0 },

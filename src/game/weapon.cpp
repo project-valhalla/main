@@ -523,11 +523,9 @@ namespace game
                 if(f->invulnmillis && f!=at && !at->invulnmillis) playsound(S_INVULNERABILITY_ACTION, f);
                 if(flags & HIT_HEAD)
                 {
-                    f->headless = true;
                     extern int playheadshotsound;
                     if(playheadshotsound) playsound(S_HEAD_HIT, NULL, &f->o);
                 }
-                else f->headless = false;
             }
         }
     }

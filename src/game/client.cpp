@@ -667,8 +667,12 @@ namespace game
 
     void setmutator(int mut)
     {
-        nextmutators &= ~(mutator[mut].exclude);
-        nextmutators |= mutator[mut].flags;
+        if(!(nextmutators & mutator[mut].flags))
+        {
+            nextmutators &= ~(mutator[mut].exclude);
+            nextmutators |= mutator[mut].flags;
+        }
+        else nextmutators &= ~(mutator[mut].flags);
     }
     ICOMMAND(mutator, "i", (int *val), setmutator(*val));
 

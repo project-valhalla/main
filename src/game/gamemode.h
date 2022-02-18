@@ -62,7 +62,7 @@ enum
 {
     MUT_DEFAULT = 1<<0,
     MUT_CLASSIC = 1<<1, MUT_INSTA = 1<<2, MUT_EFFIC = 1<<3, MUT_RANDOMWEAPON = 1<<4, MUT_ONEWEAPON = 1<<5,
-    MUT_VAMPIRE = 1<<6, MUT_MAYHEM = 1<<9, MUT_NOPOWERUP = 1<<10, MUT_NOITEMS = 1<<11,
+    MUT_VAMPIRE = 1<<6, MUT_MAYHEM = 1<<7, MUT_NOPOWERUP = 1<<8, MUT_NOITEMS = 1<<9,
     MUT_ALL = MUT_DEFAULT|MUT_CLASSIC|MUT_INSTA|MUT_EFFIC|MUT_RANDOMWEAPON|MUT_ONEWEAPON|MUT_VAMPIRE|MUT_MAYHEM|MUT_NOPOWERUP|MUT_NOITEMS
 };
 
@@ -82,7 +82,7 @@ static struct mutatorinfo
     { "one-weapon", "One Weapon", MUT_ONEWEAPON, MUT_DEFAULT|MUT_INSTA|MUT_EFFIC|MUT_RANDOMWEAPON, "\f6One Weapon\ff: only one weapon is available (set in server/offline game settings)" },
     { "vamp", "Vampire", MUT_VAMPIRE, MUT_INSTA, "\f6Vampire\ff: deal damage to regenerate health" },
     { "mayhem", "Mayhem", MUT_MAYHEM, NULL, "\f6Mayhem\ff: headshots landed with hitscan weapons instantly kill opponents" },
-    { "no-power", "No Power-ups", MUT_NOPOWERUP, 0, "\f6No Power-ups\ff: power-ups do not spawn" },
+    { "no-power", "No Power-ups", MUT_NOPOWERUP, NULL, "\f6No Power-ups\ff: power-ups do not spawn" },
     { "no-items", "No Items", MUT_NOITEMS, MUT_CLASSIC, "\f6No items\ff: items do not spawn" }
 };
 

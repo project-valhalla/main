@@ -507,7 +507,7 @@ struct gamestate
     {
         maxhealth = 100;
         health = maxhealth;
-        gunselect = GUN_GL;
+        gunselect = GUN_PISTOL;
         gunwait = 0;
         resetitems();
         juggernaut = zombie = 0;

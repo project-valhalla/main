@@ -724,6 +724,8 @@ struct gameent : dynent, gamestate
         }
     }
 
+    bool gibbed() { return state == CS_DEAD && health<=-50; }
+
     int painsound(){ return !zombie? S_PAIN1: S_PAIN2; }
 
     int diesound() { return !zombie? S_DIE1: S_DIE2; }

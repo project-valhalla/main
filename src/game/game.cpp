@@ -361,7 +361,7 @@ namespace game
     bool allowmove(physent *d)
     {
         if(d->type!=ENT_PLAYER) return true;
-        return !intermission && !(gore && ((gameent *)d)->state==CS_DEAD && ((gameent *)d)->health<=-50);
+        return !intermission && !(gore && ((gameent *)d)->gibbed());
     }
 
     bool isally(gameent *a, gameent *b)
@@ -400,10 +400,8 @@ namespace game
             damageeffect(damage, d, p, atk, d!=h);
             if(flags & HIT_HEAD)
             {
-                d->headless = true;
                 if(playheadshotsound) playsound(S_HEAD_HIT, NULL, &d->o);
             }
-            else d->headless = false;
         }
         if(d->health<=0) { if(local) killed(d, actor, NULL); }
     }
@@ -412,24 +410,19 @@ namespace game
 
     void deathstate(gameent *d, bool restore)
     {
-        bool gib = gore && d->health<=-50;
-        if(d->state==CS_ALIVE)
-        {
-            stopownersounds(d);
-            if(!gib) playsound(d->diesound(), d, &d->o);
-        }
         d->state = CS_DEAD;
         d->lastpain = lastmillis;
+        stopownersounds(d);
         if(!restore)
         {
-            if(gib) gibeffect(max(-d->health, 0), d->vel, d);
+            if(gore && d->gibbed()) gibeffect(max(-d->health, 0), d->vel, d);
             d->deaths++;
         }
         if(d==player1)
         {
-            //if(deathscore) showscores(true);
             disablezoom();
             d->attacking = ACT_IDLE;
+            //d->pitch = 0;
             d->roll = 0;
         }
         else
@@ -445,6 +438,8 @@ namespace game
             stopsound(S_JUGGERNAUT_LOOP, d->juggernautchan, 1200);
             d->juggernautchan = -1;
         }
+        if(!(gore && d->gibbed())) playsound(d->diesound(), d, &d->o);
+
     }
 
     VARP(teamcolorfrags, 0, 1, 1);

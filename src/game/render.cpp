@@ -228,7 +228,7 @@ namespace game
 
     void renderplayer(gameent *d, const playermodelinfo &mdl, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
-        if(gore && !d->headless && d->health<=-50) return;
+        if(gore && d->gibbed() && !d->headless) return;
         int lastaction = d->lastaction, anim = ANIM_IDLE|ANIM_LOOP, attack = 0, delay = 0;
         if(d->lastattack >= 0)
         {

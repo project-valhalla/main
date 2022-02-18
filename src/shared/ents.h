@@ -198,6 +198,7 @@ struct dynent : physent                         // animated characters, or chara
     {
         physent::reset();
         stopmoving();
+        pitch = 0;
         loopi(MAXANIMPARTS) animinterp[i].reset();
     }
 

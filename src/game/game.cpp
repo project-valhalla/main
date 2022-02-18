@@ -422,7 +422,7 @@ namespace game
         {
             disablezoom();
             d->attacking = ACT_IDLE;
-            //d->pitch = 0;
+            d->pitch = -90; // see death from above
             d->roll = 0;
         }
         else

@@ -367,14 +367,14 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
 static const struct guninfo { const char *name, *file, *vwep; int attacks[NUMACTS]; } guns[NUMGUNS] =
 {
     { "shotgun", "sg", "worldgun/sg", { -1, ATK_MELEE, ATK_SG1, ATK_SG2 } },
-    { "smg", "smg", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_SMG1, ATK_SMG2 }, },
+    { "smg", "smg", "worldgun/smg", { -1, ATK_MELEE, ATK_SMG1, ATK_SMG2 }, },
     { "pulse rifle (upgraded)", "pulserifle", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PULSE1, ATK_PULSE2 }, },
     { "rocket launcher", "rl", "worldgun/rl", { -1, ATK_MELEE, ATK_RL1, ATK_RL2 } },
     { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_RAIL, ATK_RAIL }, },
     { "grenade launcher", "gl", "worldgun/gl", { -1, ATK_MELEE, ATK_GL1, ATK_GL2 }, },
     { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_INSTA, ATK_INSTA }, },
-    { "pulse rifle", "pulserifle", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2 }, },
-    { "zombie", "punch/zombie", NULL, { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE }, }
+    { "pulse rifle", "pistol", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2 }, },
+    { "zombie", "zombie", "", { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE }, }
 };
 
 enum { HIT_TORSO = 1<<0, HIT_LEGS = 1<<1, HIT_HEAD = 1<<2, HIT_MATERIAL = 1<<3 };

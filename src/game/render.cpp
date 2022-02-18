@@ -132,20 +132,6 @@ namespace game
         else return getplayercolor(team, (d->playercolor>>(5*team))&0x1F);
     }
 
-    int getweaponcolor(int gun)
-    {
-        switch(gun)
-        {
-            case GUN_SG: return 0xA12020;
-            case GUN_SMG: return 0xB39D52;
-            case GUN_PULSE: return 0x523678;
-            case GUN_RL: return 0xA15B28;
-            case GUN_RAIL: return 0x3E752F;
-            case GUN_PISTOL: return 0xB2D3F9;
-            default: return 0xB3ADA3;
-        }
-    }
-
     void changedplayermodel()
     {
         if(player1->clientnum < 0) player1->playermodel = playermodel;
@@ -445,15 +431,12 @@ namespace game
         if(!hudgunsway) sway = d->o;
 
         const playermodelinfo &mdl = getplayermodelinfo(d);
-        int team = m_teammode && validteam(d->team) ? d->team : 0;
+        int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
         defformatstring(gunname, "%s/%s", mdl.hudguns[team], file);
-        if((d->gunselect == GUN_GL || d->gunselect == GUN_RL || d->gunselect == GUN_SG)
-           && attacks[d->lastattack].action == ACT_MELEE && lastmillis-d->lastaction<attacks[d->lastattack].attackdelay) // temporary solution for lack of weapon models
-            rendermodel("hudgun/punch", anim, sway, d->yaw, d->pitch, 0, MDL_NOBATCH, NULL, NULL, basetime, 0, 1, vec4(vec::hexcolor(getplayercolor(d, team))));
         modelattach a[2];
         d->muzzle = vec(-1, -1, -1);
         a[0] = modelattach("tag_muzzle", &d->muzzle);
-        rendermodel(gunname, anim, sway, d->yaw, d->pitch, 0, MDL_NOBATCH, NULL, a, basetime, 0, 1, vec4(vec::hexcolor(getweaponcolor(d->gunselect))));
+        rendermodel(gunname, anim, sway, d->yaw, d->pitch, 0, MDL_NOBATCH, NULL, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
         if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
     }
 

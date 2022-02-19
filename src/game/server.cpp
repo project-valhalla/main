@@ -257,9 +257,8 @@ namespace server
         void *authchallenge;
         int authkickvictim;
         char *authkickreason;
-        int godmode;
 
-        clientinfo() : getdemo(NULL), getmap(NULL), clipboard(NULL), authchallenge(NULL), authkickreason(NULL), godmode(0) { reset(); }
+        clientinfo() : getdemo(NULL), getmap(NULL), clipboard(NULL), authchallenge(NULL), authkickreason(NULL) { reset(); }
         ~clientinfo() { events.deletecontents(); cleanclipboard(); cleanauth(); }
 
         void addevent(gameevent *e)
@@ -2561,7 +2560,6 @@ namespace server
 
     void died(clientinfo *target, clientinfo *actor, int atk, int damage, int flags = 0)
     {
-        if(target->godmode) return;
         servstate &ts = target->state;
         ts.deaths++;
         ts.spree = ts.kills = 0;
@@ -2651,10 +2649,10 @@ namespace server
 
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int atk, int flags = 0, const vec &hitpush = vec(0, 0, 0))
     {
-        if(target->godmode) return;
+        if(m_round && betweenrounds) return;
         servstate &ts = target->state;
         int dam = damage;
-        if((m_round && betweenrounds) || (!selfdam && target==actor) || (!teamdam && isally(target, actor))) dam = 0;
+        if((!selfdam && target==actor) || (!teamdam && isally(target, actor))) dam = 0;
         if(target!=actor && isally(target, actor)) dam = max(dam/2, 1);
         if(dam > 0)
         {
@@ -2703,7 +2701,7 @@ namespace server
     void suicide(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        if(gs.state!=CS_ALIVE || ci->godmode) return;
+        if(gs.state!=CS_ALIVE) return;
         if(gs.invulnmillis)
         {
             sendspawn(ci);

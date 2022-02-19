@@ -1057,7 +1057,7 @@ namespace game
             case S_SG2:
             {
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
-                playsound(S_SG1B, d);
+                if(d==hudplayer()) playsound(S_SG1B, d);
                 break;
             }
             default: playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);

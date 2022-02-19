@@ -1811,11 +1811,7 @@ void modifygravity(physent *pl, bool water, int curtime)
     float secs = curtime/1000.0f;
     vec g(0, 0, 0);
     float grav = GRAVITY;
-    if(pl->physstate == PHYS_FALL)
-    {
-        if(pl->crouching && pl->crouched()) grav += 3.0f*secs;
-        g.z -= grav*secs;
-    }
+    if(pl->physstate == PHYS_FALL) g.z -= grav*secs;
     else if(pl->floor.z > 0 && pl->floor.z < FLOORZ)
     {
         g.z = -1;

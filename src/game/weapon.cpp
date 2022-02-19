@@ -844,7 +844,7 @@ namespace game
         if(!validatk(atk) || from.dist(to) > attacks[atk].range) return;
         vec dir = vec(from).sub(to).safenormalize();
         int mat = lookupmaterial(to);
-        bool water = (mat&MATF_VOLUME) == MAT_WATER;
+        bool water = (mat&MATF_VOLUME) == MAT_WATER, glass = (mat&MATF_VOLUME) == MAT_GLASS;
         switch(atk)
         {
             case ATK_RAIL:
@@ -852,7 +852,7 @@ namespace game
             {
                 bool insta=atk==ATK_INSTA;
                 adddynlight(vec(to).madd(dir, 4), 20, !insta? vec(0.25f, 1.0f, 0.75f):  vec(0.25f, 0.75f, 1.0f), 380, 75, DL_SHRINK);
-                if(hit || water) break;
+                if(hit || water || glass) break;
                 particle_splash(PART_SPARK1, 80, 80, to, !insta? 0x88DD88: 0x50CFE5, 1.25f, 100, 80);
                 particle_splash(PART_SPARK2, 5+rnd(20), 200+rnd(380), to, !insta? 0x88DD88: 0x50CFE5, 0.1f+rndscale(0.3f), 200, 3);
                 particle_splash(PART_SMOKE, 20, 180, to, 0x808080, 2.0f, 60, 80, 0.05f);
@@ -866,7 +866,7 @@ namespace game
             case ATK_SMG2:
             {
                 adddynlight(vec(to).madd(dir, 4), 14, vec(0.5f, 0.375f, 0.25f), 140, 20);
-                if(hit || water) break;
+                if(hit || water || glass) break;
                 particle_splash(PART_SPARK1, 30, 50, to, 0xB8E47B, 0.70f);
                 particle_splash(PART_SPARK2, 0+rnd(6), 80+rnd(380), to, 0xC8E66B, 0.05f+rndscale(0.09f), 250);
                 particle_splash(PART_SMOKE, atk==ATK_SG1? 0+rnd(5): 5+rnd(10), 150, to, 0x606060, 1.8f+rndscale(2.2f), 100, 100, 0.01f);
@@ -891,7 +891,7 @@ namespace game
             {
                 adddynlight(vec(to).madd(dir, 4), 10, vec(0, 1.2f, 1.2f), 200, 10, DL_SHRINK);
                 particle_splash(PART_SPARK1, 10, 50, to, 0x00FFFF, 1.5f, 300, 50);
-                if(hit || water) break;
+                if(hit || water || glass) break;
                 particle_splash(PART_SPARK2, 0+rnd(10), 100+rnd(280), to, 0x00FFFF, 0.01f+rndscale(0.18f), 300, 2);
                 addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 0.80f+rndscale(1.0f));
                 break;
@@ -904,12 +904,13 @@ namespace game
         if(water)
         {
             particle_splash(PART_WATER, 20, 200, vec(to).madd(dir, 5), 0xFFFFFF, 0.18f, 280, 2);
-            particle_splash(PART_STEAM, 30, 120, vec(to).madd(dir, 6), 0xFFFFFF, 1.0f, 80, 100, 0.05f);
+            particle_splash(PART_STEAM, 5, 120, vec(to).madd(dir, 6), 0xFFFFFF, 1.0f, 80, 100, 0.05f);
             impactsnd = S_WATER_IMPACT;
         }
-        else if((mat&MATF_VOLUME) == MAT_GLASS)
+        else if(glass)
         {
-            particle_splash(PART_GLASS, 0+rnd(20), 150+rnd(250), to, 0xFFFFFF, 0.20f+rndscale(0.25f), 200, 2);
+            particle_splash(PART_GLASS, 20, 200, to, 0xFFFFFF, 0.20+rndscale(0.30f));
+            addstain(STAIN_GLASS_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(1.0f));
             impactsnd = S_GLASS_IMPACT;
         }
         if(!(attacks[atk].rays > 1 && d==hudplayer()) && impactsnd) playsound(impactsnd, NULL, &to);

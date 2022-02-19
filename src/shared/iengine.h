@@ -363,7 +363,8 @@ enum
     STAIN_PULSE_SCORCH,
     STAIN_RAIL_HOLE,
     STAIN_PULSE_GLOW,
-    STAIN_RAIL_GLOW
+    STAIN_RAIL_GLOW,
+    STAIN_GLASS_HOLE
 };
 
 extern void addstain(int type, const vec &center, const vec &surface, float radius, const bvec &color = bvec(0xFF, 0xFF, 0xFF), int info = 0);

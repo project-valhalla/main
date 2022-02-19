@@ -900,18 +900,19 @@ namespace game
             default: break;
         }
         if(attacks[atk].action == ACT_MELEE || hit) return;
+        int impactsnd = attacks[atk].impactsound;
         if(water)
         {
             particle_splash(PART_WATER, 20, 200, vec(to).madd(dir, 5), 0xFFFFFF, 0.18f, 280, 2);
             particle_splash(PART_STEAM, 30, 120, vec(to).madd(dir, 6), 0xFFFFFF, 1.0f, 80, 100, 0.05f);
-            playsound(S_WATER_IMPACT, NULL, &to);
+            impactsnd = S_WATER_IMPACT;
         }
         else if((mat&MATF_VOLUME) == MAT_GLASS)
         {
             particle_splash(PART_GLASS, 0+rnd(20), 150+rnd(250), to, 0xFFFFFF, 0.20f+rndscale(0.25f), 200, 2);
-            playsound(S_GLASS_IMPACT, NULL, &to);
+            impactsnd = S_GLASS_IMPACT;
         }
-        if(attacks[atk].impactsound >= 0) playsound(attacks[atk].impactsound, NULL, &to);
+        if(!(attacks[atk].rays > 1 && d==hudplayer()) && impactsnd) playsound(impactsnd, NULL, &to);
     }
 
     VARP(muzzleflash, 0, 1, 1);

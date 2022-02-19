@@ -430,7 +430,6 @@ const float SLOPEZ = 0.5f;
 const float WALLZ = 0.2f;
 extern const float JUMPVEL = 135.0f;
 extern const float GRAVITY = 195.0f;
-#define MAXJUMPS 0
 
 bool ellipseboxcollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo)
 {
@@ -1176,7 +1175,6 @@ void slideagainst(physent *d, vec &dir, const vec &obstacle, bool foundfloor, bo
     d->vel.project(wall);
     d->falling.project(wall);
     recalcdir(d, oldvel, dir);
-    d->lastjump = lastmillis;
 }
 
 void switchfloor(physent *d, vec &dir, const vec &floor)
@@ -1743,38 +1741,33 @@ VAR(floatspeed, 1, 100, 10000);
 void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)
 {
     gameent *e = (gameent *)pl;
-    float jumpvel = JUMPVEL;
-    if(pl->timeinair) jumpvel += 95.0f;
-    if(e->zombie) jumpvel += 14.5f;
-    bool crouched = pl->crouching && pl->crouched();
-    bool canjump = pl->physstate >= PHYS_SLOPE || (!e->zombie && lastmillis-pl->lastjump < 280 && !crouched) ||
-                                                  (e->zombie && lastmillis-pl->lastjump < 800 && !crouched);
+    bool canjump = pl->physstate >= PHYS_SLOPE ||
+                   (e->zombie && !pl->doublejumping && !(pl->crouching && pl->crouched()));
     if(floating)
     {
         if(pl->jumping)
         {
             pl->jumping = false;
-            pl->vel.z = max(pl->vel.z, jumpvel);
+            pl->vel.z = max(pl->vel.z, JUMPVEL);
         }
     }
-    else if((pl->jumps <= MAXJUMPS && canjump) || water)
+    else if(canjump || water)
     {
         if(water && !pl->inwater) pl->vel.div(8);
         if(pl->jumping)
         {
             pl->jumping = false;
-            pl->vel.z = max(pl->vel.z, jumpvel); // physics impulse upwards
+            if(pl->timeinair)
+            {
+                pl->doublejumping = true;
+                pl->falling = vec(0, 0, 0);
+                pl->physstate = PHYS_FALL;
+            }
+            pl->vel.z = max(pl->vel.z, JUMPVEL); // physics impulse upwards
             if(water) { pl->vel.x /= 8.0f; pl->vel.y /= 8.0f; } // dampen velocity change even harder, gives correct water feel
 
             game::physicstrigger(pl, local, 1, 0);
-            if(e->zombie) pl->lastjump = lastmillis;
-            pl->jumps++;
         }
-    }
-    if(pl->physstate >= PHYS_SLOPE)
-    {
-        pl->jumps = 0;
-        pl->jumping = false;
     }
     if(!floating && pl->physstate == PHYS_FALL) pl->timeinair += curtime;
 
@@ -1796,9 +1789,8 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
     }
 
     vec d(m);
-    float speed;
-    if(!e->zombie) speed = pl->maxspeed-18; // this section needs to be tweaked a bit
-    else speed = pl->maxspeed;
+    float speed = pl->maxspeed;
+    if(e->zombie) speed += 10.0f; // speed bonus
     d.mul(speed);
     if(pl->type==ENT_PLAYER)
     {
@@ -1891,6 +1883,7 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
         loopi(moveres) if(!move(pl, d) && ++collisions<5) i--; // discrete steps collision detection & sliding
         if(!pl->timeinair && !water) // if we land after long time must have been a high jump, make thud sound
         {
+            pl->doublejumping = false; // now that we landed, double jump resets
             if(timeinair > 800) game::physicstrigger(pl, local, -1, 0);
         }
         game::footsteps(pl);

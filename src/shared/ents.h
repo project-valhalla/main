@@ -68,10 +68,9 @@ struct physent                                  // base entity type, can be affe
     vec floor;                                  // the normal of floor the dynent is on
 
     int inwater;
-    bool jumping;
+    bool jumping, doublejumping;
     char move, strafe, crouching;
     int lastcollide;
-    int lastjump, jumps;
 
     uchar physstate;                            // one of PHYS_* above
     uchar state, editstate;                     // one of CS_* above
@@ -80,10 +79,10 @@ struct physent                                  // base entity type, can be affe
 
     bool blocked;                               // used by physics to signal ai
 
-    physent() : o(0, 0, 0), deltapos(0, 0, 0), newpos(0, 0, 0), yaw(0), pitch(0), roll(0), maxspeed(108),
+    physent() : o(0, 0, 0), deltapos(0, 0, 0), newpos(0, 0, 0), yaw(0), pitch(0), roll(0), maxspeed(100),
                radius(4.1f), eyeheight(15), maxheight(16), aboveeye(2), xradius(4.1f), yradius(4.1f), zmargin(0),
                headradius(2.0f), legsradius(5.0f),
-               lastcollide(0), lastjump(0), jumps(0),
+               lastcollide(0),
                state(CS_ALIVE), editstate(CS_ALIVE), type(ENT_PLAYER),
                collidetype(COLLIDE_ELLIPSE),
                blocked(false)
@@ -100,7 +99,7 @@ struct physent                                  // base entity type, can be affe
         inwater = 0;
         timeinair = 0;
         eyeheight = maxheight;
-        jumping = false;
+        jumping = doublejumping = false;
         strafe = move = crouching = 0;
         physstate = PHYS_FALL;
         vel = falling = vec(0, 0, 0);

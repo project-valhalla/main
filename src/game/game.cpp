@@ -2,7 +2,7 @@
 
 namespace game
 {
-    bool intermission = false, betweenrounds = false;
+    bool intermission = false;
     bool infection = false;
     int maptime = 0, maprealtime = 0, maplimit = -1;
     int lastspawnattempt = 0;
@@ -375,7 +375,7 @@ namespace game
 
     void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
     {
-        if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission || server::betweenrounds) return;
+        if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
 
         if((!selfdam && d==actor) || (!teamdam && isally(d, actor))) damage = 0;
 

@@ -421,7 +421,7 @@ namespace game
 
     void damageeffect(int damage, dynent *d, vec &p, int atk, bool thirdperson)
     {
-        if(damage < 1 || server::betweenrounds) return;
+        if(!damage) return;
         gameent *f = (gameent *)d, *h = hudplayer();
         vec o = d->o;
         o.z -= d->eyeheight/3;
@@ -484,7 +484,7 @@ namespace game
         gameent *f = (gameent *)d;
 
         int dam = damage;
-        if((m_round && server::betweenrounds) || (!selfdam && f==at) || (!teamdam && isally(f, at))) dam = 0;
+        if((!selfdam && f==at) || (!teamdam && isally(f, at))) dam = 0;
         if(f!=at && isally(f, at)) dam = max(dam/2, 1);
         if(dam > 0)
         {
@@ -532,7 +532,6 @@ namespace game
 
     void hitpush(int damage, dynent *d, gameent *at, vec &from, vec &to, int atk, int rays, int flags)
     {
-        if(server::betweenrounds) return;
         gameent *f = (gameent *)d;
         if(f->armourmillis) damage /= 2;
         if(f->invulnmillis && f!=at && !at->invulnmillis) damage = 0;
@@ -554,7 +553,7 @@ namespace game
 
     void radialeffect(dynent *o, const vec &v, const vec &vel, int damage, gameent *at, int atk)
     {
-        if(o->state!=CS_ALIVE) return;
+        if(server::betweenrounds || o->state!=CS_ALIVE) return;
         vec dir;
         float dist = projdist(o, dir, v, vel, atk);
         if(dist<attacks[atk].exprad)
@@ -709,7 +708,7 @@ namespace game
 
     bool projdamage(dynent *o, projectile &p, const vec &v, int damage)
     {
-        if(o->state!=CS_ALIVE) return false;
+        if(server::betweenrounds || o->state!=CS_ALIVE) return false;
         if(!intersect(o, p.o, v, attacks[p.atk].margin)) return false;
         projsplash(p, v, o, damage);
         vec dir;
@@ -1154,9 +1153,16 @@ namespace game
 
     void hitscan(vec &from, vec &to, gameent *d, int atk)
     {
+        int maxrays = attacks[atk].rays;
+        if(server::betweenrounds)
+        {
+            if(maxrays > 1) { loopi(maxrays) rayhit(atk, d, from, rays[i]); }
+            else rayhit(atk, d, from, to);
+            return;
+        }
         dynent *o;
         float dist;
-        int maxrays = attacks[atk].rays, margin = attacks[atk].margin, damage = attacks[atk].damage*(d->damagemillis ? 2 : 1), flags = HIT_TORSO;
+        int margin = attacks[atk].margin, damage = attacks[atk].damage, flags = HIT_TORSO;
         bool hitlegs = false, hithead = false;
         if(attacks[atk].rays > 1)
         {

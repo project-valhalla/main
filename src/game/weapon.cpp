@@ -434,21 +434,17 @@ namespace game
         if(f->health > 0 && lastmillis-f->lastyelp > 600)
         {
             if(f==hudplayer()) damageblend(damage);
+            else if(f->shield) playsound(S_SHIELD, NULL, &f->o);
             playsound(f->painsound(), f, &f->o);
             f->lastyelp = lastmillis;
         }
+        if(f->shield && d!=hudplayer()) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);
         if(validatk(atk) && attacks[atk].hitsound > 0) playsound(attacks[atk].hitsound, NULL, f==h ? NULL : &f->o);
         else if(validsatk(atk) && atk != ATK_TELEPORT) playsound(S_MELEE_HIT2, NULL, f==h ? NULL : &f->o);
         else
         {
             playsound(S_DAMAGE, NULL, f==h ? NULL : &f->o);
             return;
-        }
-        if(f->shield && d!=player1)
-        {
-            adddynlight(p, 35, vec(2, 1.5f, 1), 80, 30);
-            particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.30f);
-            if(!m_effic(mutators)) playsound(S_SHIELD, f, &f->o);
         }
         if(f->armourmillis) playsound(S_ARMOUR_ACTION, f, &f->o);
     }

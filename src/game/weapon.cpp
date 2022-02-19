@@ -1111,7 +1111,7 @@ namespace game
     {
         vec bottom(d->o), top(d->o);
         bottom.z -= d->eyeheight;
-        top.z -= d->eyeheight/3;
+        top.z -= d->eyeheight/2.5f;
         return linecylinderintersect(from, to, bottom, top, d->legsradius, dist);
     }
 

@@ -17,9 +17,7 @@ namespace game
     #define MINDEBRIS 3
     VARP(maxdebris, MINDEBRIS, 10, 100);
 #endif
-    VARP(showexplosionradius, 0, 0, 1);
     VARP(explosioneffect, 0, 1, 1);
-    VARP(teamcoloureffects, 0, 0, 1);
 
     ICOMMAND(getweapon, "", (), intret(player1->gunselect));
 
@@ -264,20 +262,20 @@ namespace game
                 case BNC_GRENADE1:
                 case BNC_ROCKET:
                 {
-                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_SMOKE, 5, 200, pos, teamcoloureffects? teamtextcolor[bnc.owner->team] : 0x555555, 1.60f, 10, 500);
+                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_SMOKE, 5, 200, pos, 0x555555, 1.60f, 10, 500);
                     break;
                 }
 
                 case BNC_GRENADE2:
                 case BNC_GRENADE3:
                 {
-                    if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SPARK1, 10, 180, pos, teamcoloureffects? teamtextcolor[bnc.owner->team] : 0x202080, 0.70f, 2, 60);
+                    if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SPARK1, 10, 180, pos, 0x202080, 0.70f, 2, 60);
                     break;
                 }
 
                 case BNC_MINE:
                 {
-                    if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SPARK1, 10, 180, pos, teamcoloureffects? teamtextcolor[bnc.owner->team] : 0xEE88EE, 0.70f, 2, 60);
+                    if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SPARK1, 10, 180, pos, 0xEE88EE, 0.70f, 2, 60);
                     bnc.bncsound = S_PULSE3_LOOP;
                     break;
                 }
@@ -569,19 +567,17 @@ namespace game
 
     void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int damage, int atk)
     {
-        int mat = lookupmaterial(v);
         vec debrisorigin = vec(v).sub(vec(vel).mul(5));
-        vec dir = vec(owner->o).sub(v).safenormalize();
-        vec p = vec(v).madd(dir, 10);
-        if(explosioneffect) switch(atk)
+        vec dir = vec(owner->o).sub(v).safenormalize(), p = vec(v).madd(dir, 10), dynlight = vec(1.0f, 3.0f, 4.0f);
+        int fireball = 0x50CFE5;
+        switch(atk)
         {
             case ATK_PULSE1:
             {
-                adddynlight(safe ? v : debrisorigin, 2*attacks[atk].exprad, vec(1.7f, 1, 1.8f), 350, 40, 0, attacks[atk].exprad/2, vec(1.5f, 0.5f, 2.0f));
-                particle_splash(PART_SPARK2, 30, 150, p, 0xEE88EE, 0.45f);
-                particle_splash(PART_SMOKE, 10, 120, p, 0x303030, 7.3f, 250, 50);
-                particle_fireball(p, 1.15f*attacks[atk].exprad, PART_PULSE_BURST, int(attacks[atk].exprad*20), 0xEE88EE, 0.10f);
-                playsound(atk==ATK_PULSE1? S_PULSE_EXPLODE: S_PULSE3_EXPLODE, NULL, &v);
+                dynlight = vec(2.0f, 1.5f, 2.0f);
+                fireball = 0xEE88EE;
+                particle_splash(PART_SPARK2, 5+rnd(20), 200, p, 0xEE88EE, 0.08f+rndscale(0.35f), 300, 2);
+                playsound(S_PULSE_EXPLODE, NULL, &v);
                 break;
             }
             case ATK_RL1:
@@ -590,39 +586,27 @@ namespace game
             case ATK_GL1:
             case ATK_GL2:
             {
-                adddynlight(p, 2*attacks[atk].exprad, vec(2, 1.5f, 1), 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
-                particle_splash(PART_SPARK1, 20, 200, p, 0xFFD47B, 9.30f, attacks[atk].exprad*4, 100);
-                particle_splash(PART_SPARK2, 0+rnd(20), 380, p, 0xC8E66B, 0.20f+rndscale(0.35f), 350, 2);
-                particle_splash(mat&MAT_WATER? PART_STEAM: PART_SMOKE, 20, 200, p, 0x444444, 8.8f, 250, 200, 0.02f);
-                particle_fireball(v, attacks[atk].exprad, PART_PULSE_BURST, 280, 0xFFA47B, 1.0f);
+                dynlight = vec(2, 1.5f, 1);
+                fireball = 0xC8E66B;
+                particle_splash(PART_SPARK1, 30, 130, p, 0xFFC864, 8.0f, 150, 100);
+                particle_splash(PART_SPARK2, 10, 200, p, 0xFFC864, 0.10f+rndscale(0.35f), 500, 2);
+                particle_splash(PART_SMOKE, 30, 200, p, 0x444444, 8.8f, 200, 200, 0.01f);
                 playsound(S_ROCKET_EXPLODE, NULL, &v);
                 break;
             }
             case ATK_PISTOL2:
             {
-                adddynlight(p, attacks[atk].exprad, vec(0, 1.2f, 1.2f), 200);
-                particle_fireball(p, attacks[atk].exprad, PART_PULSE_BURST, int(attacks[atk].exprad*20), 0x50CFE5, 0.10f);
-                particle_splash(PART_SPARK2, 0+rnd(20), 200, p, 0x00FFFF, 0.3f+rndscale(0.10f), 200, 5);
+                dynlight = vec(0, 1.5f, 1.5f);
+                fireball = 0x00FFFF;
+                particle_splash(PART_SPARK2, 0+rnd(20), 200, p, 0x00FFFF, 0.05f+rndscale(0.10f), 200, 5);
                 playsound(S_PULSE_HIT);
                 break;
             }
-            default:
-                adddynlight(safe ? p : debrisorigin, 2*attacks[atk].exprad, vec(1.0f, 3.0f, 4.0f), 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
-                particle_fireball(p, 1.15f*attacks[atk].exprad, PART_PULSE_BURST, int(attacks[atk].exprad*20), 0x50CFE5, 0.10f);
-                break;
+            default: break;
         }
-        if(showexplosionradius) particle_fireball(v, attacks[atk].exprad, PART_EXPLOSION, 300, 0xFFFFFF, attacks[atk].exprad);
-        if(atk != ATK_PULSE1 && (mat&MATF_VOLUME) == MAT_GLASS)
-        {
-            particle_splash(PART_GLASS, 0+rnd(50), 260, p, 0xFFFFFF, 0.23f+rndscale(0.40f), 350, 2);
-            playsound(S_GLASS_IMPACT_PROJ, NULL, &v);
-        }
-        if((mat&MATF_VOLUME) == MAT_WATER)
-        {
-            particle_splash(PART_WATER, 400, 300, p, 0xffffff, 0.01f+rndscale(0.25f), 480, 2);
-            particle_splash(PART_STEAM, 240, 200, p, 0xffffff, 4.0f, 150, 50);
-            playsound(S_WATER_IMPACT_PROJ, NULL, &v);
-        }
+        particle_fireball(v, 1.15f*attacks[atk].exprad, PART_PULSE_BURST, 300, fireball, 0.10f);
+        adddynlight(safe ? v : debrisorigin, 2*attacks[atk].exprad, dynlight, 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
+        if(lookupmaterial(v)==MAT_WATER) playsound(S_WATER_IMPACT_PROJ, NULL, &v);
         /*
         int numdebris = maxdebris > MINDEBRIS ? rnd(maxdebris-MINDEBRIS)+MINDEBRIS : min(maxdebris, MINDEBRIS);
         if(numdebris)
@@ -769,21 +753,14 @@ namespace game
                 else
                 {
                     vec pos = vec(p.offset).mul(p.offsetmillis/float(OFFSETMILLIS)).add(v);
-                    int tailp = PART_PULSE_SIDE, tailpc = 0xFFFFFF, teamcolour = teamtextcolor[p.owner->team];
+                    int tailp = PART_PULSE_SIDE, tailpc = 0xFFFFFF;
                     switch(p.projtype)
                     {
                         case PROJ_ROCKET:
                         {
-                            /*
-                            if(raycubelos(pos, camera1->o, check))
-                            {
-                                particle_flare(pos, pos, 1, PART_SPARK1LE1, 0xFFC864, 2.0f+rndscale(3), NULL);
-                                particle_flare(pos, pos, 1, PART_SPARK1LE2, 0xFFC864, 3.0f+rndscale(5), NULL);
-                            }
-                            */
-                            regular_particle_splash(PART_SMOKE, 3, 300, pos, teamcoloureffects? teamcolour: 0x303030, 2.4f, 50, -20);
-                            if(p.lifetime>attacks[p.atk].range-500) regular_particle_splash(PART_SPARK1, 4, 180, pos, teamcoloureffects? teamcolour: 0x401812, 1.8f, 10, 0);
-                            particle_splash(PART_PULSE_FRONT, 1, 1, pos, teamcoloureffects? teamcolour: 0xFFC864, 1.4f, 150, 20);
+                            regular_particle_splash(PART_SMOKE, 3, 300, pos, 0x303030, 2.4f, 50, -20);
+                            if(p.lifetime<=attacks[p.atk].range/2) regular_particle_splash(PART_SPARK1, 4, 180, pos, 0xFFC864, 1.5f, 10, 0);
+                            particle_splash(PART_PULSE_FRONT, 1, 1, pos, 0xFFC864, 1.4f, 150, 20);
                             tailp = PART_PULSE_SIDE;
                             tailpc = 0xFFC864;
                             p.projsound = S_ROCKET_LOOP;
@@ -792,16 +769,16 @@ namespace game
 
                         case PROJ_PULSE:
                         {
-                            particle_splash(PART_PULSE_FRONT, 1, 1, pos, teamcoloureffects? teamcolour: 0xDD88DD, 2.4f, 150, 20);
+                            particle_splash(PART_PULSE_FRONT, 1, 1, pos, 0xDD88DD, 2.4f, 150, 20);
                             tailp = PART_PULSE_SIDE;
-                            tailpc = teamcoloureffects? teamcolour: 0xDD88DD;
+                            tailpc = 0xDD88DD;
                             p.projsound = S_PULSE_LOOP;
                             break;
                         }
 
                         case PROJ_ENERGY:
                         {
-                            particle_fireball(pos, 3.50f, PART_PULSE_BURST, 1, teamcoloureffects? teamcolour: 0xFFC1FF);
+                            particle_fireball(pos, 3.50f, PART_PULSE_BURST, 1, 0x00FFFF);
                             p.projsound = S_PULSE_LOOP;
                             break;
                         }
@@ -848,11 +825,11 @@ namespace game
                 bool insta=atk==ATK_INSTA;
                 adddynlight(vec(to).madd(dir, 4), 20, !insta? vec(0.25f, 1.0f, 0.75f):  vec(0.25f, 0.75f, 1.0f), 380, 75, DL_SHRINK);
                 if(hit || water || glass) break;
-                particle_splash(PART_SPARK1, 80, 80, to, !insta? 0x88DD88: 0x50CFE5, 1.25f, 100, 80);
-                particle_splash(PART_SPARK2, 5+rnd(20), 200+rnd(380), to, !insta? 0x88DD88: 0x50CFE5, 0.1f+rndscale(0.3f), 200, 3);
+                particle_splash(PART_SPARK1, 80, 80, to, !insta? 0x77DD77: 0x50CFE5, 1.25f, 100, 80);
+                particle_splash(PART_SPARK2, 5+rnd(20), 200+rnd(380), to, !insta? 0x77DD77: 0x50CFE5, 0.1f+rndscale(0.3f), 200, 3);
                 particle_splash(PART_SMOKE, 20, 180, to, 0x808080, 2.0f, 60, 80, 0.05f);
                 addstain(STAIN_RAIL_HOLE, to, dir, 3.5f);
-                addstain(STAIN_RAIL_GLOW, to, dir, 3.0f, !insta? 0x88DD88: 0x50CFE5);
+                addstain(STAIN_RAIL_GLOW, to, dir, 3.0f, !insta? 0x77DD77: 0x50CFE5);
                 break;
             }
 
@@ -862,8 +839,8 @@ namespace game
             {
                 adddynlight(vec(to).madd(dir, 4), 14, vec(0.5f, 0.375f, 0.25f), 140, 20);
                 if(hit || water || glass) break;
-                particle_splash(PART_SPARK1, 30, 50, to, 0xB8E47B, 0.70f);
-                particle_splash(PART_SPARK2, 0+rnd(6), 80+rnd(380), to, 0xC8E66B, 0.05f+rndscale(0.09f), 250);
+                particle_splash(PART_SPARK1, 30, 50, to, 0xFFC864, 0.70f);
+                particle_splash(PART_SPARK2, 0+rnd(6), 80+rnd(380), to, 0xFFC864, 0.05f+rndscale(0.09f), 250);
                 particle_splash(PART_SMOKE, atk==ATK_SG1? 0+rnd(5): 5+rnd(10), 150, to, 0x606060, 1.8f+rndscale(2.2f), 100, 100, 0.01f);
                 addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
                 break;
@@ -872,19 +849,20 @@ namespace game
 
             case ATK_PULSE2:
             {
-                adddynlight(vec(to).madd(dir, 4), 20, vec(1.7f, 1, 1.8f), 20);
+                adddynlight(vec(to).madd(dir, 4), 20, vec(2.0f, 1.5f, 2.0f), 20);
                 if(hit || water) break;
-                particle_splash(PART_SPARK1, 10, 60, to, 0xEE88EE, 1.50f, 180, 6);
-                particle_splash(PART_SPARK2, 0+rnd(5), 300, to, 0xFFFFFF, 0.01f+rndscale(0.10f), 350, 2);
+                particle_splash(PART_SPARK1, 10, 60, to, 0xDD88DD, 1.50f, 180, 6);
+                particle_splash(PART_SPARK2, 0+rnd(5), 300, to, 0xEE88EE, 0.01f+rndscale(0.10f), 350, 2);
                 if(from.dist(to) <= attacks[atk].range-1)
                     particle_splash(PART_SMOKE, 20, 120, to, 0x777777, 2.0f, 100, 80, 0.02f);
                 addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 1.0f+rndscale(1.10f));
+                playsound(attacks[atk].impactsound, NULL, &to);
                 break;
             }
 
             case ATK_PISTOL1:
             {
-                adddynlight(vec(to).madd(dir, 4), 10, vec(0, 1.2f, 1.2f), 200, 10, DL_SHRINK);
+                adddynlight(vec(to).madd(dir, 4), 10, vec(0, 1.5f, 1.5f), 200, 10, DL_SHRINK);
                 particle_splash(PART_SPARK1, 10, 50, to, 0x00FFFF, 1.5f, 300, 50);
                 if(hit || water || glass) break;
                 particle_splash(PART_SPARK2, 0+rnd(10), 100+rnd(280), to, 0x00FFFF, 0.01f+rndscale(0.18f), 300, 2);
@@ -894,17 +872,17 @@ namespace game
 
             default: break;
         }
-        if(attacks[atk].action == ACT_MELEE || hit) return;
+        if(attacks[atk].action == ACT_MELEE || atk == ATK_PULSE2 || hit) return;
         int impactsnd = attacks[atk].impactsound;
         if(water)
         {
-            particle_splash(PART_WATER, 20, 200, vec(to).madd(dir, 5), 0xFFFFFF, 0.18f, 280, 2);
-            particle_splash(PART_STEAM, 5, 120, vec(to).madd(dir, 6), 0xFFFFFF, 1.0f, 80, 100, 0.05f);
+            addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
             impactsnd = S_WATER_IMPACT;
+
         }
         else if(glass)
         {
-            particle_splash(PART_GLASS, 20, 200, to, 0xFFFFFF, 0.20+rndscale(0.30f));
+            particle_splash(PART_GLASS, 20, 200, to, 0xFFFFFF, 0.10+rndscale(0.20f));
             addstain(STAIN_GLASS_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(1.0f));
             impactsnd = S_GLASS_IMPACT;
         }
@@ -915,14 +893,14 @@ namespace game
 
     void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit)     // create visual effect from a shot
     {
-        int gun = attacks[atk].gun, sound = attacks[atk].sound, teamcolour = teamtextcolor[d->team];
+        int gun = attacks[atk].gun, sound = attacks[atk].sound;
         float dist = from.dist(to);
         vec up = to;
         switch(atk)
         {
             case ATK_PULSE1:
                 if(muzzleflash && d->muzzle.x >= 0)
-                    particle_flare(d->muzzle, d->muzzle, 115, PART_PULSE_MUZZLE_FLASH, teamcoloureffects? teamcolour : 0xDD88DD, 3.0f, d);
+                    particle_flare(d->muzzle, d->muzzle, 115, PART_PULSE_MUZZLE_FLASH, 0xDD88DD, 3.0f, d);
                 newprojectile(PROJ_PULSE, from, to, attacks[atk].projspeed, local, id, attacks[atk].range, d, atk);
                 break;
 
@@ -931,7 +909,7 @@ namespace game
                 if(muzzleflash)
                 {
                      if(d->muzzle.x >= 0) particle_flare(d->muzzle, d->muzzle, 80, PART_PULSE_MUZZLE_FLASH, 0xDD88DD, 4.0f, d);
-                     adddynlight(hudgunorigin(gun, d->o, to, d), 35, vec(1.8f, 1, 1.9f), 80, 10, DL_FLASH, 0, vec(0, 0, 0), d);
+                     adddynlight(hudgunorigin(gun, d->o, to, d), 35, vec(2.0f, 1.5f, 2.0f), 80, 10, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
                 particle_flare(to, from, 60, PART_LIGHTNING, 0xDD88DD, 0.80f, d);
                 particle_flare(to, from, 80, PART_LIGHTNING, 0xCC88CC, 1.10f, d);
@@ -945,12 +923,12 @@ namespace game
             {
                 if(muzzleflash)
                 {
-                    if(d->muzzle.x >= 0) particle_flare(d->muzzle, d->muzzle, 150, PART_RAIL_MUZZLE_FLASH, 0x88DD88, 0.1f, d, 0.3f);
-                    adddynlight(hudgunorigin(gun, d->o, to, d), 50, vec(0.25f, 1.0f, 0.75f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
+                    if(d->muzzle.x >= 0) particle_flare(d->muzzle, d->muzzle, 150, PART_RAIL_MUZZLE_FLASH, 0x77DD77, 0.1f, d, 0.3f);
+                    adddynlight(hudgunorigin(gun, d->o, to, d), 50, vec(1.20f, 2.0f, 1.20f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                 }
-                particle_flare(hudgunorigin(gun, from, to, d), to, 500, PART_STREAK, 0x66DD66, 1.0f);
-                particle_trail(PART_STEAM, 280, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x55DD55, 0.4f, 0);
-                particle_trail(PART_SMOKE, 300, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x808080, 1.0f, 50);
+                particle_flare(hudgunorigin(gun, from, to, d), to, 500, PART_STREAK, 0x55DD55, 0.80f);
+                particle_trail(PART_STEAM, 280, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x66DD66, 0.2f, 0);
+                particle_trail(PART_SMOKE, 300, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x808080, 0.60f, 50);
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }
@@ -958,7 +936,7 @@ namespace game
             case ATK_RL1:
 
                 if(muzzleflash && d->muzzle.x >= 0)
-                    particle_flare(d->muzzle, d->muzzle, 140, PART_PULSE_MUZZLE_FLASH, teamcoloureffects? teamcolour: 0xEFE898, 0.20f, d, 0.4f);
+                    particle_flare(d->muzzle, d->muzzle, 140, PART_PULSE_MUZZLE_FLASH, 0xEFE898, 0.20f, d, 0.4f);
                 newprojectile(PROJ_ROCKET, from, to, attacks[atk].projspeed, local, id, attacks[atk].range, d, atk);
                 break;
 
@@ -992,10 +970,10 @@ namespace game
             {
                 if(muzzleflash && d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_RAIL_MUZZLE_FLASH, teamcoloureffects? teamcolour: 0xEFE898, 5.0f, d);
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_RAIL_MUZZLE_FLASH, 0xEFE898, 5.0f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 40, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                if(atk == ATK_SMG2) particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_STREAK, teamcoloureffects? teamcolour: 0xFFC864, 1.0f);
+                if(atk == ATK_SMG2) particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_STREAK, 0xFFC864, 0.80f);
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }
@@ -1011,16 +989,16 @@ namespace game
             {
                 if(muzzleflash)
                 {
-                   if(d->muzzle.x >= 0) particle_flare(d->muzzle, d->muzzle, 50, PART_PULSE_MUZZLE_FLASH, 0x00FFFF, 6.0f, d);
-                   adddynlight(hudgunorigin(attacks[atk].gun, d->o, to, d), 30, vec(0, 1.2f, 1.2f), 60, 20, DL_FLASH, 0, vec(0, 0, 0), d);
-            }
+                   if(d->muzzle.x >= 0) particle_flare(d->muzzle, d->muzzle, 50, PART_PULSE_MUZZLE_FLASH, 0x00FFFF, 4.0f, d);
+                   adddynlight(hudgunorigin(attacks[atk].gun, d->o, to, d), 30, vec(0, 1.5f, 1.5f), 60, 20, DL_FLASH, 0, vec(0, 0, 0), d);
+                }
                 if(atk == ATK_PISTOL2)
                 {
                     newprojectile(PROJ_ENERGY, from, to, attacks[atk].projspeed, local, id, attacks[atk].range, d, atk);
                     break;
                 }
                 particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_STREAK, 0x00FFFF, 2.0f);
-                particle_trail(PART_SPARK1, 12, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x08E4E7, 0.30f, 3);
+                particle_trail(PART_SPARK1, 12, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x650ffc, 0.30f, 3);
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }
@@ -1326,7 +1304,7 @@ namespace game
             {
                 case PROJ_PULSE:
                 {
-                    adddynlight(pos, 25, vec(1.8f, 1, 1.9f));
+                    adddynlight(pos, 25, vec(2.0f, 1.5f, 2.0));
                     break;
                 }
 
@@ -1338,7 +1316,7 @@ namespace game
 
                 case PROJ_ENERGY:
                 {
-                    adddynlight(pos, 20, vec(0.25f, 0.75f, 1.0f));
+                    adddynlight(pos, 20, vec(0, 1.50f, 1.50f));
                     break;
                 }
             }
@@ -1349,21 +1327,6 @@ namespace game
             if(bnc.bouncetype<BNC_GRENADE1 && bnc.bouncetype>BNC_ROCKET) continue;
             vec pos(bnc.o);
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
-            switch(bnc.bouncetype)
-            {
-                case BNC_GRENADE2:
-                case BNC_GRENADE3:
-                {
-                    adddynlight(pos, 12, vec(0.25f, 0.30f, 1));
-                    break;
-                }
-
-                case BNC_MINE:
-                {
-                    adddynlight(pos, 15, vec(1.8f, 1, 1.9f));
-                    break;
-                }
-            }
         }
     }
 

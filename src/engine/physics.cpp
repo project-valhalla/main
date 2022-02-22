@@ -1903,10 +1903,11 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
     else if(pl->inwater && !water) game::physicstrigger(pl, local, 0, 1, pl->inwater);
     pl->inwater = water ? material&MATF_VOLUME : MAT_AIR;
 
-    if(pl->state==CS_ALIVE && (pl->o.z < 0 || material&MAT_DAMAGE || lookupmaterial(pl->feetpos())&MAT_LAVA))
-        game::damage(pl);
-    if(pl->state==CS_ALIVE && (pl->o.z < 0 || material&MAT_DEATH)) game::suicide(pl);
-
+    if(pl->state==CS_ALIVE)
+    {
+        if(material&MAT_DAMAGE || isharmful(lookupmaterial(pl->feetpos()))) game::damage(pl); // damage the player if their feet or body are inside damage/lava material
+        if(pl->o.z < 0 || material&MAT_DEATH) game::suicide(pl); // kill the player if they are inside death material or outside of world
+    }
     return true;
 }
 

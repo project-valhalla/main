@@ -40,6 +40,7 @@ enum // cube empty-space materials
 #define isliquid(mat) ((mat)==MAT_WATER || (mat)==MAT_LAVA)
 #define isclipped(mat) ((mat)==MAT_GLASS)
 #define isdeadly(mat) ((mat)==MAT_LAVA)
+#define isharmful(mat) ((mat)==MAT_LAVA || (mat)==MAT_DAMAGE)
 
 extern void lightent(extentity &e, float height = 8.0f);
 extern void lightreaching(const vec &target, vec &color, vec &dir, bool fast = false, extentity *e = 0, float minambient = 0.4f);

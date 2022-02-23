@@ -35,9 +35,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>tesseract</ProjectName>
+    <ProjectName>valhalla</ProjectName>
     <ProjectGuid>{06594C6D-6DA9-49DC-9A91-8F47221DDCFD}</ProjectGuid>
-    <RootNamespace>tesseract</RootNamespace>
+    <RootNamespace>valhalla</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'" Label="Configuration">
@@ -130,12 +130,12 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Profile64\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</LinkIncremental>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">tesseract_debug</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">tesseract_debug</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">tesseract</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">tesseract</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">tesseract</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">tesseract</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">valhalla_debug</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">valhalla_debug</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">valhalla</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">valhalla</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">valhalla</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">valhalla</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -437,6 +437,7 @@
     <ClInclude Include="..\game\ai.h" />
     <ClInclude Include="..\game\aiman.h" />
     <ClInclude Include="..\game\ctf.h" />
+    <ClInclude Include="..\game\elimination.h" />
     <ClInclude Include="..\game\extinfo.h" />
     <ClInclude Include="..\game\game.h" />
   </ItemGroup>
@@ -1019,7 +1020,7 @@
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)%(Filename)1.obj</ObjectFileName>
     </ClCompile>
-    <ClCompile Include="..\game\entities.cpp">
+    <ClCompile Include="..\game\entity.cpp">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">game.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">game.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)game.pch</PrecompiledHeaderOutputFile>
@@ -1151,7 +1152,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="tesseract.rc" />
+    <ResourceCompile Include="valhalla.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

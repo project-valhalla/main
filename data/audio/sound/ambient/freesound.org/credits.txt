@@ -1,70 +1,72 @@
-crickets01.ogg by thedogryan420
+crickets01.ogg                                                   thedogryan420
 https://freesound.org/people/thedogryan420/sounds/146033/
 
-crickets02.ogg by samwd
+crickets02.ogg                                                   samwd
 https://freesound.org/people/samwd/sounds/402733/
 
-frog.ogg was created by mixing the following recordings by JohnLaVine333 & GrayGaffer
+frog.ogg                                                         JohnLaVine333, GrayGaffer
 https://freesound.org/people/JohnLaVine333/sounds/387887/
 https://freesound.org/people/GrayGaffer/sounds/87786/
 
-hawk.ogg by UncleSigmund
+hawk.ogg                                                         UncleSigmund
 https://freesound.org/people/UncleSigmund/sounds/42389/
 
-mwtoad.ogg by felix.blume
+mwtoad.ogg                                                       felix.blume
 https://freesound.org/people/felix.blume/sounds/252647/
 
-owl01.ogg by Anthousai
+owl01.ogg                                                        Anthousai
 https://freesound.org/people/Anthousai/sounds/398734/
 
-owl02.ogg by BlueDelta
+owl02.ogg                                                        BlueDelta
 https://freesound.org/people/BlueDelta/sounds/367964/
 
-sea01.ogg , sea02.ogg , sea03.ogg by pulswelle
+sea01.ogg , sea02.ogg , sea03.ogg                                pulswelle
 https://freesound.org/people/pulswelle/sounds/339517/
 
-alarm02.ogg by sirplus
+alarm.ogg                                                        sirplus
 https://freesound.org/people/sirplus/sounds/25031/
 
-woodpecker.ogg by loberg77
+woodpecker.ogg                                                   loberg77
 https://freesound.org/people/loberg77/sounds/394753/
 
-dog01.ogg & dog02.ogg by roman_cgr
+dog01.ogg & dog02.ogg                                            roman_cgr
 https://freesound.org/people/roman_cgr/sounds/415022/
 
-cicadas01 & cicadas02 were created by mixing the following recordings by burkay, mannhawks & dan_keck
+cicadas01 & cicadas02                                            burkay, mannhawks, dan_keck
 https://freesound.org/people/burkay/sounds/322616/
 https://freesound.org/people/mannhawks/sounds/162682/
 https://freesound.org/people/dan_keck/sounds/347042/
 
-elevator.ogg by DigPro120
+elevator.ogg                                                     DigPro120
 https://freesound.org/people/DigPro120/sounds/432645/
 
-raven01.ogg by dauser
+raven01.ogg                                                      dauser
 https://freesound.org/people/dauser/sounds/328846/
 
-raven02.ogg by kentdavies959
+raven02.ogg                                                      kentdavies959
 https://freesound.org/people/kentdavies959/sounds/466666/
 
-coyote01.ogg was created by mixing the following recordings by felix.blume & dkaufman
+coyote01.ogg                                                     felix.blume, dkaufman
 https://freesound.org/people/felix.blume/sounds/215141/
 https://freesound.org/people/dkaufman/sounds/256533/
 
-coyote02.ogg was created by mixing the following recordings by tubbers & romancito
+coyote02.ogg                                                     tubbers, romancito
 https://freesound.org/people/tubbers/sounds/201454/
 https://freesound.org/people/romancito/sounds/353273/
 
-seagull01.ogg , seagull02 was created by mixing the following recordings by 
+seagull01.ogg , seagull02                                        squashy555, Bansemer, Snapper4298 
 https://freesound.org/people/squashy555/
 https://freesound.org/people/Bansemer/
 https://freesound.org/people/Snapper4298/
 
-fox.ogg 
+fox.ogg                                                          Simon Spiers, Setzilla
 https://freesound.org/people/Simon%20Spiers/sounds/431302/
 https://freesound.org/people/Setzilla/sounds/173208/
 
-bell.ogg
+bell.ogg                                                         pulsewelle
 https://freesound.org/people/pulswelle/sounds/245605/
 
-I downloaded these sounds from freesound.org and slightly edited them to make them fit in the game.
-The sounds are licensed under the Creative Commons 0 License (public domain).
+desertwind.ogg
+https://freesound.org/people/kangaroovindaloo/sounds/397445/     kangaroovindaloo
+
+The sounds were trimmed and/or mixed with other sounds under the same license. Some were edited into a loop to be usable in the game.

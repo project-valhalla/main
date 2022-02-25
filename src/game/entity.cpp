@@ -383,18 +383,15 @@ namespace entities
         {
             d->stoppowerupsound();
             d->juggernautchan = playsound(S_JUGGERNAUT_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1400, d->juggernautchan, 500);
-            adddynlight(d->o, 50, vec(2, 1, 2), 1, 10, DL_FLASH|L_NOSHADOW, 0, vec(0, 0, 0), d);
-            vec feet = d->feetpos(), o = d->o;
-            feet.z += 2.0f;
-            o.z -= 5.0f;
-            if((d->move || d->strafe) || d->timeinair) particle_splash(PART_SPARK1, 5, 700, feet, 0xFF80FF, 0.30f, 50, 60);//particle_splash(PART_SPARK1, 5, 200, feet, 0xFF80FF, 1.80f, 40, 60);
-            //else particle_splash(PART_SPARK1, 3, 300, feet, 0xFF80FF, 0.30f, 50, -5);
+            adddynlight(d->abovehead(), 30, vec(1, 0.50f, 1), 1, 0, DL_FLASH|L_NOSHADOW);
+            particle_icon(d->abovehead(), HICON_JUGGERNAUT%5, HICON_JUGGERNAUT/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             return;
         }
         if(d->damagemillis)
         {
             d->ddamagechan = playsound(S_DDAMAGE_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->ddamagechan, 200);
-            adddynlight(d->muzzle, 30, vec(2, 1, 1), 1, 25, DL_FLASH|L_NOSHADOW, 5, vec(0, 0, 0), d);
+            adddynlight(d->abovehead(), 30, vec(1, 0.50f, 0.50f), 1, 0, DL_FLASH|L_NOSHADOW);
+            particle_icon(d->abovehead(), HICON_DDAMAGE%5, HICON_DDAMAGE/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->damagemillis -= time)<=0)
             {
                 d->damagemillis = 0;
@@ -405,7 +402,8 @@ namespace entities
         if(d->hastemillis)
         {
             d->hastechan = playsound(S_HASTE_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->hastechan, 200);
-            adddynlight(d->muzzle, 30, vec(1, 2, 1), 1, 20, DL_FLASH|L_NOSHADOW, 0, vec(0, 0, 0), d);
+            adddynlight(d->abovehead(), 30, vec(0.50f, 1, 0.50f), 1, 0, DL_FLASH|L_NOSHADOW);
+            particle_icon(d->abovehead(), HICON_HASTE%5, HICON_HASTE/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->hastemillis -= time)<=0)
             {
                 d->hastemillis = 0;
@@ -421,7 +419,8 @@ namespace entities
         if(d->armourmillis)
         {
             d->armourchan = playsound(S_ARMOUR_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->armourchan, 200);
-            adddynlight(d->o, 30, vec(1, 1, 2), 1, 25, DL_FLASH|L_NOSHADOW, 10, vec(0, 0, 0), d);
+            adddynlight(d->abovehead(), 30, vec(0.50f, 0.50f, 1), 1, 0, DL_FLASH|L_NOSHADOW);
+            particle_icon(d->abovehead(), HICON_ARMOUR%5, HICON_ARMOUR/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->armourmillis -= time)<=0)
             {
                 d->armourmillis = 0;
@@ -432,7 +431,8 @@ namespace entities
         if(d->ammomillis)
         {
             d->ammochan = playsound(S_UAMMO_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1200, d->ammochan, 500);
-            adddynlight(d->muzzle, 30, vec(1, 1, 1), 1, 25, DL_FLASH|L_NOSHADOW, 10, vec(0, 0, 0), d);
+            adddynlight(d->abovehead(), 30, vec(1, 1, 1), 1, 0, DL_FLASH|L_NOSHADOW);
+            particle_icon(d->abovehead(), HICON_UAMMO%5, HICON_UAMMO/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->ammomillis -= time)<=0)
             {
                 d->ammomillis = 0;
@@ -443,10 +443,8 @@ namespace entities
         if(d->invulnmillis)
         {
             d->invulnchan = playsound(S_INVULNERABILITY_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1200, d->invulnchan, 500);
-            adddynlight(d->abovehead(), 30, vec(2, 2, 1), 1, 25, DL_FLASH, 10, vec(0, 0, 0), d);
-            vec abovehead = d->abovehead();
-            abovehead.z += 2.4f;
-            particle_icon(abovehead, HICON_HASTE, HICON_HASTE, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
+            adddynlight(d->abovehead(), 30, vec(1, 1, 0.50f), 1, 0, DL_FLASH|L_NOSHADOW);
+            particle_icon(d->abovehead(), HICON_INVULNERABILITY%5, HICON_INVULNERABILITY/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->invulnmillis -= time)<=0)
             {
                 d->invulnmillis = 0;

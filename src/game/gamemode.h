@@ -77,7 +77,7 @@ static struct mutatorinfo
     { "instagib", "Instagib", MUT_INSTAGIB, MUT_CLASSIC|MUT_EFFIC|MUT_VAMPIRE|MUT_RANDOMWEAPON|MUT_ONEWEAPON, "\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot" },
     { "effic", "Efficiency", MUT_EFFIC, MUT_CLASSIC|MUT_INSTAGIB|MUT_RANDOMWEAPON|MUT_ONEWEAPON, "\f6Efficiency\ff: you spawn with shield and all weapons" },
     { "voosh", "Voosh", MUT_RANDOMWEAPON, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC|MUT_ONEWEAPON, "\f6Voosh\ff: all players switch to a random weapon every 15 seconds" },
-    { "weapon-arena", "Weapon Arena", MUT_ONEWEAPON, MUT_INSTAGIB|MUT_EFFIC|MUT_RANDOMWEAPON, "\f6One Weapon\ff: only one weapon is available (set in server/offline game settings)" },
+    { "weapon-arena", "Weapon Arena", MUT_ONEWEAPON, MUT_INSTAGIB|MUT_EFFIC|MUT_RANDOMWEAPON, "\f6Weapon Arena\ff: only one weapon is available (set in server/offline game settings)" },
     { "vamp", "Vampire", MUT_VAMPIRE, MUT_INSTAGIB, "\f6Vampire\ff: deal damage to regenerate health" },
     { "mayhem", "Mayhem", MUT_MAYHEM, NULL, "\f6Mayhem\ff: headshots landed with hitscan weapons instantly kill opponents" },
     { "no-power", "No Power-ups", MUT_NOPOWERUP, NULL, "\f6No Power-ups\ff: power-ups do not spawn" },

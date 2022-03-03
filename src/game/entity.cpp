@@ -384,7 +384,6 @@ namespace entities
             d->stoppowerupsound();
             d->juggernautchan = playsound(S_JUGGERNAUT_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1400, d->juggernautchan, 500);
             adddynlight(d->abovehead(), 30, vec(1, 0.50f, 1), 1, 0, DL_FLASH|L_NOSHADOW);
-            particle_icon(d->abovehead(), HICON_JUGGERNAUT%5, HICON_JUGGERNAUT/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             return;
         }
         if(d->damagemillis)

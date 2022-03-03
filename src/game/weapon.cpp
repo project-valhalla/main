@@ -1227,7 +1227,7 @@ namespace game
             }
             return;
         }
-        if(!m_unlimitedammo(mutators) && atk > 0 && !d->ammomillis) d->ammo[gun] -= attacks[atk].use;
+        if(!d->ammomillis) d->ammo[gun] -= attacks[atk].use;
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);

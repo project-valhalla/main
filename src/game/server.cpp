@@ -2783,7 +2783,7 @@ namespace server
         int gun = attacks[atk].gun;
         if(attacks[atk].action != ACT_MELEE && !gs.ammo[gun]) return;
         if(attacks[atk].range && from.dist(to) > attacks[atk].range + 1) return;
-        if(!m_unlimitedammo(mutators) && atk > 0 && !gs.ammomillis) gs.ammo[gun] -= attacks[atk].use;
+        if(!gs.ammomillis) gs.ammo[gun] -= attacks[atk].use;
         gs.lastshot = millis;
         int gunwait = attacks[atk].attackdelay;
         if(gs.hastemillis) gunwait /= 2;

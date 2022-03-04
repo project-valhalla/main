@@ -82,11 +82,11 @@ struct gameentity : extentity
 {
 };
 
-enum { GUN_SG = 0, GUN_SMG, GUN_PULSE, GUN_RL, GUN_RAIL, GUN_GL, GUN_INSTA, GUN_PISTOL, GUN_ZOMBIE, NUMGUNS };
+enum { GUN_SG = 0, GUN_SMG, GUN_PULSE, GUN_RL, GUN_RAIL, GUN_INSTA, GUN_PISTOL, GUN_ZOMBIE, NUMGUNS };
 enum { ACT_IDLE = 0, ACT_MELEE, ACT_PRIMARY, ACT_SECONDARY, NUMACTS };
 enum
 {
-    ATK_MELEE = 0, ATK_SG1, ATK_SG2, ATK_SMG1, ATK_SMG2, ATK_PULSE1, ATK_PULSE2, ATK_RL1, ATK_RL2, ATK_RAIL, ATK_GL1, ATK_GL2,
+    ATK_MELEE = 0, ATK_SG1, ATK_SG2, ATK_SMG1, ATK_SMG2, ATK_PULSE1, ATK_PULSE2, ATK_RL1, ATK_RL2, ATK_RAIL,
     ATK_INSTA, ATK_ZOMBIE, ATK_PISTOL1, ATK_PISTOL2,
     ATK_TELEPORT, ATK_STOMP,
     NUMATKS
@@ -347,9 +347,6 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
     { GUN_RL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL2,           -1,           -1,  920,  110,   0,   0,   0,  200,   0, 4025,  1, 120, 33, 1500,    1 },
     //railgun
     { GUN_RAIL,     ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL1,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,   70,  70,   0,   0,    0,  50, 5000,  1, 110,  0,    0,    1 },
-    //grenade launcher
-    { GUN_GL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_GL1,           -1,           -1,  500,   80,   0,   0,   1,  200,   0,  800,  1, 100, 25, 1800,    1 },
-    { GUN_GL,      ACT_SECONDARY,ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE3,           -1,  S_PULSE_HIT, 1000,   50,   0,   0,   0,  180,   0,  500,  1, 200, 28, 5000,  100 },
     //instagib
     { GUN_INSTA,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL2,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,  150,   0,   0,   0,    0, 100, 5000,  1,  30,  0,    0,    0 },
     //zombie
@@ -371,7 +368,6 @@ static const struct guninfo { const char *name, *file, *vwep; int attacks[NUMACT
     { "pulse rifle (upgraded)", "pulserifle", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PULSE1, ATK_PULSE2 }, },
     { "rocket launcher", "rl", "worldgun/rl", { -1, ATK_MELEE, ATK_RL1, ATK_RL2 } },
     { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_RAIL, ATK_RAIL }, },
-    { "grenade launcher", "gl", "worldgun/gl", { -1, ATK_MELEE, ATK_GL1, ATK_GL2 }, },
     { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_INSTA, ATK_INSTA }, },
     { "pulse rifle", "pistol", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2 }, },
     { "zombie", "zombie", "", { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE }, }

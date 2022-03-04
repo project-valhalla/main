@@ -2735,7 +2735,6 @@ namespace server
                 break;
             case ATK_RL2:
             case ATK_SG2:
-            case ATK_GL1: case ATK_GL2:
                 if(!gs.bouncers.remove(id)) return;
                 break;
 
@@ -2743,7 +2742,6 @@ namespace server
                 return;
         }
         sendf(-1, 1, "ri4x", N_EXPLODEFX, ci->clientnum, atk, id, ci->ownernum);
-        if(atk == ATK_GL2) gs.gunwait = 0;
         loopv(hits)
         {
             hitinfo &h = hits[i];
@@ -2785,7 +2783,7 @@ namespace server
         switch(atk)
         {
             case ATK_PULSE1: case ATK_RL1: case ATK_PISTOL2: gs.projs.add(id); break;
-            case ATK_RL2: case ATK_SG2: case ATK_GL1: case ATK_GL2: gs.bouncers.add(id); break;
+            case ATK_RL2: case ATK_SG2: gs.bouncers.add(id); break;
             default:
             {
                 int totalrays = 0, maxrays = attacks[atk].rays;

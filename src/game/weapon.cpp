@@ -137,13 +137,13 @@ namespace game
         loopi(attacks[atk].rays) offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i]);
     }
 
-    enum { BNC_GRENADE1, BNC_GRENADE2, BNC_GRENADE3, BNC_MINE, BNC_ROCKET, BNC_GIB1, BNC_GIB2 };
+    enum { BNC_GRENADE, BNC_ROCKET, BNC_GIB1, BNC_GIB2 };
 
     struct bouncer : physent
     {
         int lifetime, bounces;
         float lastyaw, roll, gravity, elasticity;
-        bool local, destroyed;
+        bool local;
         gameent *owner;
         int bouncetype, variant;
         vec offset;
@@ -156,7 +156,6 @@ namespace game
         bouncer() : bounces(0), roll(0), gravity(0.8f), elasticity(0.6f), variant(0), lastbounce(0), bouncesound(-1), bouncerloopchan(-1), bouncerloopsound(-1)
         {
             type = ENT_BOUNCE;
-            destroyed = false;
         }
         ~bouncer()
         {
@@ -177,7 +176,7 @@ namespace game
 
         void limitoffset()
         {
-            if(bouncetype >= BNC_GRENADE1 && bouncetype <= BNC_ROCKET && offsetmillis > 0 && offset.z < 0)
+            if(bouncetype >= BNC_GRENADE && bouncetype <= BNC_ROCKET && offsetmillis > 0 && offset.z < 0)
                 offsetheight = raycube(vec(o.x + offset.x, o.y + offset.y, o.z), vec(0, 0, -1), -offset.z);
             else offsetheight = -1;
         }
@@ -203,9 +202,7 @@ namespace game
 
         switch(type)
         {
-            case BNC_GRENADE1:
-            case BNC_GRENADE2:
-            case BNC_GRENADE3:
+            case BNC_GRENADE:
             {
                 bnc.collidetype = COLLIDE_ELLIPSE;
                 bnc.bouncesound = S_GRENADE_BOUNCE;
@@ -217,7 +214,6 @@ namespace game
                 bnc.bouncesound = S_ROCKET_BOUNCE;
                 break;
             }
-            case BNC_MINE: bnc.collidetype = COLLIDE_ELLIPSE;
             case BNC_GIB1: bnc.variant = rnd(5); break;
             //case BNC_DEBRIS: bnc.variant = rnd(4); break;
         }
@@ -229,7 +225,7 @@ namespace game
 
         avoidcollision(&bnc, dir, owner, 0.1f);
 
-        if(type>=BNC_GRENADE1 && type<=BNC_ROCKET)
+        if(type>=BNC_GRENADE && type<=BNC_ROCKET)
         {
             bnc.offset = hudgunorigin(attacks[bnc.atk].gun, from, to, owner);
             if(owner==hudplayer() && !isthirdperson()) bnc.offset.sub(owner->o).rescale(16).add(owner->o);
@@ -276,30 +272,16 @@ namespace game
                     break;
                 }
 
-                case BNC_GRENADE1:
+                case BNC_GRENADE:
                 case BNC_ROCKET:
                 {
                     if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_SMOKE, 5, 200, pos, 0x555555, 1.60f, 10, 500);
                     break;
                 }
-
-                case BNC_GRENADE2:
-                case BNC_GRENADE3:
-                {
-                    if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SPARK1, 10, 180, pos, 0x202080, 0.70f, 2, 60);
-                    break;
-                }
-
-                case BNC_MINE:
-                {
-                    if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SPARK1, 10, 180, pos, 0xEE88EE, 0.70f, 2, 60);
-                    bnc.bouncerloopsound = S_PULSE3_LOOP;
-                    break;
-                }
             }
             if(bnc.bouncerloopsound >= 0) bnc.bouncerloopchan = playsound(bnc.bouncerloopsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerloopchan);
             vec old(bnc.o);
-            bool stopped = false;
+            bool destroyed = false;
             if(bnc.bouncetype>=BNC_GIB1 && bnc.bouncetype <= BNC_GIB2)
             {
                 // cheaper variable rate physics for debris, gibs, etc.
@@ -307,46 +289,17 @@ namespace game
                 {
                     int qtime = min(80, rtime);
                     rtime -= qtime;
-                    if((bnc.lifetime -= qtime)<0 || bounce(&bnc, qtime/1000.0f, 0.5f, 0.4f, 0.7f)) { stopped = true; break; }
+                    if((bnc.lifetime -= qtime)<0 || bounce(&bnc, qtime/1000.0f, 0.5f, 0.4f, 0.7f)) { destroyed = true; break; }
                 }
             }
-            else if(bnc.bouncetype >= BNC_GRENADE1 && bnc.bouncetype <= BNC_ROCKET)
+            else if(bnc.bouncetype >= BNC_GRENADE && bnc.bouncetype <= BNC_ROCKET)
             {
-                switch(bnc.bouncetype)
-                {
-                    case BNC_GRENADE1:
-                    {
-                        bnc.destroyed = bnc.bounces >= 1;
-                        break;
-                    }
-                    case BNC_GRENADE3:
-                    {
-                        if(bnc.bounces >= 1) bnc.gravity = 0;
-                        break;
-                    }
-                    case BNC_MINE:
-                    {
-                        if(bnc.bounces >= 1) bnc.gravity = 0;
-                        loopi(numdynents())
-                        {
-                            dynent *o = iterdynents(i);
-                            if(o->state!=CS_ALIVE) break;
-                            if(bnc.lifetime > 250 && o != bnc.owner && bnc.o.dist(o->o) < attacks[bnc.atk].exprad)
-                            {
-                                playsound(S_PULSE3_DETO, NULL, &bnc.o);
-                                bnc.lifetime = 180;
-                            }
-                        }
-                        break;
-                    }
-                    default: break;
-                }
-                stopped = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity) || (bnc.lifetime -= time)<0;
+                destroyed = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity) || (bnc.lifetime -= time)<0 || isdeadly(lookupmaterial(bnc.o)&MAT_LAVA) ||
+                            (bnc.bouncetype == BNC_GRENADE && bnc.bounces >= 1);
             }
-            int material = lookupmaterial(bnc.o);
-            if((stopped || bnc.destroyed) || isdeadly(material&MAT_LAVA))
+            if(destroyed)
             {
-                if(bnc.bouncetype >= BNC_GRENADE1 && bnc.bouncetype <= BNC_ROCKET)
+                if(bnc.bouncetype >= BNC_GRENADE && bnc.bouncetype <= BNC_ROCKET)
                 {
                     int damage = attacks[bnc.atk].damage*(bnc.owner->damagemillis||bnc.owner->juggernaut?2:1);
                     hits.setsize(0);
@@ -601,8 +554,6 @@ namespace game
             case ATK_RL1:
             case ATK_RL2:
             case ATK_SG2:
-            case ATK_GL1:
-            case ATK_GL2:
             {
                 dynlight = vec(2, 1.5f, 1);
                 fireball = 0xC8E66B;
@@ -682,12 +633,10 @@ namespace game
                 break;
             case ATK_SG2:
             case ATK_RL2:
-            case ATK_GL1:
-            case ATK_GL2:
                 loopv(bouncers)
                 {
                     bouncer &b = *bouncers[i];
-                    if(b.bouncetype < BNC_GRENADE1 && b.bouncetype > BNC_ROCKET) break;
+                    if(b.bouncetype < BNC_GRENADE && b.bouncetype > BNC_ROCKET) break;
                     if(b.owner == d && b.id == id && !b.local)
                     {
                         vec pos(b.o);
@@ -980,7 +929,7 @@ namespace game
 
             case ATK_SG2:
                 up.z += dist/16;
-                newbouncer(from, up, local, id, d, atk, BNC_GRENADE1, attacks[atk].lifetime, attacks[atk].projspeed, 1.0f, 0);
+                newbouncer(from, up, local, id, d, atk, BNC_GRENADE, attacks[atk].lifetime, attacks[atk].projspeed, 1.0f, 0);
                 break;
 
             case ATK_SMG1:
@@ -995,12 +944,6 @@ namespace game
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }
-
-            case ATK_GL1:
-            case ATK_GL2:
-                up.z += dist/8;
-                newbouncer(from, up, local, id, d, atk, BNC_MINE, attacks[atk].lifetime, attacks[atk].projspeed, 0.8f, 0);
-                break;
 
             case ATK_PISTOL1:
             case ATK_PISTOL2:
@@ -1342,7 +1285,7 @@ namespace game
         loopv(bouncers)
         {
             bouncer &bnc = *bouncers[i];
-            if(bnc.bouncetype<BNC_GRENADE1 && bnc.bouncetype>BNC_ROCKET) continue;
+            if(bnc.bouncetype<BNC_GRENADE && bnc.bouncetype>BNC_ROCKET) continue;
             vec pos(bnc.o);
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
         }
@@ -1394,8 +1337,7 @@ namespace game
             {
                 switch(bnc.bouncetype)
                 {
-                    case BNC_GRENADE1: mdl = "projectile/grenade01"; break;
-                    case BNC_GRENADE2: case BNC_GRENADE3: case BNC_MINE: mdl = "projectile/grenade02"; break;
+                    case BNC_GRENADE: mdl = "projectile/grenade"; break;
                     case BNC_ROCKET: mdl = "projectile/rocket"; break;
                     default: mdl = "projectile/grenade01"; break;
                 }
@@ -1510,7 +1452,7 @@ namespace game
         loopv(bouncers)
         {
             bouncer &bnc = *bouncers[i];
-            if(bnc.bouncetype <= BNC_GRENADE1 && bnc.bouncetype >= BNC_ROCKET) continue;
+            if(bnc.bouncetype <= BNC_GRENADE && bnc.bouncetype >= BNC_ROCKET) continue;
             obstacles.avoidnear(NULL, bnc.o.z + attacks[bnc.atk].exprad + 1, bnc.o, radius + attacks[bnc.atk].exprad);
         }
     }

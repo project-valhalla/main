@@ -28,8 +28,8 @@ static struct gamemodeinfo
     { "ctf", "Capture The Flag", M_CTF | M_TEAM, "\f0Capture The Flag\ff: capture the enemy flag and bring it back to your flag to score points for your team" },
     { "elim", "Elimination", M_ELIMINATION | M_TEAM, "\f0Elimination\ff: eliminate the enemy team to win the round and score points for your team" },
     { "lms", "Last Man Standing", M_LASTMAN, "\f0Last Man Standing\ff: eliminate everyone to win the round and score points" },
-    { "jugg", "Juggernaut", M_JUGGERNAUT, "\f0Juggernaut\ff: kill players or kill the juggernaut to become the new juggernaut and score points easier" },
-    { "infect", "Infection", M_INFECTION, "\f0Infection\ff: survive the infection or infect as many survivors as you can as a zombie to score points" }
+    { "jugg", "Juggernaut", M_JUGGERNAUT, "\f0Juggernaut\ff: kill the juggernaut to become the juggernaut and score points" },
+    { "infect", "Infection", M_INFECTION, "\f0Infection\ff: survive the infection or infect survivors to score points" }
 };
 
 #define STARTGAMEMODE (-1)
@@ -74,10 +74,10 @@ static struct mutatorinfo
 {
     { "classic", "Classic", MUT_CLASSIC, MUT_INSTAGIB|MUT_EFFIC|MUT_NOITEMS, "\f6Classic\ff: collect items for ammo, shield and health" },
     { "instagib", "Instagib", MUT_INSTAGIB, MUT_CLASSIC|MUT_EFFIC|MUT_VAMPIRE|MUT_RANDOMWEAPON|MUT_ONEWEAPON, "\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot" },
-    { "effic", "Efficiency", MUT_EFFIC, MUT_CLASSIC|MUT_INSTAGIB|MUT_RANDOMWEAPON|MUT_ONEWEAPON, "\f6Efficiency\ff: you spawn with shield and all weapons" },
+    { "effic", "Efficiency", MUT_EFFIC, MUT_CLASSIC|MUT_INSTAGIB|MUT_RANDOMWEAPON|MUT_ONEWEAPON, "\f6Efficiency\ff: you spawn with shield and all the main weapons" },
     { "voosh", "Voosh", MUT_RANDOMWEAPON, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC|MUT_ONEWEAPON, "\f6Voosh\ff: all players switch to a random weapon every 15 seconds" },
     { "weapon-arena", "Weapon Arena", MUT_ONEWEAPON, MUT_INSTAGIB|MUT_EFFIC|MUT_RANDOMWEAPON, "\f6Weapon Arena\ff: only one weapon is available (set in server/offline game settings)" },
-    { "vamp", "Vampire", MUT_VAMPIRE, MUT_INSTAGIB, "\f6Vampire\ff: deal damage to regenerate health" },
+    { "vamp", "Vampire", MUT_VAMPIRE, MUT_INSTAGIB, "\f6Vampire\ff: your health slowly decreases, deal damage to regenerate it" },
     { "mayhem", "Mayhem", MUT_MAYHEM, NULL, "\f6Mayhem\ff: headshots landed with hitscan weapons instantly kill opponents" },
     { "no-power", "No Power-ups", MUT_NOPOWERUP, NULL, "\f6No Power-ups\ff: power-ups do not spawn" },
     { "no-items", "No Items", MUT_NOITEMS, MUT_CLASSIC, "\f6No items\ff: items do not spawn" }

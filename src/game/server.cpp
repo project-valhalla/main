@@ -2538,12 +2538,6 @@ namespace server
         gs.juggernaut = 1;
         int health = gs.maxhealth*2;
         gs.maxhealth = gs.health = health;
-        if(!mutators)
-        {
-            gs.ammo[gs.primary] = 100;
-            gs.ammo[gs.secondary] = 100;
-        }
-        else loopi(NUMGUNS-3) gs.ammo[i] = 100;
         sendf(-1, 1, "ri3", N_JUGGERNAUT, ci->clientnum, health);
         nojuggernaut = false;
     }

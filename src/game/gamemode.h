@@ -60,9 +60,8 @@ static struct gamemodeinfo
 
 enum
 {
-    MUT_DEFAULT = 1<<0,
-    MUT_CLASSIC = 1<<1, MUT_INSTAGIB = 1<<2, MUT_EFFIC = 1<<3, MUT_RANDOMWEAPON = 1<<4, MUT_ONEWEAPON = 1<<5,
-    MUT_VAMPIRE = 1<<6, MUT_MAYHEM = 1<<7, MUT_NOPOWERUP = 1<<8, MUT_NOITEMS = 1<<9
+    MUT_CLASSIC = 1<<0, MUT_INSTAGIB = 1<<1, MUT_EFFIC = 1<<2, MUT_RANDOMWEAPON = 1<<3, MUT_ONEWEAPON = 1<<4,
+    MUT_VAMPIRE = 1<<5, MUT_MAYHEM = 1<<6, MUT_NOPOWERUP = 1<<7, MUT_NOITEMS = 1<<8
 };
 
 
@@ -85,7 +84,6 @@ static struct mutatorinfo
 };
 
 #define NUMMUTATORS              ((int)(sizeof(mutator)/sizeof(mutator[0])))
-#define m_default(b)             (b&MUT_DEFAULT)
 #define m_classic(b)             (b&MUT_CLASSIC)
 #define m_insta(b)               (b&MUT_INSTAGIB)
 #define m_effic(b)               (b&MUT_EFFIC)

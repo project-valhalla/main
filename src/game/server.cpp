@@ -2538,15 +2538,13 @@ namespace server
         gs.juggernaut = 1;
         int health = gs.maxhealth*2;
         gs.maxhealth = gs.health = health;
-        if(!m_insta(mutators) && !m_randomweapon(mutators) && !m_oneweapon(mutators))
+        if(!mutators)
         {
-            if(m_default(mutators))
-            {
-                gs.ammo[gs.primary] = 100;
-                gs.ammo[gs.secondary] = 100;
-            }
-            else loopi(NUMGUNS-3) gs.ammo[i] = 100;
+            gs.ammo[gs.primary] = 100;
+            gs.ammo[gs.secondary] = 100;
         }
+        else loopi(NUMGUNS-3) gs.ammo[i] = 100;
+
         gs.damagemillis = gs.hastemillis = gs.armourmillis = gs.ammomillis = 1;
         sendf(-1, 1, "ri3", N_JUGGERNAUT, ci->clientnum, health);
         nojuggernaut = false;

@@ -581,7 +581,7 @@ namespace ai
         d->ai->clearsetup();
         d->ai->reset(true);
         d->ai->lastrun = lastmillis;
-        if(m_default(mutators)) d->ai->weappref = d->primary;
+        if(!mutators) d->ai->weappref = d->primary;
         else if(m_insta(mutators)) d->ai->weappref = GUN_INSTA;
         else if(forcegun >= 0 && forcegun < NUMGUNS) d->ai->weappref = forcegun;
         else d->ai->weappref = rnd(NUMGUNS-4);

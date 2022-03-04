@@ -2270,15 +2270,12 @@ namespace game
                 if(!m_juggernaut || !d) break;
                 d->juggernaut = 1;
                 d->maxhealth = d->health = health;
-                if(!m_insta(mutators) && !m_randomweapon(mutators) && !m_oneweapon(mutators))
+                if(!mutators)
                 {
-                    if(m_default(mutators))
-                    {
-                        d->ammo[d->primary] = 100;
-                        d->ammo[d->secondary] = 100;
-                    }
-                    else loopi(NUMGUNS-5) d->ammo[i] = 100;
+                    d->ammo[d->primary] = 100;
+                    d->ammo[d->secondary] = 100;
                 }
+                else loopi(NUMGUNS-5) d->ammo[i] = 100;
                 d->damagemillis = d->hastemillis = 1;
                 d->armourmillis = d->ammomillis = 1;
                 break;

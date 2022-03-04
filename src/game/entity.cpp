@@ -74,7 +74,7 @@ namespace entities
             "item/teleport", NULL, NULL,
             NULL,
 
-            "item/ammo/shells", "item/ammo/bullets", "worldgun/pulserifle", "item/ammo/rockets", "item/ammo/rrounds",
+            "item/ammo/shells", "item/ammo/bullets", "item/ammo/pulse", "item/ammo/rockets", "item/ammo/rrounds",
             "item/health", "item/shield/yellow", "item/shield/red",
             "item/health/super", "item/health/mega", "item/ddamage", "item/haste", "item/armor", "item/ammo/item", "", "", "item/ankh"
         };

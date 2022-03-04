@@ -870,10 +870,10 @@ static partrenderer *parts[] =
     new quadrenderer("data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                 // hud icon
     new quadrenderer("<colorify:1/1/1>data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON), // grey hud icon
     new quadrenderer("data/interface/icon/light.png", PT_PART),
-    new quadrenderer("data/interface/icon/model.png", PT_PART),
+    new quadrenderer("data/interface/icon/envmap.png", PT_PART),
     new quadrenderer("data/interface/icon/player.png", PT_PART),
     new quadrenderer("data/interface/icon/entity.png", PT_PART),
-    new quadrenderer("data/interface/icon/fire.png", PT_PART),
+    new quadrenderer("data/interface/icon/particle.png", PT_PART),
     new quadrenderer("data/interface/icon/sound.png", PT_PART),
     &texts,                                                                                    // text
     &meters,                                                                                   // meter
@@ -1392,22 +1392,6 @@ void seedparticles()
     }
 }
 
-const char * const enticonnames[] =
-{
-    "data/interface/icon/light.png",
-    "data/interface/icon/model.png",
-    "data/interface/icon/player.png",
-    "data/interface/icon/entity.png",
-    "data/interface/icon/fire.png",
-    "data/interface/icon/sound.png",
-    "data/interface/icon/light.png",
-    "data/interface/icon/entity.png",
-    "data/interface/icon/entity.png",
-    "data/interface/icon/entity.png",
-    "data/interface/icon/spring.png",
-    "data/interface/icon/entity.png"
-};
-
 VARP(entityicons, 0, 1, 1);
 
 void updateparticles()
@@ -1459,44 +1443,51 @@ void updateparticles()
     }
     if(editmode) // show sparkly thingies for map entities in edit mode
     {
+        static const int entcolor[]   = { 0xFFFFFF, 0xFFFFFF,  0xFF8C00, 0x90EE90, 0xBF40BF, 0xFF7F7F, 0xFFFF00, 0xFFFFFF, 0x0096FF};
         const vector<extentity *> &ents = entities::getents();
         // note: order matters in this case as particles of the same type are drawn in the reverse order that they are added
         loopv(entgroup)
         {
             entity &e = *ents[entgroup[i]];
-            particle_textcopy(e.o, entname(e), PART_TEXT, 1, 0xFF4B19, 2.0f);
+            particle_textcopy(e.o, entname(e), PART_TEXT, 1, 0xA9A9A9, 2.0f);
         }
         loopv(ents)
         {
             entity &e = *ents[i];
             if(e.type==ET_EMPTY) continue;
-            particle_textcopy(e.o, entname(e), PART_TEXT, 1, 0x1EC850, 2.0f);
-            regular_particle_splash(PART_EDIT, 4, 40, e.o, 0x3250FF, 0.32f*particlesize/100.0f);
+            if(e.type >= ET_LIGHT && e.type <= ET_DECAL)
+            {
+                particle_textcopy(e.o, entname(e), PART_TEXT, 1, entcolor[e.type], 2.0f);
+                regular_particle_splash(PART_EDIT, 4, 50, e.o, entcolor[e.type], 0.32f*particlesize/100.0f, 200);
+            }
+            else particle_textcopy(e.o, entname(e), PART_TEXT, 1, 0x00FFFF, 2.0f);
             if(entityicons)
             {
-                int icon = PART_ENTITY;
+                int icon = 0;
                 switch(e.type)
                 {
-                case ET_LIGHT:
-                case ET_SPOTLIGHT:
-                    icon = PART_LIGHT;
-                    break;
+                    case ET_LIGHT:
+                    case ET_SPOTLIGHT:
+                        icon = PART_LIGHT;
+                        break;
 
-                case ET_MAPMODEL:
-                    icon = PART_MODEL;
-                    break;
+                    case ET_ENVMAP:
+                        icon = PART_MODEL;
+                        break;
 
-                case ET_PLAYERSTART:
-                    icon = PART_PLAYER;
-                    break;
-                case ET_SOUND:
-                    icon = PART_SOUND;
-                    break;
-                case ET_PARTICLES:
-                    icon = PART_PARTICLE;
-                    break;
+                    case ET_PLAYERSTART:
+                        icon = PART_PLAYER;
+                        break;
+                    case ET_SOUND:
+                        icon = PART_SOUND;
+                        break;
+                    case ET_PARTICLES:
+                        icon = PART_PARTICLE;
+                        break;
+                    case ET_MAPMODEL: break;
+                    default: break;
                 }
-                particle_splash(icon, 1, 1, e.o, 0xFFFFFF, 1.0f+particlesize/100.0f);
+                if(icon) particle_splash(icon, 1, 1, e.o, entcolor[e.type], 1.0f+particlesize/100.0f);
             }
         }
     }

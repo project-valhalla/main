@@ -331,7 +331,7 @@ namespace game
             {
                 if(bnc.bouncetype >= BNC_GRENADE1 && bnc.bouncetype <= BNC_ROCKET)
                 {
-                    int damage = attacks[bnc.atk].damage*(bnc.owner->damagemillis?2:1);
+                    int damage = attacks[bnc.atk].damage*(bnc.owner->damagemillis||bnc.owner->juggernaut?2:1);
                     hits.setsize(0);
                     explode(bnc.local, bnc.owner, bnc.o, bnc.vel, NULL, damage, bnc.atk);
                     addstain(STAIN_PULSE_SCORCH, bnc.o, vec(0, 0, 1), attacks[bnc.atk].exprad);
@@ -527,7 +527,7 @@ namespace game
     void hitpush(int damage, dynent *d, gameent *at, vec &from, vec &to, int atk, int rays, int flags)
     {
         gameent *f = (gameent *)d;
-        if(f->armourmillis) damage /= 2;
+        if(f->armourmillis || f->juggernaut) damage /= 2;
         if(f->invulnmillis && f!=at && !at->invulnmillis) damage = 0;
         if(flags&HIT_HEAD && m_mayhem(mutators)) damage = f->health;
         hit(damage, d, at, vec(to).sub(from).safenormalize(), atk, from.dist(to), rays, flags);
@@ -557,7 +557,7 @@ namespace game
             if(damage > 0)
             {
                 gameent *f = (gameent *)o;
-                if(f->armourmillis) damage /= 2;
+                if(f->armourmillis || f->juggernaut) damage /= 2;
                 if(f->invulnmillis && f!=at && !at->invulnmillis) damage = 0;
                 hit(dam, o, at, dir, atk, dist);
                 damageeffect(dam, o, o->o, atk);
@@ -694,7 +694,7 @@ namespace game
         vec dir;
         projdist(o, dir, v, p.dir, p.atk);
         gameent *f = (gameent *)o;
-        if(f->armourmillis) damage /= 2;
+        if(f->armourmillis || f->juggernaut) damage /= 2;
         if(f->invulnmillis && f!=p.owner && !p.owner->invulnmillis) damage = 0;
         hit(damage, o, p.owner, dir, p.atk, 0);
         damageeffect(damage, o, o->o, p.atk);
@@ -711,7 +711,7 @@ namespace game
             p.offsetmillis = max(p.offsetmillis-time, 0);
             vec dv;
             float dist = p.to.dist(p.o, dv);
-            float damage = attacks[p.atk].damage*(p.owner->damagemillis ? 2 : 1);
+            float damage = attacks[p.atk].damage*(p.owner->damagemillis || p.owner->juggernaut ? 2 : 1);
             dv.mul(time/max(dist*1000/p.speed, float(time)));
             vec v = vec(p.o).add(dv);
             bool exploded = false;
@@ -1227,7 +1227,7 @@ namespace game
             }
             return;
         }
-        if(!d->ammomillis) d->ammo[gun] -= attacks[atk].use;
+        if(!d->ammomillis && !d->juggernaut) d->ammo[gun] -= attacks[atk].use;
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
@@ -1260,7 +1260,7 @@ namespace game
         }
 
         int gunwait = attacks[atk].attackdelay;
-        if(d->hastemillis) gunwait /= 2;
+        if(d->hastemillis || d->juggernaut) gunwait /= 2;
         d->gunwait = gunwait;
         if(attacks[atk].action != ACT_MELEE && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;

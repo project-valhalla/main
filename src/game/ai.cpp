@@ -1265,7 +1265,7 @@ namespace ai
                 if(allowmove && !b.idle) timeouts(d, b);
                 if(d->state==CS_ALIVE && !d->zombie)
                 {
-                    if(d->haspowerups())
+                    if(d->haspowerups() || d->juggernaut)
                         entities::updatepowerups(curtime, d);
                     if(d->item) useitems(d);
                 }

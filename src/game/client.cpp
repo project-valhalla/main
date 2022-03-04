@@ -1762,7 +1762,7 @@ namespace game
                 if(!s || !validatk(atk)) break;
                 int gun = attacks[atk].gun;
                 if(gun >= 0) s->gunselect = gun;
-                if(!s->ammomillis) s->ammo[gun] -= attacks[atk].use;
+                if(!s->ammomillis && !s->juggernaut) s->ammo[gun] -= attacks[atk].use;
                 s->gunwait = attacks[atk].attackdelay;
                 s->lastattack = atk;
                 break;
@@ -2276,8 +2276,6 @@ namespace game
                     d->ammo[d->secondary] = 100;
                 }
                 else loopi(NUMGUNS-5) d->ammo[i] = 100;
-                d->damagemillis = d->hastemillis = 1;
-                d->armourmillis = d->ammomillis = 1;
                 break;
             }
 

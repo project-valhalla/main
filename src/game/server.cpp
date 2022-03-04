@@ -12,7 +12,7 @@ namespace game
                 conoutf(CON_ERROR, "unknown command-line option: %s", args[i]);
     }
 
-    const char *gameident() { return "Valhalla"; }
+    const char *gameident() { return "Valhalla Project"; }
 }
 
 extern ENetAddress masteraddress;
@@ -2544,8 +2544,6 @@ namespace server
             gs.ammo[gs.secondary] = 100;
         }
         else loopi(NUMGUNS-3) gs.ammo[i] = 100;
-
-        gs.damagemillis = gs.hastemillis = gs.armourmillis = gs.ammomillis = 1;
         sendf(-1, 1, "ri3", N_JUGGERNAUT, ci->clientnum, health);
         nojuggernaut = false;
     }
@@ -2762,8 +2760,8 @@ namespace server
             loopj(i) if(hits[j].target==h.target) { dup = true; break; }
             if(dup) continue;
             float damage = attacks[atk].damage*(1-h.dist/EXP_DISTSCALE/attacks[atk].exprad);
-            if(gs.damagemillis) damage *= 2;
-            if(target->state.armourmillis) damage /= 2;
+            if(gs.damagemillis || gs.juggernaut) damage *= 2;
+            if(target->state.armourmillis || target->state.juggernaut) damage /= 2;
             if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
             if(target==ci) damage /= EXP_SELFDAMDIV;
             if(damage > 0) dodamage(target, ci, damage, atk, 0, h.dir);
@@ -2781,10 +2779,10 @@ namespace server
         int gun = attacks[atk].gun;
         if(attacks[atk].action != ACT_MELEE && !gs.ammo[gun]) return;
         if(attacks[atk].range && from.dist(to) > attacks[atk].range + 1) return;
-        if(!gs.ammomillis) gs.ammo[gun] -= attacks[atk].use;
+        if(!gs.ammomillis && !gs.juggernaut) gs.ammo[gun] -= attacks[atk].use;
         gs.lastshot = millis;
         int gunwait = attacks[atk].attackdelay;
-        if(gs.hastemillis) gunwait /= 2;
+        if(gs.hastemillis || gs.juggernaut) gunwait /= 2;
         gs.gunwait = gunwait;
         if(gun == GUN_PISTOL) gs.lastpistolaction = lastmillis;
         sendf(-1, 1, "ri3x", N_SHOTEVENT, ci->clientnum, atk, ci->ownernum);
@@ -2821,8 +2819,8 @@ namespace server
                         if(h.flags & HIT_LEGS) damage /= 2;
                     }
                     if(atk == ATK_STOMP && !(h.flags & HIT_HEAD)) continue;
-                    if(gs.damagemillis) damage *= 2;
-                    if(target->state.armourmillis) damage /= 2;
+                    if(gs.damagemillis || gs.juggernaut) damage *= 2;
+                    if(target->state.armourmillis || target->state.juggernaut) damage /= 2;
                     if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
                     if(damage > 0)
                     {
@@ -2908,17 +2906,10 @@ namespace server
         {
             clientinfo *ci = clients[i];
             flushevents(ci, gamemillis);
-            if(!ci->state.juggernaut)
-            {
-                if(ci->state.damagemillis) ci->state.damagemillis = max(ci->state.damagemillis-curtime, 0);
-                if(ci->state.hastemillis) ci->state.hastemillis = max(ci->state.hastemillis-curtime, 0);
-                if(ci->state.armourmillis) ci->state.armourmillis = max(ci->state.armourmillis-curtime, 0);
-                if(ci->state.ammomillis) ci->state.ammomillis = max(ci->state.ammomillis-curtime, 0);
-            }
-            else
-            {
-                ci->state.damagemillis = ci->state.hastemillis = ci->state.armourmillis = ci->state.ammomillis = 1;
-            }
+            if(ci->state.damagemillis) ci->state.damagemillis = max(ci->state.damagemillis-curtime, 0);
+            if(ci->state.hastemillis) ci->state.hastemillis = max(ci->state.hastemillis-curtime, 0);
+            if(ci->state.armourmillis) ci->state.armourmillis = max(ci->state.armourmillis-curtime, 0);
+            if(ci->state.ammomillis) ci->state.ammomillis = max(ci->state.ammomillis-curtime, 0);
             if(ci->state.invulnmillis) ci->state.invulnmillis = max(ci->state.invulnmillis-curtime, 0);
             if(ci->state.state == CS_ALIVE)
             {

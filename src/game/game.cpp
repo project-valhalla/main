@@ -210,7 +210,7 @@ namespace game
             else if(!intermission && d->state==CS_ALIVE)
             {
                 if(lastmillis - d->lastaction >= d->gunwait) d->gunwait = 0;
-                if(d->haspowerups())
+                if(d->haspowerups() || d->juggernaut)
                     entities::updatepowerups(curtime, d);
             }
             const int lagtime = totalmillis-d->lastupdate;
@@ -240,7 +240,7 @@ namespace game
 
         physicsframe();
         ai::navigate();
-        if(player1->state == CS_ALIVE && player1->haspowerups())
+        if(player1->state == CS_ALIVE && (player1->haspowerups() || player1->juggernaut))
             entities::updatepowerups(curtime, player1);
         updateweapons(curtime);
         otherplayers(curtime);

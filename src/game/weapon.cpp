@@ -148,20 +148,38 @@ namespace game
         int bouncetype, variant;
         vec offset;
         int offsetmillis;
+        float offsetheight;
         int id;
         int atk;
-        int bouncesound, lastbounce;
-        int bouncerchan, bncsound;
+        int lastbounce, bouncesound, bouncerloopchan, bouncerloopsound;
 
-        bouncer() : bounces(0), roll(0), gravity(0.8f), elasticity(0.6f), variant(0), bouncesound(-1), lastbounce(0), bouncerchan(-1), bncsound(-1)
+        bouncer() : bounces(0), roll(0), gravity(0.8f), elasticity(0.6f), variant(0), lastbounce(0), bouncesound(-1), bouncerloopchan(-1), bouncerloopsound(-1)
         {
             type = ENT_BOUNCE;
             destroyed = false;
         }
         ~bouncer()
         {
-            if(bouncerchan >= 0) stopsound(bncsound, bouncerchan, 100);
-            bncsound = bouncerchan = -1;
+            if(bouncerloopchan >= 0) stopsound(bouncerloopsound, bouncerloopchan, 100);
+            bouncerloopsound = bouncerloopchan = -1;
+        }
+
+        vec offsetpos()
+        {
+            vec pos(o);
+            if(offsetmillis > 0)
+            {
+                pos.add(vec(offset).mul(offsetmillis/float(OFFSETMILLIS)));
+                if(offsetheight >= 0) pos.z = max(pos.z, o.z - max(offsetheight - eyeheight, 0.0f));
+            }
+            return pos;
+        }
+
+        void limitoffset()
+        {
+            if(bouncetype >= BNC_GRENADE1 && bouncetype <= BNC_ROCKET && offsetmillis > 0 && offset.z < 0)
+                offsetheight = raycube(vec(o.x + offset.x, o.y + offset.y, o.z), vec(0, 0, -1), -offset.z);
+            else offsetheight = -1;
         }
     };
 
@@ -171,7 +189,7 @@ namespace game
     {
         bouncer &bnc = *bouncers.add(new bouncer);
         bnc.o = from;
-        bnc.radius = bnc.xradius = bnc.yradius = 1.5f; //type==BNC_DEBRIS ? 0.5f : 1.5f;
+        bnc.radius = bnc.xradius = bnc.yradius = 1.4f; //type==BNC_DEBRIS ? 0.5f : 1.5f;
         bnc.eyeheight = bnc.radius;
         bnc.aboveeye = bnc.radius;
         bnc.lifetime = lifetime;
@@ -249,7 +267,6 @@ namespace game
             bouncer &bnc = *bouncers[i];
             vec pos(bnc.o);
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
-            vec check;
             switch(bnc.bouncetype)
             {
                 case BNC_GIB1:
@@ -276,11 +293,11 @@ namespace game
                 case BNC_MINE:
                 {
                     if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SPARK1, 10, 180, pos, 0xEE88EE, 0.70f, 2, 60);
-                    bnc.bncsound = S_PULSE3_LOOP;
+                    bnc.bouncerloopsound = S_PULSE3_LOOP;
                     break;
                 }
             }
-            if(bnc.bncsound >= 0) bnc.bouncerchan = playsound(bnc.bncsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerchan);
+            if(bnc.bouncerloopsound >= 0) bnc.bouncerloopchan = playsound(bnc.bouncerloopsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerloopchan);
             vec old(bnc.o);
             bool stopped = false;
             if(bnc.bouncetype>=BNC_GIB1 && bnc.bouncetype <= BNC_GIB2)
@@ -339,13 +356,14 @@ namespace game
                         addmsg(N_EXPLODE, "rci3iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime,
                                                     hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
                 }
-                stopsound(bnc.bncsound, bnc.bouncerchan);
+                stopsound(bnc.bouncerloopsound, bnc.bouncerloopchan);
                 delete bouncers.remove(i--);
             }
             else
             {
                 bnc.roll += old.sub(bnc.o).magnitude()/(4*RAD);
                 bnc.offsetmillis = max(bnc.offsetmillis-time, 0);
+                bnc.limitoffset();
             }
         }
     }
@@ -942,7 +960,7 @@ namespace game
 
             case ATK_RL2:
                 up.z += dist/8;
-                newbouncer(from, up, local, id, d, atk, BNC_ROCKET, attacks[atk].lifetime, attacks[atk].projspeed, 0.8f, 0.7f);
+                newbouncer(from, up, local, id, d, atk, BNC_ROCKET, attacks[atk].lifetime, attacks[atk].projspeed, 0.8f, 0.8f);
                 break;
 
             case ATK_SG1:
@@ -962,7 +980,7 @@ namespace game
 
             case ATK_SG2:
                 up.z += dist/16;
-                newbouncer(from, up, local, id, d, atk, BNC_GRENADE1, attacks[atk].lifetime, attacks[atk].projspeed, 1.0f);
+                newbouncer(from, up, local, id, d, atk, BNC_GRENADE1, attacks[atk].lifetime, attacks[atk].projspeed, 1.0f, 0);
                 break;
 
             case ATK_SMG1:
@@ -1348,8 +1366,7 @@ namespace game
         loopv(bouncers)
         {
             bouncer &bnc = *bouncers[i];
-            vec pos(bnc.o);
-            pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
+            vec pos = bnc.offsetpos();
             vec vel(bnc.vel);
             if(vel.magnitude() <= 25.0f) yaw = bnc.lastyaw;
             else
@@ -1383,7 +1400,7 @@ namespace game
                     default: mdl = "projectile/grenade01"; break;
                 }
             }
-            rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, cull);
+            rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, bnc.roll, cull);
         }
     }
 
@@ -1407,7 +1424,7 @@ namespace game
                 case PROJ_ROCKET: mdl = "projectile/rocket"; break;
                 default: mdl = ""; break;
             }
-            rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, v, yaw, pitch, MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
+            rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, v, yaw, pitch, 0, MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED);
         }
     }
 

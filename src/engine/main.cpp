@@ -234,7 +234,7 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
 }
 
 VAR(menumute, 0, 1, 1);
-SVARR(menumusic, "rising");
+SVARP(menumusic, "menu");
 bool firstrun = false;
 
 void setbackgroundinfo(const char *caption = NULL, Texture *mapshot = NULL, const char *mapname = NULL, const char *mapinfo = NULL)

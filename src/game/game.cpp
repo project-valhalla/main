@@ -370,6 +370,14 @@ namespace game
                       (!a->zombie && !b->zombie)));
     }
 
+    bool allowthirdperson()
+    {
+        return player1->state==CS_SPECTATOR || m_edit;
+    }
+    ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
+
+    bool editing() { return m_edit; }
+
     VARP(hitsound, 0, 0, 2);
     VARP(playheadshotsound, 0, 1, 2);
 

@@ -72,6 +72,8 @@ namespace game
     extern bool canjump();
     extern bool cancrouch();
     extern bool allowmove(physent *d);
+    extern bool allowthirdperson();
+    extern bool editing();
     extern dynent *iterdynents(int i);
     extern int numdynents();
     extern void rendergame();

@@ -903,7 +903,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     renderbackground("\f2Loading", mapshot, mname, game::getmapinfo());
 
     if(maptitle[0] && strcmp(maptitle, "Untitled Map by Unknown")) conoutf(CON_ECHO, "%s", maptitle);
-    if(playmapmusic && mapmusic[0]) startmusic(mapmusic);
+    if(!game::editing() && playmapmusic && mapmusic[0]) startmusic(mapmusic);
 
     startmap(cname ? cname : mname);
 

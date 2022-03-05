@@ -500,13 +500,13 @@ namespace ai
     {
         static vector<interest> interests;
         interests.setsize(0);
-        if((!hasgoodammo(d) || d->health < min(d->skill - 15, 75)) && !d->zombie)
+        if((!hasgoodammo(d) || d->health < min(d->skill - 15, 75)))
             items(d, b, interests);
         else
         {
             static vector<int> nearby;
             nearby.setsize(0);
-            findents(I_AMMO_SG, I_UAMMO, false, d->feetpos(), vec(32, 32, 24), nearby);
+            findents(I_AMMO_SG, I_INVULNERABILITY, false, d->feetpos(), vec(32, 32, 24), nearby);
             loopv(nearby)
             {
                 int id = nearby[i];
@@ -581,9 +581,10 @@ namespace ai
         d->ai->clearsetup();
         d->ai->reset(true);
         d->ai->lastrun = lastmillis;
-        if(!mutators) d->ai->weappref = d->primary;
+        if(d->zombie) d->ai->weappref = GUN_ZOMBIE;
+        else if(!mutators) d->ai->weappref = d->primary;
         else if(m_insta(mutators)) d->ai->weappref = GUN_INSTA;
-        else if(forcegun >= 0 && forcegun < NUMGUNS) d->ai->weappref = forcegun;
+        else if(forcegun >= 0 && validgun(forcegun)) d->ai->weappref = forcegun;
         else d->ai->weappref = rnd(NUMGUNS-4);
         vec dp = d->headpos();
         findorientation(dp, d->yaw, d->pitch, d->ai->target);
@@ -615,7 +616,8 @@ namespace ai
                     default:
                     {
                         itemstat &is = itemstats[entities::ents[ent]->type-I_AMMO_SG];
-                        wantsitem = !d->zombie && isgoodammo(is.info) && d->ammo[is.info] <= (d->ai->weappref == is.info ? is.add : is.add/2);
+                        if(!d->zombie && !d->juggernaut)
+                            wantsitem = isgoodammo(is.info) && d->ammo[is.info] <= (d->ai->weappref == is.info ? is.add : is.add/2);
                         break;
                     }
                 }
@@ -703,7 +705,7 @@ namespace ai
                 if(entities::ents.inrange(b.target))
                 {
                     extentity &e = *(extentity *)entities::ents[b.target];
-                    if(!e.spawned() || !validitem(e.type) || d->hasmaxammo(e.type) || d->zombie) return 0;
+                    if(!e.spawned() || !validitem(e.type) || d->hasmaxammo(e.type) || d->zombie || d->juggernaut) return 0;
                     //if(d->feetpos().squaredist(e.o) <= CLOSEDIST*CLOSEDIST)
                     //{
                     //    b.idle = 1;
@@ -1231,20 +1233,6 @@ namespace ai
                 }
             }
         }
-    }
-
-    void useitems(gameent *d)
-    {
-        switch(d->item)
-        {
-            case 1:
-            case 2:
-            {
-                if(badhealth(d)) addmsg(N_USEITEM, "rc", d);
-                break;
-            }
-        }
-
     }
 
     void logic(gameent *d, aistate &b, bool run)

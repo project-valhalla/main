@@ -5,9 +5,6 @@ namespace aiman
     VARN(serverbotlimit, botlimit, 0, 8, MAXBOTS);
     VAR(serverbotbalance, 0, 1, 1);
 
-    vector<const char *> botnames;
-    ICOMMAND(registerbot, "s", (const char *name), { botnames.add(newstring(name)); });
-
     void calcteams(vector<teamscore> &teams)
     {
         loopv(clients)
@@ -119,7 +116,7 @@ namespace aiman
         clients.add(ci);
         ci->state.lasttimeplayed = lastmillis;
         if(!execfile("data/config/botname.cfg", false)) copystring(ci->name, "BOT", MAXNAMELEN+1);
-        else copystring(ci->name, newstring(botnames[rnd(botnames.length())]), MAXNAMELEN+1);
+        else copystring(ci->name, newstring(ai::botnames[rnd(ai::botnames.length())]), MAXNAMELEN+1);
         ci->state.state = CS_DEAD;
         ci->team = team;
         ci->playermodel = rnd(128);

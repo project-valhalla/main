@@ -134,17 +134,9 @@ namespace game
         gameent *d = getclient(*cn);
         if(d)
         {
-            int status = !d->queue && d->state != CS_DEAD ? 0xFFFFFF : 0x606060;
-            if(d->state==CS_ALIVE && ((m_juggernaut && d->juggernaut) || (m_infection && d->zombie)))
-                status = 0xFF6060;
-            if(d->privilege)
-            {
-                if(d->privilege == PRIV_ADMIN) status = 0xFF8000;
-                else if(d->privilege == PRIV_MASTER) status = 0x40FF80;
-                else if(d->privilege == PRIV_AUTH) status = 0xC060C2;
-                if((m_juggernaut && d->juggernaut) || (m_infection && d->zombie)) status = (status>>1)&0xF42323;
-                else if(d->state==CS_DEAD) status = (status>>1)&0x7F7F7F;
-            }
+            int status = 0xFFFFFF;
+            if (d->state == CS_DEAD || d->queue) status = 0x606060;
+            else if(d->state == CS_ALIVE && (d->juggernaut || d->zombie)) status = 0xFF6060;
             intret(status);
         }
     });

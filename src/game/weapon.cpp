@@ -137,7 +137,7 @@ namespace game
         loopi(attacks[atk].rays) offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i]);
     }
 
-    enum { BNC_GRENADE, BNC_ROCKET, BNC_GIB1, BNC_GIB2 };
+    enum { BNC_GRENADE, BNC_ROCKET, BNC_GIB, };
 
     struct bouncer : physent
     {
@@ -214,7 +214,7 @@ namespace game
                 bnc.bouncesound = S_ROCKET_BOUNCE;
                 break;
             }
-            case BNC_GIB1: bnc.variant = rnd(5); break;
+            case BNC_GIB: bnc.variant = rnd(5); break;
             //case BNC_DEBRIS: bnc.variant = rnd(4); break;
         }
 
@@ -251,7 +251,7 @@ namespace game
             if(b->bouncesound >= 0 && b->vel.magnitude() > 5.0f)
                 playsound(b->bouncesound, NULL, &b->o);
         }
-        if(blood && b->bouncetype == BNC_GIB1 && b->bounces <= 2 && goreeffect <= 0)
+        if(blood && b->bouncetype == BNC_GIB && b->bounces <= 2 && goreeffect <= 0)
             addstain(STAIN_BLOOD, vec(b->o).sub(vec(surface).mul(b->radius)), surface, 2.96f/b->bounces, (b->owner->zombie ? bvec(0xFF, 0x60, 0xFF) : bvec(0x60, 0xFF, 0xFF)), rnd(4));
         b->lastbounce = lastmillis;
     }
@@ -265,7 +265,7 @@ namespace game
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
             switch(bnc.bouncetype)
             {
-                case BNC_GIB1:
+                case BNC_GIB:
                 {
                     if(blood && goreeffect <= 0 && bnc.vel.magnitude() > 30.0f)
                         regular_particle_splash(PART_BLOOD1, 0+rnd(4), 400, pos, bnc.owner->bloodcolour(), 0.80f, 25);
@@ -282,7 +282,7 @@ namespace game
             if(bnc.bouncerloopsound >= 0) bnc.bouncerloopchan = playsound(bnc.bouncerloopsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerloopchan);
             vec old(bnc.o);
             bool destroyed = false;
-            if(bnc.bouncetype>=BNC_GIB1 && bnc.bouncetype <= BNC_GIB2)
+            if(bnc.bouncetype == BNC_GIB)
             {
                 // cheaper variable rate physics for debris, gibs, etc.
                 for(int rtime = time; rtime > 0;)
@@ -433,8 +433,7 @@ namespace game
         vec from = d->abovehead();
         if(goreeffect <= 0)
         {
-            loopi(min(damage, 8)+1) spawnbouncer(from, vel, d, BNC_GIB1);
-            spawnbouncer(d->headpos(), vel, d, BNC_GIB2);
+            loopi(min(damage, 8)+1) spawnbouncer(from, vel, d, BNC_GIB);
             if(blood)
             {
                 particle_splash(PART_BLOOD1, 3, 180, d->o, d->bloodcolour(), 3.0f+rndscale(5.0f), 150, 0, 0.1f);
@@ -1317,15 +1316,14 @@ namespace game
             }
             const char *mdl = NULL;
             int cull = MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-            if(bnc.bouncetype >= BNC_GIB1 && bnc.bouncetype <= BNC_GIB2)
+            if(bnc.bouncetype >= BNC_GIB)
             {
                 float fade = 1;
                 if(bnc.lifetime < 400) fade = bnc.lifetime/400.0f;
                 const char *gib = goreeffect <= 0 ? gibnames[bnc.variant] : fruitnames[bnc.variant];
                 switch(bnc.bouncetype)
                 {
-                    case BNC_GIB1: mdl = gib; break;
-                    case BNC_GIB2: mdl = "gib/head"; break;
+                    case BNC_GIB: mdl = gib; break;
                     default: continue;
                 }
                 rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0, cull, NULL, NULL, 0, 0, fade);

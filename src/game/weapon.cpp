@@ -891,8 +891,8 @@ namespace game
                     adddynlight(hudgunorigin(gun, d->o, to, d), 50, vec(1.20f, 2.0f, 1.20f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                 }
                 particle_flare(hudgunorigin(gun, from, to, d), to, 500, PART_STREAK, 0x55DD55, 0.80f);
-                particle_trail(PART_STEAM, 280, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x66DD66, 0.2f, 0);
-                particle_trail(PART_SMOKE, 300, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x808080, 0.60f, 50);
+                particle_trail(PART_STEAM, 300, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x66DD66, 0.2f, 0);
+                particle_trail(PART_SMOKE, 140, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x808080, 0.60f, 50);
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }

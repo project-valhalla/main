@@ -346,9 +346,9 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
     { GUN_RL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL1,           -1,           -1,  920,  110,   0,   0,   0,  300,   0, 2048,  1, 120, 33, 5000,    1 },
     { GUN_RL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL2,           -1,           -1,  920,  110,   0,   0,   0,  200,   0, 2048,  1, 120, 33, 1500,    1 },
     //railgun
-    { GUN_RAIL,     ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL1,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,   70,  70,   0,   0,    0,  50, 4000,  1, 110,  0,    0,    1 },
+    { GUN_RAIL,     ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL1,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,   70,  70,   0,   0,    0,  40, 4000,  1, 110,  0,    0,    1 },
     //instagib
-    { GUN_INSTA,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL2,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,  150,   0,   0,   0,    0, 100, 4000,  1,  30,  0,    0,    0 },
+    { GUN_INSTA,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL2,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,  150,   0,   0,   0,    0,  60, 4000,  1,  30,  0,    0,    0 },
     //zombie
     { GUN_ZOMBIE,     ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE_MELEE, S_MELEE_HIT1, S_MELEE_HIT2,  600,  100,   0,   0,   4,    0,   0,   15,  1,  20,  0,    0,    0 },
     //pistol

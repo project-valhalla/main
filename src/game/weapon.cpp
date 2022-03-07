@@ -800,7 +800,7 @@ namespace game
             case ATK_SMG1:
             case ATK_SMG2:
             {
-                adddynlight(vec(to).madd(dir, 4), 14, vec(0.5f, 0.375f, 0.25f), 140, 20);
+                adddynlight(vec(to).madd(dir, 4), atk == ATK_SG1 ? 6: 12, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if(hit || water || glass) break;
                 particle_splash(PART_SPARK1, 30, 50, to, 0xFFC864, 0.70f);
                 particle_splash(PART_SPARK2, 0+rnd(6), 80+rnd(380), to, 0xFFC864, 0.05f+rndscale(0.09f), 250);

@@ -332,10 +332,10 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
                                      attackdelay, damage, headshotdam, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use; } attacks[NUMATKS] =
 {
     //melee: default melee for all weapons
-    { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,  750,   74,   0,   0,   1,    0,   0,   15,  1,  30,  0,    0,    0 },
+    { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,  650,   54,   0,   0,   1,    0,   0,   15,  1,  30,  0,    0,    0 },
     //shotgun
-    { GUN_SG,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,         S_SG1A,     S_SG_HIT,   S_SMG_HIT2, 1080,    7,   0, 380,   0,    0,   0, 1000, 20,  50,  0,    0,    1 },
-    { GUN_SG,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SG2,           -1,           -1,  600,   62,   0,   0,   2,  180,   0, 2048,  1,  60, 30, 2000,    2 },
+    { GUN_SG,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,         S_SG1A,     S_SG_HIT,   S_SMG_HIT2, 1080,    7,   0, 400,   0,    0,   0, 1000, 20,  50,  0,    0,    1 },
+    { GUN_SG,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SG2,           -1,           -1,  600,   65,   0,   0,   2,  180,   0, 2048,  1,  60, 30, 2000,    2 },
     //smg
     { GUN_SMG,      ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  110,   15,  12,  84,   0,    0,   0, 1000,  1,  20,  0,    0,    1 },
     { GUN_SMG,    ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  240,   18,  10,  30,   0,    0,   0, 1000,  1,  40,  0,    0,    1 },

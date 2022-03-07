@@ -825,7 +825,7 @@ namespace game
             int snd = S_FOOTSTEP;
             if(d->inwater) snd = S_SWIM;
             else if(lookupmaterial(d->feetpos())&MAT_WATER) snd = S_FOOTSTEP_WATER;
-            if(lastmillis-pl->lastfootstep < (d->vel.magnitude()*450/d->vel.magnitude())) return;
+            if(lastmillis-pl->lastfootstep < (d->vel.magnitude()*380/d->vel.magnitude())) return;
             else playsound(snd, d, &d->o, NULL, 0, 0, 0, -1, 200);
         }
         pl->lastfootstep = lastmillis;
@@ -1044,7 +1044,7 @@ namespace game
     }
 
     VARP(teamcrosshair, 0, 1, 1);
-    VARP(hitcrosshair, 0, 425, 1000);
+    VARP(hitcrosshair, 0, 400, 1000);
 
     const char *defaultcrosshair(int index)
     {

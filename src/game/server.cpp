@@ -258,7 +258,7 @@ namespace server
         int authkickvictim;
         char *authkickreason;
 
-        clientinfo() : getdemo(NULL), getmap(NULL), clipboard(NULL), authchallenge(NULL), authkickreason(NULL) { reset(); }
+        clientinfo() : getdemo(NULL), getmap(NULL), clipboard(NULL), authchallenge(NULL), authkickreason(NULL) { reset(); mute = false; }
         ~clientinfo() { events.deletecontents(); cleanclipboard(); cleanauth(); }
 
         void addevent(gameevent *e)
@@ -367,7 +367,7 @@ namespace server
             playermodel = -1;
             playercolor = 0; //playertype = 0;
             privilege = PRIV_NONE;
-            connected = local = queue = mute = false;
+            connected = local = queue = false;
             connectauth = 0;
             position.setsize(0);
             messages.setsize(0);
@@ -421,7 +421,6 @@ namespace server
     int gamemode = 0, mutators = 0;
     int gamemillis = 0, gamelimit = 0, nextexceeded = 0, gamespeed = 100;
     bool gamepaused = false, shouldstep = true;
-    bool unlockchat = false;
     string smapname = "";
     int interm = 0;
     enet_uint32 lastsend = 0;
@@ -1521,12 +1520,10 @@ namespace server
         if((ci->privilege || ci->local) && ci->clientnum!=victim)
         {
             clientinfo *vinfo = (clientinfo *)getclientinfo(victim);
-            if(vinfo && vinfo->connected && (ci->privilege >= vinfo->privilege || ci->local) && vinfo->privilege < PRIV_ADMIN && !vinfo->local)
+            if(vinfo && vinfo->connected && (ci->privilege >= vinfo->privilege || ci->local) && vinfo->privilege < PRIV_AUTH && !vinfo->local)
             {
-                string muter;
-                copystring(muter, colorname(ci));
-                if(reason && reason[0]) sendservmsgf("%s %smuted %s because: %s", muter, val>0? "" : "un", colorname(vinfo), reason);
-                else sendservmsgf("%s %smuted %s", muter, val>0? "" : "un", colorname(vinfo));
+                if(reason && reason[0]) sendservmsgf("%s %smuted %s because: %s", colorname(ci), val>0? "": "un", colorname(vinfo), reason);
+                else sendservmsgf("%s %smuted %s", colorname(ci), val>0? "": "un", colorname(vinfo));
                 vinfo->mute = val;
             }
         }
@@ -3446,7 +3443,7 @@ namespace server
         if(servermotd[0]) sendf(ci->clientnum, 1, "ris", N_SERVMSG, servermotd);
     }
 
-    VAR(mutespectators, 0, 0, 1);
+    VAR(spectatorchat, 0, 0, 1);
 
     void parsepacket(int sender, int chan, packetbuf &p)     // has to parse exactly each byte of the packet
     {
@@ -3888,8 +3885,8 @@ namespace server
                 loopv(clients)
                 {
                     clientinfo *c = clients[i];
-                    if(c == cq || (mutespectators && cq->state.state == CS_SPECTATOR && c->state.state != CS_SPECTATOR) ||
-                        (!unlockchat && (m_round && (cq->queue || cq->state.state == CS_DEAD) && !(c->queue || c->state.state == CS_DEAD))) || c->state.aitype != AI_NONE) continue;
+                    if(c == cq || c->state.aitype != AI_NONE || (spectatorchat && ((cq->state.state == CS_SPECTATOR && c->state.state != CS_SPECTATOR) ||
+                                                                                   (m_round && cq->state.state == CS_DEAD && c->state.state!=CS_DEAD)))) continue;
                     sendf(c->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
                 }
                 if(isdedicatedserver() && cq) logoutf("%s %s %s", colorname(cq), ghost? "<spectator>:": ":", text);
@@ -3899,13 +3896,12 @@ namespace server
             case N_SAYTEAM:
             {
                 getstring(text, p);
-                if(!ci || !cq || cq->mute || cq->state.state==CS_SPECTATOR || (m_round && cq->state.state==CS_DEAD) || !m_teammode || !validteam(cq->team)) break;
+                if(!ci || !cq || cq->mute || !m_teammode || !validteam(cq->team) || cq->state.state==CS_SPECTATOR || (m_round && cq->state.state==CS_DEAD)) break;
                 filtertext(text, text, false, false, true, true);
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
-                    if(t==cq || t->state.state==CS_SPECTATOR || (!unlockchat && (m_round && (cq->queue || cq->state.state == CS_DEAD) && !(t->queue || t->state.state == CS_DEAD))) ||
-                       t->state.aitype != AI_NONE || cq->team != t->team) continue;
+                    if(t==cq || t->state.aitype != AI_NONE || cq->team != t->team) continue;
                     sendf(t->clientnum, 1, "riis", N_SAYTEAM, cq->clientnum, text);
                 }
                 if(isdedicatedserver() && cq) logoutf("%s <%s> %s", colorname(cq), teamnames[cq->team], text);
@@ -3927,14 +3923,7 @@ namespace server
                 break;
             }
 
-            case N_UNLOCKCHAT:
-            {
-                int value = getint(p);
-                if(!cq || cq->privilege<PRIV_ADMIN) break;
-                unlockchat = value;
                 break;
-            }
-
             case N_SWITCHNAME:
             {
                 QUEUE_MSG;

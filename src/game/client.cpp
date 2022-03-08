@@ -492,12 +492,6 @@ namespace game
     }
     COMMAND(unmute, "ss");
 
-    void unlockchat(int val)
-    {
-        addmsg(N_UNLOCKCHAT, "rci", player1, val);
-    }
-    ICOMMAND(unlockchat, "i", (int *val), unlockchat(*val));
-
     void authkick(const char *desc, const char *victim, const char *reason)
     {
         authkey *a = findauthkey(desc);
@@ -1554,7 +1548,7 @@ namespace game
                 if(!d || isignored(d->clientnum)) break;
                 if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
                     particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
-                bool waiting = m_round && ((d->state==CS_SPECTATOR && d->queue) || d->state==CS_DEAD);
+                bool waiting = m_round && (d->queue || d->state==CS_DEAD);
                 conoutf(CON_CHAT, "%s: %s%s", colorname(d), waiting? "\f4": (d->state==CS_SPECTATOR? "\f8": ""), text);
                 if(chatsound == 1) playsound(S_CHAT);
                 break;

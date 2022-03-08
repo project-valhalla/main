@@ -1089,33 +1089,34 @@ namespace game
         startmusic(menumusic);
     }
 
-    VARP(chatsound, 0, 1, 1);
+    VARP(chatsound, 0, 1, 2); // 0 = no chat sound, 1 = always plays, 2 = only for whispers
 
     void toserver(char *text)
     {
         bool waiting = m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue));
-        conoutf(CON_CHAT, "%s:%s %s", colorname(player1), waiting? "\f4": (player1->state==CS_SPECTATOR? "\f8": ""), text); addmsg(N_TEXT, "rcs", player1, text);
+        conoutf(CON_CHAT, "%s: %s%s", colorname(player1), waiting? "\f4": (player1->state==CS_SPECTATOR? "\f8": "\ff"), text); addmsg(N_TEXT, "rcs", player1, text);
     }
     COMMANDN(say, toserver, "C");
 
     void sayteam(char *text)
     {
-        if(!m_teammode || !validteam(player1->team) || (!player1->queue && player1->state == CS_SPECTATOR)) return;
-        bool waiting = m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue));
-        conoutf(CON_TEAMCHAT, "%s (%steam\ff): %s%s", colorname(player1), teamtextcode[player1->team], waiting? "\f4": teamtextcode[player1->team], text);
+        if(!m_teammode || !validteam(player1->team) || (m_round && player1->state == CS_DEAD) || player1->state == CS_SPECTATOR) return;
+        conoutf(CON_TEAMCHAT, "%s (%steam\ff): %s%s", colorname(player1), teamtextcode[player1->team], teamtextcode[player1->team], text);
         addmsg(N_SAYTEAM, "rcs", player1, text);
     }
     COMMAND(sayteam, "C");
 
-    void whisper(const char *recipient, const char *text)
+    void whisper(const char *Recipient, const char *text)
     {
-        int r = parseplayer(recipient);
-        if(r>=0 && r!=player1->clientnum)
+        int rcn = parseplayer(Recipient);
+        gameent *recipient = getclient(rcn);
+        if(!recipient || recipient->clientnum < 0 || recipient == player1 || recipient->aitype == AI_BOT)
         {
-            addmsg(N_WHISPER, "rcis", player1, r, text);
-            gameent *recipient = getclient(r);
-            conoutf(CON_CHAT, "%s (whisper to %s): \f5%s", colorname(player1), colorname(recipient), text);
+            conoutf(CON_CHAT, "\f5Invalid recipient");
+            return;
         }
+        addmsg(N_WHISPER, "rcis", player1, recipient->clientnum, text);
+        conoutf(CON_CHAT, "%s (\f5whisper to \ff%s): \f5%s", colorname(player1), colorname(recipient), text);
     }
     COMMAND(whisper, "ss");
 
@@ -1555,7 +1556,7 @@ namespace game
                     particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
                 bool waiting = m_round && ((d->state==CS_SPECTATOR && d->queue) || d->state==CS_DEAD);
                 conoutf(CON_CHAT, "%s: %s%s", colorname(d), waiting? "\f4": (d->state==CS_SPECTATOR? "\f8": ""), text);
-                if(chatsound) playsound(S_CHAT);
+                if(chatsound == 1) playsound(S_CHAT);
                 break;
             }
 
@@ -1567,11 +1568,10 @@ namespace game
                 filtertext(text, text, false, false, true, true);
                 if(!t || isignored(t->clientnum)) break;
                 int team = validteam(t->team) ? t->team : 0;
-                if(t->state!=CS_DEAD && t->state!=CS_SPECTATOR)
+                if(t->state!=CS_DEAD)
                     particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8);
-                bool waiting = m_round && ((t->state==CS_SPECTATOR && t->queue) || t->state==CS_DEAD);
-                conoutf(CON_TEAMCHAT, "%s (%steam\ff): %s%s", colorname(t), teamtextcode[team], waiting? "\f4" : teamtextcode[team], text);
-                if(chatsound) playsound(S_CHAT);
+                conoutf(CON_TEAMCHAT, "%s (%steam\ff): %s%s", colorname(t), teamtextcode[team], teamtextcode[team], text);
+                if(chatsound == 1) playsound(S_CHAT);
                 break;
             }
 
@@ -1582,7 +1582,7 @@ namespace game
                 getstring(text, p);
                 filtertext(text, text, false, false, true, true);
                 if(!s || isignored(s->clientnum)) break;
-                conoutf(CON_CHAT, "%s: \f5%s", colorname(s), text);
+                conoutf(CON_CHAT, "%s (\f5whisper\ff): \f5%s", colorname(s), text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }
@@ -1658,7 +1658,7 @@ namespace game
                     if(d!=player1)
                     {
                         conoutf(CON_CHAT, "%s \f0joined the game", colorname(d, text));
-                        if(chatsound) playsound(S_CHAT);
+                        if(chatsound == 1) playsound(S_CHAT);
                     }
                     if(needclipboard >= 0) needclipboard++;
                 }

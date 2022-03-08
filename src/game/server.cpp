@@ -3899,10 +3899,8 @@ namespace server
             case N_SAYTEAM:
             {
                 getstring(text, p);
-                if(!ci || !cq || cq->mute || (!cq->queue && cq->state.state==CS_SPECTATOR) ||
-                   (ci->state.state==CS_SPECTATOR && !ci->local && !ci->privilege) || !m_teammode || !validteam(cq->team)) break;
+                if(!ci || !cq || cq->mute || cq->state.state==CS_SPECTATOR || (m_round && cq->state.state==CS_DEAD) || !m_teammode || !validteam(cq->team)) break;
                 filtertext(text, text, false, false, true, true);
-                bool ghost = cq->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state==CS_DEAD));
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
@@ -3910,7 +3908,7 @@ namespace server
                        t->state.aitype != AI_NONE || cq->team != t->team) continue;
                     sendf(t->clientnum, 1, "riis", N_SAYTEAM, cq->clientnum, text);
                 }
-                if(isdedicatedserver() && cq) logoutf("%s <%s>%s %s", colorname(cq), teamnames[cq->team], ghost? "<spectator>:": ":", text);
+                if(isdedicatedserver() && cq) logoutf("%s <%s> %s", colorname(cq), teamnames[cq->team], text);
                 break;
             }
 

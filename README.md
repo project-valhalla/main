@@ -26,8 +26,6 @@ the aim is to create a well-balanced arena-style shooter with casual, fun modes 
 
 - supporting and encouraging new players as much as possible with matchmaking and other important features which could help new players get into the game;
 
-- create an interesting game storyline;
-
 - keep the game as light as possible;
 
 - create a game launcher and add an updater in it to let players know when their game version is outdated;
@@ -71,11 +69,7 @@ trying to revolutionate the arena fps genre: big NO to the fear of creating and 
 
 - create a not too complex yet interesting movement system: adding, for example, wall jump and dodge as mutators is more than enough;
 
-- pulse rifle combo mines that stick to players like in Red Eclipse;
-
 - new casual modes: race mode, invasion mode (online Sauerbraten DMSP), football mode (Gunball), side scroller mode (Side Scroller Deathmatch/SSD), online boss mode;
-
-- weapon and power up drops by dead players;
 
 - EXP point gains to level up after every match (online multiplayer only) for players who have an account (?);
 
@@ -84,8 +78,6 @@ trying to revolutionate the arena fps genre: big NO to the fear of creating and 
 - integrated player statistics, ranking, achievements, progression system with various and unlockable vanity items, skins, etc. (nothing gameplay changing)(?);
 
 - improve bots' AI (especially movement);
-
-- possibility to jump to an exact moment in a demo playback;
 
 - movement and weapons tutorials for newcomers;
 
@@ -106,7 +98,5 @@ trying to revolutionate the arena fps genre: big NO to the fear of creating and 
 - possibility to download a new map in-game everytime it's available on the server, even outside edit mode (with custom files like textures and sounds?);
 
 - possibility to undo or redo modifications done by our client in online coop edit;
-
-- map sounds menu in the editor where you can listen to sounds before creating an entity;
 
 - mini in-game Quadropolis that allows players to share maps, mods and stuff (?);

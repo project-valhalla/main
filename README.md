@@ -89,7 +89,7 @@ trying to revolutionate the arena fps genre: big NO to the fear of creating and 
 
 - immersive atmopshere (ambient sounds, decent audio and graphics/effects, cool weapons effects to make sure that weapons are fun to shoot and feel powerful);
 
-- player model customization: variables that allow players to attach cosmetic items, change textue colors and customize their player model further;
+- player model customization: variables that allow players to attach cosmetic items, change texture colors and customize their player model further;
 
 ## Editor & engine
 

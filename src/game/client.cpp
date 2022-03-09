@@ -2236,6 +2236,7 @@ namespace game
                         if(s->state==CS_DEAD) showscores(false);
                         disablezoom();
                     }
+                    saveragdoll(s);
                     s->state = CS_SPECTATOR;
                     if(!waiting) conoutf(CON_GAMEINFO, "%s \f2entered spectator mode", colorname(s));
                 }

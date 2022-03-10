@@ -1800,7 +1800,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
         else if(pl->crouching) d.mul(0.4f);
         else if(!water) d.mul((pl->move>0? 1.1f: 0.9f) * (pl->physstate>=PHYS_SLOPE? 1.0f: (pl->move && !pl->strafe? 1.5f: 1.3f)));
     }
-    float fric = floating? 1.0f: (water? 30.0f: (pl->physstate>=PHYS_SLOPE? 4.0f: 22.0f));
+    float fric = floating? 2.0f: (water? 30.0f: (pl->physstate>=PHYS_SLOPE? 4.0f: 22.0f));
     pl->vel.lerp(d, pl->vel, pow(1 - 1/fric, curtime/20.0f));
 }
 

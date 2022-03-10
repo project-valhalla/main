@@ -428,8 +428,8 @@ const float STAIRHEIGHT = 4.1f;
 const float FLOORZ = 0.867f;
 const float SLOPEZ = 0.5f;
 const float WALLZ = 0.2f;
-extern const float JUMPVEL = 135.0f;
-extern const float GRAVITY = 195.0f;
+extern const float JUMPVEL = 143.0f;
+extern const float GRAVITY = 198.0f;
 
 bool ellipseboxcollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo)
 {
@@ -1731,9 +1731,9 @@ void vectoyawpitch(const vec &v, float &yaw, float &pitch)
 
 #define PHYSFRAMETIME 8
 
-VARP(maxroll, 0, 0, 20);
-FVAR(straferoll, 0, 0.033f, 90);
-FVAR(faderoll, 0, 0.95f, 1);
+VARP(maxroll, 0, 1, 20);
+FVAR(straferoll, 0, 0.018f, 90);
+FVAR(faderoll, 0, 0.9f, 1);
 VAR(floatspeed, 1, 100, 10000);
 
 #include "game.h"
@@ -1760,8 +1760,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
             if(pl->timeinair)
             {
                 pl->doublejumping = true;
-                pl->falling = vec(0, 0, 0);
-                pl->physstate = PHYS_FALL;
+                pl->falling.z = 1;
             }
             pl->vel.z = max(pl->vel.z, JUMPVEL); // physics impulse upwards
             if(water) { pl->vel.x /= 8.0f; pl->vel.y /= 8.0f; } // dampen velocity change even harder, gives correct water feel
@@ -1799,10 +1798,9 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
             if(pl==player) d.mul(floatspeed/100.0f);
         }
         else if(pl->crouching) d.mul(0.4f);
-        else if(!water) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f));
+        else if(!water) d.mul((pl->move>0? 1.1f: 0.9f) * (pl->physstate>=PHYS_SLOPE? 1.0f: (pl->move && !pl->strafe? 1.5f: 1.3f)));
     }
-    float fric = water && !floating ? 20.0f : (pl->physstate >= PHYS_SLOPE || floating ? 4.0f : 25.0f);
-    //float fric = water && !floating ? 20.0f : (pl->physstate >= PHYS_SLOPE || floating ? 6.0f : 30.0f);
+    float fric = floating? 1.0f: (water? 30.0f: (pl->physstate>=PHYS_SLOPE? 4.0f: 22.0f));
     pl->vel.lerp(d, pl->vel, pow(1 - 1/fric, curtime/20.0f));
 }
 
@@ -1883,14 +1881,13 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
             if(timeinair > 800) game::physicstrigger(pl, local, -1, 0);
         }
         game::footsteps(pl);
+
+        // automatically apply smooth roll when strafing
+        if(pl->strafe && maxroll) pl->roll = clamp(pl->roll - pow(clamp(1.0f + pl->strafe*pl->roll/maxroll, 0.0f, 1.0f), 0.33f)*pl->strafe*curtime*straferoll, -maxroll, maxroll);
+        else pl->roll *= curtime == PHYSFRAMETIME ? faderoll : pow(faderoll, curtime/float(PHYSFRAMETIME));
     }
 
     if(pl->state==CS_ALIVE) updatedynentcache(pl);
-
-    // automatically apply smooth roll when strafing
-
-    if(pl->strafe && maxroll) pl->roll = clamp(pl->roll - pow(clamp(1.0f + pl->strafe*pl->roll/maxroll, 0.0f, 1.0f), 0.33f)*pl->strafe*curtime*straferoll, -maxroll, maxroll);
-    else pl->roll *= curtime == PHYSFRAMETIME ? faderoll : pow(faderoll, curtime/float(PHYSFRAMETIME));
 
     // play sounds on water transitions
 

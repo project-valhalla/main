@@ -378,9 +378,9 @@ namespace game
     VARP(hudgun, 0, 1, 1);
     VARP(hudgunsway, 0, 1, 1);
 
-    FVAR(swaystep, 1, 35.0f, 100);
-    FVAR(swayside, 0, 0.10f, 1);
-    FVAR(swayup, -1, 0.15f, 1);
+    FVAR(swaystep, 1, 39.2f, 100);
+    FVAR(swayside, 0, 0.06f, 1);
+    FVAR(swayup, -1, 0.11f, 1);
 
     float swayfade = 0, swayspeed = 0, swaydist = 0;
     vec swaydir(0, 0, 0);
@@ -408,7 +408,7 @@ namespace game
             swaydir.mul(k);
             vec vel(d->vel);
             vel.add(d->falling);
-            swaydir.add(vec(vel).mul((1-k)/(15*max(vel.magnitude(), d->maxspeed))));
+            swaydir.add(vec(vel).mul((1-k)/((d->move> 0 ? 10: 12)*max(vel.magnitude(), d->maxspeed))));
         }
     }
 
@@ -436,7 +436,7 @@ namespace game
         modelattach a[2];
         d->muzzle = vec(-1, -1, -1);
         a[0] = modelattach("tag_muzzle", &d->muzzle);
-        rendermodel(gunname, anim, sway, d->yaw, d->pitch, 0, MDL_NOBATCH, NULL, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
+        rendermodel(gunname, anim, sway, d->yaw, d->pitch, d->roll, MDL_NOBATCH, NULL, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
         if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
     }
 

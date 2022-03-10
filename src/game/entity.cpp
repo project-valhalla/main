@@ -42,30 +42,6 @@ namespace entities
 #endif
     }
 
-    bool canspawnitem(int type)
-    {
-        if(!validitem(type)) return false;
-        switch(type)
-        {
-            case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL:
-                if((!m_classic(mutators) && !m_edit) || (m_effic(mutators) || m_randomweapon(mutators)
-                                                        || m_oneweapon(mutators) || m_noitems(mutators))) return false;
-                    break;
-            case I_HEALTH:
-                if((!m_classic(mutators) && !m_edit) || (m_noitems(mutators) || m_vampire(mutators))) return false;
-                break;
-            case I_YELLOWSHIELD: case I_REDSHIELD:
-                    if((!m_classic(mutators) && !m_edit) || m_noitems(mutators)) return false;
-                    break;
-            case I_SUPERHEALTH: case I_MEGAHEALTH:
-                    if(m_noitems(mutators) || m_vampire(mutators) || m_nopowerups(mutators)) return false;
-                case I_DDAMAGE: case I_HASTE: case I_ARMOUR: case I_UAMMO: case I_INVULNERABILITY:
-                if(m_noitems(mutators) || m_nopowerups(mutators)) return false;
-                break;
-        }
-        return true;
-    }
-
     const char *entmdlname(int type)
     {
         static const char * const entmdlnames[MAXENTTYPES] =
@@ -95,24 +71,7 @@ namespace entities
     {
         loopi(MAXENTTYPES)
         {
-            switch(i)
-        {
-            case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL:
-                if((!m_classic(mutators) && !m_edit) || (m_effic(mutators) || m_randomweapon(mutators)
-                                                        || m_oneweapon(mutators) || m_noitems(mutators))) continue;
-                    break;
-            case I_HEALTH:
-                if((!m_classic(mutators) && !m_edit) || (m_noitems(mutators) || m_vampire(mutators))) continue;
-                break;
-            case I_YELLOWSHIELD: case I_REDSHIELD:
-                    if((!m_classic(mutators) && !m_edit) || (m_effic(mutators) || m_noitems(mutators))) continue;
-                    break;
-            case I_SUPERHEALTH: case I_MEGAHEALTH:
-                    if(m_noitems(mutators) || m_vampire(mutators) || m_nopowerups(mutators)) continue;
-                case I_DDAMAGE: case I_HASTE: case I_ARMOUR: case I_UAMMO: case I_INVULNERABILITY:
-                if(m_noitems(mutators) || m_nopowerups(mutators)) continue;
-                break;
-        }
+            if(!server::canspawnitem(i)) continue;
             const char *mdl = entmdlname(i);
             if(!mdl) continue;
             preloadmodel(mdl);
@@ -456,7 +415,7 @@ namespace entities
     void putitems(packetbuf &p)            // puts items in network stream and also spawns them locally
     {
         putint(p, N_ITEMLIST);
-        loopv(ents) if(validitem(ents[i]->type) && canspawnitem(ents[i]->type))
+        loopv(ents) if(validitem(ents[i]->type) && server::canspawnitem(ents[i]->type))
         {
             putint(p, i);
             putint(p, ents[i]->type);
@@ -468,7 +427,7 @@ namespace entities
 
     void spawnitems(bool force)
     {
-        loopv(ents) if(validitem(ents[i]->type) && canspawnitem(ents[i]->type))
+        loopv(ents) if(validitem(ents[i]->type) && server::canspawnitem(ents[i]->type))
         {
             ents[i]->setspawned(force || !server::delayspawn(ents[i]->type));
         }

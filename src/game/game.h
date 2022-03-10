@@ -644,7 +644,9 @@ struct gameent : dynent, gamestate
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
     {
         vec push(dir);
-        if(zombie) damage *= 4;
+        if(timeinair && (attacks[atk].gun == GUN_RL || atk == ATK_PISTOL2))
+            falling.z = 1; // rocket launcher and pistol reduce gravity while falling so trick jumps are more rewarding and players are pushed further
+        if(zombie) damage *= 3; // zombies are pushed "a bit" more
         push.mul((actor==this && attacks[atk].exprad ? EXP_SELFPUSH : 1.0f)*attacks[atk].hitpush*damage/weight);
         vel.add(push);
     }

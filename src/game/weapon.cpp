@@ -137,7 +137,7 @@ namespace game
         loopi(attacks[atk].rays) offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i]);
     }
 
-    enum { BNC_GRENADE, BNC_ROCKET, BNC_GIB, };
+    enum { BNC_GRENADE, BNC_ROCKET, BNC_GIB, BNC_CARTRIDGE };
 
     struct bouncer : physent
     {
@@ -188,7 +188,7 @@ namespace game
     {
         bouncer &bnc = *bouncers.add(new bouncer);
         bnc.o = from;
-        bnc.radius = bnc.xradius = bnc.yradius = 1.4f; //type==BNC_DEBRIS ? 0.5f : 1.5f;
+        bnc.radius = bnc.xradius = bnc.yradius = type==BNC_CARTRIDGE? 0.3f: 1.4f;
         bnc.eyeheight = bnc.radius;
         bnc.aboveeye = bnc.radius;
         bnc.lifetime = lifetime;
@@ -205,7 +205,6 @@ namespace game
             case BNC_GRENADE:
             {
                 bnc.collidetype = COLLIDE_ELLIPSE;
-                bnc.bouncesound = S_GRENADE_BOUNCE;
                 break;
             }
             case BNC_ROCKET:
@@ -215,7 +214,12 @@ namespace game
                 break;
             }
             case BNC_GIB: bnc.variant = rnd(5); break;
-            //case BNC_DEBRIS: bnc.variant = rnd(4); break;
+            case BNC_CARTRIDGE:
+            {
+                int gun = bnc.owner->gunselect;
+                bnc.bouncesound = gun == GUN_SG? S_SG_CARTRIDGE: (gun == GUN_SG? S_SMG_CARTRIDGE: S_RAIL_CARTRIDGE);
+                break;
+            }
         }
 
         vec dir(to);
@@ -245,13 +249,14 @@ namespace game
         if(d->type != ENT_BOUNCE) return;
         bouncer *b = (bouncer *)d;
         b->bounces++;
-        if(lastmillis-b->lastbounce < 200) return;
+        int type = b->bouncetype;
+        if((type == BNC_CARTRIDGE && b->bounces > 1) || lastmillis-b->lastbounce < 100) return;
         if(!(lookupmaterial(b->o)&MAT_WATER))
         {
             if(b->bouncesound >= 0 && b->vel.magnitude() > 5.0f)
-                playsound(b->bouncesound, NULL, &b->o);
+                playsound(b->bouncesound, NULL, &b->o, NULL, 0, 0, 0, -1, type == BNC_CARTRIDGE? 100: 0);
         }
-        if(blood && b->bouncetype == BNC_GIB && b->bounces <= 2 && goreeffect <= 0)
+        if(blood && type == BNC_GIB && b->bounces <= 2 && goreeffect <= 0)
             addstain(STAIN_BLOOD, vec(b->o).sub(vec(surface).mul(b->radius)), surface, 2.96f/b->bounces, (b->owner->zombie ? bvec(0xFF, 0x60, 0xFF) : bvec(0x60, 0xFF, 0xFF)), rnd(4));
         b->lastbounce = lastmillis;
     }
@@ -282,7 +287,7 @@ namespace game
             if(bnc.bouncerloopsound >= 0) bnc.bouncerloopchan = playsound(bnc.bouncerloopsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerloopchan);
             vec old(bnc.o);
             bool destroyed = false;
-            if(bnc.bouncetype == BNC_GIB)
+            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_CARTRIDGE)
             {
                 // cheaper variable rate physics for debris, gibs, etc.
                 for(int rtime = time; rtime > 0;)
@@ -418,13 +423,18 @@ namespace game
         if(f->armourmillis) playsound(S_ARMOUR_ACTION, f, &f->o);
     }
 
-    void spawnbouncer(const vec &p, const vec &vel, gameent *d, int type)
+    void spawnbouncer(const vec &p, gameent *d, int type)
     {
         vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
+        if(type == BNC_CARTRIDGE)
+        {
+            to = vec(-50, 1, rnd(30)-15);
+            to.rotate_around_z(d->yaw*RAD);
+        }
         if(to.iszero()) to.z += 1;
         to.normalize();
         to.add(p);
-        newbouncer(p, to, true, 0, d, NULL, type, rnd(1000)+1000, rnd(100)+20);
+        newbouncer(p, to, true, 0, d, NULL, type, rnd(1000)+1000, rnd(100)+20, 0.8f, type == BNC_GIB? 0.6f: 0.4f);
     }
 
     void gibeffect(int damage, const vec &vel, gameent *d)
@@ -433,7 +443,7 @@ namespace game
         vec from = d->abovehead();
         if(goreeffect <= 0)
         {
-            loopi(min(damage, 8)+1) spawnbouncer(from, vel, d, BNC_GIB);
+            loopi(min(damage, 8)+1) spawnbouncer(from, d, BNC_GIB);
             if(blood)
             {
                 particle_splash(PART_BLOOD1, 3, 180, d->o, d->bloodcolour(), 3.0f+rndscale(5.0f), 150, 0, 0.1f);
@@ -852,6 +862,12 @@ namespace game
         if(!(attacks[atk].rays > 1 && d==hudplayer()) && impactsnd) playsound(impactsnd, NULL, &to);
     }
 
+    void eject(gameent *d)
+    {
+        if(d!=hudplayer()) return;
+        spawnbouncer(d->muzzle, d, BNC_CARTRIDGE);
+    }
+
     VARP(muzzleflash, 0, 1, 1);
 
     void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit)     // create visual effect from a shot
@@ -869,9 +885,9 @@ namespace game
 
             case ATK_PULSE2:
             {
-                if(muzzleflash)
+                if(muzzleflash && d->muzzle.x >= 0)
                 {
-                     if(d->muzzle.x >= 0) particle_flare(d->muzzle, d->muzzle, 80, PART_PULSE_MUZZLE_FLASH, 0xDD88DD, 4.0f, d);
+                     particle_flare(d->muzzle, d->muzzle, 80, PART_PULSE_MUZZLE_FLASH, 0xDD88DD, 4.0f, d);
                      adddynlight(hudgunorigin(gun, d->o, to, d), 35, vec(2.0f, 1.5f, 2.0f), 80, 10, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
                 particle_flare(to, from, 60, PART_LIGHTNING, 0xDD88DD, 0.80f, d);
@@ -884,10 +900,14 @@ namespace game
 
             case ATK_RAIL:
             {
-                if(muzzleflash)
+                if(d->muzzle.x >= 0)
                 {
-                    if(d->muzzle.x >= 0) particle_flare(d->muzzle, d->muzzle, 150, PART_RAIL_MUZZLE_FLASH, 0x77DD77, 0.1f, d, 0.3f);
-                    adddynlight(hudgunorigin(gun, d->o, to, d), 50, vec(1.20f, 2.0f, 1.20f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
+                    if(muzzleflash)
+                    {
+                        particle_flare(d->muzzle, d->muzzle, 150, PART_RAIL_MUZZLE_FLASH, 0x77DD77, 0.1f, d, 0.3f);
+                        adddynlight(hudgunorigin(gun, d->o, to, d), 50, vec(1.20f, 2.0f, 1.20f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
+                    }
+                    eject(d); // using muzzle vec temporarily
                 }
                 particle_flare(hudgunorigin(gun, from, to, d), to, 500, PART_STREAK, 0x55DD55, 0.80f);
                 particle_trail(PART_STEAM, 300, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x66DD66, 0.2f, 0);
@@ -910,11 +930,16 @@ namespace game
 
             case ATK_SG1:
             {
-                if(muzzleflash && d->muzzle.x >= 0)
+                if(d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 70, PART_PULSE_MUZZLE_FLASH, 0xEFE598, 5.2f, d);
-                    adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
+                    if(muzzleflash)
+                    {
+                        particle_flare(d->muzzle, d->muzzle, 70, PART_PULSE_MUZZLE_FLASH, 0xEFE598, 5.2f, d);
+                        adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
+                    }
+                    eject(d); // using muzzle vec temporarily
                 }
+                if(d->muzzle.x >= 0 && d==hudplayer()) spawnbouncer(d->muzzle, d, BNC_CARTRIDGE);
                 if(!local)
                 {
                     createrays(atk, from, to);
@@ -931,10 +956,14 @@ namespace game
             case ATK_SMG1:
             case ATK_SMG2:
             {
-                if(muzzleflash && d->muzzle.x >= 0)
+                if(d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_RAIL_MUZZLE_FLASH, 0xEFE898, 5.0f, d);
-                    adddynlight(hudgunorigin(gun, d->o, to, d), 40, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
+                    if(muzzleflash)
+                    {
+                        particle_flare(d->muzzle, d->muzzle, 80, PART_RAIL_MUZZLE_FLASH, 0xEFE898, 5.0f, d);
+                        adddynlight(hudgunorigin(gun, d->o, to, d), 40, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
+                    }
+                    eject(d); // using muzzle vec temporarily
                 }
                 if(atk == ATK_SMG2) particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_STREAK, 0xFFC864, 0.80f);
                 if(!local) rayhit(atk, d, from, to, hit);
@@ -944,9 +973,9 @@ namespace game
             case ATK_PISTOL1:
             case ATK_PISTOL2:
             {
-                if(muzzleflash)
+                if(muzzleflash && d->muzzle.x >= 0)
                 {
-                   if(d->muzzle.x >= 0) particle_flare(d->muzzle, d->muzzle, 50, PART_PULSE_MUZZLE_FLASH, 0x00FFFF, 4.0f, d);
+                   particle_flare(d->muzzle, d->muzzle, 50, PART_PULSE_MUZZLE_FLASH, 0x00FFFF, 4.0f, d);
                    adddynlight(hudgunorigin(attacks[atk].gun, d->o, to, d), 30, vec(0, 1.5f, 1.5f), 60, 20, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
                 if(atk == ATK_PISTOL2)
@@ -962,7 +991,7 @@ namespace game
 
             case ATK_INSTA:
 
-                if(muzzleflash)
+                if(muzzleflash && d->muzzle.x >= 0)
                 {
                     particle_flare(d->muzzle, d->muzzle, 100, PART_RAIL_MUZZLE_FLASH, 0x50CFE5, 2.75f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 35, vec(0.25f, 0.75f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d);
@@ -1316,7 +1345,7 @@ namespace game
             }
             const char *mdl = NULL;
             int cull = MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-            if(bnc.bouncetype >= BNC_GIB)
+            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_CARTRIDGE)
             {
                 float fade = 1;
                 if(bnc.lifetime < 400) fade = bnc.lifetime/400.0f;
@@ -1324,6 +1353,7 @@ namespace game
                 switch(bnc.bouncetype)
                 {
                     case BNC_GIB: mdl = gib; break;
+                    case BNC_CARTRIDGE: mdl = "weapon/eject/cartridge01"; break;
                     default: continue;
                 }
                 rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0, cull, NULL, NULL, 0, 0, fade);

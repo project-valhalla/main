@@ -217,7 +217,7 @@ namespace game
             case BNC_CARTRIDGE:
             {
                 int gun = bnc.owner->gunselect;
-                bnc.bouncesound = gun == GUN_SG? S_SG_CARTRIDGE: (gun == GUN_SG? S_SMG_CARTRIDGE: S_RAIL_CARTRIDGE);
+                bnc.bouncesound = gun == GUN_SG? S_SG_CARTRIDGE: (gun == GUN_SMG? S_SMG_CARTRIDGE: S_RAIL_CARTRIDGE);
                 break;
             }
         }
@@ -939,7 +939,6 @@ namespace game
                     }
                     eject(d); // using muzzle vec temporarily
                 }
-                if(d->muzzle.x >= 0 && d==hudplayer()) spawnbouncer(d->muzzle, d, BNC_CARTRIDGE);
                 if(!local)
                 {
                     createrays(atk, from, to);

@@ -69,7 +69,7 @@ namespace ai
 
         if(dist <= mdist)
         {
-            float x = fmod(fabs(asin((q.z-o.z)/dist)/RAD-pitch), 360);
+            float x = fmod(fabs((dist > 0 ? asin((q.z-o.z)/dist)/RAD : 0) - pitch), 360);
             float y = fmod(fabs(-atan2(q.x-o.x, q.y-o.y)/RAD-yaw), 360);
             if(min(x, 360-x) <= fovx && min(y, 360-y) <= fovy) return raycubelos(o, q, v);
         }
@@ -931,20 +931,20 @@ namespace ai
     {
         if(full)
         {
-            while(pitch < -180.0f) pitch += 360.0f;
-            while(pitch >= 180.0f) pitch -= 360.0f;
-            while(roll < -180.0f) roll += 360.0f;
-            while(roll >= 180.0f) roll -= 360.0f;
+            if(pitch < -180.0f) pitch = 180.0f - fmodf(-180.0f - pitch, 360.0f);
+            else if(pitch >= 180.0f) pitch = fmodf(pitch + 180.0f, 360.0f) - 180.0f;
+            if(roll < -180.0f) roll = 180.0f - fmodf(-180.0f - roll, 360.0f);
+            else if(roll >= 180.0f) roll = fmodf(roll + 180.0f, 360.0f) - 180.0f;
         }
         else
         {
             if(pitch > 89.9f) pitch = 89.9f;
-            if(pitch < -89.9f) pitch = -89.9f;
+            else if(pitch < -89.9f) pitch = -89.9f;
             if(roll > 89.9f) roll = 89.9f;
-            if(roll < -89.9f) roll = -89.9f;
+            else if(roll < -89.9f) roll = -89.9f;
         }
-        while(yaw < 0.0f) yaw += 360.0f;
-        while(yaw >= 360.0f) yaw -= 360.0f;
+        if(yaw < 0.0f) yaw = 360.0f - fmodf(-yaw, 360.0f);
+        else if(yaw >= 360.0f) yaw = fmodf(yaw, 360.0f);
     }
 
     void fixrange(float &yaw, float &pitch)
@@ -957,7 +957,7 @@ namespace ai
     {
         float dist = from.dist(pos);
         yaw = -atan2(pos.x-from.x, pos.y-from.y)/RAD;
-        pitch = asin((pos.z-from.z)/dist)/RAD;
+        pitch = dist > 0 ? asin((pos.z-from.z)/dist)/RAD : 0;
     }
 
     void scaleyawpitch(float &yaw, float &pitch, float targyaw, float targpitch, float frame, float scale)
@@ -1127,8 +1127,8 @@ namespace ai
                 {  1, 1, 315 }
             };
             float yaw = d->ai->targyaw-d->yaw;
-            while(yaw < 0.0f) yaw += 360.0f;
-            while(yaw >= 360.0f) yaw -= 360.0f;
+            if(yaw < 0.0f) yaw = 360.0f - fmodf(-yaw, 360.0f);
+            else if(yaw >= 360.0f) yaw = fmodf(yaw, 360.0f);
             int r = clamp(((int)floor((yaw+22.5f)/45.0f))&7, 0, 7);
             const aimdir &ad = aimdirs[r];
             d->move = ad.move;

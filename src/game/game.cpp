@@ -69,7 +69,7 @@ namespace game
     void nextfollow(int dir)
     {
         if(player1->state!=CS_SPECTATOR) return;
-        int cur = following >= 0 ? following : (dir < 0 ? clients.length() - 1 : 0);
+        int cur = following >= 0 ? following : (dir > 0 ? clients.length() - 1 : 0);
         loopv(clients)
         {
             cur = (cur + dir + clients.length()) % clients.length();
@@ -956,43 +956,34 @@ namespace game
 
     void drawhudicons(gameent *d, int w, int h)
     {
+        if(d->state == CS_DEAD) return;
         pushhudscale(2);
-        float x = 1800*w/h*0.5f-HICON_SIZE/2, y = 1800*0.95f-HICON_SIZE/2;
 
-        if(d->state!=CS_DEAD)
-        {
-            draw_textf("%s%d", (x-1.0*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, y/2, (d->health >= d->maxhealth/2 ? "\ff" :
-                       (d->health<= d->maxhealth/4 ? "\f3" : "\f6")), d->health);
-            draw_textf("%d", (x+0.9*HICON_STEP - HICON_SIZE - HICON_SPACE)/2, y/2, d->shield);
-            draw_textf("%d", (x+2.4*HICON_STEP - HICON_SIZE - HICON_SPACE)/2, y/2, d->ammo[d->gunselect]);
-            if(!d->juggernaut)
-            {
-                if(d->damagemillis) draw_textf("%d", (x-3.0*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, y/2, d->damagemillis/1000);
-                if(d->armourmillis) draw_textf("%d", (x-2.4*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, y/2, d->armourmillis/1000);
-                if(d->hastemillis) draw_textf("%d", (x-1.8*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, y/2, d->hastemillis/1000);
-                if(d->ammomillis) draw_textf("%d", (x-2.4*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, y/2, d->ammomillis/1000);
-            }
-            if(d->invulnmillis) draw_textf("%d", (x-3.0*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, y/2, d->invulnmillis/1000);
-        }
+        defformatstring(health, "%d", d->health);
+        bvec healthcolor = bvec::hexcolor(d->health<=d->maxhealth/4 ? 0xFF0000 : (d->health<=d->maxhealth/2 ? 0xFF8000 : (d->health<=d->maxhealth ? 0xFFFFFF : 0x40FFC0)));
+        draw_text(health, (HICON_X + HICON_SIZE + HICON_SPACE)/2, HICON_TEXTY/2, healthcolor.r, healthcolor.g, healthcolor.b);
+        draw_textf("%d", (HICON_X + HICON_STEP + HICON_SIZE + HICON_SPACE)/2, HICON_TEXTY/2, d->shield);
+        draw_textf("%d", (HICON_X + 2*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, HICON_TEXTY/2, d->ammo[d->gunselect]);
 
         pophudmatrix();
         resethudshader();
 
-        if(d->state!=CS_DEAD)
+        if(d->health > 100)
         {
-            drawicon(HICON_HEALTH, x-1.0*HICON_STEP, y);
-            drawicon(HICON_SHIELD, x+1.0*HICON_STEP, y);
-            drawicon(HICON_SG+d->gunselect, x+2.5*HICON_STEP, y);
-            if(!d->juggernaut)
-            {
-                if(d->damagemillis) drawicon(HICON_DDAMAGE, x-3.0*HICON_STEP, y);
-                if(d->armourmillis) drawicon(HICON_ARMOUR, x-2.4*HICON_STEP, y);
-                if(d->hastemillis) drawicon(HICON_HASTE, x-1.8*HICON_STEP, y);
-                if(d->ammomillis) drawicon(HICON_UAMMO, x-2.4*HICON_STEP, y);
-            }
-            if(d->item == 1 || d->invulnmillis) drawicon(HICON_INVULNERABILITY, x-3.0*HICON_STEP, y);
+            float scale = 0.68f;
+            pushhudmatrix();
+            hudmatrix.scale(scale, scale, 1);
+            flushhudmatrix();
 
+            float width, height;
+            text_boundsf(health, width, height);
+            draw_textf("/%d", (HICON_X + HICON_SIZE + HICON_SPACE + width*2)/scale, (HICON_TEXTY + height)/scale, d->maxhealth);
+            pophudmatrix();
+            resethudshader();
         }
+        drawicon(HICON_HEALTH, HICON_X, HICON_Y);
+        drawicon(HICON_SHIELD, HICON_X + HICON_STEP, HICON_Y);
+        drawicon(HICON_SG+d->gunselect, HICON_X + 2*HICON_STEP, HICON_Y);
     }
 
     void gameplayhud(int w, int h)

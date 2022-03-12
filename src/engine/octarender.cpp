@@ -367,7 +367,7 @@ struct vacollect : verthash
                    tmax.x <= bbmin.x || tmax.y <= bbmin.y || tmax.z <= bbmin.z)
                     continue;
                 float f0 = t0.norm.tonormal().dot(orient.b), f1 = t1.norm.tonormal().dot(orient.b), f2 = t2.norm.tonormal().dot(orient.b);
-                if(f0 >= 0 && f1 >= 0 && f2 >= 0) continue; 
+                if(f0 >= 0 && f1 >= 0 && f2 >= 0) continue;
                 vec p1[9], p2[9];
                 p1[0] = v0; p1[1] = v1; p1[2] = v2;
                 int nump = polyclip(p1, 3, orient.b, clipoffset.y, clipoffset.y + size.y, p2);
@@ -783,15 +783,16 @@ void addgrasstri(int face, vertex *verts, int numv, ushort texture, int layer)
 static inline void calctexgen(VSlot &vslot, int orient, vec4 &sgen, vec4 &tgen)
 {
     Texture *tex = vslot.slot->sts.empty() ? notexture : vslot.slot->sts[0].t;
+    const texrotation &r = texrotations[vslot.rotation];
     float k = TEX_SCALE/vslot.scale,
-          xs = vslot.rotation>=2 && vslot.rotation<=4 ? -tex->xs : tex->xs,
-          ys = (vslot.rotation>=1 && vslot.rotation<=2) || vslot.rotation==5 ? -tex->ys : tex->ys,
+          xs = r.flipx ? -tex->xs : tex->xs,
+          ys = r.flipy ? -tex->ys : tex->ys,
           sk = k/xs, tk = k/ys,
-          soff = -((vslot.rotation&5)==1 ? vslot.offset.y : vslot.offset.x)/xs,
-          toff = -((vslot.rotation&5)==1 ? vslot.offset.x : vslot.offset.y)/ys;
+          soff = -(r.swapxy ? vslot.offset.y : vslot.offset.x)/xs,
+          toff = -(r.swapxy ? vslot.offset.x : vslot.offset.y)/ys;
     sgen = vec4(0, 0, 0, soff);
     tgen = vec4(0, 0, 0, toff);
-    if((vslot.rotation&5)==1) switch(orient)
+    if(r.swapxy) switch(orient)
     {
         case 0: sgen.z = -sk; tgen.y = tk;  break;
         case 1: sgen.z = -sk; tgen.y = -tk; break;
@@ -900,7 +901,7 @@ void addcubeverts(VSlot &vslot, int orient, int size, vec *pos, int convex, usho
         if(vslot.refractscale > 0) loopk(numverts) { vc.refractmin.min(pos[k]); vc.refractmax.max(pos[k]); }
     }
     if(texture == DEFAULT_SKY) loopi(numverts) if(pos[i][orient>>1] != ((orient&1)<<worldscale))
-    {       
+    {
         loopk(numverts) { vc.skymin.min(pos[k]); vc.skymax.max(pos[k]); }
         break;
     }
@@ -1168,7 +1169,7 @@ vtxarray *newva(const ivec &o, int size)
         va->skymin = ivec(vec(vc.skymin).mul(8)).shr(3);
         va->skymax = ivec(vec(vc.skymax).mul(8)).add(7).shr(3);
     }
-        
+
     va->nogimin = vc.nogimin;
     va->nogimax = vc.nogimax;
 

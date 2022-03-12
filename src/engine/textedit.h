@@ -530,6 +530,9 @@ struct editor
             case SDLK_RETURN:
                 insert('\n');
                 break;
+            case SDLK_TAB:
+                insert('\t');
+                break;
         }
     }
 

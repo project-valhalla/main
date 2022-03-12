@@ -103,6 +103,13 @@ void mdlalphatest(float *cutoff)
 }
 COMMAND(mdlalphatest, "f");
 
+void mdldither(int *dither)
+{
+    checkmdl;
+    loadingmodel->setdither(*dither != 0);
+}
+COMMAND(mdldither, "i");
+
 void mdldepthoffset(int *offset)
 {
     checkmdl;
@@ -330,7 +337,9 @@ ICOMMAND(mmodel, "s", (char *name), mapmodel(name));
 COMMAND(mapmodel, "s");
 COMMAND(mapmodelreset, "i");
 ICOMMAND(mapmodelname, "ii", (int *index, int *prefix), { if(mapmodels.inrange(*index)) result(mapmodels[*index].name[0] ? mapmodels[*index].name + (*prefix ? 0 : mmprefixlen) : ""); });
+ICOMMAND(mapmodelloaded, "i", (int *index), { intret(mapmodels.inrange(*index) && mapmodels[*index].m ? 1 : 0); });
 ICOMMAND(nummapmodels, "", (), { intret(mapmodels.length()); });
+ICOMMAND(mapmodelfind, "s", (char *name), { int found = -1; loopv(mapmodels) if(strstr(mapmodels[i].name, name)) { found = i; break; } intret(found); });
 
 // model registry
 
@@ -455,7 +464,7 @@ void cleanupmodels()
 void clearmodel(char *name)
 {
     model *m = models.find(name, NULL);
-    if(!m) { conoutf("model %s is not loaded", name); return; }
+    if(!m) { conoutf(CON_WARN, "model %s is not loaded", name); return; }
     loopv(mapmodels)
     {
         mapmodelinfo &mmi = mapmodels[i];
@@ -964,7 +973,7 @@ void rendermodel(const char *mdl, int anim, const vec &o, float yaw, float pitch
     if(pitch && m->pitched()) center.rotate_around_x(pitch*RAD);
     center.rotate_around_z(yaw*RAD);
     center.add(o);
-    hasboundbox:
+hasboundbox:
     radius *= size;
 
     if(flags&MDL_NORENDER) anim |= ANIM_NORENDER;
@@ -1122,5 +1131,11 @@ void setbbfrommodel(dynent *d, const char *mdl)
     d->radius    = d->collidetype==COLLIDE_OBB ? sqrtf(d->xradius*d->xradius + d->yradius*d->yradius) : max(d->xradius, d->yradius);
     d->eyeheight = (center.z-radius.z) + radius.z*2*m->eyeheight;
     d->aboveeye  = radius.z*2*(1.0f-m->eyeheight);
+    if (d->aboveeye + d->eyeheight <= 0.5f)
+    {
+        float zrad = (0.5f - (d->aboveeye + d->eyeheight)) / 2;
+        d->aboveeye += zrad;
+        d->eyeheight += zrad;
+    }
 }
 

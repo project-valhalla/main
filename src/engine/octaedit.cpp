@@ -183,6 +183,8 @@ void toggleedit(bool force)
     execident("edittoggled");
 }
 
+VARP(editinview, 0, 1, 1);
+
 bool noedit(bool view, bool msg)
 {
     if(!editmode) { if(msg) conoutf(CON_ERROR, "operation only allowed in edit mode"); return true; }
@@ -192,8 +194,9 @@ bool noedit(bool view, bool msg)
     o.add(s);
     float r = max(s.x, s.y, s.z);
     bool viewable = (isvisiblesphere(r, o) != VFC_NOT_VISIBLE);
-    if(!viewable && msg) conoutf(CON_ERROR, "selection not in view");
-    return !viewable;
+    if(viewable || !editinview) return false;
+    if(msg) conoutf(CON_ERROR, "selection not in view");
+    return true;
 }
 
 void reorient()
@@ -233,6 +236,29 @@ ICOMMAND(selmoved, "", (), { if(noedit(true)) return; intret(sel.o != savedsel.o
 ICOMMAND(selsave, "", (), { if(noedit(true)) return; savedsel = sel; });
 ICOMMAND(selrestore, "", (), { if(noedit(true)) return; sel = savedsel; });
 ICOMMAND(selswap, "", (), { if(noedit(true)) return; swap(sel, savedsel); });
+
+ICOMMAND(getselpos, "", (),
+{
+    if(noedit(true)) return;
+    defformatstring(pos, "%s %s %s", floatstr(sel.o.x), floatstr(sel.o.y), floatstr(sel.o.z));
+    result(pos);
+});
+
+void setselpos(int *x, int *y, int *z)
+{
+    if(noedit(moving!=0)) return;
+    havesel = true;
+    sel.o = ivec(*x, *y, *z).mask(~(gridsize-1));
+}
+COMMAND(setselpos, "iii");
+
+void movesel(int *dir, int *dim)
+{
+    if(noedit(moving!=0)) return;
+    if(*dim < 0 || *dim > 2) return;
+    sel.o[*dim] += *dir * sel.grid;
+}
+COMMAND(movesel, "ii");
 
 ///////// selection support /////////////
 
@@ -325,6 +351,8 @@ extern float rayent(const vec &o, const vec &ray, float radius, int mode, int si
 
 VAR(gridlookup, 0, 0, 1);
 VAR(passthroughcube, 0, 1, 1);
+VAR(passthroughent, 0, 1, 1);
+VARF(passthrough, 0, 0, 1, { passthroughsel = passthrough; entcancel(); });
 
 void rendereditcursor()
 {
@@ -364,9 +392,9 @@ void rendereditcursor()
 
         wdist = rayent(player->o, camdir, 1e16f,
                        (editmode && showmat ? RAY_EDITMAT : 0)   // select cubes first
-                       | (!dragging && entediting ? RAY_ENTS : 0)
+                       | (!dragging && entediting && (!passthrough || !passthroughent) ? RAY_ENTS : 0)
                        | RAY_SKIPFIRST
-                       | (passthroughcube==1 ? RAY_PASS : 0), gridsize, entorient, ent);
+                       | (passthroughcube || passthrough ? RAY_PASS : 0), gridsize, entorient, ent);
 
         if((havesel || dragging) && !passthroughsel && !hmapedit)     // now try selecting the selection
             if(rayboxintersect(vec(sel.o), vec(sel.s).mul(sel.grid), player->o, camdir, sdist, orient))
@@ -715,7 +743,7 @@ struct undolist
 };
 
 undolist undos, redos;
-VARP(undomegs, 0, 5, 100);                              // bounded by n megs
+VARP(undomegs, 0, 8, 100);                              // bounded by n megs
 int totalundos = 0;
 
 void pruneundos(int maxremain)                          // bound memory
@@ -781,8 +809,8 @@ void makeundo()                        // stores state of selected cubes before 
 
 static inline int countblock(cube *c, int n = 8)
 {
-    int r = n;
-    loopi(n) if(c[i].children) r += countblock(c[i].children);
+    int r = 0;
+    loopi(n) if(c[i].children) r += countblock(c[i].children); else ++r;
     return r;
 }
 
@@ -800,8 +828,9 @@ void swapundo(undolist &a, undolist &b, int op)
         {
             ++ops;
             n += u->numents ? u->numents : countblock(u->block());
-            if(ops > 10 || n > 500)
+            if(ops > 10 || n > 2500)
             {
+                conoutf(CON_WARN, "undo too big for multiplayer");
                 if(nompedit) { multiplayer(); return; }
                 op = -1;
                 break;
@@ -1504,7 +1533,7 @@ void pastehilite()
 
 void paste()
 {
-    if(noedit()) return;
+    if(noedit(true)) return;
     mppaste(localedit, sel, true);
 }
 
@@ -2045,7 +2074,7 @@ void mpdelcube(selinfo &sel, bool local)
 
 void delcube()
 {
-    if(noedit()) return;
+    if(noedit(true)) return;
     mpdelcube(sel, true);
 }
 
@@ -2194,10 +2223,11 @@ void vrotate(int *n)
     if(noedit()) return;
     VSlot ds;
     ds.changed = 1<<VSLOT_ROTATION;
-    ds.rotation = usevdelta ? *n : clamp(*n, 0, 5);
+    ds.rotation = usevdelta ? *n : clamp(*n, 0, 7);
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
 COMMAND(vrotate, "i");
+ICOMMAND(getvrotate, "i", (int *tex), intret(lookupvslot(*tex, false).rotation));
 
 void voffset(int *x, int *y)
 {
@@ -2208,6 +2238,12 @@ void voffset(int *x, int *y)
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
 COMMAND(voffset, "ii");
+ICOMMAND(getvoffset, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    defformatstring(str, "%d %d", vslot.offset.x, vslot.offset.y);
+    result(str);
+});
 
 void vscroll(float *s, float *t)
 {
@@ -2218,6 +2254,12 @@ void vscroll(float *s, float *t)
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
 COMMAND(vscroll, "ff");
+ICOMMAND(getvscroll, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    defformatstring(str, "%s %s", floatstr(vslot.scroll.x), floatstr(vslot.scroll.y));
+    result(str);
+});
 
 void vscale(float *scale)
 {
@@ -2228,6 +2270,7 @@ void vscale(float *scale)
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
 COMMAND(vscale, "f");
+ICOMMAND(getvscale, "i", (int *tex), floatret(lookupvslot(*tex, false).scale));
 
 void vlayer(int *n)
 {
@@ -2243,6 +2286,7 @@ void vlayer(int *n)
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
 COMMAND(vlayer, "i");
+ICOMMAND(getvlayer, "i", (int *tex), intret(lookupvslot(*tex, false).layer));
 
 void vdetail(int *n)
 {
@@ -2258,6 +2302,7 @@ void vdetail(int *n)
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
 COMMAND(vdetail, "i");
+ICOMMAND(getvdetail, "i", (int *tex), intret(lookupvslot(*tex, false).detail));
 
 void valpha(float *front, float *back)
 {
@@ -2269,6 +2314,12 @@ void valpha(float *front, float *back)
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
 COMMAND(valpha, "ff");
+ICOMMAND(getvalpha, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    defformatstring(str, "%s %s", floatstr(vslot.alphafront), floatstr(vslot.alphaback));
+    result(str);
+});
 
 void vcolor(float *r, float *g, float *b)
 {
@@ -2279,6 +2330,12 @@ void vcolor(float *r, float *g, float *b)
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
 COMMAND(vcolor, "fff");
+ICOMMAND(getvcolor, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    defformatstring(str, "%s %s %s", floatstr(vslot.colorscale.r), floatstr(vslot.colorscale.g), floatstr(vslot.colorscale.b));
+    result(str);
+});
 
 void vrefract(float *k, float *r, float *g, float *b)
 {
@@ -2294,6 +2351,12 @@ void vrefract(float *k, float *r, float *g, float *b)
 
 }
 COMMAND(vrefract, "ffff");
+ICOMMAND(getvrefract, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    defformatstring(str, "%s %s %s %s", floatstr(vslot.refractscale), floatstr(vslot.refractcolor.r), floatstr(vslot.refractcolor.g), floatstr(vslot.refractcolor.b));
+    result(str);
+});
 
 void vreset()
 {
@@ -2316,6 +2379,33 @@ void vshaderparam(const char *name, float *x, float *y, float *z, float *w)
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
 COMMAND(vshaderparam, "sfFFf");
+ICOMMAND(getvshaderparam, "is", (int *tex, const char *name),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    loopv(vslot.params)
+    {
+        SlotShaderParam &p = vslot.params[i];
+        if(!strcmp(p.name, name))
+        {
+            defformatstring(str, "%s %s %s %s", floatstr(p.val[0]), floatstr(p.val[1]), floatstr(p.val[2]), floatstr(p.val[3]));
+            result(str);
+            return;
+        }
+    }
+});
+ICOMMAND(getvshaderparamnames, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    vector<char> str;
+    loopv(vslot.params)
+    {
+        SlotShaderParam &p = vslot.params[i];
+        if(i) str.put(' ');
+        str.put(p.name, strlen(p.name));
+    }
+    str.add('\0');
+    stringret(newstring(str.getbuf(), str.length()-1));
+});
 
 void mpedittex(int tex, int allfaces, selinfo &sel, bool local)
 {
@@ -2487,6 +2577,7 @@ ICOMMAND(looptexmru, "re", (ident *id, uint *body),
 ICOMMAND(numvslots, "", (), intret(vslots.length()));
 ICOMMAND(numslots, "", (), intret(slots.length()));
 COMMAND(getslottex, "i");
+ICOMMAND(texloaded, "i", (int *tex), intret(slots.inrange(*tex) && slots[*tex]->loaded ? 1 : 0));
 
 void replacetexcube(cube &c, int oldtex, int newtex)
 {

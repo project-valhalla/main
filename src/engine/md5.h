@@ -414,12 +414,12 @@ struct md5 : skelloader<md5>
         const char *fname = name + strlen(name);
         do --fname; while(fname >= name && *fname!='/' && *fname!='\\');
         fname++;
-        defformatstring(meshname, "media/model/%s/%s.md5mesh", name, fname);
+        defformatstring(meshname, "data/model/%s/%s.md5mesh", name, fname);
         mdl.meshes = sharemeshes(path(meshname));
         if(!mdl.meshes) return false;
         mdl.initanimparts();
         mdl.initskins();
-        defformatstring(animname, "media/model/%s/%s.md5anim", name, fname);
+        defformatstring(animname, "data/model/%s/%s.md5anim", name, fname);
         ((md5meshgroup *)mdl.meshes)->loadanim(path(animname));
         return true;
     }

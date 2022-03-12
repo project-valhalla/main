@@ -60,9 +60,8 @@ void menuprocess()
     {
         lastmainmenu = mainmenu;
         execident("mainmenutoggled");
-    }
-    if(mainmenu && !isconnected(true) && !UI::hascursor())
-        UI::showui("main");
+    }    
+    if(mainmenu && !isconnected(true) && !UI::hascursor()) UI::showui("main");
 }
 
 VAR(mainmenu, 1, 1, 0);

@@ -268,7 +268,7 @@ Shader *loadgrassshader()
 
     defformatstring(name, "grass%s", opts);
     return generateshader(name, "grassshader \"%s\"", opts);
-
+    
 }
 
 void loadgrassshaders()

@@ -1320,7 +1320,7 @@ namespace UI
         {
             changedraw(CHANGE_SHADER | CHANGE_COLOR | CHANGE_BLEND);
             if(type==MODULATE) modblend(); else resetblend();
-
+                
             color.init();
             gle::begin(GL_TRIANGLE_STRIP);
             gle::attribf(sx+w, sy);

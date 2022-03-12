@@ -8,6 +8,7 @@
 #endif
 #define NULL 0
 
+typedef signed char schar;
 typedef unsigned char uchar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
@@ -248,6 +249,10 @@ inline char *newconcatstring(const char *s, const char *t)
 #define loopvj(v)   for(int j = 0; j<(v).length(); j++)
 #define loopvk(v)   for(int k = 0; k<(v).length(); k++)
 #define loopvrev(v) for(int i = (v).length()-1; i>=0; i--)
+
+template<class T> inline void memclear(T *p, size_t n) { memset((void *)p, 0, n * sizeof(T)); }
+template<class T> inline void memclear(T &p) { memset((void *)&p, 0, sizeof(T)); }
+template<class T, size_t N> inline void memclear(T (&p)[N]) { memset((void *)p, 0, N * sizeof(T)); }
 
 template <class T>
 struct databuf
@@ -700,7 +705,7 @@ template <class T> struct vector
     void growbuf(int sz)
     {
         int olen = alen;
-        if(!alen) alen = max(MINSIZE, sz);
+        if(alen <= 0) alen = max(MINSIZE, sz);
         else while(alen < sz) alen += alen/2;
         if(alen <= olen) return;
         uchar *newbuf = new uchar[alen*sizeof(T)];
@@ -1143,6 +1148,7 @@ template <class T, int SIZE> struct queue
 
     void clear() { head = tail = len = 0; }
 
+    int capacity() const { return SIZE; }
     int length() const { return len; }
     bool empty() const { return !len; }
     bool full() const { return len == SIZE; }
@@ -1164,6 +1170,25 @@ template <class T, int SIZE> struct queue
     }
     T &add(const T &e) { return add() = e; }
 
+    databuf<T> reserve(int sz)
+    {
+        if(!len) head = tail = 0;
+        return databuf<T>(&data[tail], min(sz, SIZE-tail));
+    }
+
+    void advance(int sz)
+    {
+        if(len + sz > SIZE) sz = SIZE - len;
+        tail += sz;
+        if(tail >= SIZE) tail -= SIZE;
+        len += sz;
+    }
+
+    void addbuf(const databuf<T> &p)
+    {
+        advance(p.length());
+    }
+
     T &pop()
     {
         tail--;
@@ -1181,6 +1206,23 @@ template <class T, int SIZE> struct queue
         if(head >= SIZE) head -= SIZE;
         len--;
         return t;
+    }
+
+    T remove(int offset)
+    {
+        T val = removing(offset);
+        if(head+offset >= SIZE) for(int i = head+offset - SIZE + 1; i < tail; i++) data[i-1] = data[i];
+        else if(head < tail) for(int i = head+offset + 1; i < tail; i++) data[i-1] = data[i];
+        else
+        {
+            for(int i = head+offset + 1; i < SIZE; i++) data[i-1] = data[i];
+            data[SIZE-1] = data[0];
+            for(int i = 1; i < tail; i++) data[i-1] = data[i];
+        }
+        tail--;
+        if(tail < 0) tail += SIZE;
+        len--;
+        return val;
     }
 
     T &operator[](int offset) { return removing(offset); }
@@ -1248,7 +1290,7 @@ template<class T> inline void bigswap(T *buf, size_t len) { if(islittleendian())
 struct stream
 {
 #ifdef WIN32
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__MINGW32__)
     typedef off64_t offset;
 #else
     typedef __int64 offset;
@@ -1346,6 +1388,8 @@ static inline uchar cubeupper(uchar c)
 }
 extern size_t decodeutf8(uchar *dst, size_t dstlen, const uchar *src, size_t srclen, size_t *carry = NULL);
 extern size_t encodeutf8(uchar *dstbuf, size_t dstlen, const uchar *srcbuf, size_t srclen, size_t *carry = NULL);
+extern bool cubecaseequal(const char *s1, const char *s2, int n = INT_MAX);
+extern char *cubecasefind(const char *haystack, const char *needle);
 
 extern string homedir;
 

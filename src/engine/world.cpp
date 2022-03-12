@@ -199,7 +199,7 @@ void modifyoctaentity(int flags, int id, extentity &e, cube *c, const ivec &cor,
 }
 
 vector<int> outsideents;
-int spotlights = 0, volumetriclights = 0, nospeclights = 0;
+int spotlights = 0, volumetriclights = 0, nospeclights = 0, smalphalights = 0, volumetricsmalphalights = 0;
 
 static bool modifyoctaent(int flags, int id, extentity &e)
 {
@@ -229,9 +229,13 @@ static bool modifyoctaent(int flags, int id, extentity &e)
     switch(e.type)
     {
         case ET_LIGHT:
-            clearlightcache(id);
             if(e.attr5&L_VOLUMETRIC) { if(flags&MODOE_ADD) volumetriclights++; else --volumetriclights; }
             if(e.attr5&L_NOSPEC) { if(!(flags&MODOE_ADD ? nospeclights++ : --nospeclights)) cleardeferredlightshaders(); }
+            if(e.attr5&L_SMALPHA)
+            {
+                if(!(flags&MODOE_ADD ?  smalphalights++ : --smalphalights)) cleardeferredlightshaders();
+                if(e.attr5&L_VOLUMETRIC) { if(!(flags&MODOE_ADD ?  volumetricsmalphalights++ : --volumetricsmalphalights)) cleanupvolumetric(); }
+            }
             break;
         case ET_SPOTLIGHT: if(!(flags&MODOE_ADD ? spotlights++ : --spotlights)) { cleardeferredlightshaders(); cleanupvolumetric(); } break;
         case ET_PARTICLES: clearparticleemitters(); break;
@@ -1055,6 +1059,8 @@ void attachent()
 
 COMMAND(attachent, "");
 
+VARP(entcamdir, 0, 1, 1);
+
 static int keepents = 0;
 
 extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3, int v4, int v5, int &idx, bool fix = true)
@@ -1064,7 +1070,7 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
     {
         idx = -1;
         for(int i = keepents; i < ents.length(); i++) if(ents[i]->type == ET_EMPTY) { idx = i; break; }
-        if(idx < 0 && ents.length() >= MAXENTS) { conoutf("too many entities"); return NULL; }
+        if(idx < 0 && ents.length() >= MAXENTS) { conoutf(CON_ERROR, "too many entities"); return NULL; }
     }
     else while(ents.length() < idx) ents.add(entities::newentity())->type = ET_EMPTY;
     extentity &e = *entities::newentity();
@@ -1078,26 +1084,26 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
     e.reserved = 0;
     if(local && fix)
     {
-        switch(type)
+        if(entcamdir) switch(type)
         {
-                case ET_DECAL:
-                    if(!e.attr2 && !e.attr3 && !e.attr4)
-                    {
-                        e.attr2 = (int)camera1->yaw;
-                        e.attr3 = (int)camera1->pitch;
-                        e.attr4 = (int)camera1->roll;
-                    }
-                    break;
-                case ET_MAPMODEL:
-                    if(!e.attr2) e.attr2 = (int)camera1->yaw;
-                    break;
-                case ET_PLAYERSTART:
-                    e.attr5 = e.attr4;
-                    e.attr4 = e.attr3;
-                    e.attr3 = e.attr2;
-                    e.attr2 = e.attr1;
-                    e.attr1 = (int)camera1->yaw;
-                    break;
+            case ET_DECAL:
+                if(!e.attr2 && !e.attr3 && !e.attr4)
+                {
+                    e.attr2 = (int)camera1->yaw;
+                    e.attr3 = (int)camera1->pitch;
+                    e.attr4 = (int)camera1->roll;
+                }
+                break;
+            case ET_MAPMODEL:
+                if(!e.attr2) e.attr2 = (int)camera1->yaw;
+                break;
+            case ET_PLAYERSTART:
+                e.attr5 = e.attr4;
+                e.attr4 = e.attr3;
+                e.attr3 = e.attr2;
+                e.attr2 = e.attr1;
+                e.attr1 = (int)camera1->yaw;
+                break;
         }
         entities::fixentity(e);
     }
@@ -1233,12 +1239,12 @@ void nearestent()
             closedist = dist;
         }
     }
-    if(closest >= 0) entadd(closest);
+    if(closest >= 0 && entgroup.find(closest) < 0) entadd(closest);
 }
 
 ICOMMAND(enthavesel,"",  (), addimplicit(intret(entgroup.length())));
 ICOMMAND(entselect, "e", (uint *body), if(!noentedit()) addgroup(e.type != ET_EMPTY && entgroup.find(n)<0 && executebool(body)));
-ICOMMAND(entloop,   "e", (uint *body), if(!noentedit()) addimplicit(groupeditloop(((void)e, execute(body)))));
+ICOMMAND(entloop,   "e", (uint *body), if(!noentedit()) { addimplicit(groupeditloop(((void)e, execute(body)))); commitchanges(); });
 ICOMMAND(insel,     "",  (), entfocus(efocus, intret(pointinsel(sel, e.o))));
 ICOMMAND(entget,    "",  (), entfocus(efocus, string s; printent(e, s, sizeof(s)); result(s)));
 ICOMMAND(entindex,  "",  (), intret(efocus));
@@ -1382,6 +1388,7 @@ void resetmap()
     clearslots();
     clearparticles();
     clearstains();
+    cleardamagescreen();
     clearsleep();
     cancelsel();
     pruneundos();
@@ -1392,6 +1399,8 @@ void resetmap()
     spotlights = 0;
     volumetriclights = 0;
     nospeclights = 0;
+    smalphalights = 0;
+    volumetricsmalphalights = 0;
 }
 
 void startmap(const char *name)

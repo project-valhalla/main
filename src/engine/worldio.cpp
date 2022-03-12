@@ -36,7 +36,7 @@ static bool loadmapheader(stream *f, const char *ogzname, mapheader &hdr, octahe
 
     if(!memcmp(hdr.magic, "TMAP", 4))
     {
-        if(hdr.version>MAPVERSION) { conoutf(CON_ERROR, "map %s requires a newer version of Valhalla", ogzname); return false; }
+        if(hdr.version>MAPVERSION) { conoutf(CON_ERROR, "map %s requires a newer version of Tesseract", ogzname); return false; }
         if(f->read(&hdr.worldsize, 6*sizeof(int)) != 6*sizeof(int)) { conoutf(CON_ERROR, "map %s has malformatted header", ogzname); return false; }
         lilswap(&hdr.worldsize, 6);
         if(hdr.worldsize <= 0|| hdr.numents < 0) { conoutf(CON_ERROR, "map %s has malformatted header", ogzname); return false; }
@@ -533,7 +533,7 @@ void loadvslot(stream *f, VSlot &vs, int changed)
         }
     }
     if(vs.changed & (1<<VSLOT_SCALE)) vs.scale = f->getlil<float>();
-    if(vs.changed & (1<<VSLOT_ROTATION)) vs.rotation = f->getlil<int>();
+    if(vs.changed & (1<<VSLOT_ROTATION)) vs.rotation = clamp(f->getlil<int>(), 0, 7);
     if(vs.changed & (1<<VSLOT_OFFSET))
     {
         loopk(2) vs.offset[k] = f->getlil<int>();
@@ -695,11 +695,8 @@ static uint mapcrc = 0;
 uint getmapcrc() { return mapcrc; }
 void clearmapcrc() { mapcrc = 0; }
 
-VARP(playmapmusic, 0, 0, 1);
-
 bool load_world(const char *mname, const char *cname)        // still supports all map formats that have existed since the earliest cube betas!
 {
-    stopmusic(10000);
     int loadingstart = SDL_GetTicks();
     setmapfilenames(mname, cname);
     stream *f = opengzfile(ogzname, "rb");
@@ -713,7 +710,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     resetmap();
 
     Texture *mapshot = textureload(picname, 3, true, false);
-    renderbackground("\f2Loading", mapshot, mname, game::getmapinfo());
+    renderbackground("loading...", mapshot, mname, game::getmapinfo());
 
     setvar("mapversion", hdr.version, true, false);
 
@@ -900,10 +897,9 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     attachentities();
     allchanged(true);
 
-    renderbackground("\f2Loading", mapshot, mname, game::getmapinfo());
+    renderbackground("loading...", mapshot, mname, game::getmapinfo());
 
     if(maptitle[0] && strcmp(maptitle, "Untitled Map by Unknown")) conoutf(CON_ECHO, "%s", maptitle);
-    if(!game::editing() && playmapmusic && mapmusic[0]) startmusic(mapmusic);
 
     startmap(cname ? cname : mname);
 

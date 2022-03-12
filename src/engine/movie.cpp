@@ -8,11 +8,7 @@
 //   kino - ok
 
 #include "engine.h"
-#ifdef __APPLE__
-  #include "SDL2_mixer/SDL_mixer.h"
-#else
-  #include "SDL_mixer.h"
-#endif
+#include "SDL_mixer.h"
 
 VAR(dbgmovie, 0, 0, 1);
 
@@ -388,7 +384,7 @@ struct aviwriter
         endlistchunk(); // LIST odml
 
         listchunk("LIST", "INFO");
-        const char *software = "Valhalla";
+        const char *software = "Tesseract";
         writechunk("ISFT", software, strlen(software)+1);
         endlistchunk(); // LIST INFO
 

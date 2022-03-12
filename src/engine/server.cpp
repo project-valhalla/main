@@ -73,7 +73,7 @@ void fatal(const char *fmt, ...)
     defvformatstring(msg,fmt,fmt);
     if(logfile) logoutf("%s", msg);
 #ifdef WIN32
-    MessageBox(NULL, msg, "Valhalla fatal error", MB_OK|MB_SYSTEMMODAL);
+    MessageBox(NULL, msg, "Tesseract fatal error", MB_OK|MB_SYSTEMMODAL);
 #else
     fprintf(stderr, "server error: %s\n", msg);
 #endif
@@ -84,22 +84,6 @@ void fatal(const char *fmt, ...)
 void conoutfv(int type, const char *fmt, va_list args)
 {
     logoutfv(fmt, args);
-}
-
-void conoutf(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    conoutfv(CON_INFO, fmt, args);
-    va_end(args);
-}
-
-void conoutf(int type, const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    conoutfv(type, fmt, args);
-    va_end(args);
 }
 #endif
 
@@ -198,7 +182,7 @@ void sendpacket(int n, int chan, ENetPacket *packet, int exclude)
         loopv(clients) if(i!=exclude && server::allowbroadcast(i)) sendpacket(i, chan, packet);
         return;
     }
-    switch(clients[n]->type)
+    if(clients.inrange(n)) switch(clients[n]->type)
     {
         case ST_TCPIP:
         {
@@ -732,6 +716,7 @@ void localdisconnect(bool cleanup)
 
 void localconnect()
 {
+    if(initing) return;
     client &c = addclient(ST_LOCAL);
     copystring(c.hostname, "local");
     game::gameconnect(false);
@@ -1072,7 +1057,7 @@ bool setuplistenserver(bool dedicated)
         enet_socket_destroy(lansock);
         lansock = ENET_SOCKET_NULL;
     }
-    if(lansock == ENET_SOCKET_NULL) conoutf(CON_WARN, "WARNING: could not create LAN server info socket");
+    if(lansock == ENET_SOCKET_NULL) conoutf(CON_WARN, "could not create LAN server info socket");
     else enet_socket_set_option(lansock, ENET_SOCKOPT_NONBLOCK, 1);
     return true;
 }
@@ -1086,7 +1071,7 @@ void initserver(bool listen, bool dedicated)
 #endif
     }
 
-    if(!execfile("data/config/server-init.cfg", false)) execfile("data/config/server-init_default.cfg", false);
+    execfile("data/config/server-init.cfg", false);
 
     if(listen) setuplistenserver(dedicated);
 

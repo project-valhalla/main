@@ -268,8 +268,8 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
             case '5': color = bvec(192,  64, 192); break;   // magenta
             case '6': color = bvec(255, 128,   0); break;   // orange
             case '7': color = bvec(255, 255, 255); break;   // white
-            case '8': color = bvec(  0, 255, 255); break;   // cyan
-            case '9': color = bvec(255, 192, 203); break;   // pink
+            case '8': color = bvec( 80, 207, 229); break;   // "Tesseract Blue"
+            case '9': color = bvec(160, 240, 120); break;
             default: gle::color(color, a); return;          // provided color: everything else
         }
         if(textbright != 100) color.scale(textbright, 100);
@@ -416,7 +416,7 @@ void draw_text(const char *str, float left, float top, int r, int g, int b, int 
     {
         gle::color(color, a);
         if(maxwidth >= 0 && cx >= maxwidth && cx > 0) { cx = 0; cy += FONTH; }
-        draw_char(tex, '|', left+cx, top+cy, scale);
+        draw_char(tex, '_', left+cx, top+cy, scale);
         xtraverts += gle::end();
     }
     #undef TEXTINDEX

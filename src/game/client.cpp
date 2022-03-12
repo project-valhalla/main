@@ -149,7 +149,7 @@ namespace game
 
     void spawneffect(gameent *s)
     {
-        removedamageblend();
+        cleardamagescreen();
         stopownersounds(s);
         msgsound(S_SPAWN, s);
     }

@@ -316,11 +316,6 @@ namespace game
 
     void checkaction(int act)
     {
-        if(act == ACT_SECONDARY && guns[player1->gunselect].attacks[ACT_PRIMARY] == guns[player1->gunselect].attacks[ACT_SECONDARY])
-        {
-            zoom = !zoom? 1: -1;
-            return;
-        }
         doaction(act);
     }
 
@@ -1085,6 +1080,24 @@ namespace game
 #endif
         if(d->gunwait) col.mul(0.5f);
         return crosshair;
+    }
+
+    int maxsoundradius(int n)
+    {
+        switch(n)
+        {
+            case S_JUMP1:
+            case S_JUMP2:
+            case S_LAND:
+            case S_ITEMSPAWN:
+            case S_WEAPLOAD:
+            case S_NOAMMO:
+                return 350;
+            case S_FOOTSTEP:
+                return 300;
+            default:
+                return 500;
+        }
     }
 
     const char *mastermodecolor(int n, const char *unknown)

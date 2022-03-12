@@ -1,5 +1,31 @@
 #include "cube.h"
 
+///////////////////////////// console ////////////////////////
+
+void conoutf(const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    conoutfv(CON_INFO, fmt, args);
+    va_end(args);
+}
+
+void conoutf(int type, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    conoutfv(type, fmt, args);
+    va_end(args);
+}
+
+void conoutf(int type, int tag, const char *fmt, ...)
+{
+    va_list args;
+    va_start(args, fmt);
+    conoutfv(type | ((tag << CON_TAG_SHIFT) & CON_TAG_MASK), fmt, args);
+    va_end(args);
+}
+
 ///////////////////////// character conversion ///////////////
 
 #define CUBECTYPE(s, p, d, a, A, u, U) \
@@ -221,6 +247,34 @@ done:
     return dst - dstbuf;
 }
 
+bool cubecaseequal(const char *s1, const char *s2, int n)
+{
+    if(!s1 || !s2) return s1 == s2;
+    while(n-- > 0)
+    {
+        int c1 = cubelower(*s1++), c2 = cubelower(*s2++);
+        if(c1 != c2) return false;
+        if(!c1) break;
+    }
+    return true;
+}
+
+char *cubecasefind(const char *haystack, const char *needle)
+{
+    if(haystack && needle) for(const char *h = haystack, *n = needle;;)
+    {
+        int hc = cubelower(*h++), nc = cubelower(*n++);
+        if(!nc) return (char*)h - (n - needle);
+        if(hc != nc)
+        {
+            if(!hc) break;
+            n = needle;
+            h = ++haystack;
+        }
+    }
+    return NULL;
+}
+
 ///////////////////////// file system ///////////////////////
 
 #ifdef WIN32
@@ -406,8 +460,8 @@ const char *addpackagedir(const char *dir)
     char *filter = pdir;
     for(;;)
     {
-        static int len = strlen("media");
-        filter = strstr(filter, "media");
+        static int len = strlen("data");
+        filter = strstr(filter, "data");
         if(!filter) break;
         if(filter > pdir && filter[-1] == PATHDIV && filter[len] == PATHDIV) break;
         filter += len;
@@ -656,7 +710,7 @@ struct filestream : stream
     offset tell()
     {
 #ifdef WIN32
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__MINGW32__)
         offset off = ftello64(file);
 #else
         offset off = _ftelli64(file);
@@ -670,7 +724,7 @@ struct filestream : stream
     bool seek(offset pos, int whence)
     {
 #ifdef WIN32
-#ifdef __GNUC__
+#if defined(__GNUC__) && !defined(__MINGW32__)
         return fseeko64(file, pos, whence) >= 0;
 #else
         return _fseeki64(file, pos, whence) >= 0;
@@ -895,7 +949,7 @@ struct gzstream : stream
     offset size()
     {
         if(!file) return -1;
-        offset pos = tell();
+        offset pos = file->tell();
         if(!file->seek(-4, SEEK_END)) return -1;
         uint isize = file->getlil<uint>();
         return file->seek(pos, SEEK_SET) ? isize : offset(-1);

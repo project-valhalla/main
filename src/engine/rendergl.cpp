@@ -2604,7 +2604,7 @@ VAR(hidestats, 0, 0, 1);
 VAR(hidehud, 0, 0, 1);
 
 VARP(crosshairsize, 0, 15, 50);
-VARP(cursorsize, 0, 15, 30);
+VARP(cursorsize, 0, 16, 30);
 VARP(crosshairfx, 0, 1, 1);
 VARP(crosshaircolors, 0, 1, 1);
 

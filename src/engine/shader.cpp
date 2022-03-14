@@ -33,7 +33,7 @@ void loadshaders()
     hudtextshader = lookupshaderbyname("hudtext");
     hudnotextureshader = lookupshaderbyname("hudnotexture");
     stdworldshader = lookupshaderbyname("stdworld");
-    if(!nullshader || !hudshader || !hudtextshader || !hudnotextureshader || !stdworldshader) fatal("cannot find shader definitions");
+    if(!nullshader || !hudshader || !hudtextshader || !hudnotextureshader || !stdworldshader) fatal("Cannot find shader definitions");
 
     dummyslot.shader = stdworldshader;
     dummydecalslot.shader = nullshader;
@@ -1062,7 +1062,7 @@ void setupshaders()
         "}\n");
     standardshaders = false;
 
-    if(!nullshader || !hudshader || !hudtextshader || !hudnotextureshader) fatal("failed to setup shaders");
+    if(!nullshader || !hudshader || !hudtextshader || !hudnotextureshader) fatal("Failed to setup shaders");
 
     dummyslot.shader = nullshader;
 }

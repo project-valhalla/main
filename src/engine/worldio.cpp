@@ -710,7 +710,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     resetmap();
 
     Texture *mapshot = textureload(picname, 3, true, false);
-    renderbackground("loading...", mapshot, mname, game::getmapinfo());
+    renderbackground("Loading", mapshot, mname, game::getmapinfo());
 
     setvar("mapversion", hdr.version, true, false);
 
@@ -724,7 +724,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     setvar("mapsize", 1<<worldscale, true, false);
     setvar("mapscale", worldscale, true, false);
 
-    renderprogress(0, "loading vars...");
+    renderprogress(0, "Loading vars...");
 
     loopi(hdr.numvars)
     {
@@ -801,7 +801,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     ushort nummru = f->getlil<ushort>();
     loopi(nummru) texmru.add(f->getlil<ushort>());
 
-    renderprogress(0, "loading entities...");
+    renderprogress(0, "Loading entities...");
 
     vector<extentity *> &ents = entities::getents();
     int einfosize = entities::extraentinfosize();
@@ -844,15 +844,15 @@ bool load_world(const char *mname, const char *cname)        // still supports a
         f->seek((hdr.numents-MAXENTS)*(samegame ? sizeof(entity) + einfosize : eif), SEEK_CUR);
     }
 
-    renderprogress(0, "loading slots...");
+    renderprogress(0, "Loading slots...");
     loadvslots(f, hdr.numvslots);
 
-    renderprogress(0, "loading octree...");
+    renderprogress(0, "Loading octree...");
     bool failed = false;
     worldroot = loadchildren(f, ivec(0, 0, 0), hdr.worldsize>>1, failed);
     if(failed) conoutf(CON_ERROR, "garbage in map");
 
-    renderprogress(0, "validating...");
+    renderprogress(0, "Validating...");
     validatec(worldroot, hdr.worldsize>>1);
 
     if(!failed)
@@ -897,7 +897,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     attachentities();
     allchanged(true);
 
-    renderbackground("loading...", mapshot, mname, game::getmapinfo());
+    renderbackground("Loading", mapshot, mname, game::getmapinfo());
 
     if(maptitle[0] && strcmp(maptitle, "Untitled Map by Unknown")) conoutf(CON_ECHO, "%s", maptitle);
 

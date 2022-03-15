@@ -1,5 +1,5 @@
 CFLAGS=-O3 -fomit-frame-pointer
-override CFLAGS:= $(CFLAGS) -lc -Iinclude $(shell ./check_cflags.sh $(CC) $(CFLAGS))
+override CFLAGS:= $(CFLAGS) -Iinclude $(shell ./check_cflags.sh $(CC) $(CFLAGS))
 
 OBJS= \
 	callbacks.o \

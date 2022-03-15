@@ -239,9 +239,6 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     glDisable(GL_BLEND);
 }
 
-VAR(menumute, 0, 1, 1);
-SVARP(menumusic, "menu");
-
 bool firstrun = false;
 
 void setbackgroundinfo(const char *caption = NULL, Texture *mapshot = NULL, const char *mapname = NULL, const char *mapinfo = NULL)
@@ -261,7 +258,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 {
     if(!inbetweenframes && !force) return;
 
-    if(menumute) stopsounds(); // stop sounds while loading
+    stopsounds(); // stop game sounds while loading
 
     int w = hudw, h = hudh;
     if(forceaspect) w = int(ceil(h*forceaspect));
@@ -575,7 +572,7 @@ void setupscreen()
     curvsync = -1;
 
     SDL_Rect desktop;
-    if(SDL_GetDisplayBounds(0, &desktop) < 0) fatal("failed querying desktop bounds: %s", SDL_GetError());
+    if(SDL_GetDisplayBounds(0, &desktop) < 0) fatal("Failed querying desktop bounds: %s", SDL_GetError());
     desktopw = desktop.w;
     desktoph = desktop.h;
 
@@ -603,7 +600,7 @@ void setupscreen()
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
     screen = SDL_CreateWindow("Tesseract", winx, winy, winw, winh, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | flags);
-    if(!screen) fatal("failed to create OpenGL window: %s", SDL_GetError());
+    if(!screen) fatal("Failed to create OpenGL window: %s", SDL_GetError());
 
     SDL_SetWindowMinimumSize(screen, SCR_MINW, SCR_MINH);
     SDL_SetWindowMaximumSize(screen, SCR_MAXW, SCR_MAXH);
@@ -622,7 +619,7 @@ void setupscreen()
         glcontext = SDL_GL_CreateContext(screen);
         if(glcontext) break;
     }
-    if(!glcontext) fatal("failed to create OpenGL context: %s", SDL_GetError());
+    if(!glcontext) fatal("Failed to create OpenGL context: %s", SDL_GetError());
 
     SDL_GetWindowSize(screen, &screenw, &screenh);
     renderw = min(scr_w, screenw);
@@ -665,7 +662,7 @@ void resetgl()
        !reloadtexture("data/interface/mapshot_frame.png") ||
        !reloadtexture("data/interface/loading_frame.png") ||
        !reloadtexture("data/interface/loading_bar.png"))
-        fatal("failed to reload core texture");
+        fatal("Failed to reload core texture");
     reloadfonts();
     inbetweenframes = true;
     renderbackground("Initializing");
@@ -965,7 +962,7 @@ __declspec(dllexport)
 #if defined(WIN32) && !defined(_DEBUG) && !defined(__GNUC__)
 void stackdumper(unsigned int type, EXCEPTION_POINTERS *ep)
 {
-    if(!ep) fatal("unknown type");
+    if(!ep) fatal("Unknown type");
     EXCEPTION_RECORD *er = ep->ExceptionRecord;
     CONTEXT *context = ep->ContextRecord;
     char out[512];
@@ -1186,17 +1183,17 @@ int main(int argc, char **argv)
     gl_checkextensions();
     gl_init();
     notexture = textureload("data/texture/game/notexture.png");
-    if(!notexture) fatal("could not find core textures");
+    if(!notexture) fatal("Could not find core textures");
 
     logoutf("init: console");
-    if(!execfile("data/config/stdlib.cfg", false)) fatal("cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");   // this is the first file we load.
-    if(!execfile("data/config/font.cfg", false)) fatal("cannot find font definitions");
-    if(!setfont("default")) fatal("no default font specified");
+    if(!execfile("data/config/stdlib.cfg", false)) fatal("Cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");   // this is the first file we load.
+    if(!execfile("data/config/font.cfg", false)) fatal("Cannot find font definitions");
+    if(!setfont("default")) fatal("No default font specified");
 
     UI::setup();
 
     inbetweenframes = true;
-    renderbackground("initializing");
+    renderbackground("Initializing");
 
     logoutf("init: world");
     camera1 = player = game::iterdynents(0);

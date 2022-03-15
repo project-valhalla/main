@@ -587,7 +587,6 @@ namespace game
 
             showscores(true);
             disablezoom();
-            stopmusic(8000);
 
             execident("intermission");
         }

@@ -1037,7 +1037,7 @@ namespace game
             va_end(args);
         }
         int num = nums || numf ? 0 : numi, msgsize = server::msgsizelookup(type);
-        if(msgsize && num!=msgsize) { fatal("inconsistent msg size for %d (%d != %d)", type, num, msgsize); }
+        if(msgsize && num!=msgsize) { fatal("Inconsistent msg size for %d (%d != %d)", type, num, msgsize); }
         if(reliable) messagereliable = true;
         if(mcn != messagecn)
         {
@@ -1096,8 +1096,6 @@ namespace game
             nextscorelimit = Scorelimit = 30;
             clientmap[0] = '\0';
         }
-        stopmusic(5000);
-        startmusic(menumusic);
     }
 
     VARP(chatsound, 0, 1, 2); // 0 = no chat sound, 1 = always plays, 2 = only for whispers

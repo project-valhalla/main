@@ -258,7 +258,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
 {
     if(!inbetweenframes && !force) return;
 
-    stopsounds(); // stop game sounds while loading
+    stopsounds(SND_UI); // stop game sounds while loading
 
     int w = hudw, h = hudh;
     if(forceaspect) w = int(ceil(h*forceaspect));

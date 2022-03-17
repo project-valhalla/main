@@ -47,6 +47,7 @@ struct soundchannel
     bool inuse;
     vec loc;
     soundslot *slot;
+    physent *owner;
     extentity *ent;
     int radius, volume, pan, flags;
     bool dirty;
@@ -62,6 +63,7 @@ struct soundchannel
         clearloc();
         slot = NULL;
         ent = NULL;
+        owner = NULL;
         radius = 0;
         volume = -1;
         pan = -1;
@@ -72,7 +74,7 @@ struct soundchannel
 vector<soundchannel> channels;
 int maxchannels = 0;
 
-soundchannel &newchannel(int n, soundslot *slot, const vec *loc = NULL, extentity *ent = NULL, int flags = 0, int radius = 0)
+soundchannel &newchannel(int n, soundslot *slot, const vec *loc = NULL, physent *owner = NULL, extentity *ent = NULL, int flags = 0, int radius = 0)
 {
     if(ent)
     {
@@ -83,10 +85,12 @@ soundchannel &newchannel(int n, soundslot *slot, const vec *loc = NULL, extentit
     soundchannel &chan = channels[n];
     chan.reset();
     chan.inuse = true;
-    if(loc) chan.loc = *loc;
+    if(owner) chan.owner = owner;
+    else if(loc) chan.loc = *loc;
     chan.slot = slot;
+    chan.owner = owner;
     chan.ent = ent;
-    chan.flags = 0;
+    chan.flags = flags;
     chan.radius = radius;
     return chan;
 }
@@ -107,27 +111,27 @@ void syncchannel(soundchannel &chan)
     chan.dirty = false;
 }
 
-void stopchannels()
+void stopchannels(int flags = 0)
 {
     loopv(channels)
     {
         soundchannel &chan = channels[i];
-        if(!chan.inuse) continue;
+        if((flags && !(chan.flags&flags)) || !chan.inuse) continue;
         Mix_HaltChannel(i);
         freechannel(i);
     }
 }
 
 void setmusicvol(int musicvol);
-extern int musicvol;
-static int curvol = 0;
-VARFP(soundvol, 0, 255, 255,
+VARFP(soundvol, 0, 200, 255, if(!soundvol)
 {
-    if(!soundvol) { stopchannels(); setmusicvol(0); }
-    else if(!curvol) setmusicvol(musicvol);
-    curvol = soundvol;
+    stopchannels();
+    setmusicvol(0);
 });
+VARFP(announcervol, 0, 220, 200, { if(!announcervol) stopchannels(SND_ANNOUNCER); });
+VARFP(uivol, 0, 100, 255, { if(!announcervol) stopchannels(SND_UI); });
 VARFP(musicvol, 0, 60, 255, setmusicvol(soundvol ? musicvol : 0));
+VARFP(ambientsounds, 0, 1, 1, if(!ambientsounds) { stopmapsounds(); });
 
 char *musicfile = NULL, *musicdonecmd = NULL;
 
@@ -146,7 +150,7 @@ void stopmusic(int fade)
     if(nosound) return;
     DELETEA(musicfile);
     DELETEA(musicdonecmd);
-    if(music)
+    if(music && (!fade || !Mix_FadeOutMusic(fade)))
     {
         Mix_HaltMusic();
         Mix_FreeMusic(music);
@@ -272,7 +276,7 @@ Mix_Music *loadmusic(const char *name)
     return music;
 }
 
-void startmusic(char *name = "menu.ogg", char *cmd)
+void startmusic(char *name, char *cmd)
 {
     if(nosound) return;
     stopmusic();
@@ -327,14 +331,14 @@ bool soundsample::load(const char *dir, bool msg)
     string filename;
     loopi(sizeof(exts)/sizeof(exts[0]))
     {
-        formatstring(filename, "data/audio/sound/%s%s%s", dir, name, exts[i]);
+        formatstring(filename, "data/audio/%s%s%s", dir, name, exts[i]);
         if(msg && !i) renderprogress(0, filename);
         path(filename);
         chunk = loadwav(filename);
         if(chunk) return true;
     }
 
-    conoutf(CON_ERROR, "failed to load sample: data/audio/sound/%s%s", dir, name);
+    conoutf(CON_ERROR, "failed to load sample: data/audio/%s%s", dir, name);
     return false;
 }
 
@@ -446,7 +450,7 @@ static struct soundtype
     {
         return chan.inuse && config.hasslot(chan.slot, slots);
     }
-} gamesounds("game/"), mapsounds("mapsound/");
+} gamesounds(""), mapsounds("ambient/");
 
 void registersound(char *name, int *vol) { intret(gamesounds.addsound(name, *vol, 0)); }
 COMMAND(registersound, "si");
@@ -528,22 +532,43 @@ void checkmapsounds()
     {
         extentity &e = *ents[i];
         if(e.type!=ET_SOUND) continue;
-        if(camera1->o.dist(e.o) < e.attr2)
+        if(camera1->o.dist(e.o) < e.attr2) // if inside entity radius (attr2)
         {
-            if(!(e.flags&EF_SOUND)) playsound(e.attr1, NULL, NULL, &e, SND_MAP, -1);
+            if(e.attr4)
+            {
+                if(totalmillis-e.lastplayed >= e.attr4 * 1000) // delay map sound (attr4)
+                {
+                    playsound(e.attr1, NULL, NULL, &e, SND_MAP);
+                    e.lastplayed = totalmillis;
+                }
+            }
+            else if(!(e.flags&EF_SOUND)) playsound(e.attr1, NULL, NULL, &e, SND_MAP, -1);
         }
         else if(e.flags&EF_SOUND) stopmapsound(&e);
     }
 }
 
-VAR(stereo, 0, 1, 1);
+void stopownersounds(physent *d)
+{
+    loopv(channels)
+    {
+        soundchannel &chan = channels[i];
+        if(chan.inuse && chan.owner == d)
+        {
+            Mix_HaltChannel(i);
+            freechannel(i);
+        }
+    }
+}
 
-VAR(maxsoundradius, 1, 340, 0);
+VAR(stereo, 0, 1, 1);
 
 bool updatechannel(soundchannel &chan)
 {
     if(!chan.slot) return false;
-    int vol = soundvol, pan = 255/2;
+    int vol = chan.flags&SND_ANNOUNCER? announcervol: (chan.flags&SND_UI? uivol: soundvol),
+        pan = 255/2;
+    if(chan.owner) chan.loc = chan.owner->o;
     if(chan.hasloc())
     {
         vec v;
@@ -603,8 +628,9 @@ void updatesounds()
     else
     {
         reclaimchannels();
-        if(mainmenu) stopmapsounds();
-        else checkmapsounds();
+        int mat = lookupmaterial(camera1->o);
+        if(mainmenu || (player->state!=CS_EDITING && mat&MAT_WATER)) stopmapsounds();
+        else if(ambientsounds) checkmapsounds();
         syncchannels();
     }
     if(music)
@@ -614,7 +640,7 @@ void updatesounds()
     }
 }
 
-VARP(maxsoundsatonce, 0, 7, 100);
+VARP(maxsoundsatonce, 0, 0, 100);
 
 VAR(dbgsound, 0, 0, 1);
 
@@ -640,18 +666,20 @@ void preloadmapsounds()
 
 int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, int loops, int fade, int chanid, int radius, int expire)
 {
-    if(nosound || !soundvol || (minimized && !minimizedsounds)) return -1;
+    if(nosound || !soundvol || (minimized && !minimizedsounds) ||
+      (!announcervol && flags&SND_ANNOUNCER) || (!uivol && flags&SND_UI) || (!ambientsounds && flags&SND_MAP)) return -1;
 
     soundtype &sounds = ent || flags&SND_MAP ? mapsounds : gamesounds;
     if(!sounds.configs.inrange(n)) { conoutf(CON_WARN, "unregistered sound: %d", n); return -1; }
     soundconfig &config = sounds.configs[n];
 
-    if(loc)
+    if(owner || loc)
     {
         // cull sounds that are unlikely to be heard
+        vec location = owner? owner->o: *loc;
         int maxrad = game::maxsoundradius(n);
         if(radius <= 0 || maxrad < radius) radius = maxrad;
-        if(camera1->o.dist(*loc) > 1.5f*radius)
+        if(camera1->o.dist(location) > 1.5f*radius)
         {
             if(channels.inrange(chanid) && sounds.playing(channels[chanid], config))
             {
@@ -700,7 +728,7 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
     if(chanid < 0) loopv(channels) if(!channels[i].volume) { Mix_HaltChannel(i); freechannel(i); chanid = i; break; }
     if(chanid < 0) return -1;
 
-    soundchannel &chan = newchannel(chanid, &slot, loc, ent, flags, radius);
+    soundchannel &chan = newchannel(chanid, &slot, loc, owner, ent, flags, radius);
     updatechannel(chan);
     int playing = -1;
     if(fade)
@@ -714,10 +742,11 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
     return playing;
 }
 
-void stopsounds()
+void stopsounds(int exclude)
 {
     loopv(channels) if(channels[i].inuse)
     {
+        if(channels[i].flags&exclude) continue;
         Mix_HaltChannel(i);
         freechannel(i);
     }
@@ -735,18 +764,15 @@ bool stopsound(int n, int chanid, int fade)
     return true;
 }
 
-void stopownersounds(physent *owner)
-{
-}
-
-int playsoundname(const char *s, const vec *loc, int vol, int flags, int loops, int fade, int chanid, int radius, int expire)
+int playsoundname(const char *s, physent *owner, const vec *loc, int vol, int flags, int loops, int fade, int chanid, int radius, int expire)
 {
     if(!vol) vol = 100;
     int id = gamesounds.findsound(s, vol);
     if(id < 0) id = gamesounds.addsound(s, vol);
-    return playsound(id, NULL, loc, NULL, flags, loops, fade, chanid, radius, expire);
+    return playsound(id, owner, loc, NULL, flags, loops, fade, chanid, radius, expire);
 }
 
+ICOMMAND(uisound, "s", (char *s), playsound(*s, NULL, NULL, NULL, SND_UI));
 ICOMMAND(playsound, "i", (int *n), playsound(*n));
 
 void resetsound()

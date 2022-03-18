@@ -361,8 +361,8 @@ namespace game
 
     bool isally(gameent *a, gameent *b)
     {
-        return isteam(a->team, b->team) || (m_infection && ((a->zombie && b->zombie) ||
-                      (!a->zombie && !b->zombie)));
+        return (validteam(a->team) && validteam(b->team) && sameteam(a->team, b->team)) ||
+               (m_infection && ((a->zombie && b->zombie) || (!a->zombie && !b->zombie)));
     }
 
     bool allowthirdperson()
@@ -1028,16 +1028,17 @@ namespace game
         return 0;
     }
 
-    VARP(teamcrosshair, 0, 1, 1);
+    VARP(allycrosshair, 0, 1, 1);
     VARP(hitcrosshair, 0, 400, 1000);
 
     const char *defaultcrosshair(int index)
     {
         switch(index)
         {
+            case 3: return "data/interface/crosshair/ally.png";
             case 2: return "data/interface/crosshair/default_hit.png";
-            case 1: return "data/interface/crosshair/teammate.png";
-            default: return "data/interface/crosshair/default.png";
+            case 1: return "data/interface/crosshair/default.png";
+            default: return "data/interface/crosshair/edit.png";
         }
     }
 
@@ -1048,26 +1049,17 @@ namespace game
 
         if(d->state!=CS_ALIVE) return 0;
 
-        int crosshair = 0;
+        int crosshair = 1;
         if(d->lasthit && lastmillis - d->lasthit < hitcrosshair) crosshair = 2;
-        else if(teamcrosshair && m_teammode)
+        else if(allycrosshair)
         {
             dynent *o = intersectclosest(d->o, worldpos, d);
-            if(o && o->type==ENT_PLAYER && validteam(d->team) && ((gameent *)o)->team == d->team)
+            if(o && o->type==ENT_PLAYER && isally(((gameent *)o), d))
             {
-                crosshair = 1;
-
-                col = vec::hexcolor(teamtextcolor[d->team]);
+                crosshair = 3;
+                if(m_teammode) col = vec::hexcolor(teamtextcolor[d->team]);
             }
         }
-
-#if 0
-        if(crosshair!=1 && !editmode)
-        {
-            if(d->health<=25) { r = 1.0f; g = b = 0; }
-            else if(d->health<=50) { r = 1.0f; g = 0.5f; b = 0; }
-        }
-#endif
         if(d->gunwait) col.mul(0.5f);
         return crosshair;
     }

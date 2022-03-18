@@ -4,11 +4,11 @@ int lnjitterx[2][MAXLIGHTNINGSTEPS], lnjittery[2][MAXLIGHTNINGSTEPS];
 int lnjitterframe = 0, lastlnjitter = 0;
 
 VAR(lnjittermillis, 0, 100, 1000);
-VAR(lnjitterradius, 0, 4, 100);
-FVAR(lnjitterscale, 0, 0.5f, 10);
-VAR(lnscrollmillis, 1, 300, 5000);
-FVAR(lnscrollscale, 0, 0.125f, 10);
-FVAR(lnblendpower, 0, 0.25f, 1000);
+VAR(lnjitterradius, 0, 3, 100);
+FVAR(lnjitterscale, 0, 0.2f, 10);
+VAR(lnscrollmillis, 1, 250, 5000);
+FVAR(lnscrollscale, 0, 0.05f, 10);
+FVAR(lnblendpower, 0, 6.0f, 1000);
 
 static void calclightningjitter(int frame)
 {

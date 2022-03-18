@@ -74,7 +74,7 @@ struct soundchannel
 vector<soundchannel> channels;
 int maxchannels = 0;
 
-soundchannel &newchannel(int n, soundslot *slot, const vec *loc = NULL, physent *owner = NULL, extentity *ent = NULL, int flags = 0, int radius = 0)
+soundchannel &newchannel(int n, soundslot *slot, physent *owner = NULL, const vec *loc = NULL, extentity *ent = NULL, int flags = 0, int radius = 0)
 {
     if(ent)
     {
@@ -88,7 +88,6 @@ soundchannel &newchannel(int n, soundslot *slot, const vec *loc = NULL, physent 
     if(owner) chan.owner = owner;
     else if(loc) chan.loc = *loc;
     chan.slot = slot;
-    chan.owner = owner;
     chan.ent = ent;
     chan.flags = flags;
     chan.radius = radius;
@@ -128,7 +127,7 @@ VARFP(soundvol, 0, 200, 255, if(!soundvol)
     stopchannels();
     setmusicvol(0);
 });
-VARFP(announcervol, 0, 220, 200, { if(!announcervol) stopchannels(SND_ANNOUNCER); });
+VARFP(announcervol, 0, 220, 255, { if(!announcervol) stopchannels(SND_ANNOUNCER); });
 VARFP(uivol, 0, 100, 255, { if(!announcervol) stopchannels(SND_UI); });
 VARFP(musicvol, 0, 60, 255, setmusicvol(soundvol ? musicvol : 0));
 VARFP(ambientsounds, 0, 1, 1, if(!ambientsounds) { stopmapsounds(); });
@@ -728,7 +727,7 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
     if(chanid < 0) loopv(channels) if(!channels[i].volume) { Mix_HaltChannel(i); freechannel(i); chanid = i; break; }
     if(chanid < 0) return -1;
 
-    soundchannel &chan = newchannel(chanid, &slot, loc, owner, ent, flags, radius);
+    soundchannel &chan = newchannel(chanid, &slot, owner, loc, ent, flags, radius);
     updatechannel(chan);
     int playing = -1;
     if(fade)
@@ -746,7 +745,7 @@ void stopsounds(int exclude)
 {
     loopv(channels) if(channels[i].inuse)
     {
-        if(channels[i].flags&exclude) continue;
+        if(exclude && channels[i].flags&exclude) continue;
         Mix_HaltChannel(i);
         freechannel(i);
     }

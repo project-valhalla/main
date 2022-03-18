@@ -43,7 +43,6 @@ static struct gamemodeinfo
 #define m_ctf             (m_check(gamemode, M_CTF))
 #define m_teammode        (m_check(gamemode, M_TEAM))
 #define m_overtime        (m_check(gamemode, M_OVERTIME))
-#define isteam(a,b)       (m_teammode && a==b)
 #define m_elimination     (m_check(gamemode, M_ELIMINATION))
 #define m_round           (m_check(gamemode, M_ELIMINATION|M_LASTMAN|M_INFECTION))
 #define m_dm              (m_checknot(gamemode, M_EDIT|M_CTF|M_ELIMINATION|M_LASTMAN|M_INFECTION))
@@ -57,6 +56,8 @@ static struct gamemodeinfo
 #define m_timed           (m_checknot(gamemode, M_DEMO|M_EDIT|M_LOCAL))
 #define m_botmode         (m_checknot(gamemode, M_DEMO|M_LOCAL))
 #define m_mp(mode)        (m_checknot(mode, M_LOCAL))
+
+#define sameteam(a,b)     (m_teammode && a==b)
 
 enum
 {

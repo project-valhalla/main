@@ -889,7 +889,7 @@ namespace server
         virtual void spawned(clientinfo *ci) {}
         virtual int fragvalue(clientinfo *victim, clientinfo *actor)
         {
-            if(victim==actor || isteam(victim->team, actor->team)) return -1;
+            if(victim==actor || sameteam(victim->team, actor->team)) return -1;
             return 1;
         }
         virtual void died(clientinfo *victim, clientinfo *actor) {}
@@ -2547,7 +2547,7 @@ namespace server
 
     bool isally(clientinfo *target, clientinfo *actor)
     {
-        return isteam(target->team, actor->team) || (m_infection && ((actor->state.zombie && target->state.zombie) ||
+        return sameteam(target->team, actor->team) || (m_infection && ((actor->state.zombie && target->state.zombie) ||
                      (!actor->state.zombie && !target->state.zombie)));
     }
 

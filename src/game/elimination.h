@@ -17,7 +17,7 @@ struct eliminationclientmode : clientmode
     {
         loopv(scores)
         {
-            if(isteam(scores[i].team, team)) return &scores[i];
+            if(sameteam(scores[i].team, team)) return &scores[i];
         }
         return NULL;
     }
@@ -115,7 +115,7 @@ struct eliminationclientmode : clientmode
             {
                 if(aliveteam)
                 {
-                    if(!isteam(aliveteam, ci->team)) return won;
+                    if(!sameteam(aliveteam, ci->team)) return won;
                 }
                 else aliveteam = ci->team;
             }
@@ -174,11 +174,11 @@ struct eliminationclientmode : clientmode
     bool canfollow(gameent *s, gameent *f)
     {
         if(s->state!= CS_SPECTATOR || f->state == CS_DEAD) return false;
-        if(isteam(s->team, f->team)) return true;
+        if(sameteam(s->team, f->team)) return true;
         loopv(players)
         { // if any living players are on your team, you can't spec an opponent
             gameent *p = players[i];
-            if(p->state == CS_ALIVE && isteam(p->team, s->team)) return false;
+            if(p->state == CS_ALIVE && sameteam(p->team, s->team)) return false;
         }
         return true;
     }

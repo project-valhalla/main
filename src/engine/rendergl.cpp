@@ -2603,7 +2603,7 @@ void cleardamagescreen()
 VAR(hidestats, 0, 0, 1);
 VAR(hidehud, 0, 0, 1);
 
-VARP(crosshairsize, 0, 15, 50);
+VARP(crosshairsize, 0, 16, 50);
 VARP(cursorsize, 0, 16, 30);
 VARP(crosshairfx, 0, 1, 1);
 VARP(crosshaircolors, 0, 1, 1);
@@ -2618,7 +2618,7 @@ void loadcrosshair(const char *name, int i)
     if(crosshairs[i] == notexture)
     {
         name = game::defaultcrosshair(i);
-        if(!name) name = "data/interface/crosshair/default.png";
+        if(!name) name = "data/interface/crosshair/edit.png";
         crosshairs[i] = textureload(name, 3, true);
     }
 }

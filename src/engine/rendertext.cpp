@@ -268,8 +268,8 @@ static void text_color(char c, char *stack, int size, int &sp, bvec color, int a
             case '5': color = bvec(192,  64, 192); break;   // magenta
             case '6': color = bvec(255, 128,   0); break;   // orange
             case '7': color = bvec(255, 255, 255); break;   // white
-            case '8': color = bvec( 80, 207, 229); break;   // "Tesseract Blue"
-            case '9': color = bvec(160, 240, 120); break;
+            case '8': color = bvec(  0, 255, 255); break;   // cyan
+            case '9': color = bvec(255, 192, 203); break;   // pink
             default: gle::color(color, a); return;          // provided color: everything else
         }
         if(textbright != 100) color.scale(textbright, 100);

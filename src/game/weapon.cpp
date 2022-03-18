@@ -813,8 +813,8 @@ namespace game
                 adddynlight(vec(to).madd(dir, 4), atk == ATK_SG1 ? 6: 12, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if(hit || water || glass) break;
                 particle_splash(PART_SPARK1, 30, 50, to, 0xFFC864, 0.70f);
-                particle_splash(PART_SPARK2, 0+rnd(6), 80+rnd(380), to, 0xFFC864, 0.05f+rndscale(0.09f), 250);
-                particle_splash(PART_SMOKE, atk==ATK_SG1? 0+rnd(5): 5+rnd(10), 150, to, 0x606060, 1.8f+rndscale(2.2f), 100, 100, 0.01f);
+                particle_splash(PART_SPARK2, 1+rnd(6), 80+rnd(380), to, 0xFFC864, 0.05f+rndscale(0.09f), 250);
+                particle_splash(PART_SMOKE, atk==ATK_SG1? 1+rnd(5): 5+rnd(10), 150, to, 0x606060, 1.8f+rndscale(2.2f), 100, 100, 0.01f);
                 addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
                 break;
 
@@ -824,10 +824,11 @@ namespace game
             {
                 adddynlight(vec(to).madd(dir, 4), 20, vec(2.0f, 1.5f, 2.0f), 20);
                 if(hit || water) break;
-                particle_splash(PART_SPARK1, 10, 60, to, 0xDD88DD, 1.50f, 180, 6);
-                particle_splash(PART_SPARK2, 0+rnd(5), 300, to, 0xEE88EE, 0.01f+rndscale(0.10f), 350, 2);
                 if(from.dist(to) <= attacks[atk].range-1)
+                {
+                    particle_splash(PART_SPARK2, 1+rnd(5), 300, to, 0xEE88EE, 0.01f+rndscale(0.10f), 350, 2);
                     particle_splash(PART_SMOKE, 20, 120, to, 0x777777, 2.0f, 100, 80, 0.02f);
+                }
                 addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 1.0f+rndscale(1.10f));
                 playsound(attacks[atk].impactsound, NULL, &to);
                 break;
@@ -838,7 +839,7 @@ namespace game
                 adddynlight(vec(to).madd(dir, 4), 10, vec(0, 1.5f, 1.5f), 200, 10, DL_SHRINK);
                 particle_splash(PART_SPARK1, 10, 50, to, 0x00FFFF, 1.5f, 300, 50);
                 if(hit || water || glass) break;
-                particle_splash(PART_SPARK2, 0+rnd(10), 100+rnd(280), to, 0x00FFFF, 0.01f+rndscale(0.18f), 300, 2);
+                particle_splash(PART_SPARK2, 1+rnd(10), 100+rnd(280), to, 0x00FFFF, 0.01f+rndscale(0.18f), 300, 2);
                 addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 0.80f+rndscale(1.0f));
                 break;
             }
@@ -887,13 +888,11 @@ namespace game
             {
                 if(muzzleflash && d->muzzle.x >= 0)
                 {
-                     particle_flare(d->muzzle, d->muzzle, 80, PART_PULSE_MUZZLE_FLASH, 0xDD88DD, 4.0f, d);
+                     particle_flare(d->muzzle, d->muzzle, 80, PART_PULSE_MUZZLE_FLASH, 0xDD88DD, 2.4f, d);
                      adddynlight(hudgunorigin(gun, d->o, to, d), 35, vec(2.0f, 1.5f, 2.0f), 80, 10, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                particle_flare(to, from, 60, PART_LIGHTNING, 0xDD88DD, 0.80f, d);
-                particle_flare(to, from, 80, PART_LIGHTNING, 0xCC88CC, 1.10f, d);
-                particle_splash(PART_SPARK1, 20, 200, to, 0xEE88EE, 0.45f);
-                if(lastmillis-prevaction>280) particle_fireball(to, 6.0f, PART_PULSE_BURST, 200, 0xDD88DD, 1.0f);
+                particle_flare(to, from, 80, PART_LIGHTNING, 0xEE88EE, 1.0f, d);
+                particle_fireball(to, 1.0f, PART_PULSE_BURST, 100, 0xDD88DD, 1.0f);
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }
@@ -909,9 +908,8 @@ namespace game
                     }
                     eject(d); // using muzzle vec temporarily
                 }
-                particle_flare(hudgunorigin(gun, from, to, d), to, 500, PART_STREAK, 0x55DD55, 0.80f);
-                particle_trail(PART_STEAM, 300, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x66DD66, 0.2f, 0);
-                particle_trail(PART_SMOKE, 140, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x808080, 0.60f, 50);
+                particle_trail(PART_STEAM, 220, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x202020, 0.35f, 30);
+                particle_flare(hudgunorigin(gun, from, to, d), to, 600, PART_STREAK, 0x55DD55, 0.17f);
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }
@@ -919,7 +917,7 @@ namespace game
             case ATK_RL1:
 
                 if(muzzleflash && d->muzzle.x >= 0)
-                    particle_flare(d->muzzle, d->muzzle, 140, PART_PULSE_MUZZLE_FLASH, 0xEFE898, 0.20f, d, 0.4f);
+                    particle_flare(d->muzzle, d->muzzle, 140, PART_PULSE_MUZZLE_FLASH, 0xEFE898, 0.4f, d, 0.4f);
                 newprojectile(PROJ_ROCKET, from, to, attacks[atk].projspeed, local, id, attacks[atk].lifetime, d, atk);
                 break;
 
@@ -934,7 +932,7 @@ namespace game
                 {
                     if(muzzleflash)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 70, PART_PULSE_MUZZLE_FLASH, 0xEFE598, 5.2f, d);
+                        particle_flare(d->muzzle, d->muzzle, 70, PART_PULSE_MUZZLE_FLASH, 0xEFE598, 4.2f, d);
                         adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                     }
                     eject(d); // using muzzle vec temporarily
@@ -959,7 +957,7 @@ namespace game
                 {
                     if(muzzleflash)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 80, PART_RAIL_MUZZLE_FLASH, 0xEFE898, 5.0f, d);
+                        particle_flare(d->muzzle, d->muzzle, 80, PART_RAIL_MUZZLE_FLASH, 0xEFE898, 2.5f, d);
                         adddynlight(hudgunorigin(gun, d->o, to, d), 40, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                     }
                     eject(d); // using muzzle vec temporarily
@@ -974,7 +972,7 @@ namespace game
             {
                 if(muzzleflash && d->muzzle.x >= 0)
                 {
-                   particle_flare(d->muzzle, d->muzzle, 50, PART_PULSE_MUZZLE_FLASH, 0x00FFFF, 4.0f, d);
+                   particle_flare(d->muzzle, d->muzzle, 50, PART_PULSE_MUZZLE_FLASH, 0x00FFFF, 3.0f, d);
                    adddynlight(hudgunorigin(attacks[atk].gun, d->o, to, d), 30, vec(0, 1.5f, 1.5f), 60, 20, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
                 if(atk == ATK_PISTOL2)

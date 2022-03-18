@@ -228,7 +228,7 @@ namespace ai
         {
             gameent *e = players[i];
             if(targets.find(e->clientnum) >= 0) continue;
-            if(teams && d && !isteam(d->team, e->team)) continue;
+            if(teams && d && !sameteam(d->team, e->team)) continue;
             if(members) (*members)++;
             if(e == d || !e->ai || e->state != CS_ALIVE) continue;
             aistate &b = e->ai->getstate();
@@ -412,7 +412,7 @@ namespace ai
         loopv(players)
         {
             gameent *e = players[i];
-            if(e == d || (!all && e->aitype != AI_NONE) || !isteam(d->team, e->team)) continue;
+            if(e == d || (!all && e->aitype != AI_NONE) || !sameteam(d->team, e->team)) continue;
             interest &n = interests.add();
             n.state = AI_S_DEFEND;
             n.node = e->lastnode;

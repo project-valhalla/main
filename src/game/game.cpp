@@ -399,7 +399,7 @@ namespace game
         if(d->invulnmillis && !actor->invulnmillis) playsound(S_INVULNERABILITY_ACTION, d);
         if(!d->invulnmillis || (d->invulnmillis && actor->invulnmillis))
         {
-            if(d==h) damagecompass(damage, actor->o);
+            if(d==h && d!=actor) damagecompass(damage, actor->o);
             damageeffect(damage, d, p, atk, d!=h);
             if(flags & HIT_HEAD)
             {

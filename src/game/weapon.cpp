@@ -492,7 +492,7 @@ namespace game
                 if(f==player1)
                 {
                     if(lastmillis-f->lastyelp > 500) damageblend(dam);
-                    damagecompass(dam, at ? at->o : f->o);
+                    if(f!=at) damagecompass(dam, at ? at->o : f->o);
                 }
                 if(f->invulnmillis && f!=at && !at->invulnmillis) playsound(S_INVULNERABILITY_ACTION, f);
                 if(flags & HIT_HEAD)

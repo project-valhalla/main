@@ -577,7 +577,7 @@ namespace game
                 dynlight = vec(0, 1.5f, 1.5f);
                 fireball = 0x00FFFF;
                 particle_splash(PART_SPARK2, 0+rnd(20), 200, p, 0x00FFFF, 0.05f+rndscale(0.10f), 200, 5);
-                playsound(S_PULSE_HIT);
+                playsound(S_PULSE_HIT, NULL, &v);
                 break;
             }
             default: break;

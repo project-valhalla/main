@@ -2935,13 +2935,6 @@ namespace server
                         ci->state.lastregeneration = lastmillis;
                     }
                 }
-                if(!(ci->state.juggernaut || ci->state.zombie) && m_classic(mutators) && !m_randomweapon(mutators) && !ci->state.ammo[GUN_PULSE] && lastmillis-ci->state.lastpistolaction>5000 &&
-                   ci->state.ammo[GUN_PISTOL] < 50 && lastmillis-ci->state.lastammoregen>1000)
-                {
-                    ci->state.lastammoregen = lastmillis;
-                    ci->state.ammo[GUN_PISTOL]++;
-                    sendf(-1, 1, "ri4", N_REPAMMO, ci->clientnum, GUN_PISTOL, ci->state.ammo[GUN_PISTOL]);
-                }
             }
         }
         serverevents::process();

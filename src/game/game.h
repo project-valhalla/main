@@ -420,13 +420,6 @@ struct gamestate
         itemstat &is = itemstats[type-I_AMMO_SG];
         switch(type)
         {
-            case I_AMMO_PULSE:
-            {
-                ammo[is.info] = min(ammo[is.info]+is.add, is.max);
-                ammo[GUN_PISTOL] = 0;
-                if(gunselect == GUN_PISTOL) gunselect = GUN_PULSE;
-                break;
-            }
             case I_HEALTH:
             case I_SUPERHEALTH:
             case I_MEGAHEALTH:
@@ -519,7 +512,7 @@ struct gamestate
         if(m_classic(mutators) && !(m_randomweapon(mutators) || m_oneweapon(mutators)))
         {
             gunselect = GUN_PISTOL;
-            ammo[GUN_PISTOL] = 50;
+            ammo[GUN_PISTOL] = 100;
             shield = 0;
         }
         else if(m_insta(mutators))

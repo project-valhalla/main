@@ -445,12 +445,10 @@ FVAR(ragdollairfric, 0, 0.996f, 1);
 FVAR(ragdollunstick, 0, 10, 1e3f);
 VAR(ragdollexpireoffset, 0, 2500, 30000);
 VAR(ragdollwaterexpireoffset, 0, 4000, 30000);
-VAR(floatycorpses, 0, 0, 1);
+VAR(ragdollgravity, 0, 198.0f, 200.0f);
 
 void ragdolldata::move(dynent *pl, float ts)
 {
-    extern const float GRAVITY;
-    float grav = floatycorpses ? 0 : GRAVITY;
     if(collidemillis && lastmillis > collidemillis) return;
 
     int material = lookupmaterial(vec(center.x, center.y, center.z + radius/2));
@@ -472,7 +470,7 @@ void ragdolldata::move(dynent *pl, float ts)
     {
         vert &v = verts[i];
         vec dpos = vec(v.pos).sub(v.oldpos);
-        dpos.z -= grav*ts*ts;
+        dpos.z -= ragdollgravity*ts*ts;
         if(water) dpos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
         dpos.mul(pow((water ? ragdollwaterfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*tsfric);
         v.oldpos = v.pos;

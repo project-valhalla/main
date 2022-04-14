@@ -50,9 +50,9 @@ namespace entities
             "item/teleport", NULL, NULL,
             NULL,
 
-            "item/ammo/shells", "item/ammo/bullets", "item/ammo/pulse", "item/ammo/rockets", "item/ammo/rrounds",
+            "item/ammo/shotgun", "item/ammo/smg", "item/ammo/pulse", "item/ammo/rocket", "item/ammo/railgun",
             "item/health", "item/shield/yellow", "item/shield/red",
-            "item/health/super", "item/health/mega", "item/ddamage", "item/haste", "item/armor", "item/ammo/item", "", "", "item/ankh"
+            "item/health/super", "item/health/mega", "item/doubledamage", "item/haste", "item/armour", "item/ammo/unlimited", "", "", "item/invulnerability"
         };
         return entmdlnames[type];
     }
@@ -502,9 +502,9 @@ namespace entities
             "none?", "light", "mapmodel", "playerstart", "envmap", "particles", "sound", "spotlight", "decal",
             "teleport", "teledest", "jumppad",
             "flag",
-            "sg", "smg", "pulse", "rl", "rail",
-            "health", "shield1", "shield2",
-            "health_super", "health_mega", "doubledamage", "haste", "armor", "unlimited_ammo", "?", "!", "invulnerability"
+            "shotgun", "smg", "pulse", "rocket", "railgun",
+            "health", "light_shield", "heavy_shield",
+            "superhealth", "megahealth", "double_damage", "haste", "armour", "unlimited_ammo", "invalid_item1", "invalid_item2", "invulnerability"
         };
         return i>=0 && size_t(i)<sizeof(entnames)/sizeof(entnames[0]) ? entnames[i] : "";
     }

@@ -247,16 +247,16 @@ done:
     return dst - dstbuf;
 }
 
-bool cubecaseequal(const char *s1, const char *s2, int n)
+int cubecasecmp(const char *s1, const char *s2, int n)
 {
-    if(!s1 || !s2) return s1 == s2;
+    if(!s1 || !s2) return !s2 - !s1;
     while(n-- > 0)
     {
         int c1 = cubelower(*s1++), c2 = cubelower(*s2++);
-        if(c1 != c2) return false;
+        if(c1 != c2) return c1 - c2;
         if(!c1) break;
     }
-    return true;
+    return 0;
 }
 
 char *cubecasefind(const char *haystack, const char *needle)

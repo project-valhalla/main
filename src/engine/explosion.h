@@ -143,16 +143,15 @@ struct fireballrenderer : listrenderer
         if(isfoggedsphere(psize*WOBBLE, p->o)) return;
 
         vec dir = vec(o).sub(camera1->o), s, t;
-        float dist = dir.magnitude();
+        float dist = dir.magnitude(), mag2 = dir.magnitude2();
         bool inside = dist <= psize*WOBBLE;
-        if(inside)
+        if(inside || mag2 <= 0.0f)
         {
             s = camright;
             t = camup;
         }
         else
         {
-            float mag2 = dir.magnitude2();
             dir.x /= mag2;
             dir.y /= mag2;
             dir.z /= dist;

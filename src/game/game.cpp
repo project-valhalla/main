@@ -270,12 +270,12 @@ namespace game
             }
         }
         int mat = lookupmaterial(camera1->o);
-        if(player1->state!=CS_EDITING && mat&MAT_WATER) waterchan = playsound(S_WATER, NULL, NULL, NULL, 0, -1, 200, waterchan);
+        if(player1->state!=CS_EDITING && mat&MAT_WATER) waterchan = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterchan);
         else
         {
             if(waterchan >= 0)
             {
-                stopsound(S_WATER, waterchan, 500);
+                stopsound(S_UNDERWATER, waterchan, 500);
                 waterchan = -1;
             }
         }
@@ -396,14 +396,14 @@ namespace game
                 playsound(isally(d, actor) ? S_HIT_ALLY : (hitsound == 1 ? S_HIT1 : S_HIT2));
         }
         if(d!=actor) actor->lasthit = lastmillis;
-        if(d->invulnmillis && !actor->invulnmillis) playsound(S_INVULNERABILITY_ACTION, d);
+        if(d->invulnmillis && !actor->invulnmillis) playsound(S_ACTION_INVULNERABILITY, d);
         if(!d->invulnmillis || (d->invulnmillis && actor->invulnmillis))
         {
             if(d==h && d!=actor) damagecompass(damage, actor->o);
             damageeffect(damage, d, p, atk, d!=h);
             if(flags & HIT_HEAD)
             {
-                if(playheadshotsound) playsound(S_HEAD_HIT, NULL, &d->o);
+                if(playheadshotsound) playsound(S_HIT_WEAPON_HEAD, NULL, &d->o);
             }
         }
         if(d->health<=0) { if(local) killed(d, actor, NULL); }
@@ -778,7 +778,7 @@ namespace game
             if(d==player1 || d->type!=ENT_PLAYER || ((gameent *)d)->ai)
             {
                 if(!e->timeinair) msgsound(S_JUMP1, d);
-                else msgsound(e->zombie ? S_JUMP2 : S_JUMP3, d);
+                else msgsound(S_JUMP2);
             }
         }
         else if(floorlevel<0)
@@ -817,8 +817,7 @@ namespace game
         if(d->physstate>=PHYS_SLOPE && moving)
         {
             int snd = S_FOOTSTEP;
-            if(d->inwater) snd = S_SWIM;
-            else if(lookupmaterial(d->feetpos())&MAT_WATER) snd = S_FOOTSTEP_WATER;
+            if(lookupmaterial(d->feetpos())&MAT_WATER) snd = S_FOOTSTEP_WATER;
             if(lastmillis-pl->lastfootstep < (d->vel.magnitude()*380/d->vel.magnitude())) return;
             else playsound(snd, d, &d->o, NULL, 0, 0, 0, -1, 200);
         }
@@ -1071,9 +1070,10 @@ namespace game
             case S_JUMP1:
             case S_JUMP2:
             case S_LAND:
-            case S_ITEMSPAWN:
-            case S_WEAPLOAD:
-            case S_NOAMMO:
+            case S_ITEM_SPAWN:
+            case S_ITEM_BOUNCE:
+            case S_WEAPON_LOAD:
+            case S_WEAPON_NOAMMO:
                 return 350;
             case S_FOOTSTEP:
                 return 300;

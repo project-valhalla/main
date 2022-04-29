@@ -159,11 +159,7 @@ namespace game
         msgsound(S_INFECTED, d);
         particle_splash(PART_SPARK2, 100, 200, d->o, 0x80FF20, 0.40f, 200, 8);
         adddynlight(d->headpos(), 50, vec(0.80f, 1.0f, 0.20f), 100, 60, DL_FLASH, 0, vec(0, 0, 0), d);
-        if(d==player1)
-        {
-            conoutf(CON_FRAG_SELF, "\f0You got infected %s %s", actor ? "by" : "", actor ? colorname(actor) : "");
-            if(actor) playsound(S_ANNOUNCER_INFECTED, NULL, NULL, NULL, SND_ANNOUNCER);
-        }
+        if(d==player1) conoutf(CON_FRAG_SELF, "\f0You got infected %s %s", actor ? "by" : "", actor ? colorname(actor) : "");
         if(d!=player1) conoutf(CON_GAMEINFO, "\f2%s got infected %s %s", colorname(d), actor ? "by" : "", actor ? colorname(actor) : "");
     }
 
@@ -1829,7 +1825,7 @@ namespace game
                 {
                     case 1:
                     {
-                        msgsound(S_INVULNERABILITY_ACTIVATION, u);
+                        msgsound(S_ACTIVATION_INVULNERABILITY, u);
                         if(u==hudplayer()) playsound(S_ANNOUNCER_INVULNERABILITY, NULL, NULL, NULL, SND_ANNOUNCER);
                         break;
                     }
@@ -1889,7 +1885,7 @@ namespace game
                 if(victim->damagemillis)
                 {
                     actor->damagemillis = victim->damagemillis;
-                    msgsound(S_DDAMAGE, actor);
+                    msgsound(S_DAMAGE, actor);
                 }
                 if(victim->hastemillis)
                 {
@@ -1928,7 +1924,7 @@ namespace game
                 int gun = getint(p);
                 if(!validgun(gun)) return;
                 d->gunselect = gun;
-                playsound(S_WEAPLOAD, d);
+                playsound(S_WEAPON_LOAD, d);
                 break;
             }
 
@@ -1990,7 +1986,7 @@ namespace game
                 if(!entities::ents.inrange(i)) break;
                 entities::setspawn(i, true);
                 ai::itemspawned(i);
-                playsound(S_ITEMSPAWN, NULL, &entities::ents[i]->o, NULL, 0, 0, 0, -1, 0, 1500);
+                playsound(S_ITEM_SPAWN, NULL, &entities::ents[i]->o, NULL, 0, 0, 0, -1, 0, 1500);
                 #if 0
                 const char *name = entities::itemname(i);
                 if(name) particle_text(entities::ents[i]->o, name, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);

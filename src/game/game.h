@@ -82,7 +82,16 @@ struct gameentity : extentity
 {
 };
 
-enum { GUN_SG = 0, GUN_SMG, GUN_PULSE, GUN_RL, GUN_RAIL, GUN_INSTA, GUN_PISTOL, GUN_ZOMBIE, NUMGUNS };
+enum
+{
+    // main weapons
+    GUN_SG = 0, GUN_SMG, GUN_PULSE, GUN_RL, GUN_RAIL, GUN_PISTOL,
+
+    // special weapons
+    GUN_INSTA, GUN_ZOMBIE,
+
+    NUMGUNS
+};
 enum { ACT_IDLE = 0, ACT_MELEE, ACT_PRIMARY, ACT_SECONDARY, NUMACTS };
 enum
 {
@@ -108,70 +117,78 @@ enum { VAR_TIMELIMIT = 0, VAR_SCORELIMIT, VAR_MAXROUNDS, VAR_SELFDAMAGE, VAR_TEA
 // hardcoded sounds, defined in sound.cfg
 enum
 {
-    S_JUMP1 = 0, S_JUMP2, S_JUMP3, S_LAND, S_LAND_WATER, S_FOOTSTEP, S_FOOTSTEP_WATER, S_SWIM,
-    S_SPLASHIN, S_SPLASHOUT, S_CORPSE, S_BURN, S_GIB, S_GIB_ALT,
-    S_SPAWN, S_REGENERATION, S_DAMAGE,
-    S_WATER,
+    // player
+    S_JUMP1 = 0, S_JUMP2, S_LAND, S_LAND_WATER, S_FOOTSTEP, S_FOOTSTEP_WATER,
+    S_SPLASHIN, S_SPLASHOUT, S_UNDERWATER, S_BURN,
 
-    S_ITEMSPAWN, S_TELEPORT, S_TELEDEST, S_JUMPPAD,
-    S_AMMO_SG, S_AMMO_SMG, S_AMMO_PULSE, S_AMMO_RL, S_AMMO_RAIL,
-    S_HEALTH, S_YSHIELD, S_RSHIELD, S_SHIELD,
-    S_SHEALTH, S_MHEALTH,
-    S_DDAMAGE, S_DDAMAGE_ACTION, S_DDAMAGE_LOOP, S_DDAMAGE_TIMEOUT,
-    S_HASTE, S_HASTE_ACTION, S_HASTE_LOOP, S_HASTE_TIMEOUT,
-    S_ARMOUR,  S_ARMOUR_ACTION, S_ARMOUR_LOOP, S_ARMOUR_TIMEOUT,
-    S_UAMMO, S_UAMMO_ACTION, S_UAMMO_LOOP, S_UAMMO_TIMEOUT,
-    S_INVULNERABILITY, S_INVULNERABILITY_ACTIVATION, S_INVULNERABILITY_ACTION, S_INVULNERABILITY_LOOP, S_INVULNERABILITY_TIMEOUT,
+    S_SPAWN, S_REGENERATION, S_PLAYER_DAMAGE,
 
-    S_JUGGERNAUT, S_JUGGERNAUT_LOOP, S_JUGGERNAUT_ACTION,
-    S_INFECTED, S_VOOSH,
+    S_PAIN, S_DIE, S_TAUNT,
+    S_PAIN_ZOMBIE, S_DIE_ZOMBIE, S_TAUNT_ZOMBIE,
 
-    S_MELEE1, S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,
-    S_PULSE1, S_PULSE2A, S_PULSE2B, S_PULSE3, S_PULSE_HIT, S_PULSE_LOOP, S_PULSE3_LOOP, S_PULSE3_DETO, S_PULSE_EXPLODE, S_PULSE3_EXPLODE,
-    S_RAIL1, S_RAIL2, S_RAIL_HIT1, S_RAIL_HIT2,
-    S_ROCKETL1, S_ROCKETL2, S_ROCKET_LOOP, S_ROCKET_EXPLODE,
-    S_SG1A, S_SG1B, S_SG2, S_SG_HIT,
-    S_SMG, S_SMG2, S_SMG_HIT1, S_SMG_HIT2,
-    S_ZOMBIE_MELEE, S_ZOMBIE_IDLE,
+    S_CORPSE, S_GIB,
+
+    // item / entity
+    S_TELEPORT, S_TELEDEST, S_JUMPPAD,
+
+    S_ITEM_SPAWN, S_ITEM_BOUNCE,
+
+    S_AMMO_SG, S_AMMO_SMG, S_AMMO_PULSE, S_AMMO_ROCKET, S_AMMO_RAIL,
+    S_HEALTH, S_SUPERHEALTH, S_MEGAHEALTH,
+    S_SHIELD_LIGHT, S_SHIELD_HEAVY, S_SHIELD_HIT,
+
+    S_DAMAGE, S_HASTE, S_ARMOUR, S_UAMMO, S_INVULNERABILITY,
+    S_ACTION_DAMAGE, S_ACTION_HASTE, S_ACTION_ARMOUR, S_ACTION_UAMMO, S_ACTION_INVULNERABILITY,
+    S_LOOP_DAMAGE, S_LOOP_HASTE, S_LOOP_ARMOUR, S_LOOP_UAMMO, S_LOOP_INVULNERABILITY,
+    S_TIMEOUT_DAMAGE, S_TIMEOUT_HASTE, S_TIMEOUT_ARMOUR, S_TIMEOUT_UAMMO, S_TIMEOUT_INVULNERABILITY,
+    S_ACTIVATION_INVULNERABILITY,
+
+    // weapon
+    S_MELEE,
+    S_SG1_A, S_SG1_B, S_SG2,
+    S_SMG,
+    S_PULSE1, S_PULSE2_A, S_PULSE2_B, S_PULSE_LOOP, S_PULSE_EXPLODE,
+    S_ROCKET1, S_ROCKET2, S_ROCKET_LOOP, S_ROCKET_EXPLODE,
+    S_RAIL_A, S_RAIL_B, S_RAIL_INSTAGIB,
     S_PISTOL1, S_PISTOL2,
+    S_ZOMBIE, S_ZOMBIE_IDLE,
 
-    S_SAW_HIT1,
+    S_IMPACT_SG, S_IMPACT_SMG, S_IMPACT_PULSE, S_IMPACT_RAILGUN,
+    S_IMPACT_WATER, S_IMPACT_WATER_PROJ, S_IMPACT_GLASS,
 
-    S_HEAD_HIT,
-    S_WATER_IMPACT, S_WATER_IMPACT_PROJ, S_GLASS_IMPACT,
+    S_HIT_MELEE, S_HIT_RAILGUN,
+    S_HIT_WEAPON, S_HIT_WEAPON_HEAD,
 
-    S_ROCKET_BOUNCE, S_SMG_CARTRIDGE, S_SG_CARTRIDGE, S_RAIL_CARTRIDGE,
+    S_BOUNCE_ROCKET,
+    S_BOUNCE_CARTRIDGE_SMG, S_BOUNCE_CARTRIDGE_SG, S_BOUNCE_CARTRIDGE_RAILGUN,
 
-    S_WEAPLOAD, S_NOAMMO, S_HIT1, S_HIT2, S_HIT_ALLY, S_KILL1, S_KILL2, S_KILL_ALLY, S_SUICIDE,
-    S_CHAT,
+    S_WEAPON_LOAD, S_WEAPON_NOAMMO,
 
-    S_PAIN1, S_PAIN2,
-    S_DIE1, S_DIE2,
-    S_TAUNT1, S_TAUNT2, //S_TAUNT1, S_TAUNT2, S_TAUNT3, S_TAUNT4,
+    // announcer
+    S_ANNOUNCER_FIGHT, S_ANNOUNCER_WIN,
 
+    S_ANNOUNCER_FIRST_BLOOD, S_ANNOUNCER_HEADSHOT,
+    S_ANNOUNCER_DOUBLE_KILL, S_ANNOUNCER_MULTI_KILL,
+    S_ANNOUNCER_KILLING_SPREE, S_ANNOUNCER_UNSTOPPABLE,
     S_ANNOUNCER_10_KILLS, S_ANNOUNCER_5_KILLS, S_ANNOUNCER_1_KILL,
-    S_ANNOUNCER_FIRST_BLOOD, S_ANNOUNCER_DOUBLE_KILL, S_ANNOUNCER_MULTI_KILL,
-    S_ANNOUNCER_KILLING_SPREE, S_ANNOUNCER_UNSTOPPABLE, S_ANNOUNCER_HEADSHOT,
+
     S_ANNOUNCER_DDAMAGE, S_ANNOUNCER_HASTE, S_ANNOUNCER_ARMOUR, S_ANNOUNCER_UAMMO, S_ANNOUNCER_INVULNERABILITY,
+
     S_ANNOUNCER_FLAGSCORE_BLUE, S_ANNOUNCER_FLAGSCORE_RED,
-    S_ANNOUNCER_JUGGERNAUT, S_ANNOUNCER_INFECTION, S_ANNOUNCER_INFECTED,
-    S_ANNOUNCER_ZOMBIE, S_ANNOUNCER_SURVIVOR,
-    S_ANNOUNCER_TRAITOR,
-    S_ANNOUNCER_WIN_ROUND, S_ANNOUNCER_WIN, S_ANNOUNCER_FIGHT,
+    S_ANNOUNCER_JUGGERNAUT,
+    S_ANNOUNCER_INFECTION, S_ANNOUNCER_ZOMBIE, S_ANNOUNCER_SURVIVOR,
+    S_ANNOUNCER_WIN_ROUND,
 
-    S_INTERMISSION, S_INTERMISSION_WIN,
-
-    S_FLAGPICKUP,
-    S_FLAGDROP,
-    S_FLAGRETURN,
-    S_FLAGSCORE,
-    S_FLAGRESET,
-    S_FLAGFAIL,
-    S_FLAGLOOP,
-
+    // miscellaneous
+    S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET, S_FLAGFAIL, S_FLAGLOOP,
+    S_JUGGERNAUT, S_JUGGERNAUT_LOOP, S_JUGGERNAUT_ACTION,
+    S_INFECTION, S_INFECTED, S_WIN_ZOMBIES, S_WIN_SURVIVORS,
     S_LMS_ROUND, S_LMS_ROUND_WIN,
-    S_INFECTION, S_ZOMBIES, S_SURVIVORS,
-    S_CHOOSING_TRAITOR, S_TRAITOR1, S_TRAITOR2
+    S_VOOSH,
+
+    S_HIT1, S_HIT2, S_HIT_ALLY, S_KILL1, S_KILL2, S_KILL_ALLY, S_SUICIDE,
+    S_CHAT,
+    S_INTERMISSION, S_INTERMISSION_WIN
 };
 
 // network messages codes, c2s, c2c, s2c
@@ -303,19 +320,19 @@ static struct itemstat { int add, max, sound, info; } itemstats[] =
     { 12,    60,    S_AMMO_SG,          GUN_SG,       }, // shotgun
     { 40,    200,   S_AMMO_SMG,         GUN_SMG,      }, // smg
     { 80,    400,   S_AMMO_PULSE,       GUN_PULSE,    }, // pulse ammo
-    { 6,     30,    S_AMMO_RL,          GUN_RL,       }, // rockets
-    { 8,     40,    S_AMMO_RAIL,        GUN_RAIL,     }, // rail
+    { 6,     30,    S_AMMO_ROCKET,      GUN_RL,       }, // rockets
+    { 8,     40,    S_AMMO_RAIL,        GUN_RAIL,     }, // railgun
     { 25,    100,   S_HEALTH,           NULL,         }, // regular health
-    { 50,    200,   S_YSHIELD,          NULL,         }, // regular shield
-    { 100,   200,   S_RSHIELD,          NULL,         }, // red shield
-    { 50,    200,   S_SHEALTH,          NULL,         }, // super health
-    { 100,   250,   S_MHEALTH,          NULL,         }, // mega health
-    { 30000, 60000, S_DDAMAGE,          NULL,         }, // double damage
+    { 50,    200,   S_SHIELD_LIGHT,     NULL,         }, // light shield
+    { 100,   200,   S_SHIELD_HEAVY,     NULL,         }, // heavy shield
+    { 50,    200,   S_SUPERHEALTH,      NULL,         }, // super health
+    { 100,   250,   S_MEGAHEALTH,       NULL,         }, // megahealth
+    { 30000, 60000, S_DAMAGE,           NULL,         }, // double damage
     { 30000, 60000, S_HASTE,            NULL,         }, // haste
     { 30000, 60000, S_ARMOUR,           NULL,         }, // armour
     { 30000, 60000, S_UAMMO,            NULL,         }, // unlimited ammo
-    {     0,     0,    NULL,            NULL,         }, // unlimited ammo
-    {     0,     0,    NULL,            NULL,         }, // unlimited ammo
+    {     0,     0,    NULL,            NULL,         }, // ?
+    {     0,     0,    NULL,            NULL,         }, // ?
     {     1,     1, S_INVULNERABILITY,     1,         }  // invulnerability
 };
 
@@ -331,32 +348,32 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
                                      attackdelay, damage, headshotdam, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use; } attacks[NUMATKS] =
 {
     //melee: default melee for all weapons
-    { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,       S_MELEE2, S_MELEE_HIT1, S_MELEE_HIT2,  650,   54,   0,   0,   1,    0,   0,   15,  1,  30,  0,    0,    0 },
+    { -1,             ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,        S_MELEE,  -1, S_HIT_MELEE,  650,   54,   0,   0,   1,    0,   0,   15,  1,  30,  0,    0,    0 },
     //shotgun
-    { GUN_SG,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,         S_SG1A,     S_SG_HIT,   S_SMG_HIT2, 1080,    7,   0, 400,   0,    0,   0, 1000, 20,  50,  0,    0,    1 },
-    { GUN_SG,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SG2,           -1,           -1,  600,   65,   0,   0,   2,  180,   0, 2048,  1,  60, 30, 2000,    2 },
+    { GUN_SG,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_SG1_A,  S_IMPACT_SG, S_HIT_WEAPON, 1080,    7,   0, 400,   0,    0,   0, 1000, 20,  50,  0,    0,    1 },
+    { GUN_SG,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SG2,  S_ROCKET_EXPLODE,    -1,  600,   65,   0,   0,   2,  180,   0, 2048,  1,  60, 30, 2000,    2 },
     //smg
-    { GUN_SMG,      ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  110,   15,  12,  84,   0,    0,   0, 1000,  1,  20,  0,    0,    1 },
-    { GUN_SMG,    ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_SMG_HIT1,   S_SMG_HIT2,  240,   18,  10,  30,   0,    0,   0, 1000,  1,  40,  0,    0,    1 },
+    { GUN_SMG,      ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_IMPACT_SMG,   S_HIT_WEAPON,  110,   15,  12,  84,   0,    0,   0, 1000,  1,  20,  0,    0,    1 },
+    { GUN_SMG,    ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,          S_SMG,   S_IMPACT_SMG,   S_HIT_WEAPON,  240,   18,  10,  30,   0,    0,   0, 1000,  1,  40,  0,    0,    1 },
     //pulse
-    { GUN_PULSE,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE1,           -1,  S_PULSE_HIT,  180,   22,   0,   0,   1, 1000,   0, 2048,  1,  75, 18, 3000,    2 },
-    { GUN_PULSE,  ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT,  ANIM_GUN_IDLE,      S_PULSE2A,  S_PULSE_HIT,  S_PULSE_HIT,   80,   12,   4,   0,   0,    0,   0,  200,  1, 100,  0,    0,    1 },
+    { GUN_PULSE,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,       S_PULSE1,   S_PULSE_EXPLODE,        -1,  180,   22,   0,   0,   1, 1000,   0, 2048,  1,  75, 18, 3000,    2 },
+    { GUN_PULSE,  ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT,  ANIM_GUN_IDLE,      S_PULSE2_A,  S_IMPACT_PULSE,  S_HIT_WEAPON,   80,   12,   4,   0,   0,    0,   0,  200,  1, 100,  0,    0,    1 },
     //rocket
-    { GUN_RL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL1,           -1,           -1,  920,  110,   0,   0,   0,  300,   0, 2048,  1, 120, 33, 5000,    1 },
-    { GUN_RL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKETL2,           -1,           -1,  920,  110,   0,   0,   0,  200,   0, 2048,  1, 120, 33, 1500,    1 },
+    { GUN_RL,       ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKET1, S_ROCKET_EXPLODE,     -1,  920,  110,   0,   0,   0,  300,   0, 2048,  1, 120, 33, 5000,    1 },
+    { GUN_RL,     ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,     S_ROCKET2, S_ROCKET_EXPLODE,     -1,  920,  110,   0,   0,   0,  200,   0, 2048,  1, 120, 33, 1500,    1 },
     //railgun
-    { GUN_RAIL,     ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL1,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,   70,  70,   0,   0,    0,  40, 4000,  1, 110,  0,    0,    1 },
+    { GUN_RAIL,     ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL_A,  S_IMPACT_RAILGUN,  S_HIT_RAILGUN, 1200,   70,  70,   0,   0,    0,  40, 4000,  1, 110,  0,    0,    1 },
     //instagib
-    { GUN_INSTA,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL2,  S_RAIL_HIT1,  S_RAIL_HIT2, 1200,  150,   0,   0,   0,    0,  60, 4000,  1,  30,  0,    0,    0 },
+    { GUN_INSTA,    ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,        S_RAIL_INSTAGIB,  S_IMPACT_RAILGUN,           -1, 1200,  150,   0,   0,   0,    0,  60, 4000,  1,  30,  0,    0,    0 },
     //zombie
-    { GUN_ZOMBIE,     ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE_MELEE, S_MELEE_HIT1, S_MELEE_HIT2,  600,  100,   0,   0,   4,    0,   0,   15,  1,  20,  0,    0,    0 },
+    { GUN_ZOMBIE,     ACT_MELEE, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE, -1, S_HIT_MELEE,  600,  100,   0,   0,   4,    0,   0,   15,  1,  20,  0,    0,    0 },
     //pistol
-    { GUN_PISTOL,   ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL1,  S_PULSE_HIT,   S_SMG_HIT2,  300,    8,   5,   0,   0,    0,   0, 1000,  1, 200,  0,    0,    1 },
-    { GUN_PISTOL, ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL2,           -1,  S_PULSE_HIT,  600,   10,   0,   0,   5, 1000,   0, 2048,  1, 400,  8,  800,    2 },
+    { GUN_PISTOL,   ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL1,  S_IMPACT_PULSE,   S_HIT_WEAPON,  300,    8,   5,   0,   0,    0,   0, 1000,  1, 200,  0,    0,    1 },
+    { GUN_PISTOL, ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,      S_PISTOL2,  S_IMPACT_PULSE,    -1,  600,   10,   0,   0,   5, 1000,   0, 2048,  1, 400,  8,  800,    2 },
     //telefrag
-    { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, S_MELEE_HIT2, S_MELEE_HIT2,    0, 1050,   0,   0,   8,    0,   0,    6,  1,   0,  0,    0,    0 },
+    { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, NULL,  NULL,    0, 1050,   0,   0,   8,    0,   0,    6,  1,   0,  0,    0,    0 },
     //stomp
-    { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, S_MELEE_HIT2, S_MELEE_HIT2,    0,  100,   0,   0,   3,    0,   0,    2,  1,   0,  0,    0,    0 }
+    { -1,             ACT_MELEE,  ANIM_IDLE,  ANIM_VWEP_IDLE,  ANIM_GUN_IDLE,             -1, NULL, NULL,    0,  100,   0,   0,   3,    0,   0,    2,  1,   0,  0,    0,    0 }
 
 };
 
@@ -367,8 +384,8 @@ static const struct guninfo { const char *name, *file, *vwep; int attacks[NUMACT
     { "pulse rifle (upgraded)", "pulserifle", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PULSE1, ATK_PULSE2 }, },
     { "rocket launcher", "rl", "worldgun/rl", { -1, ATK_MELEE, ATK_RL1, ATK_RL2 } },
     { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_RAIL, ATK_RAIL }, },
-    { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_INSTA, ATK_INSTA }, },
     { "pulse rifle", "pistol", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2 }, },
+    { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_INSTA, ATK_INSTA }, },
     { "zombie", "zombie", "", { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE }, }
 };
 
@@ -625,11 +642,11 @@ struct gameent : dynent, gamestate
         if(ai) delete ai;
         if(attackchan >= 0) stopsound(attacksound, attackchan);
         if(idlechan >= 0) stopsound(idlesound, idlechan);
-        if(ddamagechan >= 0) stopsound(S_DDAMAGE_LOOP, ddamagechan);
-        if(hastechan >= 0) stopsound(S_HASTE_LOOP, hastechan);
-        if(armourchan >= 0) stopsound(S_ARMOUR_LOOP, armourchan);
-        if(ammochan >= 0) stopsound(S_UAMMO_LOOP, ammochan);
-        if(invulnchan >= 0) stopsound(S_INVULNERABILITY_LOOP, invulnchan);
+        if(ddamagechan >= 0) stopsound(S_LOOP_DAMAGE, ddamagechan);
+        if(hastechan >= 0) stopsound(S_LOOP_HASTE, hastechan);
+        if(armourchan >= 0) stopsound(S_LOOP_ARMOUR, armourchan);
+        if(ammochan >= 0) stopsound(S_LOOP_UAMMO, ammochan);
+        if(invulnchan >= 0) stopsound(S_LOOP_INVULNERABILITY, invulnchan);
         if(juggernautchan >= 0) stopsound(S_JUGGERNAUT_LOOP, juggernautchan);
     }
 
@@ -688,38 +705,38 @@ struct gameent : dynent, gamestate
     {
         if(ddamagechan >= 0)
         {
-            stopsound(S_DDAMAGE_LOOP, ddamagechan, 500);
+            stopsound(S_LOOP_DAMAGE, ddamagechan, 500);
             ddamagechan = -1;
         }
         if(hastechan >= 0)
         {
-            stopsound(S_HASTE_LOOP, hastechan, 500);
+            stopsound(S_LOOP_HASTE, hastechan, 500);
             hastechan = -1;
         }
         if(armourchan >= 0)
         {
-            stopsound(S_ARMOUR_LOOP, armourchan, 500);
+            stopsound(S_LOOP_ARMOUR, armourchan, 500);
             armourchan = -1;
         }
         if(ammochan >= 0)
         {
-            stopsound(S_UAMMO_LOOP, ammochan, 500);
+            stopsound(S_LOOP_UAMMO, ammochan, 500);
             ammochan = -1;
         }
         if(invulnchan >= 0)
         {
-            stopsound(S_INVULNERABILITY_LOOP, invulnchan, 500);
+            stopsound(S_LOOP_INVULNERABILITY, invulnchan, 500);
             invulnchan = -1;
         }
     }
 
     bool gibbed() { return state == CS_DEAD && health<=-50; }
 
-    int painsound(){ return !zombie? S_PAIN1: S_PAIN2; }
+    int painsound(){ return !zombie? S_PAIN: S_PAIN_ZOMBIE; }
 
-    int diesound() { return !zombie? S_DIE1: S_DIE2; }
+    int diesound() { return !zombie? S_DIE: S_DIE_ZOMBIE; }
 
-    int tauntsound() { return !zombie? S_TAUNT1: S_TAUNT2; }
+    int tauntsound() { return !zombie? S_TAUNT: S_TAUNT_ZOMBIE; }
 
     int bloodcolour() { return !zombie? 0x60FFFFF: 0xFF90FF; }
 };

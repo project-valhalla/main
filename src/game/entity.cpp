@@ -347,26 +347,26 @@ namespace entities
         }
         if(d->damagemillis)
         {
-            d->ddamagechan = playsound(S_DDAMAGE_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->ddamagechan, 200);
+            d->ddamagechan = playsound(S_LOOP_DAMAGE, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->ddamagechan, 200);
             adddynlight(d->abovehead(), 30, vec(1, 0.50f, 0.50f), 1, 0, DL_FLASH|L_NOSHADOW);
             particle_icon(d->abovehead(), HICON_DDAMAGE%5, HICON_DDAMAGE/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->damagemillis -= time)<=0)
             {
                 d->damagemillis = 0;
-                stopsound(S_DDAMAGE_LOOP, d->ddamagechan);
-                playsound(S_DDAMAGE_TIMEOUT, d);
+                stopsound(S_LOOP_DAMAGE, d->ddamagechan);
+                playsound(S_TIMEOUT_DAMAGE, d);
             }
         }
         if(d->hastemillis)
         {
-            d->hastechan = playsound(S_HASTE_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->hastechan, 200);
+            d->hastechan = playsound(S_LOOP_HASTE, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->hastechan, 200);
             adddynlight(d->abovehead(), 30, vec(0.50f, 1, 0.50f), 1, 0, DL_FLASH|L_NOSHADOW);
             particle_icon(d->abovehead(), HICON_HASTE%5, HICON_HASTE/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->hastemillis -= time)<=0)
             {
                 d->hastemillis = 0;
-                stopsound(S_HASTE_LOOP, d->hastechan);
-                playsound(S_HASTE_TIMEOUT, d);
+                stopsound(S_LOOP_HASTE, d->hastechan);
+                playsound(S_TIMEOUT_HASTE, d);
             }
             if((d->move || d->strafe) || d->jumping)
             {
@@ -376,38 +376,38 @@ namespace entities
         }
         if(d->armourmillis)
         {
-            d->armourchan = playsound(S_ARMOUR_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->armourchan, 200);
+            d->armourchan = playsound(S_LOOP_ARMOUR, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->armourchan, 200);
             adddynlight(d->abovehead(), 30, vec(0.50f, 0.50f, 1), 1, 0, DL_FLASH|L_NOSHADOW);
             particle_icon(d->abovehead(), HICON_ARMOUR%5, HICON_ARMOUR/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->armourmillis -= time)<=0)
             {
                 d->armourmillis = 0;
-                stopsound(S_ARMOUR_LOOP, d->armourchan);
-                playsound(S_ARMOUR_TIMEOUT, d);
+                stopsound(S_LOOP_ARMOUR, d->armourchan);
+                playsound(S_TIMEOUT_ARMOUR, d);
             }
         }
         if(d->ammomillis)
         {
-            d->ammochan = playsound(S_UAMMO_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1200, d->ammochan, 500);
+            d->ammochan = playsound(S_LOOP_UAMMO, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1200, d->ammochan, 500);
             adddynlight(d->abovehead(), 30, vec(1, 1, 1), 1, 0, DL_FLASH|L_NOSHADOW);
             particle_icon(d->abovehead(), HICON_UAMMO%5, HICON_UAMMO/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->ammomillis -= time)<=0)
             {
                 d->ammomillis = 0;
-                stopsound(S_UAMMO_LOOP, d->ammochan);
-                playsound(S_UAMMO_TIMEOUT, d);
+                stopsound(S_LOOP_UAMMO, d->ammochan);
+                playsound(S_TIMEOUT_UAMMO, d);
             }
         }
         if(d->invulnmillis)
         {
-            d->invulnchan = playsound(S_INVULNERABILITY_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1200, d->invulnchan, 500);
+            d->invulnchan = playsound(S_LOOP_INVULNERABILITY, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1200, d->invulnchan, 500);
             adddynlight(d->abovehead(), 30, vec(1, 1, 0.50f), 1, 0, DL_FLASH|L_NOSHADOW);
             particle_icon(d->abovehead(), HICON_INVULNERABILITY%5, HICON_INVULNERABILITY/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
             if((d->invulnmillis -= time)<=0)
             {
                 d->invulnmillis = 0;
-                stopsound(S_INVULNERABILITY_LOOP, d->invulnchan);
-                playsound(S_INVULNERABILITY_TIMEOUT, d);
+                stopsound(S_LOOP_INVULNERABILITY, d->invulnchan);
+                playsound(S_TIMEOUT_INVULNERABILITY, d);
             }
         }
     }

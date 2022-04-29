@@ -26,7 +26,7 @@ namespace game
         if(gun!=d->gunselect)
         {
             addmsg(N_GUNSELECT, "rci", d, gun);
-            playsound(S_WEAPLOAD, d);
+            playsound(S_WEAPON_LOAD, d);
         }
         disablezoom();
         d->gunselect = gun;
@@ -62,7 +62,7 @@ namespace game
         int gun = getweapon(name);
         if(player1->state!=CS_ALIVE || !validgun(gun)) return;
         if(force || player1->ammo[gun]) gunselect(gun, player1);
-        else playsound(S_NOAMMO);
+        else playsound(S_WEAPON_NOAMMO);
     }
     ICOMMAND(setweapon, "si", (char *name, int *force), setweapon(name, *force!=0));
 
@@ -80,7 +80,7 @@ namespace game
                 return;
             }
         }
-        playsound(S_NOAMMO);
+        playsound(S_WEAPON_NOAMMO);
     }
     ICOMMAND(cycleweapon, "V", (tagval *args, int numargs),
     {
@@ -114,7 +114,7 @@ namespace game
                 if(validgun(gun) && gun != player1->gunselect && player1->ammo[gun]) { gunselect(gun, player1); return; }
             } else { weaponswitch(player1); return; }
         }
-        playsound(S_NOAMMO);
+        playsound(S_WEAPON_NOAMMO);
     });
 
     void offsetray(const vec &from, const vec &to, int spread, float range, vec &dest)
@@ -210,14 +210,14 @@ namespace game
             case BNC_ROCKET:
             {
                 bnc.collidetype = COLLIDE_ELLIPSE;
-                bnc.bouncesound = S_ROCKET_BOUNCE;
+                bnc.bouncesound = S_BOUNCE_ROCKET;
                 break;
             }
             case BNC_GIB: bnc.variant = rnd(5); break;
             case BNC_CARTRIDGE:
             {
                 int gun = bnc.owner->gunselect;
-                bnc.bouncesound = gun == GUN_SG? S_SG_CARTRIDGE: (gun == GUN_SMG? S_SMG_CARTRIDGE: S_RAIL_CARTRIDGE);
+                bnc.bouncesound = gun == GUN_SG? S_BOUNCE_CARTRIDGE_SG: (gun == GUN_SMG? S_BOUNCE_CARTRIDGE_SMG: S_BOUNCE_CARTRIDGE_RAILGUN);
                 break;
             }
         }
@@ -408,19 +408,19 @@ namespace game
         if(f->health > 0 && lastmillis-f->lastyelp > 600)
         {
             if(f==hudplayer()) damageblend(damage);
-            else if(f->shield) playsound(S_SHIELD, NULL, &f->o);
+            else if(f->shield) playsound(S_SHIELD_HIT, NULL, &f->o);
             playsound(f->painsound(), f, &f->o);
             f->lastyelp = lastmillis;
         }
         if(f->shield && d!=hudplayer()) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);
-        if(validatk(atk) && attacks[atk].hitsound > 0) playsound(attacks[atk].hitsound, NULL, f==h ? NULL : &f->o);
-        else if(validsatk(atk) && atk != ATK_TELEPORT) playsound(S_MELEE_HIT2, NULL, f==h ? NULL : &f->o);
+        if(validatk(atk) && attacks[atk].hitsound) playsound(attacks[atk].hitsound, NULL, f==h ? NULL : &f->o);
+        else if(validsatk(atk) && atk != ATK_TELEPORT) playsound(S_HIT_MELEE, NULL, f==h ? NULL : &f->o);
         else
         {
             playsound(S_DAMAGE, NULL, f==h ? NULL : &f->o);
             return;
         }
-        if(f->armourmillis) playsound(S_ARMOUR_ACTION, f, &f->o);
+        if(f->armourmillis) playsound(S_ACTION_ARMOUR, f, &f->o);
     }
 
     void spawnbouncer(const vec &p, gameent *d, int type)
@@ -494,11 +494,11 @@ namespace game
                     if(lastmillis-f->lastyelp > 500) damageblend(dam);
                     if(f!=at) damagecompass(dam, at ? at->o : f->o);
                 }
-                if(f->invulnmillis && f!=at && !at->invulnmillis) playsound(S_INVULNERABILITY_ACTION, f);
+                if(f->invulnmillis && f!=at && !at->invulnmillis) playsound(S_ACTION_INVULNERABILITY, f);
                 if(flags & HIT_HEAD)
                 {
                     extern int playheadshotsound;
-                    if(playheadshotsound) playsound(S_HEAD_HIT, NULL, &f->o);
+                    if(playheadshotsound) playsound(S_HIT_WEAPON_HEAD, NULL, &f->o);
                 }
             }
         }
@@ -577,14 +577,14 @@ namespace game
                 dynlight = vec(0, 1.5f, 1.5f);
                 fireball = 0x00FFFF;
                 particle_splash(PART_SPARK2, 0+rnd(20), 200, p, 0x00FFFF, 0.05f+rndscale(0.10f), 200, 5);
-                playsound(S_PULSE_HIT, NULL, &v);
+                playsound(S_IMPACT_PULSE, NULL, &v);
                 break;
             }
             default: break;
         }
         particle_fireball(v, 1.15f*attacks[atk].exprad, PART_PULSE_BURST, 300, fireball, 0.10f);
         adddynlight(safe ? v : debrisorigin, 2*attacks[atk].exprad, dynlight, 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
-        if(lookupmaterial(v)==MAT_WATER) playsound(S_WATER_IMPACT_PROJ, NULL, &v);
+        if(lookupmaterial(v)==MAT_WATER) playsound(S_IMPACT_WATER_PROJ, NULL, &v);
         /*
         int numdebris = maxdebris > MINDEBRIS ? rnd(maxdebris-MINDEBRIS)+MINDEBRIS : min(maxdebris, MINDEBRIS);
         if(numdebris)
@@ -851,14 +851,14 @@ namespace game
         if(water)
         {
             addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
-            impactsnd = S_WATER_IMPACT;
+            impactsnd = S_IMPACT_WATER;
 
         }
         else if(glass)
         {
             particle_splash(PART_GLASS, 20, 200, to, 0xFFFFFF, 0.10+rndscale(0.20f));
             addstain(STAIN_GLASS_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(1.0f));
-            impactsnd = S_GLASS_IMPACT;
+            impactsnd = S_IMPACT_GLASS;
         }
         if(!(attacks[atk].rays > 1 && d==hudplayer()) && impactsnd) playsound(impactsnd, NULL, &to);
     }
@@ -1003,19 +1003,26 @@ namespace game
         if(d->idlesound >= 0) d->stopidlesound();
         switch(sound)
         {
-            case S_PULSE2A:
+            case S_SG1_A:
+            case S_SG2:
+            {
+                playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
+                if(d==hudplayer()) playsound(S_SG1_B, d);
+                break;
+            }
+            case S_PULSE2_A:
             {
                 if(d->attacksound >= 0) looped = true;
                 d->attacksound = sound;
                 d->attackchan = playsound(sound, NULL, &d->o, NULL, 0, -1, 100, d->attackchan);
-                if(lastmillis-prevaction>200 && !looped) playsound(S_PULSE2B, d);
+                if(lastmillis-prevaction>200 && !looped) playsound(S_PULSE2_B, d);
                 break;
             }
-            case S_SG1A:
-            case S_SG2:
+            case S_RAIL_A:
+            case S_RAIL_INSTAGIB:
             {
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
-                if(d==hudplayer()) playsound(S_SG1B, d);
+                if(d==hudplayer()) playsound(S_RAIL_B, d);
                 break;
             }
             default: playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
@@ -1027,9 +1034,9 @@ namespace game
                 playsound(S_JUGGERNAUT_ACTION, d);
                 return;
             }
-            if(d->damagemillis) playsound(S_DDAMAGE_ACTION, d);
-            if(d->hastemillis)  playsound(S_HASTE_ACTION, d);
-            if(d->ammomillis) playsound(S_UAMMO_ACTION, d);
+            if(d->damagemillis) playsound(S_ACTION_DAMAGE, d);
+            if(d->hastemillis)  playsound(S_ACTION_HASTE, d);
+            if(d->ammomillis) playsound(S_ACTION_UAMMO, d);
         }
     }
 
@@ -1203,7 +1210,7 @@ namespace game
         {
             if(d==player1)
             {
-                msgsound(S_NOAMMO, d);
+                msgsound(S_WEAPON_NOAMMO, d);
                 d->gunwait = 600;
                 d->lastattack = -1;
                 if(!d->ammo[gun]) weaponswitch(d);
@@ -1403,11 +1410,8 @@ namespace game
         int atk = guns[d->gunselect].attacks[d->attacking];
         switch(d->attacksound)
         {
-            case S_PULSE2A:
-                atk = ATK_PULSE2;
-                break;
-            default:
-                return;
+            case S_PULSE2_A: atk = ATK_PULSE2; break;
+            default: return;
         }
         if(atk >= 0 && atk < NUMATKS &&
            d->clientnum >= 0 && d->state == CS_ALIVE &&

@@ -2208,12 +2208,12 @@ namespace server
         {
             if((survivors <= 0 && zombies <= 0) || (timeisup && survivors <= 0 && zombies > 0))
             {
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_SURVIVORS, NULL, timeisup? "\f2Time is up": "\f2Nobody survived");
+                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_WIN_SURVIVORS, NULL, timeisup? "\f2Time is up": "\f2Nobody survived");
                 endround();
             }
             else if(zombies <= 0 || (timeisup && survivors > 0))
             {
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_SURVIVOR, S_SURVIVORS, "\f2Survivors win the round");
+                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_SURVIVOR, S_WIN_SURVIVORS, "\f2Survivors win the round");
                 loopv(clients)
                 {
                     clientinfo *ci = clients[i];
@@ -2226,7 +2226,7 @@ namespace server
             }
             else if(survivors <= 0 && numclients(-1, true, false) > 1)
             {
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_ZOMBIE, S_ZOMBIES, "\f2Zombies win the round");
+                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_ZOMBIE, S_WIN_ZOMBIES, "\f2Zombies win the round");
                 endround();
             }
         }

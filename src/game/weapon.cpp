@@ -557,7 +557,6 @@ namespace game
                 dynlight = vec(2.0f, 1.5f, 2.0f);
                 fireball = 0xEE88EE;
                 particle_splash(PART_SPARK2, 5+rnd(20), 200, p, 0xEE88EE, 0.08f+rndscale(0.35f), 300, 2);
-                playsound(S_PULSE_EXPLODE, NULL, &v);
                 break;
             }
             case ATK_RL1:
@@ -569,7 +568,6 @@ namespace game
                 particle_splash(PART_SPARK1, 30, 130, p, 0xFFC864, 8.0f, 150, 100);
                 particle_splash(PART_SPARK2, 10, 200, p, 0xFFC864, 0.10f+rndscale(0.35f), 500, 2);
                 particle_splash(PART_SMOKE, 30, 200, p, 0x444444, 8.8f, 200, 200, 0.01f);
-                playsound(S_ROCKET_EXPLODE, NULL, &v);
                 break;
             }
             case ATK_PISTOL2:
@@ -577,13 +575,13 @@ namespace game
                 dynlight = vec(0, 1.5f, 1.5f);
                 fireball = 0x00FFFF;
                 particle_splash(PART_SPARK2, 0+rnd(20), 200, p, 0x00FFFF, 0.05f+rndscale(0.10f), 200, 5);
-                playsound(S_IMPACT_PULSE, NULL, &v);
                 break;
             }
             default: break;
         }
         particle_fireball(v, 1.15f*attacks[atk].exprad, PART_PULSE_BURST, 300, fireball, 0.10f);
         adddynlight(safe ? v : debrisorigin, 2*attacks[atk].exprad, dynlight, 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
+        playsound(attacks[atk].impactsound, NULL, &v);
         if(lookupmaterial(v)==MAT_WATER) playsound(S_IMPACT_WATER_PROJ, NULL, &v);
         /*
         int numdebris = maxdebris > MINDEBRIS ? rnd(maxdebris-MINDEBRIS)+MINDEBRIS : min(maxdebris, MINDEBRIS);

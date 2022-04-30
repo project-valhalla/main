@@ -593,6 +593,7 @@ struct gamestate
             }
             ammo[primary] = itemstats[primary-GUN_SG].add*4;
             ammo[secondary] = itemstats[secondary-GUN_SG].add*4;
+            ammo[GUN_PISTOL] = 100;
             gunselect = primary;
             shield = 0;
         }

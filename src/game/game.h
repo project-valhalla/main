@@ -318,11 +318,11 @@ static const char * const iconnames[] =
 
 static struct itemstat { int add, max, sound, info; } itemstats[] =
 {
-    { 12,    60,    S_AMMO_SG,          GUN_SG,       }, // shotgun
-    { 40,    200,   S_AMMO_SMG,         GUN_SMG,      }, // smg
-    { 80,    400,   S_AMMO_PULSE,       GUN_PULSE,    }, // pulse ammo
+    { 12,    60,    S_AMMO_SG,          GUN_SG,       }, // shotgun ammo
+    { 40,    200,   S_AMMO_SMG,         GUN_SMG,      }, // smg ammo
+    { 80,    400,   S_AMMO_PULSE,       GUN_PULSE,    }, // pulse battery
     { 6,     30,    S_AMMO_ROCKET,      GUN_RL,       }, // rockets
-    { 8,     40,    S_AMMO_RAIL,        GUN_RAIL,     }, // railgun
+    { 8,     40,    S_AMMO_RAIL,        GUN_RAIL,     }, // railgun ammo
     { 25,    100,   S_HEALTH,           NULL,         }, // regular health
     { 50,    200,   S_SHIELD_LIGHT,     NULL,         }, // light shield
     { 100,   200,   S_SHIELD_HEAVY,     NULL,         }, // heavy shield
@@ -354,7 +354,7 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
     },
     //shotgun
     { GUN_SG, ACT_PRIMARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_SG1_A, S_IMPACT_SG, S_HIT_WEAPON,
-      1080,    7,    0,  400,   0,    0,    0, 1000,   20,   50,    0,    0,    1
+      1080,    6,    0,  320,   0,    0,    0, 1000,   20,   50,    0,    0,    1
     },
     { GUN_SG, ACT_SECONDARY, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_SG2, S_ROCKET_EXPLODE, S_HIT_WEAPON,
       600,    65,    0,    0,   2,  180,    0, 2048,    1,   60,   30, 2000,    2

@@ -191,5 +191,5 @@ struct fireballrenderer : listrenderer
         }
     }
 };
-static fireballrenderer fireballs("data/particle/explosion.png"), pulsebursts("data/particle/pulse_burst.png");
+static fireballrenderer fireballs("data/particle/explosion01.png"), pulsebursts("data/particle/explosion02.png");
 

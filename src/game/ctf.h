@@ -579,7 +579,7 @@ struct ctfclientmode : clientmode
         vec color;
         if(team==1) { fcolor = 0x2020FF; color = vec(0.25f, 0.25f, 1); }
         else { fcolor = 0x802020; color = vec(1, 0.25f, 0.25f); }
-        particle_fireball(loc, 30, PART_EXPLOSION, -1, fcolor, 4.8f);
+        particle_fireball(loc, 30, PART_EXPLOSION1, -1, fcolor, 4.8f);
         adddynlight(loc, 35, color, 900, 100);
         particle_splash(PART_SPARK1, 150, 300, loc, fcolor, 0.24f);
     }

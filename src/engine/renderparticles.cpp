@@ -848,37 +848,37 @@ struct softquadrenderer : quadrenderer
 static partrenderer *parts[] =
 {
     new quadrenderer("<grey>data/particle/blood01.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4|PT_COLLIDE, STAIN_BLOOD), // blood spats (note: rgb is inverted)
-    new quadrenderer("<grey>data/particle/blood02.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4),
-    new trailrenderer("data/particle/water.png", PT_TRAIL|PT_LERP),                            // water, entity
-    new quadrenderer("data/particle/glass.png", PT_PART|PT_FLIP|PT_RND4),                            // water, entity
-    new quadrenderer("<grey>data/particle/smoke.png", PT_PART|PT_FLIP|PT_LERP),               // smoke
-    new quadrenderer("<grey>data/particle/steam.png", PT_PART|PT_FLIP),                       // steam
-    new quadrenderer("<grey>data/particle/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_BRIGHT),   // flame
-    new taperenderer("data/particle/flare.png", PT_TAPE|PT_BRIGHT),                           // streak
-    new taperenderer("data/particle/rail_trail.png", PT_TAPE|PT_FEW|PT_BRIGHT),               // rail trail
-    new taperenderer("data/particle/pulse_side.png", PT_TAPE|PT_FEW|PT_BRIGHT),               // pulse side
-    new quadrenderer("data/particle/pulse_front.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),      // pulse front
-    &lightnings,                                                                               // lightning
-    &fireballs,                                                                                // explosion fireball
-    &pulsebursts,                                                                              // pulse burst
-    new quadrenderer("data/particle/spark.png", PT_PART|PT_FLIP|PT_BRIGHT),                   // sparks
-    new trailrenderer("data/particle/spark2.png", PT_TRAIL|PT_BRIGHT),                           // sparks again
-    new quadrenderer("data/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                   // edit mode entities
-    new quadrenderer("data/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE),           // colliding snow
-    new quadrenderer("data/particle/rail_muzzle.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),  // rail muzzle flash
-    new quadrenderer("data/particle/pulse_muzzle.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK), // pulse muzzle flash
-    new quadrenderer("data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                 // hud icon
-    new quadrenderer("<colorify:1/1/1>data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON), // grey hud icon
+    new quadrenderer("<grey>data/particle/blood02.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4),                         // blood drops
+    new trailrenderer("data/particle/water.png", PT_TRAIL|PT_LERP),                                              // water
+    new quadrenderer("data/particle/glass.png", PT_PART|PT_FLIP|PT_BRIGHT|PT_RND4),                              // glass
+    new quadrenderer("<grey>data/particle/smoke.png", PT_PART|PT_FLIP|PT_LERP),                                  // smoke
+    new quadrenderer("<grey>data/particle/steam.png", PT_PART|PT_FLIP),                                          // steam
+    new quadrenderer("<grey>data/particle/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_BRIGHT),                      // flame
+    new quadrenderer("data/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE),                              // colliding snow
+    new taperenderer("data/particle/trail.png", PT_TAPE|PT_FEW|PT_BRIGHT),                                       // bullet trail
+    new taperenderer("data/particle/trail_projectile.png", PT_TAPE|PT_FEW|PT_BRIGHT),                            // projectile trail
+    &lightnings,                                                                                                 // lightning
+    &fireballs,                                                                                                  // explosion fireball
+    &pulsebursts,                                                                                                // pulse burst
+    new quadrenderer("data/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                    // sparks
+    new trailrenderer("data/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                          // spark trail
+    new quadrenderer("data/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                                      // edit mode entities
+    new quadrenderer("data/particle/orb.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),                                 // energy orb
+    new quadrenderer("data/particle/muzzle01.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // muzzle flash
+    new quadrenderer("data/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // pulse muzzle flash
+    new quadrenderer("data/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
+    new quadrenderer("data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                                    // hud icon
+    new quadrenderer("<colorify:1/1/1>data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                    // grey hud icon
     new quadrenderer("data/interface/icon/light.png", PT_PART),
     new quadrenderer("data/interface/icon/envmap.png", PT_PART),
     new quadrenderer("data/interface/icon/player.png", PT_PART),
     new quadrenderer("data/interface/icon/entity.png", PT_PART),
     new quadrenderer("data/interface/icon/particle.png", PT_PART),
     new quadrenderer("data/interface/icon/sound.png", PT_PART),
-    &texts,                                                                                    // text
-    &meters,                                                                                   // meter
-    &metervs,                                                                                  // meter vs.
-    &flares                                                                                    // lens flares - must be done last
+    &texts,                                                                                                      // text
+    &meters,                                                                                                     // meter
+    &metervs,                                                                                                    // meter vs.
+    &flares                                                                                                      // lens flares - must be done last
 };
 
 VARFP(maxparticles, 10, 4000, 10000, initparticles());
@@ -1306,7 +1306,7 @@ static void makeparticles(entity &e)
             break;
         }
         case 3: //fire ball - <size> <rgb>
-            newparticle(e.o, vec(0, 0, 1), 1, PART_EXPLOSION, colorfromattr(e.attr3), 4.0f)->val = 1+e.attr2;
+            newparticle(e.o, vec(0, 0, 1), 1, PART_EXPLOSION1, colorfromattr(e.attr3), 4.0f)->val = 1+e.attr2;
             break;
         case 4:  //tape - <dir> <length> <rgb>
         case 7:  //lightning
@@ -1314,7 +1314,7 @@ static void makeparticles(entity &e)
         case 10: //water
         case 13: //snow
         {
-            static const int typemap[]   = { PART_STREAK, -1, -1, PART_LIGHTNING, -1, PART_STEAM, PART_WATER, -1, -1, PART_SNOW };
+            static const int typemap[]   = { PART_TRAIL, -1, -1, PART_LIGHTNING, -1, PART_STEAM, PART_WATER, -1, -1, PART_SNOW };
             static const float sizemap[] = { 0.28f, 0.0f, 0.0f, 1.0f, 0.0f, 2.4f, 0.60f, 0.0f, 0.0f, 0.5f };
             static const int gravmap[] = { 0, 0, 0, 0, 0, -20, 2, 0, 0, 20 };
             int type = typemap[e.attr1-4];

@@ -164,7 +164,7 @@ namespace entities
     void tpeffects(vec p)
     {
         particle_splash(PART_SPARK2, 50, 200, p, 0x89E5FB, 0.20f, 250, 8);
-        particle_fireball(p, 10.0f, PART_PULSE_BURST, 500, 0x89E5FB, 1.0f);
+        particle_fireball(p, 10.0f, PART_EXPLOSION2, 500, 0x89E5FB, 1.0f);
         adddynlight(p, 100, vec(0.50f, 1.0f, 1.4f), 500, 100);
     }
 

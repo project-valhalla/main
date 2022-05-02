@@ -1357,7 +1357,7 @@ namespace ai
                     waypoint &e = waypoints[index], &f = waypoints[prev];
                     vec fr = f.o, dr = e.o;
                     fr.z += amt; dr.z += amt;
-                    particle_flare(fr, dr, 1, PART_STREAK, 0xFFFFFF);
+                    particle_flare(fr, dr, 1, PART_TRAIL, 0xFFFFFF);
                 }
             }
             last = i;
@@ -1365,7 +1365,7 @@ namespace ai
         if(aidebug >= 5)
         {
             vec pos = d->feetpos();
-            if(d->ai->spot != vec(0, 0, 0)) particle_flare(pos, d->ai->spot, 1, PART_LIGHTNING, 0x00FFFF);
+            if(d->ai->spot != vec(0, 0, 0)) particle_flare(pos, d->ai->spot, 1, PART_LIGHTNING, 0x0000FF);
             if(iswaypoint(d->ai->targnode))
                 particle_flare(pos, waypoints[d->ai->targnode].o, 1, PART_LIGHTNING, 0xFF00FF);
             if(iswaypoint(d->lastnode))
@@ -1475,7 +1475,7 @@ namespace ai
                 {
                      int link = w.links[j];
                      if(!link) break;
-                     particle_flare(w.o, waypoints[link].o, 1, PART_STREAK, 0x0000FF);
+                     particle_flare(w.o, waypoints[link].o, 1, PART_TRAIL, 0x00FFFF);
                 }
             }
 

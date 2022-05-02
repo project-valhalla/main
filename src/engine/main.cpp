@@ -599,7 +599,7 @@ void setupscreen()
 #endif
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0);
-    screen = SDL_CreateWindow("Tesseract", winx, winy, winw, winh, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | flags);
+    screen = SDL_CreateWindow("Valhalla", winx, winy, winw, winh, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_INPUT_FOCUS | SDL_WINDOW_MOUSE_FOCUS | flags);
     if(!screen) fatal("Failed to create OpenGL window: %s", SDL_GetError());
 
     SDL_SetWindowMinimumSize(screen, SCR_MINW, SCR_MINH);

@@ -565,8 +565,7 @@ VAR(stereo, 0, 1, 1);
 bool updatechannel(soundchannel &chan)
 {
     if(!chan.slot) return false;
-    int vol = chan.flags&SND_ANNOUNCER? announcervol: (chan.flags&SND_UI? uivol: soundvol),
-        pan = 255/2;
+    float volf = 1.0f, panf = 0.5f;
     if(chan.owner) chan.loc = chan.owner->o;
     if(chan.hasloc())
     {
@@ -583,15 +582,16 @@ bool updatechannel(soundchannel &chan)
             }
         }
         else if(chan.radius > 0) rad = chan.radius;
-        if(rad > 0) vol -= int(clamp(dist/rad, 0.0f, 1.0f)*soundvol); // simple mono distance attenuation
+        if(rad > 0) volf -= clamp(dist/rad, 0.0f, 1.0f); // simple mono distance attenuation
         if(stereo && (v.x != 0 || v.y != 0) && dist>0)
         {
             v.rotate_around_z(-camera1->yaw*RAD);
-            pan = int(255.9f*(0.5f - 0.5f*v.x/v.magnitude2())); // range is from 0 (left) to 255 (right)
+            panf = 0.5f - 0.5f*v.x/v.magnitude2(); // range is from 0 (left) to 1 (right)
         }
     }
-    vol = (vol*MIX_MAX_VOLUME*chan.slot->volume)/255/255;
-    vol = min(vol, MIX_MAX_VOLUME);
+    int voltype = chan.flags&SND_ANNOUNCER? announcervol : (chan.flags&SND_UI? uivol : soundvol),
+        vol = clamp(int(volf*voltype*chan.slot->volume*(MIX_MAX_VOLUME/float(255*255)) + 0.5f), 0, MIX_MAX_VOLUME);
+    int pan = clamp(int(panf*255.9f), 0, 255);
     if(vol == chan.volume && pan == chan.pan) return false;
     chan.volume = vol;
     chan.pan = pan;

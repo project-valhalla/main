@@ -668,6 +668,7 @@ namespace server
     VAR(maxdemos, 0, 5, 25);
     VAR(maxdemosize, 0, 16, 31);
     VAR(restrictdemos, 0, 1, 1);
+    VARF(autorecorddemo, 0, 0, 1, demonextmatch = autorecorddemo!=0);
 
     VAR(restrictpausegame, 0, 1, 1);
     VAR(restrictgamespeed, 0, 1, 1);
@@ -2374,10 +2375,10 @@ namespace server
         {
             if(clients.length()) setupdemoplayback();
         }
-        else if(demonextmatch)
+        else
         {
-            demonextmatch = false;
-            setupdemorecord();
+            if(demonextmatch) setupdemorecord();
+            demonextmatch = autorecorddemo!=0;
         }
 
         if(smode) smode->setup();

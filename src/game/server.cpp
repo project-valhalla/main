@@ -2491,6 +2491,51 @@ namespace server
         }
     }
 
+    VAR(overtime, 0, 1, 1);
+
+    bool checkovertime()
+    {
+        if(!m_timed || m_round || !overtime) return false;
+        int topteam = 0;
+        int topscore = INT_MIN;
+        bool tied = false;
+        if(m_teammode)
+        {
+            vector<teamscore> scores;
+            if(smode && smode->hidefrags()) smode->getteamscores(scores);
+            loopv(clients)
+            {
+                clientinfo *ci = clients[i];
+                if(ci->state.state==CS_SPECTATOR || !validteam(ci->team)) continue;
+                int score = 0;
+                if(smode && smode->hidefrags())
+                {
+                    int idx = scores.htfind(ci->team);
+                    if(idx >= 0) score = scores[idx].score;
+                }
+                else score = teaminfos[ci->team-1].frags;
+                if(!topteam || score > topscore) { topteam = ci->team; topscore = score; tied = false; }
+                else if(score == topscore && ci->team != topteam) tied = true;
+            }
+        }
+        else
+        {
+            loopv(clients)
+            {
+                clientinfo *ci = clients[i];
+                if(ci->state.state==CS_SPECTATOR) continue;
+                int score = ci->state.frags;
+                if(score > topscore) { topscore = score; tied = false; }
+                else if(score == topscore) tied = true;
+            }
+        }
+        if(!tied) return false;
+        sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, NULL, "\f2Overtime: scores are tied");
+        gamelimit = max(gamemillis, gamelimit) + 2*60000;
+        sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
+        return true;
+    }
+
     void resetgamelimit()
     {
         gamemillis = 0;
@@ -2523,7 +2568,7 @@ namespace server
 
     void checkintermission()
     {
-        if(gamemillis >= gamelimit && !interm)
+        if(gamemillis >= gamelimit && !interm && !checkovertime())
         {
             if(m_round)
             {

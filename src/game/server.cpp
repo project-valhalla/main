@@ -1024,6 +1024,8 @@ namespace server
                     return best;
     }
 
+    VAR(persistteams, 0, 0, 1);
+
     void autoteam()
     {
         vector<clientinfo *> team[MAXTEAMS];
@@ -1047,12 +1049,16 @@ namespace server
             if(!selected) break;
             remaining -= selected;
         }
-        loopi(MAXTEAMS) loopvj(team[i])
+        loopi(MAXTEAMS)
         {
-            clientinfo *ci = team[i][j];
-            if(ci->team == 1+i) continue;
-            ci->team = 1+i;
-            sendf(-1, 1, "riiii", N_SETTEAM, ci->clientnum, ci->team, -1);
+            loopvj(team[i])
+            {
+                clientinfo *ci = team[i][j];
+                if(ci->team == 1+i) continue;
+                if(persistteams && validteam(ci->team) && (!smode || smode->canchangeteam(ci, 1+i, ci->team))) continue;
+                ci->team = 1+i;
+                sendf(-1, 1, "riiii", N_SETTEAM, ci->clientnum, ci->team, -1);
+            }
         }
     }
 

@@ -3283,7 +3283,7 @@ void reloadtex(char *name)
 {
     Texture *t = textures.access(path(name, true));
     if(!t) { conoutf(CON_ERROR, "texture %s is not loaded", name); return; }
-    if(t->type&Texture::TRANSIENT) { conoutf(CON_ERROR, "can't reload transient texture %s", name); return; }
+    if(t->type&Texture::TRANSIENT) { conoutf(CON_ERROR, "cannot reload transient texture %s", name); return; }
     DELETEA(t->alphamask);
     Texture oldtex = *t;
     t->id = 0;

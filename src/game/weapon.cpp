@@ -1305,16 +1305,12 @@ namespace game
         }
     }
 
-    static const char * const gibnames[5] = { "gib/variant/gib01", "gib/variant/gib02", "gib/variant/gib03", "gib/variant/gib04", "gib/variant/gib05" };
-    static const char * const fruitnames[5] = { "gib/fruit/apple", "gib/fruit/appleslice", "gib/fruit/pear", "gib/fruit/apple", "gib/fruit/appleslice" };
+    static const char * const gibnames[5] = { "projectile/gib/gib01", "projectile/gib/gib02", "projectile/gib/gib03", "projectile/gib/gib04", "projectile/gib/gib05" };
     static const char * const gunnames[5] = { "item/ammo/shells", "item/ammo/bullets", "worldgun/pulserifle", "item/ammo/rockets", "item/ammo/rrounds" };
-    //static const char * const debrisnames[4] = { "debris/debris01", "debris/debris02", "debris/debris03", "debris/debris04" };
 
     void preloadbouncers()
     {
         loopi(sizeof(gibnames)/sizeof(gibnames[0])) preloadmodel(gibnames[i]);
-        loopi(sizeof(fruitnames)/sizeof(fruitnames[0])) preloadmodel(fruitnames[i]);
-        //loopi(sizeof(debrisnames)/sizeof(debrisnames[0])) preloadmodel(debrisnames[i]);
     }
 
     void renderbouncers()
@@ -1338,11 +1334,10 @@ namespace game
             {
                 float fade = 1;
                 if(bnc.lifetime < 400) fade = bnc.lifetime/400.0f;
-                const char *gib = goreeffect <= 0 ? gibnames[bnc.variant] : fruitnames[bnc.variant];
                 switch(bnc.bouncetype)
                 {
-                    case BNC_GIB: mdl = gib; break;
-                    case BNC_CARTRIDGE: mdl = "weapon/eject/cartridge01"; break;
+                    case BNC_GIB: mdl = gibnames[bnc.variant]; break;
+                    case BNC_CARTRIDGE: mdl = "projectile/eject/cartridge01"; break;
                     default: continue;
                 }
                 rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0, cull, NULL, NULL, 0, 0, fade);

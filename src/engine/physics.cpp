@@ -2008,7 +2008,7 @@ bool entinmap(dynent *d, bool avoidplayers)        // brute force but effective 
     // leave ent at original pos, possibly stuck
     d->o = orig;
     d->resetinterp();
-    conoutf(CON_WARN, "can't find entity spawn spot! (%.1f, %.1f, %.1f)", d->o.x, d->o.y, d->o.z);
+    conoutf(CON_WARN, "cannot find entity spawn spot! (%.1f, %.1f, %.1f)", d->o.x, d->o.y, d->o.z);
     return false;
 }
 

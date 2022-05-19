@@ -410,13 +410,13 @@ static const struct attackinfo { int gun, action, anim, vwepanim, hudanim, sound
 
 static const struct guninfo { const char *name, *file, *vwep; int attacks[NUMACTS]; } guns[NUMGUNS] =
 {
-    { "shotgun", "sg", "worldgun/sg", { -1, ATK_MELEE, ATK_SG1, ATK_SG2 } },
-    { "smg", "smg", "worldgun/smg", { -1, ATK_MELEE, ATK_SMG1, ATK_SMG2 }, },
-    { "pulse rifle (upgraded)", "pulserifle", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PULSE1, ATK_PULSE2 }, },
-    { "rocket launcher", "rl", "worldgun/rl", { -1, ATK_MELEE, ATK_RL1, ATK_RL2 } },
-    { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_RAIL, ATK_RAIL }, },
-    { "pulse rifle", "pistol", "worldgun/pulserifle", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2 }, },
-    { "railgun", "railgun", "worldgun/railgun", { -1, ATK_MELEE, ATK_INSTA, ATK_INSTA }, },
+    { "shotgun", "sg", "weapon/worldgun/sg", { -1, ATK_MELEE, ATK_SG1, ATK_SG2 } },
+    { "smg", "smg", "weapon/worldgun/smg", { -1, ATK_MELEE, ATK_SMG1, ATK_SMG2 }, },
+    { "pulse", "pulserifle", "weapon/worldgun/pulserifle", { -1, ATK_MELEE, ATK_PULSE1, ATK_PULSE2 }, },
+    { "rocket", "rocket", "weapon/worldgun/rocket", { -1, ATK_MELEE, ATK_RL1, ATK_RL2 } },
+    { "railgun", "railgun", "weapon/worldgun/railgun", { -1, ATK_MELEE, ATK_RAIL, ATK_RAIL }, },
+    { "pistol", "pistol", "weapon/worldgun/pulserifle", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2 }, },
+    { "instagun", "railgun", "weapon/worldgun/railgun", { -1, ATK_MELEE, ATK_INSTA, ATK_INSTA }, },
     { "zombie", "zombie", "", { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE }, }
 };
 

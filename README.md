@@ -1,26 +1,24 @@
 # Valhalla project
 An arena shooter project based on Tesseract which focuses on both competitive and casual gameplay.
 
-I've put together a list of things I would like to do with this project.
-If you think you can help with these feel free to join the project!
-
+I have put together a list of things I would like to do with this project.
 Please note: anything written below is not set in stone, everything is open to discussion, suggestions and ideas.
 
-## General
+## Summary
 
-the aim is to create a well-balanced arena-style shooter with casual, fun modes such as Infection, Gunball (football/rugby mode), Invasion (online Sauerbraten DMSP), boss mode and other cool stuff!
+*The aim is to innovate the arena genre, create a simple yet fun shooter with classic, casual and fun modes such as Infection, Gunball (football/rugby mode), Invasion (online Sauerbraten DMSP) and other cool stuff!*
 
 - create a gameplay which is more complex, interesting and various than Sauerbraten's gameplay but in the same time as simple, polished and fun as possible;
 
-- create a not too complicated yet interesting movement system, add mutators and other variables to make every game even more unique;
+- smooth movement system: not too boring, not too complex;
 
-- try to revolutionate the arena fps genre with new ideas;
+- try to innovate the arena genre;
 
-- colorful graphics (if not a little bit cartoony): spooky maps are welcome from time to time but let's avoid too much hyper realistic (since the gameplay is unrealistic) or gloomy stuff, we don't need ANOTHER gritty sci-fi shooter;
+- colorful graphics: let's avoid too much hyper realistic or gloomy stuff, we don't need ANOTHER gritty sci-fi shooter;
 
-- create competitive modes aswell as casual modes, like zombie mode and invasion mode (online Sauerbraten DMSP) to let newbies and casual players have fun with their friends, too;
+- focus on classic modes as well as on casual modes (like Infection mode) so newbies and casuals can have fun too;
 
-- add a progression system and features that allow the players to customize their player model;
+- add a progression system and features that allow the players to customize their player model (?);
 
 - improve the editor: simplify the editor's appearence, make more functions accessible trough clear user interface;
 
@@ -30,14 +28,14 @@ the aim is to create a well-balanced arena-style shooter with casual, fun modes 
 
 - create a game launcher and add an updater in it to let players know when their game version is outdated;
 
-- tweak the engine, add features players want to see and develope them with the community.
+- tweak the engine, add features players want to see and develop them with the community. Though the goal is not to make a new engine, but a new game.
 
 
 Some of these points are further explained in the lists below.
 
 ## User interface
 
-Improve the general user interface: make it as clear as possible, noob-friendly.
+*Improve the general user interface: make it as clear as possible, noob-friendly.*
 
 - letting the player know when there has been a connection problem or when they got kicked with a clear UI window;
 
@@ -47,13 +45,11 @@ Improve the general user interface: make it as clear as possible, noob-friendly.
 
 - move frag messages regarding the player (you got killed by, you killed, double kill, etc) to the center of the screen;
 
-- move the frag messages regarding other players (dude killed dude) from the regular console to the right top of the screen;
-
 - move CTF and other important mode-specific messages to the center of the screen;
 
-- an alternative scoreboard (toggable by pressing F2) which shows more player statistics than the regular scoreboard like damage dealt, accuracy, medals (double kill, killing sprees), etc;
+- kill feed;
 
-- player model 3D preview on the left (or right) side in the main menu;
+- player model 3D preview on the left (or right) side in the main menu.
 
 ## Server
 
@@ -61,42 +57,40 @@ Improve the general user interface: make it as clear as possible, noob-friendly.
 
 - ability for developers to send global messages (visible to any player in any server in the master server);
 
-- the game recognizes modded servers and let players know they are modified before joining;
+- the game recognizes modded servers and let players know they are modified before joining.
 
 ## Gameplay
 
-trying to revolutionate the arena fps genre: big NO to the fear of creating and experimenting particular and original weapons, attack combinations and modes (as long as they're not too complicated); adding classic FFA mode (which relies heavily on map control and is not that noob-friendly) as a mutator; suggestions are welcome!
+*Trying to innovate the arena genre: experimenting with particular and original weapons/mechanics and modes (without over-complicating things);*
 
-- create a not too complex yet interesting movement system: adding, for example, wall jump and dodge as mutators is more than enough;
+- keep classic modes that heavily rely on map control (not that noob-friendly) as mutators;
 
-- new casual modes: race mode, invasion mode (online Sauerbraten DMSP), football mode (Gunball), side scroller mode (Side Scroller Deathmatch/SSD), online boss mode;
+- smooth movement system: not too boring, not too complex;
+
+- new casual modes: race mode, invasion mode (online Sauerbraten DMSP), football mode (Gunball), side scroller mode (Side Scroller Deathmatch/SSD), etc. ;
 
 - EXP point gains to level up after every match (online multiplayer only) for players who have an account (?);
 
-- game point gains to unlock player skins and vanity items after every match (online multiplayer only) for players who have an account (?);
-
 - integrated player statistics, ranking, achievements, progression system with various and unlockable vanity items, skins, etc. (nothing gameplay changing)(?);
 
-- improve bots' AI (especially movement);
+- improve bots;
 
 - movement and weapons tutorials for newcomers;
 
 ## Aesthetics
 
-- cartoonish and/or colourful graphics, without exaggerating... avoid the grittiness/darkness of Quake and of most maps in Sauerbraten;
+- colourful graphics, avoid the grittiness/darkness of Quake and of most maps in Sauerbraten;
 
 - unique characters (player models) with unique personalities and voices;
 
-- immersive atmopshere (ambient sounds, decent audio and graphics/effects, cool weapons effects to make sure that weapons are fun to shoot and feel powerful);
+- immersive atmopshere (decent audio, decent effects, decent gunplay to make sure weapons are fun to shoot and feel powerful);
 
 - player model customization: variables that allow players to attach cosmetic items, change texture colors and customize their player model further;
 
 ## Editor & engine
 
-- being open to tweak the engine and add features;
+- being open to tweak the engine and add features. Though the goal is to create a new game, not a new engine;
 
 - possibility to download a new map in-game everytime it's available on the server, even outside edit mode (with custom files like textures and sounds?);
-
-- possibility to undo or redo modifications done by our client in online coop edit;
 
 - mini in-game Quadropolis that allows players to share maps, mods and stuff (?);

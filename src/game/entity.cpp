@@ -102,7 +102,7 @@ namespace entities
                     if(e.attr2 < 0) continue;
                     break;
                 default:
-                    if(!e.spawned() || !validitem(e.type)) continue;
+                    if((!editmode && !e.spawned()) || !validitem(e.type)) continue;
                     break;
             }
             const char *mdlname = entmodel(e);
@@ -110,7 +110,8 @@ namespace entities
             {
                 vec p = e.o;
                 p.z += 1+sinf(lastmillis/100.0+e.o.x+e.o.y)/20;
-                rendermodel(mdlname, ANIM_MAPMODEL|ANIM_LOOP, p, lastmillis/(float)revs, 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED);
+                float trans = e.spawned()? 1: 0.5f;
+                rendermodel(mdlname, ANIM_MAPMODEL|ANIM_LOOP, p, lastmillis/(float)revs, 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, 1, vec4(1, 1, 1, trans));
             }
         }
     }

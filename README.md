@@ -1,5 +1,5 @@
 # Valhalla project
-*A first-person arena shooter project based on [Tesseract](http://tesseract.gg) which focuses on both classic and casual gameplay.*
+*A first-person arena shooter project based on [Tesseract](http://tesseract.gg) which focuses on both old school and casual gameplay.*
 
 ## About
 The project started in march 2019.
@@ -24,4 +24,4 @@ Some of the things we plan to accomplish:
 
 ## Join us
 
-We have a [Discord server](https://discord.gg/W4QXB4jKY5) that you might find interesting. Whether you just want to have a chat, have a question to ask, want to share your ideas, provide feedback, report issues or even contribute, feel free to join!
+We have a [Discord server](https://discord.gg/qFMAde5WQP) that you might find interesting. Whether you just want to have a chat, have a question to ask, want to share your ideas, provide feedback, report issues or even contribute, feel free to join!

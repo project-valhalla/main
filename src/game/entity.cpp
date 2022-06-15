@@ -110,7 +110,8 @@ namespace entities
             {
                 vec p = e.o;
                 p.z += 1+sinf(lastmillis/100.0+e.o.x+e.o.y)/20;
-                float trans = e.spawned()? 1: 0.5f;
+                float trans = 1;
+                if(validitem(e.type) && !e.spawned()) trans = 0.5f;
                 rendermodel(mdlname, ANIM_MAPMODEL|ANIM_LOOP, p, lastmillis/(float)revs, 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, 1, vec4(1, 1, 1, trans));
             }
         }

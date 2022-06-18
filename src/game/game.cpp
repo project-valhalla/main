@@ -824,10 +824,6 @@ namespace game
         pl->lastfootstep = lastmillis;
     }
 
-    void dynentcollide(physent *d, physent *o, const vec &dir)
-    {
-    }
-
     void msgsound(int n, physent *d)
     {
         if(!d || d == player1)

@@ -592,7 +592,6 @@ bool plcollide(physent *d, const vec &dir, bool insideplayercol)    // collide w
             if(plcollide(d, dir, o))
             {
                 collideplayer = o;
-                game::dynentcollide(d, o, collidewall);
                 return true;
             }
             if(collideinside > lastinside)
@@ -605,7 +604,6 @@ bool plcollide(physent *d, const vec &dir, bool insideplayercol)    // collide w
     if(insideplayer && insideplayercol)
     {
         collideplayer = insideplayer;
-        game::dynentcollide(d, insideplayer, vec(0, 0, 0));
         return true;
     }
     return false;

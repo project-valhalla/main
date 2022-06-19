@@ -407,9 +407,9 @@ struct gamestate
         item = type = 0;
     }
 
-    void baseammo(int gun, int k = 3, int scale = 1)
+    void baseammo(int gun, int k = 3)
     {
-        ammo[gun] = (itemstats[gun-GUN_SG].add*k)/scale;
+        ammo[gun] = itemstats[gun-GUN_SG].add*k;
     }
 
     void addammo(int gun, int k = 1, int scale = 1)
@@ -465,7 +465,7 @@ struct gamestate
         else if(m_effic(mutators))
         {
             shield = 100;
-            loopi(NUMGUNS-5) baseammo(i);
+            loopi(NUMGUNS-3) baseammo(i);
             gunselect = GUN_SMG;
         }
         else if((m_randomweapon(mutators) || m_oneweapon(mutators)) && forceweapon >= 0)

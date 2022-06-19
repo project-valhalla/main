@@ -282,6 +282,9 @@
     <ClInclude Include="..\game\gamemode.h">
       <Filter>game</Filter>
     </ClInclude>
+    <ClInclude Include="..\game\weapon.h">
+      <Filter>game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="valhalla.rc" />

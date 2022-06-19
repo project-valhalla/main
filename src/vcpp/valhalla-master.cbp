@@ -181,6 +181,7 @@
 		<Unit filename="../game/server.cpp" />
 		<Unit filename="../game/waypoint.cpp" />
 		<Unit filename="../game/weapon.cpp" />
+		<Unit filename="../game/weapon.h" />
 		<Unit filename="../shared/command.h" />
 		<Unit filename="../shared/crypto.cpp" />
 		<Unit filename="../shared/cube.h">

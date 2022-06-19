@@ -2810,7 +2810,7 @@ namespace server
             if(gs.damagemillis || gs.juggernaut) damage *= 2;
             if(target->state.armourmillis || target->state.juggernaut) damage /= 2;
             if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
-            if(target==ci) damage /= EXP_SELFDAMDIV;
+            if(target==ci) damage /= ALLY_DAMDIV;
             if(damage > 0) dodamage(target, ci, damage, atk, 0, h.dir);
         }
     }

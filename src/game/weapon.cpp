@@ -533,7 +533,7 @@ namespace game
         if(dist<attacks[atk].exprad)
         {
             float dam = damage*(1-dist/EXP_DISTSCALE/attacks[atk].exprad);
-            if(o==at) damage /= EXP_SELFDAMDIV;
+            if(o==at) damage /= ALLY_DAMDIV;
             if(damage > 0)
             {
                 gameent *f = (gameent *)o;

@@ -957,7 +957,7 @@ namespace game
         pophudmatrix();
         resethudshader();
 
-        if(d->health > 100)
+        if(d->health > d->maxhealth)
         {
             float scale = 0.68f;
             pushhudmatrix();

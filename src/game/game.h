@@ -464,7 +464,7 @@ struct gamestate
         }
         else if(m_effic(mutators))
         {
-            shield = 100;
+            maxhealth = health = 200;
             loopi(NUMGUNS-3) baseammo(i);
             gunselect = GUN_SMG;
         }

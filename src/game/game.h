@@ -312,7 +312,7 @@ static struct itemstat { int add, max, sound, info; } itemstats[] =
     { 25,    100,   S_HEALTH,           NULL,         }, // regular health
     { 50,    200,   S_SHIELD_LIGHT,     NULL,         }, // light shield
     { 100,   200,   S_SHIELD_HEAVY,     NULL,         }, // heavy shield
-    { 50,    200,   S_SUPERHEALTH,      NULL,         }, // super health
+    { 50,    250,   S_SUPERHEALTH,      NULL,         }, // super health
     { 100,   250,   S_MEGAHEALTH,       NULL,         }, // megahealth
     { 30000, 60000, S_DAMAGE,           NULL,         }, // double damage
     { 30000, 60000, S_HASTE,            NULL,         }, // haste

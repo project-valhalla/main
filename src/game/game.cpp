@@ -314,11 +314,6 @@ namespace game
 
     // inputs
 
-    void checkaction(int act)
-    {
-        doaction(act);
-    }
-
     void doaction(int act)
     {
         if(!connected || intermission) return;
@@ -326,8 +321,8 @@ namespace game
         player1->lastact = act;
     }
 
-    ICOMMAND(primary, "D", (int *down), checkaction(*down ? ACT_PRIMARY : ACT_IDLE));
-    ICOMMAND(secondary, "D", (int *down), checkaction(*down ? ACT_SECONDARY : ACT_IDLE));
+    ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
+    ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
 
     VARF(primaryweapon, -1, -1, 5, addmsg(N_SETWEAPONS, "riii", player1->clientnum, primaryweapon, player1->secondary));

@@ -1,9 +1,9 @@
-*.o
-*.gch
+# Custom
 *.layout
 *.depend
+*.ini
+*.bak
 mingw.res
-server-init.cfg
 .objs/
 bin_unix/
 

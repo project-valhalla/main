@@ -6,8 +6,6 @@ namespace ai
 {
     using namespace game;
 
-    vector<const char *> botnames;
-
     avoidset obstacles;
     int updatemillis = 0, iteration = 0, itermillis = 0, forcegun = -1;
     vec aitarget(0, 0, 0);
@@ -17,7 +15,6 @@ namespace ai
 
     ICOMMAND(botadd, "s", (char *s), addmsg(N_ADDBOT, "ri", *s ? clamp(parseint(s), 1, 101) : -1));
     ICOMMAND(botdel, "", (), addmsg(N_DELBOT, "r"));
-    ICOMMAND(botname, "s", (const char *name), { botnames.add(newstring(name)); });
     ICOMMAND(botlimit, "i", (int *n), addmsg(N_BOTLIMIT, "ri", *n));
     ICOMMAND(botbalance, "i", (int *n), addmsg(N_BOTBALANCE, "ri", *n));
 

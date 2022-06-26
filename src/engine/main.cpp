@@ -1211,7 +1211,6 @@ int main(int argc, char **argv)
     execfile("data/config/ui.cfg");
     execfile("data/config/heightmap.cfg");
     execfile("data/config/blendbrush.cfg");
-    execfile("data/config/botname.cfg");
     execfile("data/config/tip.cfg");
     if(game::savedservers()) execfile(game::savedservers(), false);
 

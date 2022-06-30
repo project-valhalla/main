@@ -746,12 +746,12 @@ struct stainrenderer
 
 stainrenderer stains[] =
 {
-    stainrenderer("<grey>data/particle/blood01.png", SF_RND4|SF_ROTATE|SF_INVMOD),
-    stainrenderer("<grey>data/particle/scorch.png", SF_ROTATE, 500),
-    stainrenderer("<grey>data/particle/hole_railgun.png", SF_ROTATE|SF_OVERBRIGHT),
-    stainrenderer("<grey>data/particle/glow_pulse.png", SF_ROTATE|SF_GLOW|SF_SATURATE, 250, 1500, 250),
-    stainrenderer("<grey>data/particle/glow_railgun.png",  SF_ROTATE|SF_GLOW|SF_SATURATE, 100, 1100, 100),
-    stainrenderer("<grey>data/particle/hole_glass.png", SF_ROTATE|SF_OVERBRIGHT)
+    stainrenderer("<grey>data/texture/particle/blood01.png", SF_RND4|SF_ROTATE|SF_INVMOD),
+    stainrenderer("<grey>data/texture/particle/scorch.png", SF_ROTATE, 500),
+    stainrenderer("<grey>data/texture/particle/hole_railgun.png", SF_ROTATE|SF_OVERBRIGHT),
+    stainrenderer("<grey>data/texture/particle/glow_pulse.png", SF_ROTATE|SF_GLOW|SF_SATURATE, 250, 1500, 250),
+    stainrenderer("<grey>data/texture/particle/glow_railgun.png",  SF_ROTATE|SF_GLOW|SF_SATURATE, 100, 1100, 100),
+    stainrenderer("<grey>data/texture/particle/hole_glass.png", SF_ROTATE|SF_OVERBRIGHT)
 };
 
 void initstains()

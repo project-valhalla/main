@@ -1182,7 +1182,7 @@ int main(int argc, char **argv)
     logoutf("init: gl");
     gl_checkextensions();
     gl_init();
-    notexture = textureload("data/texture/base/notexture.png");
+    notexture = textureload("data/texture/world/base/notexture.png");
     if(!notexture) fatal("Could not find core textures");
 
     logoutf("init: console");

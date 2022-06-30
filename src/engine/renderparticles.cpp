@@ -847,26 +847,26 @@ struct softquadrenderer : quadrenderer
 
 static partrenderer *parts[] =
 {
-    new quadrenderer("<grey>data/particle/blood01.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4|PT_COLLIDE, STAIN_BLOOD), // blood spats (note: rgb is inverted)
-    new quadrenderer("<grey>data/particle/blood02.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4),                         // blood drops
-    new trailrenderer("data/particle/water.png", PT_TRAIL|PT_LERP),                                              // water
-    new quadrenderer("data/particle/glass.png", PT_PART|PT_FLIP|PT_BRIGHT|PT_RND4),                              // glass
-    new quadrenderer("<grey>data/particle/smoke.png", PT_PART|PT_FLIP|PT_LERP),                                  // smoke
-    new quadrenderer("<grey>data/particle/steam.png", PT_PART|PT_FLIP),                                          // steam
-    new quadrenderer("<grey>data/particle/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_BRIGHT),                      // flame
-    new quadrenderer("data/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE),                              // colliding snow
-    new taperenderer("data/particle/trail.png", PT_TAPE|PT_FEW|PT_BRIGHT),                                       // bullet trail
-    new taperenderer("data/particle/trail_projectile.png", PT_TAPE|PT_FEW|PT_BRIGHT),                            // projectile trail
+    new quadrenderer("<grey>data/texture/particle/blood01.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4|PT_COLLIDE, STAIN_BLOOD), // blood spats (note: rgb is inverted)
+    new quadrenderer("<grey>data/texture/particle/blood02.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4),                         // blood drops
+    new trailrenderer("data/texture/particle/water.png", PT_TRAIL|PT_LERP),                                              // water
+    new quadrenderer("data/texture/particle/glass.png", PT_PART|PT_FLIP|PT_BRIGHT|PT_RND4),                              // glass
+    new quadrenderer("<grey>data/texture/particle/smoke.png", PT_PART|PT_FLIP|PT_LERP),                                  // smoke
+    new quadrenderer("<grey>data/texture/particle/steam.png", PT_PART|PT_FLIP),                                          // steam
+    new quadrenderer("<grey>data/texture/particle/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_BRIGHT),                      // flame
+    new quadrenderer("data/texture/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE),                              // colliding snow
+    new taperenderer("data/texture/particle/trail.png", PT_TAPE|PT_FEW|PT_BRIGHT),                                       // bullet trail
+    new taperenderer("data/texture/particle/trail_projectile.png", PT_TAPE|PT_FEW|PT_BRIGHT),                            // projectile trail
     &lightnings,                                                                                                 // lightning
     &fireballs,                                                                                                  // explosion fireball
     &pulsebursts,                                                                                                // pulse burst
-    new quadrenderer("data/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                    // sparks
-    new trailrenderer("data/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                          // spark trail
-    new quadrenderer("data/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                                      // edit mode entities
-    new quadrenderer("data/particle/orb.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),                                 // energy orb
-    new quadrenderer("data/particle/muzzle01.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // muzzle flash
-    new quadrenderer("data/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // pulse muzzle flash
-    new quadrenderer("data/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
+    new quadrenderer("data/texture/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                    // sparks
+    new trailrenderer("data/texture/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                          // spark trail
+    new quadrenderer("data/texture/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                                      // edit mode entities
+    new quadrenderer("data/texture/particle/orb.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),                                 // energy orb
+    new quadrenderer("data/texture/particle/muzzle01.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // muzzle flash
+    new quadrenderer("data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // pulse muzzle flash
+    new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
     new quadrenderer("data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                                    // hud icon
     new quadrenderer("<colorify:1/1/1>data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                    // grey hud icon
     new quadrenderer("data/interface/icon/light.png", PT_PART),

@@ -900,7 +900,7 @@ static void setupwindow(const char *title)
 {
     copystring(apptip, title);
     //appinstance = GetModuleHandle(NULL);
-    if(!appinstance) fatal("failed getting application instance");
+    if(!appinstance) fatal("Failed getting application instance");
     appicon = LoadIcon(appinstance, MAKEINTRESOURCE(IDI_ICON1));//(HICON)LoadImage(appinstance, MAKEINTRESOURCE(IDI_ICON1), IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
     if(!appicon) fatal("Failed loading icon");
 

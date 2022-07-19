@@ -900,13 +900,7 @@ namespace game
         {
             if(d->state!=CS_ALIVE) return;
             gameent *pl = (gameent *)d;
-            if(pl->invulnmillis)
-            {
-                addmsg(N_SUICIDE, "rc", pl);
-                return;
-            }
-            if(!m_mp(gamemode))
-                killed(pl, pl, NULL);
+            if(!m_mp(gamemode)) killed(pl, pl);
             else
             {
                 int seq = (pl->lifesequence<<16)|((lastmillis/1000)&0xFFFF);

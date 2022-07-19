@@ -2747,12 +2747,6 @@ namespace server
     {
         servstate &gs = ci->state;
         if(gs.state!=CS_ALIVE) return;
-        if(gs.invulnmillis)
-        {
-            sendspawn(ci);
-            gs.respawn();
-            return;
-        }
         if(m_juggernaut && gs.juggernaut) nojuggernaut = true;
         teaminfo *t = NULL;
         if(!betweenrounds && !zombiechosen && !interm)

@@ -1832,11 +1832,10 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
             if(timeinair > 800) game::physicstrigger(pl, local, -1, 0);
         }
         game::footsteps(pl);
-
-        // automatically apply smooth roll when strafing
-        if(pl->strafe && maxroll) pl->roll = clamp(pl->roll - pow(clamp(1.0f + pl->strafe*pl->roll/maxroll, 0.0f, 1.0f), 0.33f)*pl->strafe*curtime*straferoll, -maxroll, maxroll);
-        else pl->roll *= curtime == PHYSFRAMETIME ? faderoll : pow(faderoll, curtime/float(PHYSFRAMETIME));
     }
+    // automatically apply smooth roll when strafing
+    if(pl->strafe && maxroll && !floating) pl->roll = clamp(pl->roll - pow(clamp(1.0f + pl->strafe*pl->roll/maxroll, 0.0f, 1.0f), 0.33f)*pl->strafe*curtime*straferoll, -maxroll, maxroll);
+    else pl->roll *= curtime == PHYSFRAMETIME ? faderoll : pow(faderoll, curtime/float(PHYSFRAMETIME));
 
     if(pl->state==CS_ALIVE) updatedynentcache(pl);
 

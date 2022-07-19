@@ -1739,7 +1739,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
     }
 
     vec d(m);
-    float speed = pl->maxspeed;
+    float speed = pl->speed;
     if(e->zombie || e->juggernaut) speed += 10.0f; // speed bonus
     d.mul(speed);
     if(pl->type==ENT_PLAYER)

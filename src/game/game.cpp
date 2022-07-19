@@ -1056,7 +1056,6 @@ namespace game
             case S_JUMP2:
             case S_LAND:
             case S_ITEM_SPAWN:
-            case S_ITEM_BOUNCE:
             case S_WEAPON_LOAD:
             case S_WEAPON_NOAMMO:
                 return 350;

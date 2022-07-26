@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# VALHALLA_OPTIONS contains any command line options you would like to start Valhalla with.
+VALHALLA_OPTIONS=""
+
+# VALHALLA_HOME is where Valhalla should store user files.
+VALHALLA_HOME="${HOME}/Library/Application Support/Valhalla"
+VALHALLA_APPDIR=$(dirname "$0")
+
+cd "${VALHALLA_APPDIR}"
+
+if [ -e "../Resources/data/config/default.cfg" ]; then
+    cd "../Resources" # we are an app package
+    VALHALLA_BIN="../MacOS"
+elif [ -e "../../../data/config/default.cfg" ]; then
+    cd "../../.." # we are being run in place
+    VALHALLA_BIN="./valhalla.app/Contents/MacOS"
+else
+    VALHALLA_BIN="."
+fi
+
+exec ${VALHALLA_BIN}/valhalla_universal ${VALHALLA_OPTIONS} -u"${VALHALLA_HOME}" -glog.txt $@

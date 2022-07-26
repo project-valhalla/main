@@ -1,7 +1,7 @@
 CXXFLAGS= -O3 -fomit-frame-pointer -ffast-math
 override CXXFLAGS+= -Wall -fsigned-char -fno-exceptions -fno-rtti
 
-PLATFORM= $(shell uname -s)
+PLATFORM= $(shell uname -s | tr '[:lower:]' '[:upper:]')
 PLATFORM_ARCH= $(shell uname -m)
 PLATFORM_PREFIX= native
 
@@ -46,11 +46,21 @@ endif
 CLIENT_INCLUDES= $(INCLUDES) -Iinclude
 STD_LIBS= -static-libgcc -static-libstdc++
 CLIENT_LIBS= -mwindows $(STD_LIBS) -L$(WINBIN) -L$(WINLIB) -lSDL2 -lSDL2_image -lSDL2_mixer -lzlib1 -lopengl32 -lenet -lws2_32 -lwinmm
-else	
+else
+ifneq (,$(findstring DARWIN,$(PLATFORM)))
+OSXMIN= 10.9
+override CC+=-arch x86_64 -mmacosx-version-min=$(OSXMIN)
+override CXX+=-arch x86_64 -mmacosx-version-min=$(OSXMIN)
+CLIENT_INCLUDES= $(INCLUDES) -Iinclude
+CLIENT_LIBS= -F../valhalla.app/Contents/Frameworks/ -framework SDL2 -framework SDL2_image
+CLIENT_LIBS+= -framework SDL2_mixer -framework CoreAudio -framework AudioToolbox
+CLIENT_LIBS+= -framework AudioUnit -framework OpenGL -framework Cocoa -lz -Lenet -lenet
+else
 CLIENT_INCLUDES= $(INCLUDES) -I/usr/X11R6/include `sdl2-config --cflags`
 CLIENT_LIBS= -Lenet -lenet -L/usr/X11R6/lib -lX11 `sdl2-config --libs` -lSDL2_image -lSDL2_mixer -lz -lGL
 endif
-ifeq ($(PLATFORM),Linux)
+endif
+ifeq ($(PLATFORM),LINUX)
 CLIENT_LIBS+= -lrt
 else
 ifneq (,$(findstring GNU,$(PLATFORM))) 
@@ -193,6 +203,9 @@ install: all
 else
 client:	libenet $(CLIENT_OBJS)
 	$(CXX) $(CXXFLAGS) -o tess_client $(CLIENT_OBJS) $(CLIENT_LIBS)
+ifneq (,$(findstring DARWIN,$(PLATFORM)))
+	install_name_tool -add_rpath @executable_path/../Frameworks tess_client
+endif
 
 server:	libenet $(SERVER_OBJS)
 	$(CXX) $(CXXFLAGS) -o tess_server $(SERVER_OBJS) $(SERVER_LIBS)  
@@ -206,12 +219,17 @@ shared/tessfont.o: shared/tessfont.c
 tessfont: shared/tessfont.o
 	$(CXX) $(CXXFLAGS) -o tessfont shared/tessfont.o `freetype-config --libs` -lz
 
+ifneq (,$(findstring DARWIN,$(PLATFORM)))
+install: client
+	cp tess_client ../valhalla.app/Contents/MacOS/valhalla_universal
+else
 install: all
 	cp -f tess_client	../bin_unix/$(PLATFORM_PREFIX)_client
 	cp -f tess_server	../bin_unix/$(PLATFORM_PREFIX)_server
 ifneq (,$(STRIP))
 	$(STRIP) ../bin_unix/$(PLATFORM_PREFIX)_client
 	$(STRIP) ../bin_unix/$(PLATFORM_PREFIX)_server
+endif
 endif
 endif
 

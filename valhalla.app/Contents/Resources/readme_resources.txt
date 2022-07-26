@@ -1,0 +1,1 @@
+In order to successfuly launch the game you need to copy the data directory into this folder.

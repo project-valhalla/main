@@ -1,4 +1,4 @@
-cube2font default.ttf default 3 19 1 1 49 49 512 512 32 64 media/interface/font/ 
+cube2font default.ttf default 3 19 1 1 49 49 512 512 32 64 data/interface/font/ 
 
 Fonts are (c) Bitstream (see below). DejaVu changes are in public domain.
 Glyphs imported from Arev fonts are (c) Tavmjong Bah (see below)

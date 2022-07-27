@@ -344,6 +344,8 @@ bool editmoveplane(const vec &o, const vec &ray, int d, float off, vec &handle, 
 }
 
 namespace hmap { inline bool isheightmap(int orient, int d, bool empty, cube *c); }
+extern int entorient;
+extern int enthover;
 extern void entdrag(const vec &ray);
 extern bool hoveringonent(int ent, int orient);
 extern void renderentselection(const vec &o, const vec &ray, bool entmoving);
@@ -2913,6 +2915,9 @@ void rendertexturepanel(int w, int h)
         resethudshader();
     }
 }
+
+ICOMMAND(getselface, "", (), intret(enthover >= 0 ? -1 : sel.orient));
+ICOMMAND(getselentface, "", (), intret(enthover >= 0 ? entorient : -1));
 
 #define EDITSTAT(name, type, val) \
     ICOMMAND(editstat##name, "", (), \

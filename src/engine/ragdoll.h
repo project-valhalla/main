@@ -443,9 +443,9 @@ FVAR(ragdollwaterfric, 0, 0.85f, 1);
 FVAR(ragdollgroundfric, 0, 0.8f, 1);
 FVAR(ragdollairfric, 0, 0.996f, 1);
 FVAR(ragdollunstick, 0, 10, 1e3f);
+FVAR(ragdollgravity, 0, 198.0f, 200);
 VAR(ragdollexpireoffset, 0, 2500, 30000);
 VAR(ragdollwaterexpireoffset, 0, 4000, 30000);
-VAR(ragdollgravity, 0, 198.0f, 200.0f);
 
 void ragdolldata::move(dynent *pl, float ts)
 {

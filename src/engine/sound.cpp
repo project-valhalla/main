@@ -771,7 +771,7 @@ int playsoundname(const char *s, physent *owner, const vec *loc, int vol, int fl
     return playsound(id, owner, loc, NULL, flags, loops, fade, chanid, radius, expire);
 }
 
-ICOMMAND(uisound, "s", (char *s), playsound(*s, NULL, NULL, NULL, SND_UI));
+ICOMMAND(uisound, "s", (const char *s), playsoundname(s, NULL, NULL, 100, SND_UI));
 ICOMMAND(playsound, "i", (int *n), playsound(*n));
 
 void resetsound()

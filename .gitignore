@@ -1,8 +1,15 @@
 # Custom
-*.layout
+*.bak
 *.depend
 *.ini
-*.bak
+*.layout
+*~
+.DS_Store
+.DS_Store?
+.Trashes
+._*
+Thumbs.db
+ehthumbs.db
 mingw.res
 .objs/
 bin_unix/

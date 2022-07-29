@@ -145,8 +145,6 @@ namespace game
 
     VARP(deadpush, 1, 2, 20);
 
-    const vec teamlightcolor[1+MAXTEAMS] = { vec(1, 2, 1), vec(1, 1, 2), vec(2, 1, 1) };
-
     void spawneffect(gameent *s)
     {
         cleardamagescreen();

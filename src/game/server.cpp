@@ -2663,14 +2663,6 @@ namespace server
             }
         }
         sendf(-1, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, attacks[atk].gun, kflags);
-        actor->state.item = target->state.item;
-        if(target!=actor && !target->state.juggernaut)
-        {
-            actor->state.damagemillis = target->state.damagemillis;
-            actor->state.hastemillis = target->state.hastemillis;
-            actor->state.armourmillis = target->state.armourmillis;
-            actor->state.ammomillis = target->state.ammomillis;
-        }
         target->position.setsize(0);
         if(smode) smode->died(target, actor);
         ts.state = CS_DEAD;

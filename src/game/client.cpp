@@ -1873,39 +1873,8 @@ namespace game
                 if(!actor) break;
                 actor->frags = frags;
                 if(m_teammode) setteaminfo(actor->team, tfrags);
-#if 0
-                if(actor!=player1 && (!cmode || !cmode->hidefrags()))
-                    particle_textcopy(actor->abovehead(), tempformatstring("%d", actor->frags), PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
-#endif
                 if(!victim) break;
-                actor->item = victim->item;
                 killed(victim, actor, weapon, flags);
-                if(actor == victim || victim->juggernaut) break;
-                if(victim->damagemillis)
-                {
-                    actor->damagemillis = victim->damagemillis;
-                    msgsound(S_DAMAGE, actor);
-                }
-                if(victim->hastemillis)
-                {
-                    actor->hastemillis = victim->hastemillis;
-                    msgsound(S_HASTE, actor);
-                }
-                if(victim->armourmillis)
-                {
-                    actor->armourmillis = victim->armourmillis;
-                    msgsound(S_ARMOUR, actor);
-                }
-                if(victim->ammomillis)
-                {
-                    actor->ammomillis = victim->ammomillis;
-                    msgsound(S_UAMMO, actor);
-                }
-                if(!actor->item && victim->item)
-                {
-                    actor->item = victim->item;
-                    if(actor->item == 1) msgsound(S_INVULNERABILITY, actor);
-                }
                 break;
             }
 

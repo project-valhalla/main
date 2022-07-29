@@ -1219,7 +1219,6 @@ int main(int argc, char **argv)
     if(!execfile(game::savedconfig(), false))
     {
         execfile(game::defaultconfig());
-        writecfg(game::restoreconfig());
         firstrun = true;
     }
     execfile(game::autoexec(), false);

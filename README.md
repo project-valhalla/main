@@ -20,6 +20,7 @@ Some of the things we plan to accomplish:
 - **iterate on the arena shooter formula**: take up from where the genre left off, experiment, improve user's experience;
 - **maintenance**: tweak and maintain the engine, develop features with the community;
 - **simplicity**: gameplay aims to be interesting and various but also simple, polished and fun;
+- **UI/HUD improvements and customization**: we plan to make a clear and accessible UI that is scriptable and easily customizable;
 - **uniqueness**: much importance is given to the art direction, which aims to create something unique and distinct;
 
 ## Join us

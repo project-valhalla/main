@@ -3,6 +3,7 @@
 *.depend
 *.ini
 *.layout
+*.lnk
 *~
 .DS_Store
 .DS_Store?
@@ -177,5 +178,3 @@ modules.xml
 .idea/sonarlint
 
 # End of https://www.gitignore.io/api/c,c++,intellij+all
-
-*.lnk

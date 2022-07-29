@@ -2662,7 +2662,7 @@ namespace server
                 sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
             }
         }
-        sendf(-1, 1, "ri6", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, kflags);
+        sendf(-1, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, attacks[atk].gun, kflags);
         actor->state.item = target->state.item;
         if(target!=actor && !target->state.juggernaut)
         {
@@ -2759,7 +2759,7 @@ namespace server
             if(m_teammode && validteam(ci->team)) t = &teaminfos[ci->team-1];
             if(t) t->frags += fragvalue;
         }
-        sendf(-1, 1, "ri6", N_DIED, ci->clientnum, ci->clientnum, gs.frags, t ? t->frags : 0, 0);
+        sendf(-1, 1, "ri7", N_DIED, ci->clientnum, ci->clientnum, gs.frags, t ? t->frags : 0, -1, 0);
         ci->position.setsize(0);
         if(smode) smode->died(ci, NULL);
         gs.state = CS_DEAD;

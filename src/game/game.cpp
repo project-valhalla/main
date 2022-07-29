@@ -440,7 +440,6 @@ namespace game
 
     }
 
-    VARP(teamcolorfrags, 0, 1, 1);
     VARP(killsound, 0, 0, 2);
 
     void dead(gameent *d, gameent *actor)
@@ -456,7 +455,13 @@ namespace game
         adddynlight(d->headpos(), 50, vec(1.0f, 0.80f, 1.0f), 100, 60, DL_FLASH, 0, vec(0, 0, 0), d);
     }
 
-    void killed(gameent *d, gameent *actor, int flags)
+    int killfeedactorcn = -1,
+        killfeedtargetcn = -1,
+        killfeedweapon = -1;
+
+    bool killfeedheadshot = false;
+
+    void killed(gameent *d, gameent *actor, int weapon, int flags)
     {
         if(d->state==CS_EDITING)
         {
@@ -466,89 +471,28 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
+        // console messages
         gameent *h = followingplayer();
         if(!h) h = player1;
         int contype = d==h || actor==h ? CON_FRAG_SELF : CON_FRAG_OTHER;
-        const char *dname = "", *aname = "", *dtype = "";
-        if(m_teammode && teamcolorfrags)
-        {
-            dname = teamcolorname(d, "you");
-            if(actor) aname = teamcolorname(actor, "you");
-        }
-        else
-        {
-            dname = colorname(d, NULL, "you");
-            if(actor) aname = colorname(actor, NULL, "you");
-        }
-        if(m_infection && d->zombie) dtype = "(zombie)";
-        if(m_juggernaut && d->juggernaut) dtype = "(juggernaut)";
-        if(d==actor)
-        {
-            if(!d->juggernaut) conoutf(contype, "%s \f2suicided%s", dname, d==player1 ? "!" : "");
-            else conoutf(contype, "%s \f2(juggernaut) died", dname);
-            if(d==hudplayer() && killsound) playsound(S_SUICIDE);
-        }
-        else if(isally(d, actor))
-        {
-            contype |= CON_TEAMKILL;
-            if(actor==player1) conoutf(contype, "%s \f2killed a \f6teammate\f2 (\ff%s\f2)", aname, dname);
-            else if(d==player1) conoutf(contype, "%s \f2got killed by a \f6teammate\f2 (\ff%s\f2)", dname, aname);
-            else conoutf(contype, "%s \f2killed a \f6teammate\f2 (\ff%s\f2)", aname, dname);
-            if(actor==hudplayer() && killsound) playsound(S_KILL_ALLY);
-        }
-        else
-        {
-            if(flags&K_TELEFRAG) conoutf(CON_GAMEINFO, "%s \f2teleported into \ff%s \f2%s", aname, dname, dtype);
-            else if(flags&K_STOMP) conoutf(CON_GAMEINFO, "%s \f2got stomped by \ff%s \f2%s", dname, aname, dtype);
-            else
-            {
-                if(d==player1) conoutf(contype, "%s \f2got killed by \ff%s", dname, aname);
-                else conoutf(contype, "%s \f2killed \ff%s \f2%s", aname, dname, dtype);
-            }
-            if(m_juggernaut && flags&K_JUGGERNAUT)
-            {
-                conoutf(CON_GAMEINFO, "%s \f2became the juggernaut", aname);
-                if(actor==player1) playsound(S_ANNOUNCER_JUGGERNAUT, NULL, NULL, NULL, SND_ANNOUNCER);
-                juggernauteffect(d);
-            }
-            if(flags&K_FIRST)
-            {
-                if(actor==hudplayer()) playsound(S_ANNOUNCER_FIRST_BLOOD, NULL, NULL, NULL, SND_ANNOUNCER);
-                conoutf(CON_GAMEINFO, "%s \f2drew first blood", aname);
-                if(actor->aitype==AI_BOT) taunt(actor);
-            }
-            if(flags&K_DOUBLE)
-            {
-                if(actor==hudplayer()) playsound(S_ANNOUNCER_DOUBLE_KILL, NULL, NULL, NULL, SND_ANNOUNCER);
-                conoutf(CON_GAMEINFO, "%s \f2scored a double kill", aname);
-            }
-            else if(flags&K_MULTI)
-            {
-                if(actor==hudplayer()) playsound(S_ANNOUNCER_MULTI_KILL, NULL, NULL, NULL, SND_ANNOUNCER);
-                conoutf(CON_GAMEINFO, "%s \f2scored a multi kill", aname);
-            }
-            if(flags&K_SPREE)
-            {
-                if(actor==hudplayer()) playsound(S_ANNOUNCER_KILLING_SPREE, NULL, NULL, NULL, SND_ANNOUNCER);
-                conoutf(CON_GAMEINFO, "%s \f2%s on a killing spree", aname, actor==player1 ? "are" : "is");
-                if(actor->aitype==AI_BOT) taunt(actor);
-            }
-            else if(flags&K_UNSTOPPABLE)
-            {
-                if(actor==hudplayer()) playsound(S_ANNOUNCER_UNSTOPPABLE, NULL, NULL, NULL, SND_ANNOUNCER);
-                conoutf(CON_GAMEINFO, "%s \f2%s unstoppable!", aname, actor==player1 ? "are" : "is");
-                if(actor->aitype==AI_BOT) taunt(actor);
-            }
-            if(flags&K_HEADSHOT)
-            {
-                if(actor==hudplayer()) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
-            }
-            if(actor->aitype==AI_BOT && d->aitype != AI_BOT && actor->skill < 80 && d->frags >= actor->frags)
-                taunt(actor);
-            if(actor==hudplayer() && killsound) playsound(killsound == 1 ? S_KILL1 : S_KILL2);
-        }
-        dead(d, actor);
+        if(d==actor) conoutf(contype, "\fs%s \f2suicided\fr", colorname(d));
+        else conoutf(contype, "\fs%s \f2killed \fr%s \f2%s", colorname(actor), colorname(d), isally(d, actor)? "(ally)" : "");
+
+        if(flags&K_HEADSHOT && actor==hudplayer()) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
+        // kill feeds
+        killfeedactorcn = actor->clientnum;
+        killfeedtargetcn = d->clientnum;
+        killfeedweapon = validgun(weapon)? weapon: -1;
+        killfeedheadshot = flags&K_HEADSHOT;
+        execident("onkillfeed");
+        // update player state and reset ai
+        deathstate(d);
+        ai::killed(d, actor);
     }
+    ICOMMAND(getkillfeedactor, "", (), intret(killfeedactorcn));
+    ICOMMAND(getkillfeedtarget, "", (), intret(killfeedtargetcn));
+    ICOMMAND(getkillfeedweap, "", (), intret(killfeedweapon));
+    ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
     void timeupdate(int secs)
     {
@@ -900,7 +844,7 @@ namespace game
         {
             if(d->state!=CS_ALIVE) return;
             gameent *pl = (gameent *)d;
-            if(!m_mp(gamemode)) killed(pl, pl);
+            if(!m_mp(gamemode)) killed(pl, pl, -1);
             else
             {
                 int seq = (pl->lifesequence<<16)|((lastmillis/1000)&0xFFFF);

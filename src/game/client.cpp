@@ -1866,7 +1866,8 @@ namespace game
 
             case N_DIED:
             {
-                int vcn = getint(p), acn = getint(p), frags = getint(p), tfrags = getint(p), flags = getint(p);
+                int vcn = getint(p), acn = getint(p), frags = getint(p), tfrags = getint(p),
+                    weapon = getint(p), flags = getint(p);
                 gameent *victim = getclient(vcn),
                        *actor = getclient(acn);
                 if(!actor) break;
@@ -1878,7 +1879,7 @@ namespace game
 #endif
                 if(!victim) break;
                 actor->item = victim->item;
-                killed(victim, actor, flags);
+                killed(victim, actor, weapon, flags);
                 if(actor == victim || victim->juggernaut) break;
                 if(victim->damagemillis)
                 {

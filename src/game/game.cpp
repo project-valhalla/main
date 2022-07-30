@@ -455,13 +455,10 @@ namespace game
         adddynlight(d->headpos(), 50, vec(1.0f, 0.80f, 1.0f), 100, 60, DL_FLASH, 0, vec(0, 0, 0), d);
     }
 
-    int killfeedactorcn = -1,
-        killfeedtargetcn = -1,
-        killfeedweapon = -1;
-
+    int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;
     bool killfeedheadshot = false;
 
-    void killed(gameent *d, gameent *actor, int weapon, int flags)
+    void killed(gameent *d, gameent *actor, int atk, int flags)
     {
         if(d->state==CS_EDITING)
         {
@@ -475,14 +472,15 @@ namespace game
         gameent *h = followingplayer();
         if(!h) h = player1;
         int contype = d==h || actor==h ? CON_FRAG_SELF : CON_FRAG_OTHER;
-        if(d==actor) conoutf(contype, "\fs%s \f2suicided\fr", colorname(d));
-        else conoutf(contype, "\fs%s \f2killed \fr%s \f2%s", colorname(actor), colorname(d), isally(d, actor)? "(ally)" : "");
-
+        if(d==actor) conoutf(contype, "%s \fs\f2suicided\fr", teamcolorname(d));
+        else if(isally(d, actor)) conoutf(contype, "%s \fs\f2killed an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), teamcolorname(d));
+        else conoutf(contype, "%s \fs\f2killed\fr %s", teamcolorname(actor), teamcolorname(d));
+        // headshot announcement
         if(flags&K_HEADSHOT && actor==hudplayer()) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
-        // kill feeds
+        // kill feed
         killfeedactorcn = actor->clientnum;
         killfeedtargetcn = d->clientnum;
-        killfeedweapon = validgun(weapon)? weapon: -1;
+        killfeedweaponinfo = validatk(atk)? (attacks[atk].action == ACT_MELEE? -1 : attacks[atk].gun) : -2;
         killfeedheadshot = flags&K_HEADSHOT;
         execident("onkillfeed");
         // update player state and reset ai
@@ -491,7 +489,7 @@ namespace game
     }
     ICOMMAND(getkillfeedactor, "", (), intret(killfeedactorcn));
     ICOMMAND(getkillfeedtarget, "", (), intret(killfeedtargetcn));
-    ICOMMAND(getkillfeedweap, "", (), intret(killfeedweapon));
+    ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
     ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
     void timeupdate(int secs)

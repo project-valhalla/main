@@ -1867,14 +1867,14 @@ namespace game
             case N_DIED:
             {
                 int vcn = getint(p), acn = getint(p), frags = getint(p), tfrags = getint(p),
-                    weapon = getint(p), flags = getint(p);
+                    atk = getint(p), flags = getint(p);
                 gameent *victim = getclient(vcn),
-                       *actor = getclient(acn);
+                        *actor = getclient(acn);
                 if(!actor) break;
                 actor->frags = frags;
                 if(m_teammode) setteaminfo(actor->team, tfrags);
                 if(!victim) break;
-                killed(victim, actor, weapon, flags);
+                killed(victim, actor, atk, flags);
                 break;
             }
 

@@ -764,7 +764,7 @@ namespace game
     extern gameent *getclient(int cn);
     extern gameent *newclient(int cn);
     extern const char *colorname(gameent *d, const char *name = NULL, const char *alt = NULL, const char *color = "");
-    extern const char *teamcolorname(gameent *d, const char *alt = "you");
+    extern const char *teamcolorname(gameent *d, const char *alt = NULL);
     extern const char *teamcolor(const char *prefix, const char *suffix, int team, const char *alt);
     extern gameent *pointatplayer();
     extern gameent *hudplayer();
@@ -780,7 +780,7 @@ namespace game
     extern bool isally(gameent *a, gameent *b);
     extern void deathstate(gameent *d, bool restore = false);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
-    extern void killed(gameent *d, gameent *actor, int weapon, int flags = K_NONE);
+    extern void killed(gameent *d, gameent *actor, int atk, int flags = K_NONE);
     extern void timeupdate(int timeremain);
     extern void msgsound(int n, physent *d = NULL);
     extern void drawicon(int icon, float x, float y, float sz = 120);

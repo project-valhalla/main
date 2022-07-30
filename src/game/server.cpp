@@ -2662,7 +2662,7 @@ namespace server
                 sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
             }
         }
-        sendf(-1, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, attacks[atk].gun, kflags);
+        sendf(-1, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, atk, kflags);
         target->position.setsize(0);
         if(smode) smode->died(target, actor);
         ts.state = CS_DEAD;

@@ -946,8 +946,7 @@ namespace game
                     }
                     if(d==hudplayer()) spawnbouncer(d->muzzle, d, BNC_CARTRIDGE); // using muzzle vec temporarily
                 }
-                particle_trail(PART_STEAM, 220, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x202020, 0.35f, 30);
-                particle_flare(hudgunorigin(gun, from, to, d), to, 600, PART_TRAIL, 0x55DD55, 0.17f);
+                particle_flare(hudgunorigin(gun, from, to, d), to, 600, PART_TRAIL, 0x55DD55, 0.6f);
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }

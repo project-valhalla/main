@@ -533,15 +533,15 @@ void checkmapsounds()
         if(e.type!=ET_SOUND) continue;
         if(camera1->o.dist(e.o) < e.attr2) // if inside entity radius (attr2)
         {
-            if(e.attr4)
+            if(!(e.flags&EF_SOUND))
             {
-                if(totalmillis-e.lastplayed >= e.attr4 * 1000) // delay map sound (attr4)
+                if(!e.attr4) playsound(e.attr1, NULL, NULL, &e, SND_MAP, -1);
+                else if(totalmillis-e.lastplayed >= e.attr4 * 1000) // delay map sound (attr4)
                 {
                     playsound(e.attr1, NULL, NULL, &e, SND_MAP);
                     e.lastplayed = totalmillis;
                 }
             }
-            else if(!(e.flags&EF_SOUND)) playsound(e.attr1, NULL, NULL, &e, SND_MAP, -1);
         }
         else if(e.flags&EF_SOUND) stopmapsound(&e);
     }

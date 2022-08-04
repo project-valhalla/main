@@ -218,7 +218,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_LISTDEMOS, 1, N_SENDDEMOLIST, 0, N_GETDEMO, 2, N_SENDDEMO, 0,
     N_DEMOPLAYBACK, 3, N_RECORDDEMO, 2, N_STOPDEMO, 1, N_CLEARDEMOS, 2,
     N_TAKEFLAG, 3, N_RETURNFLAG, 4, N_RESETFLAG, 3, N_TRYDROPFLAG, 1, N_DROPFLAG, 7, N_SCOREFLAG, 9, N_INITFLAGS, 0,
-    N_ROUNDSCORE, 0, N_JUGGERNAUT, 3, N_INFECT, 4, N_SCORE, 3, N_TRAITOR, 2,  N_FORCEWEAPON, 3,
+    N_ROUNDSCORE, 0, N_JUGGERNAUT, 3, N_INFECT, 3, N_SCORE, 3, N_TRAITOR, 2,  N_FORCEWEAPON, 3,
     N_SAYTEAM, 0, N_WHISPER, 0,
     N_CLIENT, 0,
     N_AUTHTRY, 0, N_AUTHKICK, 0, N_AUTHCHAL, 0, N_AUTHANS, 0, N_REQAUTH, 0,
@@ -440,6 +440,15 @@ struct gamestate
         gunwait = 0;
         resetitems();
         juggernaut = zombie = 0;
+    }
+
+    void infect()
+    {
+        resetitems();
+        zombie = 1;
+        maxhealth = health = 1000;
+        ammo[GUN_ZOMBIE] = 1;
+        gunselect = GUN_ZOMBIE;
     }
 
     void setweapons(int weap1, int weap2)
@@ -779,6 +788,7 @@ namespace game
     extern bool isally(gameent *a, gameent *b);
     extern void deathstate(gameent *d, bool restore = false);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
+    extern void obituary(gameent *d, gameent *actor, int atk, bool headshot = false);
     extern void killed(gameent *d, gameent *actor, int atk, int flags = K_NONE);
     extern void timeupdate(int timeremain);
     extern void msgsound(int n, physent *d = NULL);

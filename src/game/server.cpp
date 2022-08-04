@@ -2115,21 +2115,12 @@ namespace server
         return host;
     }
 
-    void infect(clientinfo *ci, int actor = -1)
+    void infect(clientinfo *ci, int actor)
     {
         if(!m_infection || !ci || ci->state.state!=CS_ALIVE) return;
-        servstate &gs = ci->state;
-        gs.resetitems();
-        gs.zombie = 1;
-        int health = gs.maxhealth*10;
-        gs.maxhealth = gs.health = health;
-        gs.ammo[GUN_ZOMBIE] = 1;
-        gs.gunselect = GUN_ZOMBIE;
-        sendf(-1, 1, "ri4", N_INFECT, ci->clientnum, actor, health);
-        if(!zombiechosen)
-        {
-            sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_INFECTION, S_INFECTION, "\f2The infection has begun");
-        }
+        ci->state.infect();
+        sendf(-1, 1, "ri3", N_INFECT, ci->clientnum, actor);
+        if(!zombiechosen) sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_INFECTION, S_INFECTION, "\fs\f2Infection has begun\fr");
     }
 
     void choosezombie()
@@ -2141,7 +2132,7 @@ namespace server
             if(clients[i]->state.state!=CS_ALIVE) spec = ci;
         }
         clientinfo *zombie = hostzombie(spec);
-        infect(zombie);
+        infect(zombie, zombie->clientnum);
         zombiechosen = true;
         betweenrounds = false;
     }

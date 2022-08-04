@@ -458,6 +458,34 @@ namespace game
     int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;
     bool killfeedheadshot = false;
 
+    void obituary(gameent *d, gameent *actor, int atk, bool headshot)
+    {
+        // console messages
+        gameent *h = followingplayer();
+        if(!h) h = player1;
+        int contype = d==h || actor==h ? CON_FRAG_SELF : CON_FRAG_OTHER;
+        const char *act = "killed";
+        if(attacks[atk].gun == GUN_ZOMBIE)
+        {
+            if(d==actor) act = "got infected";
+            else act = "infected";
+        }
+        else if(d==actor) act = "suicided";
+        if(d==actor) conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
+        else if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
+        else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
+        // kill feed
+        killfeedactorcn = actor->clientnum;
+        killfeedtargetcn = d->clientnum;
+        killfeedweaponinfo = validatk(atk)? (attacks[atk].action == ACT_MELEE? -1 : attacks[atk].gun) : -2;
+        killfeedheadshot = headshot;
+        execident("onkillfeed");
+    }
+    ICOMMAND(getkillfeedactor, "", (), intret(killfeedactorcn));
+    ICOMMAND(getkillfeedtarget, "", (), intret(killfeedtargetcn));
+    ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
+    ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
+
     void killed(gameent *d, gameent *actor, int atk, int flags)
     {
         if(d->state==CS_EDITING)
@@ -468,29 +496,12 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-        // console messages
-        gameent *h = followingplayer();
-        if(!h) h = player1;
-        int contype = d==h || actor==h ? CON_FRAG_SELF : CON_FRAG_OTHER;
-        if(d==actor) conoutf(contype, "%s \fs\f2suicided\fr", teamcolorname(d));
-        else if(isally(d, actor)) conoutf(contype, "%s \fs\f2killed an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), teamcolorname(d));
-        else conoutf(contype, "%s \fs\f2killed\fr %s", teamcolorname(actor), teamcolorname(d));
-        // headshot announcement
+        obituary(d, actor, atk, flags&K_HEADSHOT); // obituary (console messages, kill feed)
         if(flags&K_HEADSHOT && actor==hudplayer()) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
-        // kill feed
-        killfeedactorcn = actor->clientnum;
-        killfeedtargetcn = d->clientnum;
-        killfeedweaponinfo = validatk(atk)? (attacks[atk].action == ACT_MELEE? -1 : attacks[atk].gun) : -2;
-        killfeedheadshot = flags&K_HEADSHOT;
-        execident("onkillfeed");
         // update player state and reset ai
         deathstate(d);
         ai::killed(d, actor);
     }
-    ICOMMAND(getkillfeedactor, "", (), intret(killfeedactorcn));
-    ICOMMAND(getkillfeedtarget, "", (), intret(killfeedtargetcn));
-    ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
-    ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
     void timeupdate(int secs)
     {

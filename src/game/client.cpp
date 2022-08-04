@@ -152,15 +152,6 @@ namespace game
         msgsound(S_SPAWN, s);
     }
 
-    void infected(gameent *d, gameent *actor)
-    {
-        msgsound(S_INFECTED, d);
-        particle_splash(PART_SPARK2, 100, 200, d->o, 0x80FF20, 0.40f, 200, 8);
-        adddynlight(d->headpos(), 50, vec(0.80f, 1.0f, 0.20f), 100, 60, DL_FLASH, 0, vec(0, 0, 0), d);
-        if(d==player1) conoutf(CON_FRAG_SELF, "\f0You got infected %s %s", actor ? "by" : "", actor ? colorname(actor) : "");
-        if(d!=player1) conoutf(CON_GAMEINFO, "\f2%s got infected %s %s", colorname(d), actor ? "by" : "", actor ? colorname(actor) : "");
-    }
-
     void switchname(const char *name)
     {
         filtertext(player1->name, name, false, false, true, false, MAXNAMELEN);
@@ -2249,17 +2240,14 @@ namespace game
 
             case N_INFECT:
             {
-                int tcn = getint(p), acn = getint(p), health = getint(p);
-                gameent *d = getclient(tcn);
-                gameent *actor = getclient(acn);
+                int tcn = getint(p), acn = getint(p);
+                gameent *d = getclient(tcn),
+                        *actor = getclient(acn);
                 if(!m_infection || !d) break;
-                d->resetitems();
-                d->zombie = 1;
-                d->maxhealth = d->health = health;
-                d->ammo[GUN_ZOMBIE] = 1;
-                d->gunselect = GUN_ZOMBIE;
+                obituary(d, actor, ATK_ZOMBIE);
+                d->infect();
                 d->stoppowerupsound();
-                infected(d, actor ? actor : NULL);
+                playsound(S_INFECTED, d);
                 break;
             }
 

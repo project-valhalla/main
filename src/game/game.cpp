@@ -442,12 +442,6 @@ namespace game
 
     VARP(killsound, 0, 0, 2);
 
-    void dead(gameent *d, gameent *actor)
-    {
-        deathstate(d);
-        ai::kill(d, actor);
-    }
-
     void juggernauteffect(gameent *d)
     {
         msgsound(S_JUGGERNAUT, d);

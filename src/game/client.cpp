@@ -1081,6 +1081,7 @@ namespace game
             nextscorelimit = Scorelimit = 30;
             clientmap[0] = '\0';
         }
+        execident("on_disconnect");
     }
 
     VARP(chatsound, 0, 1, 2); // 0 = no chat sound, 1 = always plays, 2 = only for whispers

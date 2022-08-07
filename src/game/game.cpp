@@ -128,6 +128,7 @@ namespace game
             showscores(false);
             if(cmode) cmode->respawned(player1);
         }
+        execident("on_spawn");
     }
 
     gameent *pointatplayer()
@@ -478,7 +479,7 @@ namespace game
         killfeedtargetcn = d->clientnum;
         killfeedweaponinfo = validatk(atk)? (attacks[atk].action == ACT_MELEE? -1 : attacks[atk].gun) : -2;
         killfeedheadshot = headshot;
-        execident("onkillfeed");
+        execident("on_killfeed");
     }
     ICOMMAND(getkillfeedactor, "", (), intret(killfeedactorcn));
     ICOMMAND(getkillfeedtarget, "", (), intret(killfeedtargetcn));
@@ -500,6 +501,9 @@ namespace game
         // update player state and reset ai
         deathstate(d);
         ai::killed(d, actor);
+        // events
+        if(d == player1) execident("on_death");
+        if(actor == player1) execident("on_kill");
     }
 
     void timeupdate(int secs)
@@ -535,7 +539,7 @@ namespace game
             showscores(true);
             disablezoom();
 
-            execident("intermission");
+            execident("on_intermission");
         }
     }
 
@@ -650,7 +654,7 @@ namespace game
         showscores(false);
         disablezoom();
 
-        execident("mapstart");
+        execident("on_mapstart");
     }
 
     void startmap(const char *name)   // called just after a map load

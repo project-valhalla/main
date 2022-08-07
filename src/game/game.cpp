@@ -3,7 +3,6 @@
 namespace game
 {
     bool intermission = false;
-    bool infection = false;
     int maptime = 0, maprealtime = 0, maplimit = -1;
     int lastspawnattempt = 0;
 

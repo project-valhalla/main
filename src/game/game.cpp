@@ -128,6 +128,7 @@ namespace game
             showscores(false);
             if(cmode) cmode->respawned(player1);
         }
+        execident("on_spawn");
     }
 
     gameent *pointatplayer()
@@ -400,7 +401,7 @@ namespace game
                 if(playheadshotsound) playsound(S_HIT_WEAPON_HEAD, NULL, &d->o);
             }
         }
-        if(d->health<=0) { if(local) killed(d, actor, NULL); }
+        if(d->health<=0) { if(local) kill(d, actor, NULL); }
     }
 
     VARP(gore, 0, 1, 1);
@@ -441,12 +442,6 @@ namespace game
 
     VARP(killsound, 0, 0, 2);
 
-    void dead(gameent *d, gameent *actor)
-    {
-        deathstate(d);
-        ai::killed(d, actor);
-    }
-
     void juggernauteffect(gameent *d)
     {
         msgsound(S_JUGGERNAUT, d);
@@ -457,7 +452,7 @@ namespace game
     int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;
     bool killfeedheadshot = false;
 
-    void obituary(gameent *d, gameent *actor, int atk, bool headshot)
+    void writeobituary(gameent *d, gameent *actor, int atk, bool headshot)
     {
         // console messages
         gameent *h = followingplayer();
@@ -478,14 +473,14 @@ namespace game
         killfeedtargetcn = d->clientnum;
         killfeedweaponinfo = validatk(atk)? (attacks[atk].action == ACT_MELEE? -1 : attacks[atk].gun) : -2;
         killfeedheadshot = headshot;
-        execident("onkillfeed");
+        execident("on_killfeed");
     }
     ICOMMAND(getkillfeedactor, "", (), intret(killfeedactorcn));
     ICOMMAND(getkillfeedtarget, "", (), intret(killfeedtargetcn));
     ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
     ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
-    void killed(gameent *d, gameent *actor, int atk, int flags)
+    void kill(gameent *d, gameent *actor, int atk, int flags)
     {
         if(d->state==CS_EDITING)
         {
@@ -495,11 +490,14 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-        obituary(d, actor, atk, flags&K_HEADSHOT); // obituary (console messages, kill feed)
+        writeobituary(d, actor, atk, flags&K_HEADSHOT); // obituary (console messages, kill feed)
         if(flags&K_HEADSHOT && actor==hudplayer()) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
         // update player state and reset ai
         deathstate(d);
-        ai::killed(d, actor);
+        ai::kill(d, actor);
+        // events
+        if(d == player1) execident("on_death");
+        if(actor == player1) execident("on_kill");
     }
 
     void timeupdate(int secs)
@@ -535,7 +533,7 @@ namespace game
             showscores(true);
             disablezoom();
 
-            execident("intermission");
+            execident("on_intermission");
         }
     }
 
@@ -650,7 +648,7 @@ namespace game
         showscores(false);
         disablezoom();
 
-        execident("mapstart");
+        execident("on_mapstart");
     }
 
     void startmap(const char *name)   // called just after a map load
@@ -852,7 +850,7 @@ namespace game
         {
             if(d->state!=CS_ALIVE) return;
             gameent *pl = (gameent *)d;
-            if(!m_mp(gamemode)) killed(pl, pl, -1);
+            if(!m_mp(gamemode)) kill(pl, pl, -1);
             else
             {
                 int seq = (pl->lifesequence<<16)|((lastmillis/1000)&0xFFFF);

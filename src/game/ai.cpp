@@ -592,7 +592,7 @@ namespace ai
         if(d->ai) setup(d);
     }
 
-    void killed(gameent *d, gameent *e)
+    void kill(gameent *d, gameent *e)
     {
         if(d->ai) d->ai->reset();
     }

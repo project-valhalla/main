@@ -2396,6 +2396,7 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 }
 
 COMMAND(texture, "ssiiif");
+ICOMMAND(numdecalslots, "", (), { intret(decalslots.length()); });
 
 void texgrass(char *name)
 {

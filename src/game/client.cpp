@@ -1081,6 +1081,7 @@ namespace game
             nextscorelimit = Scorelimit = 30;
             clientmap[0] = '\0';
         }
+        execident("on_disconnect");
     }
 
     VARP(chatsound, 0, 1, 2); // 0 = no chat sound, 1 = always plays, 2 = only for whispers
@@ -1865,7 +1866,7 @@ namespace game
                 actor->frags = frags;
                 if(m_teammode) setteaminfo(actor->team, tfrags);
                 if(!victim) break;
-                killed(victim, actor, atk, flags);
+                kill(victim, actor, atk, flags);
                 break;
             }
 
@@ -2244,7 +2245,7 @@ namespace game
                 gameent *d = getclient(tcn),
                         *actor = getclient(acn);
                 if(!m_infection || !d) break;
-                obituary(d, actor, ATK_ZOMBIE);
+                writeobituary(d, actor, ATK_ZOMBIE);
                 d->infect();
                 d->stoppowerupsound();
                 playsound(S_INFECTED, d);

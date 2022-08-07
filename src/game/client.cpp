@@ -1866,7 +1866,7 @@ namespace game
                 actor->frags = frags;
                 if(m_teammode) setteaminfo(actor->team, tfrags);
                 if(!victim) break;
-                killed(victim, actor, atk, flags);
+                kill(victim, actor, atk, flags);
                 break;
             }
 
@@ -2245,7 +2245,7 @@ namespace game
                 gameent *d = getclient(tcn),
                         *actor = getclient(acn);
                 if(!m_infection || !d) break;
-                obituary(d, actor, ATK_ZOMBIE);
+                writeobituary(d, actor, ATK_ZOMBIE);
                 d->infect();
                 d->stoppowerupsound();
                 playsound(S_INFECTED, d);

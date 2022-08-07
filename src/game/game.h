@@ -788,8 +788,8 @@ namespace game
     extern bool isally(gameent *a, gameent *b);
     extern void deathstate(gameent *d, bool restore = false);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
-    extern void obituary(gameent *d, gameent *actor, int atk, bool headshot = false);
-    extern void killed(gameent *d, gameent *actor, int atk, int flags = K_NONE);
+    extern void writeobituary(gameent *d, gameent *actor, int atk, bool headshot = false);
+    extern void kill(gameent *d, gameent *actor, int atk, int flags = K_NONE);
     extern void timeupdate(int timeremain);
     extern void msgsound(int n, physent *d = NULL);
     extern void drawicon(int icon, float x, float y, float sz = 120);

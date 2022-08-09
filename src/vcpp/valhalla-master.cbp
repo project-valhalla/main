@@ -165,7 +165,6 @@
 		<Unit filename="../game/ai.cpp" />
 		<Unit filename="../game/ai.h" />
 		<Unit filename="../game/aiman.h" />
-		<Unit filename="../game/client.cpp" />
 		<Unit filename="../game/ctf.h" />
 		<Unit filename="../game/elimination.h" />
 		<Unit filename="../game/entity.cpp" />
@@ -175,10 +174,11 @@
 			<Option compile="1" />
 			<Option weight="0" />
 		</Unit>
+		<Unit filename="../game/gameclient.cpp" />
 		<Unit filename="../game/gamemode.h" />
+		<Unit filename="../game/gameserver.cpp" />
 		<Unit filename="../game/render.cpp" />
 		<Unit filename="../game/scoreboard.cpp" />
-		<Unit filename="../game/server.cpp" />
 		<Unit filename="../game/waypoint.cpp" />
 		<Unit filename="../game/weapon.cpp" />
 		<Unit filename="../game/weapon.h" />

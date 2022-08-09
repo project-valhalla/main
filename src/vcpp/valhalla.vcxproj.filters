@@ -16,7 +16,7 @@
     <ClCompile Include="..\engine\client.cpp">
       <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\game\client.cpp">
+    <ClCompile Include="..\game\gameclient.cpp">
       <Filter>game</Filter>
     </ClCompile>
     <ClCompile Include="..\engine\command.cpp">
@@ -115,7 +115,7 @@
     <ClCompile Include="..\engine\server.cpp">
       <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\game\server.cpp">
+    <ClCompile Include="..\game\gameserver.cpp">
       <Filter>game</Filter>
     </ClCompile>
     <ClCompile Include="..\engine\serverbrowser.cpp">

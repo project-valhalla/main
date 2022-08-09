@@ -4,6 +4,7 @@
 *.ini
 *.layout
 *.lnk
+*.user
 *~
 .DS_Store
 .DS_Store?
@@ -13,6 +14,7 @@ Thumbs.db
 ehthumbs.db
 mingw.res
 .objs/
+.vs/
 bin_unix/
 
 # Created by https://www.gitignore.io/api/c,c++,intellij+all

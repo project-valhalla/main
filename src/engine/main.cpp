@@ -1262,7 +1262,6 @@ int main(int argc, char **argv)
     if(firstrun)
     {
         execfile("data/config/ui/firstrun.cfg");
-        UI::showui("welcome");
         firstrun = false;
     }
 

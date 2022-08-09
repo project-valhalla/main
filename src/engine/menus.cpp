@@ -62,6 +62,7 @@ void menuprocess()
         execident("mainmenutoggled");
     }    
     if(mainmenu && !isconnected(true) && !UI::hascursor()) UI::showui("main");
+    if(!UI::uivisible("perm")) UI::showui("perm");
 }
 
 VAR(mainmenu, 1, 1, 0);

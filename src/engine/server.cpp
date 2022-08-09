@@ -1070,8 +1070,8 @@ void initserver(bool listen, bool dedicated)
         setupwindow("Valhalla server");
 #endif
     }
-    execfile("data/config/maplistgen.cfg", false);
-    execfile("data/config/server-init.cfg", false);
+    execfile("data/config/server/maplistgen.cfg", false);
+    execfile("data/config/server/server-init.cfg", false);
 
     if(listen) setuplistenserver(dedicated);
 

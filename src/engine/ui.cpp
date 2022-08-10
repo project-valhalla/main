@@ -6,6 +6,7 @@ namespace UI
     float cursorx = 0.499f, cursory = 0.499f;
 
     bool cursorlocked = false, mousetracking = false;
+    bool cursorlockedx = false, cursorlockedy = false;
 
     vec2 mousetrackvec;
 
@@ -3101,7 +3102,9 @@ namespace UI
     ICOMMAND(uiallowinput, "b", (int *val), { if(window) { if(*val >= 0) window->allowinput = *val!=0; intret(window->allowinput ? 1 : 0); } });
     ICOMMAND(uieschide, "b", (int *val), { if(window) { if(*val >= 0) window->eschide = *val!=0; intret(window->eschide ? 1 : 0); } });
 
-    ICOMMAND(uilockcursor, "", (), cursorlocked = true);
+    ICOMMAND(uilockcursor,  "", (), cursorlocked  = true);
+    ICOMMAND(uilockcursorx, "", (), cursorlockedx = true);
+    ICOMMAND(uilockcursory, "", (), cursorlockedy = true);
     ICOMMAND(uiaspect, "", (), floatret(float(hudw)/hudh));
     ICOMMAND(uimousetrackx, "", (), {
         mousetracking = true;
@@ -3513,8 +3516,8 @@ namespace UI
 
         if(!cursorlocked)
         {
-            cursorx = clamp(cursorx + mousemovex, 0.0f, 1.0f);
-            cursory = clamp(cursory + mousemovey, 0.0f, 1.0f);
+            if (!cursorlockedx) cursorx = clamp(cursorx + mousemovex, 0.0f, 1.0f);
+            if (!cursorlockedy) cursory = clamp(cursory + mousemovey, 0.0f, 1.0f);
         }
         return true;
     }
@@ -3583,7 +3586,9 @@ namespace UI
     void update()
     {
         mousetracking = false;
-        cursorlocked = false;
+        cursorlocked  = false;
+        cursorlockedx = false;
+        cursorlockedy = false;
 
         readyeditors();
 

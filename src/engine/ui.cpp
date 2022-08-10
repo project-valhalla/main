@@ -5,6 +5,10 @@ namespace UI
 {
     float cursorx = 0.499f, cursory = 0.499f;
 
+    bool cursorlocked = false, mousetracking = false;
+
+    vec2 mousetrackvec;
+
     static void quads(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1)
     {
         gle::attribf(x,   y);   gle::attribf(tx,    ty);
@@ -3097,6 +3101,17 @@ namespace UI
     ICOMMAND(uiallowinput, "b", (int *val), { if(window) { if(*val >= 0) window->allowinput = *val!=0; intret(window->allowinput ? 1 : 0); } });
     ICOMMAND(uieschide, "b", (int *val), { if(window) { if(*val >= 0) window->eschide = *val!=0; intret(window->eschide ? 1 : 0); } });
 
+    ICOMMAND(uilockcursor, "", (), cursorlocked = true);
+    ICOMMAND(uimousetrackx, "", (), {
+        mousetracking = true;
+        floatret(mousetrackvec.x);
+    });
+
+    ICOMMAND(uimousetracky, "", (), {
+        mousetracking = true;
+        floatret(mousetrackvec.y);
+    });
+
     bool showui(const char *name)
     {
         Window *window = windows.find(name, NULL);
@@ -3485,11 +3500,21 @@ namespace UI
         cursorx = cursory = 0.5f;
     }
 
-    bool movecursor(int dx, int dy)
+    bool movecursor(int dx, int dy, int w, int h)
     {
         if(!hascursor()) return false;
-        cursorx = clamp(cursorx + dx*uisensitivity/hudw, 0.0f, 1.0f);
-        cursory = clamp(cursory + dy*uisensitivity/hudh, 0.0f, 1.0f);
+
+        #define mousesens(a,b,c) ((float(a)/float(b))*c)
+        float mousemovex = mousesens(dx, w, uisensitivity);
+        float mousemovey = mousesens(dy, h, uisensitivity);
+
+        mousetrack(mousemovex, mousemovey);
+
+        if(!cursorlocked)
+        {
+            cursorx = clamp(cursorx + mousemovex, 0.0f, 1.0f);
+            cursory = clamp(cursory + mousemovey, 0.0f, 1.0f);
+        }
         return true;
     }
 
@@ -3556,19 +3581,26 @@ namespace UI
 
     void update()
     {
+        mousetracking = false;
+        cursorlocked = false;
+
         readyeditors();
 
         world->setstate(STATE_HOVER, cursorx, cursory, world->childstate&STATE_HOLD_MASK);
         if(world->childstate&STATE_HOLD) world->setstate(STATE_HOLD, cursorx, cursory, STATE_HOLD, false);
         if(world->childstate&STATE_ALT_HOLD) world->setstate(STATE_ALT_HOLD, cursorx, cursory, STATE_ALT_HOLD, false);
         if(world->childstate&STATE_ESC_HOLD) world->setstate(STATE_ESC_HOLD, cursorx, cursory, STATE_ESC_HOLD, false);
-
+        
         calctextscale();
 
         world->build();
 
+        if(!mousetracking) mousetrackvec = vec2(0, 0);
+
         flusheditors();
     }
+
+    void mousetrack(float dx, float dy) { mousetrackvec.add(vec2(dx, dy)); }
 
     void render()
     {

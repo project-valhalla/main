@@ -3508,7 +3508,7 @@ namespace UI
         float mousemovex = mousesens(dx, w, uisensitivity);
         float mousemovey = mousesens(dy, h, uisensitivity);
 
-        mousetrack(mousemovex, mousemovey);
+        mousetrackvec.add(vec2(mousemovex, mousemovey));
 
         if(!cursorlocked)
         {
@@ -3599,8 +3599,6 @@ namespace UI
 
         flusheditors();
     }
-
-    void mousetrack(float dx, float dy) { mousetrackvec.add(vec2(dx, dy)); }
 
     void render()
     {

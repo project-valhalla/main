@@ -3102,6 +3102,7 @@ namespace UI
     ICOMMAND(uieschide, "b", (int *val), { if(window) { if(*val >= 0) window->eschide = *val!=0; intret(window->eschide ? 1 : 0); } });
 
     ICOMMAND(uilockcursor, "", (), cursorlocked = true);
+    ICOMMAND(uiaspect, "", (), floatret(float(hudw)/hudh));
     ICOMMAND(uimousetrackx, "", (), {
         mousetracking = true;
         floatret(mousetrackvec.x);

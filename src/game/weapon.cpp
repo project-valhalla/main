@@ -742,7 +742,7 @@ namespace game
                             tails = 4.50f; tailc = 0x00FFFF;
                             particle_splash(PART_ORB, 1, 1, pos, tailc, tails, 150, 20);
                             particle_fireball(pos, 9.50f, PART_EXPLOSION2, 1, 0x00FFFF);
-                            p.projsound = S_PULSE_LOOP;
+                            p.projsound = S_PISTOL_LOOP;
                             break;
                         }
                     }

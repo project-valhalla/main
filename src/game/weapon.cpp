@@ -309,7 +309,7 @@ namespace game
                     int damage = attacks[bnc.atk].damage*(bnc.owner->damagemillis||bnc.owner->juggernaut?2:1);
                     hits.setsize(0);
                     explode(bnc.local, bnc.owner, bnc.o, bnc.vel, NULL, damage, bnc.atk);
-                    addstain(STAIN_PULSE_SCORCH, bnc.o, vec(0, 0, 1), attacks[bnc.atk].exprad);
+                    addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
                     if(bnc.local)
                         addmsg(N_EXPLODE, "rci3iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime,
                                                     hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
@@ -616,15 +616,12 @@ namespace game
             case ATK_RL2:
                 loopv(bouncers)
                 {
-                    bouncer &b = *bouncers[i];
-                    if(b.bouncetype < BNC_GRENADE && b.bouncetype > BNC_ROCKET) break;
-                    if(b.owner == d && b.id == id && !b.local)
+                    bouncer &bnc = *bouncers[i];
+                    if(bnc.bouncetype < BNC_GRENADE && bnc.bouncetype > BNC_ROCKET) break;
+                    if(bnc.owner == d && bnc.id == id && !bnc.local)
                     {
-                        vec pos(b.o);
-                        pos.add(vec(b.offset).mul(b.offsetmillis/float(OFFSETMILLIS)));
-                        explode(b.local, b.owner, pos, b.vel, NULL, 0, atk);
-                        vec dir = vec(b.vel).neg();
-                        addstain(STAIN_PULSE_SCORCH, pos, dir, attacks[atk].exprad*0.75f);
+                        explode(bnc.local, bnc.owner, bnc.offsetpos(), bnc.vel, NULL, 0, atk);
+                        addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
                         delete bouncers.remove(i);
                         break;
                     }

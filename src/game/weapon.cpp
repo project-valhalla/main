@@ -94,11 +94,11 @@ namespace game
     {
         if(d->state!=CS_ALIVE) return;
         int s = d->gunselect;
-        if(s!=GUN_SG && d->ammo[GUN_SG])  s = GUN_SG;
+        if(s!=GUN_SG && d->ammo[GUN_SG])            s = GUN_SG;
         else if(s!=GUN_SMG && d->ammo[GUN_SMG])     s = GUN_SMG;
-        else if(s!=GUN_PULSE && d->ammo[GUN_PULSE])     s = GUN_PULSE;
-        else if(s!=GUN_RL && d->ammo[GUN_RL])     s = GUN_RL;
-        else if(s!=GUN_RAIL && d->ammo[GUN_RAIL])  s = GUN_RAIL;
+        else if(s!=GUN_PULSE && d->ammo[GUN_PULSE]) s = GUN_PULSE;
+        else if(s!=GUN_RL && d->ammo[GUN_RL])       s = GUN_RL;
+        else if(s!=GUN_RAIL && d->ammo[GUN_RAIL])   s = GUN_RAIL;
         gunselect(s, d);
     }
 

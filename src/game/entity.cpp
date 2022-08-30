@@ -270,6 +270,7 @@ namespace entities
     }
 
     VARR(teleteam, 0, 1, 1);
+    VARP(autoswitch, 0, 1, 1);
 
     void trypickup(int n, gameent *d)
     {
@@ -280,6 +281,10 @@ namespace entities
                 {
                     addmsg(N_ITEMPICKUP, "rci", d, n);
                     ents[n]->clearspawned(); // even if someone else gets it first
+                    // first time you pick up a weapon you switch to it automatically
+                    if(!autoswitch || (ents[n]->type < I_AMMO_SG || ents[n]->type > I_AMMO_RAIL)) break;
+                    itemstat &is = itemstats[ents[n]->type-I_AMMO_SG];
+                    if(d->gunselect != is.info && !d->ammo[is.info]) gunselect(is.info, d);
                 }
                 break;
 

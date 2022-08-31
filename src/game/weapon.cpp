@@ -66,6 +66,13 @@ namespace game
     }
     ICOMMAND(setweapon, "si", (char *name, int *force), setweapon(name, *force!=0));
 
+    void setprimaryweapon(const char *alternative)
+    {
+        if(!mutators) gunselect(player1->primary, player1);
+        else setweapon(alternative);
+    }
+    ICOMMAND(setprimaryweapon, "s", (char *alternative), setprimaryweapon(alternative));
+
     void cycleweapon(int numguns, int *guns, bool force = false)
     {
         if(numguns<=0 || player1->state!=CS_ALIVE) return;

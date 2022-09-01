@@ -107,7 +107,7 @@ namespace game
         clearbouncers();
     }
 
-    gameent *spawnstate(gameent *d)              // reset player state not persistent accross spawns
+    gameent *spawnstate(gameent *d)              // reset player state not persistent across spawns
     {
         d->respawn();
         d->spawnstate(gamemode, mutators, forceweapon);

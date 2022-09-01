@@ -4,6 +4,7 @@
 *.ini
 *.layout
 *.lnk
+*.save-failed
 *.user
 *~
 .DS_Store

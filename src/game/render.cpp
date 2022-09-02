@@ -2,9 +2,6 @@
 
 namespace game
 {
-    /*vector<gameent *> bestplayers;
-    vector<int> bestteams;*/
-
     VARP(ragdoll, 0, 1, 1);
     VARP(ragdollmillis, 0, 10000, 300000);
     VARP(ragdollfade, 0, 400, 5000);
@@ -75,11 +72,10 @@ namespace game
         0xA3435B
     };
 
-    extern void changedplayercolor(), changedplayertype();
+    extern void changedplayercolor();
     VARFP(playercolor, 0, 4, sizeof(playercolors)/sizeof(playercolors[0])-1, changedplayercolor());
     VARFP(playercolorazul, 0, 0, sizeof(playercolorsazul)/sizeof(playercolorsazul[0])-1, changedplayercolor());
     VARFP(playercolorrojo, 0, 0, sizeof(playercolorsrojo)/sizeof(playercolorsrojo[0])-1, changedplayercolor());
-    //VARFP(playertype, 0, 0, sizeof(playerst)/sizeof(playerst[0])-1, changedplayertype());
 
     static const playermodelinfo playermodels[] =
     {
@@ -165,11 +161,6 @@ namespace game
         if(player1->clientnum < 0) player1->playercolor = playercolor | (playercolorazul<<5) | (playercolorrojo<<10);
     }
 
-    /*void changedplayertype()
-    {
-        if(player1->clientnum < 0) player1->playertype = playertype;
-    }*/
-
     void syncplayer()
     {
         if(player1->playermodel != playermodel)
@@ -214,19 +205,14 @@ namespace game
 
     void renderplayer(gameent *d, const playermodelinfo &mdl, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
-        if(gore && d->gibbed() && !d->headless) return;
+        if(gore && d->gibbed()) return;
         int lastaction = d->lastaction, anim = ANIM_IDLE|ANIM_LOOP, attack = 0, delay = 0;
         if(d->lastattack >= 0)
         {
             attack = attacks[d->lastattack].anim;
             delay = attacks[d->lastattack].attackdelay+50;
         }
-        if(intermission && d->state!=CS_DEAD)
-        {
-            /*anim = attack = ANIM_LOSE|ANIM_LOOP;
-            if(validteam(team) ? bestteams.htfind(team)>=0 : bestplayers.find(d)>=0) anim = attack = ANIM_WIN|ANIM_LOOP;*/
-        }
-        else if(d->state==CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-d->lastaction>delay)
+        if(d->state==CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-d->lastaction>delay)
         {
             lastaction = d->lasttaunt;
             anim = attack = ANIM_TAUNT;
@@ -291,8 +277,7 @@ namespace game
                 else if(dir && game::allowmove(d)) anim |= (dir | ANIM_LOOP) << ANIM_SECONDARY;
             }
 
-            if(d->crouching || lastmillis-d->landmillis < 150)
-                switch((anim>>ANIM_SECONDARY)&ANIM_INDEX)
+            if(d->crouching) switch((anim>>ANIM_SECONDARY)&ANIM_INDEX)
             {
                 case ANIM_IDLE: anim &= ~(ANIM_INDEX<<ANIM_SECONDARY); anim |= ANIM_CROUCH<<ANIM_SECONDARY; break;
                 case ANIM_JUMP: anim &= ~(ANIM_INDEX<<ANIM_SECONDARY); anim |= ANIM_CROUCH_JUMP<<ANIM_SECONDARY; break;

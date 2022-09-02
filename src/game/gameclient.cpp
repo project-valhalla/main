@@ -1255,7 +1255,6 @@ namespace game
         sendstring(player1->name, p);
         putint(p, player1->playermodel);
         putint(p, player1->playercolor);
-        //putint(p, player1->playertype);
         string hash = "";
         if(connectpass[0])
         {
@@ -1662,7 +1661,6 @@ namespace game
                 if(!validteam(d->team)) d->team = 0;
                 d->playermodel = getint(p);
                 d->playercolor = getint(p);
-                //d->playertype = getint(p);
                 break;
             }
 
@@ -1888,33 +1886,19 @@ namespace game
                 break;
             }
 
+            case N_TAUNT:
+            {
+                if(!d) return;
+                d->lasttaunt = lastmillis;
+                playsound(d->tauntsound(), d);
+                break;
+            }
+
             case N_SETWEAPONS:
             {
                 int cn = getint(p), primary = getint(p), secondary = getint(p);
                 gameent *d = getclient(cn);
                 d->setweapons(primary, secondary);
-                break;
-            }
-
-            case N_ANIMATION:
-            {
-                if(!d) return;
-                int anim = getint(p);
-                switch(anim)
-                {
-                    case ANIM_TAUNT:
-                    {
-                       d->lasttaunt = lastmillis;
-                       //if(d!=player1) playsound(d->tauntsound(), d==hudplayer() ? NULL : &d->o);
-                       break;
-                    }
-                    case ANIM_CROUCH:
-                    {
-                       d->landmillis = lastmillis;
-                       break;
-                    }
-                    default: break;
-                }
                 break;
             }
 
@@ -1947,10 +1931,6 @@ namespace game
                 entities::setspawn(i, true);
                 ai::itemspawned(i);
                 playsound(S_ITEM_SPAWN, NULL, &entities::ents[i]->o, NULL, 0, 0, 0, -1, 0, 1500);
-                #if 0
-                const char *name = entities::itemname(i);
-                if(name) particle_text(entities::ents[i]->o, name, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
-                #endif
                 particle_splash(PART_SPARK1, 20, 100, entities::ents[i]->o, 0x903020, 7.5f, 50, -1, 0.04f);
                 particle_splash(PART_SPARK1, 40, 60, entities::ents[i]->o, 0x905030, 5.5f, 100, 60, 0.08f);
                 adddynlight(entities::ents[i]->o, 20, vec(2, 1.2f, 1), 250, 0, DL_SHRINK);

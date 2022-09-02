@@ -137,14 +137,14 @@ namespace server
         vec o;
         int state, editstate;
         int lastdeath, deadflush, lastspawn, lifesequence, lastpain;
-        int lastregeneration, lastpistolaction, lastammoregen;
+        int lastregeneration;
         int lastshot, lastkill;
         projectilestate<8> projs, bouncers;
         int frags, flags, deaths, points, teamkills, shotdamage, damage, kills, spree;
         int lasttimeplayed, timeplayed;
         float effectiveness;
 
-        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastregeneration(0), lastpistolaction(0), lastammoregen(0), lastkill(0), kills(0), spree(0) {}
+        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastregeneration(0), lastkill(0), kills(0), spree(0) {}
 
         bool isalive(int gamemillis)
         {
@@ -228,13 +228,12 @@ namespace server
     };
 
     extern int gamemillis, nextexceeded;
-    int roundmillis;
 
     struct clientinfo
     {
         int clientnum, ownernum, connectmillis, sessionid, overflow;
         string name, mapvote;
-        int team, playermodel, playercolor; //, playertype;
+        int team, playermodel, playercolor;
         int modevote, mutsvote;
         int privilege;
         bool connected, local, timesync, queue, mute;
@@ -269,14 +268,13 @@ namespace server
 
         enum
         {
-            PUSHMILLIS_DEFAULT = 3000, PUSHMILLIS_MUT = 60000 // this part needs to be improved
+            PUSHMILLIS = 3000
         };
 
         int calcpushrange()
         {
             ENetPeer *peer = getclientpeer(ownernum);
-            int pushmillis = PUSHMILLIS_MUT;
-            return pushmillis + (peer ? peer->roundTripTime + peer->roundTripTimeVariance : ENET_PEER_DEFAULT_ROUND_TRIP_TIME);
+            return PUSHMILLIS + (peer ? peer->roundTripTime + peer->roundTripTimeVariance : ENET_PEER_DEFAULT_ROUND_TRIP_TIME);
         }
 
         bool checkpushed(int millis, int range)
@@ -305,7 +303,7 @@ namespace server
 
         bool checkexceeded()
         {
-            return false; //state.state==CS_ALIVE && exceeded && gamemillis > exceeded + calcpushrange();
+            return false; //return state.state==CS_ALIVE && exceeded && gamemillis > exceeded + calcpushrange();
         }
 
         void mapchange()
@@ -328,7 +326,6 @@ namespace server
 
         void roundreset()
         {
-            //state.reset();
             events.deletecontents();
             lastevent = 0;
         }
@@ -365,7 +362,7 @@ namespace server
             name[0] = 0;
             team = 0;
             playermodel = -1;
-            playercolor = 0; //playertype = 0;
+            playercolor = 0;
             privilege = PRIV_NONE;
             connected = local = queue = false;
             connectauth = 0;
@@ -833,7 +830,6 @@ namespace server
         mcrc = 0;
         ments.setsize(0);
         sents.setsize(0);
-        //cps.reset();
     }
 
     bool serveroption(const char *arg)
@@ -1845,7 +1841,6 @@ namespace server
             putint(p, ci->state.skill);
             putint(p, ci->playermodel);
             putint(p, ci->playercolor);
-            //putint(p, ci->playertype);
             putint(p, ci->team);
             sendstring(ci->name, p);
         }
@@ -1857,7 +1852,6 @@ namespace server
             putint(p, ci->team);
             putint(p, ci->playermodel);
             putint(p, ci->playercolor);
-            //putint(p, ci->playertype);
         }
     }
 
@@ -2063,7 +2057,6 @@ namespace server
         int remain = scorelimit-points, snd = -1;
         if(m_dm)
         {
-            //string line1;
             if(scorelimit > remain)
             {
                 switch(remain)
@@ -2090,19 +2083,16 @@ namespace server
                         break;
                     }
                     default: break;
-                    }
-                    /*defformatstring(line1, "\f2%d kill%s remain", remain, remain == 1 ? "" : "s");
-                    if(snd >= 0) playsound(snd);
-                    if(f10warn || f5warn || f1warn) sendf(-1, 1, "ri2s", N_ANNOUNCE, snd, line1);*/
                 }
             }
-            if(points >= scorelimit)
-            {
-                if(m_dm) startintermission();
-                else if(m_round && !m_elimination && !interm) gameover();
-                defformatstring(winner, "%s \f2wins the match", colorname(ci));
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, NULL, NULL, winner);
-            }
+        }
+        if(points >= scorelimit)
+        {
+            if(m_dm) startintermission();
+            else if(m_round && !m_elimination && !interm) gameover();
+            defformatstring(winner, "%s \f2wins the match", colorname(ci));
+            sendf(-1, 1, "ri3s", N_ANNOUNCE, NULL, NULL, winner);
+        }
     }
 
     clientinfo *hostzombie(clientinfo *exclude1 = NULL, clientinfo *exclude2 = NULL)
@@ -2808,7 +2798,6 @@ namespace server
         int gunwait = attacks[atk].attackdelay;
         if(gs.hastemillis || gs.juggernaut) gunwait /= 2;
         gs.gunwait = gunwait;
-        if(gun == GUN_PISTOL) gs.lastpistolaction = lastmillis;
         sendf(-1, 1, "ri3x", N_SHOTEVENT, ci->clientnum, atk, ci->ownernum);
         gs.shotdamage += attacks[atk].damage*attacks[atk].rays;
         bool hit = false;
@@ -3060,7 +3049,7 @@ namespace server
         if(smode) smode->leavegame(ci);
         ci->state.state = CS_SPECTATOR;
         ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-        //if(!ci->local && (!ci->privilege || ci->warned)) aiman::removeai(ci);
+        if(!ci->local && (!ci->privilege || ci->warned)) aiman::removeai(ci);
         sendf(-1, 1, "ri4", N_SPECTATOR, ci->clientnum, 1, ci->queue);
     }
 
@@ -3493,7 +3482,6 @@ namespace server
                     copystring(ci->name, text, MAXNAMELEN+1);
                     ci->playermodel = getint(p);
                     ci->playercolor = getint(p);
-                    //ci->playertype = getint(p);
 
                     string password, authdesc, authname;
                     getstring(password, p, sizeof(password));
@@ -3973,13 +3961,6 @@ namespace server
             {
                 ci->playercolor = getint(p);
                 QUEUE_MSG;
-                break;
-            }
-
-            case N_SWITCHPTYPE:
-            {
-                //ci->playertype = getint(p);
-                //QUEUE_MSG;
                 break;
             }
 

@@ -13,10 +13,6 @@ namespace game
     };
     vector<hitmsg> hits;
 
-#if 0
-    #define MINDEBRIS 3
-    VARP(maxdebris, MINDEBRIS, 10, 100);
-#endif
     VARP(explosioneffect, 0, 1, 1);
 
     ICOMMAND(getweapon, "", (), intret(player1->gunselect));
@@ -156,8 +152,7 @@ namespace game
         vec offset;
         int offsetmillis;
         float offsetheight;
-        int id;
-        int atk;
+        int id, atk;
         int lastbounce, bouncesound, bouncerloopchan, bouncerloopsound;
 
         bouncer() : bounces(0), roll(0), gravity(0.8f), elasticity(0.6f), variant(0), lastbounce(0), bouncesound(-1), bouncerloopchan(-1), bouncerloopsound(-1)
@@ -166,7 +161,7 @@ namespace game
         }
         ~bouncer()
         {
-            if(bouncerloopchan >= 0) stopsound(bouncerloopsound, bouncerloopchan, 100);
+            if(bouncerloopchan >= 0) stopsound(bouncerloopsound, bouncerloopchan);
             bouncerloopsound = bouncerloopchan = -1;
         }
 
@@ -360,7 +355,7 @@ namespace game
         }
         ~projectile()
         {
-            if(projchan >= 0) stopsound(projsound, projchan, 100);
+            if(projchan >= 0) stopsound(projsound, projchan);
             projsound = projchan = -1;
         }
 
@@ -1179,7 +1174,7 @@ namespace game
             hitpush(attacks[atk].damage, o, d, from, to, atk, 1, flags);
             damageeffect(damage, o, to, atk);
         }
-        else //if(attacks[atk].action==ACT_MELEE)
+        else
         {
             rayhit(atk, d, from, to);
         }

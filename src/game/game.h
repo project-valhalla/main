@@ -177,7 +177,7 @@ enum
     N_SHOOT, N_SPECIALATK, N_EXPLODE, N_HURTPLAYER, N_SUICIDE,
     N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_USEITEM,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
-    N_GUNSELECT, N_SETWEAPONS, N_ANIMATION,
+    N_GUNSELECT, N_TAUNT, N_SETWEAPONS,
     N_ANNOUNCE,
     N_MAPCHANGE, N_SERVERVARIABLES, N_MAPVOTE, N_SENDVARIABLES, N_TEAMINFO, N_ITEMSPAWN, N_ITEMPICKUP, N_ITEMACC, N_TELEPORT, N_JUMPPAD,
     N_PING, N_PONG, N_CLIENTPING,
@@ -207,7 +207,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_SHOOT, 0, N_SPECIALATK, 0, N_EXPLODE, 0, N_HURTPLAYER, 0, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 8, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 12, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3, N_USEITEM, 1,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 12, N_SPAWN, 3, N_FORCEDEATH, 2,
-    N_GUNSELECT, 2, N_SETWEAPONS, 4, N_ANIMATION, 2,
+    N_GUNSELECT, 2, N_TAUNT, 1, N_SETWEAPONS, 4,
     N_ANNOUNCE, 4,
     N_MAPCHANGE, 0, N_SERVERVARIABLES, 8, N_MAPVOTE, 0, N_SENDVARIABLES, 0, N_TEAMINFO, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
     N_PING, 2, N_PONG, 2, N_CLIENTPING, 2,
@@ -550,24 +550,30 @@ struct gameent : dynent, gamestate
     int frags, flags, deaths, points, totaldamage, totalshots;
     editinfo *edit;
     float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll;
-    int smoothmillis, landmillis;
-    float trans;
+    int smoothmillis;
 
     int attackchan, attacksound, idlechan, idlesound;
     int ddamagechan, hastechan, armourchan, ammochan, invulnchan, juggernautchan;
 
     string name, info;
-    int team, playermodel, playercolor, playertype;
+    int team, playermodel, playercolor;
     ai::aiinfo *ai;
     int ownernum, lastnode;
-    bool headless, queue;
+    bool queue;
 
     vec muzzle;
 
-    gameent() : weight(100), clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0), lifesequence(0), respawned(-1), suicided(-1), lastpain(0), lastfootstep(0), lastyelp(0), frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), edit(NULL), smoothmillis(-1), landmillis(0), trans(1), attackchan(-1), attacksound(-1), ddamagechan(-1), hastechan(-1), armourchan(-1), ammochan(-1), invulnchan(-1), juggernautchan(-1), team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1), muzzle(-1, -1, -1)
+    gameent() : weight(100),
+                clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
+                lifesequence(0), respawned(-1), suicided(-1),
+                lastpain(0), lastfootstep(0), lastyelp(0),
+                frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0),
+                edit(NULL), smoothmillis(-1),
+                attackchan(-1), attacksound(-1), ddamagechan(-1), hastechan(-1), armourchan(-1), ammochan(-1), invulnchan(-1), juggernautchan(-1),
+                team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1), muzzle(-1, -1, -1)
     {
         name[0] = info[0] = 0;
-        headless = queue = false;
+        queue = false;
         respawn();
     }
     ~gameent()

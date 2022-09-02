@@ -15,8 +15,8 @@ namespace game
     {
         if(d->state!=CS_ALIVE || lastmillis-d->lasttaunt<1000) return;
         d->lasttaunt = lastmillis;
-        addmsg(N_ANIMATION, "rci", d, ANIM_TAUNT);
-        msgsound(d->tauntsound(), d);
+        addmsg(N_TAUNT, "rc", player1);
+        playsound(d->tauntsound(), player1);
     }
     ICOMMAND(taunt, "", (), taunt(player1));
 
@@ -160,7 +160,7 @@ namespace game
     {
         gameent *d = followingplayer();
         if(d) return specmode > 1 || d->state == CS_DEAD;
-        return player1->state == CS_DEAD || intermission;
+        return intermission || player1->state == CS_DEAD;
     }
 
     bool collidecamera()
@@ -235,8 +235,18 @@ namespace game
 
     void updateworld()        // main game update loop
     {
-        if(!maptime) { maptime = lastmillis; maprealtime = totalmillis; return; }
-        if(!curtime) { gets2c(); if(player1->clientnum>=0) c2sinfo(); return; }
+        if(!maptime)
+        {
+            maptime = lastmillis;
+            maprealtime = totalmillis;
+            return;
+        }
+        if(!curtime)
+        {
+            gets2c();
+            if(player1->clientnum>=0) c2sinfo();
+            return;
+        }
 
         physicsframe();
         ai::navigate();
@@ -305,7 +315,6 @@ namespace game
             if(wait>0)
             {
                 lastspawnattempt = lastmillis;
-                //conoutf(CON_GAMEINFO, "\f2you must wait %d second%s before respawn!", wait, wait!=1 ? "s" : "");
                 return;
             }
             respawnself();
@@ -732,8 +741,6 @@ namespace game
             {
                 if(d->state==CS_ALIVE)
                 {
-                    e->landmillis = lastmillis;
-                    addmsg(N_ANIMATION, "rci", e, ANIM_CROUCH);
                     if(lookupmaterial(d->feetpos())&MAT_WATER)
                     {
                         vec feet = d->feetpos();

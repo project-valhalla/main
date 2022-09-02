@@ -250,7 +250,7 @@ namespace game
         }
         else if(d->state==CS_EDITING || d->state==CS_SPECTATOR) anim = ANIM_EDIT|ANIM_LOOP;
         else if(d->state==CS_LAGGED)                            anim = ANIM_LAG|ANIM_LOOP;
-        else if(!intermission)
+        else
         {
             if(lastmillis-d->lastpain < 300)
             {
@@ -273,7 +273,7 @@ namespace game
                     ANIM_RUN_NE, ANIM_RUN_N, ANIM_RUN_NW
                 };
                 int dir = dirs[(d->move+1)*3 + (d->strafe+1)];
-                if(d->timeinair>100) anim |= ((dir ? dir+ANIM_JUMP_N-ANIM_RUN_N : ANIM_JUMP) | ANIM_END) << ANIM_SECONDARY;
+                if(d->timeinair>100) anim |= ((dir && game::allowmove(d) ? dir+ANIM_JUMP_N-ANIM_RUN_N : ANIM_JUMP) | ANIM_END) << ANIM_SECONDARY;
                 else if(dir && game::allowmove(d)) anim |= (dir | ANIM_LOOP) << ANIM_SECONDARY;
             }
 

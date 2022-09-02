@@ -166,7 +166,6 @@ VARF(maxclients, 0, DEFAULTCLIENTS, MAXCLIENTS, { if(!maxclients) maxclients = D
 VARF(maxdupclients, 0, 0, MAXCLIENTS, { if(serverhost) serverhost->duplicatePeers = maxdupclients ? maxdupclients : MAXCLIENTS; });
 
 void process(ENetPacket *packet, int sender, int chan);
-//void disconnect_client(int n, int reason);
 
 int getservermtu() { return serverhost ? serverhost->mtu : -1; }
 void *getclientinfo(int i) { return !clients.inrange(i) || clients[i]->type==ST_EMPTY ? NULL : clients[i]->info; }
@@ -294,9 +293,9 @@ const char *disconnectreason(int reason)
         case DISC_LOCAL: return "server is in local mode";
         case DISC_KICK: return "kicked/banned";
         case DISC_MSGERR: return "message error";
-        case DISC_IPBAN: return "ip is banned";
+        case DISC_IPBAN: return "IP is banned";
         case DISC_PRIVATE: return "server is in private mode";
-        case DISC_MAXCLIENTS: return "server FULL";
+        case DISC_MAXCLIENTS: return "server full";
         case DISC_TIMEOUT: return "connection timed out";
         case DISC_OVERFLOW: return "overflow";
         case DISC_PASSWORD: return "invalid password";

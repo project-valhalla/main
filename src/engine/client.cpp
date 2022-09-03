@@ -266,9 +266,9 @@ void gets2c()           // get updates from the server
                     lastdisconnectreason = msg;
                     if(msg) conoutf(CON_ERROR, "disconnecting... (%s)", msg);
                     else conoutf(CON_ERROR, "server network error, disconnecting...");
+                    execident("on_forcedisconnect");
                 }
                 disconnect();
-                execident("networkerror");
             }
             return;
 

@@ -180,7 +180,7 @@ void toggleedit(bool force)
     keyrepeat(editmode, KR_EDITMODE);
     editing = entediting = editmode;
     if(!force) game::edittoggled(editmode);
-    execident("edittoggled");
+    execident("on_edittoggle");
 }
 
 VARP(editinview, 0, 1, 1);

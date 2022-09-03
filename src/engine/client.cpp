@@ -213,7 +213,7 @@ void localservertoclient(int chan, ENetPacket *packet)   // processes any update
 void clientkeepalive() { if(clienthost) enet_host_service(clienthost, NULL, 0); }
 
 const char *lastdisconnectreason;
-ICOMMAND(getlastdisconnectreason, "", (), result(lastdisconnectreason));
+ICOMMAND(getlastdisconnectreason, "", (), if(lastdisconnectreason) result(lastdisconnectreason));
 
 void gets2c()           // get updates from the server
 {
@@ -264,8 +264,16 @@ void gets2c()           // get updates from the server
                 {
                     const char *msg = disconnectreason(event.data);
                     lastdisconnectreason = msg;
-                    if(msg) conoutf(CON_ERROR, "disconnecting... (%s)", msg);
-                    else conoutf(CON_ERROR, "server network error, disconnecting...");
+                    if(msg)
+                    {
+                        conoutf(CON_ERROR, "disconnecting... (%s)", msg);
+                        lastdisconnectreason = msg;
+                    }
+                    else
+                    {
+                        conoutf(CON_ERROR, "disconnecting... (server network error)");
+                        lastdisconnectreason = "server network error";
+                    }
                     execident("on_forcedisconnect");
                 }
                 disconnect();

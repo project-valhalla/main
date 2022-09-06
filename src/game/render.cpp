@@ -524,9 +524,7 @@ namespace game
 
     void preloadsounds()
     {
-        for(int i = S_JUMP1; i <= S_JUMPPAD; i++) preloadsound(i);
-        for(int i = S_DAMAGE; i <= S_PISTOL2; i++) preloadsound(i);
-        for(int i = S_IMPACT_SG; i <= S_ANNOUNCER_INVULNERABILITY; i++) preloadsound(i);
+        for(int i = S_JUMP1; i <= S_ANNOUNCER_INVULNERABILITY; i++) preloadsound(i);
         for(int i = S_HIT1; i <= S_INTERMISSION_WIN; i++) preloadsound(i);
     }
 

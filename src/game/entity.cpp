@@ -67,11 +67,36 @@ namespace entities
         return e.type < MAXENTTYPES ? entmdlname(e.type) : NULL;
     }
 
+    bool canspawnitem(int type)
+    {
+        if(!validitem(type)) return false;
+        switch(type)
+        {
+            case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL:
+            case I_YELLOWSHIELD: case I_REDSHIELD:
+                if(!m_classic(mutators) || m_noitems(mutators)) return false;
+                    break;
+            case I_HEALTH:
+                if(!m_classic(mutators) || m_vampire(mutators) || m_noitems(mutators)) return false;
+                break;
+            case I_SUPERHEALTH: case I_MEGAHEALTH:
+                    if(m_insta(mutators) || m_vampire(mutators) || m_noitems(mutators)) return false;
+                    break;
+                case I_DDAMAGE: case I_ARMOUR: case I_UAMMO:
+                    if(m_insta(mutators) || m_noitems(mutators) || m_nopowerups(mutators)) return false;
+                    break;
+                case I_HASTE: case I_INVULNERABILITY:
+                    if(m_noitems(mutators) || m_nopowerups(mutators)) return false;
+                break;
+        }
+        return true;
+    }
+
     void preloadentities()
     {
         loopi(MAXENTTYPES)
         {
-            if(!server::canspawnitem(i)) continue;
+            if(!canspawnitem(i)) continue;
             const char *mdl = entmdlname(i);
             if(!mdl) continue;
             preloadmodel(mdl);
@@ -424,7 +449,7 @@ namespace entities
     void putitems(packetbuf &p)            // puts items in network stream and also spawns them locally
     {
         putint(p, N_ITEMLIST);
-        loopv(ents) if(validitem(ents[i]->type) && server::canspawnitem(ents[i]->type))
+        loopv(ents) if(validitem(ents[i]->type) && canspawnitem(ents[i]->type))
         {
             putint(p, i);
             putint(p, ents[i]->type);
@@ -436,7 +461,7 @@ namespace entities
 
     void spawnitems(bool force)
     {
-        loopv(ents) if(validitem(ents[i]->type) && server::canspawnitem(ents[i]->type))
+        loopv(ents) if(validitem(ents[i]->type) && canspawnitem(ents[i]->type))
         {
             ents[i]->setspawned(force || !server::delayspawn(ents[i]->type));
         }

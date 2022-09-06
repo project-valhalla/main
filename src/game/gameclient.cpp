@@ -1050,6 +1050,7 @@ namespace game
     void gameconnect(bool _remote)
     {
         remote = _remote;
+        execident("on_connect");
     }
 
     void gamedisconnect(bool cleanup)

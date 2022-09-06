@@ -15,6 +15,8 @@ namespace game
 
     VARP(explosioneffect, 0, 1, 1);
 
+    SVARP(primaryweapon, "");
+
     ICOMMAND(getweapon, "", (), intret(player1->gunselect));
 
     void gunselect(int gun, gameent *d)
@@ -64,8 +66,12 @@ namespace game
 
     void setprimaryweapon(const char *alternative)
     {
-        if(!mutators) gunselect(player1->primary, player1);
-        else setweapon(alternative);
+        if(!m_multipleweapons(mutators)) gunselect(player1->primary, player1);
+        else
+        {
+            int weapon = getweapon(alternative);
+            if(player1->ammo[weapon]) gunselect(weapon, player1);
+        }
     }
     ICOMMAND(setprimaryweapon, "s", (char *alternative), setprimaryweapon(alternative));
 

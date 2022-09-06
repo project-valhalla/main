@@ -178,7 +178,7 @@ enum
     N_SHOOT, N_SPECIALATK, N_EXPLODE, N_HURTPLAYER, N_SUICIDE,
     N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_USEITEM,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
-    N_GUNSELECT, N_TAUNT, N_SETWEAPONS,
+    N_GUNSELECT, N_PRIMARYWEAPON, N_TAUNT,
     N_ANNOUNCE,
     N_MAPCHANGE, N_SERVERVARIABLES, N_MAPVOTE, N_SENDVARIABLES, N_TEAMINFO, N_ITEMSPAWN, N_ITEMPICKUP, N_ITEMACC, N_TELEPORT, N_JUMPPAD,
     N_PING, N_PONG, N_CLIENTPING,
@@ -208,7 +208,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_SHOOT, 0, N_SPECIALATK, 0, N_EXPLODE, 0, N_HURTPLAYER, 0, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 8, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 12, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3, N_USEITEM, 1,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 12, N_SPAWN, 3, N_FORCEDEATH, 2,
-    N_GUNSELECT, 2, N_TAUNT, 1, N_SETWEAPONS, 4,
+    N_GUNSELECT, 2, N_PRIMARYWEAPON, 2, N_TAUNT, 1,
     N_ANNOUNCE, 4,
     N_MAPCHANGE, 0, N_SERVERVARIABLES, 8, N_MAPVOTE, 0, N_SENDVARIABLES, 0, N_TEAMINFO, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
     N_PING, 2, N_PONG, 2, N_CLIENTPING, 2,
@@ -226,7 +226,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_PAUSEGAME, 0, N_GAMESPEED, 0,
     N_ADDBOT, 2, N_DELBOT, 1, N_INITAI, 0, N_FROMAI, 2, N_BOTLIMIT, 2, N_BOTBALANCE, 2,
     N_MAPCRC, 0, N_CHECKMAPS, 1,
-    N_SWITCHNAME, 0, N_SWITCHMODEL, 2, N_SWITCHCOLOR, 2, N_SWITCHTEAM, 2,
+    N_SWITCHNAME, 0, N_SWITCHMODEL, 2, N_SWITCHCOLOR, 2,  N_SWITCHTEAM, 2,
     N_SERVCMD, 0,
     N_DEMOPACKET, 0,
     -1
@@ -330,14 +330,14 @@ static struct itemstat { int add, max, sound, info; } itemstats[] =
 struct gamestate
 {
     int health, maxhealth, shield, item;
-    int gunselect, gunwait, primary, secondary;
+    int gunselect, gunwait, primary;
     int ammo[NUMGUNS];
     int aitype, skill;
     int damagemillis, hastemillis, armourmillis, ammomillis, invulnmillis;
     int lastdamage;
     int juggernaut, zombie;
 
-    gamestate() : maxhealth(100), primary(-1), secondary(-1), aitype(AI_NONE), skill(0), lastdamage(0) { }
+    gamestate() : maxhealth(100), aitype(AI_NONE), skill(0), lastdamage(0) { }
 
     bool canpickup(int type)
     {
@@ -429,33 +429,32 @@ struct gamestate
     {
         shield = item = 0;
         damagemillis = hastemillis = armourmillis = ammomillis = invulnmillis = 0;
-        gunwait = 0;
+    }
+
+    void resetweapons()
+    {
         loopi(NUMGUNS) ammo[i] = 0;
+        gunwait = 0;
     }
 
     void respawn()
     {
         maxhealth = 100;
         health = maxhealth;
-        gunselect = GUN_PISTOL;
-        gunwait = 0;
         resetitems();
+        resetweapons();
+        gunselect = GUN_PISTOL;
         juggernaut = zombie = 0;
     }
 
     void infect()
     {
         resetitems();
+        resetweapons();
         zombie = 1;
         maxhealth = health = 1000;
         ammo[GUN_ZOMBIE] = 1;
         gunselect = GUN_ZOMBIE;
-    }
-
-    void setweapons(int weap1, int weap2)
-    {
-        primary = weap1;
-        secondary = weap2;
     }
 
     void spawnstate(int gamemode, int mutators, int forceweapon)
@@ -464,11 +463,10 @@ struct gamestate
         {
             gunselect = GUN_PISTOL;
             ammo[GUN_PISTOL] = 100;
-            shield = 0;
         }
         else if(m_insta(mutators))
         {
-            shield = 0;
+            maxhealth = health = 100;
             gunselect = GUN_INSTA;
             ammo[GUN_INSTA] = 1;
         }
@@ -486,19 +484,14 @@ struct gamestate
         }
         else
         {
-            if(primary <= -1)
+            if(primary < GUN_SG || primary > GUN_RAIL || aitype  != AI_NONE)
+            // randomize primary weapon at each respawn in case it is not an existing/allowed weapon or the player is a bot
             {
-                do primary = rnd(5); while(primary==secondary);
+                primary = rnd(5);
             }
-            if(secondary <= -1)
-            {
-                do secondary = rnd(5); while(secondary==primary);
-            }
-            ammo[primary] = itemstats[primary-GUN_SG].add*4;
-            ammo[secondary] = itemstats[secondary-GUN_SG].add*4;
-            ammo[GUN_PISTOL] = 100;
+            baseammo(primary);
             gunselect = primary;
-            shield = 0;
+            ammo[GUN_PISTOL] = 100;
         }
     }
 
@@ -507,7 +500,7 @@ struct gamestate
     {
         if(!environment)
         {
-            int ad = damage/3*2; // suggestions are welcome
+            int ad = damage/3*2;
             if(ad>shield) ad = shield;
             shield -= ad;
             damage -= ad;
@@ -825,6 +818,7 @@ namespace game
     extern void sendposition(gameent *d, bool reliable = false);
 
     // weapon
+    extern char *primaryweapon;
     extern int getweapon(const char *name);
     extern void shoot(gameent *d, const vec &targ);
     extern void specialattack(gameent *d, int atk, vec from, const vec &targ);

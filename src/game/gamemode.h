@@ -96,3 +96,4 @@ static struct mutatorinfo
 #define m_noitems(b)             (b&MUT_NOITEMS)
 
 #define m_regen(b)               (!(b&MUT_CLASSIC) && !(b&MUT_INSTAGIB) && !(b&MUT_EFFIC) && !(b&MUT_VAMPIRE))
+#define m_multipleweapons(b)     (b&MUT_CLASSIC || b&MUT_EFFIC)

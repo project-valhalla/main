@@ -1442,16 +1442,12 @@ namespace game
         if(resume && d==player1)
         {
             getint(p); // gunselect
-            getint(p); // primary
-            getint(p); // secondary
             loopi(NUMGUNS) getint(p);
         }
         else
         {
             int gun = getint(p);
             d->gunselect = clamp(gun, 0, NUMGUNS-1);
-            d->primary = getint(p);
-            d->secondary = getint(p);
             loopi(NUMGUNS) d->ammo[i] = getint(p);
         }
     }
@@ -1738,7 +1734,6 @@ namespace game
                 ai::spawned(s);
                 checkfollow();
                 addmsg(N_SPAWN, "rcii", s, s->lifesequence, s->gunselect);
-                spawneffect(s);
                 break;
             }
 
@@ -1880,19 +1875,18 @@ namespace game
                 break;
             }
 
+            case N_PRIMARYWEAPON:
+            {
+                int primaryweapon = getint(p);
+                if(d && validgun(primaryweapon)) d->primary = primaryweapon;
+                break;
+            }
+
             case N_TAUNT:
             {
                 if(!d) return;
                 d->lasttaunt = lastmillis;
                 playsound(d->tauntsound(), d);
-                break;
-            }
-
-            case N_SETWEAPONS:
-            {
-                int cn = getint(p), primary = getint(p), secondary = getint(p);
-                gameent *d = getclient(cn);
-                d->setweapons(primary, secondary);
                 break;
             }
 

@@ -1593,7 +1593,7 @@ namespace server
         }
 
         uchar operator[](int msg) const { return msg >= 0 && msg < NUMMSG ? msgmask[msg] : 0; }
-    } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVERVARIABLES, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_DIED, N_SPAWNSTATE, N_FORCEDEATH, N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_ROUNDSCORE, N_JUGGERNAUT, N_INFECT, N_SCORE, N_TRAITOR, N_FORCEWEAPON, N_CLIENT, N_AUTHCHAL, N_INITAI, N_DEMOPACKET, -2, N_CALCLIGHT, N_REMIP, N_NEWMAP, N_GETMAP, N_SENDMAP, N_CLIPBOARD, -3, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_EDITVAR, N_EDITVSLOT, N_UNDO, N_REDO, -4, N_POS, NUMMSG),
+    } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVERVARIABLES, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_DIED, 4, N_FORCEDEATH, N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_ROUNDSCORE, N_JUGGERNAUT, N_INFECT, N_SCORE, N_TRAITOR, N_FORCEWEAPON, N_CLIENT, N_AUTHCHAL, N_INITAI, N_DEMOPACKET, -2, N_CALCLIGHT, N_REMIP, N_NEWMAP, N_GETMAP, N_SENDMAP, N_CLIPBOARD, -3, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_EDITVAR, N_EDITVSLOT, N_UNDO, N_REDO, -4, N_POS, NUMMSG),
       connectfilter(-1, N_CONNECT, -2, N_AUTHANS, -3, N_PING, NUMMSG);
 
     int checktype(int type, clientinfo *ci)
@@ -1801,8 +1801,6 @@ namespace server
         putint(p, gs.shield);
         putint(p, gs.item);
         putint(p, gs.gunselect);
-        putint(p, gs.primary);
-        putint(p, gs.secondary);
         loopi(NUMGUNS) putint(p, gs.ammo[i]);
     }
 
@@ -1817,9 +1815,9 @@ namespace server
     {
         servstate &gs = ci->state;
         spawnstate(ci);
-        sendf(ci->ownernum, 1, "ri3i7v", N_SPAWNSTATE, ci->clientnum, gs.lifesequence,
+        sendf(ci->ownernum, 1, "ri3i5v", N_SPAWNSTATE, ci->clientnum, gs.lifesequence,
             gs.health, gs.maxhealth, gs.shield, gs.item,
-            gs.gunselect, gs.primary, gs.secondary, NUMGUNS, gs.ammo);
+            gs.gunselect, NUMGUNS, gs.ammo);
         gs.lastspawn = gamemillis;
     }
 
@@ -2019,12 +2017,12 @@ namespace server
     void sendresume(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        sendf(-1, 1, "ri3i9i9vi", N_RESUME, ci->clientnum, gs.state,
+        sendf(-1, 1, "ri3i9i7vi", N_RESUME, ci->clientnum, gs.state,
             gs.frags, gs.flags, gs.deaths, gs.points, gs.damagemillis, gs.hastemillis, gs.armourmillis, gs.invulnmillis,
             gs.juggernaut, gs.zombie,
             gs.lifesequence,
             gs.health, gs.maxhealth, gs.shield, gs.item,
-            gs.gunselect, gs.primary, gs.secondary, NUMGUNS, gs.ammo, -1);
+            gs.gunselect, NUMGUNS, gs.ammo, -1);
     }
 
     void sendinitclient(clientinfo *ci)
@@ -3752,20 +3750,19 @@ namespace server
                 break;
             }
 
-            case N_SETWEAPONS:
+            case N_PRIMARYWEAPON:
             {
-                int cn = getint(p), primary = getint(p), secondary = getint(p);
-                clientinfo *ci = (clientinfo *)getclientinfo(cn);
-                if((primary < GUN_SG && primary > GUN_RAIL) || (secondary < GUN_SG && secondary > GUN_RAIL)) break;
-                ci->state.setweapons(primary, secondary);
-                sendf(-1, 1, "ri4", N_SETWEAPONS, ci->clientnum, primary, secondary);
+                int primaryweapon = getint(p);
+                if(validgun(primaryweapon)) ci->state.primary = primaryweapon;
+                QUEUE_MSG;
                 break;
             }
 
             case N_SPAWN:
             {
                 int ls = getint(p), gunselect = getint(p);
-                if(!cq || (cq->state.state!=CS_ALIVE && cq->state.state!=CS_DEAD && cq->state.state!=CS_EDITING) || ls!=cq->state.lifesequence || cq->state.lastspawn<0 || !validgun(gunselect)) break;
+                if(!cq || (cq->state.state!=CS_ALIVE && cq->state.state!=CS_DEAD && cq->state.state!=CS_EDITING) ||
+                   ls!=cq->state.lifesequence || cq->state.lastspawn<0 || !validgun(gunselect)) break;
                 cq->state.lastspawn = -1;
                 cq->state.state = CS_ALIVE;
                 cq->state.gunselect = gunselect;

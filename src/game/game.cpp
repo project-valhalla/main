@@ -120,7 +120,11 @@ namespace game
         if(m_mp(gamemode))
         {
             int seq = (player1->lifesequence<<16)|((lastmillis/1000)&0xFFFF);
-            if(player1->respawned!=seq) { addmsg(N_TRYSPAWN, "rc", player1); player1->respawned = seq; }
+            if(player1->respawned!=seq)
+            {
+                addmsg(N_TRYSPAWN, "rc", player1);
+                player1->respawned = seq;
+            }
         }
         else
         {
@@ -317,6 +321,10 @@ namespace game
                 lastspawnattempt = lastmillis;
                 return;
             }
+            int weapon = -1;
+            if(primaryweapon[0]) weapon = getweapon(primaryweapon);
+            player1->primary = weapon;
+            addmsg(N_PRIMARYWEAPON, "ri", player1->primary);
             respawnself();
         }
     }
@@ -333,9 +341,6 @@ namespace game
     ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
-
-    VARF(primaryweapon, -1, -1, 5, addmsg(N_SETWEAPONS, "riii", player1->clientnum, primaryweapon, player1->secondary));
-    VARF(secondaryweapon, -1, -1, 5, addmsg(N_SETWEAPONS, "riii", player1->clientnum, player1->primary, secondaryweapon));
 
     void useitem()
     {

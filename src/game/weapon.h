@@ -28,6 +28,8 @@ enum
     NUMGUNS
 };
 
+#define validgun(n) ((n) >= 0 && (n) < NUMGUNS)
+
 // weapon attacks
 enum
 {
@@ -48,7 +50,6 @@ enum
 };
 
 #define validact(n) ((n) >= 0 && (n) < NUMACTS)
-#define validgun(n) ((n) >= 0 && (n) < NUMGUNS)
 #define validatk(n) ((n) >= 0 && (n) < ATK_TELEPORT)
 #define validsatk(n) ((n) >= ATK_TELEPORT && (n) < NUMATKS)
 

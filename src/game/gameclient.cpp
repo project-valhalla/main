@@ -1697,13 +1697,6 @@ namespace game
                 break;
             }
 
-            case N_SWITCHPTYPE:
-            {
-                int color = getint(p);
-                if(d) d->playercolor = color;
-                break;
-            }
-
             case N_CDIS:
                 clientdisconnected(getint(p));
                 break;

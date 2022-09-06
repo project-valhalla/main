@@ -1828,7 +1828,7 @@ namespace server
         sendpacket(ci->clientnum, chan, p.finalize());
     }
 
-    void putinitclient(clientinfo *ci, packetbuf &p)
+    void putinitclient(clientinfo *ci, packetbuf &p, bool notify = false)
     {
         if(ci->state.aitype != AI_NONE)
         {
@@ -1846,6 +1846,7 @@ namespace server
         {
             putint(p, N_INITCLIENT);
             putint(p, ci->clientnum);
+            putint(p, notify);
             sendstring(ci->name, p);
             putint(p, ci->team);
             putint(p, ci->playermodel);
@@ -2028,7 +2029,7 @@ namespace server
     void sendinitclient(clientinfo *ci)
     {
         packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-        putinitclient(ci, p);
+        putinitclient(ci, p, true);
         sendpacket(-1, 1, p.finalize(), ci->clientnum);
     }
 

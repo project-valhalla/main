@@ -1626,7 +1626,7 @@ namespace game
 
             case N_INITCLIENT:            // another client either connected or changed name/team
             {
-                int cn = getint(p);
+                int cn = getint(p), notify = getint(p);
                 gameent *d = newclient(cn);
                 if(!d)
                 {
@@ -1646,7 +1646,7 @@ namespace game
                 }
                 else                    // new client
                 {
-                    if(d!=player1)
+                    if(d!=player1 && notify)
                     {
                         conoutf(CON_CHAT, "%s \f0joined the game", colorname(d, text));
                         if(chatsound == 1) playsound(S_CHAT);

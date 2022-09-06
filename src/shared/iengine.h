@@ -210,6 +210,7 @@ extern void logoutf(const char *fmt, ...) PRINTFARGS(1, 2);
 
 // octa
 extern int lookupmaterial(const vec &o);
+extern int lookuptexturematerial(const vec &v);
 
 static inline bool insideworld(const vec &o)
 {

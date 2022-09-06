@@ -759,6 +759,18 @@ namespace game
         }
     }
 
+    int footstepsound(int texturematerial)
+    {
+        switch(texturematerial)
+        {
+            case 1: return S_FOOTSTEP_SOFT; break;
+            case 2: return S_FOOTSTEP_METAL; break;
+            case 3: return S_FOOTSTEP_WOOD; break;
+            default: return S_FOOTSTEP; break;
+        }
+        return S_FOOTSTEP;
+    }
+
     VARP(footstepssound, 0, 1, 1);
 
     void footsteps(physent *d)
@@ -768,7 +780,7 @@ namespace game
         gameent *pl = (gameent *)d;
         if(d->physstate>=PHYS_SLOPE && moving)
         {
-            int snd = S_FOOTSTEP;
+            int material = lookuptexturematerial(d->feetpos(-1)), snd = footstepsound(material);
             if(lookupmaterial(d->feetpos())&MAT_WATER) snd = S_FOOTSTEP_WATER;
             if(lastmillis-pl->lastfootstep < (d->vel.magnitude()*380/d->vel.magnitude())) return;
             else playsound(snd, d, &d->o, NULL, 0, 0, 0, -1, 200);

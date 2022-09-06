@@ -2360,6 +2360,22 @@ ICOMMAND(getvrefract, "i", (int *tex),
     result(str);
 });
 
+void vmaterial(int *n)
+{
+    if(noedit()) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_MATERIAL;
+    if(vslots.inrange(*n))
+    {
+        ds.texturematerial = *n;
+        if(vslots[ds.texturematerial]->changed && nompedit && multiplayer()) return;
+    }
+    editingvslot(ds.texturematerial);
+    mpeditvslot(usevdelta, ds, allfaces, sel, true);
+}
+COMMAND(vmaterial, "i");
+ICOMMAND(getvmaterial, "i", (int *tex), intret(lookupvslot(*tex, false).texturematerial));
+
 void vreset()
 {
     if(noedit()) return;

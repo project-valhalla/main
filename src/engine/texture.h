@@ -612,6 +612,7 @@ enum
     VSLOT_RESERVED, // used by RE
     VSLOT_REFRACT,
     VSLOT_DETAIL,
+    VSLOT_MATERIAL,
     VSLOT_NUM
 };
 
@@ -632,6 +633,7 @@ struct VSlot
     vec glowcolor;
     float refractscale;
     vec refractcolor;
+    int texturematerial;
 
     VSlot(Slot *slot = NULL, int index = -1) : slot(slot), next(NULL), index(index), changed(0)
     {
@@ -656,6 +658,7 @@ struct VSlot
         glowcolor = vec(1, 1, 1);
         refractscale = 0;
         refractcolor = vec(1, 1, 1);
+        texturematerial = 0;
     }
 
     void cleanup()

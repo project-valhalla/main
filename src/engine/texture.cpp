@@ -2001,6 +2001,7 @@ static void propagatevslot(VSlot &dst, const VSlot &src, int diff, bool edit = f
         dst.refractcolor = src.refractcolor;
     }
     if(diff & (1<<VSLOT_DETAIL)) dst.detail = src.detail;
+    if(diff & (1<<VSLOT_MATERIAL)) dst.texturematerial = src.texturematerial;
 }
 
 static void propagatevslot(VSlot *root, int changed)
@@ -2057,6 +2058,7 @@ static void mergevslot(VSlot &dst, const VSlot &src, int diff, Slot *slot = NULL
         dst.refractcolor.mul(src.refractcolor);
     }
     if(diff & (1<<VSLOT_DETAIL)) dst.detail = src.detail;
+    if(diff & (1<<VSLOT_MATERIAL)) dst.texturematerial = src.texturematerial;
 }
 
 void mergevslot(VSlot &dst, const VSlot &src, const VSlot &delta)
@@ -2112,6 +2114,7 @@ static bool comparevslot(const VSlot &dst, const VSlot &src, int diff)
     if(diff & (1<<VSLOT_COLOR) && dst.colorscale != src.colorscale) return false;
     if(diff & (1<<VSLOT_REFRACT) && (dst.refractscale != src.refractscale || dst.refractcolor != src.refractcolor)) return false;
     if(diff & (1<<VSLOT_DETAIL) && dst.detail != src.detail) return false;
+    if(diff & (1<<VSLOT_MATERIAL) && dst.texturematerial != src.texturematerial) return false;
     return true;
 }
 
@@ -2179,6 +2182,11 @@ void packvslot(vector<uchar> &buf, const VSlot &src)
     {
         buf.put(VSLOT_DETAIL);
         putuint(buf, vslots.inrange(src.detail) && !vslots[src.detail]->changed ? src.detail : 0);
+    }
+    if(src.changed & (1<<VSLOT_MATERIAL))
+    {
+        buf.put(VSLOT_MATERIAL);
+        putuint(buf, vslots.inrange(src.texturematerial) && !vslots[src.texturematerial]->changed ? src.texturematerial : 0);
     }
     buf.put(0xFF);
 }
@@ -2255,6 +2263,12 @@ bool unpackvslot(ucharbuf &buf, VSlot &dst, bool delta)
             {
                 int tex = getuint(buf);
                 dst.detail = vslots.inrange(tex) ? tex : 0;
+                break;
+            }
+            case VSLOT_MATERIAL:
+            {
+                int tex = getuint(buf);
+                dst.texturematerial = vslots.inrange(tex) ? tex : 0;
                 break;
             }
             default:
@@ -2500,6 +2514,15 @@ void texsmooth(int *id, int *angle)
     s.smooth = smoothangle(*id, *angle);
 }
 COMMAND(texsmooth, "ib");
+
+void texmaterial(int *material)
+{
+    if(!defslot) return;
+    Slot &s = *defslot;
+    s.variants->texturematerial = *material;
+    propagatevslot(s.variants, 1<<VSLOT_MATERIAL);
+}
+COMMAND(texmaterial, "i");
 
 void decaldepth(float *depth, float *fade)
 {

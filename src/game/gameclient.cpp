@@ -2193,9 +2193,9 @@ namespace game
                 gameent *w = getclient(wn);
                 if(!w) return;
                 w->team = validteam(team) ? team : 0;
-                static const char * const fmt[2] = { "%s switched to team %s", "%s forced to team %s"};
+                static const char * const fmt[2] = { "%s \fs\f2switched to team\fr %s%s", "%s \fs\f2forced to team\fr %s%s"};
                 if(reason >= 0 && size_t(reason) < sizeof(fmt)/sizeof(fmt[0]))
-                    conoutf(fmt[reason], colorname(w), teamnames[w->team]);
+                    conoutf(fmt[reason], colorname(w), teamtextcode[w->team], teamnames[w->team]);
                 break;
             }
 

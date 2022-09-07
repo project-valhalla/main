@@ -56,7 +56,7 @@ namespace game
         0xB3ADA3
     };
 
-    static const int playercolorsazul[] =
+    static const int playercolorsblue[] =
     {
         0x27508A,
         0x3F748C,
@@ -64,7 +64,7 @@ namespace game
         0x5364B5
     };
 
-    static const int playercolorsrojo[] =
+    static const int playercolorsred[] =
     {
         0xAC2C2A,
         0x992417,
@@ -74,8 +74,8 @@ namespace game
 
     extern void changedplayercolor();
     VARFP(playercolor, 0, 4, sizeof(playercolors)/sizeof(playercolors[0])-1, changedplayercolor());
-    VARFP(playercolorazul, 0, 0, sizeof(playercolorsazul)/sizeof(playercolorsazul[0])-1, changedplayercolor());
-    VARFP(playercolorrojo, 0, 0, sizeof(playercolorsrojo)/sizeof(playercolorsrojo[0])-1, changedplayercolor());
+    VARFP(playercolorblue, 0, 0, sizeof(playercolorsblue)/sizeof(playercolorsblue[0])-1, changedplayercolor());
+    VARFP(playercolorred, 0, 0, sizeof(playercolorsred)/sizeof(playercolorsred[0])-1, changedplayercolor());
 
     static const playermodelinfo playermodels[] =
     {
@@ -109,8 +109,8 @@ namespace game
             return playercolors[color%(sizeof(playercolors)/sizeof(playercolors[0]))];
         switch(team)
         {
-            case 1: GETPLAYERCOLOR(playercolorsazul)
-            case 2: GETPLAYERCOLOR(playercolorsrojo)
+            case 1: GETPLAYERCOLOR(playercolorsblue)
+            case 2: GETPLAYERCOLOR(playercolorsred)
             default: GETPLAYERCOLOR(playercolors)
         }
     }
@@ -121,8 +121,8 @@ namespace game
     {
         if(d==player1) switch(team)
         {
-            case 1: return getplayercolor(1, playercolorazul);
-            case 2: return getplayercolor(2, playercolorrojo);
+            case 1: return getplayercolor(1, playercolorblue);
+            case 2: return getplayercolor(2, playercolorred);
             default: return getplayercolor(0, playercolor);
         }
         else return getplayercolor(team, (d->playercolor>>(5*team))&0x1F);
@@ -158,7 +158,7 @@ namespace game
 
     void changedplayercolor()
     {
-        if(player1->clientnum < 0) player1->playercolor = playercolor | (playercolorazul<<5) | (playercolorrojo<<10);
+        if(player1->clientnum < 0) player1->playercolor = playercolor | (playercolorblue<<5) | (playercolorred<<10);
     }
 
     void syncplayer()
@@ -169,7 +169,7 @@ namespace game
             addmsg(N_SWITCHMODEL, "ri", player1->playermodel);
         }
 
-        int col = playercolor | (playercolorazul<<5) | (playercolorrojo<<10);
+        int col = playercolor | (playercolorblue<<5) | (playercolorred<<10);
         if(player1->playercolor != col)
         {
             player1->playercolor = col;

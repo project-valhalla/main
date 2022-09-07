@@ -2305,6 +2305,15 @@ namespace game
         }
     }
 
+    struct demoreq
+    {
+        int tag;
+        string name;
+    };
+    vector<demoreq> demoreqs;
+    enum { MAXDEMOREQS = 7 };
+    static int lastdemoreq = 0;
+
     void receivefile(packetbuf &p)
     {
         int type;
@@ -2313,8 +2322,26 @@ namespace game
             case N_DEMOPACKET: return;
             case N_SENDDEMO:
             {
-                defformatstring(fname, "%d.dmo", lastmillis);
-                stream *demo = openrawfile(fname, "wb");
+                string fname;
+                fname[0] = '\0';
+                int tag = getint(p);
+                loopv(demoreqs) if(demoreqs[i].tag == tag)
+                {
+                    copystring(fname, demoreqs[i].name);
+                    demoreqs.remove(i);
+                    break;
+                }
+                if(!fname[0])
+                {
+                    time_t t = time(NULL);
+                    size_t len = strftime(fname, sizeof(fname), "%Y-%m-%d_%H.%M.%S", localtime(&t));
+                    fname[min(len, sizeof(fname)-1)] = '\0';
+                }
+                int len = strlen(fname);
+                if(len < 4 || strcasecmp(&fname[len-4], ".dmo")) concatstring(fname, ".dmo");
+                stream *demo = NULL;
+                if(const char *buf = server::getdemofile(fname, true)) demo = openrawfile(buf, "wb");
+                if(!demo) demo = openrawfile(fname, "wb");
                 if(!demo) return;
                 conoutf("received demo \"%s\"", fname);
                 ucharbuf b = p.subbuf(p.remaining());
@@ -2396,13 +2423,24 @@ namespace game
     }
     ICOMMAND(cleardemos, "i", (int *val), cleardemos(*val));
 
-    void getdemo(int i)
+    void getdemo(char *val, char *name)
     {
+        int i = 0;
+        if(isdigit(val[0]) || name[0]) i = parseint(val);
+        else name = val;
         if(i<=0) conoutf("getting demo...");
         else conoutf("getting demo %d...", i);
-        addmsg(N_GETDEMO, "ri", i);
+        ++lastdemoreq;
+        if(name[0])
+        {
+            if(demoreqs.length() >= MAXDEMOREQS) demoreqs.remove(0);
+            demoreq &r = demoreqs.add();
+            r.tag = lastdemoreq;
+            copystring(r.name, name);
+        }
+        addmsg(N_GETDEMO, "rii", i, lastdemoreq);
     }
-    ICOMMAND(getdemo, "i", (int *val), getdemo(*val));
+    ICOMMAND(getdemo, "ss", (char *val, char *name), getdemo(val, name));
 
     void listdemos()
     {

@@ -1042,7 +1042,7 @@ bool setuplistenserver(bool dedicated)
     ENetAddress address = { ENET_HOST_ANY, enet_uint16(serverport <= 0 ? server::serverport() : serverport) };
     if(*serverip)
     {
-        if(enet_address_set_host(&address, serverip)<0) conoutf(CON_WARN, "WARNING: server ip not resolved");
+        if(enet_address_set_host(&address, serverip)<0) conoutf(CON_WARN, "server IP not resolved");
         else serveraddress.host = address.host;
     }
     serverhost = enet_host_create(&address, min(maxclients + server::reserveclients(), MAXCLIENTS), server::numchannels(), 0, serveruprate);

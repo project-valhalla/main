@@ -679,7 +679,7 @@ void updatefrommaster()
 {
     vector<char> data;
     retrieveservers(data);
-    if(data.empty()) conoutf(CON_ERROR, "Master server not replying");
+    if(data.empty()) conoutf(CON_ERROR, "master server not replying");
     else
     {
         clearservers();

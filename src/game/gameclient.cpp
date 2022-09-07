@@ -514,7 +514,7 @@ namespace game
     {
         gameent *d = getclient(cn);
         if(!d || d == player1) return;
-        conoutf("ignoring %s", d->name);
+        conoutf("ignoring: %s", d->name);
         if(ignores.find(cn) < 0) ignores.add(cn);
     }
 
@@ -522,7 +522,7 @@ namespace game
     {
         if(ignores.find(cn) < 0) return;
         gameent *d = getclient(cn);
-        if(d) conoutf("stopped ignoring %s", d->name);
+        if(d) conoutf("stopped ignoring: %s", d->name);
         ignores.removeobj(cn);
     }
 
@@ -899,17 +899,17 @@ namespace game
                 if(val < 0)
                     formatstring(str, "%d", val);
                 else if(id->flags&IDF_HEX && id->maxval==0xFFFFFF)
-                    formatstring(str, "0x%.6X (%d, %d, %d)", val, (val>>16)&0xFF, (val>>8)&0xFF, val&0xFF);
+                    formatstring(str, "0x%.6X (\fs\f3R\fr: %d, \fs\f0G\fr: %d, \fs\f1B\fr: %d)", val, (val>>16)&0xFF, (val>>8)&0xFF, val&0xFF);
                 else
                     formatstring(str, id->flags&IDF_HEX ? "0x%X" : "%d", val);
-                conoutf("%s set map var \"%s\" to %s", colorname(d), id->name, str);
+                conoutf(CON_GAMEINFO, "%s \fs\f2set map variable \fr%s\fs\f2 to\fr %s", colorname(d), id->name, str);
                 break;
             }
             case ID_FVAR:
-                conoutf("%s set map var \"%s\" to %s", colorname(d), id->name, floatstr(*id->storage.f));
+                conoutf(CON_GAMEINFO, "%s \fs\f2set map variable \fr%s\fs\f2 to\fr %s", colorname(d), id->name, floatstr(*id->storage.f));
                 break;
             case ID_SVAR:
-                conoutf("%s set map var \"%s\" to \"%s\"", colorname(d), id->name, *id->storage.s);
+                conoutf(CON_GAMEINFO, "%s \fs\f2set map variable \fr%s\fs\f2 to \fr%s", colorname(d), id->name, *id->storage.s);
                 break;
         }
     }
@@ -1500,8 +1500,8 @@ namespace game
                     gamepaused = val;
                     player1->attacking = ACT_IDLE;
                 }
-                if(a) conoutf("%s %s the game", colorname(a), val ? "paused" : "resumed");
-                else conoutf("game is %s", val ? "paused" : "resumed");
+                if(a) conoutf(CON_GAMEINFO, "%s \fs\f2%s the game\fr", colorname(a), val ? "paused" : "resumed");
+                else conoutf(CON_GAMEINFO, "\f2game is %s", val ? "paused" : "resumed");
                 break;
             }
 
@@ -1510,8 +1510,8 @@ namespace game
                 int val = clamp(getint(p), 10, 1000), cn = getint(p);
                 gameent *a = cn >= 0 ? getclient(cn) : NULL;
                 if(!demopacket) gamespeed = val;
-                if(a) conoutf("%s set gamespeed to %d", colorname(a), val);
-                else conoutf("gamespeed is %d", val);
+                if(a) conoutf(CON_GAMEINFO, "%s \fs\f2set gamespeed to\fr %d", colorname(a), val);
+                else conoutf(CON_GAMEINFO, "\fs\f2gamespeed is\fr %d", val);
                 break;
             }
 
@@ -1638,17 +1638,19 @@ namespace game
                 }
                 getstring(text, p);
                 filtertext(text, text, false, false, true, false, MAXNAMELEN);
-                if(!text[0]) copystring(text, "player");
-                if(d->name[0])          // already connected
+                if(!text[0]) copystring(text, "player"); // if no text is specified for the name change, change to default name
+                if(d->name[0]) // already connected but the client changed their name
                 {
-                    if(strcmp(d->name, text) && !isignored(d->clientnum) && d!=player1)
+                    if(notify && strcmp(d->name, text) && !isignored(d->clientnum))
+                    {
                         conoutf("%s is now known as %s", colorname(d), colorname(d, text));
+                    }
                 }
-                else                    // new client
+                else // new client joined
                 {
                     if(d!=player1 && notify)
                     {
-                        conoutf(CON_CHAT, "%s \f0joined the game", colorname(d, text));
+                        conoutf(CON_CHAT, "%s \fs\f0joined the game\fr", colorname(d, text));
                         if(chatsound == 1) playsound(S_CHAT);
                     }
                     if(needclipboard >= 0) needclipboard++;
@@ -1894,7 +1896,7 @@ namespace game
             {
                 int snd1 = getint(p), snd2 = getint(p);
                 getstring(text, p);
-                if(text[0]) conoutf(CON_GAMEINFO, "%s", text);
+                if(text[0]) conoutf(CON_GAMEINFO, "\fs\f2%s\fr", text);
                 if(snd1 >= 0) playsound(snd1);
                 if(snd2 >= 0) playsound(snd2);
                 break;
@@ -2017,12 +2019,12 @@ namespace game
             }
             case N_REMIP:
                 if(!d) return;
-                conoutf("%s remipped", colorname(d));
+                conoutf(CON_GAMEINFO, "%s \fs\f2remipped\fr", colorname(d));
                 mpremip(false);
                 break;
             case N_CALCLIGHT:
                 if(!d) return;
-                conoutf("%s calced lights", colorname(d));
+                conoutf(CON_GAMEINFO, "%s \fs\f2computed lights\fr", colorname(d));
                 mpcalclight(false);
                 break;
             case N_EDITENT:            // coop edit of ent
@@ -2126,7 +2128,7 @@ namespace game
                 if(mm != mastermode)
                 {
                     mastermode = mm;
-                    conoutf("mastermode is %s%s\ff (%d)", mastermodecolors[mastermode+1], server::mastermodename(mastermode), mastermode);
+                    conoutf("master mode is %s%s (%d)", mastermodecolors[mastermode+1], server::mastermodename(mastermode), mastermode);
                 }
                 break;
             }
@@ -2134,7 +2136,7 @@ namespace game
             case N_MASTERMODE:
             {
                 mastermode = getint(p);
-                conoutf("mastermode is %s%s\ff (%d)", mastermodecolors[mastermode+1], server::mastermodename(mastermode), mastermode);
+                conoutf("master mode is %s%s (%d)", mastermodecolors[mastermode+1], server::mastermodename(mastermode), mastermode);
                 break;
             }
 
@@ -2175,9 +2177,9 @@ namespace game
                         if(s->state==CS_DEAD) showscores(false);
                         disablezoom();
                     }
+                    else if(!waiting) conoutf(CON_GAMEINFO, "%s \fs\f2entered spectator mode\fr", colorname(s));
                     saveragdoll(s);
                     s->state = CS_SPECTATOR;
-                    if(!waiting) conoutf(CON_GAMEINFO, "%s \f2entered spectator mode", colorname(s));
                 }
                 else if(s->state==CS_SPECTATOR) deathstate(s, true);
                 s->queue = waiting;
@@ -2248,7 +2250,7 @@ namespace game
                 {
                     int newsize = 0;
                     while(1<<newsize < getworldsize()) newsize++;
-                    conoutf(size>=0 ? "%s started a new map of size %d" : "%s enlarged the map to size %d", colorname(d), newsize);
+                    conoutf(CON_GAMEINFO, size>=0 ? "%s \fs\f2started a new map of size\fr %d" : "%s \fs\f2enlarged the map to size\fr %d", colorname(d), newsize);
                 }
                 break;
             }
@@ -2271,7 +2273,6 @@ namespace game
                 {
                     vector<char> buf;
                     answerchallenge(a->key, text, buf);
-                    //conoutf(CON_DEBUG, "answering %u, challenge %s with %s", id, text, buf.getbuf());
                     packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
                     putint(p, N_AUTHANS);
                     sendstring(a->desc, p);

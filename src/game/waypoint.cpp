@@ -719,7 +719,7 @@ namespace ai
         }
 
         delete f;
-        conoutf("loaded %d waypoints from %s", numwp, wptname);
+        conoutf(CON_DEBUG, "loaded %d waypoints from %s", numwp, wptname);
 
         if(!cleanwaypoints()) clearwpcache();
     }

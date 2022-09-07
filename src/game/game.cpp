@@ -525,8 +525,7 @@ namespace game
             intermission = true;
             player1->attacking = ACT_IDLE;
             if(cmode) cmode->gameover();
-            conoutf(CON_GAMEINFO, "\f2intermission:");
-            conoutf(CON_GAMEINFO, "\f2game has ended!");
+            conoutf(CON_GAMEINFO, "\f2intermission: game has ended!");
             if(m_ctf) conoutf(CON_GAMEINFO, "\f2player frags: %d, flags: %d, deaths: %d", player1->frags, player1->flags, player1->deaths);
             else conoutf(CON_GAMEINFO, "\f2player frags: %d, deaths: %d", player1->frags, player1->deaths);
             int accuracy = (player1->totaldamage*100)/max(player1->totalshots, 1);
@@ -594,7 +593,14 @@ namespace game
         gameent *d = clients[cn];
         if(d)
         {
-            if(notify && d->name[0]) conoutf("%s \f4left the game", colorname(d));
+            if(notify && d->name[0])
+            {
+                if(d->aitype == AI_NONE)
+                {
+                    conoutf(CON_CHAT, "%s \fs\f4left the game\fr", colorname(d));
+                }
+                else conoutf(CON_GAMEINFO, "\fs\f2bot removed:\fr %s", colorname(d));
+            }
             removeweapons(d);
             removetrackedparticles(d);
             removetrackeddynlights(d);
@@ -648,14 +654,14 @@ namespace game
             cmode->setup();
         }
 
-        conoutf(CON_GAMEINFO, "%s on %s", server::modeprettyname(gamemode), getclientmap());
+        conoutf(CON_GAMEINFO, "\fs\f0%s \f2on \f0%s\fr", server::modeprettyname(gamemode), getclientmap());
 
         if(mutators != 0) loopi(NUMMUTATORS)
         {
            if(mutators & mutator[i].flags) conoutf(CON_GAMEINFO, "%s", mutator[i].info);
         }
         const char *info = m_valid(gamemode) ? gamemodes[gamemode - STARTGAMEMODE].info : NULL;
-        if(showmodeinfo && info) conoutf(CON_GAMEINFO, "\f0%s", info);
+        if(showmodeinfo && info) conoutf(CON_GAMEINFO, "%s", info);
 
         syncplayer();
 

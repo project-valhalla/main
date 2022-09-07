@@ -95,7 +95,7 @@ bool loadents(const char *fname, vector<entity> &ents, uint *crc)
     if(strcmp(gametype, game::gameident()))
     {
         samegame = false;
-        conoutf(CON_WARN, "WARNING: loading map from %s game, ignoring entities except for lights/mapmodels", gametype);
+        conoutf(CON_WARN, "loading map from %s game, ignoring entities except for lights and map models", gametype);
     }
     int eif = f->getlil<ushort>();
     int extrasize = f->getlil<ushort>();
@@ -789,7 +789,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     if(strcmp(gametype, game::gameident())!=0)
     {
         samegame = false;
-        conoutf(CON_WARN, "WARNING: loading map from %s game, ignoring entities except for lights/mapmodels", gametype);
+        conoutf(CON_WARN, "loading map from %s game, ignoring entities except for lights and map models", gametype);
     }
     int eif = f->getlil<ushort>();
     int extrasize = f->getlil<ushort>();
@@ -877,7 +877,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     mapcrc = f->getcrc();
     delete f;
 
-    conoutf("read map %s (%.1f seconds)", ogzname, (SDL_GetTicks()-loadingstart)/1000.0f);
+    conoutf(CON_DEBUG, "read map %s (%.1f seconds)", ogzname, (SDL_GetTicks()-loadingstart)/1000.0f);
 
     clearmainmenu();
 

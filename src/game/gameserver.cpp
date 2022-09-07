@@ -3106,8 +3106,8 @@ namespace server
             {
                 clientinfo *ci = clients[j];
                 if(ci->state.state==CS_SPECTATOR || ci->state.aitype != AI_NONE || !ci->clientmap[0] || ci->mapcrc != info.crc || (req < 0 && ci->warned)) continue;
-                //formatstring(msg, "%s has modified map \"%s\"", colorname(ci), smapname);
-                //sendf(req, 1, "ris", N_SERVMSG, msg);
+                formatstring(msg, "%s has modified map \"%s\"", colorname(ci), smapname);
+                sendf(req, 1, "ris", N_SERVMSG, msg);
                 if(req < 0) ci->warned = true;
             }
         }

@@ -521,7 +521,7 @@ struct gamestate
 };
 
 #define MAXTEAMS 2
-static const char * const teamnames[1+MAXTEAMS] = { "", "Blue", "Red" };
+static const char * const teamnames[1+MAXTEAMS] = { "", "Aesir", "Vanir" };
 static const char * const teamtextcode[1+MAXTEAMS] = { "\ff", "\f1", "\f3" };
 static const int teamtextcolor[1+MAXTEAMS] = { 0xFFFFFF, 0x6496FF, 0xFF4B19 };
 static const int teamscoreboardcolor[1+MAXTEAMS] = { 0, 0x3030C0, 0xC03030 };

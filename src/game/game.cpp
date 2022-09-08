@@ -129,7 +129,7 @@ namespace game
         else
         {
             spawnplayer(player1);
-            showscores(false);
+            hidescoreboard();
             if(cmode) cmode->respawned(player1);
         }
         execident("on_spawn");
@@ -234,7 +234,6 @@ namespace game
         }
     }
 
-    VARP(deathscore, 0, 1, 1);
     int waterchan = -1;
 
     void updateworld()        // main game update loop
@@ -271,7 +270,6 @@ namespace game
                     player1->move = player1->strafe = 0;
                     moveplayer(player1, 10, true);
                 }
-                if(deathscore && lastmillis-player1->lastpain>950 && lastmillis-player1->lastpain<=1000) showscores(true);
             }
             else if(!intermission)
             {
@@ -451,7 +449,6 @@ namespace game
             d->juggernautchan = -1;
         }
         if(!(gore && d->gibbed())) playsound(d->diesound(), d, &d->o);
-
     }
 
     VARP(killsound, 0, 0, 2);
@@ -542,10 +539,7 @@ namespace game
                 playsound(S_ANNOUNCER_WIN, NULL, NULL, NULL, SND_ANNOUNCER);
             }
             else playsound(S_INTERMISSION);
-
-            showscores(true);
             disablezoom();
-
             execident("on_intermission");
         }
     }
@@ -665,7 +659,7 @@ namespace game
 
         syncplayer();
 
-        showscores(false);
+        hidescoreboard();
         disablezoom();
 
         execident("on_mapstart");

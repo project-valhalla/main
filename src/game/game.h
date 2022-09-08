@@ -847,7 +847,7 @@ namespace game
     extern void avoidweapons(ai::avoidset &obstacles, float radius);
 
     // scoreboard
-    extern void showscores(bool on);
+    extern void hidescoreboard();
     extern void getbestplayers(vector<gameent *> &best);
     extern void getbestteams(vector<int> &best);
     extern void clearteaminfo();

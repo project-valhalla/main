@@ -221,10 +221,10 @@ namespace game
         }
     });
 
-    void showscores(bool on)
+    void hidescoreboard()
     {
         if(UI::uivisible("main")) return;
-        UI::holdui("scoreboard", on);
+        UI::holdui("scoreboard", false);
     }
 }
 

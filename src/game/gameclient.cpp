@@ -284,7 +284,7 @@ namespace game
     {
         addmsg(N_EDITMODE, "ri", on ? 1 : 0);
         if(player1->state==CS_DEAD) deathstate(player1, true);
-        else if(player1->state==CS_EDITING && player1->editstate==CS_DEAD) showscores(false);
+        else if(player1->state==CS_EDITING && player1->editstate==CS_DEAD) hidescoreboard();
         disablezoom();
         player1->suicided = player1->respawned = -2;
         checkfollow();
@@ -1452,7 +1452,6 @@ namespace game
         }
     }
 
-    extern int deathscore;
     VARP(regensound, 0, 1, 1);
 
     void parsemessages(int cn, gameent *d, ucharbuf &p)
@@ -1605,7 +1604,6 @@ namespace game
                 if(d==player1)
                 {
                     if(editmode) toggleedit();
-                    if(deathscore) showscores(true);
                 }
                 else d->resetinterp();
                 d->state = CS_DEAD;
@@ -1731,7 +1729,7 @@ namespace game
                 s->state = CS_ALIVE;
                 if(cmode) cmode->pickspawn(s);
                 else findplayerspawn(s, -1, m_teammode ? s->team : 0);
-                if(s == player1) showscores(false);
+                if(s == player1) hidescoreboard();
                 if(cmode) cmode->respawned(s);
                 ai::spawned(s);
                 checkfollow();
@@ -2174,7 +2172,7 @@ namespace game
                     if(s==player1)
                     {
                         if(editmode) toggleedit();
-                        if(s->state==CS_DEAD) showscores(false);
+                        if(s->state==CS_DEAD) hidescoreboard();
                         disablezoom();
                     }
                     else if(!waiting) conoutf(CON_GAMEINFO, "%s \fs\f2entered spectator mode\fr", colorname(s));

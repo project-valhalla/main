@@ -426,6 +426,7 @@ namespace game
         if(!restore)
         {
             if(gore && d->gibbed()) gibeffect(max(-d->health, 0), d->vel, d);
+            else playsound(d->diesound(), d);
             d->deaths++;
         }
         if(d==player1)
@@ -448,7 +449,6 @@ namespace game
             stopsound(S_JUGGERNAUT_LOOP, d->juggernautchan, 1200);
             d->juggernautchan = -1;
         }
-        if(!(gore && d->gibbed())) playsound(d->diesound(), d, &d->o);
     }
 
     VARP(killsound, 0, 0, 2);

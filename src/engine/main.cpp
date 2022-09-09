@@ -106,7 +106,7 @@ VARFN(screenh, scr_h, SCR_MINH, -1, SCR_MAXH, initwarning("screen resolution"));
 
 void writeinitcfg()
 {
-    stream *f = openutf8file("data/config/init.cfg", "w");
+    stream *f = openutf8file("config/init.cfg", "w");
     if(!f) return;
     f->printf("// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
     extern int fullscreen;
@@ -1112,7 +1112,7 @@ int main(int argc, char **argv)
         logoutf("Setting log file: %s", file);
         break;
     }
-    execfile("data/config/init.cfg", false);
+    execfile("config/init.cfg", false);
     for(int i = 1; i<argc; i++)
     {
         if(argv[i][0]=='-') switch(argv[i][1])
@@ -1186,8 +1186,8 @@ int main(int argc, char **argv)
     if(!notexture) fatal("Could not find core textures");
 
     logoutf("init: console");
-    if(!execfile("data/config/stdlib.cfg", false)) fatal("Cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");   // this is the first file we load.
-    if(!execfile("data/config/font.cfg", false)) fatal("Cannot find font definitions");
+    if(!execfile("config/stdlib.cfg", false)) fatal("Cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");   // this is the first file we load.
+    if(!execfile("config/font.cfg", false)) fatal("Cannot find font definitions");
     if(!setfont("default")) fatal("No default font specified");
 
     UI::setup();
@@ -1204,14 +1204,14 @@ int main(int argc, char **argv)
 
     logoutf("init: cfg");
     initing = INIT_LOAD;
-    execfile("data/config/keymap.cfg");
-    execfile("data/config/stdedit.cfg");
+    execfile("config/keymap.cfg");
+    execfile("config/stdedit.cfg");
     execfile(game::gameconfig());
-    execfile("data/config/sound.cfg");
-    execfile("data/config/ui.cfg");
-    execfile("data/config/heightmap.cfg");
-    execfile("data/config/blendbrush.cfg");
-    execfile("data/config/tip.cfg");
+    execfile("config/sound.cfg");
+    execfile("config/ui.cfg");
+    execfile("config/heightmap.cfg");
+    execfile("config/blendbrush.cfg");
+    execfile("config/tip.cfg");
     if(game::savedservers()) execfile(game::savedservers(), false);
 
     identflags |= IDF_PERSIST;
@@ -1261,7 +1261,7 @@ int main(int argc, char **argv)
 
     if(firstrun)
     {
-        execfile("data/config/ui/firstrun.cfg");
+        execfile("config/ui/firstrun.cfg");
         firstrun = false;
     }
 

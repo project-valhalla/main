@@ -1087,15 +1087,15 @@ namespace game
     void writegamedata(vector<char> &extras) {}
     void readgamedata(vector<char> &extras) {}
 
-    const char *gameconfig() { return "data/config/game.cfg"; }
-    const char *savedconfig() { return "data/config/saved.cfg"; }
-    const char *defaultconfig() { return "data/config/default.cfg"; }
-    const char *autoexec() { return "data/config/autoexec.cfg"; }
-    const char *savedservers() { return "data/config/servers.cfg"; }
+    const char *gameconfig() { return "config/game.cfg"; }
+    const char *savedconfig() { return "config/saved.cfg"; }
+    const char *defaultconfig() { return "config/default.cfg"; }
+    const char *autoexec() { return "config/autoexec.cfg"; }
+    const char *savedservers() { return "config/servers.cfg"; }
 
     void loadconfigs()
     {
-        execfile("data/config/auth.cfg", false);
+        execfile("config/auth.cfg", false);
     }
 
     bool clientoption(const char *arg) { return false; }

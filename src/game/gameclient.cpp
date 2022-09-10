@@ -353,6 +353,12 @@ namespace game
         if(d) intret(d->deaths);
     });
 
+    ICOMMAND(getclientprivilege, "i", (int *cn),
+    {
+        gameent *d = getclient(*cn);
+        if(d) intret(d->privilege);
+    });
+
     bool ismaster(int cn)
     {
         gameent *d = getclient(cn);

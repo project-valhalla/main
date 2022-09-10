@@ -1,5 +1,7 @@
 #include "game.h"
 
+extern int maxparticletextdistance;
+
 namespace game
 {
     VARP(ragdoll, 0, 1, 1);
@@ -335,11 +337,12 @@ namespace game
             if(d->state!=CS_DEAD)
             {
                 int team = m_teammode && validteam(d->team) ? d->team : 0;
-                particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
-                vec abovehead = d->abovehead();
-                abovehead.z += d->invulnmillis ? 8.0f : 2.0f;
-                if(d!=player1 && isally(player1, d))
-                    particle_icon(abovehead, HICON_GL, HICON_GL, PART_HUD_ICON, 1, 0xFFFFFF, 2.0f, NULL);
+                gameent *hud = followingplayer(player1);
+                if(isally(hud, d) && hud->o.dist(d->o) > maxparticletextdistance)
+                {
+                    particle_icon(d->abovehead(), HICON_GL, HICON_GL, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
+                }
+                else particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
             }
         }
         loopv(ragdolls)

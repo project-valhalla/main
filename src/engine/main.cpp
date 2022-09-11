@@ -239,8 +239,6 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     glDisable(GL_BLEND);
 }
 
-bool firstrun = false;
-
 void setbackgroundinfo(const char *caption = NULL, Texture *mapshot = NULL, const char *mapname = NULL, const char *mapinfo = NULL)
 {
     renderedframe = false;
@@ -1219,7 +1217,6 @@ int main(int argc, char **argv)
     if(!execfile(game::savedconfig(), false))
     {
         execfile(game::defaultconfig());
-        firstrun = true;
     }
     execfile(game::autoexec(), false);
 
@@ -1258,12 +1255,6 @@ int main(int argc, char **argv)
 
     inputgrab(grabinput = true);
     ignoremousemotion();
-
-    if(firstrun)
-    {
-        execfile("config/ui/firstrun.cfg");
-        firstrun = false;
-    }
 
     for(;;)
     {

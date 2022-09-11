@@ -9,10 +9,10 @@ VALHALLA_APPDIR=$(dirname "$0")
 
 cd "${VALHALLA_APPDIR}"
 
-if [ -e "../Resources/data/config/default.cfg" ]; then
+if [ -e "../Resources/config/default.cfg" ]; then
     cd "../Resources" # we are an app package
     VALHALLA_BIN="../MacOS"
-elif [ -e "../../../data/config/default.cfg" ]; then
+elif [ -e "../../../config/default.cfg" ]; then
     cd "../../.." # we are being run in place
     VALHALLA_BIN="./valhalla.app/Contents/MacOS"
 else

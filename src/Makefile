@@ -112,12 +112,12 @@ CLIENT_OBJS= \
 	engine/world.o \
 	engine/worldio.o \
 	game/ai.o \
-	game/client.o \
+	game/gameclient.o \
 	game/entity.o \
 	game/game.o \
 	game/render.o \
 	game/scoreboard.o \
-	game/server.o \
+	game/gameserver.o \
 	game/waypoint.o \
 	game/weapon.o
 
@@ -141,7 +141,7 @@ SERVER_OBJS= \
 	standalone/engine/server.o \
 	standalone/engine/worldio.o \
 	standalone/game/entity.o \
-	standalone/game/server.o
+	standalone/game/gameserver.o
 
 SERVER_PCH= standalone/shared/cube.h.gch standalone/engine/engine.h.gch standalone/game/game.h.gch
 
@@ -443,9 +443,9 @@ engine/worldio.o: engine/texture.h engine/bih.h engine/model.h
 game/ai.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/ai.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/ai.o: shared/iengine.h shared/igame.h game/ai.h
-game/client.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
-game/client.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
-game/client.o: shared/iengine.h shared/igame.h game/ai.h game/ctf.h game/elimination.h
+game/gameclient.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
+game/gameclient.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
+game/gameclient.o: shared/iengine.h shared/igame.h game/ai.h game/ctf.h game/elimination.h
 game/entity.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/entity.o: shared/ents.h shared/command.h shared/glexts.h
 game/entity.o: shared/glemu.h shared/iengine.h shared/igame.h game/ai.h
@@ -458,10 +458,10 @@ game/render.o: shared/iengine.h shared/igame.h game/ai.h
 game/scoreboard.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/scoreboard.o: shared/ents.h shared/command.h shared/glexts.h
 game/scoreboard.o: shared/glemu.h shared/iengine.h shared/igame.h game/ai.h
-game/server.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
-game/server.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
-game/server.o: shared/iengine.h shared/igame.h game/ai.h game/ctf.h game/elimination.h
-game/server.o: game/extinfo.h game/aiman.h
+game/gameserver.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
+game/gameserver.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
+game/gameserver.o: shared/iengine.h shared/igame.h game/ai.h game/ctf.h game/elimination.h
+game/gameserver.o: game/extinfo.h game/aiman.h
 game/waypoint.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/waypoint.o: shared/ents.h shared/command.h shared/glexts.h
 game/waypoint.o: shared/glemu.h shared/iengine.h shared/igame.h game/ai.h

@@ -1,7 +1,0 @@
-ally.png, health.png, infinity.png, ankh.png, star01.png, star02.png and entity.png were created by garsipal.
-
-Take a look at license.txt for the icons from Sauerbraten.
-
-flag_blue.png and flag_red.png come with Tesseract.
-
-All the other icons were created by modifying free public domain icons downloaded from various sites.

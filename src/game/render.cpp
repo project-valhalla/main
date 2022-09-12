@@ -318,14 +318,6 @@ namespace game
     {
         ai::render();
 
-        /*if(intermission)
-        {
-            bestteams.shrink(0);
-            bestplayers.shrink(0);
-            if(m_teammode) getbestteams(bestteams);
-            else getbestplayers(bestplayers);
-        }*/
-
         bool third = isthirdperson();
         gameent *f = followingplayer(), *exclude = third ? NULL : f;
         loopv(players)

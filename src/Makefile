@@ -224,11 +224,11 @@ install: client
 	cp tess_client ../valhalla.app/Contents/MacOS/valhalla_universal
 else
 install: all
-	cp -f tess_client	../bin_unix/$(PLATFORM_PREFIX)_client
-	cp -f tess_server	../bin_unix/$(PLATFORM_PREFIX)_server
+	cp -f tess_client	../bin/bin_unix/$(PLATFORM_PREFIX)_client
+	cp -f tess_server	../bin/bin_unix/$(PLATFORM_PREFIX)_server
 ifneq (,$(STRIP))
-	$(STRIP) ../bin_unix/$(PLATFORM_PREFIX)_client
-	$(STRIP) ../bin_unix/$(PLATFORM_PREFIX)_server
+	$(STRIP) ../bin/bin_unix/$(PLATFORM_PREFIX)_client
+	$(STRIP) ../bin/bin_unix/$(PLATFORM_PREFIX)_server
 endif
 endif
 endif

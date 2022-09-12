@@ -2,7 +2,7 @@
 
 set TESS_BIN=bin\bin32
 
-IF EXIST bin64\tesseract.exe (
+IF EXIST bin\bin64\tesseract.exe (
     IF /I "%PROCESSOR_ARCHITECTURE%" == "amd64" (
         set TESS_BIN=bin\bin64
     )

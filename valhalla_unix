@@ -5,7 +5,7 @@
 TESS_DATA=.
 
 # TESS_BIN should refer to the directory in which Tesseract executable files are placed.
-TESS_BIN=${TESS_DATA}/bin_unix
+TESS_BIN=${TESS_DATA}/bin/bin_unix
 
 # TESS_OPTIONS contains any command line options you would like to start Tesseract with.
 #TESS_OPTIONS=""
@@ -50,10 +50,10 @@ then
   MACHINE_NAME=
 fi
 
-if [ -x ./bin_unix/${SYSTEM_NAME}client ]
+if [ -x ./bin/bin_unix/${SYSTEM_NAME}client ]
 then
   cd ${TESS_DATA}
-  exec ./bin_unix/${SYSTEM_NAME}client ${TESS_OPTIONS} "$@"
+  exec ./bin/bin_unix/${SYSTEM_NAME}client ${TESS_OPTIONS} "$@"
 else
   echo "Your platform does not have a pre-compiled Tesseract client."
   echo "Please follow the following steps to build a native client:"

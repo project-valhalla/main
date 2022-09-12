@@ -16,8 +16,8 @@
 				<Compiler>
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-O3" />
-					<Add option="-ffast-math" />
 					<Add option="-Wall" />
+					<Add option="-ffast-math" />
 					<Add option="-m64" />
 					<Add option="-fsigned-char" />
 					<Add option="-fno-exceptions" />
@@ -44,7 +44,7 @@
 					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add directory="../../bin64" />
+					<Add directory="../../bin/bin64" />
 					<Add directory="../lib64" />
 				</Linker>
 				<Environment>
@@ -61,8 +61,8 @@
 				<Compiler>
 					<Add option="-fomit-frame-pointer" />
 					<Add option="-O3" />
-					<Add option="-ffast-math" />
 					<Add option="-Wall" />
+					<Add option="-ffast-math" />
 					<Add option="-m32" />
 					<Add option="-fsigned-char" />
 					<Add option="-fno-exceptions" />
@@ -89,7 +89,7 @@
 					<Add library="enet" />
 					<Add library="ws2_32" />
 					<Add library="winmm" />
-					<Add directory="../../bin" />
+					<Add directory="../../bin/bin32" />
 					<Add directory="../lib" />
 				</Linker>
 				<Environment>

@@ -27,7 +27,7 @@ ifneq (,$(STRIP))
 endif
 endif
 WINLIB=lib64
-WINBIN=../bin64
+WINBIN=../bin/bin64
 override CXX+= -m64
 override WINDRES+= -F pe-x86-64
 else
@@ -39,7 +39,7 @@ ifneq (,$(STRIP))
 endif
 endif
 WINLIB=lib
-WINBIN=../bin
+WINBIN=../bin/bin32
 override CXX+= -m32
 override WINDRES+= -F pe-i386
 endif

@@ -52,7 +52,7 @@ OSXMIN= 10.9
 override CC+=-arch x86_64 -mmacosx-version-min=$(OSXMIN)
 override CXX+=-arch x86_64 -mmacosx-version-min=$(OSXMIN)
 CLIENT_INCLUDES= $(INCLUDES) -Iinclude
-CLIENT_LIBS= -F../valhalla.app/Contents/Frameworks/ -framework SDL2 -framework SDL2_image
+CLIENT_LIBS= -F../bin/valhalla.app/Contents/Frameworks/ -framework SDL2 -framework SDL2_image
 CLIENT_LIBS+= -framework SDL2_mixer -framework CoreAudio -framework AudioToolbox
 CLIENT_LIBS+= -framework AudioUnit -framework OpenGL -framework Cocoa -lz -Lenet -lenet
 else
@@ -221,7 +221,7 @@ tessfont: shared/tessfont.o
 
 ifneq (,$(findstring DARWIN,$(PLATFORM)))
 install: client
-	cp tess_client ../valhalla.app/Contents/MacOS/valhalla_universal
+	cp tess_client ../bin/valhalla.app/Contents/MacOS/valhalla_universal
 else
 install: all
 	cp -f tess_client	../bin/bin_unix/$(PLATFORM_PREFIX)_client

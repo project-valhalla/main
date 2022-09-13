@@ -306,7 +306,11 @@ void inputcommand(char *init, char *action = NULL, char *prompt = NULL, char *fl
         case 's': commandflags |= CF_COMPLETE|CF_EXECUTE; break;
     }
     else if(init) commandflags |= CF_COMPLETE|CF_EXECUTE;
-    if(fullconsolecommand) UI::showui("fullconsole");
+    if(fullconsolecommand)
+    {
+        if(init) UI::showui("fullconsole");
+        else UI::hideui("fullconsole");
+    }
 }
 
 ICOMMAND(saycommand, "C", (char *init), inputcommand(init));
@@ -631,14 +635,14 @@ bool consolekey(int code, bool isdown)
             }
             histpos = history.length();
             inputcommand(NULL);
-            if(fullconsolecommand) UI::hideui("fullconsole");
+
             if(h) h->run();
         }
         else if(code==SDLK_ESCAPE)
         {
             histpos = history.length();
             inputcommand(NULL);
-            if(fullconsolecommand) UI::hideui("fullconsole");
+
         }
     }
 

@@ -285,6 +285,8 @@ ICOMMAND(clearspecbinds, "", (), enumerate(keyms, keym, km, km.clear(keym::ACTIO
 ICOMMAND(cleareditbinds, "", (), enumerate(keyms, keym, km, km.clear(keym::ACTION_EDITING)));
 ICOMMAND(clearallbinds, "", (), enumerate(keyms, keym, km, km.clear()));
 
+VARP(fullconsolecommand, 0, 1, 1);
+
 void inputcommand(char *init, char *action = NULL, char *prompt = NULL, char *flags = NULL) // turns input to the command line on or off
 {
     commandmillis = init ? totalmillis : -1;
@@ -304,6 +306,7 @@ void inputcommand(char *init, char *action = NULL, char *prompt = NULL, char *fl
         case 's': commandflags |= CF_COMPLETE|CF_EXECUTE; break;
     }
     else if(init) commandflags |= CF_COMPLETE|CF_EXECUTE;
+    if(fullconsolecommand) UI::showui("fullconsole");
 }
 
 ICOMMAND(saycommand, "C", (char *init), inputcommand(init));
@@ -628,12 +631,14 @@ bool consolekey(int code, bool isdown)
             }
             histpos = history.length();
             inputcommand(NULL);
+            if(fullconsolecommand) UI::hideui("fullconsole");
             if(h) h->run();
         }
         else if(code==SDLK_ESCAPE)
         {
             histpos = history.length();
             inputcommand(NULL);
+            if(fullconsolecommand) UI::hideui("fullconsole");
         }
     }
 

@@ -435,7 +435,7 @@ namespace game
             d->attacking = ACT_IDLE;
             if(!restore && deathfromabove)
             {
-                d->pitch = -90; // see death from above
+                d->pitch = -90; // lower your pitch to see your death from above
             }
             d->roll = 0;
         }

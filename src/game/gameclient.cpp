@@ -2180,6 +2180,8 @@ namespace game
                         if(editmode) toggleedit();
                         if(s->state==CS_DEAD) hidescoreboard();
                         disablezoom();
+                        extern int deathfromabove;
+                        if(deathfromabove) s->pitch = 0; // reset player pitch if it has been lowered on death
                     }
                     else if(!waiting) conoutf(CON_GAMEINFO, "%s \fs\f2entered spectator mode\fr", colorname(s));
                     saveragdoll(s);

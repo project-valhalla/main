@@ -416,6 +416,7 @@ namespace game
     }
 
     VARP(gore, 0, 1, 1);
+    VARP(deathfromabove, 0, 1, 1);
 
     void deathstate(gameent *d, bool restore)
     {
@@ -432,7 +433,10 @@ namespace game
         {
             disablezoom();
             d->attacking = ACT_IDLE;
-            if(!restore) d->pitch = -90; // see death from above
+            if(!restore && deathfromabove)
+            {
+                d->pitch = -90; // see death from above
+            }
             d->roll = 0;
         }
         else

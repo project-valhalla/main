@@ -3344,69 +3344,123 @@ static inline void setiter(ident &id, int i, identstack &stack)
     }
 }
 
-static inline void doloop(ident &id, int offset, int n, int step, uint *body)
+static inline void doloop(ident &id, int offset, int n, int step, bool rev, uint *body)
 {
     if(n <= 0 || id.type != ID_ALIAS) return;
     identstack stack;
-    loopi(n)
+    if(rev)
     {
-        setiter(id, offset + i*step, stack);
-        execute(body);
+        loopirev(n)
+        {
+            setiter(id, offset + i*step, stack);
+            execute(body);
+        }
+    }
+    else
+    {
+        loopi(n)
+        {
+            setiter(id, offset + i*step, stack);
+            execute(body);
+        }
     }
     poparg(id);
 }
-ICOMMAND(loop, "rie", (ident *id, int *n, uint *body), doloop(*id, 0, *n, 1, body));
-ICOMMAND(loop+, "riie", (ident *id, int *offset, int *n, uint *body), doloop(*id, *offset, *n, 1, body));
-ICOMMAND(loop*, "riie", (ident *id, int *step, int *n, uint *body), doloop(*id, 0, *n, *step, body));
-ICOMMAND(loop+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), doloop(*id, *offset, *n, *step, body));
+ICOMMAND(loop, "rie", (ident *id, int *n, uint *body), doloop(*id, 0, *n, 1, false, body));
+ICOMMAND(loop+, "riie", (ident *id, int *offset, int *n, uint *body), doloop(*id, *offset, *n, 1, false, body));
+ICOMMAND(loop*, "riie", (ident *id, int *step, int *n, uint *body), doloop(*id, 0, *n, *step, false, body));
+ICOMMAND(loop+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), doloop(*id, *offset, *n, *step, false, body));
+ICOMMAND(looprev, "rie", (ident *id, int *n, uint *body), doloop(*id, 0, *n, 1, true, body));
+ICOMMAND(looprev+, "riie", (ident *id, int *offset, int *n, uint *body), doloop(*id, *offset, *n, 1, true, body));
+ICOMMAND(looprev*, "riie", (ident *id, int *step, int *n, uint *body), doloop(*id, 0, *n, *step, true, body));
+ICOMMAND(looprev+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), doloop(*id, *offset, *n, *step, true, body));
 
-static inline void loopwhile(ident &id, int offset, int n, int step, uint *cond, uint *body)
+static inline void loopwhile(ident &id, int offset, int n, int step, bool rev, uint *cond, uint *body)
 {
     if(n <= 0 || id.type!=ID_ALIAS) return;
     identstack stack;
-    loopi(n)
+    if(rev)
     {
-        setiter(id, offset + i*step, stack);
-        if(!executebool(cond)) break;
-        execute(body);
+        loopirev(n)
+        {
+            setiter(id, offset + i*step, stack);
+            execute(body);
+        }
+    }
+    else
+    {
+        loopi(n)
+        {
+            setiter(id, offset + i*step, stack);
+            execute(body);
+        }
     }
     poparg(id);
 }
-ICOMMAND(loopwhile, "riee", (ident *id, int *n, uint *cond, uint *body), loopwhile(*id, 0, *n, 1, cond, body));
-ICOMMAND(loopwhile+, "riiee", (ident *id, int *offset, int *n, uint *cond, uint *body), loopwhile(*id, *offset, *n, 1, cond, body));
-ICOMMAND(loopwhile*, "riiee", (ident *id, int *step, int *n, uint *cond, uint *body), loopwhile(*id, 0, *n, *step, cond, body));
-ICOMMAND(loopwhile+*, "riiiee", (ident *id, int *offset, int *step, int *n, uint *cond, uint *body), loopwhile(*id, *offset, *n, *step, cond, body));
+ICOMMAND(loopwhile, "riee", (ident *id, int *n, uint *cond, uint *body), loopwhile(*id, 0, *n, 1, false, cond, body));
+ICOMMAND(loopwhile+, "riiee", (ident *id, int *offset, int *n, uint *cond, uint *body), loopwhile(*id, *offset, *n, 1, false, cond, body));
+ICOMMAND(loopwhile*, "riiee", (ident *id, int *step, int *n, uint *cond, uint *body), loopwhile(*id, 0, *n, *step, false, cond, body));
+ICOMMAND(loopwhile+*, "riiiee", (ident *id, int *offset, int *step, int *n, uint *cond, uint *body), loopwhile(*id, *offset, *n, *step, false, cond, body));
+ICOMMAND(loopwhilerev, "riee", (ident *id, int *n, uint *cond, uint *body), loopwhile(*id, 0, *n, 1, true, cond, body));
+ICOMMAND(loopwhilerev+, "riiee", (ident *id, int *offset, int *n, uint *cond, uint *body), loopwhile(*id, *offset, *n, 1, true, cond, body));
+ICOMMAND(loopwhilerev*, "riiee", (ident *id, int *step, int *n, uint *cond, uint *body), loopwhile(*id, 0, *n, *step, true, cond, body));
+ICOMMAND(loopwhilerev+*, "riiiee", (ident *id, int *offset, int *step, int *n, uint *cond, uint *body), loopwhile(*id, *offset, *n, *step, true, cond, body));
 
 ICOMMAND(while, "ee", (uint *cond, uint *body), while(executebool(cond)) execute(body));
 
-static inline void loopconc(ident &id, int offset, int n, int step, uint *body, bool space)
+static inline void loopconc(ident &id, int offset, int n, int step, bool rev, uint *body, bool space)
 {
     if(n <= 0 || id.type != ID_ALIAS) return;
     identstack stack;
     vector<char> s;
-    loopi(n)
+    if(rev)
     {
-        setiter(id, offset + i*step, stack);
-        tagval v;
-        executeret(body, v);
-        const char *vstr = v.getstr();
-        int len = strlen(vstr);
-        if(space && i) s.add(' ');
-        s.put(vstr, len);
-        freearg(v);
+        loopirev(n)
+        {
+            setiter(id, offset + i*step, stack);
+            tagval v;
+            executeret(body, v);
+            const char *vstr = v.getstr();
+            int len = strlen(vstr);
+            if(space && i) s.add(' ');
+            s.put(vstr, len);
+            freearg(v);
+        }
+    }
+    else
+    {
+        loopi(n)
+        {
+            setiter(id, offset + i*step, stack);
+            tagval v;
+            executeret(body, v);
+            const char *vstr = v.getstr();
+            int len = strlen(vstr);
+            if(space && i) s.add(' ');
+            s.put(vstr, len);
+            freearg(v);
+        }
     }
     if(n > 0) poparg(id);
     s.add('\0');
     commandret->setstr(s.disown());
 }
-ICOMMAND(loopconcat, "rie", (ident *id, int *n, uint *body), loopconc(*id, 0, *n, 1, body, true));
-ICOMMAND(loopconcat+, "riie", (ident *id, int *offset, int *n, uint *body), loopconc(*id, *offset, *n, 1, body, true));
-ICOMMAND(loopconcat*, "riie", (ident *id, int *step, int *n, uint *body), loopconc(*id, 0, *n, *step, body, true));
-ICOMMAND(loopconcat+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), loopconc(*id, *offset, *n, *step, body, true));
-ICOMMAND(loopconcatword, "rie", (ident *id, int *n, uint *body), loopconc(*id, 0, *n, 1, body, false));
-ICOMMAND(loopconcatword+, "riie", (ident *id, int *offset, int *n, uint *body), loopconc(*id, *offset, *n, 1, body, false));
-ICOMMAND(loopconcatword*, "riie", (ident *id, int *step, int *n, uint *body), loopconc(*id, 0, *n, *step, body, false));
-ICOMMAND(loopconcatword+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), loopconc(*id, *offset, *n, *step, body, false));
+ICOMMAND(loopconcat, "rie", (ident *id, int *n, uint *body), loopconc(*id, 0, *n, 1, false, body, true));
+ICOMMAND(loopconcat+, "riie", (ident *id, int *offset, int *n, uint *body), loopconc(*id, *offset, *n, 1, false, body, true));
+ICOMMAND(loopconcat*, "riie", (ident *id, int *step, int *n, uint *body), loopconc(*id, 0, *n, *step, false, body, true));
+ICOMMAND(loopconcat+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), loopconc(*id, *offset, *n, *step, false, body, true));
+ICOMMAND(loopconcatword, "rie", (ident *id, int *n, uint *body), loopconc(*id, 0, *n, 1, false, body, false));
+ICOMMAND(loopconcatword+, "riie", (ident *id, int *offset, int *n, uint *body), loopconc(*id, *offset, *n, 1, false, body, false));
+ICOMMAND(loopconcatword*, "riie", (ident *id, int *step, int *n, uint *body), loopconc(*id, 0, *n, *step, false, body, false));
+ICOMMAND(loopconcatword+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), loopconc(*id, *offset, *n, *step, false, body, false));
+ICOMMAND(loopconcatrev, "rie", (ident *id, int *n, uint *body), loopconc(*id, 0, *n, 1, true, body, true));
+ICOMMAND(loopconcatrev+, "riie", (ident *id, int *offset, int *n, uint *body), loopconc(*id, *offset, *n, 1, true, body, true));
+ICOMMAND(loopconcatrev*, "riie", (ident *id, int *step, int *n, uint *body), loopconc(*id, 0, *n, *step, true, body, true));
+ICOMMAND(loopconcatrev+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), loopconc(*id, *offset, *n, *step, true, body, true));
+ICOMMAND(loopconcatwordrev, "rie", (ident *id, int *n, uint *body), loopconc(*id, 0, *n, 1, true, body, false));
+ICOMMAND(loopconcatwordrev+, "riie", (ident *id, int *offset, int *n, uint *body), loopconc(*id, *offset, *n, 1, true, body, false));
+ICOMMAND(loopconcatwordrev*, "riie", (ident *id, int *step, int *n, uint *body), loopconc(*id, 0, *n, *step, true, body, false));
+ICOMMAND(loopconcatwordrev+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), loopconc(*id, *offset, *n, *step, true, body, false));
 
 void concat(tagval *v, int n)
 {

@@ -175,7 +175,7 @@ enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_AUTH};
 enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
-    N_SHOOT, N_SPECIALATK, N_EXPLODE, N_HURTPLAYER, N_SUICIDE,
+    N_SHOOT, N_EXPLODE, N_HURTPLAYER, N_SUICIDE,
     N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_USEITEM,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_PRIMARYWEAPON, N_TAUNT,
@@ -205,7 +205,7 @@ enum
 static const int msgsizes[] =               // size inclusive message token, 0 for variable or not-checked sizes
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
-    N_SHOOT, 0, N_SPECIALATK, 0, N_EXPLODE, 0, N_HURTPLAYER, 0, N_SUICIDE, 1,
+    N_SHOOT, 0, N_EXPLODE, 0, N_HURTPLAYER, 0, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 8, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 12, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3, N_USEITEM, 1,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 8, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_PRIMARYWEAPON, 2, N_TAUNT, 1,
@@ -821,7 +821,6 @@ namespace game
     extern char *primaryweapon;
     extern int getweapon(const char *name);
     extern void shoot(gameent *d, const vec &targ);
-    extern void specialattack(gameent *d, int atk, vec from, const vec &targ);
     extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
     extern void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int dam, int atk);
     extern void explodeeffects(int atk, gameent *d, bool local, int id = 0);

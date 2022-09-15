@@ -356,16 +356,6 @@ namespace entities
             if(!e.spawned() && e.type!=TELEPORT && e.type!=JUMPPAD) continue;
             float dist = e.o.dist(o);
             if(dist<(e.type==TELEPORT ? 16 : 12)) trypickup(i, d);
-
-            // really ugly code, it does nothing for hacks... wrote to test the telefrag concept
-            if(d->state!=CS_ALIVE) continue;
-            if(e.type==TELEPORT && lastmillis-d->lastpickupmillis<=50)
-            {
-                vec v;
-                if(d->aitype==AI_BOT) v = d->ai->target;
-                else v = worldpos;
-                specialattack(d, ATK_TELEPORT, d->o, v);
-            }
         }
     }
 

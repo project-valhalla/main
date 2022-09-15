@@ -422,12 +422,7 @@ namespace game
         }
         if(f->shield && d!=hudplayer()) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);
         if(validatk(atk) && attacks[atk].hitsound) playsound(attacks[atk].hitsound, NULL, f==h ? NULL : &f->o);
-        else if(validsatk(atk) && atk != ATK_TELEPORT) playsound(S_HIT_MELEE, NULL, f==h ? NULL : &f->o);
-        else
-        {
-            playsound(S_DAMAGE, NULL, f==h ? NULL : &f->o);
-            return;
-        }
+        else playsound(S_DAMAGE, NULL, f==h ? NULL : &f->o);
         if(f->armourmillis) playsound(S_ACTION_ARMOUR, f, &f->o);
     }
 
@@ -1243,32 +1238,6 @@ namespace game
         d->gunwait = gunwait;
         if(attacks[atk].action != ACT_MELEE && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;
-    }
-
-    void specialattack(gameent *d, int atk, vec from, const vec &targ)
-    {
-        vec to = targ, dir = vec(to).sub(from).safenormalize();
-        float dist = to.dist(from);
-        float shorten = attacks[atk].range && dist > attacks[atk].range ? attacks[atk].range : 0,
-              barrier = raycube(d->o, dir, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
-        if(barrier > 0 && barrier < dist && (!shorten || barrier < shorten))
-            shorten = barrier;
-        if(shorten) to = vec(dir).mul(shorten).add(from);
-
-        if(attacks[atk].rays > 1) createrays(atk, from, to);
-        else if(attacks[atk].spread) offsetray(from, to, attacks[atk].spread, attacks[atk].range, to);
-
-        hits.setsize(0);
-
-        if(!attacks[atk].projspeed) hitscan(from, to, d, atk);
-
-        if(d==player1 || d->ai)
-        {
-            addmsg(N_SPECIALATK, "rci2i6iv", d, lastmillis-maptime, atk,
-                   (int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
-                   (int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
-                   hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
-        }
     }
 
     void adddynlights()

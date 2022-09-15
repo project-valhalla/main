@@ -760,7 +760,6 @@ namespace game
                         msgsound(S_LAND_WATER, d);
                     }
                     else msgsound(S_LAND, d);
-                    specialattack(e, ATK_STOMP, d->feetpos(), worldpos); // really ugly code, it does nothing for hacks... wrote to test the stomp attack concept
                 }
                 else msgsound(S_CORPSE, d);
             }

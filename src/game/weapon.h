@@ -17,6 +17,8 @@ enum
     NUMACTS
 };
 
+#define validact(n) ((n) >= 0 && (n) < NUMACTS)
+
 enum
 {
     // main weapons
@@ -44,14 +46,10 @@ enum
 
     ATK_INSTA, ATK_ZOMBIE,
 
-    ATK_TELEPORT, ATK_STOMP,
-
     NUMATKS
 };
 
-#define validact(n) ((n) >= 0 && (n) < NUMACTS)
-#define validatk(n) ((n) >= 0 && (n) < ATK_TELEPORT)
-#define validsatk(n) ((n) >= ATK_TELEPORT && (n) < NUMATKS)
+#define validatk(n) ((n) >= 0 && (n) <= ATK_ZOMBIE)
 
 #define MAXRAYS 20
 #define EXP_SELFPUSH 2.5f
@@ -87,12 +85,7 @@ static const struct attackinfo
     // instagib
     { GUN_INSTA,  ACT_PRIMARY,  1200, 150,  0,   0, 0,    0, 60, 4000,  1,  30,  0,    0, 0, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_RAIL_INSTAGIB, S_IMPACT_RAILGUN, S_HIT_WEAPON  },
     // zombie
-    { GUN_ZOMBIE, ACT_PRIMARY,   600, 100,  0,   0, 4,    0,  0,   15,  1,  20,  0,    0, 0, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE,        S_HIT_MELEE,      S_HIT_MELEE   },
-
-    // telefrag
-    { -1, ACT_MELEE, ANIM_IDLE, ANIM_VWEP_IDLE, ANIM_GUN_IDLE, -1, NULL, NULL, 0, 1050, 0, 0, 8, 0, 0, 6, 1, 0, 0, 0, 0 },
-    // stomp
-    { -1, ACT_MELEE, ANIM_IDLE, ANIM_VWEP_IDLE, ANIM_GUN_IDLE, -1, NULL, NULL, 0, 100, 0, 0, 3, 0, 0, 2, 1, 0, 0, 0, 0 }
+    { GUN_ZOMBIE, ACT_PRIMARY,   600, 100,  0,   0, 4,    0,  0,   15,  1,  20,  0,    0, 0, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE,        S_HIT_MELEE,      S_HIT_MELEE   }
 };
 
 static const struct guninfo { const char *name, *file, *vwep; int attacks[NUMACTS]; } guns[NUMGUNS] =

@@ -84,15 +84,6 @@ namespace server
         void process(clientinfo *ci);
     };
 
-    struct satkevent : timedevent
-    {
-        int id, atk;
-        vec from, to;
-        vector<hitinfo> hits;
-
-        void process(clientinfo *ci);
-    };
-
     struct suicideevent : gameevent
     {
         void process(clientinfo *ci);
@@ -2694,8 +2685,6 @@ namespace server
             case 15: actor->state.spree = 5; break; // restarts
         }
         if(flags & HIT_HEAD) kflags |= K_HEADSHOT;
-        if(atk == ATK_TELEPORT) kflags |= K_TELEFRAG;
-        if(atk == ATK_STOMP) kflags |= K_STOMP;
         if(m_juggernaut)
         {
             if(target->state.juggernaut) nojuggernaut = true;
@@ -2883,7 +2872,7 @@ namespace server
 
                     totalrays += h.rays;
                     if(totalrays>maxrays) continue;
-                    bool headshot = (atk == ATK_STOMP || ((validatk(atk) && (attacks[atk].headshotdam || m_mayhem(mutators)) && !attacks[atk].projspeed)));
+                    bool headshot = (validatk(atk) && attacks[atk].headshotdam) || (m_mayhem(mutators) && !attacks[atk].projspeed);
                     int damage = h.rays*attacks[atk].damage;
                     if(attacks[atk].headshotdam) // no headshot damage no locational damage
                     {
@@ -2898,7 +2887,6 @@ namespace server
                         }
                         if(h.flags & HIT_LEGS) damage /= 2;
                     }
-                    if(atk == ATK_STOMP && !(h.flags & HIT_HEAD)) continue;
                     if(gs.damagemillis || gs.juggernaut) damage *= 2;
                     if(target->state.armourmillis || target->state.juggernaut) damage /= 2;
                     if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
@@ -2919,26 +2907,6 @@ namespace server
         sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, -1, 0, 0,
                                int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
                                int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
-    }
-
-    void satkevent::process(clientinfo *ci)
-    {
-        servstate &gs = ci->state;
-        if(!gs.isalive(gamemillis) || !validsatk(atk)) return;
-        if(attacks[atk].range && from.dist(to) > attacks[atk].range + 1) return;
-        int totalrays = 0, maxrays = attacks[atk].rays;
-        loopv(hits)
-        {
-            hitinfo &h = hits[i];
-            clientinfo *target = getinfo(h.target);
-            if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.rays<1 || h.dist > attacks[atk].range + 1) continue;
-            totalrays += h.rays;
-            if(totalrays>maxrays) continue;
-            int damage = h.rays*attacks[atk].damage;
-            if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
-            if(damage > 0) dodamage(target, ci, damage, atk, h.flags, h.dir);
-            break;
-        }
     }
 
     void pickupevent::process(clientinfo *ci)
@@ -3888,31 +3856,6 @@ namespace server
                     cq->setpushed();
                 }
                 else delete shot;
-                break;
-            }
-
-            case N_SPECIALATK:
-            {
-                satkevent *satk = new satkevent;
-                satk->id = getint(p);
-                satk->millis = cq ? cq->geteventmillis(gamemillis, satk->id) : 0;
-                satk->atk = getint(p);
-                loopk(3) satk->from[k] = getint(p)/DMF;
-                loopk(3) satk->to[k] = getint(p)/DMF;
-                int hits = getint(p);
-                loopk(hits)
-                {
-                    if(p.overread()) break;
-                    hitinfo &hit = satk->hits.add();
-                    hit.target = getint(p);
-                    hit.lifesequence = getint(p);
-                    hit.dist = getint(p)/DMF;
-                    hit.rays = getint(p);
-                    hit.flags = getint(p);
-                    loopk(3) hit.dir[k] = getint(p)/DNF;
-                }
-                if(cq) cq->addevent(satk);
-                else delete satk;
                 break;
             }
 

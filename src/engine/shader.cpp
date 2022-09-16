@@ -1517,6 +1517,27 @@ ICOMMAND(setpostfx, "sffff", (char *name, float *x, float *y, float *z, float *w
     if(name[0]) addpostfx(name, 0, 0, 1, 1, vec4(*x, *y, *z, *w));
 });
 
+void removepostfx(const char *name)
+{
+    if(!*name) return;
+    Shader *s = useshaderbyname(name);
+    if(!s)
+    {
+        conoutf(CON_ERROR, "no such postfx shader: %s", name);
+        return;
+    }
+    loopv(postfxpasses)
+    {
+        postfxpass &p = postfxpasses[i];
+        if(p.shader == s)
+        {
+            postfxpasses.remove(i);
+            break;
+        }
+    }
+}
+ICOMMAND(removepostfx, "s", (char *name), removepostfx(name));
+
 void cleanupshaders()
 {
     cleanuppostfx(true);

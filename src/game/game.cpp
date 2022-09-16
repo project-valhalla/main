@@ -16,7 +16,7 @@ namespace game
         if(d->state!=CS_ALIVE || lastmillis-d->lasttaunt<1000) return;
         d->lasttaunt = lastmillis;
         addmsg(N_TAUNT, "rc", player1);
-        playsound(d->tauntsound(), player1);
+        playsound(d->tauntsound(), d == player1? player1 : d);
     }
     ICOMMAND(taunt, "", (), taunt(player1));
 
@@ -505,7 +505,14 @@ namespace game
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
         writeobituary(d, actor, atk, flags&K_HEADSHOT); // obituary (console messages, kill feed)
-        if(flags&K_HEADSHOT && actor==hudplayer()) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
+        if(flags)
+        {
+            if(actor->aitype == AI_BOT) taunt(actor);
+            if(flags&K_HEADSHOT && actor==h)
+            {
+                playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
+            }
+        }
         // update player state and reset ai
         deathstate(d);
         ai::kill(d, actor);

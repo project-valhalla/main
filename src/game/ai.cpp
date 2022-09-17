@@ -394,7 +394,7 @@ namespace ai
 
     bool hasgoodammo(gameent *d)
     {
-        static const int goodguns[] = { GUN_PULSE, GUN_RAIL, GUN_RL, GUN_SG };
+        static const int goodguns[] = { GUN_SG, GUN_PULSE, GUN_RL, GUN_RAIL };
         loopi(sizeof(goodguns)/sizeof(goodguns[0])) if(d->hasammo(goodguns[0])) return true;
         return false;
     }
@@ -419,13 +419,23 @@ namespace ai
         float score = 0;
         switch(e.type)
         {
-            case I_HEALTH: case I_SUPERHEALTH:
+            case I_HEALTH:
                 if(d->health < min(d->skill, 75)) score = 1e3f;
                 break;
-            case I_DDAMAGE: case I_HASTE: case I_ARMOUR: case I_UAMMO:
-            case I_INVULNERABILITY: score = 1e3f; break;
-            case I_MEGAHEALTH: score = 1e2f; break;
-            case I_YELLOWSHIELD: case I_REDSHIELD: if(d->shield<50) score = 1e1f; break;
+
+            case I_SUPERHEALTH: case I_MEGAHEALTH:
+                score = 1e2f;
+                break;
+
+            case I_YELLOWSHIELD: case I_REDSHIELD:
+                if(e.type == I_REDSHIELD) score = 1e2f;
+                else score = 1e1f;
+                break;
+
+            case I_DDAMAGE: case I_HASTE: case I_ARMOUR: case I_UAMMO: case I_INVULNERABILITY:
+                score = 1e4f;
+                break;
+
             default:
             {
                 if(e.type >= I_AMMO_SG && e.type <= I_AMMO_RAIL && !d->hasmaxammo(e.type))
@@ -492,18 +502,23 @@ namespace ai
     {
         static vector<interest> interests;
         interests.setsize(0);
-        if((!hasgoodammo(d) || d->health < min(d->skill - 15, 75)))
-            items(d, b, interests);
-        else
+        if(!m_noitems(mutators))
         {
-            static vector<int> nearby;
-            nearby.setsize(0);
-            findents(I_AMMO_SG, I_INVULNERABILITY, false, d->feetpos(), vec(32, 32, 24), nearby);
-            loopv(nearby)
+            if((!hasgoodammo(d) || d->health < min(d->skill - 15, 75)))
             {
-                int id = nearby[i];
-                extentity &e = *(extentity *)entities::ents[id];
-                if(d->canpickup(e.type)) tryitem(d, e, id, b, interests);
+                items(d, b, interests);
+            }
+            else
+            {
+                static vector<int> nearby;
+                nearby.setsize(0);
+                findents(I_AMMO_SG, I_INVULNERABILITY, false, d->feetpos(), vec(32, 32, 24), nearby);
+                loopv(nearby)
+                {
+                    int id = nearby[i];
+                    extentity &e = *(extentity *)entities::ents[id];
+                    if(d->canpickup(e.type)) tryitem(d, e, id, b, interests);
+                }
             }
         }
         if(cmode) cmode->aifind(d, b, interests);
@@ -604,12 +619,21 @@ namespace ai
                 bool wantsitem = false;
                 switch(e.type)
                 {
-                    case I_HEALTH: case I_SUPERHEALTH: case I_MEGAHEALTH: case I_INVULNERABILITY: wantsitem = badhealth(d); break;
+                    case I_HEALTH: case I_SUPERHEALTH: case I_MEGAHEALTH:
+                        wantsitem = badhealth(d);
+                        break;
+
+                    case I_YELLOWSHIELD: case I_REDSHIELD:
+                        break;
+
+                    case I_DDAMAGE: case I_HASTE: case I_ARMOUR: case I_UAMMO: case I_INVULNERABILITY:
+                        wantsitem = hasgoodammo(d);
+                        break;
+
                     default:
                     {
                         itemstat &is = itemstats[entities::ents[ent]->type-I_AMMO_SG];
-                        if(!d->zombie && !d->juggernaut)
-                            wantsitem = isgoodammo(is.info) && d->ammo[is.info] <= (d->ai->weappref == is.info ? is.add : is.add/2);
+                        wantsitem = isgoodammo(is.info) && d->ammo[is.info] <= (d->ai->weappref == is.info ? is.add : is.add/2);
                         break;
                     }
                 }
@@ -891,8 +915,10 @@ namespace ai
     void jumpto(gameent *d, aistate &b, const vec &pos)
     {
         vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
-        bool sequenced = d->ai->blockseq || d->ai->targseq, offground = d->timeinair && !d->inwater, canjump = d->zombie || !offground,
-            jump = canjump && lastmillis >= d->ai->jumpseed && (sequenced || off.z >= JUMPMIN || lastmillis >= d->ai->jumprand);
+        bool sequenced = d->ai->blockseq || d->ai->targseq,
+             offground = d->timeinair && !d->inwater,
+             canjump = d->zombie || !offground,
+             jump = canjump && lastmillis >= d->ai->jumpseed && (sequenced || off.z >= JUMPMIN || lastmillis >= d->ai->jumprand);
         if(jump)
         {
             vec old = d->o;
@@ -1148,7 +1174,7 @@ namespace ai
         gameent *e = getclient(d->ai->enemy);
         if(!d->hasammo(d->gunselect) || !hasrange(d, e, d->gunselect) || (d->gunselect != d->ai->weappref && (!isgoodammo(d->gunselect) || d->hasammo(d->ai->weappref))))
         {
-            static const int gunprefs[] = { GUN_PULSE, GUN_RAIL, GUN_RL, GUN_SG };
+            static const int gunprefs[] = { GUN_SG, GUN_PULSE, GUN_RL, GUN_RAIL };
             int gun = -1;
             if(d->hasammo(d->ai->weappref) && hasrange(d, e, d->ai->weappref)) gun = d->ai->weappref;
             else
@@ -1246,7 +1272,9 @@ namespace ai
                 if(d->state==CS_ALIVE && !d->zombie)
                 {
                     if(d->haspowerups() || d->juggernaut)
+                    {
                         entities::updatepowerups(curtime, d);
+                    }
                     if(d->item && (!hasgoodammo(d) || badhealth(d)))
                        addmsg(N_USEITEM, "rc", d);
                 }

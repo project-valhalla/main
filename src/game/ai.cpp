@@ -88,10 +88,21 @@ namespace ai
         return false;
     }
 
+    bool melee(gameent *d)
+    {
+        int atk = guns[d->gunselect].attacks[d->attacking];
+        if((validatk(atk) && attacks[atk].action == ACT_MELEE) || d->gunselect == GUN_ZOMBIE)
+        {
+            return true;
+        }
+        return false;
+    }
+
     bool hastarget(gameent *d, int atk, aistate &b, gameent *e, float yaw, float pitch, float dist)
     { // add margins of error
         if(attackrange(d, atk, dist) || (d->skill <= 100 && !rnd(d->skill)))
         {
+            if(melee(d)) return true;
             float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*attacks[atk].attackdelay/200.f)), 0.f, attacks[atk].projspeed ? 0.25f : 1e16f),
                 offy = yaw-d->yaw, offp = pitch-d->pitch;
             if(offy > 180) offy -= 360;
@@ -326,7 +337,7 @@ namespace ai
 
     bool defend(gameent *d, aistate &b, const vec &pos, float guard, float wander, int walk)
     {
-        bool hasenemy = enemy(d, b, pos, wander);
+        bool hasenemy = enemy(d, b, pos, wander, melee(d) ? 1 : 0);
         if(!walk)
         {
             if(d->feetpos().squaredist(pos) <= guard*guard)
@@ -561,7 +572,7 @@ namespace ai
         if(d->ai && canmove(d) && targetable(d, e)) // see if this ai is interested in a grudge
         {
             aistate &b = d->ai->getstate();
-            if(violence(d, b, e)) return;
+            if(violence(d, b, e, melee(d) ? 1 : 0)) return;
         }
         if(checkothers(targets, d, AI_S_DEFEND, AI_T_PLAYER, d->clientnum, true))
         {
@@ -570,7 +581,7 @@ namespace ai
                 gameent *t = getclient(targets[i]);
                 if(!t->ai || !canmove(t) || !targetable(t, e)) continue;
                 aistate &c = t->ai->getstate();
-                if(violence(t, c, e)) return;
+                if(violence(t, c, e, melee(d) ? 1 : 0)) return;
             }
         }
     }
@@ -588,11 +599,13 @@ namespace ai
         d->ai->clearsetup();
         d->ai->reset(true);
         d->ai->lastrun = lastmillis;
-        if(d->zombie) d->ai->weappref = GUN_ZOMBIE;
-        else if(!mutators) d->ai->weappref = d->primary;
-        else if(m_insta(mutators)) d->ai->weappref = GUN_INSTA;
-        else if(forcegun >= 0 && validgun(forcegun)) d->ai->weappref = forcegun;
-        else d->ai->weappref = rnd(NUMGUNS-4);
+        if(m_insta(mutators)) d->ai->weappref = GUN_INSTA;
+        else if(d->zombie) d->ai->weappref = GUN_ZOMBIE;
+        else
+        {
+        	if(forcegun >= 0 && forcegun < NUMGUNS) d->ai->weappref = forcegun;
+			else d->ai->weappref = rnd(NUMGUNS-3);
+        }
         vec dp = d->headpos();
         findorientation(dp, d->yaw, d->pitch, d->ai->target);
     }
@@ -762,6 +775,7 @@ namespace ai
                     {
                         int atk = guns[d->gunselect].attacks[ACT_PRIMARY];
                         float guard = SIGHTMIN, wander = attacks[atk].range;
+                        if(melee(d)) guard = 0.f;
                         return patrol(d, b, e->feetpos(), guard, wander) ? 1 : 0;
                     }
                     break;
@@ -1008,7 +1022,7 @@ namespace ai
 
     bool lockon(gameent *d, int atk, gameent *e, float maxdist)
     {
-        if(attacks[atk].action == ACT_MELEE && !d->blocked && !d->timeinair)
+        if(melee(d) && !d->blocked && !d->timeinair)
         {
             vec dir = vec(e->o).sub(d->o);
             float xydist = dir.x*dir.x+dir.y*dir.y, zdist = dir.z*dir.z, mdist = maxdist*maxdist, ddist = d->radius*d->radius+e->radius*e->radius;
@@ -1033,7 +1047,7 @@ namespace ai
         }
         else if(hunt(d, b))
         {
-            getyawpitch(dp, vec(d->ai->spot).addz(d->eyeheight), d->ai->targyaw, d->ai->targpitch);
+            getyawpitch(dp, vec(d->ai->spot).add(vec(0, 0, d->eyeheight)), d->ai->targyaw, d->ai->targpitch);
             d->ai->lasthunt = lastmillis;
         }
         else
@@ -1042,24 +1056,24 @@ namespace ai
             d->ai->spot = vec(0, 0, 0);
         }
 
-        if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
+		if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 
         gameent *e = getclient(d->ai->enemy);
         bool enemyok = e && targetable(d, e);
         if(!enemyok || d->skill >= 50)
         {
-            gameent *f = (gameent *)intersectclosest(dp, d->ai->target, d, 1);
+            gameent *f = (gameent *)intersectclosest(dp, d->ai->target, d);
             if(f)
             {
                 if(targetable(d, f))
                 {
-                    if(!enemyok) violence(d, b, f);
+                    if(!enemyok) violence(d, b, f, melee(d) ? 1 : 0);
                     enemyok = true;
                     e = f;
                 }
                 else enemyok = false;
             }
-            else if(!enemyok && target(d, b, 0, false, SIGHTMIN))
+            else if(!enemyok && target(d, b, melee(d) ? 1 : 0, false, SIGHTMIN))
                 enemyok = (e = getclient(d->ai->enemy)) != NULL;
         }
         if(enemyok)
@@ -1070,7 +1084,7 @@ namespace ai
             getyawpitch(dp, ep, yaw, pitch);
             fixrange(yaw, pitch);
             bool insight = cansee(d, dp, ep), hasseen = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->skill*10)+3000,
-                quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= skmod+30;
+                quick = d->ai->enemyseen && lastmillis-d->ai->enemyseen <= (d->gunselect == GUN_SMG ? 300 : skmod)+30;
             if(insight) d->ai->enemyseen = lastmillis;
             if(idle || insight || hasseen || quick)
             {
@@ -1174,7 +1188,7 @@ namespace ai
         gameent *e = getclient(d->ai->enemy);
         if(!d->hasammo(d->gunselect) || !hasrange(d, e, d->gunselect) || (d->gunselect != d->ai->weappref && (!isgoodammo(d->gunselect) || d->hasammo(d->ai->weappref))))
         {
-            static const int gunprefs[] = { GUN_SG, GUN_PULSE, GUN_RL, GUN_RAIL };
+            static const int gunprefs[] = { GUN_SMG, GUN_RL, GUN_SG, GUN_RAIL, GUN_PISTOL };
             int gun = -1;
             if(d->hasammo(d->ai->weappref) && hasrange(d, e, d->ai->weappref)) gun = d->ai->weappref;
             else
@@ -1261,7 +1275,7 @@ namespace ai
         {
             if(allowmove)
             {
-                if(!request(d, b)) target(d, b, 0, b.idle ? true : false);
+                if(!request(d, b)) target(d, b, melee(d) ? 1 : 0, b.idle ? true : false);
                 shoot(d, d->ai->target);
             }
             if(!intermission)
@@ -1275,11 +1289,11 @@ namespace ai
                     {
                         entities::updatepowerups(curtime, d);
                     }
-                    if(d->item && (!hasgoodammo(d) || badhealth(d)))
+                    else if(d->item && (!hasgoodammo(d) || badhealth(d)))
                        addmsg(N_USEITEM, "rc", d);
                 }
-                entities::checkitems(d);
-                if(cmode) cmode->checkitems(d);
+				entities::checkitems(d);
+				if(cmode) cmode->checkitems(d);
             }
         }
         else if(d->state == CS_DEAD)
@@ -1449,7 +1463,7 @@ namespace ai
                 }
                 if(aidebug >= 3)
                 {
-                    if(d->ai->weappref >= 0 && d->ai->weappref < NUMGUNS)
+                    if(validgun(d->ai->weappref))
                     {
                         particle_textcopy(pos, guns[d->ai->weappref].name, PART_TEXT, 1);
                         pos.z += 2;

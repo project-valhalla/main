@@ -2469,8 +2469,8 @@ void gl_drawview()
         renderparticles();
         GLERROR;
 
-        extern int hidehud;
-        if(!hidehud)
+        extern int editcursor;
+        if(editcursor)
         {
             glDepthMask(GL_FALSE);
             renderblendbrush();
@@ -2602,6 +2602,7 @@ void cleardamagescreen()
 
 VAR(hidestats, 0, 0, 1);
 VAR(hidehud, 0, 0, 1);
+VAR(editcursor, 0, 1, 1);
 
 VARP(crosshairsize, 0, 16, 50);
 VARP(cursorsize, 0, 16, 30);

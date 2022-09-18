@@ -126,7 +126,8 @@ ICOMMAND(moving, "b", (int *n),
 
 VARF(gridpower, 0, 3, 12,
 {
-    if(dragging) return;
+    extern int editcursor;
+    if(dragging || !editcursor) return;
     gridsize = 1<<gridpower;
     if(gridsize>=worldsize) gridsize = worldsize/2;
     cancelsel();
@@ -553,8 +554,8 @@ void rendereditcursor()
 
 void tryedit()
 {
-    extern int hidehud;
-    if(!editmode || hidehud || mainmenu) return;
+    extern int editcursor;
+    if(!editmode || !editcursor ||  mainmenu) return;
     if(blendpaintmode) trypaintblendmap();
 }
 

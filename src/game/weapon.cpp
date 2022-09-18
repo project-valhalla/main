@@ -605,7 +605,7 @@ namespace game
         vec dir = vec(p.dir).neg();
         float rad = attacks[p.atk].exprad*0.75f;
         addstain(STAIN_PULSE_SCORCH, pos, dir, rad);
-        if(p.atk == ATK_PULSE1) addstain(STAIN_PULSE_GLOW, pos, dir, rad, 0xEE88EE);
+        if(p.atk == ATK_PISTOL2) addstain(STAIN_PULSE_GLOW, pos, dir, rad, 0x00FFFF);
     }
 
     void projsplash(projectile &p, const vec &v, dynent *safe, int damage)
@@ -749,7 +749,6 @@ namespace game
                         {
                             tails = 4.50f; tailc = 0x00FFFF;
                             particle_splash(PART_ORB, 1, 1, pos, tailc, tails, 150, 20);
-                            particle_fireball(pos, 9.50f, PART_EXPLOSION2, 1, 0x00FFFF);
                             p.projsound = S_PISTOL_LOOP;
                             break;
                         }
@@ -822,7 +821,7 @@ namespace game
             case ATK_INSTA:
             {
                 bool insta=atk==ATK_INSTA;
-                adddynlight(vec(to).madd(dir, 4), 20, !insta? vec(0.25f, 1.0f, 0.75f):  vec(0.25f, 0.75f, 1.0f), 380, 75, DL_SHRINK);
+                adddynlight(vec(to).madd(dir, 4), 20, !insta? vec(0.25f, 1.0f, 0.75f):  vec(0.25f, 0.75f, 1.0f), 180, 75, DL_EXPAND);
                 if(hit || water || glass) break;
                 particle_splash(PART_SPARK1, 80, 80, to, !insta? 0x77DD77: 0x50CFE5, 1.25f, 100, 80);
                 particle_splash(PART_SPARK2, 5+rnd(20), 200+rnd(380), to, !insta? 0x77DD77: 0x50CFE5, 0.1f+rndscale(0.3f), 200, 3);
@@ -834,7 +833,7 @@ namespace game
 
             case ATK_PISTOL1:
             {
-                adddynlight(vec(to).madd(dir, 4), 10, vec(0, 1.5f, 1.5f), 200, 10, DL_SHRINK);
+                adddynlight(vec(to).madd(dir, 4), 10, vec(0.2f, 1.5f, 1.5f), 180, 50, DL_EXPAND);
                 particle_splash(PART_SPARK1, 10, 50, to, 0x00FFFF, 1.5f, 300, 50);
                 if(hit || water || glass) break;
                 particle_splash(PART_SPARK2, 1+rnd(10), 100+rnd(280), to, 0x00FFFF, 0.01f+rndscale(0.18f), 300, 2);
@@ -973,7 +972,6 @@ namespace game
                     break;
                 }
                 particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
-                particle_trail(PART_SPARK1, 12, hudgunorigin(attacks[atk].gun, from, to, d), to, 0x650ffc, 0.30f, 3);
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
             }

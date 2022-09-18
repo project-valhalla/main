@@ -1529,11 +1529,8 @@ void removepostfx(const char *name)
     loopv(postfxpasses)
     {
         postfxpass &p = postfxpasses[i];
-        if(p.shader == s)
-        {
-            postfxpasses.remove(i);
-            break;
-        }
+        if(p.shader != s) continue;
+        postfxpasses.remove(i--);
     }
 }
 ICOMMAND(removepostfx, "s", (char *name), removepostfx(name));

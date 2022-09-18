@@ -166,26 +166,45 @@ namespace entities
         if(!validitem(type)) return;
         ents[n]->clearspawned();
         if(!d) return;
-        /*
-        itemstat &is = itemstats[type-I_HEALTH];
-        if(d!=player1 || isthirdperson())
-        {
-            //particle_text(d->abovehead(), is.name, PART_TEXT, 2000, 0xFFC864, 4.0f, -8);
-            particle_icon(d->abovehead(), is.icon%4, is.icon/4, PART_HUD_ICON_GREY, 2000, 0xFFFFFF, 2.0f, -8);
-        }
-        */
-        playsound(itemstats[type-I_AMMO_SG].sound, NULL, d!=player1 ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
+        gameent *h = followingplayer(player1);
+        playsound(itemstats[type-I_AMMO_SG].sound, NULL, d!=h ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
         d->pickup(type);
-        int asnd = -1;
-        switch(type)
+        if(d==h)
         {
-            case I_DDAMAGE: asnd = S_ANNOUNCER_DDAMAGE; break;
-            case I_HASTE: asnd = S_ANNOUNCER_HASTE; break;
-            case I_ARMOUR: asnd = S_ANNOUNCER_ARMOUR; break;
-            case I_UAMMO: asnd = S_ANNOUNCER_UAMMO; break;
-            default: asnd = -1; break;
+            const char *itemname = "";
+            int announcersound = -1;
+            switch(type)
+            {
+                case I_DDAMAGE:
+                    itemname = "Double Damage";
+                    announcersound = S_ANNOUNCER_DDAMAGE;
+                    break;
+
+                case I_HASTE:
+                    itemname = "Haste";
+                    announcersound = S_ANNOUNCER_HASTE;
+                    break;
+
+                case I_ARMOUR:
+                    itemname = "Armour";
+                    announcersound = S_ANNOUNCER_ARMOUR;
+                    break;
+
+                case I_UAMMO:
+                    itemname = "Unlimited Ammo";
+                    announcersound = S_ANNOUNCER_UAMMO;
+                    break;
+
+                case I_INVULNERABILITY:
+                    itemname = "Invulnerability";
+                    announcersound = S_ANNOUNCER_INVULNERABILITY;
+                    break;
+
+                default: return;
+            }
+            conoutf(CON_GAMEINFO, "\f2%s obtained", itemname);
+            playsound(announcersound, NULL, NULL, NULL, SND_ANNOUNCER);
         }
-        if(d==hudplayer() && asnd >= 0) playsound(asnd, NULL, NULL, NULL, SND_ANNOUNCER);
     }
 
     // these functions are called when the client touches the item
@@ -361,78 +380,14 @@ namespace entities
 
     void updatepowerups(int time, gameent *d)
     {
-        bool hud = (d == hudplayer());
-        if(d->juggernaut)
+        d->powerupsound = S_LOOP_DAMAGE + d->poweruptype-1;
+        d->powerupchan = playsound(d->powerupsound, d, NULL, NULL, 0, -1, 500, d->powerupchan, 200);
+        if((d->powerupmillis -= time)<=0)
         {
-            d->stoppowerupsound();
-            d->juggernautchan = playsound(S_JUGGERNAUT_LOOP, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1400, d->juggernautchan, 500);
-            adddynlight(d->abovehead(), 30, vec(1, 0.50f, 1), 1, 0, DL_FLASH|L_NOSHADOW);
-            return;
-        }
-        if(d->damagemillis)
-        {
-            d->ddamagechan = playsound(S_LOOP_DAMAGE, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->ddamagechan, 200);
-            adddynlight(d->abovehead(), 30, vec(1, 0.50f, 0.50f), 1, 0, DL_FLASH|L_NOSHADOW);
-            particle_icon(d->abovehead(), HICON_DDAMAGE%5, HICON_DDAMAGE/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
-            if((d->damagemillis -= time)<=0)
-            {
-                d->damagemillis = 0;
-                stopsound(S_LOOP_DAMAGE, d->ddamagechan);
-                playsound(S_TIMEOUT_DAMAGE, d);
-            }
-        }
-        if(d->hastemillis)
-        {
-            d->hastechan = playsound(S_LOOP_HASTE, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->hastechan, 200);
-            adddynlight(d->abovehead(), 30, vec(0.50f, 1, 0.50f), 1, 0, DL_FLASH|L_NOSHADOW);
-            particle_icon(d->abovehead(), HICON_HASTE%5, HICON_HASTE/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
-            if((d->hastemillis -= time)<=0)
-            {
-                d->hastemillis = 0;
-                stopsound(S_LOOP_HASTE, d->hastechan);
-                playsound(S_TIMEOUT_HASTE, d);
-            }
-            if((d->move || d->strafe) || d->jumping)
-            {
-                //regular_particle_flame(PART_FLAME, d->feetpos(), 1.5f, 1, 0x309020, 4, 1.0f, 100.0f, 300.0f);
-                //adddynlight(d->o, 20, vec(1, 2, 1), 1, 20, DL_FLASH, 0, vec(0, 0, 0), d);
-            }
-        }
-        if(d->armourmillis)
-        {
-            d->armourchan = playsound(S_LOOP_ARMOUR, NULL, hud ? NULL : &d->o, NULL, 0, -1, 500, d->armourchan, 200);
-            adddynlight(d->abovehead(), 30, vec(0.50f, 0.50f, 1), 1, 0, DL_FLASH|L_NOSHADOW);
-            particle_icon(d->abovehead(), HICON_ARMOUR%5, HICON_ARMOUR/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
-            if((d->armourmillis -= time)<=0)
-            {
-                d->armourmillis = 0;
-                stopsound(S_LOOP_ARMOUR, d->armourchan);
-                playsound(S_TIMEOUT_ARMOUR, d);
-            }
-        }
-        if(d->ammomillis)
-        {
-            d->ammochan = playsound(S_LOOP_UAMMO, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1200, d->ammochan, 500);
-            adddynlight(d->abovehead(), 30, vec(1, 1, 1), 1, 0, DL_FLASH|L_NOSHADOW);
-            particle_icon(d->abovehead(), HICON_UAMMO%5, HICON_UAMMO/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
-            if((d->ammomillis -= time)<=0)
-            {
-                d->ammomillis = 0;
-                stopsound(S_LOOP_UAMMO, d->ammochan);
-                playsound(S_TIMEOUT_UAMMO, d);
-            }
-        }
-        if(d->invulnmillis)
-        {
-            d->invulnchan = playsound(S_LOOP_INVULNERABILITY, NULL, hud ? NULL : &d->o, NULL, 0, -1, 1200, d->invulnchan, 500);
-            adddynlight(d->abovehead(), 30, vec(1, 1, 0.50f), 1, 0, DL_FLASH|L_NOSHADOW);
-            particle_icon(d->abovehead(), HICON_INVULNERABILITY%5, HICON_INVULNERABILITY/5, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
-            if((d->invulnmillis -= time)<=0)
-            {
-                d->invulnmillis = 0;
-                stopsound(S_LOOP_INVULNERABILITY, d->invulnchan);
-                playsound(S_TIMEOUT_INVULNERABILITY, d);
-            }
+            d->powerupmillis = 0;
+            stopsound(d->powerupsound, d->powerupchan);
+            playsound(S_TIMEOUT_DAMAGE + d->poweruptype-1, d);
+            d->poweruptype = PU_NONE;
         }
     }
 

@@ -78,6 +78,17 @@ enum                            // static entity types
     MAXENTTYPES
 };
 
+// power-ups
+enum
+{
+    PU_NONE = 0,
+    PU_DAMAGE,
+    PU_HASTE,
+    PU_ARMOR,
+    PU_AMMO,
+    PU_INVULNERABILITY
+};
+
 struct gameentity : extentity
 {
 };
@@ -207,7 +218,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
     N_SHOOT, 0, N_EXPLODE, 0, N_HURTPLAYER, 0, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 8, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 12, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3, N_USEITEM, 1,
-    N_TRYSPAWN, 1, N_SPAWNSTATE, 8, N_SPAWN, 3, N_FORCEDEATH, 2,
+    N_TRYSPAWN, 1, N_SPAWNSTATE, 7, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_PRIMARYWEAPON, 2, N_TAUNT, 1,
     N_ANNOUNCE, 4,
     N_MAPCHANGE, 0, N_SERVERVARIABLES, 8, N_MAPVOTE, 0, N_SENDVARIABLES, 0, N_TEAMINFO, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
@@ -305,23 +316,23 @@ enum
 
 static struct itemstat { int add, max, sound, info; } itemstats[] =
 {
-    { 12,    60,    S_AMMO_SG,          GUN_SG,       }, // shotgun ammo
-    { 40,    200,   S_AMMO_SMG,         GUN_SMG,      }, // smg ammo
-    { 80,    400,   S_AMMO_PULSE,       GUN_PULSE,    }, // pulse battery
-    { 6,     30,    S_AMMO_ROCKET,      GUN_RL,       }, // rockets
-    { 8,     40,    S_AMMO_RAIL,        GUN_RAIL,     }, // railgun ammo
-    { 25,    100,   S_HEALTH,           NULL,         }, // regular health
-    { 50,    200,   S_SHIELD_LIGHT,     NULL,         }, // light shield
-    { 100,   200,   S_SHIELD_HEAVY,     NULL,         }, // heavy shield
-    { 50,    250,   S_SUPERHEALTH,      NULL,         }, // super health
-    { 100,   250,   S_MEGAHEALTH,       NULL,         }, // megahealth
-    { 30000, 60000, S_DAMAGE,           NULL,         }, // double damage
-    { 30000, 60000, S_HASTE,            NULL,         }, // haste
-    { 30000, 60000, S_ARMOUR,           NULL,         }, // armour
-    { 30000, 60000, S_UAMMO,            NULL,         }, // unlimited ammo
-    {     0,     0,    NULL,            NULL,         }, // ?
-    {     0,     0,    NULL,            NULL,         }, // ?
-    {     1,     1, S_INVULNERABILITY,     1,         }  // invulnerability
+    { 12,    60,    S_AMMO_SG,          GUN_SG,             }, // shotgun ammo
+    { 40,    200,   S_AMMO_SMG,         GUN_SMG,            }, // smg ammo
+    { 80,    400,   S_AMMO_PULSE,       GUN_PULSE,          }, // pulse battery
+    { 6,     30,    S_AMMO_ROCKET,      GUN_RL,             }, // rockets
+    { 8,     40,    S_AMMO_RAIL,        GUN_RAIL,           }, // railgun ammo
+    { 25,    100,   S_HEALTH,           NULL,               }, // regular health
+    { 50,    200,   S_SHIELD_LIGHT,     NULL,               }, // light shield
+    { 100,   200,   S_SHIELD_HEAVY,     NULL,               }, // heavy shield
+    { 50,    250,   S_SUPERHEALTH,      NULL,               }, // super health
+    { 100,   250,   S_MEGAHEALTH,       NULL,               }, // megahealth
+    { 30000, 60000, S_DAMAGE,           PU_DAMAGE,          }, // double damage
+    { 30000, 60000, S_HASTE,            PU_HASTE,           }, // haste
+    { 30000, 60000, S_ARMOUR,           PU_ARMOR,           }, // armour
+    { 30000, 60000, S_UAMMO,            PU_AMMO,            }, // unlimited ammo
+    {     0,     0, NULL,               NULL,               }, // ?
+    {     0,     0, NULL,               NULL,               }, // ?
+    { 15000, 30000, S_INVULNERABILITY,  PU_INVULNERABILITY, }  // invulnerability
 };
 
 #define validitem(n) (((n) >= I_AMMO_SG && (n) <= I_INVULNERABILITY))
@@ -329,11 +340,11 @@ static struct itemstat { int add, max, sound, info; } itemstats[] =
 // inherited by gameent and server clients
 struct gamestate
 {
-    int health, maxhealth, shield, item;
+    int health, maxhealth, shield;
     int gunselect, gunwait, primary;
     int ammo[NUMGUNS];
     int aitype, skill;
-    int damagemillis, hastemillis, armourmillis, ammomillis, invulnmillis;
+    int poweruptype, powerupmillis, item;
     int lastdamage;
     int juggernaut, zombie;
 
@@ -345,14 +356,28 @@ struct gamestate
         itemstat &is = itemstats[type-I_AMMO_SG];
         switch(type)
         {
-            case I_HEALTH:  case I_SUPERHEALTH: case I_MEGAHEALTH: return health<is.max;
-            case I_YELLOWSHIELD: case I_REDSHIELD: return shield<is.max;
-            case I_DDAMAGE: return damagemillis<is.max;
-            case I_HASTE:   return armourmillis<is.max;
-            case I_ARMOUR:  return hastemillis<is.max;
-            case I_UAMMO:   return ammomillis<is.max;
-            case I_INVULNERABILITY: return item<is.max;
-            default: return ammo[is.info]<is.max;
+            case I_HEALTH:
+            case I_SUPERHEALTH:
+            case I_MEGAHEALTH:
+                return health<is.max;
+
+            case I_YELLOWSHIELD:
+            case I_REDSHIELD:
+                return shield<is.max;
+
+            case I_DDAMAGE:
+            case I_HASTE:
+            case I_ARMOUR:
+            case I_UAMMO:
+            case I_INVULNERABILITY:
+                if(!item && (!powerupmillis || poweruptype == is.info))
+                {
+                    return true;
+                }
+                return false;
+
+            default:
+                return ammo[is.info]<is.max;
         }
     }
 
@@ -367,45 +392,37 @@ struct gamestate
             case I_MEGAHEALTH:
                 health = min(health+is.add, is.max);
                 break;
+
             case I_YELLOWSHIELD:
             case I_REDSHIELD:
                 shield = min(shield+is.add, is.max);
                 break;
+
             case I_DDAMAGE:
-                damagemillis = min(damagemillis+is.add, is.max);
-                break;
             case I_ARMOUR:
-                armourmillis = min(armourmillis+is.add, is.max);
-                break;
             case I_HASTE:
-                hastemillis = min(hastemillis+is.add, is.max);
-                break;
             case I_UAMMO:
-                ammomillis = min(ammomillis+is.add, is.max);
+                poweruptype = is.info;
+                powerupmillis = min(powerupmillis+is.add, is.max);
                 break;
+
             case I_INVULNERABILITY:
-                item = is.info;
+                item = type;
                 break;
+
             default:
                 ammo[is.info] = min(ammo[is.info]+is.add, is.max);
                 break;
         }
     }
 
-    void useitem(int type)
+    void useitem()
     {
-        if(item > 2 || !item || juggernaut || zombie) return;
-        switch(type)
-        {
-            case 1:
-                invulnmillis = min(15000, 15000);
-                break;
-            case 2:
-                health = maxhealth+20;
-                break;
-            default: break;
-        }
-        item = type = 0;
+        if(!item || !validitem(item)) return;
+        itemstat &is = itemstats[item-I_AMMO_SG];
+        powerupmillis = min(powerupmillis+is.add, is.max);
+        poweruptype = is.info;
+        item = 0;
     }
 
     void baseammo(int gun, int k = 3)
@@ -427,8 +444,9 @@ struct gamestate
 
     void resetitems()
     {
-        shield = item = 0;
-        damagemillis = hastemillis = armourmillis = ammomillis = invulnmillis = 0;
+        shield = 0;
+        poweruptype = PU_NONE;
+        powerupmillis = item = 0;
     }
 
     void resetweapons()
@@ -514,9 +532,9 @@ struct gamestate
         return validgun(gun) && gun != exclude && ammo[gun] > 0;
     }
 
-    bool haspowerups()
+    bool haspowerup(int powerup)
     {
-        return damagemillis || hastemillis || armourmillis || ammomillis || invulnmillis;
+        return powerupmillis && poweruptype == powerup;
     }
 };
 
@@ -547,7 +565,7 @@ struct gameent : dynent, gamestate
     int smoothmillis;
 
     int attackchan, attacksound, idlechan, idlesound;
-    int ddamagechan, hastechan, armourchan, ammochan, invulnchan, juggernautchan;
+    int powerupchan, powerupsound;
 
     string name, info;
     int team, playermodel, playercolor;
@@ -563,7 +581,7 @@ struct gameent : dynent, gamestate
                 lastpain(0), lastfootstep(0), lastyelp(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0),
                 edit(NULL), smoothmillis(-1),
-                attackchan(-1), attacksound(-1), ddamagechan(-1), hastechan(-1), armourchan(-1), ammochan(-1), invulnchan(-1), juggernautchan(-1),
+                attackchan(-1), attacksound(-1), powerupchan(-1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1), muzzle(-1, -1, -1)
     {
         name[0] = info[0] = 0;
@@ -576,12 +594,7 @@ struct gameent : dynent, gamestate
         if(ai) delete ai;
         if(attackchan >= 0) stopsound(attacksound, attackchan);
         if(idlechan >= 0) stopsound(idlesound, idlechan);
-        if(ddamagechan >= 0) stopsound(S_LOOP_DAMAGE, ddamagechan);
-        if(hastechan >= 0) stopsound(S_LOOP_HASTE, hastechan);
-        if(armourchan >= 0) stopsound(S_LOOP_ARMOUR, armourchan);
-        if(ammochan >= 0) stopsound(S_LOOP_UAMMO, ammochan);
-        if(invulnchan >= 0) stopsound(S_LOOP_INVULNERABILITY, invulnchan);
-        if(juggernautchan >= 0) stopsound(S_JUGGERNAUT_LOOP, juggernautchan);
+        if(powerupchan >= 0) stopsound(powerupsound, powerupchan);
     }
 
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
@@ -636,30 +649,10 @@ struct gameent : dynent, gamestate
 
     void stoppowerupsound()
     {
-        if(ddamagechan >= 0)
+        if(powerupchan >= 0)
         {
-            stopsound(S_LOOP_DAMAGE, ddamagechan, 500);
-            ddamagechan = -1;
-        }
-        if(hastechan >= 0)
-        {
-            stopsound(S_LOOP_HASTE, hastechan, 500);
-            hastechan = -1;
-        }
-        if(armourchan >= 0)
-        {
-            stopsound(S_LOOP_ARMOUR, armourchan, 500);
-            armourchan = -1;
-        }
-        if(ammochan >= 0)
-        {
-            stopsound(S_LOOP_UAMMO, ammochan, 500);
-            ammochan = -1;
-        }
-        if(invulnchan >= 0)
-        {
-            stopsound(S_LOOP_INVULNERABILITY, invulnchan, 500);
-            invulnchan = -1;
+            stopsound(powerupsound, powerupchan, 500);
+            powerupchan = -1;
         }
     }
 

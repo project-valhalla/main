@@ -1858,7 +1858,6 @@ namespace server
         putint(p, gs.health);
         putint(p, gs.maxhealth);
         putint(p, gs.shield);
-        putint(p, gs.item);
         putint(p, gs.gunselect);
         loopi(NUMGUNS) putint(p, gs.ammo[i]);
     }
@@ -1874,9 +1873,8 @@ namespace server
     {
         servstate &gs = ci->state;
         spawnstate(ci);
-        sendf(ci->ownernum, 1, "ri3i5v", N_SPAWNSTATE, ci->clientnum, gs.lifesequence,
-            gs.health, gs.maxhealth, gs.shield, gs.item,
-            gs.gunselect, NUMGUNS, gs.ammo);
+        sendf(ci->ownernum, 1, "ri3i4v", N_SPAWNSTATE, ci->clientnum, gs.lifesequence,
+              gs.health, gs.maxhealth, gs.shield, gs.gunselect, NUMGUNS, gs.ammo);
         gs.lastspawn = gamemillis;
     }
 
@@ -2047,10 +2045,8 @@ namespace server
                 putint(p, oi->state.flags);
                 putint(p, oi->state.deaths);
                 putint(p, oi->state.points);
-                putint(p, oi->state.damagemillis);
-                putint(p, oi->state.hastemillis);
-                putint(p, oi->state.armourmillis);
-                putint(p, oi->state.invulnmillis);
+                putint(p, oi->state.poweruptype);
+                putint(p, oi->state.powerupmillis);
                 putint(p, oi->state.juggernaut);
                 putint(p, oi->state.zombie);
                 sendstate(oi->state, p);
@@ -2077,12 +2073,12 @@ namespace server
     void sendresume(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        sendf(-1, 1, "ri3i9i7vi", N_RESUME, ci->clientnum, gs.state,
-            gs.frags, gs.flags, gs.deaths, gs.points, gs.damagemillis, gs.hastemillis, gs.armourmillis, gs.invulnmillis,
-            gs.juggernaut, gs.zombie,
-            gs.lifesequence,
-            gs.health, gs.maxhealth, gs.shield, gs.item,
-            gs.gunselect, NUMGUNS, gs.ammo, -1);
+        sendf(-1, 1, "ri3i9i4vi", N_RESUME, ci->clientnum, gs.state,
+            gs.frags, gs.flags, gs.deaths, gs.points,
+            gs.poweruptype, gs.powerupmillis,
+            gs.juggernaut, gs.zombie, gs.lifesequence,
+            gs.health, gs.maxhealth, gs.shield, gs.gunselect,
+            NUMGUNS, gs.ammo, -1);
     }
 
     void sendinitclient(clientinfo *ci)
@@ -2830,9 +2826,9 @@ namespace server
             loopj(i) if(hits[j].target==h.target) { dup = true; break; }
             if(dup) continue;
             float damage = attacks[atk].damage*(1-h.dist/EXP_DISTSCALE/attacks[atk].exprad);
-            if(gs.damagemillis || gs.juggernaut) damage *= 2;
-            if(target->state.armourmillis || target->state.juggernaut) damage /= 2;
-            if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
+            if(gs.haspowerup(PU_DAMAGE) || gs.juggernaut) damage *= 2;
+            if(target->state.haspowerup(PU_DAMAGE) || target->state.juggernaut) damage /= 2;
+            if(target->state.haspowerup(PU_INVULNERABILITY) && ci!=target && !gs.haspowerup(PU_INVULNERABILITY)) damage = 0;
             if(target==ci) damage /= ALLY_DAMDIV;
             if(damage > 0) dodamage(target, ci, damage, atk, 0, h.dir);
         }
@@ -2849,10 +2845,16 @@ namespace server
         int gun = attacks[atk].gun;
         if(attacks[atk].action != ACT_MELEE && !gs.ammo[gun]) return;
         if(attacks[atk].range && from.dist(to) > attacks[atk].range + 1) return;
-        if(!gs.ammomillis && !gs.juggernaut) gs.ammo[gun] -= attacks[atk].use;
+        if(!gs.haspowerup(PU_AMMO) && !gs.juggernaut)
+        {
+            gs.ammo[gun] -= attacks[atk].use;
+        }
         gs.lastshot = millis;
         int gunwait = attacks[atk].attackdelay;
-        if(gs.hastemillis || gs.juggernaut) gunwait /= 2;
+        if(gs.haspowerup(PU_HASTE) || gs.juggernaut)
+        {
+            gunwait /= 2;
+        }
         gs.gunwait = gunwait;
         sendf(-1, 1, "ri3x", N_SHOTEVENT, ci->clientnum, atk, ci->ownernum);
         gs.shotdamage += attacks[atk].damage*attacks[atk].rays;
@@ -2887,9 +2889,9 @@ namespace server
                         }
                         if(h.flags & HIT_LEGS) damage /= 2;
                     }
-                    if(gs.damagemillis || gs.juggernaut) damage *= 2;
-                    if(target->state.armourmillis || target->state.juggernaut) damage /= 2;
-                    if(target->state.invulnmillis && ci!=target && !gs.invulnmillis) damage = 0;
+                    if(gs.haspowerup(PU_DAMAGE) || gs.juggernaut) damage *= 2;
+                    if(target->state.haspowerup(PU_ARMOR) || target->state.juggernaut) damage /= 2;
+                    if(target->state.haspowerup(PU_INVULNERABILITY) && ci!=target && !gs.haspowerup(PU_INVULNERABILITY)) damage = 0;
                     if(damage > 0)
                     {
                         dodamage(target, ci, damage, atk, h.flags, h.dir);
@@ -2954,11 +2956,15 @@ namespace server
         {
             clientinfo *ci = clients[i];
             flushevents(ci, gamemillis);
-            if(ci->state.damagemillis) ci->state.damagemillis = max(ci->state.damagemillis-curtime, 0);
-            if(ci->state.hastemillis) ci->state.hastemillis = max(ci->state.hastemillis-curtime, 0);
-            if(ci->state.armourmillis) ci->state.armourmillis = max(ci->state.armourmillis-curtime, 0);
-            if(ci->state.ammomillis) ci->state.ammomillis = max(ci->state.ammomillis-curtime, 0);
-            if(ci->state.invulnmillis) ci->state.invulnmillis = max(ci->state.invulnmillis-curtime, 0);
+            if(ci->state.poweruptype && ci->state.powerupmillis)
+            {
+                ci->state.powerupmillis = max(ci->state.powerupmillis - curtime, 0);
+                if(!ci->state.powerupmillis)
+                {
+                    ci->state.powerupmillis = 0;
+                    ci->state.poweruptype = PU_NONE;
+                }
+            }
             if(ci->state.state == CS_ALIVE)
             {
                 if((m_regen(mutators) || (!m_vampire(mutators) && m_infection && ci->state.zombie)) && !ci->state.juggernaut)
@@ -3823,7 +3829,7 @@ namespace server
             {
                 int damage = getint(p);
                 if(!cq) break;
-                if(cq->state.invulnmillis) damage = 0;
+                if(cq->state.haspowerup(PU_INVULNERABILITY)) damage = 0;
                 if(lastmillis-cq->state.lastdamage<=800) break;
                 dodamage(cq, cq, damage, -1, HIT_MATERIAL);
                 cq->state.lastdamage = lastmillis;
@@ -3886,7 +3892,7 @@ namespace server
             case N_USEITEM:
             {
                 if(!cq || cq->state.state!=CS_ALIVE || !cq->state.item) break;
-                cq->state.useitem(cq->state.item);
+                cq->state.useitem();
                 sendf(-1, 1, "ri2", N_USEITEM, cq->clientnum);
                 break;
             }

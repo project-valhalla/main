@@ -213,8 +213,7 @@ namespace game
             else if(!intermission && d->state==CS_ALIVE)
             {
                 if(lastmillis - d->lastaction >= d->gunwait) d->gunwait = 0;
-                if(d->haspowerups() || d->juggernaut)
-                    entities::updatepowerups(curtime, d);
+                if(d->powerupmillis) entities::updatepowerups(curtime, d);
             }
             const int lagtime = totalmillis-d->lastupdate;
             if(!lagtime || intermission) continue;
@@ -252,8 +251,13 @@ namespace game
 
         physicsframe();
         ai::navigate();
-        if(player1->state == CS_ALIVE && (player1->haspowerups() || player1->juggernaut))
-            entities::updatepowerups(curtime, player1);
+        if(player1->state != CS_DEAD && !intermission)
+        {
+            if(player1->powerupmillis)
+            {
+                entities::updatepowerups(curtime, player1);
+            }
+        }
         updateweapons(curtime);
         otherplayers(curtime);
         ai::update();
@@ -334,17 +338,16 @@ namespace game
         if((player1->attacking = act)) respawn();
         player1->lastact = act;
     }
-
     ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
 
     void useitem()
     {
-        if(!player1->item) return;
+        if(!player1->item || !validitem(player1->item)) return;
         addmsg(N_USEITEM, "rc", player1);
     }
-    ICOMMAND(useitem, "", (), { useitem(); });
+    COMMAND(useitem, "");
 
     bool canjump()
     {
@@ -402,8 +405,8 @@ namespace game
                 playsound(isally(d, actor) ? S_HIT_ALLY : (hitsound == 1 ? S_HIT1 : S_HIT2));
         }
         if(d!=actor) actor->lasthit = lastmillis;
-        if(d->invulnmillis && !actor->invulnmillis) playsound(S_ACTION_INVULNERABILITY, d);
-        if(!d->invulnmillis || (d->invulnmillis && actor->invulnmillis))
+        if(d->haspowerup(PU_INVULNERABILITY) && !actor->haspowerup(PU_INVULNERABILITY)) playsound(S_ACTION_INVULNERABILITY, d);
+        if(!d->haspowerup(PU_INVULNERABILITY) || (d->haspowerup(PU_INVULNERABILITY) && actor->haspowerup(PU_INVULNERABILITY)))
         {
             if(d==h && d!=actor) damagecompass(damage, actor->o);
             damageeffect(damage, d, p, atk, d!=h);
@@ -447,11 +450,6 @@ namespace game
         }
         d->stopweaponsound();
         d->stoppowerupsound();
-        if(d->juggernautchan >= 0)
-        {
-            stopsound(S_JUGGERNAUT_LOOP, d->juggernautchan, 1200);
-            d->juggernautchan = -1;
-        }
     }
 
     VARP(killsound, 0, 0, 2);
@@ -866,7 +864,7 @@ namespace game
             if(d->state!=CS_ALIVE) return;
             gameent *e = (gameent *)d;
             int damage = ENV_DAM;
-            if(e->invulnmillis) damage = 0;
+            if(e->haspowerup(PU_INVULNERABILITY)) damage = 0;
             if(!m_mp(gamemode))
             {
                 if(lastmillis-e->lastdamage <= 800) return;

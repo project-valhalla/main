@@ -56,7 +56,10 @@ namespace ai
 
     bool targetable(gameent *d, gameent *e)
     {
-        if(d == e || !canmove(d) || (!d->invulnmillis && e->invulnmillis)) return false;
+        if(d == e || !canmove(d) || (!d->haspowerup(PU_INVULNERABILITY) && e->haspowerup(PU_INVULNERABILITY)))
+        {
+            return false;
+        }
         return e->state == CS_ALIVE && !isally(d, e);
     }
 
@@ -1285,12 +1288,11 @@ namespace ai
                 if(allowmove && !b.idle) timeouts(d, b);
                 if(d->state==CS_ALIVE && !d->zombie)
                 {
-                    if(d->haspowerups() || d->juggernaut)
+                    if(d->powerupmillis) entities::updatepowerups(curtime, d);
+                    if(d->item && (badhealth(d) || !hasgoodammo(d)))
                     {
-                        entities::updatepowerups(curtime, d);
+                        addmsg(N_USEITEM, "rc", d);
                     }
-                    else if(d->item && (!hasgoodammo(d) || badhealth(d)))
-                       addmsg(N_USEITEM, "rc", d);
                 }
 				entities::checkitems(d);
 				if(cmode) cmode->checkitems(d);

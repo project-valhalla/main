@@ -314,7 +314,11 @@ namespace game
             {
                 if(bnc.bouncetype >= BNC_GRENADE && bnc.bouncetype <= BNC_ROCKET)
                 {
-                    int damage = attacks[bnc.atk].damage*(bnc.owner->damagemillis||bnc.owner->juggernaut?2:1);
+                    int damage = attacks[bnc.atk].damage;
+                    if(bnc.owner->haspowerup(PU_DAMAGE) || bnc.owner->juggernaut)
+                    {
+                        damage *= 2;
+                    }
                     hits.setsize(0);
                     explode(bnc.local, bnc.owner, bnc.o, bnc.vel, NULL, damage, bnc.atk);
                     addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
@@ -423,7 +427,7 @@ namespace game
         if(f->shield && d!=hudplayer()) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);
         if(validatk(atk) && attacks[atk].hitsound) playsound(attacks[atk].hitsound, NULL, f==h ? NULL : &f->o);
         else playsound(S_DAMAGE, NULL, f==h ? NULL : &f->o);
-        if(f->armourmillis) playsound(S_ACTION_ARMOUR, f, &f->o);
+        if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOUR, f, &f->o);
     }
 
     void spawnbouncer(const vec &p, gameent *d, int type)
@@ -497,7 +501,7 @@ namespace game
                     if(lastmillis-f->lastyelp > 500) damageblend(dam);
                     if(f!=at) damagecompass(dam, at ? at->o : f->o);
                 }
-                if(f->invulnmillis && f!=at && !at->invulnmillis) playsound(S_ACTION_INVULNERABILITY, f);
+                if(f->haspowerup(PU_INVULNERABILITY) && f!=at && !at->haspowerup(PU_INVULNERABILITY)) playsound(S_ACTION_INVULNERABILITY, f);
                 if(flags & HIT_HEAD)
                 {
                     extern int playheadshotsound;
@@ -510,8 +514,8 @@ namespace game
     void hitpush(int damage, dynent *d, gameent *at, vec &from, vec &to, int atk, int rays, int flags)
     {
         gameent *f = (gameent *)d;
-        if(f->armourmillis || f->juggernaut) damage /= 2;
-        if(f->invulnmillis && f!=at && !at->invulnmillis) damage = 0;
+        if(f->haspowerup(PU_ARMOR) || f->juggernaut) damage /= 2;
+        if(f->haspowerup(PU_INVULNERABILITY) && f!=at && !at->haspowerup(PU_INVULNERABILITY)) damage = 0;
         if(flags&HIT_HEAD && m_mayhem(mutators)) damage = f->health;
         hit(damage, d, at, vec(to).sub(from).safenormalize(), atk, from.dist(to), rays, flags);
     }
@@ -540,8 +544,8 @@ namespace game
             if(damage > 0)
             {
                 gameent *f = (gameent *)o;
-                if(f->armourmillis || f->juggernaut) damage /= 2;
-                if(f->invulnmillis && f!=at && !at->invulnmillis) damage = 0;
+                if(f->haspowerup(PU_INVULNERABILITY) || f->juggernaut) damage /= 2;
+                if(f->haspowerup(PU_INVULNERABILITY) && f!=at && !at->haspowerup(PU_INVULNERABILITY)) damage = 0;
                 hit(dam, o, at, dir, atk, dist);
                 damageeffect(dam, o, o->o, atk);
             }
@@ -659,8 +663,8 @@ namespace game
         vec dir;
         projdist(o, dir, v, p.dir, p.atk);
         gameent *f = (gameent *)o;
-        if(f->armourmillis || f->juggernaut) damage /= 2;
-        if(f->invulnmillis && f!=p.owner && !p.owner->invulnmillis) damage = 0;
+        if(f->haspowerup(PU_ARMOR) || f->juggernaut) damage /= 2;
+        if(f->haspowerup(PU_INVULNERABILITY) && f!=p.owner && !p.owner->haspowerup(PU_INVULNERABILITY)) damage = 0;
         hit(damage, o, p.owner, dir, p.atk, 0);
         damageeffect(damage, o, o->o, p.atk);
         return true;
@@ -676,7 +680,11 @@ namespace game
             p.offsetmillis = max(p.offsetmillis-time, 0);
             vec dv;
             float dist = p.to.dist(p.o, dv);
-            float damage = attacks[p.atk].damage*(p.owner->damagemillis || p.owner->juggernaut ? 2 : 1);
+            float damage = attacks[p.atk].damage;
+            if(p.owner->haspowerup(PU_DAMAGE) || p.owner->juggernaut)
+            {
+                damage *= 2;
+            }
             dv.mul(time/max(dist*1000/p.speed, float(time)));
             vec v = vec(p.o).add(dv);
             bool exploded = false;
@@ -1018,9 +1026,10 @@ namespace game
                 playsound(S_JUGGERNAUT_ACTION, d);
                 return;
             }
-            if(d->damagemillis) playsound(S_ACTION_DAMAGE, d);
-            if(d->hastemillis)  playsound(S_ACTION_HASTE, d);
-            if(d->ammomillis) playsound(S_ACTION_UAMMO, d);
+            if(d->poweruptype >= PU_DAMAGE && d->poweruptype < PU_INVULNERABILITY)
+            {
+                playsound(S_ACTION_DAMAGE+d->poweruptype-1, d);
+            }
         }
     }
 
@@ -1201,7 +1210,7 @@ namespace game
             }
             return;
         }
-        if(!d->ammomillis && !d->juggernaut) d->ammo[gun] -= attacks[atk].use;
+        if(!d->haspowerup(PU_AMMO) && !d->juggernaut) d->ammo[gun] -= attacks[atk].use;
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
@@ -1234,7 +1243,7 @@ namespace game
         }
 
         int gunwait = attacks[atk].attackdelay;
-        if(d->hastemillis || d->juggernaut) gunwait /= 2;
+        if(d->haspowerup(PU_HASTE) || d->juggernaut) gunwait /= 2;
         d->gunwait = gunwait;
         if(attacks[atk].action != ACT_MELEE && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;

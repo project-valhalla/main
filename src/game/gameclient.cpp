@@ -1423,28 +1423,23 @@ namespace game
             d->points = getint(p);
             if(d==player1)
             {
-                getint(p); // damagemillis
-                getint(p); // hastemillis
-                getint(p); // armourmillis
-                getint(p); // invulnmillis
+                getint(p); // poweruptype
+                getint(p); // powerupmillis
                 getint(p); // juggernaut
                 getint(p); // zombie
             }
             else
             {
-                d->damagemillis = getint(p);
-                d->hastemillis = getint(p);
-                d->armourmillis = getint(p);
-                d->invulnmillis = getint(p);
-                d->juggernaut = getint(p);
+                d->poweruptype = getint(p);
+                d->powerupmillis = getint(p);
                 d->zombie = getint(p);
+                d->juggernaut = getint(p);
             }
         }
         d->lifesequence = getint(p);
         d->health = getint(p);
         d->maxhealth = getint(p);
         d->shield = getint(p);
-        d->item = getint(p);
         if(resume && d==player1)
         {
             getint(p); // gunselect
@@ -1750,7 +1745,10 @@ namespace game
                 if(!s || !validatk(atk)) break;
                 int gun = attacks[atk].gun;
                 if(gun >= 0) s->gunselect = gun;
-                if(!s->ammomillis && !s->juggernaut) s->ammo[gun] -= attacks[atk].use;
+                if(!s->haspowerup(PU_AMMO) && !s->juggernaut)
+                {
+                    s->ammo[gun] -= attacks[atk].use;
+                }
                 s->gunwait = attacks[atk].attackdelay;
                 s->lastattack = atk;
                 break;
@@ -1802,19 +1800,9 @@ namespace game
             case N_USEITEM:
             {
                 int ucn = getint(p);
-                gameent *u = getclient(ucn);
-                if(!u || !u->item) break;
-                switch(u->item)
-                {
-                    case 1:
-                    {
-                        msgsound(S_ACTIVATION_INVULNERABILITY, u);
-                        if(u==hudplayer()) playsound(S_ANNOUNCER_INVULNERABILITY, NULL, NULL, NULL, SND_ANNOUNCER);
-                        break;
-                    }
-                    default: break;
-                }
-                u->useitem(u->item);
+                gameent *user = getclient(ucn);
+                user->useitem();
+                playsound(S_ACTIVATION_INVULNERABILITY, user);
                 break;
             }
 

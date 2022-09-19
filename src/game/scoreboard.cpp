@@ -206,12 +206,8 @@ namespace game
     {
         if(Timelimit>0 && m_timed && getclientmap() && (maplimit >= 0 || intermission))
         {
-            if(intermission) result("intermission");
-            else
-            {
-                int secs = max(maplimit-lastmillis, 0)/1000;
-                result(tempformatstring("%d:%02d", secs/60, secs%60));
-            }
+            int secs = max(maplimit-lastmillis, 0)/1000;
+            result(tempformatstring("%d:%02d", secs/60, secs%60));
         }
     });
 

@@ -527,6 +527,7 @@ namespace game
         }
         else
         {
+            maplimit = lastmillis + 45*1000;
             intermission = true;
             player1->attacking = ACT_IDLE;
             if(cmode) cmode->gameover();

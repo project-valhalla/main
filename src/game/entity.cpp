@@ -52,7 +52,7 @@ namespace entities
 
             "item/ammo/shotgun", "item/ammo/smg", "item/ammo/pulse", "item/ammo/rocket", "item/ammo/railgun",
             "item/health", "item/shield/yellow", "item/shield/red",
-            "item/health/super", "item/health/mega", "item/doubledamage", "item/haste", "item/armour", "item/ammo/unlimited", "", "", "item/invulnerability"
+            "item/health/super", "item/health/mega", "item/doubledamage", "item/haste", "item/armour", "item/ammo/unlimited", "item/agility", "item/invulnerability"
         };
         return entmdlnames[type];
     }
@@ -85,7 +85,7 @@ namespace entities
                 case I_DDAMAGE: case I_ARMOUR: case I_UAMMO:
                     if(m_insta(mutators) || m_noitems(mutators) || m_nopowerups(mutators)) return false;
                     break;
-                case I_HASTE: case I_INVULNERABILITY:
+                case I_HASTE: case I_AGILITY: case I_INVULNERABILITY:
                     if(m_noitems(mutators) || m_nopowerups(mutators)) return false;
                 break;
         }
@@ -193,6 +193,11 @@ namespace entities
                 case I_UAMMO:
                     itemname = "Unlimited Ammo";
                     announcersound = S_ANNOUNCER_UAMMO;
+                    break;
+
+                case I_AGILITY:
+                    itemname = "Agility";
+                    announcersound = S_ANNOUNCER_AGILITY;
                     break;
 
                 case I_INVULNERABILITY:
@@ -484,7 +489,7 @@ namespace entities
             "flag",
             "shotgun", "smg", "pulse", "rocket", "railgun",
             "health", "light_shield", "heavy_shield",
-            "superhealth", "megahealth", "double_damage", "haste", "armour", "unlimited_ammo", "invalid_item1", "invalid_item2", "invulnerability"
+            "superhealth", "megahealth", "double_damage", "haste", "armour", "unlimited_ammo", "agility", "invulnerability"
         };
         return i>=0 && size_t(i)<sizeof(entnames)/sizeof(entnames[0]) ? entnames[i] : "";
     }

@@ -1804,7 +1804,7 @@ namespace game
                 int ucn = getint(p);
                 gameent *user = getclient(ucn);
                 user->useitem();
-                playsound(S_ACTIVATION_INVULNERABILITY, user);
+                playsound(S_ACTIVATION_AGILITY+user->poweruptype-5, user);
                 break;
             }
 

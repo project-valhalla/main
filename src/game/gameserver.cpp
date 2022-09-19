@@ -922,7 +922,7 @@ namespace server
                 case I_DDAMAGE: case I_ARMOUR: case I_UAMMO:
                     if(m_insta(mutators) || m_noitems(mutators) || m_nopowerups(mutators)) return false;
                     break;
-                case I_HASTE: case I_INVULNERABILITY:
+                case I_HASTE: case I_AGILITY: case I_INVULNERABILITY:
                     if(m_noitems(mutators) || m_nopowerups(mutators)) return false;
                 break;
         }
@@ -936,21 +936,35 @@ namespace server
         int sec = 0;
         switch(type)
         {
-            case I_AMMO_SG:
-            case I_AMMO_SMG:
-            case I_AMMO_PULSE:
-            case I_AMMO_RL:
-            case I_AMMO_RAIL: sec = 15; break;
-            case I_HEALTH: sec = 22; break;
-            case I_YELLOWSHIELD: sec = 30; break;
-            case I_REDSHIELD: sec = 60; break;
-            case I_SUPERHEALTH: sec = 40; break;
-            case I_MEGAHEALTH: sec = 80; break;
-            case I_DDAMAGE:
-            case I_HASTE:
-            case I_ARMOUR:
-            case I_UAMMO: sec = 100; break;
-            case I_INVULNERABILITY: sec = 180; break;
+            case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE:
+            case I_AMMO_RL: case I_AMMO_RAIL:
+                sec = 15;
+                break;
+
+            case I_HEALTH:
+                sec = 22;
+                break;
+
+            case I_YELLOWSHIELD:
+                sec = 30;
+                break;
+
+            case I_REDSHIELD:
+                sec = 60;
+                break;
+
+            case I_SUPERHEALTH:
+                sec = 40;
+                break;
+
+            case I_MEGAHEALTH:
+                sec = 80;
+                break;
+
+            case I_DDAMAGE: case I_HASTE: case I_ARMOUR:
+            case I_UAMMO: case I_AGILITY: case I_INVULNERABILITY:
+                sec = 100;
+                break;
         }
         return sec*1000;
     }
@@ -959,15 +973,11 @@ namespace server
     {
         switch(type)
         {
-            case I_YELLOWSHIELD:
-            case I_REDSHIELD:
-            case I_MEGAHEALTH:
-            case I_DDAMAGE:
-            case I_HASTE:
-            case I_ARMOUR:
-            case I_UAMMO:
-            case I_INVULNERABILITY:
+            case I_YELLOWSHIELD: case I_REDSHIELD: case I_MEGAHEALTH:
+            case I_DDAMAGE: case I_HASTE: case I_ARMOUR:
+            case I_UAMMO: case I_AGILITY: case I_INVULNERABILITY:
                 return true;
+
             default:
                 return false;
         }

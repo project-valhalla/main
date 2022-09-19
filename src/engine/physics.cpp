@@ -1692,8 +1692,9 @@ VAR(floatspeed, 1, 100, 10000);
 void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)
 {
     gameent *e = (gameent *)pl;
-    bool canjump = pl->physstate >= PHYS_SLOPE ||
-                   ((e->zombie || e->juggernaut) && !pl->doublejumping && !(pl->crouching && pl->crouched()));
+    bool canjump = pl->physstate >= PHYS_SLOPE
+                   || ((e->haspowerup(PU_AGILITY) || e->zombie || e->juggernaut)
+                   && !pl->doublejumping && !(pl->crouching && pl->crouched()));
     if(floating)
     {
         if(pl->jumping)
@@ -1740,7 +1741,8 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 
     vec d(m);
     float speed = pl->speed;
-    if(e->zombie || e->juggernaut) speed += 10.0f; // speed bonus
+    if(e->haspowerup(PU_AGILITY)) speed += (e->powerupmillis/1000);
+    else if(e->zombie || e->juggernaut) speed += 10.0f; // speed bonus
     d.mul(speed);
     if(pl->type==ENT_PLAYER)
     {

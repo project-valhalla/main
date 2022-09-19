@@ -74,7 +74,7 @@ enum                            // static entity types
 
     I_AMMO_SG, I_AMMO_SMG, I_AMMO_PULSE, I_AMMO_RL, I_AMMO_RAIL,
     I_HEALTH, I_YELLOWSHIELD, I_REDSHIELD,
-    I_SUPERHEALTH, I_MEGAHEALTH, I_DDAMAGE, I_HASTE, I_ARMOUR, I_UAMMO, I_ITEM1, I_ITEM2, I_INVULNERABILITY,
+    I_SUPERHEALTH, I_MEGAHEALTH, I_DDAMAGE, I_HASTE, I_ARMOUR, I_UAMMO, I_AGILITY, I_INVULNERABILITY,
     MAXENTTYPES
 };
 
@@ -86,6 +86,7 @@ enum
     PU_HASTE,
     PU_ARMOR,
     PU_AMMO,
+    PU_AGILITY,
     PU_INVULNERABILITY
 };
 
@@ -125,11 +126,11 @@ enum
     S_HEALTH, S_SUPERHEALTH, S_MEGAHEALTH,
     S_SHIELD_LIGHT, S_SHIELD_HEAVY, S_SHIELD_HIT,
 
-    S_DAMAGE, S_HASTE, S_ARMOUR, S_UAMMO, S_INVULNERABILITY,
+    S_DAMAGE, S_HASTE, S_ARMOUR, S_UAMMO, S_AGILITY, S_INVULNERABILITY,
     S_ACTION_DAMAGE, S_ACTION_HASTE, S_ACTION_ARMOUR, S_ACTION_UAMMO, S_ACTION_INVULNERABILITY,
-    S_LOOP_DAMAGE, S_LOOP_HASTE, S_LOOP_ARMOUR, S_LOOP_UAMMO, S_LOOP_INVULNERABILITY,
-    S_TIMEOUT_DAMAGE, S_TIMEOUT_HASTE, S_TIMEOUT_ARMOUR, S_TIMEOUT_UAMMO, S_TIMEOUT_INVULNERABILITY,
-    S_ACTIVATION_INVULNERABILITY,
+    S_LOOP_DAMAGE, S_LOOP_HASTE, S_LOOP_ARMOUR, S_LOOP_UAMMO, S_LOOP_AGILITY, S_LOOP_INVULNERABILITY,
+    S_TIMEOUT_DAMAGE, S_TIMEOUT_HASTE, S_TIMEOUT_ARMOUR, S_TIMEOUT_UAMMO, S_TIMEOUT_AGILITY, S_TIMEOUT_INVULNERABILITY,
+    S_ACTIVATION_AGILITY, S_ACTIVATION_INVULNERABILITY,
 
     // weapon
     S_MELEE,
@@ -160,7 +161,8 @@ enum
     S_ANNOUNCER_KILLING_SPREE, S_ANNOUNCER_UNSTOPPABLE,
     S_ANNOUNCER_10_KILLS, S_ANNOUNCER_5_KILLS, S_ANNOUNCER_1_KILL,
 
-    S_ANNOUNCER_DDAMAGE, S_ANNOUNCER_HASTE, S_ANNOUNCER_ARMOUR, S_ANNOUNCER_UAMMO, S_ANNOUNCER_INVULNERABILITY,
+    S_ANNOUNCER_DDAMAGE, S_ANNOUNCER_HASTE, S_ANNOUNCER_ARMOUR,
+    S_ANNOUNCER_UAMMO, S_ANNOUNCER_AGILITY, S_ANNOUNCER_INVULNERABILITY,
 
     S_ANNOUNCER_FLAGSCORE_BLUE, S_ANNOUNCER_FLAGSCORE_RED,
     S_ANNOUNCER_JUGGERNAUT,
@@ -330,8 +332,7 @@ static struct itemstat { int add, max, sound, info; } itemstats[] =
     { 30000, 60000, S_HASTE,            PU_HASTE,           }, // haste
     { 30000, 60000, S_ARMOUR,           PU_ARMOR,           }, // armour
     { 30000, 60000, S_UAMMO,            PU_AMMO,            }, // unlimited ammo
-    {     0,     0, NULL,               NULL,               }, // ?
-    {     0,     0, NULL,               NULL,               }, // ?
+    { 30000, 60000, S_AGILITY,          PU_AGILITY,         }, // agility
     { 15000, 30000, S_INVULNERABILITY,  PU_INVULNERABILITY, }  // invulnerability
 };
 
@@ -369,6 +370,7 @@ struct gamestate
             case I_HASTE:
             case I_ARMOUR:
             case I_UAMMO:
+            case I_AGILITY:
             case I_INVULNERABILITY:
                 if(!item && (powerupmillis < is.info || poweruptype == is.info))
                 {
@@ -406,6 +408,7 @@ struct gamestate
                 powerupmillis = min(powerupmillis+is.add, is.max);
                 break;
 
+            case I_AGILITY:
             case I_INVULNERABILITY:
                 item = type;
                 break;

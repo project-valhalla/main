@@ -218,7 +218,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
     N_SHOOT, 0, N_EXPLODE, 0, N_HURTPLAYER, 0, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 8, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 12, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3, N_USEITEM, 1,
-    N_TRYSPAWN, 1, N_SPAWNSTATE, 7, N_SPAWN, 3, N_FORCEDEATH, 2,
+    N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_PRIMARYWEAPON, 2, N_TAUNT, 1,
     N_ANNOUNCE, 4,
     N_MAPCHANGE, 0, N_SERVERVARIABLES, 8, N_MAPVOTE, 0, N_SENDVARIABLES, 0, N_TEAMINFO, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
@@ -370,7 +370,7 @@ struct gamestate
             case I_ARMOUR:
             case I_UAMMO:
             case I_INVULNERABILITY:
-                if(!item && (!powerupmillis || poweruptype == is.info))
+                if(!item && (powerupmillis < is.info || poweruptype == is.info))
                 {
                     return true;
                 }

@@ -1425,6 +1425,7 @@ namespace game
             {
                 getint(p); // poweruptype
                 getint(p); // powerupmillis
+                getint(p); // item
                 getint(p); // juggernaut
                 getint(p); // zombie
             }
@@ -1432,8 +1433,9 @@ namespace game
             {
                 d->poweruptype = getint(p);
                 d->powerupmillis = getint(p);
-                d->zombie = getint(p);
+                d->item = getint(p);
                 d->juggernaut = getint(p);
+                d->zombie = getint(p);
             }
         }
         d->lifesequence = getint(p);

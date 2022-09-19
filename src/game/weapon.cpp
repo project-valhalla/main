@@ -501,7 +501,10 @@ namespace game
                     if(lastmillis-f->lastyelp > 500) damageblend(dam);
                     if(f!=at) damagecompass(dam, at ? at->o : f->o);
                 }
-                if(f->haspowerup(PU_INVULNERABILITY) && f!=at && !at->haspowerup(PU_INVULNERABILITY)) playsound(S_ACTION_INVULNERABILITY, f);
+                if(f->haspowerup(PU_INVULNERABILITY) && f!=at && !at->haspowerup(PU_INVULNERABILITY))
+                {
+                    playsound(S_ACTION_INVULNERABILITY, f);
+                }
                 if(flags & HIT_HEAD)
                 {
                     extern int playheadshotsound;
@@ -1024,7 +1027,7 @@ namespace game
                 playsound(S_JUGGERNAUT_ACTION, d);
                 return;
             }
-            if(d->poweruptype >= PU_DAMAGE && d->poweruptype < PU_INVULNERABILITY)
+            if(d->haspowerup(PU_DAMAGE) || d->haspowerup(PU_HASTE) || d->haspowerup(PU_AMMO))
             {
                 playsound(S_ACTION_DAMAGE+d->poweruptype-1, d);
             }

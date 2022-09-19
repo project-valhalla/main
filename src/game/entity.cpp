@@ -381,13 +381,14 @@ namespace entities
     void updatepowerups(int time, gameent *d)
     {
         d->powerupsound = S_LOOP_DAMAGE + d->poweruptype-1;
-        d->powerupchan = playsound(d->powerupsound, d, NULL, NULL, 0, -1, 500, d->powerupchan, 200);
+        gameent *hud = followingplayer(player1);
+        d->powerupchan = playsound(d->powerupsound, NULL, d==hud ? NULL : &d->o, NULL, 0, -1, 200, d->powerupchan);
         if((d->powerupmillis -= time)<=0)
         {
             d->powerupmillis = 0;
-            stopsound(d->powerupsound, d->powerupchan);
             playsound(S_TIMEOUT_DAMAGE + d->poweruptype-1, d);
             d->poweruptype = PU_NONE;
+            d->stoppowerupsound();
         }
     }
 

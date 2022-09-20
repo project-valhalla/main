@@ -278,7 +278,7 @@ Mix_Music *loadmusic(const char *name)
 void playmusic(const char *name, const char *cmd, int *fade)
 {
     if(nosound) return;
-    stopmusic(*fade);
+    stopmusic(*name ? 0 : *fade);
     if(!musicvol || !*name) return;
     string file;
     static const char * const exts[] = { "", ".wav", ".ogg" };

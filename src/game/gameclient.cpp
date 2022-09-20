@@ -1503,7 +1503,7 @@ namespace game
                     player1->attacking = ACT_IDLE;
                 }
                 if(a) conoutf(CON_GAMEINFO, "%s \fs\f2%s the game\fr", colorname(a), val ? "paused" : "resumed");
-                else conoutf(CON_GAMEINFO, "\f2game is %s", val ? "paused" : "resumed");
+                else conoutf(CON_GAMEINFO, "\f2Game is %s", val ? "paused" : "resumed");
                 break;
             }
 
@@ -1512,8 +1512,8 @@ namespace game
                 int val = clamp(getint(p), 10, 1000), cn = getint(p);
                 gameent *a = cn >= 0 ? getclient(cn) : NULL;
                 if(!demopacket) gamespeed = val;
-                if(a) conoutf(CON_GAMEINFO, "%s \fs\f2set gamespeed to\fr %d", colorname(a), val);
-                else conoutf(CON_GAMEINFO, "\fs\f2gamespeed is\fr %d", val);
+                if(a) conoutf(CON_GAMEINFO, "%s \fs\f2set game speed to\fr %d", colorname(a), val);
+                else conoutf(CON_GAMEINFO, "\fs\f2Game speed is\fr %d", val);
                 break;
             }
 

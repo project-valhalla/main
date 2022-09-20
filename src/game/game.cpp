@@ -531,12 +531,7 @@ namespace game
             intermission = true;
             player1->attacking = ACT_IDLE;
             if(cmode) cmode->gameover();
-            conoutf(CON_GAMEINFO, "\f2intermission: game has ended!");
-            if(m_ctf) conoutf(CON_GAMEINFO, "\f2player frags: %d, flags: %d, deaths: %d", player1->frags, player1->flags, player1->deaths);
-            else conoutf(CON_GAMEINFO, "\f2player frags: %d, deaths: %d", player1->frags, player1->deaths);
-            int accuracy = (player1->totaldamage*100)/max(player1->totalshots, 1);
-            conoutf(CON_GAMEINFO, "\f2player total damage dealt: %d, damage wasted: %d, accuracy(%%): %d", player1->totaldamage, player1->totalshots-player1->totaldamage, accuracy);
-
+            conoutf(CON_GAMEINFO, "\f2Intermission: game has ended!");
             bestteams.shrink(0);
             bestplayers.shrink(0);
             if(m_teammode) getbestteams(bestteams);
@@ -602,7 +597,7 @@ namespace game
                 {
                     conoutf(CON_CHAT, "%s \fs\f4left the game\fr", colorname(d));
                 }
-                else conoutf(CON_GAMEINFO, "\fs\f2bot removed:\fr %s", colorname(d));
+                else conoutf(CON_GAMEINFO, "\fs\f2Bot removed:\fr %s", colorname(d));
             }
             removeweapons(d);
             removetrackedparticles(d);

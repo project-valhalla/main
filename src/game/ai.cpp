@@ -170,7 +170,7 @@ namespace ai
         if(!d->name[0])
         {
             if(aidebug) conoutf(CON_DEBUG, "%s assigned to %s at skill: %d", colorname(d, name), o ? colorname(o) : "?", sk);
-            else conoutf(CON_GAMEINFO, "\fs\f2bot added: \fr%s", colorname(d, name));
+            else conoutf(CON_GAMEINFO, "\fs\f2Bot added: \fr%s", colorname(d, name));
             resetthisguy = true;
         }
         else

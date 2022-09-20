@@ -144,7 +144,7 @@ void setmusicvol(int musicvol)
     if(music) Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
 }
 
-void stopmusic(int fade)
+void stopmusic(int fade = 0)
 {
     if(nosound) return;
     DELETEA(musicfile);
@@ -275,33 +275,36 @@ Mix_Music *loadmusic(const char *name)
     return music;
 }
 
-void startmusic(char *name, char *cmd)
+void playmusic(const char *name, const char *cmd, int *fade)
 {
     if(nosound) return;
-    stopmusic();
-    if(soundvol && musicvol && *name)
+    stopmusic(*fade);
+    if(!musicvol || !*name) return;
+    string file;
+    static const char * const exts[] = { "", ".wav", ".ogg" };
+    loopk(sizeof(exts)/sizeof(exts[0]))
     {
-        defformatstring(file, "data/audio/music/%s", name);
-        path(file);
+        formatstring(file, "data/audio/music/%s%s", name, exts[k]);
         if(loadmusic(file))
         {
             DELETEA(musicfile);
             DELETEA(musicdonecmd);
-            musicfile = newstring(file);
-            if(cmd[0]) musicdonecmd = newstring(cmd);
-            Mix_PlayMusic(music, cmd[0] ? 0 : -1);
+            musicfile = newstring(name);
+            if(cmd && *cmd) musicdonecmd = newstring(cmd);
+            if(*fade) Mix_FadeInMusic(music, cmd && *cmd ? 0 : -1, *fade);
+            else Mix_PlayMusic(music, cmd && *cmd ? 0 : -1);
             Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
             intret(1);
-        }
-        else
-        {
-            conoutf(CON_ERROR, "could not play music: %s", file);
-            intret(0);
+            break;
         }
     }
+    if(!music)
+    {
+        conoutf(CON_ERROR, "could not play music file: %s", name);
+        intret(0);
+    }
 }
-
-COMMANDN(music, startmusic, "ss");
+COMMANDN(music, playmusic, "ssi");
 
 static Mix_Chunk *loadwav(const char *name)
 {

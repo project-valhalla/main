@@ -275,7 +275,7 @@ Mix_Music *loadmusic(const char *name)
     return music;
 }
 
-void playmusic(const char *name, const char *cmd, int *fade)
+void playmusic(const char *name, int *fade, const char *cmd)
 {
     if(nosound) return;
     stopmusic(*name ? 0 : *fade);
@@ -304,7 +304,7 @@ void playmusic(const char *name, const char *cmd, int *fade)
         intret(0);
     }
 }
-COMMANDN(music, playmusic, "ssi");
+COMMANDN(music, playmusic, "sis");
 
 static Mix_Chunk *loadwav(const char *name)
 {

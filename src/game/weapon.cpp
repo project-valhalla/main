@@ -13,8 +13,6 @@ namespace game
     };
     vector<hitmsg> hits;
 
-    VARP(explosioneffect, 0, 1, 1);
-
     SVARP(primaryweapon, "");
 
     ICOMMAND(getweapon, "", (), intret(player1->gunselect));

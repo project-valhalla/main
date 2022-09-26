@@ -17,7 +17,7 @@ enum
     ANIM_SHOOT, ANIM_MELEE,
     ANIM_PAIN,
     ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
-    ANIM_GUN_IDLE, ANIM_GUN_SHOOT, ANIM_GUN_MELEE,
+    ANIM_GUN_IDLE, ANIM_GUN_SHOOT, ANIM_GUN_MELEE, ANIM_GUN_SWITCH,
     ANIM_VWEP_IDLE, ANIM_VWEP_SHOOT, ANIM_VWEP_MELEE,
     NUMANIMS
 };
@@ -35,7 +35,7 @@ static const char * const animnames[] =
     "shoot", "melee",
     "pain",
     "edit", "lag", "taunt", "win", "lose",
-    "gun idle", "gun shoot", "gun melee",
+    "gun idle", "gun shoot", "gun melee", "gun switch",
     "vwep idle", "vwep shoot", "vwep melee"
 };
 
@@ -560,7 +560,7 @@ struct gameent : dynent, gamestate
     int lastpain;
     int lastaction, lastattack, lasthit;
     int attacking, lastact;
-    int lasttaunt, lastfootstep, lastyelp;
+    int lasttaunt, lastfootstep, lastyelp, lastswitch;
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots;
     editinfo *edit;
@@ -581,7 +581,7 @@ struct gameent : dynent, gamestate
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
-                lastpain(0), lastfootstep(0), lastyelp(0),
+                lastpain(0), lastfootstep(0), lastyelp(0), lastswitch(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0),
                 edit(NULL), smoothmillis(-1),
                 attackchan(-1), attacksound(-1), powerupchan(-1),

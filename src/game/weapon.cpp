@@ -19,13 +19,15 @@ namespace game
 
     void gunselect(int gun, gameent *d)
     {
-        if(gun!=d->gunselect)
+        if(gun == d->gunselect || lastmillis - d->lastswitch < 100)
         {
-            addmsg(N_GUNSELECT, "rci", d, gun);
-            playsound(S_WEAPON_LOAD, d);
+            return;
         }
-        disablezoom();
+        addmsg(N_GUNSELECT, "rci", d, gun);
+        playsound(S_WEAPON_LOAD, d);
         d->gunselect = gun;
+        d->lastswitch = lastmillis;
+        disablezoom();
     }
 
     void nextweapon(int dir, bool force = false)

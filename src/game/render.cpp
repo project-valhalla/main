@@ -430,15 +430,16 @@ namespace game
         }
 
         int anim = ANIM_GUN_IDLE|ANIM_LOOP, basetime = 0;
-        if(d->lastaction && d->lastattack >= 0 && lastmillis-d->lastaction<attacks[d->lastattack].attackdelay)
+        bool animateattack = d->lastattack == ATK_MELEE || attacks[d->lastattack].gun == d->gunselect;
+        if(animateattack && d->lastaction && d->lastattack >= 0 && lastmillis - d->lastaction < attacks[d->lastattack].attackdelay)
         {
-            bool render = true;
-            if(d->lastattack != ATK_MELEE) render = attacks[d->lastattack].gun == d->gunselect;
-            if(render)
-            {
-                if(anim >= 0) anim = attacks[d->lastattack].hudanim;
-                basetime = d->lastaction;
-            }
+            if(anim >= 0) anim = attacks[d->lastattack].hudanim;
+            basetime = d->lastaction;
+        }
+        if(lastmillis - d->lastswitch <= 600)
+        {
+            if(anim >= 0) anim = ANIM_GUN_SWITCH;
+            basetime = d->lastswitch;
         }
         drawhudmodel(d, anim, basetime);
     }

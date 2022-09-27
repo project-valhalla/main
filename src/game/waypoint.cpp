@@ -506,7 +506,7 @@ namespace ai
         return !route.empty();
     }
 
-    VARF(dropwaypoints, 0, 0, 1, { player1->lastnode = -1; });
+    VARF(dropwaypoints, 0, 0, 1, { self->lastnode = -1; });
 
     int addwaypoint(const vec &o, int weight = -1)
     {
@@ -665,7 +665,7 @@ namespace ai
         }
         if(cleared)
         {
-            player1->lastnode = -1;
+            self->lastnode = -1;
             loopv(players) if(players[i]) players[i]->lastnode = -1;
             remapwaypoints();
             clearwpcache();
@@ -771,7 +771,7 @@ namespace ai
         }
         if(cleared)
         {
-            player1->lastnode = -1;
+            self->lastnode = -1;
             remapwaypoints();
             clearwpcache();
         }
@@ -796,7 +796,7 @@ namespace ai
         }
         if(cleared)
         {
-            player1->lastnode = -1;
+            self->lastnode = -1;
             remapwaypoints();
         }
         clearwpcache();

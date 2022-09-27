@@ -154,41 +154,41 @@ namespace game
 
     void switchname(const char *name)
     {
-        filtertext(player1->name, name, false, false, true, false, MAXNAMELEN);
-        if(!player1->name[0]) copystring(player1->name, "player");
-        addmsg(N_SWITCHNAME, "rs", player1->name);
+        filtertext(self->name, name, false, false, true, false, MAXNAMELEN);
+        if(!self->name[0]) copystring(self->name, "player");
+        addmsg(N_SWITCHNAME, "rs", self->name);
     }
     void printname()
     {
-        conoutf("your name is: %s", colorname(player1));
+        conoutf("your name is: %s", colorname(self));
     }
     ICOMMAND(name, "sN", (char *s, int *numargs),
     {
         if(*numargs > 0) switchname(s);
         else if(!*numargs) printname();
-        else result(colorname(player1));
+        else result(colorname(self));
     });
-    ICOMMAND(getname, "", (), result(player1->name));
+    ICOMMAND(getname, "", (), result(self->name));
 
     void switchteam(const char *team)
     {
         int num = isdigit(team[0]) ? parseint(team) : teamnumber(team);
         if(!validteam(num)) return;
-        if(player1->clientnum < 0) player1->team = num;
+        if(self->clientnum < 0) self->team = num;
         else addmsg(N_SWITCHTEAM, "ri", num);
     }
     void printteam()
     {
-        if((player1->clientnum >= 0 && !m_teammode) || !validteam(player1->team)) conoutf("you are not in a team");
-        else conoutf("your team is: \fs%s%s\fr", teamtextcode[player1->team], teamnames[player1->team]);
+        if((self->clientnum >= 0 && !m_teammode) || !validteam(self->team)) conoutf("you are not in a team");
+        else conoutf("your team is: \fs%s%s\fr", teamtextcode[self->team], teamnames[self->team]);
     }
     ICOMMAND(team, "sN", (char *s, int *numargs),
     {
         if(*numargs > 0) switchteam(s);
         else if(!*numargs) printteam();
-        else if((player1->clientnum < 0 || m_teammode) && validteam(player1->team)) result(tempformatstring("\fs%s%s\fr", teamtextcode[player1->team], teamnames[player1->team]));
+        else if((self->clientnum < 0 || m_teammode) && validteam(self->team)) result(tempformatstring("\fs%s%s\fr", teamtextcode[self->team], teamnames[self->team]));
     });
-    ICOMMAND(getteam, "", (), intret((player1->clientnum < 0 || m_teammode) && validteam(player1->team) ? player1->team : 0));
+    ICOMMAND(getteam, "", (), intret((self->clientnum < 0 || m_teammode) && validteam(self->team) ? self->team : 0));
     ICOMMAND(getteamname, "i", (int *num), result(teamname(*num)));
 
     struct authkey
@@ -213,7 +213,7 @@ namespace game
 
     authkey *findauthkey(const char *desc = "")
     {
-        loopv(authkeys) if(!strcmp(authkeys[i]->desc, desc) && !strcasecmp(authkeys[i]->name, player1->name)) return authkeys[i];
+        loopv(authkeys) if(!strcmp(authkeys[i]->desc, desc) && !strcasecmp(authkeys[i]->name, self->name)) return authkeys[i];
         loopv(authkeys) if(!strcmp(authkeys[i]->desc, desc)) return authkeys[i];
         return NULL;
     }
@@ -265,12 +265,12 @@ namespace game
     {
         if(!connected) return;
         sendcrc = true;
-        if(player1->state!=CS_SPECTATOR || player1->privilege || !remote) senditemstoserver = true;
+        if(self->state!=CS_SPECTATOR || self->privilege || !remote) senditemstoserver = true;
     }
 
     void writeclientinfo(stream *f)
     {
-        f->printf("name %s\n", escapestring(player1->name));
+        f->printf("name %s\n", escapestring(self->name));
     }
 
     bool allowedittoggle()
@@ -283,10 +283,10 @@ namespace game
     void edittoggled(bool on)
     {
         addmsg(N_EDITMODE, "ri", on ? 1 : 0);
-        if(player1->state==CS_DEAD) deathstate(player1, true);
-        else if(player1->state==CS_EDITING && player1->editstate==CS_DEAD) hidescoreboard();
+        if(self->state==CS_DEAD) deathstate(self, true);
+        else if(self->state==CS_EDITING && self->editstate==CS_DEAD) hidescoreboard();
         disablezoom();
-        player1->suicided = player1->respawned = -2;
+        self->suicided = self->respawned = -2;
         checkfollow();
     }
 
@@ -417,7 +417,7 @@ namespace game
         int n = strtol(arg, &end, 10);
         if(*arg && !*end)
         {
-            if(n!=player1->clientnum && !clients.inrange(n)) return -1;
+            if(n!=self->clientnum && !clients.inrange(n)) return -1;
             return n;
         }
         // try case sensitive first
@@ -450,7 +450,7 @@ namespace game
         }
         return -1;
     }
-    ICOMMAND(getclientnum, "s", (char *name), intret(name[0] ? parseplayer(name) : player1->clientnum));
+    ICOMMAND(getclientnum, "s", (char *name), intret(name[0] ? parseplayer(name) : self->clientnum));
 
     void listclients(bool local, bool bots)
     {
@@ -459,7 +459,7 @@ namespace game
         int numclients = 0;
         if(local && connected)
         {
-            formatstring(cn, "%d", player1->clientnum);
+            formatstring(cn, "%d", self->clientnum);
             buf.put(cn, strlen(cn));
             numclients++;
         }
@@ -483,20 +483,20 @@ namespace game
     void kick(const char *victim, const char *reason)
     {
         int vn = parseplayer(victim);
-        if(vn>=0 && vn!=player1->clientnum) addmsg(N_KICK, "ris", vn, reason);
+        if(vn>=0 && vn!=self->clientnum) addmsg(N_KICK, "ris", vn, reason);
     }
     COMMAND(kick, "ss");
 
     void mute(const char *victim, const char *reason)
     {
         int vn = parseplayer(victim);
-        if(vn>=0 && vn!=player1->clientnum) addmsg(N_MUTE, "riis", vn, 1, reason);
+        if(vn>=0 && vn!=self->clientnum) addmsg(N_MUTE, "riis", vn, 1, reason);
     }
     COMMAND(mute, "ss");
     void unmute(const char *victim)
     {
         int vn = parseplayer(victim);
-        if(vn>=0 && vn!=player1->clientnum) addmsg(N_MUTE, "riis", vn, 0, "");
+        if(vn>=0 && vn!=self->clientnum) addmsg(N_MUTE, "riis", vn, 0, "");
     }
     COMMAND(unmute, "ss");
 
@@ -504,7 +504,7 @@ namespace game
     {
         authkey *a = findauthkey(desc);
         int vn = parseplayer(victim);
-        if(a && vn>=0 && vn!=player1->clientnum)
+        if(a && vn>=0 && vn!=self->clientnum)
         {
             a->lastauth = lastmillis;
             addmsg(N_AUTHKICK, "rssis", a->desc, a->name, vn, reason);
@@ -519,7 +519,7 @@ namespace game
     void ignore(int cn)
     {
         gameent *d = getclient(cn);
-        if(!d || d == player1) return;
+        if(!d || d == self) return;
         conoutf("ignoring: %s", d->name);
         if(ignores.find(cn) < 0) ignores.add(cn);
     }
@@ -550,9 +550,9 @@ namespace game
 
     void hashpwd(const char *pwd)
     {
-        if(player1->clientnum<0) return;
+        if(self->clientnum<0) return;
         string hash;
-        server::hashpassword(player1->clientnum, sessionid, pwd, hash);
+        server::hashpassword(self->clientnum, sessionid, pwd, hash);
         result(hash);
     }
     COMMAND(hashpwd, "s");
@@ -560,7 +560,7 @@ namespace game
     void setmaster(const char *arg, const char *who)
     {
         if(!arg[0]) return;
-        int val = 1, cn = player1->clientnum;
+        int val = 1, cn = self->clientnum;
         if(who[0])
         {
             cn = parseplayer(who);
@@ -570,8 +570,8 @@ namespace game
         if(!arg[1] && isdigit(arg[0])) val = parseint(arg);
         else
         {
-            if(cn != player1->clientnum) return;
-            server::hashpassword(player1->clientnum, sessionid, arg, hash);
+            if(cn != self->clientnum) return;
+            server::hashpassword(self->clientnum, sessionid, arg, hash);
         }
         addmsg(N_SETMASTER, "riis", cn, val, hash);
     }
@@ -593,7 +593,7 @@ namespace game
 
     void togglespectator(int val, const char *who)
     {
-        int i = who[0] ? parseplayer(who) : player1->clientnum;
+        int i = who[0] ? parseplayer(who) : self->clientnum;
         if(i>=0) addmsg(N_SPECTATOR, "riii", i, val, 0);
     }
     ICOMMAND(spectator, "is", (int *val, char *who), togglespectator(*val, who));
@@ -744,7 +744,7 @@ namespace game
             server::forcevariables(roundlimit, selfdam, teamdam, forceweapon);
             if(!isconnected()) localconnect();
         }
-        else if(player1->state!=CS_SPECTATOR || player1->privilege)
+        else if(self->state!=CS_SPECTATOR || self->privilege)
         {
             addmsg(N_MAPVOTE, "rsii", name, mode, muts);
             addmsg(N_SENDVARIABLES, "ri6", tl, sl, roundlimit, selfdam, teamdam, forceweapon);
@@ -938,7 +938,7 @@ namespace game
                 break;
             default: return;
         }
-        printvar(player1, id);
+        printvar(self, id);
     }
 
     void pausegame(bool val)
@@ -997,7 +997,7 @@ namespace game
                 case 'c':
                 {
                     gameent *d = va_arg(args, gameent *);
-                    mcn = !d || d == player1 ? -1 : d->clientnum;
+                    mcn = !d || d == self ? -1 : d->clientnum;
                     break;
                 }
                 case 'v':
@@ -1064,17 +1064,17 @@ namespace game
         if(remote) stopfollowing();
         ignores.setsize(0);
         connected = remote = false;
-        player1->clientnum = -1;
+        self->clientnum = -1;
         if(editmode) toggleedit();
         sessionid = 0;
         mastermode = MM_OPEN;
         messages.setsize(0);
         messagereliable = false;
         messagecn = -1;
-        player1->respawn();
-        player1->lifesequence = 0;
-        player1->state = CS_ALIVE;
-        player1->privilege = PRIV_NONE;
+        self->respawn();
+        self->lifesequence = 0;
+        self->state = CS_ALIVE;
+        self->privilege = PRIV_NONE;
         sendcrc = senditemstoserver = false;
         demoplayback = false;
         gamepaused = false;
@@ -1095,16 +1095,16 @@ namespace game
 
     void toserver(char *text)
     {
-        bool waiting = m_round && (player1->state==CS_DEAD || (player1->state==CS_SPECTATOR && player1->queue));
-        conoutf(CON_CHAT, "%s: %s%s", colorname(player1), waiting? "\f4": (player1->state==CS_SPECTATOR? "\f8": "\ff"), text); addmsg(N_TEXT, "rcs", player1, text);
+        bool waiting = m_round && (self->state==CS_DEAD || (self->state==CS_SPECTATOR && self->queue));
+        conoutf(CON_CHAT, "%s: %s%s", colorname(self), waiting? "\f4": (self->state==CS_SPECTATOR? "\f8": "\ff"), text); addmsg(N_TEXT, "rcs", self, text);
     }
     COMMANDN(say, toserver, "C");
 
     void sayteam(char *text)
     {
-        if(!m_teammode || !validteam(player1->team) || (m_round && player1->state == CS_DEAD) || player1->state == CS_SPECTATOR) return;
-        conoutf(CON_TEAMCHAT, "%s (%steam\ff): %s%s", colorname(player1), teamtextcode[player1->team], teamtextcode[player1->team], text);
-        addmsg(N_SAYTEAM, "rcs", player1, text);
+        if(!m_teammode || !validteam(self->team) || (m_round && self->state == CS_DEAD) || self->state == CS_SPECTATOR) return;
+        conoutf(CON_TEAMCHAT, "%s (%steam\ff): %s%s", colorname(self), teamtextcode[self->team], teamtextcode[self->team], text);
+        addmsg(N_SAYTEAM, "rcs", self, text);
     }
     COMMAND(sayteam, "C");
 
@@ -1112,13 +1112,13 @@ namespace game
     {
         int rcn = parseplayer(Recipient);
         gameent *recipient = getclient(rcn);
-        if(!recipient || recipient->clientnum < 0 || recipient == player1 || recipient->aitype == AI_BOT)
+        if(!recipient || recipient->clientnum < 0 || recipient == self || recipient->aitype == AI_BOT)
         {
             conoutf(CON_CHAT, "\f5Invalid recipient");
             return;
         }
-        addmsg(N_WHISPER, "rcis", player1, recipient->clientnum, text);
-        conoutf(CON_CHAT, "%s (\f5whisper to \ff%s): \f5%s", colorname(player1), colorname(recipient), text);
+        addmsg(N_WHISPER, "rcis", self, recipient->clientnum, text);
+        conoutf(CON_CHAT, "%s (\f5whisper to \ff%s): \f5%s", colorname(self), colorname(recipient), text);
     }
     COMMAND(whisper, "ss");
 
@@ -1193,14 +1193,14 @@ namespace game
         loopv(players)
         {
             gameent *d = players[i];
-            if((d == player1 || d->ai) && (d->state == CS_ALIVE || d->state == CS_EDITING))
+            if((d == self || d->ai) && (d->state == CS_ALIVE || d->state == CS_EDITING))
             {
                 packetbuf q(100);
                 sendposition(d, q);
                 for(int j = i+1; j < players.length(); j++)
                 {
                     gameent *d = players[j];
-                    if((d == player1 || d->ai) && (d->state == CS_ALIVE || d->state == CS_EDITING))
+                    if((d == self || d->ai) && (d->state == CS_ALIVE || d->state == CS_EDITING))
                         sendposition(d, q);
                 }
                 sendclientpacket(q.finalize(), 0);
@@ -1259,13 +1259,13 @@ namespace game
     {
         packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
         putint(p, N_CONNECT);
-        sendstring(player1->name, p);
-        putint(p, player1->playermodel);
-        putint(p, player1->playercolor);
+        sendstring(self->name, p);
+        putint(p, self->playermodel);
+        putint(p, self->playercolor);
         string hash = "";
         if(connectpass[0])
         {
-            server::hashpassword(player1->clientnum, sessionid, connectpass, hash);
+            server::hashpassword(self->clientnum, sessionid, connectpass, hash);
             memset(connectpass, 0, sizeof(connectpass));
         }
         sendstring(hash, p);
@@ -1290,13 +1290,13 @@ namespace game
         // don't care if he's in the scenery or other players,
         // just don't overlap with our client
 
-        const float r = player1->radius+d->radius;
-        const float dx = player1->o.x-d->o.x;
-        const float dy = player1->o.y-d->o.y;
-        const float dz = player1->o.z-d->o.z;
-        const float rz = player1->aboveeye+d->eyeheight;
+        const float r = self->radius+d->radius;
+        const float dx = self->o.x-d->o.x;
+        const float dy = self->o.y-d->o.y;
+        const float dz = self->o.z-d->o.z;
+        const float rz = self->aboveeye+d->eyeheight;
         const float fx = (float)fabs(dx), fy = (float)fabs(dy), fz = (float)fabs(dz);
-        if(fx<r && fy<r && fz<rz && player1->state!=CS_SPECTATOR && d->state!=CS_DEAD)
+        if(fx<r && fy<r && fz<rz && self->state!=CS_SPECTATOR && d->state!=CS_DEAD)
         {
             if(fx<fy) d->o.y += dy<0 ? r-fy : -(r-fy);  // push aside
             else      d->o.x += dx<0 ? r-fx : -(r-fx);
@@ -1415,13 +1415,13 @@ namespace game
         if(!d) { static gameent dummy; d = &dummy; }
         if(resume)
         {
-            if(d==player1) getint(p);
+            if(d==self) getint(p);
             else d->state = getint(p);
             d->frags = getint(p);
             d->flags = getint(p);
             d->deaths = getint(p);
             d->points = getint(p);
-            if(d==player1)
+            if(d==self)
             {
                 getint(p); // poweruptype
                 getint(p); // powerupmillis
@@ -1442,7 +1442,7 @@ namespace game
         d->health = getint(p);
         d->maxhealth = getint(p);
         d->shield = getint(p);
-        if(resume && d==player1)
+        if(resume && d==self)
         {
             getint(p); // gunselect
             loopi(NUMGUNS) getint(p);
@@ -1477,7 +1477,7 @@ namespace game
                     return;
                 }
                 sessionid = getint(p);
-                player1->clientnum = mycn;      // we are now connected
+                self->clientnum = mycn;      // we are now connected
                 if(getint(p) > 0) conoutf("this server is password protected");
                 getstring(servdesc, p, sizeof(servdesc));
                 getstring(servauth, p, sizeof(servauth));
@@ -1500,7 +1500,7 @@ namespace game
                 if(!demopacket)
                 {
                     gamepaused = val;
-                    player1->attacking = ACT_IDLE;
+                    self->attacking = ACT_IDLE;
                 }
                 if(a) conoutf(CON_GAMEINFO, "%s \fs\f2%s the game\fr", colorname(a), val ? "paused" : "resumed");
                 else conoutf(CON_GAMEINFO, "\f2Game is %s", val ? "paused" : "resumed");
@@ -1602,9 +1602,9 @@ namespace game
             case N_FORCEDEATH:
             {
                 int cn = getint(p);
-                gameent *d = cn==player1->clientnum ? player1 : newclient(cn);
+                gameent *d = cn==self->clientnum ? self : newclient(cn);
                 if(!d) break;
-                if(d==player1)
+                if(d==self)
                 {
                     if(editmode) toggleedit();
                 }
@@ -1649,7 +1649,7 @@ namespace game
                 }
                 else // new client joined
                 {
-                    if(d!=player1 && notify)
+                    if(d!=self && notify)
                     {
                         conoutf(CON_CHAT, "%s \fs\f0joined the game\fr", colorname(d, text));
                         if(chatsound == 1) playsound(S_CHAT);
@@ -1723,7 +1723,7 @@ namespace game
                 if(!s) { parsestate(NULL, p); break; }
                 if(s!=hudplayer() && s->state==CS_DEAD && s->lastpain) saveragdoll(s);
                 else cleanragdoll(s);
-                if(s==player1)
+                if(s==self)
                 {
                     if(editmode) toggleedit();
                 }
@@ -1732,7 +1732,7 @@ namespace game
                 s->state = CS_ALIVE;
                 if(cmode) cmode->pickspawn(s);
                 else findplayerspawn(s, -1, m_teammode ? s->team : 0);
-                if(s == player1) hidescoreboard();
+                if(s == self) hidescoreboard();
                 if(cmode) cmode->respawned(s);
                 ai::spawned(s);
                 checkfollow();
@@ -1784,7 +1784,7 @@ namespace game
             case N_REGENERATE:
             {
                 int cn = getint(p), health = getint(p);
-                gameent *d = cn==player1->clientnum ? player1 : getclient(cn);
+                gameent *d = cn==self->clientnum ? self : getclient(cn);
                 d->health = health;
                 if(regensound && m_regen(mutators) && d->health <= d->maxhealth && !d->juggernaut && !d->zombie)
                     playsound(S_REGENERATION, d);
@@ -1794,7 +1794,7 @@ namespace game
             case N_REPAMMO:
             {
                 int cn = getint(p), gun = getint(p), ammo = getint(p);
-                gameent *d = cn==player1->clientnum ? player1 : getclient(cn);
+                gameent *d = cn==self->clientnum ? self : getclient(cn);
                 d->ammo[gun] = ammo;
                 break;
             }
@@ -1822,7 +1822,7 @@ namespace game
                 if(!target || !actor) break;
                 target->health = health;
                 target->shield = shield;
-                if(target->state == CS_ALIVE && actor != player1) target->lastpain = lastmillis;
+                if(target->state == CS_ALIVE && actor != self) target->lastpain = lastmillis;
                 if(attacks[atk].projspeed || target == actor) damaged(damage, target->o, target, actor, atk, flags, false);
                 break;
             }
@@ -1902,7 +1902,7 @@ namespace game
                 {
                     int cn = getint(p);
                     if(p.overread() || cn<0) break;
-                    gameent *d = (cn == player1->clientnum ? player1 : newclient(cn));
+                    gameent *d = (cn == self->clientnum ? self : newclient(cn));
                     parsestate(d, p, true);
                 }
                 break;
@@ -2066,7 +2066,7 @@ namespace game
             }
 
             case N_PONG:
-                addmsg(N_CLIENTPING, "i", player1->ping = (player1->ping*5+totalmillis-getint(p))/6);
+                addmsg(N_CLIENTPING, "i", self->ping = (self->ping*5+totalmillis-getint(p))/6);
                 break;
 
             case N_CLIENTPING:
@@ -2099,10 +2099,10 @@ namespace game
             case N_DEMOPLAYBACK:
             {
                 int on = getint(p);
-                if(on) player1->state = CS_SPECTATOR;
+                if(on) self->state = CS_SPECTATOR;
                 else clearclients();
                 demoplayback = on!=0;
-                player1->clientnum = getint(p);
+                self->clientnum = getint(p);
                 gamepaused = false;
                 checkfollow();
                 execident(on ? "demostart" : "demoend");
@@ -2115,7 +2115,7 @@ namespace game
                 loopv(players) players[i]->privilege = PRIV_NONE;
                 while((mn = getint(p))>=0 && !p.overread())
                 {
-                    gameent *m = mn==player1->clientnum ? player1 : newclient(mn);
+                    gameent *m = mn==self->clientnum ? self : newclient(mn);
                     int priv = getint(p);
                     if(m) m->privilege = priv;
                 }
@@ -2156,16 +2156,16 @@ namespace game
             {
                 int sn = getint(p), val = getint(p), waiting = getint(p);
                 gameent *s;
-                if(sn==player1->clientnum)
+                if(sn==self->clientnum)
                 {
-                    s = player1;
-                    if(val && remote && !player1->privilege) senditemstoserver = false;
+                    s = self;
+                    if(val && remote && !self->privilege) senditemstoserver = false;
                 }
                 else s = newclient(sn);
                 if(!s) return;
                 if(val)
                 {
-                    if(s==player1)
+                    if(s==self)
                     {
                         if(editmode) toggleedit();
                         if(s->state==CS_DEAD) hidescoreboard();
@@ -2227,7 +2227,7 @@ namespace game
                 loopi(NUMGUNS) d->ammo[i] = 0;
                 d->baseammo(gun);
                 d->gunselect = gun;
-                if(m_randomweapon(mutators) && player1->zombie)
+                if(m_randomweapon(mutators) && self->zombie)
                     playsound(S_VOOSH, d, &d->o);
                 break;
             }
@@ -2242,7 +2242,7 @@ namespace game
                 int size = getint(p);
                 if(size>=0) emptymap(size, true, NULL);
                 else enlargemap(true);
-                if(d && d!=player1)
+                if(d && d!=self)
                 {
                     int newsize = 0;
                     while(1<<newsize < getworldsize()) newsize++;
@@ -2398,7 +2398,7 @@ namespace game
     {
         if(remote)
         {
-            if(player1->privilege<PRIV_MASTER) return;
+            if(self->privilege<PRIV_MASTER) return;
             addmsg(N_STOPDEMO, "r");
         }
         else server::stopdemo();
@@ -2407,14 +2407,14 @@ namespace game
 
     void recorddemo(int val)
     {
-        if(remote && player1->privilege<PRIV_MASTER) return;
+        if(remote && self->privilege<PRIV_MASTER) return;
         addmsg(N_RECORDDEMO, "ri", val);
     }
     ICOMMAND(recorddemo, "i", (int *val), recorddemo(*val));
 
     void cleardemos(int val)
     {
-        if(remote && player1->privilege<PRIV_MASTER) return;
+        if(remote && self->privilege<PRIV_MASTER) return;
         addmsg(N_CLEARDEMOS, "ri", val);
     }
     ICOMMAND(cleardemos, "i", (int *val), cleardemos(*val));
@@ -2447,7 +2447,7 @@ namespace game
 
     void sendmap()
     {
-        if(!m_edit || (player1->state==CS_SPECTATOR && remote && !player1->privilege)) { conoutf(CON_ERROR, "\"sendmap\" only works in coop edit mode"); return; }
+        if(!m_edit || (self->state==CS_SPECTATOR && remote && !self->privilege)) { conoutf(CON_ERROR, "\"sendmap\" only works in coop edit mode"); return; }
         conoutf("sending map...");
         defformatstring(mname, "sendmap_%d", lastmillis);
         save_world(mname, true);
@@ -2472,29 +2472,29 @@ namespace game
 
     void gotoplayer(const char *arg)
     {
-        if(player1->state!=CS_SPECTATOR && player1->state!=CS_EDITING) return;
+        if(self->state!=CS_SPECTATOR && self->state!=CS_EDITING) return;
         int i = parseplayer(arg);
         if(i>=0)
         {
             gameent *d = getclient(i);
-            if(!d || d==player1) return;
-            player1->o = d->o;
+            if(!d || d==self) return;
+            self->o = d->o;
             vec dir;
-            vecfromyawpitch(player1->yaw, player1->pitch, 1, 0, dir);
-            player1->o.add(dir.mul(-32));
-            player1->resetinterp();
+            vecfromyawpitch(self->yaw, self->pitch, 1, 0, dir);
+            self->o.add(dir.mul(-32));
+            self->resetinterp();
         }
     }
     COMMANDN(goto, gotoplayer, "s");
 
     void gotosel()
     {
-        if(player1->state!=CS_EDITING) return;
-        player1->o = getselpos();
+        if(self->state!=CS_EDITING) return;
+        self->o = getselpos();
         vec dir;
-        vecfromyawpitch(player1->yaw, player1->pitch, 1, 0, dir);
-        player1->o.add(dir.mul(-32));
-        player1->resetinterp();
+        vecfromyawpitch(self->yaw, self->pitch, 1, 0, dir);
+        self->o.add(dir.mul(-32));
+        self->resetinterp();
     }
     COMMAND(gotosel, "");
 }

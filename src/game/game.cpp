@@ -6,8 +6,8 @@ namespace game
     int maptime = 0, maprealtime = 0, maplimit = -1;
     int lastspawnattempt = 0;
 
-    gameent *player1 = NULL;         // our client
-    vector<gameent *> players;       // other clients
+    gameent *self = NULL; // ourselves (our client)
+    vector<gameent *> players; // other clients
     vector<gameent *> bestplayers;
     vector<int> bestteams;
 
@@ -15,10 +15,10 @@ namespace game
     {
         if(d->state!=CS_ALIVE || lastmillis-d->lasttaunt<1000) return;
         d->lasttaunt = lastmillis;
-        addmsg(N_TAUNT, "rc", player1);
+        addmsg(N_TAUNT, "rc", self);
         playsound(d->tauntsound(), d);
     }
-    ICOMMAND(taunt, "", (), taunt(player1));
+    ICOMMAND(taunt, "", (), taunt(self));
 
     int following = -1;
 
@@ -30,7 +30,7 @@ namespace game
 
     gameent *followingplayer(gameent *fallback)
     {
-        if(player1->state!=CS_SPECTATOR || following<0) return fallback;
+        if(self->state!=CS_SPECTATOR || following<0) return fallback;
         gameent *target = getclient(following);
         if(target && target->state!=CS_SPECTATOR) return target;
         return fallback;
@@ -56,9 +56,9 @@ namespace game
         int cn = -1;
         if(arg[0])
         {
-            if(player1->state != CS_SPECTATOR) return;
+            if(self->state != CS_SPECTATOR) return;
             cn = parseplayer(arg);
-            if(cn == player1->clientnum) cn = -1;
+            if(cn == self->clientnum) cn = -1;
         }
         if(cn < 0 && (following < 0 || specmode)) return;
         following = cn;
@@ -67,12 +67,12 @@ namespace game
 
     void nextfollow(int dir)
     {
-        if(player1->state!=CS_SPECTATOR) return;
+        if(self->state!=CS_SPECTATOR) return;
         int cur = following >= 0 ? following : (dir > 0 ? clients.length() - 1 : 0);
         loopv(clients)
         {
             cur = (cur + dir + clients.length()) % clients.length();
-            if(clients[cur] && canfollow(player1, clients[cur]))
+            if(clients[cur] && canfollow(self, clients[cur]))
             {
                 following = cur;
                 return;
@@ -84,7 +84,7 @@ namespace game
 
     void checkfollow()
     {
-        if(player1->state != CS_SPECTATOR)
+        if(self->state != CS_SPECTATOR)
         {
             if(following >= 0) stopfollowing();
         }
@@ -119,32 +119,32 @@ namespace game
         if(ispaused()) return;
         if(m_mp(gamemode))
         {
-            int seq = (player1->lifesequence<<16)|((lastmillis/1000)&0xFFFF);
-            if(player1->respawned!=seq)
+            int seq = (self->lifesequence<<16)|((lastmillis/1000)&0xFFFF);
+            if(self->respawned!=seq)
             {
-                addmsg(N_TRYSPAWN, "rc", player1);
-                player1->respawned = seq;
+                addmsg(N_TRYSPAWN, "rc", self);
+                self->respawned = seq;
             }
         }
         else
         {
-            spawnplayer(player1);
+            spawnplayer(self);
             hidescoreboard();
-            if(cmode) cmode->respawned(player1);
+            if(cmode) cmode->respawned(self);
         }
         execident("on_spawn");
     }
 
     gameent *pointatplayer()
     {
-        loopv(players) if(players[i] != player1 && intersect(players[i], player1->o, worldpos)) return players[i];
+        loopv(players) if(players[i] != self && intersect(players[i], self->o, worldpos)) return players[i];
         return NULL;
     }
 
     gameent *hudplayer()
     {
-        if((thirdperson && allowthirdperson()) || specmode > 1) return player1;
-        return followingplayer(player1);
+        if((thirdperson && allowthirdperson()) || specmode > 1) return self;
+        return followingplayer(self);
     }
 
     void setupcamera()
@@ -152,10 +152,10 @@ namespace game
         gameent *target = followingplayer();
         if(target)
         {
-            player1->yaw = target->yaw;
-            player1->pitch = target->state==CS_DEAD ? 0 : target->pitch;
-            player1->o = target->o;
-            player1->resetinterp();
+            self->yaw = target->yaw;
+            self->pitch = target->state==CS_DEAD ? 0 : target->pitch;
+            self->o = target->o;
+            self->resetinterp();
         }
     }
 
@@ -163,12 +163,12 @@ namespace game
     {
         gameent *d = followingplayer();
         if(d) return specmode > 1 || d->state == CS_DEAD;
-        return intermission || player1->state == CS_DEAD;
+        return intermission || self->state == CS_DEAD;
     }
 
     bool collidecamera()
     {
-        switch(player1->state)
+        switch(self->state)
         {
             case CS_EDITING: return false;
             case CS_SPECTATOR: return followingplayer()!=NULL;
@@ -207,7 +207,7 @@ namespace game
         loopv(players)
         {
             gameent *d = players[i];
-            if(d == player1 || d->ai) continue;
+            if(d == self || d->ai) continue;
 
             if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d);
             else if(!intermission && d->state==CS_ALIVE)
@@ -245,17 +245,17 @@ namespace game
         if(!curtime)
         {
             gets2c();
-            if(player1->clientnum>=0) c2sinfo();
+            if(self->clientnum>=0) c2sinfo();
             return;
         }
 
         physicsframe();
         ai::navigate();
-        if(player1->state != CS_DEAD && !intermission)
+        if(self->state != CS_DEAD && !intermission)
         {
-            if(player1->powerupmillis)
+            if(self->powerupmillis)
             {
-                entities::updatepowerups(curtime, player1);
+                entities::updatepowerups(curtime, self);
             }
         }
         updateweapons(curtime);
@@ -265,27 +265,27 @@ namespace game
         gets2c();
         if(connected)
         {
-            if(player1->state == CS_DEAD)
+            if(self->state == CS_DEAD)
             {
-                if(player1->ragdoll) moveragdoll(player1);
-                else if(lastmillis-player1->lastpain<2000)
+                if(self->ragdoll) moveragdoll(self);
+                else if(lastmillis-self->lastpain<2000)
                 {
-                    player1->move = player1->strafe = 0;
-                    moveplayer(player1, 10, true);
+                    self->move = self->strafe = 0;
+                    moveplayer(self, 10, true);
                 }
             }
             else if(!intermission)
             {
-                if(player1->ragdoll) cleanragdoll(player1);
-                crouchplayer(player1, 10, true);
-                moveplayer(player1, 10, true);
+                if(self->ragdoll) cleanragdoll(self);
+                crouchplayer(self, 10, true);
+                moveplayer(self, 10, true);
                 swayhudgun(curtime);
-                entities::checkitems(player1);
-                if(cmode) cmode->checkitems(player1);
+                entities::checkitems(self);
+                if(cmode) cmode->checkitems(self);
             }
         }
         int mat = lookupmaterial(camera1->o);
-        if(player1->state!=CS_EDITING && mat&MAT_WATER) waterchan = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterchan);
+        if(self->state!=CS_EDITING && mat&MAT_WATER) waterchan = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterchan);
         else
         {
             if(waterchan >= 0)
@@ -294,7 +294,7 @@ namespace game
                 waterchan = -1;
             }
         }
-        if(player1->clientnum>=0) c2sinfo();   // do this last, to reduce the effective frame lag
+        if(self->clientnum>=0) c2sinfo();   // do this last, to reduce the effective frame lag
     }
 
     void spawnplayer(gameent *d)   // place at random spawn
@@ -302,7 +302,7 @@ namespace game
         if(cmode) cmode->pickspawn(d);
         else findplayerspawn(d, -1, m_teammode ? d->team : 0);
         spawnstate(d);
-        if(d==player1)
+        if(d==self)
         {
             if(editmode) d->state = CS_EDITING;
             else if(d->state != CS_SPECTATOR) d->state = CS_ALIVE;
@@ -313,10 +313,10 @@ namespace game
 
     void respawn()
     {
-        if(player1->state==CS_DEAD)
+        if(self->state==CS_DEAD)
         {
-            player1->attacking = ACT_IDLE;
-            int wait = cmode ? cmode->respawnwait(player1) : 0;
+            self->attacking = ACT_IDLE;
+            int wait = cmode ? cmode->respawnwait(self) : 0;
             if(wait>0)
             {
                 lastspawnattempt = lastmillis;
@@ -324,8 +324,8 @@ namespace game
             }
             int weapon = -1;
             if(primaryweapon[0]) weapon = getweapon(primaryweapon);
-            player1->primary = weapon;
-            addmsg(N_PRIMARYWEAPON, "ri", player1->primary);
+            self->primary = weapon;
+            addmsg(N_PRIMARYWEAPON, "ri", self->primary);
             respawnself();
         }
     }
@@ -335,8 +335,8 @@ namespace game
     void doaction(int act)
     {
         if(!connected || intermission) return;
-        if((player1->attacking = act)) respawn();
-        player1->lastact = act;
+        if((self->attacking = act)) respawn();
+        self->lastact = act;
     }
     ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
@@ -344,8 +344,8 @@ namespace game
 
     void useitem()
     {
-        if(!player1->item || !validitem(player1->item)) return;
-        addmsg(N_USEITEM, "rc", player1);
+        if(!self->item || !validitem(self->item)) return;
+        addmsg(N_USEITEM, "rc", self);
     }
     COMMAND(useitem, "");
 
@@ -353,13 +353,13 @@ namespace game
     {
         if(!connected || intermission) return false;
         respawn();
-        return player1->state!=CS_DEAD;
+        return self->state!=CS_DEAD;
     }
 
     bool cancrouch()
     {
         if(!connected || intermission) return false;
-        return player1->state!=CS_DEAD;
+        return self->state!=CS_DEAD;
     }
 
     bool allowmove(physent *d)
@@ -376,7 +376,7 @@ namespace game
 
     bool allowthirdperson()
     {
-        return player1->state==CS_SPECTATOR || m_edit;
+        return self->state==CS_SPECTATOR || m_edit;
     }
     ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
 
@@ -399,7 +399,7 @@ namespace game
 
         gameent *h = hudplayer();
 
-        if(h!=player1 && actor==h && d!=actor)
+        if(h!=self && actor==h && d!=actor)
         {
             if(hitsound && actor->lasthit != lastmillis)
                 playsound(isally(d, actor) ? S_HIT_ALLY : (hitsound == 1 ? S_HIT1 : S_HIT2));
@@ -432,7 +432,7 @@ namespace game
             else playsound(d->diesound(), d);
             d->deaths++;
         }
-        if(d==player1)
+        if(d==self)
         {
             disablezoom();
             d->attacking = ACT_IDLE;
@@ -467,8 +467,8 @@ namespace game
     void writeobituary(gameent *d, gameent *actor, int atk, bool headshot)
     {
         // console messages
-        gameent *h = followingplayer(player1);
-        if(!h) h = player1;
+        gameent *h = followingplayer(self);
+        if(!h) h = self;
         int contype = d==h || actor==h ? CON_FRAG_SELF : CON_FRAG_OTHER;
         const char *act = "killed";
         if(attacks[atk].gun == GUN_ZOMBIE)
@@ -498,7 +498,7 @@ namespace game
         {
             d->editstate = CS_DEAD;
             d->deaths++;
-            if(d!=player1) d->resetinterp();
+            if(d!=self) d->resetinterp();
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
@@ -506,7 +506,7 @@ namespace game
         if(flags)
         {
             if(actor->aitype == AI_BOT) taunt(actor);
-            if(flags & K_HEADSHOT && actor == followingplayer(player1))
+            if(flags & K_HEADSHOT && actor == followingplayer(self))
             {
                 playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
             }
@@ -515,8 +515,8 @@ namespace game
         deathstate(d);
         ai::kill(d, actor);
         // events
-        if(d == player1) execident("on_death");
-        if(actor == player1) execident("on_kill");
+        if(d == self) execident("on_death");
+        if(actor == self) execident("on_kill");
     }
 
     void timeupdate(int secs)
@@ -529,7 +529,7 @@ namespace game
         {
             maplimit = lastmillis + 45*1000;
             intermission = true;
-            player1->attacking = ACT_IDLE;
+            self->attacking = ACT_IDLE;
             if(cmode) cmode->gameover();
             conoutf(CON_GAMEINFO, "\f2Intermission: game has ended!");
             bestteams.shrink(0);
@@ -537,7 +537,7 @@ namespace game
             if(m_teammode) getbestteams(bestteams);
             else getbestplayers(bestplayers);
 
-            if(validteam(player1->team) ? bestteams.htfind(player1->team)>=0 : bestplayers.find(player1)>=0)
+            if(validteam(self->team) ? bestteams.htfind(self->team)>=0 : bestplayers.find(self)>=0)
             {
                 playsound(S_INTERMISSION_WIN);
                 playsound(S_ANNOUNCER_WIN, NULL, NULL, NULL, SND_ANNOUNCER);
@@ -548,12 +548,12 @@ namespace game
         }
     }
 
-    ICOMMAND(getfrags, "", (), intret(player1->frags));
-    ICOMMAND(getflags, "", (), intret(player1->flags));
-    ICOMMAND(getdeaths, "", (), intret(player1->deaths));
-    ICOMMAND(getaccuracy, "", (), intret((player1->totaldamage*100)/max(player1->totalshots, 1)));
-    ICOMMAND(gettotaldamage, "", (), intret(player1->totaldamage));
-    ICOMMAND(gettotalshots, "", (), intret(player1->totalshots));
+    ICOMMAND(getfrags, "", (), intret(self->frags));
+    ICOMMAND(getflags, "", (), intret(self->flags));
+    ICOMMAND(getdeaths, "", (), intret(self->deaths));
+    ICOMMAND(getaccuracy, "", (), intret((self->totaldamage*100)/max(self->totalshots, 1)));
+    ICOMMAND(gettotaldamage, "", (), intret(self->totaldamage));
+    ICOMMAND(gettotalshots, "", (), intret(self->totalshots));
 
     vector<gameent *> clients;
 
@@ -565,7 +565,7 @@ namespace game
             return NULL;
         }
 
-        if(cn == player1->clientnum) return player1;
+        if(cn == self->clientnum) return self;
 
         while(cn >= clients.length()) clients.add(NULL);
         if(!clients[cn])
@@ -580,7 +580,7 @@ namespace game
 
     gameent *getclient(int cn)   // ensure valid entity
     {
-        if(cn == player1->clientnum) return player1;
+        if(cn == self->clientnum) return self;
         return clients.inrange(cn) ? clients[cn] : NULL;
     }
 
@@ -622,9 +622,9 @@ namespace game
 
     void initclient()
     {
-        player1 = spawnstate(new gameent);
-        filtertext(player1->name, "player", false, false, true, false, MAXNAMELEN);
-        players.add(player1);
+        self = spawnstate(new gameent);
+        filtertext(self->name, "player", false, false, true, false, MAXNAMELEN);
+        players.add(self);
     }
 
     VARP(showmodeinfo, 0, 1, 1);
@@ -674,8 +674,8 @@ namespace game
         ai::savewaypoints();
         ai::clearwaypoints(true);
 
-        if(!m_mp(gamemode)) spawnplayer(player1);
-        else findplayerspawn(player1, -1, m_teammode ? player1->team : 0);
+        if(!m_mp(gamemode)) spawnplayer(self);
+        else findplayerspawn(self, -1, m_teammode ? self->team : 0);
         entities::resetspawns();
         copystring(clientmap, name ? name : "");
 
@@ -720,7 +720,7 @@ namespace game
         {
             if(material!=MAT_LAVA)
             {
-                playsound(S_SPLASHOUT, NULL, d==player1 ? NULL : &d->o);
+                playsound(S_SPLASHOUT, NULL, d==self ? NULL : &d->o);
                 particle_splash(PART_WATER, 30, 100, o, 0xFFFFFF, 0.08f+rndscale(0.15f), 200, 5);
                 particle_splash(PART_STEAM, 50, 100, o, 0xFFFFFF, 0.80f);
 
@@ -728,7 +728,7 @@ namespace game
         }
         else if(waterlevel<0)
         {
-            playsound(material==MAT_LAVA ? S_BURN : S_SPLASHIN, NULL, d==player1 ? NULL : &d->o);
+            playsound(material==MAT_LAVA ? S_BURN : S_SPLASHIN, NULL, d==self ? NULL : &d->o);
             if(material!=MAT_LAVA)
             {
                 particle_splash(PART_WATER, 30, 200, o, 0xFFFFFF, 0.08f+rndscale(0.15f), 150, 4);
@@ -738,7 +738,7 @@ namespace game
         }
         if     (floorlevel>0)
         {
-            if(d==player1 || d->type!=ENT_PLAYER || ((gameent *)d)->ai)
+            if(d==self || d->type!=ENT_PLAYER || ((gameent *)d)->ai)
             {
                 if(!e->timeinair) msgsound(S_JUMP1, d);
                 else msgsound(S_JUMP2);
@@ -746,7 +746,7 @@ namespace game
         }
         else if(floorlevel<0)
         {
-            if(d==player1 || d->type!=ENT_PLAYER || ((gameent *)d)->ai)
+            if(d==self || d->type!=ENT_PLAYER || ((gameent *)d)->ai)
             {
                 if(d->state==CS_ALIVE)
                 {
@@ -798,7 +798,7 @@ namespace game
 
     void msgsound(int n, physent *d)
     {
-        if(!d || d == player1)
+        if(!d || d == self)
         {
             addmsg(N_SOUND, "ci", d, n);
             playsound(n, camera1);
@@ -822,14 +822,14 @@ namespace game
     bool duplicatename(gameent *d, const char *name = NULL, const char *alt = NULL)
     {
         if(!name) name = d->name;
-        if(alt && d != player1 && !strcmp(name, alt)) return true;
+        if(alt && d != self && !strcmp(name, alt)) return true;
         loopv(players) if(d!=players[i] && !strcmp(name, players[i]->name)) return true;
         return false;
     }
 
     const char *colorname(gameent *d, const char *name, const char * alt, const char *color)
     {
-        if(!name) name = alt && d == player1 ? alt : d->name;
+        if(!name) name = alt && d == self ? alt : d->name;
         bool dup = !name[0] || duplicatename(d, name, alt);
         if(dup || color[0])
         {
@@ -855,7 +855,7 @@ namespace game
 
     void damage(physent *d)
     {
-        if(d==player1 || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
+        if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
         {
             if(d->state!=CS_ALIVE) return;
             gameent *e = (gameent *)d;
@@ -873,7 +873,7 @@ namespace game
 
     void suicide(physent *d)
     {
-        if(d==player1 || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
+        if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
         {
             if(d->state!=CS_ALIVE) return;
             gameent *pl = (gameent *)d;
@@ -885,7 +885,7 @@ namespace game
             }
         }
     }
-    ICOMMAND(suicide, "", (), suicide(player1));
+    ICOMMAND(suicide, "", (), suicide(self));
 
     bool needminimap() { return m_ctf; }
 
@@ -950,7 +950,7 @@ namespace game
     {
         pushhudscale(h/1800.0f);
 
-        if(player1->state==CS_SPECTATOR)
+        if(self->state==CS_SPECTATOR)
         {
             float pw, ph, tw, th, fw, fh;
             text_boundsf("  ", pw, ph);

@@ -15,7 +15,7 @@ namespace game
 
     SVARP(primaryweapon, "");
 
-    ICOMMAND(getweapon, "", (), intret(player1->gunselect));
+    ICOMMAND(getweapon, "", (), intret(self->gunselect));
 
     void gunselect(int gun, gameent *d)
     {
@@ -24,23 +24,23 @@ namespace game
             return;
         }
         addmsg(N_GUNSELECT, "rci", d, gun);
-        playsound(S_WEAPON_LOAD, d);
         d->gunselect = gun;
         d->lastswitch = lastmillis;
+        playsound(S_WEAPON_LOAD, d);
         disablezoom();
     }
 
     void nextweapon(int dir, bool force = false)
     {
-        if(player1->state!=CS_ALIVE) return;
+        if(self->state!=CS_ALIVE) return;
         dir = (dir < 0 ? NUMGUNS-1 : 1);
-        int gun = player1->gunselect;
+        int gun = self->gunselect;
         loopi(NUMGUNS)
         {
             gun = (gun + dir)%NUMGUNS;
-            if(force || player1->ammo[gun]) break;
+            if(force || self->ammo[gun]) break;
         }
-        if(gun != player1->gunselect) gunselect(gun, player1);
+        if(gun != self->gunselect) gunselect(gun, self);
     }
     ICOMMAND(nextweapon, "ii", (int *dir, int *force), nextweapon(*dir, *force!=0));
 
@@ -58,34 +58,34 @@ namespace game
     void setweapon(const char *name, bool force = false)
     {
         int gun = getweapon(name);
-        if(player1->state!=CS_ALIVE || !validgun(gun)) return;
-        if(force || player1->ammo[gun]) gunselect(gun, player1);
+        if(self->state!=CS_ALIVE || !validgun(gun)) return;
+        if(force || self->ammo[gun]) gunselect(gun, self);
         else playsound(S_WEAPON_NOAMMO);
     }
     ICOMMAND(setweapon, "si", (char *name, int *force), setweapon(name, *force!=0));
 
     void setprimaryweapon(const char *alternative)
     {
-        if(!m_multipleweapons(mutators)) gunselect(player1->primary, player1);
+        if(!m_multipleweapons(mutators)) gunselect(self->primary, self);
         else
         {
             int weapon = getweapon(alternative);
-            if(player1->ammo[weapon]) gunselect(weapon, player1);
+            if(self->ammo[weapon]) gunselect(weapon, self);
         }
     }
     ICOMMAND(setprimaryweapon, "s", (char *alternative), setprimaryweapon(alternative));
 
     void cycleweapon(int numguns, int *guns, bool force = false)
     {
-        if(numguns<=0 || player1->state!=CS_ALIVE) return;
+        if(numguns<=0 || self->state!=CS_ALIVE) return;
         int offset = 0;
-        loopi(numguns) if(guns[i] == player1->gunselect) { offset = i+1; break; }
+        loopi(numguns) if(guns[i] == self->gunselect) { offset = i+1; break; }
         loopi(numguns)
         {
             int gun = guns[(i+offset)%numguns];
-            if(gun>=0 && gun<NUMGUNS && (force || player1->ammo[gun]))
+            if(gun>=0 && gun<NUMGUNS && (force || self->ammo[gun]))
             {
-                gunselect(gun, player1);
+                gunselect(gun, self);
                 return;
             }
         }
@@ -113,15 +113,15 @@ namespace game
 
     ICOMMAND(weapon, "V", (tagval *args, int numargs),
     {
-        if(player1->state!=CS_ALIVE) return;
+        if(self->state!=CS_ALIVE) return;
         loopi(3)
         {
             const char *name = i < numargs ? args[i].getstr() : "";
             if(name[0])
             {
                 int gun = getweapon(name);
-                if(validgun(gun) && gun != player1->gunselect && player1->ammo[gun]) { gunselect(gun, player1); return; }
-            } else { weaponswitch(player1); return; }
+                if(validgun(gun) && gun != self->gunselect && self->ammo[gun]) { gunselect(gun, self); return; }
+            } else { weaponswitch(self); return; }
         }
         playsound(S_WEAPON_NOAMMO);
     });
@@ -471,7 +471,7 @@ namespace game
         {
             f->lastpain = lastmillis;
             if(at->type==ENT_PLAYER && f!=at && !isally(f, at)) at->totaldamage += dam;
-            if(at==player1 && d!=at)
+            if(at==self && d!=at)
             {
                 extern int hitsound;
                 if(hitsound && at->lasthit != lastmillis)
@@ -494,9 +494,9 @@ namespace game
             h.info2 = info2;
             h.flags = flags;
             h.dir = f==at ? ivec(0, 0, 0) : ivec(vec(vel).mul(DNF));
-            if(at==player1 && dam > 0)
+            if(at==self && dam > 0)
             {
-                if(f==player1)
+                if(f==self)
                 {
                     if(lastmillis-f->lastyelp > 500) damageblend(dam);
                     if(f!=at) damagecompass(dam, at ? at->o : f->o);
@@ -676,7 +676,7 @@ namespace game
     void updateprojectiles(int time)
     {
         if(projs.empty()) return;
-        gameent *noside = followingplayer(player1);
+        gameent *noside = followingplayer(self);
         loopv(projs)
         {
             projectile &p = projs[i];
@@ -1056,7 +1056,7 @@ namespace game
         gameent *pl = (gameent *)owner;
         if(pl->muzzle.x < 0 || pl->lastattack < 0 || attacks[pl->lastattack].gun != pl->gunselect) return;
         o = pl->muzzle;
-        hud = owner == followingplayer(player1) ? vec(pl->o).add(vec(0, 0, 2)) : pl->muzzle;
+        hud = owner == followingplayer(self) ? vec(pl->o).add(vec(0, 0, 2)) : pl->muzzle;
     }
 
     float intersectdist = 1e16f;
@@ -1202,7 +1202,7 @@ namespace game
         d->lastattack = atk;
         if(attacks[atk].action!=ACT_MELEE && (!d->ammo[gun] || attacks[atk].use > d->ammo[gun]))
         {
-            if(d==player1)
+            if(d==self)
             {
                 msgsound(S_WEAPON_NOAMMO, d);
                 d->gunwait = 600;
@@ -1235,7 +1235,7 @@ namespace game
 
         shoteffects(atk, from, to, d, true, 0, prevaction);
 
-        if(d==player1 || d->ai)
+        if(d==self || d->ai)
         {
             addmsg(N_SHOOT, "rci2i6iv", d, lastmillis-maptime, atk,
                    (int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
@@ -1419,10 +1419,10 @@ namespace game
     void updateweapons(int curtime)
     {
         updateprojectiles(curtime);
-        if(player1->clientnum>=0 && player1->state==CS_ALIVE) shoot(player1, worldpos); // only shoot when connected to server
+        if(self->clientnum>=0 && self->state==CS_ALIVE) shoot(self, worldpos); // only shoot when connected to server
         updatebouncers(curtime); // need to do this after the player shoots so bouncers don't end up inside player's BB next frame
         gameent *following = followingplayer();
-        if(!following) following = player1;
+        if(!following) following = self;
         loopv(players)
         {
             gameent *d = players[i];

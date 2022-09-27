@@ -147,7 +147,7 @@ namespace game
     ICOMMAND(scoreboardpj, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
-        if(d && d != player1)
+        if(d && d != self)
         {
             if(d->state==CS_LAGGED) result("LAG");
             else intret(d->plag);
@@ -165,17 +165,17 @@ namespace game
     });
 
     ICOMMAND(scoreboardshowfrags, "", (), intret(cmode && cmode->hidefrags() ? 0 : 1));
-    ICOMMAND(scoreboardshowclientnum, "", (), intret(showclientnum || player1->privilege>=PRIV_MASTER ? 1 : 0));
+    ICOMMAND(scoreboardshowclientnum, "", (), intret(showclientnum || self->privilege>=PRIV_MASTER ? 1 : 0));
     ICOMMAND(scoreboardmultiplayer, "", (), intret(multiplayer(false) || demoplayback ? 1 : 0));
 
     ICOMMAND(scoreboardhighlight, "i", (int *cn),
-        intret(*cn == player1->clientnum && highlightscore && (multiplayer(false) || demoplayback || players.length() > 1) ? 0x808080 : 0));
+        intret(*cn == self->clientnum && highlightscore && (multiplayer(false) || demoplayback || players.length() > 1) ? 0x808080 : 0));
 
     ICOMMAND(scoreboardservinfo, "", (),
     {
         if(!showservinfo) return;
         const ENetAddress *address = connectedpeer();
-        if(address && player1->clientnum >= 0)
+        if(address && self->clientnum >= 0)
         {
             if(servdesc[0])
             {

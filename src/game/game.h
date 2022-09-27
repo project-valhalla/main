@@ -757,7 +757,7 @@ namespace game
     extern string clientmap;
     extern bool intermission;
     extern int maptime, maprealtime, maplimit;
-    extern gameent *player1;
+    extern gameent *self;
     extern vector<gameent *> players, clients;
     extern int lastspawnattempt;
     extern int following;

@@ -420,7 +420,7 @@ struct ctfclientmode : clientmode
             if(wait>=0)
             {
                 pushhudscale(2);
-                bool flash = wait>0 && d==player1 && lastspawnattempt>=d->lastpain && lastmillis < lastspawnattempt+100;
+                bool flash = wait>0 && d==self && lastspawnattempt>=d->lastpain && lastmillis < lastspawnattempt+100;
                 draw_textf("%s%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, flash ? "\f3" : "", wait);
                 pophudmatrix();
                 resethudshader();
@@ -474,7 +474,7 @@ struct ctfclientmode : clientmode
             else if(f.team==2) color = vec(1, 0.25f, 0.25f);
             else color = vec(0.80f, 0.80f, 0.80f);
             adddynlight(pos, 30, color, 1, 20);
-            if(player1->state!=CS_EDITING) f.chan = playsound(S_FLAGLOOP, NULL, f.owner == player1? NULL: &pos, NULL, 0, -1, 500, f.chan, 200);
+            if(self->state!=CS_EDITING) f.chan = playsound(S_FLAGLOOP, NULL, f.owner == self? NULL: &pos, NULL, 0, -1, 500, f.chan, 200);
             else
             {
                 stopsound(S_FLAGLOOP, f.chan);
@@ -530,7 +530,7 @@ struct ctfclientmode : clientmode
             {
                 flag &f = flags[i];
                 f.version = version;
-                f.owner = owner>=0 ? (owner==player1->clientnum ? player1 : newclient(owner)) : NULL;
+                f.owner = owner>=0 ? (owner==self->clientnum ? self : newclient(owner)) : NULL;
                 f.droptime = dropped;
                 f.droploc = dropped ? droploc : f.spawnloc;
                 f.interptime = 0;
@@ -543,9 +543,9 @@ struct ctfclientmode : clientmode
     void trydropflag()
     {
         if(!m_ctf) return;
-        loopv(flags) if(flags[i].owner == player1)
+        loopv(flags) if(flags[i].owner == self)
         {
-            addmsg(N_TRYDROPFLAG, "rc", player1);
+            addmsg(N_TRYDROPFLAG, "rc", self);
             return;
         }
     }
@@ -637,10 +637,10 @@ struct ctfclientmode : clientmode
             d->flagpickup &= ~(1<<f.id);
             if(d->feetpos().dist(f.spawnloc) < FLAGRADIUS) d->flagpickup |= 1<<f.id;
         }
-        if(d!=player1) particle_textcopy(d->abovehead(), tempformatstring("%d", score), PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
+        if(d!=self) particle_textcopy(d->abovehead(), tempformatstring("%d", score), PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
         d->flags = dflags;
         conoutf(CON_GAMEINFO, "%s \fs\f2scored for\fr %s", teamcolorname(d), teamcolor("\fs\f2team\fr ", "", team, "\fs\f2a team\fr"));
-        playsound(team==player1->team ? S_FLAGSCORE : S_FLAGFAIL);
+        playsound(team==self->team ? S_FLAGSCORE : S_FLAGFAIL);
         playsound(team==1 ? S_ANNOUNCER_FLAGSCORE_BLUE : S_ANNOUNCER_FLAGSCORE_RED, NULL, NULL, NULL, SND_ANNOUNCER);
         if(d->aitype==AI_BOT) taunt(d);
 
@@ -939,7 +939,7 @@ case N_DROPFLAG:
     int ocn = getint(p), flag = getint(p), version = getint(p);
     vec droploc;
     loopk(3) droploc[k] = getint(p)/DMF;
-    gameent *o = ocn==player1->clientnum ? player1 : newclient(ocn);
+    gameent *o = ocn==self->clientnum ? self : newclient(ocn);
     if(o && m_ctf) ctfmode.dropflag(o, flag, version, droploc);
     break;
 }
@@ -947,7 +947,7 @@ case N_DROPFLAG:
 case N_SCOREFLAG:
 {
     int ocn = getint(p), relayflag = getint(p), relayversion = getint(p), goalflag = getint(p), goalversion = getint(p), team = getint(p), score = getint(p), oflags = getint(p);
-    gameent *o = ocn==player1->clientnum ? player1 : newclient(ocn);
+    gameent *o = ocn==self->clientnum ? self : newclient(ocn);
     if(o && m_ctf) ctfmode.scoreflag(o, relayflag, relayversion, goalflag, goalversion, team, score, oflags);
     break;
 }
@@ -955,7 +955,7 @@ case N_SCOREFLAG:
 case N_RETURNFLAG:
 {
     int ocn = getint(p), flag = getint(p), version = getint(p);
-    gameent *o = ocn==player1->clientnum ? player1 : newclient(ocn);
+    gameent *o = ocn==self->clientnum ? self : newclient(ocn);
     if(o && m_ctf) ctfmode.returnflag(o, flag, version);
     break;
 }
@@ -963,7 +963,7 @@ case N_RETURNFLAG:
 case N_TAKEFLAG:
 {
     int ocn = getint(p), flag = getint(p), version = getint(p);
-    gameent *o = ocn==player1->clientnum ? player1 : newclient(ocn);
+    gameent *o = ocn==self->clientnum ? self : newclient(ocn);
     if(o && m_ctf) ctfmode.takeflag(o, flag, version);
     break;
 }

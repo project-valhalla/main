@@ -13,7 +13,7 @@
 #include "model.h"
 
 extern dynent *player;
-extern physent *camera1;                // special ent that acts as camera, same object as player1 in FPS mode
+extern physent *camera1; // special entity that acts as a camera, same object as "self" (our client) in the game code
 
 extern int worldscale, worldsize;
 extern int mapversion;

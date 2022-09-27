@@ -166,7 +166,7 @@ namespace entities
         if(!validitem(type)) return;
         ents[n]->clearspawned();
         if(!d) return;
-        gameent *h = followingplayer(player1);
+        gameent *h = followingplayer(self);
         playsound(itemstats[type-I_AMMO_SG].sound, NULL, d!=h ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
         d->pickup(type);
         if(d==h)
@@ -272,7 +272,7 @@ namespace entities
             {
                 int snd = S_JUMPPAD, flags = 0;
                 if(e.attr4 > 0) { snd = e.attr4; flags = SND_MAP; }
-                if(d == player1) playsound(snd, NULL, NULL, NULL, flags);
+                if(d == self) playsound(snd, NULL, NULL, NULL, flags);
                 else playsound(snd, NULL, &e.o, NULL, flags);
             }
         }
@@ -386,7 +386,7 @@ namespace entities
     void updatepowerups(int time, gameent *d)
     {
         d->powerupsound = S_LOOP_DAMAGE + d->poweruptype-1;
-        gameent *hud = followingplayer(player1);
+        gameent *hud = followingplayer(self);
         d->powerupchan = playsound(d->powerupsound, NULL, d==hud ? NULL : &d->o, NULL, 0, -1, 200, d->powerupchan);
         if((d->powerupmillis -= time)<=0)
         {
@@ -442,7 +442,7 @@ namespace entities
             case TELEDEST:
                 e.attr3 = e.attr2;
                 e.attr2 = e.attr1;
-                e.attr1 = (int)player1->yaw;
+                e.attr1 = (int)self->yaw;
                 break;
         }
     }

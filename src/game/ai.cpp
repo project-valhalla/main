@@ -192,7 +192,7 @@ namespace ai
         d->playercolor = col;
 
         if(resetthisguy) removeweapons(d);
-        if(d->ownernum >= 0 && player1->clientnum == d->ownernum)
+        if(d->ownernum >= 0 && self->clientnum == d->ownernum)
         {
             create(d);
             if(d->ai)
@@ -1317,7 +1317,7 @@ namespace ai
     void avoid()
     {
         // guess as to the radius of ai and other critters relying on the avoid set for now
-        float guessradius = player1->radius;
+        float guessradius = self->radius;
         obstacles.clear();
         loopv(players)
         {

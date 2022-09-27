@@ -21,7 +21,7 @@ namespace game
         r->lastupdate = ragdollfade && lastmillis > d->lastpain + max(ragdollmillis - ragdollfade, 0) ? lastmillis - max(ragdollmillis - ragdollfade, 0) : d->lastpain;
         r->edit = NULL;
         r->ai = NULL;
-        if(d==player1) r->playermodel = playermodel;
+        if(d==self) r->playermodel = playermodel;
         ragdolls.add(r);
         d->ragdoll = NULL;
     }
@@ -100,7 +100,7 @@ namespace game
 
     const playermodelinfo &getplayermodelinfo(gameent *d)
     {
-        const playermodelinfo *mdl = getplayermodelinfo(d==player1 || forceplayermodels ? playermodel : d->playermodel);
+        const playermodelinfo *mdl = getplayermodelinfo(d==self || forceplayermodels ? playermodel : d->playermodel);
         if(!mdl) mdl = getplayermodelinfo(playermodel);
         return *mdl;
     }
@@ -121,7 +121,7 @@ namespace game
 
     int getplayercolor(gameent *d, int team)
     {
-        if(d==player1) switch(team)
+        if(d==self) switch(team)
         {
             case 1: return getplayercolor(1, playercolorblue);
             case 2: return getplayercolor(2, playercolorred);
@@ -132,8 +132,8 @@ namespace game
 
     void changedplayermodel()
     {
-        if(player1->clientnum < 0) player1->playermodel = playermodel;
-        if(player1->ragdoll) cleanragdoll(player1);
+        if(self->clientnum < 0) self->playermodel = playermodel;
+        if(self->ragdoll) cleanragdoll(self);
         loopv(ragdolls)
         {
             gameent *d = ragdolls[i];
@@ -148,7 +148,7 @@ namespace game
         loopv(players)
         {
             gameent *d = players[i];
-            if(d == player1 || !d->ragdoll) continue;
+            if(d == self || !d->ragdoll) continue;
             if(!forceplayermodels)
             {
                 const playermodelinfo *mdl = getplayermodelinfo(d->playermodel);
@@ -160,22 +160,22 @@ namespace game
 
     void changedplayercolor()
     {
-        if(player1->clientnum < 0) player1->playercolor = playercolor | (playercolorblue<<5) | (playercolorred<<10);
+        if(self->clientnum < 0) self->playercolor = playercolor | (playercolorblue<<5) | (playercolorred<<10);
     }
 
     void syncplayer()
     {
-        if(player1->playermodel != playermodel)
+        if(self->playermodel != playermodel)
         {
-            player1->playermodel = playermodel;
-            addmsg(N_SWITCHMODEL, "ri", player1->playermodel);
+            self->playermodel = playermodel;
+            addmsg(N_SWITCHMODEL, "ri", self->playermodel);
         }
 
         int col = playercolor | (playercolorblue<<5) | (playercolorred<<10);
-        if(player1->playercolor != col)
+        if(self->playercolor != col)
         {
-            player1->playercolor = col;
-            addmsg(N_SWITCHCOLOR, "ri", player1->playercolor);
+            self->playercolor = col;
+            addmsg(N_SWITCHCOLOR, "ri", self->playercolor);
         }
     }
 
@@ -238,8 +238,8 @@ namespace game
             if(guns[d->gunselect].vwep) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         }
         const char *mdlname = d->zombie ? mdl.zombiemodel : mdl.model[validteam(team) ? team : 0];
-        float yaw = testanims && d==player1 ? 0 : d->yaw,
-              pitch = testpitch && d==player1 ? testpitch : d->pitch;
+        float yaw = testanims && d==self ? 0 : d->yaw,
+              pitch = testpitch && d==self ? testpitch : d->pitch;
         vec o = d->feetpos();
         int basetime = 0;
         if(animoverride) anim = (animoverride<0 ? ANIM_ALL : animoverride)|ANIM_LOOP;
@@ -297,7 +297,7 @@ namespace game
             if((anim&ANIM_INDEX)==ANIM_IDLE && (anim>>ANIM_SECONDARY)&ANIM_INDEX) anim >>= ANIM_SECONDARY;
         }
         if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
-        if(d!=player1) flags |= MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
+        if(d!=self) flags |= MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY;
         if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
         else flags |= MDL_CULL_DIST;
         if(!mainpass) flags &= ~(MDL_FULLBRIGHT | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY | MDL_CULL_DIST);
@@ -323,13 +323,13 @@ namespace game
         loopv(players)
         {
             gameent *d = players[i];
-            if(d == player1 || d->state==CS_SPECTATOR || d->state==CS_SPAWNING || d->lifesequence < 0 || d == exclude || (d->state==CS_DEAD && hidedead)) continue;
+            if(d == self || d->state==CS_SPECTATOR || d->state==CS_SPAWNING || d->lifesequence < 0 || d == exclude || (d->state==CS_DEAD && hidedead)) continue;
             renderplayer(d);
             copystring(d->info, colorname(d));
             if(d->state!=CS_DEAD)
             {
                 int team = m_teammode && validteam(d->team) ? d->team : 0;
-                gameent *hud = followingplayer(player1);
+                gameent *hud = followingplayer(self);
                 if(isally(hud, d) && hud->o.dist(d->o) > maxparticletextdistance)
                 {
                     particle_icon(d->abovehead(), HICON_GL, HICON_GL, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
@@ -347,8 +347,8 @@ namespace game
         }
         if(exclude)
             renderplayer(exclude, 1, MDL_ONLYSHADOW);
-        else if(!f && (player1->state==CS_ALIVE || (player1->state==CS_EDITING && third) || (player1->state==CS_DEAD && !hidedead)))
-            renderplayer(player1, 1, third ? 0 : MDL_ONLYSHADOW);
+        else if(!f && (self->state==CS_ALIVE || (self->state==CS_EDITING && third) || (self->state==CS_DEAD && !hidedead)))
+            renderplayer(self, 1, third ? 0 : MDL_ONLYSHADOW);
         entities::renderentities();
         renderbouncers();
         renderprojectiles();
@@ -425,7 +425,7 @@ namespace game
         gameent *d = hudplayer();
         if(d->state==CS_SPECTATOR || d->state==CS_EDITING || !hudgun || editmode)
         {
-            d->muzzle = player1->muzzle = vec(-1, -1, -1);
+            d->muzzle = self->muzzle = vec(-1, -1, -1);
             return;
         }
 
@@ -494,7 +494,7 @@ namespace game
 
     void preloadweapons()
     {
-        const playermodelinfo &mdl = getplayermodelinfo(player1);
+        const playermodelinfo &mdl = getplayermodelinfo(self);
         loopi(NUMGUNS)
         {
             const char *file = guns[i].file;

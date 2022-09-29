@@ -727,12 +727,13 @@ namespace game
 
     void footstep(physent *pl, int sound)
     {
-        if(!footstepssound || pl->physstate < PHYS_SLOPE || (pl->crouching && pl->crouched()))
+        if(!footstepssound || pl->physstate < PHYS_SLOPE
+           || (pl->crouching && pl->crouched()) || pl->blocked)
         {
             return;
         }
         gameent *d = (gameent *)pl;
-        if((d->move || d->strafe) && !d->blocked)
+        if(d->move || d->strafe)
         {
             if(lastmillis-d->lastfootstep < (d->vel.magnitude()*380/d->vel.magnitude())) return;
             else playsound(sound, d, &d->o, NULL, 0, 0, 0, -1, 200);
@@ -792,6 +793,8 @@ namespace game
                 playsound(S_WATER_OUT, NULL, pl == self ? NULL : &pl->o);
                 break;
             }
+
+            default: break;
         }
     }
 

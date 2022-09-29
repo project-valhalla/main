@@ -1717,7 +1717,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
             pl->vel.z = max(pl->vel.z, JUMPVEL); // physics impulse upwards
             if(water) { pl->vel.x /= 8.0f; pl->vel.y /= 8.0f; } // dampen velocity change even harder, gives correct water feel
 
-            game::physicstrigger(pl, local, 1, 0);
+            game::triggerphysicsevent(pl, PHYSEVENT_JUMP, pl->inwater);
         }
     }
     if(!floating && pl->physstate == PHYS_FALL) pl->timeinair += curtime;
@@ -1831,9 +1831,11 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
         if(!pl->timeinair && !water) // if we land after long time must have been a high jump, make thud sound
         {
             pl->doublejumping = false; // now that we landed, double jump resets
-            if(timeinair > 800) game::physicstrigger(pl, local, -1, 0);
+            material = lookupmaterial(pl->feetpos());
+            if(timeinair > 350 && timeinair < 800) game::triggerphysicsevent(pl, PHYSEVENT_LAND_SHORT, material);
+            else if(timeinair >= 800) game::triggerphysicsevent(pl, PHYSEVENT_LAND_MEDIUM, material);
+            game::triggerphysicsevent(pl, PHYSEVENT_FOOTSTEP, material);
         }
-        game::footsteps(pl);
     }
     // automatically apply smooth roll when strafing
     if(pl->strafe && maxroll && !floating) pl->roll = clamp(pl->roll - pow(clamp(1.0f + pl->strafe*pl->roll/maxroll, 0.0f, 1.0f), 0.33f)*pl->strafe*curtime*straferoll, -maxroll, maxroll);
@@ -1848,14 +1850,14 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
         material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - pl->eyeheight)/2));
         water = isliquid(material&MATF_VOLUME);
     }
-    if(!pl->inwater && water) game::physicstrigger(pl, local, 0, -1, material&MATF_VOLUME);
-    else if(pl->inwater && !water) game::physicstrigger(pl, local, 0, 1, pl->inwater);
+    if(!pl->inwater && water) game::triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material&MATF_VOLUME);
+    else if(pl->inwater && !water) game::triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater);
     pl->inwater = water ? material&MATF_VOLUME : MAT_AIR;
 
     if(pl->state==CS_ALIVE)
     {
         if(material&MAT_DAMAGE || isharmful(lookupmaterial(pl->feetpos()))) game::damage(pl); // damage the player if their feet or body are inside damage/lava material
-        if(pl->o.z < 0 || material&MAT_DEATH) game::suicide(pl); // kill the player if they are inside death material or outside of world
+        if(pl->o.z < 0 || material&MAT_DEATH) game::suicide(pl); // kill the player if inside death material or outside of world (below origin)
     }
     return true;
 }

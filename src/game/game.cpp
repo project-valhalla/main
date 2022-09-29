@@ -711,89 +711,88 @@ namespace game
         return server::modename(gamemode, NULL);
     }
 
-    void physicstrigger(physent *d, bool local, int floorlevel, int waterlevel, int material)
+    int footstepsound(int surface, int material)
     {
-        if(d->state>CS_DEAD) return;
-        gameent *e = (gameent *)d;
-        vec o = d->state==CS_DEAD || (d==hudplayer() && !isthirdperson()) ? d->feetpos() : d->o;
-        if     (waterlevel>0)
-        {
-            if(material!=MAT_LAVA)
-            {
-                playsound(S_SPLASHOUT, NULL, d==self ? NULL : &d->o);
-                particle_splash(PART_WATER, 30, 100, o, 0xFFFFFF, 0.08f+rndscale(0.15f), 200, 5);
-                particle_splash(PART_STEAM, 50, 100, o, 0xFFFFFF, 0.80f);
-
-            }
-        }
-        else if(waterlevel<0)
-        {
-            playsound(material==MAT_LAVA ? S_BURN : S_SPLASHIN, NULL, d==self ? NULL : &d->o);
-            if(material!=MAT_LAVA)
-            {
-                particle_splash(PART_WATER, 30, 200, o, 0xFFFFFF, 0.08f+rndscale(0.15f), 150, 4);
-                particle_splash(PART_STEAM, 50, 100, o, 0xFFFFFF, 0.80f);
-
-            }
-        }
-        if     (floorlevel>0)
-        {
-            if(d==self || d->type!=ENT_PLAYER || ((gameent *)d)->ai)
-            {
-                if(!e->timeinair) msgsound(S_JUMP1, d);
-                else msgsound(S_JUMP2);
-            }
-        }
-        else if(floorlevel<0)
-        {
-            if(d==self || d->type!=ENT_PLAYER || ((gameent *)d)->ai)
-            {
-                if(d->state==CS_ALIVE)
-                {
-                    if(lookupmaterial(d->feetpos())&MAT_WATER)
-                    {
-                        vec feet = d->feetpos();
-                        feet.z += 5.2f;
-                        particle_splash(PART_WATER, 130, 250, feet, 0xFFFFFF, 0.04f, 250, 4);
-                        particle_splash(PART_WATER, 200, 200, feet, 0xFFFFFF, 0.08f, 300, 3);
-                        particle_splash(PART_WATER, 50, 100, feet, 0xFFFFFF, 2.0f, 150, 5);
-                        particle_splash(PART_STEAM, 50, 120, feet, 0xFFFFFF, 2.8f, 80, 50);
-                        msgsound(S_LAND_WATER, d);
-                    }
-                    else msgsound(S_LAND, d);
-                }
-                else msgsound(S_CORPSE, d);
-            }
-        }
-    }
-
-    int footstepsound(int texturematerial)
-    {
-        switch(texturematerial)
+        if(material & MAT_WATER) return S_FOOTSTEP_WATER;
+        else switch(surface)
         {
             case 1: return S_FOOTSTEP_SOFT; break;
             case 2: return S_FOOTSTEP_METAL; break;
             case 3: return S_FOOTSTEP_WOOD; break;
             default: return S_FOOTSTEP; break;
         }
-        return S_FOOTSTEP;
     }
 
     VARP(footstepssound, 0, 1, 1);
 
-    void footsteps(physent *d)
+    void footstep(physent *pl, int sound)
     {
-        if(!footstepssound || (!d->inwater && d->crouching && d->crouched()) || d->blocked) return;
-        bool moving = d->move || d->strafe;
-        gameent *pl = (gameent *)d;
-        if(d->physstate>=PHYS_SLOPE && moving)
+        if(!footstepssound || pl->physstate < PHYS_SLOPE || (pl->crouching && pl->crouched()))
         {
-            int material = lookuptexturematerial(d->feetpos(-1)), snd = footstepsound(material);
-            if(lookupmaterial(d->feetpos())&MAT_WATER) snd = S_FOOTSTEP_WATER;
-            if(lastmillis-pl->lastfootstep < (d->vel.magnitude()*380/d->vel.magnitude())) return;
-            else playsound(snd, d, &d->o, NULL, 0, 0, 0, -1, 200);
+            return;
         }
-        pl->lastfootstep = lastmillis;
+        gameent *d = (gameent *)pl;
+        if((d->move || d->strafe) && !d->blocked)
+        {
+            if(lastmillis-d->lastfootstep < (d->vel.magnitude()*380/d->vel.magnitude())) return;
+            else playsound(sound, d, &d->o, NULL, 0, 0, 0, -1, 200);
+        }
+        d->lastfootstep = lastmillis;
+    }
+
+    void triggerphysicsevent(physent *pl, int event, int material)
+    {
+        if(pl->state > CS_DEAD) return;
+        switch(event)
+        {
+            case PHYSEVENT_JUMP:
+            {
+                if(material & MAT_WATER || !(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai))
+                {
+                    break;
+                }
+                if(!pl->timeinair) msgsound(S_JUMP1, pl);
+                else msgsound(S_JUMP2);
+                break;
+            }
+
+            case PHYSEVENT_LAND_SHORT:
+            case PHYSEVENT_FOOTSTEP:
+            {
+                if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
+                int surface = lookuptexturematerial(pl->feetpos(-1)),
+                    sound = footstepsound(surface, material);
+                if(event == PHYSEVENT_FOOTSTEP) footstep(pl, sound);
+                else msgsound(sound, pl);
+                break;
+            }
+
+            case PHYSEVENT_LAND_MEDIUM:
+            {
+                if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
+                msgsound(S_LAND, pl);
+                break;
+            }
+
+            case PHYSEVENT_RAGDOLL_COLLIDE:
+            {
+                playsound(S_CORPSE, NULL, pl == self ? NULL : &pl->o);
+                break;
+            }
+
+            case PHYSEVENT_LIQUID_IN:
+            {
+                playsound(material == MAT_LAVA ? S_LAVA_IN : S_WATER_IN, NULL, pl == self ? NULL : &pl->o);
+                break;
+            }
+
+            case PHYSEVENT_LIQUID_OUT:
+            {
+                if(material == MAT_LAVA) break;
+                playsound(S_WATER_OUT, NULL, pl == self ? NULL : &pl->o);
+                break;
+            }
+        }
     }
 
     void msgsound(int n, physent *d)

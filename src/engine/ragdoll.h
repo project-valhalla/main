@@ -131,7 +131,7 @@ struct ragdolldata
     };
 
     ragdollskel *skel;
-    int millis, collidemillis, collisions, floating, lastmove, unsticks;
+    int millis, collidemillis, lastcollision, collisions, floating, lastmove, unsticks;
     vec offset, center;
     float radius, timestep, scale;
     vert *verts;
@@ -143,6 +143,7 @@ struct ragdolldata
         : skel(skel),
           millis(lastmillis),
           collidemillis(0),
+          lastcollision(0),
           collisions(0),
           floating(0),
           lastmove(lastmillis),
@@ -453,12 +454,12 @@ void ragdolldata::move(dynent *pl, float ts)
 
     int material = lookupmaterial(vec(center.x, center.y, center.z + radius/2));
     bool water = isliquid(material&MATF_VOLUME);
-    if(!pl->inwater && water) game::physicstrigger(pl, true, 0, -1, material&MATF_VOLUME);
+    if(!pl->inwater && water) game::triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material&MATF_VOLUME);
     else if(pl->inwater && !water)
     {
         material = lookupmaterial(center);
         water = isliquid(material&MATF_VOLUME);
-        if(!water) game::physicstrigger(pl, true, 0, 1, pl->inwater);
+        if(!water) game::triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater);
     }
     pl->inwater = water ? material&MATF_VOLUME : MAT_AIR;
 
@@ -500,10 +501,10 @@ void ragdolldata::move(dynent *pl, float ts)
         if(!collidemillis)
         {
             collidemillis = lastmillis + (water ? ragdollwaterexpireoffset : ragdollexpireoffset);
-            if(!water && lastmillis-pl->lastcollide > 300)
+            if(!water && lastmillis - pl->ragdoll->lastcollision > 500)
             {
-                game::physicstrigger(pl, true, -1, 0);
-                pl->lastcollide = lastmillis;
+                game::triggerphysicsevent(pl, PHYSEVENT_RAGDOLL_COLLIDE);
+                pl->ragdoll->lastcollision = lastmillis;
             }
         }
     }

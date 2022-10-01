@@ -1070,7 +1070,7 @@ void initserver(bool listen, bool dedicated)
 #endif
     }
     execfile("config/server/maplistgen.cfg", false);
-    execfile("config/server/server-init.cfg", false);
+    execfile("config/server/server.cfg", false);
 
     if(listen) setuplistenserver(dedicated);
 

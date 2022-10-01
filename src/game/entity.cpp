@@ -167,49 +167,47 @@ namespace entities
         ents[n]->clearspawned();
         if(!d) return;
         gameent *h = followingplayer(self);
-        playsound(itemstats[type-I_AMMO_SG].sound, NULL, d!=h ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
+        playsound(itemstats[type-I_AMMO_SG].sound, NULL, d != h ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
         d->pickup(type);
-        if(d==h)
+        const char *itemname = "";
+        int announcersound = -1;
+        switch(type)
         {
-            const char *itemname = "";
-            int announcersound = -1;
-            switch(type)
-            {
-                case I_DDAMAGE:
-                    itemname = "Double Damage";
-                    announcersound = S_ANNOUNCER_DDAMAGE;
-                    break;
+            case I_DDAMAGE:
+                itemname = "Double Damage";
+                announcersound = S_ANNOUNCER_DDAMAGE;
+                break;
 
-                case I_HASTE:
-                    itemname = "Haste";
-                    announcersound = S_ANNOUNCER_HASTE;
-                    break;
+            case I_HASTE:
+                itemname = "Haste";
+                announcersound = S_ANNOUNCER_HASTE;
+                break;
 
-                case I_ARMOUR:
-                    itemname = "Armour";
-                    announcersound = S_ANNOUNCER_ARMOUR;
-                    break;
+            case I_ARMOUR:
+                itemname = "Armour";
+                announcersound = S_ANNOUNCER_ARMOUR;
+                break;
 
-                case I_UAMMO:
-                    itemname = "Unlimited Ammo";
-                    announcersound = S_ANNOUNCER_UAMMO;
-                    break;
+            case I_UAMMO:
+                itemname = "Unlimited Ammo";
+                announcersound = S_ANNOUNCER_UAMMO;
+                break;
 
-                case I_AGILITY:
-                    itemname = "Agility";
-                    announcersound = S_ANNOUNCER_AGILITY;
-                    break;
+            case I_AGILITY:
+                itemname = "Agility";
+                announcersound = S_ANNOUNCER_AGILITY;
+                break;
 
-                case I_INVULNERABILITY:
-                    itemname = "Invulnerability";
-                    announcersound = S_ANNOUNCER_INVULNERABILITY;
-                    break;
+            case I_INVULNERABILITY:
+                itemname = "Invulnerability";
+                announcersound = S_ANNOUNCER_INVULNERABILITY;
+                break;
 
-                default: return;
-            }
-            conoutf(CON_GAMEINFO, "\f2%s obtained", itemname);
-            playsound(announcersound, NULL, NULL, NULL, SND_ANNOUNCER);
+            default: return;
         }
+        if(d == self) conoutf(CON_GAMEINFO, "\f2%s obtained", itemname);
+        else conoutf(CON_GAMEINFO, "%s \f2obtained the %s power-up", colorname(d), itemname);
+        playsound(d == h ? announcersound : S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
     }
 
     // these functions are called when the client touches the item

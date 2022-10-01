@@ -931,56 +931,13 @@ namespace server
 
     int spawntime(int type)
     {
-        int np = numclients(-1, true, false);
-        np = np<3 ? 4 : (np>4 ? 2 : 3);         // spawn times are dependent on number of players
-        int sec = 0;
-        switch(type)
-        {
-            case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE:
-            case I_AMMO_RL: case I_AMMO_RAIL:
-                sec = 15;
-                break;
-
-            case I_HEALTH:
-                sec = 22;
-                break;
-
-            case I_YELLOWSHIELD:
-                sec = 30;
-                break;
-
-            case I_REDSHIELD:
-                sec = 60;
-                break;
-
-            case I_SUPERHEALTH:
-                sec = 40;
-                break;
-
-            case I_MEGAHEALTH:
-                sec = 80;
-                break;
-
-            case I_DDAMAGE: case I_HASTE: case I_ARMOUR:
-            case I_UAMMO: case I_AGILITY: case I_INVULNERABILITY:
-                sec = 100;
-                break;
-        }
-        return sec*1000;
+        return itemstats[type-I_AMMO_SG].spawntime * 1000;
     }
 
     bool delayspawn(int type)
     {
-        switch(type)
-        {
-            case I_YELLOWSHIELD: case I_REDSHIELD: case I_MEGAHEALTH:
-            case I_DDAMAGE: case I_HASTE: case I_ARMOUR:
-            case I_UAMMO: case I_AGILITY: case I_INVULNERABILITY:
-                return true;
-
-            default:
-                return false;
-        }
+        return type >= I_YELLOWSHIELD && type <= I_INVULNERABILITY;
+        return false;
     }
 
     bool pickup(int i, int sender)         // server side item pickup, acknowledge first client that gets it

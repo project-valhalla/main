@@ -1449,7 +1449,7 @@ void updateparticles()
         loopv(entgroup)
         {
             entity &e = *ents[entgroup[i]];
-            particle_textcopy(e.o, entname(e), PART_TEXT, 1, 0xA9A9A9, 2.0f);
+            particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, 0xA9A9A9, 2.0f);
         }
         loopv(ents)
         {
@@ -1457,10 +1457,10 @@ void updateparticles()
             if(e.type==ET_EMPTY) continue;
             if(e.type >= ET_LIGHT && e.type <= ET_DECAL)
             {
-                particle_textcopy(e.o, entname(e), PART_TEXT, 1, entcolor[e.type], 2.0f);
+                particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, entcolor[e.type], 2.0f);
                 regular_particle_splash(PART_EDIT, 4, 50, e.o, entcolor[e.type], 0.32f*particlesize/100.0f, 200);
             }
-            else particle_textcopy(e.o, entname(e), PART_TEXT, 1, 0x00FFFF, 2.0f);
+            else particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, 0x00FFFF, 2.0f);
             if(entityicons)
             {
                 int icon = 0;
@@ -1472,20 +1472,22 @@ void updateparticles()
                         break;
 
                     case ET_ENVMAP:
-                        icon = PART_MODEL;
+                        icon = PART_ENVMAP;
                         break;
 
                     case ET_PLAYERSTART:
                         icon = PART_PLAYER;
                         break;
+
                     case ET_SOUND:
                         icon = PART_SOUND;
                         break;
+
                     case ET_PARTICLES:
                         icon = PART_PARTICLE;
                         break;
-                    case ET_MAPMODEL: break;
-                    default: break;
+
+                    default: return;
                 }
                 if(icon) particle_splash(icon, 1, 1, e.o, entcolor[e.type], 1.0f+particlesize/100.0f);
             }

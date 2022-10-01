@@ -427,6 +427,7 @@
     <ClInclude Include="..\engine\texture.h" />
     <ClInclude Include="..\engine\vertmodel.h" />
     <ClInclude Include="..\game\elimination.h" />
+    <ClInclude Include="..\game\entity.h" />
     <ClInclude Include="..\game\gamemode.h" />
     <ClInclude Include="..\game\weapon.h" />
     <ClInclude Include="..\shared\command.h" />

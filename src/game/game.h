@@ -56,40 +56,6 @@ enum
 #define DNF 100.0f              // for normalized vectors
 #define DVELF 1.0f              // for playerspeed based velocity vectors
 
-enum                            // static entity types
-{
-    NOTUSED = ET_EMPTY,         // entity slot not in use in map
-    LIGHT = ET_LIGHT,           // lightsource, attr1 = radius, attr2 = intensity
-    MAPMODEL = ET_MAPMODEL,     // attr1 = idx, attr2 = yaw, attr3 = pitch, attr4 = roll, attr5 = scale
-    PLAYERSTART,                // attr1 = angle, attr2 = team
-    ENVMAP = ET_ENVMAP,         // attr1 = radius
-    PARTICLES = ET_PARTICLES,
-    MAPSOUND = ET_SOUND,
-    SPOTLIGHT = ET_SPOTLIGHT,
-    DECAL = ET_DECAL,
-    TELEPORT,                   // attr1 = idx, attr2 = model, attr3 = tag
-    TELEDEST,                   // attr1 = angle, attr2 = idx
-    JUMPPAD,                    // attr1 = zpush, attr2 = ypush, attr3 = xpush
-    FLAG,                       // attr1 = angle, attr2 = team
-
-    I_AMMO_SG, I_AMMO_SMG, I_AMMO_PULSE, I_AMMO_RL, I_AMMO_RAIL,
-    I_HEALTH, I_YELLOWSHIELD, I_REDSHIELD,
-    I_SUPERHEALTH, I_MEGAHEALTH, I_DDAMAGE, I_HASTE, I_ARMOUR, I_UAMMO, I_AGILITY, I_INVULNERABILITY,
-    MAXENTTYPES
-};
-
-// power-ups
-enum
-{
-    PU_NONE = 0,
-    PU_DAMAGE,
-    PU_HASTE,
-    PU_ARMOR,
-    PU_AMMO,
-    PU_AGILITY,
-    PU_INVULNERABILITY
-};
-
 struct gameentity : extentity
 {
 };
@@ -316,28 +282,7 @@ enum
 #include "weapon.h"
 #include "ai.h"
 #include "gamemode.h"
-
-static struct itemstat { int add, max, sound, info; } itemstats[] =
-{
-    { 12,    60,    S_AMMO_SG,          GUN_SG,             }, // shotgun ammo
-    { 40,    200,   S_AMMO_SMG,         GUN_SMG,            }, // smg ammo
-    { 80,    400,   S_AMMO_PULSE,       GUN_PULSE,          }, // pulse battery
-    { 6,     30,    S_AMMO_ROCKET,      GUN_RL,             }, // rockets
-    { 8,     40,    S_AMMO_RAIL,        GUN_RAIL,           }, // railgun ammo
-    { 25,    100,   S_HEALTH,           NULL,               }, // regular health
-    { 50,    200,   S_SHIELD_LIGHT,     NULL,               }, // light shield
-    { 100,   200,   S_SHIELD_HEAVY,     NULL,               }, // heavy shield
-    { 50,    250,   S_SUPERHEALTH,      NULL,               }, // super health
-    { 100,   250,   S_MEGAHEALTH,       NULL,               }, // megahealth
-    { 30000, 60000, S_DAMAGE,           PU_DAMAGE,          }, // double damage
-    { 30000, 60000, S_HASTE,            PU_HASTE,           }, // haste
-    { 30000, 60000, S_ARMOUR,           PU_ARMOR,           }, // armour
-    { 30000, 60000, S_UAMMO,            PU_AMMO,            }, // unlimited ammo
-    { 30000, 60000, S_AGILITY,          PU_AGILITY,         }, // agility
-    { 15000, 30000, S_INVULNERABILITY,  PU_INVULNERABILITY, }  // invulnerability
-};
-
-#define validitem(n) (((n) >= I_AMMO_SG && (n) <= I_INVULNERABILITY))
+#include "entity.h"
 
 // inherited by gameent and server clients
 struct gamestate
@@ -700,10 +645,6 @@ struct teaminfo
 namespace entities
 {
     extern vector<extentity *> ents;
-
-    extern const char *entmdlname(int type);
-    extern const char *itemname(int i);
-    extern int itemicon(int i);
 
     extern void preloadentities();
     extern void renderentities();

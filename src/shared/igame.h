@@ -4,7 +4,7 @@ namespace entities
 {
     extern void editent(int i, bool local);
     extern const char *entnameinfo(entity &e);
-    extern const char *entname(int i);
+    extern const char *entname(int type);
     extern int extraentinfosize();
     extern void writeent(entity &e, char *buf);
     extern void readent(entity &e, char *buf, int ver);

@@ -22,41 +22,6 @@ namespace entities
     bool mayattach(extentity &e) { return false; }
     bool attachent(extentity &e, extentity &a) { return false; }
 
-    const char *itemname(int i)
-    {
-        return NULL;
-#if 0
-        int t = ents[i]->type;
-        if(!validitem(t)) return NULL;
-        return itemstats[t-I_FIRST].name;
-#endif
-    }
-
-    int itemicon(int i)
-    {
-        return -1;
-#if 0
-        int t = ents[i]->type;
-        if(!validitem(t)) return -1;
-        return itemstats[t-I_FIRST].icon;
-#endif
-    }
-
-    const char *entmdlname(int type)
-    {
-        static const char * const entmdlnames[MAXENTTYPES] =
-        {
-            NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
-            "item/teleport", NULL, NULL,
-            NULL,
-
-            "item/ammo/shotgun", "item/ammo/smg", "item/ammo/pulse", "item/ammo/rocket", "item/ammo/railgun",
-            "item/health", "item/shield/yellow", "item/shield/red",
-            "item/health/super", "item/health/mega", "item/doubledamage", "item/haste", "item/armour", "item/ammo/unlimited", "item/agility", "item/invulnerability"
-        };
-        return entmdlnames[type];
-    }
-
     const char *entmodel(const entity &e)
     {
         if(e.type == TELEPORT)
@@ -64,7 +29,7 @@ namespace entities
             if(e.attr2 > 0) return mapmodelname(e.attr2);
             if(e.attr2 < 0) return NULL;
         }
-        return e.type < MAXENTTYPES ? entmdlname(e.type) : NULL;
+        return e.type < MAXENTTYPES ? gentities[e.type].file : NULL;
     }
 
     bool canspawnitem(int type)
@@ -97,7 +62,7 @@ namespace entities
         loopi(MAXENTTYPES)
         {
             if(!canspawnitem(i)) continue;
-            const char *mdl = entmdlname(i);
+            const char *mdl = gentities[i].file;
             if(!mdl) continue;
             preloadmodel(mdl);
         }
@@ -167,47 +132,13 @@ namespace entities
         ents[n]->clearspawned();
         if(!d) return;
         gameent *h = followingplayer(self);
-        playsound(itemstats[type-I_AMMO_SG].sound, NULL, d != h ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
+        itemstat &is = itemstats[type-I_AMMO_SG];
+        playsound(is.sound, NULL, d != h ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
         d->pickup(type);
-        const char *itemname = "";
-        int announcersound = -1;
-        switch(type)
-        {
-            case I_DDAMAGE:
-                itemname = "Double Damage";
-                announcersound = S_ANNOUNCER_DDAMAGE;
-                break;
-
-            case I_HASTE:
-                itemname = "Haste";
-                announcersound = S_ANNOUNCER_HASTE;
-                break;
-
-            case I_ARMOUR:
-                itemname = "Armour";
-                announcersound = S_ANNOUNCER_ARMOUR;
-                break;
-
-            case I_UAMMO:
-                itemname = "Unlimited Ammo";
-                announcersound = S_ANNOUNCER_UAMMO;
-                break;
-
-            case I_AGILITY:
-                itemname = "Agility";
-                announcersound = S_ANNOUNCER_AGILITY;
-                break;
-
-            case I_INVULNERABILITY:
-                itemname = "Invulnerability";
-                announcersound = S_ANNOUNCER_INVULNERABILITY;
-                break;
-
-            default: return;
-        }
-        if(d == self) conoutf(CON_GAMEINFO, "\f2%s obtained", itemname);
-        else conoutf(CON_GAMEINFO, "%s \f2obtained the %s power-up", colorname(d), itemname);
-        playsound(d == h ? announcersound : S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
+        if(type < I_DDAMAGE || type > I_INVULNERABILITY) return;
+        if(d == self) conoutf(CON_GAMEINFO, "\f2%s obtained", gentities[type].prettyname);
+        else conoutf(CON_GAMEINFO, "%s \f2obtained the %s power-up", colorname(d), gentities[type].prettyname);
+        playsound(d == h ? is.announcersound : S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
     }
 
     // these functions are called when the client touches the item
@@ -477,19 +408,14 @@ namespace entities
         return false;
     }
 
-    const char *entnameinfo(entity &e) { return ""; }
-    const char *entname(int i)
+    const char *entnameinfo(entity &e)
     {
-        static const char * const entnames[MAXENTTYPES] =
-        {
-            "none?", "light", "mapmodel", "playerstart", "envmap", "particles", "sound", "spotlight", "decal",
-            "teleport", "teledest", "jumppad",
-            "flag",
-            "shotgun", "smg", "pulse", "rocket", "railgun",
-            "health", "light_shield", "heavy_shield",
-            "superhealth", "megahealth", "double_damage", "haste", "armour", "unlimited_ammo", "agility", "invulnerability"
-        };
-        return i>=0 && size_t(i)<sizeof(entnames)/sizeof(entnames[0]) ? entnames[i] : "";
+        return e.type < MAXENTTYPES ? gentities[e.type].prettyname : "";
+    }
+
+    const char *entname(int type)
+    {
+        return type >= 0 && type < MAXENTTYPES ? gentities[type].name : "";
     }
 
     void editent(int i, bool local)

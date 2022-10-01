@@ -168,6 +168,7 @@
 		<Unit filename="../game/ctf.h" />
 		<Unit filename="../game/elimination.h" />
 		<Unit filename="../game/entity.cpp" />
+		<Unit filename="../game/entity.h" />
 		<Unit filename="../game/extinfo.h" />
 		<Unit filename="../game/game.cpp" />
 		<Unit filename="../game/game.h">

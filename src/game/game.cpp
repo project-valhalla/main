@@ -771,7 +771,7 @@ namespace game
             case PHYSEVENT_LAND_MEDIUM:
             {
                 if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
-                msgsound(S_LAND, pl);
+                msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, pl);
                 break;
             }
 

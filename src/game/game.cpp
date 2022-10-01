@@ -736,7 +736,7 @@ namespace game
         if(d->move || d->strafe)
         {
             if(lastmillis-d->lastfootstep < (d->vel.magnitude()*380/d->vel.magnitude())) return;
-            else playsound(sound, d, &d->o, NULL, 0, 0, 0, -1, 200);
+            else playsound(sound, d, &d->o, NULL, 0, 0, 0, -1);
         }
         d->lastfootstep = lastmillis;
     }
@@ -1039,6 +1039,10 @@ namespace game
             case S_WEAPON_NOAMMO:
                 return 350;
             case S_FOOTSTEP:
+            case S_FOOTSTEP_SOFT:
+            case S_FOOTSTEP_METAL:
+            case S_FOOTSTEP_WOOD:
+            case S_FOOTSTEP_WATER:
                 return 300;
             default:
                 return 500;

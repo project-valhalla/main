@@ -2122,7 +2122,7 @@ namespace game
                 if(mm != mastermode)
                 {
                     mastermode = mm;
-                    conoutf("master mode is %s%s (%d)", mastermodecolors[mastermode+1], server::mastermodename(mastermode), mastermode);
+                    conoutf("master mode is %s%s", mastermodecolors[mastermode+1], server::mastermodename(mastermode));
                 }
                 break;
             }
@@ -2130,7 +2130,7 @@ namespace game
             case N_MASTERMODE:
             {
                 mastermode = getint(p);
-                conoutf("master mode is %s%s (%d)", mastermodecolors[mastermode+1], server::mastermodename(mastermode), mastermode);
+                conoutf("master mode is %s%s", mastermodecolors[mastermode+1], server::mastermodename(mastermode));
                 break;
             }
 

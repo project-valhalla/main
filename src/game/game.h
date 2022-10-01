@@ -96,9 +96,9 @@ struct gameentity : extentity
 
 enum { MM_AUTH = -1, MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE, MM_PASSWORD, MM_START = MM_AUTH, MM_INVALID = MM_START - 1 };
 
-static const char * const mastermodenames[] =  { "Auth",   "Open",   "Veto",       "Locked",     "Private",    "Password" };
-static const char * const mastermodecolors[] = { "",       "\f0",    "\f2",        "\f1",        "\f3",        "\f3" };
-static const char * const mastermodeicons[] =  { "server", "server", "serverlock", "serverlock", "serverpriv", "serverpriv" };
+static const char * const mastermodenames[] =  { "Default", "Open",        "Veto",        "Locked",        "Private",        "Password"    };
+static const char * const mastermodecolors[] = { "",        "\f0",         "\f2",         "\f4",           "\f3",            "\f7"         };
+static const char * const mastermodeicons[] =  { "server",  "server_open", "server_veto", "server_locked", "server_private", "server_pass" };
 
 enum { VAR_TIMELIMIT = 0, VAR_SCORELIMIT, VAR_MAXROUNDS, VAR_SELFDAMAGE, VAR_TEAMDAMAGE, VAR_WEAPON, VAR_TEAM1, VAR_TEAM2 };
 

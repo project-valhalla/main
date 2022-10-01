@@ -800,8 +800,8 @@ namespace server
     {
         switch(type)
         {
+            case PRIV_AUTH: return "\f5auth\ff";
             case PRIV_ADMIN: return "\f6administrator\ff";
-            case PRIV_AUTH: return "\f5auth\f";
             case PRIV_MASTER: return "\f0master\ff";
             default: return "unknown";
         }

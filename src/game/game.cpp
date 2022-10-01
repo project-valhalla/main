@@ -1085,7 +1085,7 @@ namespace game
         GETSERVINFO(*i, si,
         {
             int mm = si->attr.inrange(2) ? si->attr[2] : MM_INVALID;
-            result(si->maxplayers > 0 && si->numplayers >= si->maxplayers ? "serverfull" : mastermodeicon(mm, "serverunk"));
+            result(si->maxplayers > 0 && si->numplayers >= si->maxplayers ? "server_full" : mastermodeicon(mm, "server_unknown"));
         }));
 
     // any data written into this vector will get saved with the map data. Must take care to do own versioning, and endianess if applicable. Will not get called when loading maps from other games, so provide defaults.

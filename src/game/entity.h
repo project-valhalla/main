@@ -20,16 +20,7 @@ enum                            // static entity types
     MAXENTTYPES
 };
 
-enum // power-up types
-{
-    PU_NONE = 0,
-    PU_DAMAGE,
-    PU_HASTE,
-    PU_ARMOR,
-    PU_AMMO,
-    PU_AGILITY,
-    PU_INVULNERABILITY
-};
+#define validitem(n) (((n) >= I_AMMO_SG && (n) <= I_INVULNERABILITY))
 
 static const struct gentityinfo { const char *name, *prettyname, *file; } gentities[MAXENTTYPES] =
 {
@@ -39,7 +30,7 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "playerstart",     "Spawn Point",        NULL                   },
     { "envmap",          "Environment Map",    NULL                   },
     { "particles",       "Particles",          NULL                   },
-    { "sound",           "Ambience Sound",     NULL                   },
+    { "sound",           "Ambience",           NULL                   },
     { "spotlight",       "Spotlight",          NULL                   },
     { "decal",           "Decal",              NULL                   },
     { "teleport",        "Portal",             "item/teleport"        },
@@ -64,6 +55,17 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "invulnerability", "Invulnerability",    "item/invulnerability" }
 };
 
+enum // power-up types
+{
+    PU_NONE = 0,
+    PU_DAMAGE,
+    PU_HASTE,
+    PU_ARMOR,
+    PU_AMMO,
+    PU_AGILITY,
+    PU_INVULNERABILITY
+};
+
 static struct itemstat { int add, max, spawntime, info, sound, announcersound; } itemstats[] =
 {
     { 12,    60,    15,  GUN_SG,             S_AMMO_SG,         NULL,                        }, // shotgun ammo
@@ -83,5 +85,3 @@ static struct itemstat { int add, max, spawntime, info, sound, announcersound; }
     { 30000, 60000, 100, PU_AGILITY,         S_AGILITY,         S_ANNOUNCER_AGILITY,         }, // agility
     { 15000, 30000, 100, PU_INVULNERABILITY, S_INVULNERABILITY, S_ANNOUNCER_INVULNERABILITY, }  // invulnerability
 };
-
-#define validitem(n) (((n) >= I_AMMO_SG && (n) <= I_INVULNERABILITY))

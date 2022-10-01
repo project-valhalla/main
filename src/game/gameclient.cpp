@@ -1478,7 +1478,7 @@ namespace game
                 }
                 sessionid = getint(p);
                 self->clientnum = mycn;      // we are now connected
-                if(getint(p) > 0) conoutf("this server is password protected");
+                if(getint(p) > 0) conoutf(CON_ERROR, "this server is password protected");
                 getstring(servdesc, p, sizeof(servdesc));
                 getstring(servauth, p, sizeof(servauth));
                 sendintro();

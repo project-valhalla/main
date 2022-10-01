@@ -1461,36 +1461,34 @@ void updateparticles()
                 regular_particle_splash(PART_EDIT, 4, 50, e.o, entcolor[e.type], 0.32f*particlesize/100.0f, 200);
             }
             else particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, 0x00FFFF, 2.0f);
-            if(entityicons)
+            if(!entityicons) continue;
+            int icon = 0;
+            switch(e.type)
             {
-                int icon = 0;
-                switch(e.type)
-                {
-                    case ET_LIGHT:
-                    case ET_SPOTLIGHT:
-                        icon = PART_LIGHT;
-                        break;
+                case ET_LIGHT:
+                case ET_SPOTLIGHT:
+                    icon = PART_LIGHT;
+                    break;
 
-                    case ET_ENVMAP:
-                        icon = PART_ENVMAP;
-                        break;
+                case ET_ENVMAP:
+                    icon = PART_ENVMAP;
+                    break;
 
-                    case ET_PLAYERSTART:
-                        icon = PART_PLAYER;
-                        break;
+                case ET_PLAYERSTART:
+                    icon = PART_PLAYER;
+                    break;
 
-                    case ET_SOUND:
-                        icon = PART_SOUND;
-                        break;
+                case ET_SOUND:
+                    icon = PART_SOUND;
+                    break;
 
-                    case ET_PARTICLES:
-                        icon = PART_PARTICLE;
-                        break;
+                case ET_PARTICLES:
+                    icon = PART_PARTICLE;
+                    break;
 
-                    default: return;
-                }
-                if(icon) particle_splash(icon, 1, 1, e.o, entcolor[e.type], 1.0f+particlesize/100.0f);
+                default: break;
             }
+            if(icon) particle_splash(icon, 1, 1, e.o, entcolor[e.type], 1.0f+particlesize/100.0f);
         }
     }
 }

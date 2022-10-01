@@ -1096,7 +1096,7 @@ namespace game
     const char *savedconfig() { return "config/saved.cfg"; }
     const char *defaultconfig() { return "config/default.cfg"; }
     const char *autoexec() { return "config/autoexec.cfg"; }
-    const char *savedservers() { return "config/server/servers.cfg"; }
+    const char *savedservers() { return "config/server/saved_servers.cfg"; }
 
     void loadconfigs()
     {

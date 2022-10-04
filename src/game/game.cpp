@@ -736,7 +736,7 @@ namespace game
         if(d->move || d->strafe)
         {
             if(lastmillis-d->lastfootstep < (d->vel.magnitude()*380/d->vel.magnitude())) return;
-            else playsound(sound, d, &d->o, NULL, 0, 0, 0, -1);
+            else playsound(sound, d);
         }
         d->lastfootstep = lastmillis;
     }

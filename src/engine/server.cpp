@@ -1046,7 +1046,7 @@ bool setuplistenserver(bool dedicated)
         else serveraddress.host = address.host;
     }
     serverhost = enet_host_create(&address, min(maxclients + server::reserveclients(), MAXCLIENTS), server::numchannels(), 0, serveruprate);
-    if(!serverhost) return servererror(dedicated, "could not create server host");
+    if(!serverhost) return servererror(dedicated, "Could not create server host. Server may be already running.");
     serverhost->duplicatePeers = maxdupclients ? maxdupclients : MAXCLIENTS;
     serverhost->intercept = serverinfointercept;
     address.port = server::laninfoport();

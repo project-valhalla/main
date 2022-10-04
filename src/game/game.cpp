@@ -753,7 +753,7 @@ namespace game
                     break;
                 }
                 if(!pl->timeinair) msgsound(S_JUMP1, pl);
-                else msgsound(S_JUMP2);
+                else msgsound(S_JUMP2, pl);
                 break;
             }
 

@@ -121,9 +121,9 @@ namespace entities
         addammo(type, d->ammo[type-I_AMMO_SG+GUN_SG], local);
     }
 
-    // these two functions are called when the server acknowledges that you really
-    // picked up the item (in multiplayer someone may grab it before you).
-
+   /* This function is called once the server acknowledges that you really
+    * picked up the item (in multiplayer someone may grab it before you).
+    */
     void pickupeffects(int n, gameent *d)
     {
         if(!ents.inrange(n)) return;
@@ -137,7 +137,7 @@ namespace entities
         d->pickup(type);
         if(type < I_DDAMAGE || type > I_INVULNERABILITY) return;
         if(d == self) conoutf(CON_GAMEINFO, "\f2%s obtained", gentities[type].prettyname);
-        else conoutf(CON_GAMEINFO, "%s \f2obtained the %s power-up", colorname(d), gentities[type].prettyname);
+        else conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
         playsound(d == h ? is.announcersound : S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
     }
 

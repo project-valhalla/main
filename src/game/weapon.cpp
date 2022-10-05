@@ -60,7 +60,6 @@ namespace game
         int gun = getweapon(name);
         if(self->state!=CS_ALIVE || !validgun(gun)) return;
         if(force || self->ammo[gun]) gunselect(gun, self);
-        else playsound(S_WEAPON_NOAMMO);
     }
     ICOMMAND(setweapon, "si", (char *name, int *force), setweapon(name, *force!=0));
 

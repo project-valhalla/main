@@ -342,8 +342,8 @@ namespace game
     ICOMMAND(getclientscore, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
-        int score = d->flags;
-        if(m_lms || m_infection) score = d->points;
+        int score = d->points;
+        if(m_ctf) score = d->flags;
         if(d) intret(score);
     });
 

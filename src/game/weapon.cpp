@@ -840,7 +840,8 @@ namespace game
                 particle_splash(PART_SPARK1, 10, 50, to, 0x00FFFF, 1.5f, 300, 50);
                 if(hit || water || glass) break;
                 particle_splash(PART_SPARK2, 1+rnd(10), 100+rnd(280), to, 0x00FFFF, 0.01f+rndscale(0.18f), 300, 2);
-                addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 0.80f+rndscale(1.0f));
+                addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 2.0f);
+                addstain(STAIN_RAIL_GLOW, to, dir, 1.50f, 0x00FFFF);
                 break;
             }
 

@@ -2125,8 +2125,7 @@ namespace server
         sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
         if(!scorelimit) return;
         clientinfo *best = winningclient();
-        if(!best) sendservmsgf("No best player to check");
-        else if(ci == best) checkscorelimit(best);
+        if(ci == best) checkscorelimit(best);
     }
 
     clientinfo *hostzombie(clientinfo *exclude1 = NULL, clientinfo *exclude2 = NULL)

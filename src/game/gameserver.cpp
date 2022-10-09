@@ -674,8 +674,10 @@ namespace server
     });
     SVAR(servermotd, "");
 
-    bool betweenrounds = false, firstblood = false, nojuggernaut = true, zombiechosen = false;
-    bool f1warn = true, f5warn = true, f10warn = true;
+    bool firstblood    = false,
+         betweenrounds = false,
+         nojuggernaut  = true,
+         zombiechosen  = false;
 
     struct teamkillkick
     {
@@ -975,7 +977,7 @@ namespace server
             float rank = ci->state.state!=CS_SPECTATOR ? ci->state.effectiveness/max(ci->state.timeplayed, 1) : -1;
             if(!best || rank > bestrank) { best = ci; bestrank = rank; }
         }
-                    return best;
+        return best;
     }
 
     VAR(persistteams, 0, 0, 1);
@@ -2075,48 +2077,56 @@ namespace server
         notgotitems = false;
     }
 
-    void checkscorelimit(clientinfo *ci, int points)
+    clientinfo *winningclient()
     {
-        if(!scorelimit) return;
-        int remain = scorelimit-points, snd = -1;
-        if(m_dm)
+        clientinfo *best = NULL;
+        int highscore = -1;
+        loopv(clients)
         {
-            if(scorelimit > remain)
+            clientinfo *ci = clients[i];
+            if(ci->state.state == CS_SPECTATOR) continue;
+            int score = m_dm ? ci->state.frags : ci->state.points;
+            if(score > highscore)
             {
-                switch(remain)
-                {
-                    case 10:
-                    {
-                        snd = S_ANNOUNCER_10_KILLS;
-                        if(f10warn) sendf(-1, 1, "ri3s", N_ANNOUNCE, snd, NULL, "\f210 kills remain");
-                        f10warn = false;
-                        break;
-                    }
-                    case 5:
-                    {
-                        snd = S_ANNOUNCER_5_KILLS;
-                        if(f5warn) sendf(-1, 1, "ri3s", N_ANNOUNCE, snd, NULL, "\f25 kills remain");
-                        f5warn = false;
-                        break;
-                    }
-                    case 1:
-                    {
-                        snd = S_ANNOUNCER_1_KILL;
-                        if(f1warn) sendf(-1, 1, "ri3s", N_ANNOUNCE, snd, NULL, "\f21 kill remains");
-                        f1warn = false;
-                        break;
-                    }
-                    default: break;
-                }
+                best = ci;
+                highscore = score;
             }
         }
-        if(points >= scorelimit)
+        return best;
+    }
+
+    void checkscorelimit(clientinfo *ci)
+    {
+        teaminfo *team = m_teammode && validteam(ci->team) ? &teaminfos[ci->team-1] : NULL;
+        int highscore = m_teammode ? team->frags : ci->state.frags;
+        if(!m_dm) highscore = ci->state.points;
+        else
+        {
+            int remain = scorelimit - highscore;
+            if(remain == 10 || remain == 5 || remain == 1)
+            {
+                defformatstring(announcement, "\f2%d kill%s remain%s", remain, remain == 1 ? "" : "s", remain == 1 ? "s" : "");
+                int announcementsound = remain == 10 ? S_ANNOUNCER_10_KILLS : (remain == 5 ? S_ANNOUNCER_5_KILLS : S_ANNOUNCER_1_KILL);
+                sendf(-1, 1, "ri3s", N_ANNOUNCE, announcementsound, NULL, announcement);
+            }
+        }
+        if(highscore >= scorelimit)
         {
             if(m_dm) startintermission();
             else if(m_round && !m_elimination && !interm) gameover();
-            defformatstring(winner, "%s \f2wins the match", colorname(ci));
+            defformatstring(winner, "%s%s \fs\f2wins the match\fr", team ? teamtextcode[ci->team] : "", team ? teamnames[ci->team] : colorname(ci));
             sendf(-1, 1, "ri3s", N_ANNOUNCE, NULL, NULL, winner);
         }
+    }
+
+    void score(clientinfo *ci, int score = 1)
+    {
+        ci->state.points += score;
+        sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
+        if(!scorelimit) return;
+        clientinfo *best = winningclient();
+        if(!best) sendservmsgf("No best player to check");
+        else if(ci == best) checkscorelimit(best);
     }
 
     clientinfo *hostzombie(clientinfo *exclude1 = NULL, clientinfo *exclude2 = NULL)
@@ -2129,11 +2139,11 @@ namespace server
         return host;
     }
 
-    void infect(clientinfo *ci, int actor)
+    void infect(clientinfo *ci, clientinfo *actor)
     {
         if(!m_infection || !ci || ci->state.state!=CS_ALIVE) return;
         ci->state.infect();
-        sendf(-1, 1, "ri3", N_INFECT, ci->clientnum, actor);
+        sendf(-1, 1, "ri3", N_INFECT, ci->clientnum, actor->clientnum);
         if(!zombiechosen) sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_INFECTION, S_INFECTION, "\fs\f2Infection has begun\fr");
     }
 
@@ -2147,8 +2157,6 @@ namespace server
         }
         clientinfo *zombie = hostzombie(spec);
         infect(zombie, zombie->clientnum);
-        zombiechosen = true;
-        betweenrounds = false;
     }
 
     static void startzombieround()
@@ -2230,9 +2238,7 @@ namespace server
                 {
                     clientinfo *ci = clients[i];
                     if(ci->state.state!=CS_ALIVE || ci->state.zombie) continue;
-                    ci->state.points += 5;
-                    sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
-                    checkscorelimit(ci, ci->state.points);
+                    score(ci, 5);
                 }
                 endround();
             }
@@ -2262,9 +2268,7 @@ namespace server
                 {
                     clientinfo *ci = clients[i];
                     if(ci->state.state != CS_ALIVE) continue;
-                    ci->state.points++;
-                    sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
-                    checkscorelimit(ci, ci->state.points);
+                    score(ci);
                     if(ci->state.aitype != AI_NONE) continue;
                     sendf(ci->clientnum, 1, "ri3s", N_ANNOUNCE, S_LMS_ROUND_WIN, S_ANNOUNCER_WIN_ROUND, "\f2You win the round");
                 }
@@ -2589,7 +2593,11 @@ namespace server
         }
     }
 
-    void startintermission() { gamelimit = min(gamelimit, gamemillis); checkintermission(); }
+    void startintermission()
+    {
+        gamelimit = min(gamelimit, gamemillis);
+        checkintermission();
+    }
 
     void makejuggernaut(clientinfo *ci, int actor = -1)
     {
@@ -2675,13 +2683,7 @@ namespace server
             actor->state.teamkills++;
             addteamkill(actor, target, 1);
         }
-        if(m_infection)
-        {
-            actor->state.points += fragvalue;
-            sendf(-1, 1, "ri3", N_SCORE, actor->clientnum, actor->state.points);
-            checkscorelimit(actor, actor->state.points);
-        }
-        if(m_dm) checkscorelimit(actor, t ? t->frags : actor->state.frags);
+        score(actor, fragvalue);
         ts.deadflush = ts.lastdeath + DEATHMILLIS;
         // don't issue respawn yet until DEATHMILLIS has elapsed
         // ts.respawn();
@@ -2728,10 +2730,8 @@ namespace server
                 if(target == actor || target->state.zombie) died(target, actor, atk, damage, flags);
                 else
                 {
-                    infect(target, actor->clientnum);
-                    actor->state.points++;
-                    sendf(-1, 1, "ri3", N_SCORE, actor->clientnum, actor->state.points);
-                    checkscorelimit(actor, actor->state.points);
+                    infect(target, actor);
+                    score(actor);
                 }
             }
             else died(target, actor, atk, damage, flags);

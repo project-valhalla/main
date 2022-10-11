@@ -2155,7 +2155,7 @@ namespace server
             if(clients[i]->state.state!=CS_ALIVE) spec = ci;
         }
         clientinfo *zombie = hostzombie(spec);
-        infect(zombie, zombie->clientnum);
+        infect(zombie, zombie);
     }
 
     static void startzombieround()

@@ -404,13 +404,12 @@ namespace game
         }
     }
 
-    void damageeffect(int damage, dynent *d, vec &p, int atk, bool thirdperson)
+    void damageeffect(int damage, dynent *d, vec p, int atk, bool thirdperson)
     {
         if(!damage) return;
-        gameent *f = (gameent *)d, *h = hudplayer();
-        vec o = d->o;
-        o.z -= d->eyeheight/3;
-        if(f==h) p = o;
+        gameent *f = (gameent *)d,
+                *hud = followingplayer(self);
+        if(f == hud) p.z += 0.6f*(d->eyeheight + d->aboveeye) - d->eyeheight;
         if(blood)
         {
             particle_splash(PART_BLOOD1, max(damage/12, rnd(3)+1), 160, p, f->bloodcolour(), 0.01f, 100, 0, 0.09f);
@@ -418,14 +417,14 @@ namespace game
         }
         if(f->health > 0 && lastmillis-f->lastyelp > 600)
         {
-            if(f==hudplayer()) damageblend(damage);
+            if(f == hud) damageblend(damage);
             else if(f->shield) playsound(S_SHIELD_HIT, NULL, &f->o);
             playsound(f->painsound(), f, &f->o);
             f->lastyelp = lastmillis;
         }
-        if(f->shield && d!=hudplayer()) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);
-        if(validatk(atk) && attacks[atk].hitsound) playsound(attacks[atk].hitsound, NULL, f==h ? NULL : &f->o);
-        else playsound(S_DAMAGE, NULL, f==h ? NULL : &f->o);
+        if(f->shield) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);
+        if(validatk(atk) && attacks[atk].hitsound) playsound(attacks[atk].hitsound, NULL, f == hud ? NULL : &f->o);
+        else playsound(S_DAMAGE, NULL, f == hud ? NULL : &f->o);
         if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOUR, f, &f->o);
     }
 

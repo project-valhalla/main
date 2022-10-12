@@ -34,7 +34,7 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "spotlight",       "Spotlight",          NULL                   },
     { "decal",           "Decal",              NULL                   },
     { "teleport",        "Portal",             "item/teleport"        },
-    { "teledest",        "Portal Destination", ""                     },
+    { "teledest",        "Portal Destination", NULL                   },
     { "jumppad",         "Jump Pad",           NULL                   },
     { "flag",            "Flag",               NULL                   },
     { "shotgun",         "Shotgun",            "item/ammo/shotgun"    },
@@ -73,10 +73,10 @@ static struct itemstat { int add, max, spawntime, info, sound, announcersound; }
     { 80,    400,   15,  GUN_PULSE,          S_AMMO_PULSE,      NULL,                        }, // pulse battery
     { 6,     30,    15,  GUN_RL,             S_AMMO_ROCKET,     NULL,                        }, // rockets
     { 8,     40,    15,  GUN_RAIL,           S_AMMO_RAIL,       NULL,                        }, // railgun ammo
-    { 25,    100,   22,  NULL,               S_HEALTH,          NULL,                        }, // regular health
-    { 50,    200,   30,  NULL,               S_SHIELD_LIGHT,    NULL,                        }, // light shield
-    { 100,   200,   60,  NULL,               S_SHIELD_HEAVY,    NULL,                        }, // heavy shield
-    { 50,    250,   40,  NULL,               S_SUPERHEALTH,     NULL,                        }, // super health
+    { 25,    100,   25,  NULL,               S_HEALTH,          NULL,                        }, // regular health
+    { 50,    200,   35,  NULL,               S_SHIELD_LIGHT,    NULL,                        }, // light shield
+    { 100,   200,   35,  NULL,               S_SHIELD_HEAVY,    NULL,                        }, // heavy shield
+    { 50,    250,   60,  NULL,               S_SUPERHEALTH,     NULL,                        }, // super health
     { 100,   250,   80,  NULL,               S_MEGAHEALTH,      NULL,                        }, // mega health
     { 30000, 60000, 100, PU_DAMAGE,          S_DAMAGE,          S_ANNOUNCER_DDAMAGE,         }, // double damage
     { 30000, 60000, 100, PU_HASTE,           S_HASTE,           S_ANNOUNCER_HASTE,           }, // haste

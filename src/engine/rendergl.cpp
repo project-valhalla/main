@@ -2604,8 +2604,8 @@ VAR(hidestats, 0, 0, 1);
 VAR(hidehud, 0, 0, 1);
 VAR(editcursor, 0, 1, 1);
 
-VARP(crosshairsize, 0, 16, 50);
-VARP(cursorsize, 0, 16, 30);
+VARP(crosshairsize, 0, 15, 30);
+VARP(cursorsize, 0, 15, 30);
 VARP(crosshairfx, 0, 1, 1);
 VARP(crosshaircolors, 0, 1, 1);
 
@@ -2662,7 +2662,7 @@ void drawcrosshair(int w, int h)
         static Texture *cursor = NULL;
         if(!cursor) cursor = textureload("data/interface/cursor.png", 3, true);
         crosshair = cursor;
-        chsize = cursorsize*w/900.0f;
+        chsize = cursorsize*3;
         UI::getcursorpos(cx, cy);
     }
     else
@@ -2677,7 +2677,7 @@ void drawcrosshair(int w, int h)
             loadcrosshair(NULL, index);
             crosshair = crosshairs[index];
         }
-        chsize = crosshairsize*w/900.0f;
+        chsize = crosshairsize*3;
     }
     if(crosshair->type&Texture::ALPHA) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     else glBlendFunc(GL_ONE, GL_ONE);

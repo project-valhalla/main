@@ -153,15 +153,11 @@ void bgquad(float x, float y, float w, float h, float tx = 0, float ty = 0, floa
 void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, const char *mapname, const char *mapinfo)
 {
     static int lastupdate = -1, lastw = -1, lasth = -1;
-    static float backgroundu = 0, backgroundv = 0;
     if((renderedframe && !mainmenu && lastupdate != lastmillis) || lastw != w || lasth != h)
     {
         lastupdate = lastmillis;
         lastw = w;
         lasth = h;
-
-        backgroundu = rndscale(1);
-        backgroundv = rndscale(1);
     }
     else if(lastupdate != lastmillis) lastupdate = lastmillis;
 
@@ -173,11 +169,10 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     gle::deftexcoord0();
 
     settexture("data/interface/background.png", 0);
-    float bu = w*0.67f/256.0f, bv = h*0.67f/256.0f;
-    bgquad(0, 0, w, h, backgroundu, backgroundv, bu, bv);
+    bgquad(0, 0, w, h);
 
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     settexture("data/interface/shadow.png", 3);
     bgquad(0, 0, w, h);

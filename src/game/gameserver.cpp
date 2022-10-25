@@ -2123,7 +2123,7 @@ namespace server
     {
         ci->state.points += score;
         sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
-        if(!scorelimit) return;
+        if(m_edit || !scorelimit) return;
         clientinfo *best = winningclient();
         if(ci == best) checkscorelimit(best);
     }

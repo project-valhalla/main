@@ -164,7 +164,7 @@
 		<Unit filename="../engine/worldio.cpp" />
 		<Unit filename="../game/ai.cpp" />
 		<Unit filename="../game/ai.h" />
-		<Unit filename="../game/aiman.h" />
+		<Unit filename="../game/aimanager.h" />
 		<Unit filename="../game/ctf.h" />
 		<Unit filename="../game/elimination.h" />
 		<Unit filename="../game/entity.cpp" />

@@ -385,7 +385,7 @@ namespace server
         uint ip;
     };
 
-    namespace aiman
+    namespace aimanager
     {
         extern void removeai(clientinfo *ci);
         extern void clearai();
@@ -1448,7 +1448,7 @@ namespace server
     void revokemaster(clientinfo *ci)
     {
         ci->privilege = PRIV_NONE;
-        if(ci->state.state==CS_SPECTATOR && !ci->local) aiman::removeai(ci);
+        if(ci->state.state==CS_SPECTATOR && !ci->local) aimanager::removeai(ci);
     }
 
     extern void connected(clientinfo *ci);
@@ -2315,7 +2315,7 @@ namespace server
         pausegame(false);
         changegamespeed(100);
         if(smode) smode->cleanup();
-        aiman::clearai();
+        aimanager::clearai();
         serverevents::invalidate();
 
         gamemode = mode;
@@ -2383,7 +2383,7 @@ namespace server
             if(m_mp(gamemode) && ci->state.state!=CS_SPECTATOR) sendspawn(ci);
         }
 
-        aiman::changemap();
+        aimanager::changemap();
 
         if(m_demo)
         {
@@ -3017,7 +3017,7 @@ namespace server
                         }
                     }
                 }
-                aiman::checkai();
+                aimanager::checkai();
                 if(smode) smode->update();
             }
         }
@@ -3059,7 +3059,7 @@ namespace server
         if(smode) smode->leavegame(ci);
         ci->state.state = CS_SPECTATOR;
         ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-        if(!ci->local && (!ci->privilege || ci->warned)) aiman::removeai(ci);
+        if(!ci->local && (!ci->privilege || ci->warned)) aimanager::removeai(ci);
         sendf(-1, 1, "ri4", N_SPECTATOR, ci->clientnum, 1, ci->queue);
     }
 
@@ -3140,7 +3140,7 @@ namespace server
         ci->state.state = CS_DEAD;
         ci->state.respawn();
         ci->state.lasttimeplayed = lastmillis;
-        aiman::addclient(ci);
+        aimanager::addclient(ci);
         sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 0, ci->queue);
         if(ci->clientmap[0] || ci->mapcrc) checkmaps();
         if(!hasmap(ci)) rotatemap(true);
@@ -3154,7 +3154,7 @@ namespace server
     void noclients()
     {
         bannedips.shrink(0);
-        aiman::clearai();
+        aimanager::clearai();
     }
 
     void localconnect(int n)
@@ -3201,7 +3201,7 @@ namespace server
             savescore(ci);
             sendf(-1, 1, "ri2", N_CDIS, n);
             clients.removeobj(ci);
-            aiman::removeai(ci);
+            aimanager::removeai(ci);
             if(!numclients(-1, false, true)) noclients(); // bans clear when server empties
             if(ci->local) checkpausegame();
         }
@@ -3463,7 +3463,7 @@ namespace server
         if(restorescore(ci)) sendresume(ci);
         sendinitclient(ci);
 
-        aiman::addclient(ci);
+        aimanager::addclient(ci);
 
         if(m_demo) setupdemoplayback();
 
@@ -3955,7 +3955,7 @@ namespace server
                 {
                     if(ci->state.state==CS_ALIVE) suicide(ci);
                     ci->team = team;
-                    aiman::changeteam(ci);
+                    aimanager::changeteam(ci);
                     sendf(-1, 1, "riiii", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
                 }
                 break;
@@ -4123,7 +4123,7 @@ namespace server
                     if(wi->state.state==CS_ALIVE) suicide(wi);
                     wi->team = team;
                 }
-                aiman::changeteam(wi);
+                aimanager::changeteam(wi);
                 sendf(-1, 1, "riiii", N_SETTEAM, who, wi->team, 1);
                 break;
             }
@@ -4219,27 +4219,27 @@ namespace server
 
             case N_ADDBOT:
             {
-                aiman::reqadd(ci, getint(p));
+                aimanager::reqadd(ci, getint(p));
                 break;
             }
 
             case N_DELBOT:
             {
-                aiman::reqdel(ci);
+                aimanager::reqdel(ci);
                 break;
             }
 
             case N_BOTLIMIT:
             {
                 int limit = getint(p);
-                if(ci) aiman::setbotlimit(ci, limit);
+                if(ci) aimanager::setbotlimit(ci, limit);
                 break;
             }
 
             case N_BOTBALANCE:
             {
                 int balance = getint(p);
-                if(ci) aiman::setbotbalance(ci, balance!=0);
+                if(ci) aimanager::setbotbalance(ci, balance!=0);
                 break;
             }
 
@@ -4436,5 +4436,5 @@ namespace server
 
     int protocolversion() { return PROTOCOL_VERSION; }
 
-    #include "aiman.h"
+    #include "aimanager.h"
 }

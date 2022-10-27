@@ -1,5 +1,5 @@
 // server-side ai manager
-namespace aiman
+namespace aimanager
 {
     bool dorefresh = false, botbalance = true;
     VARN(serverbotlimit, botlimit, 0, 8, MAXBOTS);

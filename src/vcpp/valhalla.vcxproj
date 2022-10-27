@@ -426,6 +426,7 @@
     <ClInclude Include="..\engine\textedit.h" />
     <ClInclude Include="..\engine\texture.h" />
     <ClInclude Include="..\engine\vertmodel.h" />
+    <ClInclude Include="..\game\aimanager.h" />
     <ClInclude Include="..\game\elimination.h" />
     <ClInclude Include="..\game\entity.h" />
     <ClInclude Include="..\game\gamemode.h" />
@@ -440,7 +441,6 @@
     <ClInclude Include="..\shared\igame.h" />
     <ClInclude Include="..\shared\tools.h" />
     <ClInclude Include="..\game\ai.h" />
-    <ClInclude Include="..\game\aiman.h" />
     <ClInclude Include="..\game\ctf.h" />
     <ClInclude Include="..\game\extinfo.h" />
     <ClInclude Include="..\game\game.h" />

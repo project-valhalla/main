@@ -168,9 +168,6 @@
     <ClInclude Include="..\game\ai.h">
       <Filter>game</Filter>
     </ClInclude>
-    <ClInclude Include="..\game\aiman.h">
-      <Filter>game</Filter>
-    </ClInclude>
     <ClInclude Include="..\engine\animmodel.h">
       <Filter>engine</Filter>
     </ClInclude>
@@ -286,6 +283,9 @@
       <Filter>game</Filter>
     </ClInclude>
     <ClInclude Include="..\game\entity.h">
+      <Filter>game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game\aimanager.h">
       <Filter>game</Filter>
     </ClInclude>
   </ItemGroup>

@@ -140,13 +140,17 @@ Texture *backgroundmapshot = NULL;
 string backgroundmapname = "";
 char *backgroundmapinfo = NULL;
 
-void bgquad(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1)
+void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1, bool flipx = 0, bool flipy = 0)
 {
+    if(flipx) swap(tx1, tx2);
+    if(flipy) swap(ty1, ty2);
+    gle::defvertex(2);
+    gle::deftexcoord0();
     gle::begin(GL_TRIANGLE_STRIP);
-    gle::attribf(x,   y);   gle::attribf(tx,      ty);
-    gle::attribf(x+w, y);   gle::attribf(tx + tw, ty);
-    gle::attribf(x,   y+h); gle::attribf(tx,      ty + th);
-    gle::attribf(x+w, y+h); gle::attribf(tx + tw, ty + th);
+    gle::attribf(x, y);     gle::attribf(tx1, ty1);
+    gle::attribf(x+w, y);   gle::attribf(tx2, ty1);
+    gle::attribf(x, y+h);   gle::attribf(tx1, ty2);
+    gle::attribf(x+w, y+h); gle::attribf(tx2, ty2);
     gle::end();
 }
 
@@ -165,29 +169,45 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     resethudmatrix();
     resethudshader();
 
-    gle::defvertex(2);
-    gle::deftexcoord0();
-
-    settexture("data/interface/background.png", 0);
-    bgquad(0, 0, w, h);
-
     glEnable(GL_BLEND);
+
+    Texture *t = textureload("data/interface/background.png", 0, true, false);
+    glBindTexture(GL_TEXTURE_2D, t->id);
+    float offsetx = 0, offsety = 0;
+    float hudratio = h / (float)w, bgratio = t->h / (float)t->w;
+
+    if(hudratio < bgratio)
+    {
+        float scalex = w / (float)t->w;
+        float scaledh = t->h * scalex;
+        float ratioy = h / scaledh;
+        offsety = (1.0f - ratioy) * 0.5f;
+    }
+    else
+    {
+        float scaley = h / (float)t->h;
+        float scaledw = t->w * scaley;
+        float ratiox = w / scaledw;
+        offsetx = (1.0f - ratiox) * 0.5f;
+    }
+    drawquad(0, 0, w, h, offsetx, offsety, 1-offsetx, 1-offsety);
+
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     settexture("data/interface/shadow.png", 3);
-    bgquad(0, 0, w, h);
+    drawquad(0, 0, w, h);
 
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     float lw = min(w, h), lh = 0.25f*lw,
           lx = 0.5f*(w - lw), slice = floor(0.005f*lw);
     settexture("<mad:0/0/0>data/interface/logo.png", 3);
-    bgquad(lx, slice, lw, lh);
+    drawquad(lx, slice, lw, lh);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     settexture("<mad:0.165/0.953/0.482>data/interface/logo.png", 3);
-    bgquad(lx+slice, 0, lw, lh);
+    drawquad(lx+slice, 0, lw, lh);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -221,7 +241,7 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
             x -= 0.5f*sz;
             resethudshader();
             glBindTexture(GL_TEXTURE_2D, mapshot->id);
-            bgquad(x, y, sz, sz);
+            drawquad(x, y, sz, sz);
         }
         if(mapname)
         {
@@ -306,23 +326,21 @@ void renderprogressview(int w, int h, float bar, const char *text)   // also use
           fx = renderedframe ? w - fw - fh/4 : 0.5f*(w - fw),
           fy = renderedframe ? fh/4 : h - fh*1.5f;
     settexture("data/interface/loading_frame.png", 3);
-    bgquad(fx, fy, fw, fh);
+    drawquad(fx, fy, fw, fh);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     float bw = fw*(512 - 2*8)/512.0f, bh = fh*20/32.0f,
           bx = fx + fw*8/512.0f, by = fy + fh*6/32.0f,
-          su1 = 0/32.0f, su2 = 8/32.0f, sw = fw*8/512.0f,
-          eu1 = 24/32.0f, eu2 = 32/32.0f, ew = fw*8/512.0f,
-          mw = bw - sw - ew,
+          sw = fw*8/512.0f, mw = bw - sw - sw,
           ex = bx+sw + max(mw*bar, fw*8/512.0f);
     if(bar > 0)
     {
         settexture("data/interface/loading_bar.png", 3);
-        bgquad(bx, by, sw, bh, su1, 0, su2-su1, 1);
-        bgquad(bx+sw, by, ex-(bx+sw), bh, su2, 0, eu1-su2, 1);
-        bgquad(ex, by, ew, bh, eu1, 0, eu2-eu1, 1);
+        drawquad(bx, by, sw, bh);
+        drawquad(bx+sw, by, ex-(bx+sw), bh, 0.25f, 0, 0.75f, 1);
+        drawquad(ex, by, sw, bh, 0.75f, 0, 0.25f, 1);
     }
 
     if(text)

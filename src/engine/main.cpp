@@ -169,8 +169,6 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     resethudmatrix();
     resethudshader();
 
-    glEnable(GL_BLEND);
-
     Texture *t = textureload("data/interface/background.png", 0, true, false);
     glBindTexture(GL_TEXTURE_2D, t->id);
     float offsetx = 0, offsety = 0;
@@ -192,6 +190,7 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     }
     drawquad(0, 0, w, h, offsetx, offsety, 1-offsetx, 1-offsety);
 
+    glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     settexture("data/interface/shadow.png", 3);

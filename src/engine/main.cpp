@@ -191,24 +191,18 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     drawquad(0, 0, w, h, offsetx, offsety, 1-offsetx, 1-offsety);
 
     glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     settexture("data/interface/shadow.png", 3);
     drawquad(0, 0, w, h);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     float lw = min(w, h), lh = 0.25f*lw,
           lx = 0.5f*(w - lw), slice = floor(0.005f*lw);
     settexture("<mad:0/0/0>data/interface/logo.png", 3);
     drawquad(lx, slice, lw, lh);
 
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
     settexture("<mad:0.165/0.953/0.482>data/interface/logo.png", 3);
     drawquad(lx+slice, 0, lw, lh);
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if(caption)
     {

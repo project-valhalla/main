@@ -1728,6 +1728,14 @@ uchar *loadalphamask(Texture *t)
     return t->alphamask;
 }
 
+Texture *textureloaded(const char *name)
+{
+    string tname;
+    copystring(tname, name);
+    path(tname);
+    return textures.access(tname);
+}
+
 Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 {
     string tname;
@@ -4087,3 +4095,9 @@ COMMAND(mergenormalmaps, "ss");
 COMMAND(normalizenormalmap, "ss");
 COMMAND(removealphachannel, "ss");
 
+ICOMMAND(gettexaspect, "s", (char *tex),
+{
+    Texture *t = textureloaded(tex);
+    if(!t) return;
+    floatret((float)t->w / (float)t->h);
+});

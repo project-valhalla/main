@@ -179,25 +179,33 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
 
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    float lh = 0.5f*min(w, h), lw = lh*2,
-          lx = 0.5f*(w - lw), ly = 0.5f*(h*0.5f - lh);
-    settexture((maxtexsize ? min(maxtexsize, hwtexsize) : hwtexsize) >= 1024 && (hudw > 1280 || hudh > 800) ? "<premul>data/interface/logo_1024.png" : "<premul>data/interface/logo.png", 3);
-    bgquad(lx, ly, lw, lh);
+    float lw = min(w, h), lh = 0.25f*lw,
+          lx = 0.5f*(w - lw), slice = floor(0.005f*lw);
+    settexture("<mad:0/0/0>data/interface/logo.png", 3);
+    bgquad(lx, slice, lw, lh);
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    settexture("<mad:0.165/0.953/0.482>data/interface/logo.png", 3);
+    bgquad(lx+slice, 0, lw, lh);
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if(caption)
     {
         int tw = text_width(caption);
-        float tsz = 0.04f*min(w, h)/FONTH,
-              tx = 0.5f*(w - tw*tsz), ty = h - 0.075f*1.5f*min(w, h) - FONTH*tsz;
+        float tsz = 0.04f*lw/FONTH,
+              tx = 0.5f*(w - tw*tsz), ty = h - 0.075f*1.5f*lw - FONTH*tsz;
         pushhudtranslate(tx, ty, tsz);
         draw_text(caption, 0, 0);
         pophudmatrix();
     }
     if(mapshot || mapname)
     {
-        float infowidth = 14*FONTH, sz = 0.35f*min(w, h), msz = (0.85f*min(w, h) - sz)/(infowidth + FONTH), x = 0.5f*w, y = ly+lh - sz/15, mx = 0, my = 0, mw = 0, mh = 0;
+        float infowidth = 14*FONTH, sz = 0.35f*lw,
+            msz = (0.85f*lw - sz)/(infowidth + FONTH),
+            x = 0.5f*w, ly = 0.5f*lw, y = (0.5f*(h*0.5f - ly) + ly) - sz/15,
+            mx = 0, my = 0, mw = 0, mh = 0;
         if(mapinfo)
         {
             text_boundsf(mapinfo, mw, mh, infowidth);

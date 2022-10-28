@@ -2720,7 +2720,7 @@ void gl_drawhud()
     resethudshader();
 
     pushfont();
-    setfont("default_outline");
+    setfont("default.ol");
 
     debuglights();
 

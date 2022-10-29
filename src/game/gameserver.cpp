@@ -1542,8 +1542,16 @@ namespace server
                     else formatstring(kicker, "%s as '\fs\f5%s\fr'", colorname(ci), authname);
                 }
                 else copystring(kicker, colorname(ci));
-                if(reason && reason[0]) sendservmsgf("%s kicked %s because: %s", kicker, colorname(vinfo), reason);
-                else sendservmsgf("%s kicked %s", kicker, colorname(vinfo));
+                if(reason && reason[0])
+                {
+                    sendservmsgf("%s kicked %s because: %s", kicker, colorname(vinfo), reason);
+                    if(isdedicatedserver()) logoutf("%s kicked %s because: %s", kicker, colorname(vinfo), reason);
+                }
+                else
+                {
+                    sendservmsgf("%s kicked %s", kicker, colorname(vinfo));
+                    if(isdedicatedserver()) logoutf("%s kicked %s", kicker, colorname(vinfo));
+                }
                 uint ip = getclientip(victim);
                 addban(ip, 4*60*60000);
                 kickclients(ip, ci, priv);
@@ -1559,8 +1567,18 @@ namespace server
             clientinfo *vinfo = (clientinfo *)getclientinfo(victim);
             if(vinfo && vinfo->connected && (ci->privilege >= vinfo->privilege || ci->local) && vinfo->privilege < PRIV_AUTH && !vinfo->local)
             {
-                if(reason && reason[0]) sendservmsgf("%s %smuted %s because: %s", colorname(ci), val>0? "": "un", colorname(vinfo), reason);
-                else sendservmsgf("%s %smuted %s", colorname(ci), val>0? "": "un", colorname(vinfo));
+                const char *action = "muted";
+                if(val <= 0) action = "unmuted";
+                if(reason && reason[0])
+                {
+                    sendservmsgf("%s %s %s because: %s", colorname(ci), action, colorname(vinfo), reason);
+                    if(isdedicatedserver()) logoutf("%s %s %s because: %s", colorname(ci), action, colorname(vinfo), reason);
+                }
+                else
+                {
+                    sendservmsgf("%s %s %s", colorname(ci), action, colorname(vinfo));
+                    if(isdedicatedserver()) logoutf("%s %s %s", colorname(ci), action, colorname(vinfo));
+                }
                 vinfo->mute = val;
             }
         }

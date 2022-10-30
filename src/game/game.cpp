@@ -283,6 +283,7 @@ namespace game
                 entities::checkitems(self);
                 if(cmode) cmode->checkitems(self);
             }
+            else if(self->state == CS_SPECTATOR) moveplayer(self, 10, true);
         }
         int mat = lookupmaterial(camera1->o);
         if(self->state!=CS_EDITING && mat&MAT_WATER) waterchan = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterchan);
@@ -364,7 +365,7 @@ namespace game
 
     bool allowmove(physent *d)
     {
-        if(d->type!=ENT_PLAYER) return true;
+        if(d->type!=ENT_PLAYER || d->state == CS_SPECTATOR) return true;
         return !intermission && !(gore && ((gameent *)d)->gibbed());
     }
 

@@ -163,7 +163,7 @@ namespace game
     {
         gameent *d = followingplayer();
         if(d) return specmode > 1 || d->state == CS_DEAD;
-        return intermission || self->state == CS_DEAD;
+        return (intermission && self->state != CS_SPECTATOR) || self->state == CS_DEAD;
     }
 
     bool collidecamera()

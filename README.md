@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="600" src="https://dl.dropboxusercontent.com/s/8pzbwz3rr8lvup5/logo640x160.png?dl=0" alt="Valhalla Logo">
+  <img width="600" src="https://dl.dropboxusercontent.com/s/jld3nn81hag8w8g/logo_ol640x160.png?dl=0" alt="Valhalla Logo">
 </p>
 
 <p align="center">

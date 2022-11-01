@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="500" src="https://dl.dropboxusercontent.com/s/shxat7evplam676/logo_title.png?dl=0" alt="Valhalla Logo">
+  <img width="600" src="https://dl.dropboxusercontent.com/s/8pzbwz3rr8lvup5/logo640x160.png?dl=0" alt="Valhalla Logo">
 </p>
 
 <p align="center">
@@ -21,7 +21,7 @@ In an effort to enhance our skills and learn new things, we are working to bring
 
 Although Valhalla is inspired by [Cube 2: Sauerbraten](http://sauerbraten.org) and numerous other ancient video games, it does not intend to blindly follow the path of other similar projects and attempt to create yet another *clone* of well-known old-school games, but rather it seeks to innovate the genre by proposing a simple but enjoyable shooter, experimenting with fresh concepts and combining old-school and modern elements to create something distinctive, leading to a modern interpretation of the classic arena gameplay. 
 
-We strive to offer the majority of players a satisfying gaming experience by making sure Valhalla is always free and open source, collaborating with the community, focusing on the creation of a nice blend of classic and casual gameplay and trying to enhance the built-in map editor.
+We strive to offer the majority of players a satisfying gaming experience by making sure Valhalla is always free and open source, collaborating with the community, focusing on the creation of a nice blend of classic and casual gameplay and trying to enhance the built-in map editor based on the Cube Engine 2.
 
 Anyone can contribute features, assets and ideas to the project to help it develop.
 

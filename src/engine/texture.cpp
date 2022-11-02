@@ -4097,7 +4097,18 @@ COMMAND(removealphachannel, "ss");
 
 ICOMMAND(gettexaspect, "s", (char *tex),
 {
-    Texture *t = textureloaded(tex);
-    if(!t) return;
-    floatret((float)t->w / (float)t->h);
+    Texture *t = textureload(tex, 0, false, false);
+    floatret(!t ? 0.0f : (float)t->w / (float)t->h);
+});
+
+ICOMMAND(gettexw, "s", (char *tex),
+{
+    Texture *t = textureload(tex, 0, false, false);
+    intret(!t ? 0 : (int)t->w);
+});
+
+ICOMMAND(gettexh, "s", (char *tex),
+{
+    Texture *t = textureload(tex, 0, false, false);
+    intret(!t ? 0 : (int)t->h);
 });

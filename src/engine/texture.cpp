@@ -4095,10 +4095,15 @@ COMMAND(mergenormalmaps, "ss");
 COMMAND(normalizenormalmap, "ss");
 COMMAND(removealphachannel, "ss");
 
-ICOMMAND(gettexaspect, "s", (char *tex),
+ICOMMAND(gettexaspect, "si", (char *tex, int *a),
 {
     Texture *t = textureload(tex, 0, false, false);
-    floatret(!t ? 0.0f : (float)t->w / (float)t->h);
+    if(!t) floatret(0.0f);
+    else
+    {
+        float w = t->w; float h = t->h;
+        floatret(*a ? h/w : w/h);
+    }
 });
 
 ICOMMAND(gettexw, "s", (char *tex),

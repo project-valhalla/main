@@ -4098,13 +4098,13 @@ COMMAND(removealphachannel, "ss");
 ICOMMAND(gettexaspecthw, "s", (char *tex),
 {
     Texture *t = textureload(tex, 0, false, false);
-    floatret(t->h/t->w);
+    floatret(float(t->h)/t->w);
 });
 
 ICOMMAND(gettexaspectwh, "s", (char *tex),
 {
     Texture *t = textureload(tex, 0, false, false);
-    floatret(t->w/t->h);
+    floatret(float(t->w)/t->h);
 });
 
 ICOMMAND(gettexw, "s", (char *tex),

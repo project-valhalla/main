@@ -4110,11 +4110,11 @@ ICOMMAND(gettexaspectwh, "s", (char *tex),
 ICOMMAND(gettexw, "s", (char *tex),
 {
     Texture *t = textureload(tex, 0, false, false);
-    intret(!t ? 0 : (int)t->w);
+    intret(t->w);
 });
 
 ICOMMAND(gettexh, "s", (char *tex),
 {
     Texture *t = textureload(tex, 0, false, false);
-    intret(!t ? 0 : (int)t->h);
+    intret(t->h);
 });

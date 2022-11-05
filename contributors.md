@@ -3,7 +3,7 @@ Copyright © 2019-2022 Valhalla Project source code and related configuration fi
 
 **Main developers**:
 - [Darky2020](https://github.com/Darky2020)
-- [Edasert](https://github.com/edasert)
+- [edasert](https://github.com/edasert)
 - [garsipal](https://github.com/garsipal)
 - [Στέφανος "Coornio/8924th" Βλαστός](https://github.com/coornio)
 

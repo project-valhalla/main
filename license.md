@@ -16,7 +16,7 @@ Said assets may be subject to individual copyright and specific distribution res
 
 ## License
 
-A list of the individuals who contributed to the content licensed under these terms can be found in the CONTRIBUTORS.md file located in the root directory of this repository.
+A list of the individuals who contributed to the content licensed under these terms can be found in the "contributors.md" file located in the root directory of this repository.
 
 You may use the source code if you abide by the zlib license: http://www.opensource.org/licenses/zlib-license.php
 

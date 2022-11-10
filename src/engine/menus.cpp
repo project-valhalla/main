@@ -63,6 +63,7 @@ void menuprocess()
     }
     if(mainmenu && !isconnected(true) && !UI::hascursor()) UI::showui("main");
     if(!UI::uivisible("perm")) UI::showui("perm");
+    if(!UI::uivisible("ghud")) UI::showui("ghud");
 }
 
 VAR(mainmenu, 1, 1, 0);

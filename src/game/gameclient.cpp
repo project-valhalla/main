@@ -359,6 +359,12 @@ namespace game
         if(d) intret(d->health);
     });
 
+    ICOMMAND(getclientmaxhealth, "i", (int *cn),
+    {
+        gameent *d = getclient(*cn);
+        if(d) intret(d->maxhealth);
+    });
+
     ICOMMAND(getclientshield, "i", (int *cn),
     {
         gameent *d = getclient(*cn);

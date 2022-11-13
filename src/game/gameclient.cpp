@@ -353,6 +353,42 @@ namespace game
         if(d) intret(d->deaths);
     });
 
+    ICOMMAND(getclienthealth, "i", (int *cn),
+    {
+        gameent *d = getclient(*cn);
+        if(d) intret(d->health);
+    });
+
+    ICOMMAND(getclientshield, "i", (int *cn),
+    {
+        gameent *d = getclient(*cn);
+        if(d) intret(d->shield);
+    });
+
+    ICOMMAND(getclientweapon, "i", (int *cn),
+    {
+        gameent *d = getclient(*cn);
+        if(d) intret(d->gunselect);
+    });
+
+    ICOMMAND(getclientammo, "i", (int *cn),
+    {
+        gameent *d = getclient(*cn);
+        if(d) intret(d->ammo[d->gunselect]);
+    });
+
+    ICOMMAND(getclientpowerup, "i", (int *cn),
+    {
+        gameent *d = getclient(*cn);
+        if(d) intret(d->poweruptype);
+    });
+
+    ICOMMAND(getclientpowerupmillis, "i", (int *cn),
+    {
+        gameent *d = getclient(*cn);
+        if(d) intret(d->powerupmillis);
+    });
+
     ICOMMAND(getclientprivilege, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
@@ -411,6 +447,7 @@ namespace game
     ICOMMAND(isai, "ii", (int *cn, int *type), intret(isai(*cn, *type) ? 1 : 0));
 
     VARP(playersearch, 0, 3, 10);
+
     int parseplayer(const char *arg)
     {
         char *end;

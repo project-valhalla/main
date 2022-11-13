@@ -667,8 +667,7 @@ void resetgl()
 
     inbetweenframes = false;
     if(!reloadtexture(*notexture) ||
-       !reloadtexture("<premul>data/interface/logo.png") ||
-       !reloadtexture("<premul>data/interface/logo_1024.png") ||
+       !reloadtexture("data/interface/logo.png") ||
        !reloadtexture("data/interface/background.png") ||
        !reloadtexture("data/interface/shadow.png") ||
        !reloadtexture("data/interface/mapshot_frame.png") ||

@@ -694,7 +694,7 @@ VAR(hwcubetexsize, 1, 0, 0);
 VAR(hwmaxaniso, 1, 0, 0);
 VAR(hwtexunits, 1, 0, 0);
 VAR(hwvtexunits, 1, 0, 0);
-VARFP(maxtexsize, 0, 0, 1<<12, initwarning("texture quality", INIT_LOAD));
+VARFP(maxtexsize, 0, 0, 1<<13, initwarning("texture quality", INIT_LOAD));
 VARFP(reducefilter, 0, 1, 1, initwarning("texture quality", INIT_LOAD));
 VARFP(texreduce, 0, 0, 12, initwarning("texture quality", INIT_LOAD));
 VARFP(texcompress, 0, 4096, 1<<13, initwarning("texture quality", INIT_LOAD));
@@ -1640,7 +1640,7 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
         if(!s) { if(msg) conoutf(CON_ERROR, "could not load texture %s", file); return false; }
         int bpp = s->format->BitsPerPixel;
         if(bpp%8 || !texformat(bpp/8)) { SDL_FreeSurface(s); conoutf(CON_ERROR, "texture must be 8, 16, 24, or 32 bpp: %s", file); return false; }
-        if(max(s->w, s->h) > (1<<12)) { SDL_FreeSurface(s); conoutf(CON_ERROR, "texture size exceeded %dx%d pixels: %s", 1<<12, 1<<12, file); return false; }
+        if(max(s->w, s->h) > (1<<13)) { SDL_FreeSurface(s); conoutf(CON_ERROR, "texture size exceeded %dx%d pixels: %s", 1<<13, 1<<13, file); return false; }
         d.wrap(s);
     }
 
@@ -3788,7 +3788,7 @@ void savepng(const char *filename, ImageData &image, bool flip)
     if(deflateInit(&z, compresspng) != Z_OK)
         goto error;
 
-    uchar buf[1<<12];
+    uchar buf[1<<13];
     z.next_out = (Bytef *)buf;
     z.avail_out = sizeof(buf);
 

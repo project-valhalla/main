@@ -597,6 +597,17 @@ void texpremul(ImageData &s)
     }
 }
 
+void texfade(ImageData &s, float alpha) {
+    switch(s.bpp) {
+        case 2:
+            writetex(s, dst[1] = uchar(clamp(uint(dst[1])*alpha, 0.0f, 255.0f)); );
+            break;
+        case 4:
+            writetex(s, dst[3] = uchar(clamp(uint(dst[3])*alpha, 0.0f, 255.0f)); );
+            break;
+    }
+}
+
 void texagrad(ImageData &s, float x2, float y2, float x1, float y1)
 {
     if(s.bpp != 2 && s.bpp != 4) return;
@@ -1657,6 +1668,7 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
             int emphasis = atoi(arg[0]), repeat = atoi(arg[1]);
             texblur(d, emphasis > 0 ? clamp(emphasis, 1, 2) : 1, repeat > 0 ? repeat : 1);
         }
+        else if(matchstring(cmd, len, "fade")) texfade(d, atof(arg[0]));
         else if(matchstring(cmd, len, "premul")) texpremul(d);
         else if(matchstring(cmd, len, "agrad")) texagrad(d, atof(arg[0]), atof(arg[1]), atof(arg[2]), atof(arg[3]));
         else if(matchstring(cmd, len, "blend"))

@@ -201,7 +201,7 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     settexture("<mad:0/0/0>data/interface/logo.png", 3);
     drawquad(lx, slice, lw, lh);
 
-    settexture("<mad:0.165/0.953/0.482>data/interface/logo.png", 3);
+    settexture("data/interface/logo.png", 3);
     drawquad(lx+slice, 0, lw, lh);
 
     if(caption)
@@ -668,7 +668,7 @@ void resetgl()
     inbetweenframes = false;
     if(!reloadtexture(*notexture) ||
        !reloadtexture("<mad:0/0/0>data/interface/logo.png") ||
-       !reloadtexture("<mad:0.165/0.953/0.482>data/interface/logo.png") ||
+       !reloadtexture("data/interface/logo.png") ||
        !reloadtexture("data/interface/background.png") ||
        !reloadtexture("data/interface/shadow.png") ||
        !reloadtexture("data/interface/mapshot_frame.png") ||

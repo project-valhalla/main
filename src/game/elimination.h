@@ -74,6 +74,7 @@ struct eliminationclientmode : clientmode
             sendservmsgf("%s%s \f2team reached score limit", teamtextcode[winner], teamnames[winner]);
         }
     }
+
     static void startround()
     {
         resetgamelimit();
@@ -85,8 +86,10 @@ struct eliminationclientmode : clientmode
                 if(ci->queue)
                 {
                     ci->queue = false;
-                    extern void unspectate(clientinfo *ci);
-                    unspectate(ci);
+                    ci->state.state = CS_DEAD;
+                    ci->state.respawn();
+                    ci->state.lasttimeplayed = lastmillis;
+                    sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 0, ci->queue);
                 }
                 ci->state.reassign();
                 sendspawn(ci);

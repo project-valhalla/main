@@ -406,6 +406,9 @@ void addserver(const char *name, int port, const char *password, bool keep)
     if(password) s->password = newstring(password);
     s->keep = keep;
 }
+ICOMMAND(addserver, "sis", (const char *name, int *port, const char *password), addserver(name, *port, password[0] ? password : NULL));
+ICOMMAND(keepserver, "sis", (const char *name, int *port, const char *password), addserver(name, *port, password[0] ? password : NULL, true));
+ICOMMAND(numservers, "", (), intret(servers.length()));
 
 VARP(searchlan, 0, 0, 1);
 VARMP(servpingrate, 1, 5, 60, 1000);
@@ -569,8 +572,7 @@ void refreshservers()
     if(totalmillis - lastinfo >= servpingrate/(maxservpings ? max(1, (servers.length() + maxservpings - 1) / maxservpings) : 1)) pingservers();
     if(autosortservers) sortservers();
 }
-
-ICOMMAND(numservers, "", (), intret(servers.length()))
+COMMAND(refreshservers, "");
 
 #define GETSERVERINFO_(idx, si, body) \
     if(servers.inrange(idx)) \
@@ -616,6 +618,7 @@ void clearservers(bool full = false)
     if(full) servers.deletecontents();
     else loopvrev(servers) if(!servers[i]->keep) delete servers.remove(i);
 }
+ICOMMAND(clearservers, "i", (int *full), clearservers(*full!=0));
 
 #define RETRIEVELIMIT 20000
 
@@ -707,18 +710,14 @@ void updatefrommaster()
     refreshservers();
     updatedservers = true;
 }
+COMMAND(updatefrommaster, "");
 
 void initservers()
 {
-    if(autoupdateservers && !updatedservers) updatefrommaster();
+    if(!autoupdateservers && updatedservers) return;
+    updatefrommaster();
 }
-
-ICOMMAND(addserver, "sis", (const char *name, int *port, const char *password), addserver(name, *port, password[0] ? password : NULL));
-ICOMMAND(keepserver, "sis", (const char *name, int *port, const char *password), addserver(name, *port, password[0] ? password : NULL, true));
-ICOMMAND(clearservers, "i", (int *full), clearservers(*full!=0));
-COMMAND(updatefrommaster, "");
 COMMAND(initservers, "");
-COMMAND(refreshservers, "");
 
 void writeservercfg()
 {

@@ -869,12 +869,12 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
     new quadrenderer("data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                                    // hud icon
     new quadrenderer("<colorify:1/1/1>data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                    // grey hud icon
-    new quadrenderer("data/interface/icon/light.png", PT_PART),
-    new quadrenderer("data/interface/icon/envmap.png", PT_PART),
-    new quadrenderer("data/interface/icon/player.png", PT_PART),
-    new quadrenderer("data/interface/icon/entity.png", PT_PART),
-    new quadrenderer("data/interface/icon/particle.png", PT_PART),
-    new quadrenderer("data/interface/icon/sound.png", PT_PART),
+    new quadrenderer("data/interface/particle/light.png", PT_PART),
+    new quadrenderer("data/interface/particle/envmap.png", PT_PART),
+    new quadrenderer("data/interface/particle/player.png", PT_PART),
+    new quadrenderer("data/interface/particle/entity.png", PT_PART),
+    new quadrenderer("data/interface/particle/particle.png", PT_PART),
+    new quadrenderer("data/interface/particle/sound.png", PT_PART),
     &texts,                                                                                                      // text
     &meters,                                                                                                     // meter
     &metervs,                                                                                                    // meter vs.

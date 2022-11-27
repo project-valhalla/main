@@ -249,27 +249,21 @@ enum
 
 static const char * const iconnames[] =
 {
-    "data/interface/icon/flag_red.png",
-    "data/interface/icon/flag_blue.png",
-    "data/interface/icon/shield.png",
-    "data/interface/icon/health.png",
-    "data/interface/icon/shotgun.png",
-    "data/interface/icon/smg.png",
-    "data/interface/icon/pulse.png",
-    "data/interface/icon/rocket.png",
-    "data/interface/icon/railgun.png",
-    "data/interface/icon/pistol.png",
-    "data/interface/icon/unknown.png",
-    "data/interface/icon/punch.png",
-    "data/interface/icon/skull01.png",
-    "data/interface/icon/zombie.png",
-    "data/interface/icon/ally.png",
-    "data/interface/icon/haste.png",
-    "data/interface/icon/skull02.png",
-    "data/interface/icon/armour.png",
-    "data/interface/icon/infinity.png",
-    "data/interface/icon/asclepius.png",
-    "data/interface/icon/ankh.png"
+    "data/interface/hud/flag_red.png",
+    "data/interface/hud/flag_blue.png",
+    "data/interface/hud/shield.png",
+    "data/interface/hud/health.png",
+    "data/interface/hud/shotgun.png",
+    "data/interface/hud/smg.png",
+    "data/interface/hud/pulse.png",
+    "data/interface/hud/rocket.png",
+    "data/interface/hud/railgun.png",
+    "data/interface/hud/pistol.png",
+
+    "data/interface/hud/zombie.png",
+    "data/interface/hud/ally.png",
+    "data/interface/hud/haste.png",
+    "data/interface/hud/armor.png"
 };
 
 enum

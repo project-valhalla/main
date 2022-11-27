@@ -1083,7 +1083,7 @@ void particle_trail(int type, int fade, const vec &s, const vec &e, int color, f
 }
 
 VARP(particletext, 0, 1, 1);
-VARP(maxparticletextdistance, 0, 64, 10000);
+VARP(maxparticletextdistance, 0, 128, 10000);
 
 void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
 {

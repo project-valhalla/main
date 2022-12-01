@@ -61,12 +61,13 @@ void menuprocess()
         lastmainmenu = mainmenu;
         execident("on_mainmenutoggle");
     }
+    if(!UI::uivisible("perm")) UI::showui("perm");
     if(!isconnected(true))
     {
         if(mainmenu && !UI::hascursor()) UI::showui("main");
     }
-    else if(!UI::uivisible("ghud")) UI::showui("ghud");
-    if(!UI::uivisible("perm")) UI::showui("perm");
+    else if(!UI::uivisible("hud")) UI::showui("hud");
+    
 }
 
 VAR(mainmenu, 1, 1, 0);

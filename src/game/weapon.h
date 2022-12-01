@@ -66,7 +66,7 @@ static const struct attackinfo
     // melee: default melee for all weapons
     { NULL,       ACT_MELEE,     650,  60,  0,   0, 2,    0,  0,   14,  1,  30,  0,    0, 0, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_MELEE,         S_HIT_MELEE,      S_HIT_MELEE,  },
     // shotgun
-    { GUN_SG,     ACT_PRIMARY,  1000,   5,  0, 260, 0,    0,  0, 1000, 20,  50,  0,    0, 1, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_SG1_A,         S_IMPACT_SG,      S_HIT_WEAPON  },
+    { GUN_SG,     ACT_PRIMARY,   880,   5,  0, 260, 0,    0,  0, 1000, 20,  50,  0,    0, 1, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_SG1_A,         S_IMPACT_SG,      S_HIT_WEAPON  },
     { GUN_SG,     ACT_SECONDARY, 600,  65,  0,   0, 2,  180,  0, 2048,  1,  60, 30, 2000, 2, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_SG2,           S_ROCKET_EXPLODE, S_HIT_WEAPON  },
     // smg
     { GUN_SMG,    ACT_PRIMARY,   110,  30, 30,  84, 0,    0,  0, 1000,  1,  20,  0,    0, 1, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_SMG,           S_IMPACT_SMG,     S_HIT_WEAPON  },

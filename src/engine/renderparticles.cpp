@@ -855,11 +855,11 @@ static partrenderer *parts[] =
     new quadrenderer("<grey>data/texture/particle/steam.png", PT_PART|PT_FLIP),                                          // steam
     new quadrenderer("<grey>data/texture/particle/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_BRIGHT),                      // flame
     new quadrenderer("data/texture/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE),                              // colliding snow
-    new taperenderer("data/texture/particle/trail.png", PT_TAPE|PT_FEW|PT_BRIGHT),                                       // bullet trail
+    new taperenderer("data/texture/particle/trail.png", PT_TAPE|PT_BRIGHT),                                              // bullet trail
     new taperenderer("data/texture/particle/trail_projectile.png", PT_TAPE|PT_FEW|PT_BRIGHT),                            // projectile trail
-    &lightnings,                                                                                                 // lightning
-    &fireballs,                                                                                                  // explosion fireball
-    &pulsebursts,                                                                                                // pulse burst
+    &lightnings,                                                                                                         // lightning
+    &fireballs,                                                                                                          // explosion fireball
+    &pulsebursts,                                                                                                        // pulse burst
     new quadrenderer("data/texture/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                    // sparks
     new trailrenderer("data/texture/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                          // spark trail
     new quadrenderer("data/texture/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                                      // edit mode entities
@@ -867,18 +867,18 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/muzzle01.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // muzzle flash
     new quadrenderer("data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // pulse muzzle flash
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
-    new quadrenderer("data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                                    // hud icon
-    new quadrenderer("<colorify:1/1/1>data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                    // grey hud icon
+    new quadrenderer("data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                                            // hud icon
+    new quadrenderer("<colorify:1/1/1>data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                            // grey hud icon
     new quadrenderer("data/interface/particle/light.png", PT_PART),
     new quadrenderer("data/interface/particle/envmap.png", PT_PART),
     new quadrenderer("data/interface/particle/player.png", PT_PART),
     new quadrenderer("data/interface/particle/entity.png", PT_PART),
     new quadrenderer("data/interface/particle/particle.png", PT_PART),
     new quadrenderer("data/interface/particle/sound.png", PT_PART),
-    &texts,                                                                                                      // text
-    &meters,                                                                                                     // meter
-    &metervs,                                                                                                    // meter vs.
-    &flares                                                                                                      // lens flares - must be done last
+    &texts,                                                                                                              // text
+    &meters,                                                                                                             // meter
+    &metervs,                                                                                                            // meter vs.
+    &flares                                                                                                              // lens flares - must be done last
 };
 
 VARFP(maxparticles, 10, 4000, 10000, initparticles());

@@ -95,7 +95,7 @@ static const struct guninfo { const char *name, *file, *vwep; int attacks[NUMACT
     { "pulse", "pulserifle", "weapon/worldgun/pulserifle", { -1, ATK_MELEE, ATK_PULSE1, ATK_PULSE2 }, },
     { "rocket", "rocket", "weapon/worldgun/rocket", { -1, ATK_MELEE, ATK_RL1, ATK_RL2 } },
     { "railgun", "railgun", "weapon/worldgun/railgun", { -1, ATK_MELEE, ATK_RAIL, ATK_RAIL }, },
-    { "pistol", "pistol", "weapon/worldgun/pulserifle", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2 }, },
+    { "pistol", "pistol", "weapon/worldgun/pistol", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2 }, },
     { "instagun", "railgun", "weapon/worldgun/railgun", { -1, ATK_MELEE, ATK_INSTA, ATK_INSTA }, },
     { "zombie", "zombie", "", { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE }, }
 };

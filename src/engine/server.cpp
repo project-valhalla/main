@@ -1000,10 +1000,11 @@ static bool dedicatedserver = false;
 
 bool isdedicatedserver() { return dedicatedserver; }
 
-void rundedicatedserver()
+void rundedicatedserver(bool isconfigured)
 {
     dedicatedserver = true;
     logoutf("dedicated server started, waiting for clients...");
+    if(!isconfigured) logoutf("could not find server configuration file");
 #ifdef WIN32
     SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
     for(;;)
@@ -1070,7 +1071,7 @@ void initserver(bool listen, bool dedicated)
 #endif
     }
     execfile("config/server/maplistgen.cfg", false);
-    execfile("config/server/server.cfg", false);
+    bool isconfigured = execfile("config/server/server.cfg", false);
 
     if(listen) setuplistenserver(dedicated);
 
@@ -1080,7 +1081,7 @@ void initserver(bool listen, bool dedicated)
     {
         dedicatedserver = dedicated;
         updatemasterserver();
-        if(dedicated) rundedicatedserver(); // never returns
+        if(dedicated) rundedicatedserver(isconfigured); // never returns
 #ifndef STANDALONE
         else conoutf("listen server started");
 #endif

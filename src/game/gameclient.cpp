@@ -317,15 +317,6 @@ namespace game
     }
     ICOMMAND(getclientmodel, "i", (int *cn), intret(getclientmodel(*cn)));
 
-    const char *getclienticon(int cn)
-    {
-        gameent *d = getclient(cn);
-        if(!d || d->state==CS_SPECTATOR) return "spectator";
-        const playermodelinfo &mdl = getplayermodelinfo(d);
-        return m_teammode && validteam(d->team) ? mdl.icon[d->team] : mdl.icon[0];
-    }
-    ICOMMAND(getclienticon, "i", (int *cn), result(getclienticon(*cn)));
-
     int getclientcolor(int cn)
     {
         gameent *d = getclient(cn);

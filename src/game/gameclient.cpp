@@ -422,6 +422,7 @@ namespace game
         return d && d->state==CS_SPECTATOR;
     }
     ICOMMAND(isspectator, "i", (int *cn), intret(isspectator(*cn) ? 1 : 0));
+    ICOMMAND(spectating, "", (), intret(isspectator(self->clientnum) ? 1 : 0));
 
     ICOMMAND(islagged, "i", (int *cn),
     {

@@ -88,14 +88,14 @@ static const struct attackinfo
     { GUN_ZOMBIE, ACT_PRIMARY,   600, 100,  0,   0, 4,    0,  0,   15,  1,  20,  0,    0, 0, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE, S_ZOMBIE,        S_HIT_MELEE,      S_HIT_MELEE   }
 };
 
-static const struct guninfo { const char *name, *file, *vwep; int attacks[NUMACTS]; } guns[NUMGUNS] =
+static const struct guninfo { const char *name, *model, *worldmodel; int attacks[NUMACTS]; } guns[NUMGUNS] =
 {
-    { "shotgun", "shotgun", "weapon/worldgun/shotgun", { -1, ATK_MELEE, ATK_SG1, ATK_SG2 } },
-    { "smg", "smg", "weapon/worldgun/smg", { -1, ATK_MELEE, ATK_SMG1, ATK_SMG2 }, },
-    { "pulse", "pulserifle", "weapon/worldgun/pulserifle", { -1, ATK_MELEE, ATK_PULSE1, ATK_PULSE2 }, },
-    { "rocket", "rocket", "weapon/worldgun/rocket", { -1, ATK_MELEE, ATK_RL1, ATK_RL2 } },
-    { "railgun", "railgun", "weapon/worldgun/railgun", { -1, ATK_MELEE, ATK_RAIL, ATK_RAIL }, },
-    { "pistol", "pistol", "weapon/worldgun/pistol", { -1, ATK_MELEE, ATK_PISTOL1, ATK_PISTOL2 }, },
-    { "instagun", "railgun", "weapon/worldgun/railgun", { -1, ATK_MELEE, ATK_INSTA, ATK_INSTA }, },
-    { "zombie", "zombie", "", { -1, ATK_ZOMBIE, ATK_ZOMBIE, ATK_ZOMBIE }, }
+    { "shotgun",  "shotgun",    "weapon/shotgun/world",    { -1, ATK_MELEE,  ATK_SG1,     ATK_SG2     }, },
+    { "smg",      "smg",        "weapon/smg/world",        { -1, ATK_MELEE,  ATK_SMG1,    ATK_SMG2    }, },
+    { "pulse",    "pulserifle", "weapon/pulserifle/world", { -1, ATK_MELEE,  ATK_PULSE1,  ATK_PULSE2  }, },
+    { "rocket",   "rocket",     "weapon/rocket/world",     { -1, ATK_MELEE,  ATK_RL1,     ATK_RL2     }, },
+    { "railgun",  "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_RAIL,    ATK_RAIL    }, },
+    { "pistol",   "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1, ATK_PISTOL2 }, },
+    { "instagun", "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,   ATK_INSTA   }, },
+    { "zombie",   "zombie",     "",                        { -1, ATK_ZOMBIE, ATK_ZOMBIE,  ATK_ZOMBIE  }  }
 };

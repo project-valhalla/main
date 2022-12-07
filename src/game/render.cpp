@@ -81,7 +81,7 @@ namespace game
 
     static const playermodelinfo playermodels[] =
     {
-        { { "player/bones", "player/bones", "player/bones" }, { "hudgun", "hudgun", "hudgun" }, "player/zombie", { "player", "player_azul", "player_rojo" }, true }
+        { "player/bones", "player/zombie", true }
     };
 
     extern void changedplayermodel();
@@ -186,11 +186,7 @@ namespace game
             const playermodelinfo *mdl = getplayermodelinfo(i);
             if(!mdl) break;
             if(i != playermodel && (!multiplayer(false) || forceplayermodels)) continue;
-            if(m_teammode)
-            {
-                loopj(MAXTEAMS) preloadmodel(mdl->model[1+j]);
-            }
-            else preloadmodel(mdl->model[0]);
+            preloadmodel(mdl->model);
         }
     }
 
@@ -222,7 +218,7 @@ namespace game
         }
         modelattach a[5];
         int ai = 0;
-        if(guns[d->gunselect].vwep)
+        if(guns[d->gunselect].worldmodel)
         {
             int vanim = ANIM_VWEP_IDLE|ANIM_LOOP, vtime = 0;
             if(lastaction && d->lastattack >= 0 && attacks[d->lastattack].gun==d->gunselect && lastmillis < lastaction + delay)
@@ -230,14 +226,14 @@ namespace game
                 vanim = attacks[d->lastattack].vwepanim;
                 vtime = lastaction;
             }
-            a[ai++] = modelattach("tag_weapon", guns[d->gunselect].vwep, vanim, vtime);
+            a[ai++] = modelattach("tag_weapon", guns[d->gunselect].worldmodel, vanim, vtime);
         }
         if(mainpass && !(flags&MDL_ONLYSHADOW))
         {
             d->muzzle = vec(-1, -1, -1);
-            if(guns[d->gunselect].vwep) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
+            if(guns[d->gunselect].worldmodel) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         }
-        const char *mdlname = d->zombie ? mdl.zombiemodel : mdl.model[validteam(team) ? team : 0];
+        const char *mdlname = !d->zombie ? mdl.model : mdl.zombiemodel;
         float yaw = testanims && d==self ? 0 : d->yaw,
               pitch = testpitch && d==self ? testpitch : d->pitch;
         vec o = d->feetpos();
@@ -399,7 +395,7 @@ namespace game
 
     void drawhudmodel(gameent *d, int anim, int basetime)
     {
-        const char *file = guns[d->gunselect].file;
+        const char *file = guns[d->gunselect].model;
         if(!file) return;
 
         vec sway;
@@ -410,9 +406,8 @@ namespace game
         sway.add(swaydir).add(d->o);
         if(!hudgunsway) sway = d->o;
 
-        const playermodelinfo &mdl = getplayermodelinfo(d);
         int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
-        defformatstring(gunname, "weapon/%s/%s", mdl.hudguns[team], file);
+        defformatstring(gunname, "weapon/%s", file);
         modelattach a[2];
         d->muzzle = vec(-1, -1, -1);
         a[0] = modelattach("tag_muzzle", &d->muzzle);
@@ -494,27 +489,14 @@ namespace game
 
     void preloadweapons()
     {
-        const playermodelinfo &mdl = getplayermodelinfo(self);
         loopi(NUMGUNS)
         {
-            const char *file = guns[i].file;
+            const char *file = guns[i].model;
             if(!file) continue;
             string fname;
-            if(m_teammode)
-            {
-                loopj(MAXTEAMS)
-                {
-                    formatstring(fname, "weapon/%s/%s", mdl.hudguns[1+j], file);
-                    preloadmodel(fname);
-                }
-            }
-            else
-            {
-                formatstring(fname, "weapon/%s/%s", mdl.hudguns[0], file);
-                preloadmodel(fname);
-            }
-            if(guns[i].vwep) formatstring(fname, "%s", guns[i].vwep);
+            formatstring(fname, "weapon/%s", file);
             preloadmodel(fname);
+            if(guns[i].worldmodel) preloadmodel(guns[i].worldmodel);
         }
     }
 

@@ -1241,7 +1241,7 @@ namespace game
                    (int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
                    hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
         }
-
+        if(!attacks[atk].isfullauto) d->attacking = ACT_IDLE;
         int gunwait = attacks[atk].attackdelay;
         if(d->haspowerup(PU_HASTE) || d->juggernaut) gunwait /= 2;
         d->gunwait = gunwait;

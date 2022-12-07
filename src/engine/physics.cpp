@@ -1693,8 +1693,8 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
 {
     gameent *e = (gameent *)pl;
     bool canjump = pl->physstate >= PHYS_SLOPE
-                   || ((e->haspowerup(PU_AGILITY) || e->zombie || e->juggernaut)
-                   && !pl->doublejumping && !(pl->crouching && pl->crouched()));
+                   || ((e->haspowerup(PU_AGILITY)
+                   || e->zombie || e->juggernaut) && !pl->doublejumping);
     if(floating)
     {
         if(pl->jumping)
@@ -1975,7 +1975,14 @@ dir(forward,  move,    1, k_up,    k_down);
 dir(left,     strafe,  1, k_left,  k_right);
 dir(right,    strafe, -1, k_right, k_left);
 
-ICOMMAND(jump,   "D", (int *down), { if(!*down || game::canjump()) player->jumping = *down!=0; });
+ICOMMAND(jump,   "D", (int *down),
+{
+    if(!*down || game::canjump())
+    {
+        if(player->crouched()) player->crouching = 0;
+        else player->jumping = *down!=0;
+    }
+});
 ICOMMAND(crouch, "D", (int *down), { if(!*down) player->crouching = abs(player->crouching); else if(game::cancrouch()) player->crouching = -1; });
 
 bool entinmap(dynent *d, bool avoidplayers)        // brute force but effective way to find a free spawn spot in the map

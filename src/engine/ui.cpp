@@ -1380,11 +1380,13 @@ namespace UI
     struct Line : Filler
     {
         Color color;
+        int flip;
 
-        void setup(const Color &color_, float minw_ = 0, float minh_ = 0)
+        void setup(const Color &color_, float minw_ = 0, float minh_ = 0, bool flip_ = false)
         {
             Filler::setup(minw_, minh_);
             color = color_;
+            this->flip = flip_;
         }
 
         static const char *typestr() { return "#Line"; }
@@ -1402,8 +1404,16 @@ namespace UI
 
             color.init();
             gle::begin(GL_LINES);
-            gle::attribf(sx,   sy);
-            gle::attribf(sx+w, sy+h);
+            if (flip)
+            {
+                gle::attribf(sx,   sy+h);
+                gle::attribf(sx+w, sy);
+            }
+            else
+            {
+                gle::attribf(sx,   sy);
+                gle::attribf(sx+w, sy+h);
+            }
             gle::end();
 
             Object::draw(sx, sy);
@@ -3319,8 +3329,8 @@ namespace UI
     ICOMMAND(uioutline, "iffe", (int *c, float *minw, float *minh, uint *children),
         BUILD(Outline, o, o->setup(Color(*c), *minw, *minh), children));
 
-    ICOMMAND(uiline, "iffe", (int *c, float *minw, float *minh, uint *children),
-        BUILD(Line, o, o->setup(Color(*c), *minw, *minh), children));
+    ICOMMAND(uiline, "iffie", (int *c, float *minw, float *minh, bool *flip, uint *children),
+        BUILD(Line, o, o->setup(Color(*c), *minw, *minh, *flip), children));
 
     ICOMMAND(uitriangle, "iffie", (int *c, float *minw, float *minh, int *angle, uint *children),
         BUILD(Triangle, o, o->setup(Color(*c), *minw, *minh, *angle, Triangle::SOLID), children));

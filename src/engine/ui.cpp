@@ -2526,8 +2526,8 @@ namespace UI
             SliderButton *button = (SliderButton *)find(SliderButton::typestr(), false);
             if(!button) return;
             float offset = w > button->w ? clamp((cx - button->w/2)/(w - button->w), 0.0f, 1.0f) : 0.0f;
-            int step = int((val - vmin) / vstep),
-                bstep = int(offset * (vmax - vmin) / vstep);
+            int step = round((val - vmin) / vstep),
+                bstep = round(offset * (vmax - vmin) / vstep);
             if(step != bstep) changeval(bstep * vstep + vmin);
         }
 
@@ -2535,8 +2535,8 @@ namespace UI
         {
             SliderButton *button = (SliderButton *)find(SliderButton::typestr(), false);
             if(!button) return;
-            int step = int((val - vmin) / vstep),
-                bstep = int(button->x / (w - button->w) * (vmax - vmin) / vstep);
+            int step = round((val - vmin) / vstep),
+                bstep = round(button->x / (w - button->w) * (vmax - vmin) / vstep);
             if(step != bstep) button->x = (w - button->w) * step * vstep / (vmax - vmin);
             button->adjust &= ~ALIGN_HMASK;
 
@@ -2554,8 +2554,8 @@ namespace UI
             SliderButton *button = (SliderButton *)find(SliderButton::typestr(), false);
             if(!button) return;
             float offset = h > button->h ? clamp((cy - button->h/2)/(h - button->h), 0.0f, 1.0f) : 0.0f;
-            int step = int((val - vmin) / vstep),
-                bstep = int(offset * (vmax - vmin) / vstep);
+            int step = round((val - vmin) / vstep),
+                bstep = round(offset * (vmax - vmin) / vstep);
             if(step != bstep) changeval(bstep * vstep + vmin);
         }
 
@@ -2563,8 +2563,8 @@ namespace UI
         {
             SliderButton *button = (SliderButton *)find(SliderButton::typestr(), false);
             if(!button) return;
-            int step = int((val - vmin) / vstep),
-                bstep = int(button->y / (h - button->h) * (vmax - vmin) / vstep);
+            int step = round((val - vmin) / vstep),
+                bstep = round(button->y / (h - button->h) * (vmax - vmin) / vstep);
             if(step != bstep) button->y = (h - button->h) * step * vstep / (vmax - vmin);
             button->adjust &= ~ALIGN_VMASK;
 

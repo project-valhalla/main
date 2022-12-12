@@ -1380,7 +1380,7 @@ namespace UI
     struct Line : Filler
     {
         Color color;
-        int flip;
+        bool flip;
 
         void setup(const Color &color_, float minw_ = 0, float minh_ = 0, bool flip_ = false)
         {

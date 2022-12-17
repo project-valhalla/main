@@ -2700,7 +2700,7 @@ VARP(showfps, 0, 1, 1);
 VARP(showfpsrange, 0, 0, 1);
 VAR(statrate, 1, 200, 1000);
 
-FVARP(conscale, 1e-3f, 0.44f, 1e3f);
+FVARP(conscale, 1e-3f, 0.45f, 1e3f);
 
 void resethudshader()
 {

@@ -22,14 +22,14 @@ static struct gamemodeinfo
 } gamemodes[] =
 {
     { "demo", "Demo", M_DEMO | M_LOCAL, NULL},
-    { "edit", "Edit", M_EDIT, "\f0Cooperative Editing\ff: edit maps with multiple players simultaneously" },
-    { "dm", "Deathmatch", M_LOBBY, "\f0Deathmatch\ff: kill everyone to score points" },
-    { "tdm", "Team Deathmatch", M_TEAM, "\f0Team Deathmatch\ff: kill the enemy team to score points for your team" },
-    { "ctf", "Capture The Flag", M_CTF | M_TEAM, "\f0Capture The Flag\ff: capture the enemy flag and bring it back to your flag to score points for your team" },
-    { "elim", "Elimination", M_ELIMINATION | M_TEAM, "\f0Elimination\ff: eliminate the enemy team to win the round and score points for your team" },
-    { "lms", "Last Man Standing", M_LASTMAN, "\f0Last Man Standing\ff: eliminate everyone to win the round and score points" },
-    { "jugg", "Juggernaut", M_JUGGERNAUT, "\f0Juggernaut\ff: kill the juggernaut to become the juggernaut and score points" },
-    { "infect", "Infection", M_INFECTION, "\f0Infection\ff: survive the infection or infect survivors to score points" }
+    { "edit", "Edit", M_EDIT, "\f2Cooperative Editing\ff: edit maps with multiple players simultaneously" },
+    { "dm", "Deathmatch", M_LOBBY, "\f2Deathmatch\ff: kill everyone to score points" },
+    { "tdm", "Team Deathmatch", M_TEAM, "\f2Team Deathmatch\ff: kill the enemy team to score points for your team" },
+    { "ctf", "Capture The Flag", M_CTF | M_TEAM, "\f2Capture The Flag\ff: capture the enemy flag and bring it back to your flag to score points for your team" },
+    { "elim", "Elimination", M_ELIMINATION | M_TEAM, "\f2Elimination\ff: eliminate the enemy team to win the round and score points for your team" },
+    { "lms", "Last Man Standing", M_LASTMAN, "\f2Last Man Standing\ff: eliminate everyone to win the round and score points" },
+    { "jugg", "Juggernaut", M_JUGGERNAUT, "\f2Juggernaut\ff: kill the juggernaut to become the juggernaut and score points" },
+    { "infect", "Infection", M_INFECTION, "\f2Infection\ff: survive the infection or infect survivors to score points" }
 };
 
 #define STARTGAMEMODE (-1)

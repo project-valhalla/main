@@ -160,7 +160,7 @@ namespace game
     }
     void printname()
     {
-        conoutf("your name is: %s", colorname(self));
+        conoutf(CON_ECHO, "\fs\f1Your name is:\fr %s", colorname(self));
     }
     ICOMMAND(name, "sN", (char *s, int *numargs),
     {
@@ -179,8 +179,8 @@ namespace game
     }
     void printteam()
     {
-        if((self->clientnum >= 0 && !m_teammode) || !validteam(self->team)) conoutf("you are not in a team");
-        else conoutf("your team is: \fs%s%s\fr", teamtextcode[self->team], teamnames[self->team]);
+        if((self->clientnum >= 0 && !m_teammode) || !validteam(self->team)) conoutf(CON_ECHO, "\fs\f1You are not in a team\fr");
+        else conoutf("\fs\f1Your team is:\fr \fs%s%s\fr", teamtextcode[self->team], teamnames[self->team]);
     }
     ICOMMAND(team, "sN", (char *s, int *numargs),
     {
@@ -555,7 +555,7 @@ namespace game
     {
         gameent *d = getclient(cn);
         if(!d || d == self) return;
-        conoutf("ignoring: %s", d->name);
+        conoutf(CON_ECHO, "\fs\f1Ignoring:\fr %s", d->name);
         if(ignores.find(cn) < 0) ignores.add(cn);
     }
 
@@ -563,7 +563,7 @@ namespace game
     {
         if(ignores.find(cn) < 0) return;
         gameent *d = getclient(cn);
-        if(d) conoutf("stopped ignoring: %s", d->name);
+        if(d) conoutf(CON_ECHO, "\fs\f1Stopped ignoring:\fr %s", d->name);
         ignores.removeobj(cn);
     }
 
@@ -1682,7 +1682,7 @@ namespace game
                 {
                     if(notify && strcmp(d->name, text) && !isignored(d->clientnum))
                     {
-                        conoutf("%s is now known as %s", colorname(d), colorname(d, text));
+                        conoutf(CON_CHAT, "%s \fs\f0is now known as\fr %s", colorname(d), colorname(d, text));
                     }
                 }
                 else // new client joined
@@ -1710,7 +1710,7 @@ namespace game
                     if(!text[0]) copystring(text, "player");
                     if(strcmp(text, d->name))
                     {
-                        if(!isignored(d->clientnum)) conoutf("%s is now known as %s", colorname(d), colorname(d, text));
+                        if(!isignored(d->clientnum)) conoutf(CON_CHAT, "%s \fs\f0is now known as\fr %s", colorname(d), colorname(d, text));
                         copystring(d->name, text, MAXNAMELEN+1);
                     }
                 }
@@ -1928,7 +1928,7 @@ namespace game
             {
                 int snd1 = getint(p), snd2 = getint(p);
                 getstring(text, p);
-                if(text[0]) conoutf(CON_GAMEINFO, "\fs\f2%s\fr", text);
+                if(text[0]) conoutf(CON_GAMEINFO, "%s", text);
                 if(snd1 >= 0) playsound(snd1);
                 if(snd2 >= 0) playsound(snd2);
                 break;
@@ -2160,7 +2160,7 @@ namespace game
                 if(mm != mastermode)
                 {
                     mastermode = mm;
-                    conoutf("master mode is %s%s", mastermodecolors[mastermode+1], server::mastermodename(mastermode));
+                    conoutf("\fs\f0master mode is\fr %s%s", mastermodecolors[mastermode+1], server::mastermodename(mastermode));
                 }
                 break;
             }
@@ -2168,7 +2168,7 @@ namespace game
             case N_MASTERMODE:
             {
                 mastermode = getint(p);
-                conoutf("master mode is %s%s", mastermodecolors[mastermode+1], server::mastermodename(mastermode));
+                conoutf("\fs\f0master mode is\fr %s%s", mastermodecolors[mastermode+1], server::mastermodename(mastermode));
                 break;
             }
 
@@ -2211,11 +2211,15 @@ namespace game
                         extern int deathfromabove;
                         if(deathfromabove) s->pitch = 0; // reset player pitch if it has been lowered on death
                     }
-                    else if(!waiting) conoutf(CON_GAMEINFO, "%s \fs\f2entered spectator mode\fr", colorname(s));
+                    else if(!waiting) conoutf("%s \fs\f0has entered spectator mode\fr", colorname(s));
                     saveragdoll(s);
                     s->state = CS_SPECTATOR;
                 }
-                else if(s->state==CS_SPECTATOR) deathstate(s, true);
+                else if(s->state==CS_SPECTATOR)
+                {
+                    deathstate(s, true);
+                    conoutf("%s \fs\f0has left spectator mode\fr", colorname(s));
+                }
                 s->queue = waiting;
                 checkfollow();
                 break;
@@ -2227,7 +2231,7 @@ namespace game
                 gameent *w = getclient(wn);
                 if(!w) return;
                 w->team = validteam(team) ? team : 0;
-                static const char * const fmt[2] = { "%s \fs\f2switched to team\fr %s%s", "%s \fs\f2forced to team\fr %s%s"};
+                static const char * const fmt[2] = { "%s \fs\f0switched to team\fr %s%s", "%s \fs\f0forced to team\fr %s%s"};
                 if(reason >= 0 && size_t(reason) < sizeof(fmt)/sizeof(fmt[0]))
                     conoutf(fmt[reason], colorname(w), teamtextcode[w->team], teamnames[w->team]);
                 break;

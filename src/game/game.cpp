@@ -653,14 +653,13 @@ namespace game
             cmode->setup();
         }
 
-        conoutf(CON_GAMEINFO, "\fs\f0%s \f2on \f0%s\fr", server::modeprettyname(gamemode), getclientmap());
-
-        if(mutators != 0) loopi(NUMMUTATORS)
-        {
-           if(mutators & mutator[i].flags) conoutf(CON_GAMEINFO, "%s", mutator[i].info);
-        }
         const char *info = m_valid(gamemode) ? gamemodes[gamemode - STARTGAMEMODE].info : NULL;
-        if(showmodeinfo && info) conoutf(CON_GAMEINFO, "%s", info);
+        if(showmodeinfo && info) conoutf("%s", info);
+        if(mutators) loopi(NUMMUTATORS)
+        {
+           if(!(mutators & mutator[i].flags)) continue;
+           conoutf("%s", mutator[i].info);
+        }
 
         syncplayer();
 

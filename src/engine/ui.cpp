@@ -7,6 +7,7 @@ namespace UI
 
     bool mousetracking = false, cursorlockedx = false, cursorlockedy = false;
 
+    vec2 cursortrackvec;
     vec2 mousetrackvec;
 
     static void quads(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1)
@@ -3115,8 +3116,12 @@ namespace UI
     ICOMMAND(uilockcursor,  "", (), { cursorlockedx = true; cursorlockedy = true;});
     ICOMMAND(uilockcursorx, "", (),   cursorlockedx = true);
     ICOMMAND(uilockcursory, "", (),   cursorlockedy = true);
-    ICOMMAND(uimousetrackx, "", (), { mousetracking = true; floatret(mousetrackvec.x); });
-    ICOMMAND(uimousetracky, "", (), { mousetracking = true; floatret(mousetrackvec.y); });
+
+    ICOMMAND(uicursorx, "", (), { floatret(cursortrackvec.x); });
+    ICOMMAND(uicursory, "", (), { floatret(cursortrackvec.y); });
+
+    ICOMMAND(uimousex, "", (), { mousetracking = true; floatret(mousetrackvec.x); });
+    ICOMMAND(uimousey, "", (), { mousetracking = true; floatret(mousetrackvec.y); });
 
     bool showui(const char *name)
     {
@@ -3515,9 +3520,12 @@ namespace UI
         float mousemovey = mousesens(dy, h, uisensitivity);
 
         mousetrackvec.add(vec2(mousemovex, mousemovey));
-
+        
         if (!cursorlockedx) cursorx = clamp(cursorx + mousemovex, 0.0f, 1.0f);
         if (!cursorlockedy) cursory = clamp(cursory + mousemovey, 0.0f, 1.0f);
+
+        cursortrackvec = vec2(cursorx, cursory);
+
         return true;
     }
 

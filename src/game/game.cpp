@@ -892,19 +892,6 @@ namespace game
 
     bool needminimap() { return m_ctf; }
 
-    void drawicon(int icon, float x, float y, float sz)
-    {
-        settexture(iconnames[icon]);
-        gle::defvertex(2);
-        gle::deftexcoord0();
-        gle::begin(GL_TRIANGLE_STRIP);
-        gle::attribf(x,   y);   gle::attribf(0, 0);
-        gle::attribf(x+sz, y);   gle::attribf(1, 0);
-        gle::attribf(x,   y+sz); gle::attribf(0, 1);
-        gle::attribf(x+sz, y+sz); gle::attribf(1, 1);
-        gle::end();
-    }
-
     float abovegameplayhud(int w, int h)
     {
         switch(hudplayer()->state)
@@ -915,75 +902,6 @@ namespace game
             default:
                 return 1650.0f/1800.0f;
         }
-    }
-
-    void drawhudicons(gameent *d, int w, int h)
-    {
-        if(d->state == CS_DEAD) return;
-        pushhudscale(2);
-
-        defformatstring(health, "%d", d->health);
-        bvec healthcolor = bvec::hexcolor(d->health<=d->maxhealth/4 ? 0xFF0000 : (d->health<=d->maxhealth/2 ? 0xFF8000 : (d->health<=d->maxhealth ? 0xFFFFFF : 0x40FFC0)));
-        draw_text(health, (HICON_X + HICON_SIZE + HICON_SPACE)/2, HICON_TEXTY/2, healthcolor.r, healthcolor.g, healthcolor.b);
-        draw_textf("%d", (HICON_X + HICON_STEP + HICON_SIZE + HICON_SPACE)/2, HICON_TEXTY/2, d->shield);
-        draw_textf("%d", (HICON_X + 2*HICON_STEP + HICON_SIZE + HICON_SPACE)/2, HICON_TEXTY/2, d->ammo[d->gunselect]);
-
-        pophudmatrix();
-        resethudshader();
-
-        if(d->health > d->maxhealth)
-        {
-            float scale = 0.68f;
-            pushhudmatrix();
-            hudmatrix.scale(scale, scale, 1);
-            flushhudmatrix();
-
-            float width, height;
-            text_boundsf(health, width, height);
-            draw_textf("/%d", (HICON_X + HICON_SIZE + HICON_SPACE + width*2)/scale, (HICON_TEXTY + height)/scale, d->maxhealth);
-            pophudmatrix();
-            resethudshader();
-        }
-        drawicon(HICON_HEALTH, HICON_X, HICON_Y);
-        drawicon(HICON_SHIELD, HICON_X + HICON_STEP, HICON_Y);
-        drawicon(HICON_SG+d->gunselect, HICON_X + 2*HICON_STEP, HICON_Y);
-    }
-
-    void gameplayhud(int w, int h)
-    {
-        pushhudscale(h/1800.0f);
-
-        if(self->state==CS_SPECTATOR)
-        {
-            float pw, ph, tw, th, fw, fh;
-            text_boundsf("  ", pw, ph);
-            text_boundsf("\f2SPECTATOR", tw, th);
-            th = max(th, ph);
-            gameent *f = followingplayer();
-            text_boundsf(f ? colorname(f) : " ", fw, fh);
-            fh = max(fh, ph);
-            draw_text("\f2SPECTATOR", w*1800/h - tw - pw, 1650 - th - fh);
-            if(f)
-            {
-                int color = f->state!=CS_DEAD ? 0xFFFFFF : 0x606060;
-                if(f->privilege)
-                {
-                    color = f->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
-                    if(f->state==CS_DEAD) color = (color>>1)&0x7F7F7F;
-                }
-                draw_text(colorname(f), w*1800/h - fw - pw, 1650 - fh, (color>>16)&0xFF, (color>>8)&0xFF, color&0xFF);
-            }
-            resethudshader();
-        }
-
-        gameent *d = hudplayer();
-        if(d->state!=CS_EDITING)
-        {
-            if(d->state!=CS_SPECTATOR) drawhudicons(d, w, h);
-            if(cmode) cmode->drawhud(d, w, h);
-        }
-
-        pophudmatrix();
     }
 
     float clipconsole(float w, float h)

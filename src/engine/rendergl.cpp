@@ -2782,14 +2782,6 @@ void gl_drawhud()
             pophudmatrix();
         }
 
-        if(!editmode)
-        {
-            resethudshader();
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            game::gameplayhud(w, h);
-            abovehud = min(abovehud, conh*game::abovegameplayhud(w, h));
-        }
-
         rendertexturepanel(w, h);
     }
 

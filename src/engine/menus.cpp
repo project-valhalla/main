@@ -67,7 +67,6 @@ void menuprocess()
         if(mainmenu && !UI::hascursor()) UI::showui("main");
     }
     else if(!UI::uivisible("hud")) UI::showui("hud");
-    
 }
 
 VAR(mainmenu, 1, 1, 0);

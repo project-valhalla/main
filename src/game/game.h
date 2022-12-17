@@ -724,7 +724,6 @@ namespace game
     extern void kill(gameent *d, gameent *actor, int atk, int flags = K_NONE);
     extern void timeupdate(int timeremain);
     extern void msgsound(int n, physent *d = NULL);
-    extern void drawicon(int icon, float x, float y, float sz = 120);
     extern void doaction(int act);
     const char *mastermodecolor(int n, const char *unknown);
     const char *mastermodeicon(int n, const char *unknown);

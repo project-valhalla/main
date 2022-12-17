@@ -371,63 +371,6 @@ struct ctfclientmode : clientmode
         return (h*(1 + 1 + 10))/(4*10);
     }
 
-    void drawhud(gameent *d, int w, int h)
-    {
-        if(d->state == CS_ALIVE)
-        {
-            loopv(flags) if(flags[i].owner == d)
-            {
-                float x = 1800*w/h*0.5f-HICON_SIZE/2, y = 1800*0.95f-HICON_SIZE/2;
-                drawicon(flags[i].team==1 ? HICON_BLUE_FLAG : HICON_RED_FLAG, x, y);
-                break;
-            }
-        }
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        int s = 1800/4, x = 1800*w/h - s - s/10, y = s/10;
-        gle::colorf(1, 1, 1, minimapalpha);
-        if(minimapalpha >= 1) glDisable(GL_BLEND);
-        bindminimap();
-        drawminimap(d, x, y, s);
-        if(minimapalpha >= 1) glEnable(GL_BLEND);
-        gle::colorf(1, 1, 1);
-        float margin = 0.04f, roffset = s*margin, rsize = s + 2*roffset;
-        setradartex();
-        drawradar(x - roffset, y - roffset, rsize);
-        settexture("data/interface/radar/compass.png", 3);
-        pushhudmatrix();
-        hudmatrix.translate(x - roffset + 0.5f*rsize, y - roffset + 0.5f*rsize, 0);
-        hudmatrix.rotate_around_z((camera1->yaw + 180)*-RAD);
-        flushhudmatrix();
-        drawradar(-0.5f*rsize, -0.5f*rsize, rsize);
-        pophudmatrix();
-        drawplayerblip(d, x, y, s, 1.5f);
-        loopv(flags)
-        {
-            flag &f = flags[i];
-            if(!validteam(f.team)) continue;
-            if(f.owner)
-            {
-                if(lastmillis%1000 >= 500) continue;
-            }
-            else if(f.droptime && (f.droploc.x < 0 || lastmillis%300 >= 150)) continue;
-            drawblip(d, x, y, s, i, true);
-        }
-        drawteammates(d, x, y, s);
-        if(d->state == CS_DEAD)
-        {
-            int wait = respawnwait(d);
-            if(wait>=0)
-            {
-                pushhudscale(2);
-                bool flash = wait>0 && d==self && lastspawnattempt>=d->lastpain && lastmillis < lastspawnattempt+100;
-                draw_textf("%s%d", (x+s/2)/2-(wait>=10 ? 28 : 16), (y+s/2)/2-32, flash ? "\f3" : "", wait);
-                pophudmatrix();
-                resethudshader();
-            }
-        }
-    }
-
     void removeplayer(gameent *d)
     {
         loopv(flags) if(flags[i].owner == d)

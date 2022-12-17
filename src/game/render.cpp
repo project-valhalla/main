@@ -186,7 +186,7 @@ namespace game
             const playermodelinfo *mdl = getplayermodelinfo(i);
             if(!mdl) break;
             if(i != playermodel && (!multiplayer(false) || forceplayermodels)) continue;
-            preloadmodel(mdl->model);
+            preloadmodel(mdl->directory);
         }
     }
 
@@ -201,7 +201,7 @@ namespace game
     VAR(testanims, 0, 0, 1);
     VAR(testpitch, -90, 0, 90);
 
-    void renderplayer(gameent *d, const playermodelinfo &mdl, int color, int team, float fade, int flags = 0, bool mainpass = true)
+    void renderplayer(gameent *d, const playermodelinfo &playermodel, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
         if(gore && d->gibbed()) return;
         int lastaction = d->lastaction, anim = ANIM_IDLE|ANIM_LOOP, attack = 0, delay = 0;
@@ -233,7 +233,7 @@ namespace game
             d->muzzle = vec(-1, -1, -1);
             if(guns[d->gunselect].worldmodel) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         }
-        const char *mdlname = !d->zombie ? mdl.model : mdl.zombiemodel;
+        const char *playermodelfile = !d->zombie ? playermodel.directory : playermodel.zombiemodel;
         float yaw = testanims && d==self ? 0 : d->yaw,
               pitch = testpitch && d==self ? testpitch : d->pitch;
         vec o = d->feetpos();
@@ -243,7 +243,7 @@ namespace game
         {
             anim = ANIM_DYING|ANIM_NOPITCH;
             basetime = d->lastpain;
-            if(ragdoll && mdl.ragdoll) anim |= ANIM_RAGDOLL;
+            if(ragdoll && playermodel.ragdoll) anim |= ANIM_RAGDOLL;
             else if(lastmillis-basetime>1000) anim = ANIM_DEAD|ANIM_LOOP|ANIM_NOPITCH;
         }
         else if(d->state==CS_EDITING || d->state==CS_SPECTATOR) anim = ANIM_EDIT|ANIM_LOOP;
@@ -301,7 +301,7 @@ namespace game
         if(d->state == CS_LAGGED) trans = 0.5f;
         else if(d->state == CS_ALIVE && camera1->o.dist(d->o) < d->radius) trans = 0.1f;
         else flags &= ~(MDL_NOSHADOW);
-        rendermodel(mdlname, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), trans));
+        rendermodel(playermodelfile, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), trans));
     }
 
     static inline void renderplayer(gameent *d, float fade = 1, int flags = 0)
@@ -406,8 +406,9 @@ namespace game
         sway.add(swaydir).add(d->o);
         if(!hudgunsway) sway = d->o;
 
+        const playermodelinfo &playermodel = getplayermodelinfo(d);
         int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
-        defformatstring(gunname, "weapon/%s", file);
+        defformatstring(gunname, "%s/arm/%s", playermodel.directory, file);
         modelattach a[2];
         d->muzzle = vec(-1, -1, -1);
         a[0] = modelattach("tag_muzzle", &d->muzzle);
@@ -489,12 +490,13 @@ namespace game
 
     void preloadweapons()
     {
+        const playermodelinfo &playermodel = getplayermodelinfo(self);
         loopi(NUMGUNS)
         {
             const char *file = guns[i].model;
             if(!file) continue;
             string fname;
-            formatstring(fname, "weapon/%s", file);
+            formatstring(fname, "%s/arm/%s", playermodel.directory, file);
             preloadmodel(fname);
             if(guns[i].worldmodel) preloadmodel(guns[i].worldmodel);
         }

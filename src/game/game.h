@@ -788,7 +788,7 @@ namespace game
     // render
     struct playermodelinfo
     {
-        const char *model, *zombiemodel;
+        const char *directory, *zombiemodel;
         bool ragdoll;
     };
 

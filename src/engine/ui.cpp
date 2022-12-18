@@ -3108,6 +3108,13 @@ namespace UI
         if(window) { if (window == UI::window) return; world->hide(window); windows.remove(name); delete window; }
         windows[name] = new Window(name, contents, onshow, onhide);
     });
+    ICOMMAND(settopui, "s", (char *name),
+    {
+        Window *window = windows.find(name, NULL);
+        if(!window || world->children.last() == window) return;
+        world->children.remove(world->children.find(window));
+        world->children.add(window);
+    });
 
     ICOMMAND(uiallowinput, "b", (int *val), { if(window) { if(*val >= 0) window->allowinput = *val!=0; intret(window->allowinput ? 1 : 0); } });
     ICOMMAND(uieschide, "b", (int *val), { if(window) { if(*val >= 0) window->eschide = *val!=0; intret(window->eschide ? 1 : 0); } });
@@ -3520,7 +3527,7 @@ namespace UI
         float mousemovey = mousesens(dy, h, uisensitivity);
 
         mousetrackvec.add(vec2(mousemovex, mousemovey));
-        
+
         if (!cursorlockedx) cursorx = clamp(cursorx + mousemovex, 0.0f, 1.0f);
         if (!cursorlockedy) cursory = clamp(cursory + mousemovey, 0.0f, 1.0f);
 

@@ -3124,8 +3124,9 @@ namespace UI
     ICOMMAND(uilockcursorx, "", (),   cursorlockedx = true);
     ICOMMAND(uilockcursory, "", (),   cursorlockedy = true);
 
-    ICOMMAND(uicursorx, "", (), { floatret(cursortrackvec.x); });
-    ICOMMAND(uicursory, "", (), { floatret(cursortrackvec.y); });
+    ICOMMAND(uicursor,  "", (), intret(world->allowinput()));
+    ICOMMAND(uicursorx, "", (), floatret(cursortrackvec.x));
+    ICOMMAND(uicursory, "", (), floatret(cursortrackvec.y));
 
     ICOMMAND(uimousex, "", (), { mousetracking = true; floatret(mousetrackvec.x); });
     ICOMMAND(uimousey, "", (), { mousetracking = true; floatret(mousetrackvec.y); });

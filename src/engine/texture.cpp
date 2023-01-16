@@ -513,6 +513,19 @@ void texmad(ImageData &s, const vec &mul, const vec &add)
     );
 }
 
+void texintmul(ImageData &s, const uint32_t &color)
+{
+    vec mul;
+    mul.x = (color >> 16 & 255);
+    mul.y = (color >>  8 & 255);
+    mul.z = (color       & 255);
+    if(s.bpp < 3 && (mul.x != mul.y || mul.y != mul.z))
+        swizzleimage(s);
+    writetex(s,
+        loopk(min(s.bpp, 3)) dst[k] = round((mul[k]/255.0f)*dst[k]);
+    );
+}
+
 void texcolorify(ImageData &s, const vec &color, vec weights)
 {
     if(s.bpp < 3) return;
@@ -1648,6 +1661,7 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
         PARSETEXCOMMANDS(cmds);
         if(d.compressed) goto compressed;
         if(matchstring(cmd, len, "mad")) texmad(d, parsevec(arg[0]), parsevec(arg[1]));
+        else if(matchstring(cmd, len, "intmul")) texintmul(d, atoi(arg[0]));
         else if(matchstring(cmd, len, "colorify")) texcolorify(d, parsevec(arg[0]), parsevec(arg[1]));
         else if(matchstring(cmd, len, "colormask")) texcolormask(d, parsevec(arg[0]), *arg[1] ? parsevec(arg[1]) : vec(1, 1, 1));
         else if(matchstring(cmd, len, "normal"))

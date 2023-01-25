@@ -462,7 +462,7 @@ int explicitsky = 0;
 
 bool limitsky()
 {
-    return explicitsky && (useskytexture || editmode);
+    return explicitsky && (useskytexture || (editmode && showsky));
 }
 
 void drawskybox(bool clear)

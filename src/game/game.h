@@ -456,13 +456,13 @@ struct gamestate
         }
     }
 
-    // just subtract damage here, can set death, etc. later in code calling this
+    // subtract damage/shield points and apply damage here
     int dodamage(int damage, bool environment = false)
     {
-        if(!environment)
-        {
-            int ad = damage/3*2;
-            if(ad>shield) ad = shield;
+        if(shield && !environment)
+        { // only if the player has shield points and damage is not caused by the environment
+            int ad = round(damage / 3.0f * 2.0f);
+            if(ad > shield) ad = shield;
             shield -= ad;
             damage -= ad;
         }

@@ -185,6 +185,7 @@ VARR(fogdomecap, 0, 1, 1);
 FVARR(fogdomeclip, 0, 1, 1);
 CVARR(fogdomecolour, 0);
 VARR(fogdomeclouds, 0, 1, 1);
+VARR(fogdomesquare, 0, 0, 1);
 
 namespace fogdome
 {
@@ -347,7 +348,7 @@ namespace fogdome
 
 static void drawfogdome()
 {
-    SETSHADER(skyfog);
+    SETVARIANT(skyfog, fogdomesquare ? 0 : -1, 0);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

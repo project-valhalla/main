@@ -4346,6 +4346,12 @@ CMPSCMD(>=s, >=);
 ICOMMAND(echo, "C", (char *s), conoutf(CON_ECHO, "\f1%s", s));
 ICOMMAND(error, "C", (char *s), conoutf(CON_ERROR, "%s", s));
 ICOMMAND(strstr, "ss", (char *a, char *b), { char *s = strstr(a, b); intret(s ? s-a : -1); });
+ICOMMAND(strrstr, "ss", (char *a, char *b),
+{
+    char *last = NULL;
+    for(char *cur = a; char *s = strstr(cur, b); last = s, ++cur);
+    intret(last ? last-a : -1);
+});
 ICOMMAND(strlen, "s", (char *s), intret(strlen(s)));
 ICOMMAND(strcode, "si", (char *s, int *i), intret(*i > 0 ? (memchr(s, 0, *i) ? 0 : uchar(s[*i])) : uchar(s[0])));
 ICOMMAND(codestr, "i", (int *i), { char *s = newstring(1); s[0] = char(*i); s[1] = '\0'; stringret(s); });

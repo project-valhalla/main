@@ -188,11 +188,7 @@ struct ident
         val = v.val;
     }
 
-    void forcenull()
-    {
-        if(valtype==VAL_STR) delete[] val.s;
-        valtype = VAL_NULL;
-    }
+    void forcenull();
 
     float getfloat() const;
     int getint() const;

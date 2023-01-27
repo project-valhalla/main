@@ -111,6 +111,43 @@ static inline void cleancode(ident &id)
     }
 }
 
+static struct lockstr* lockedstrings = NULL;
+
+struct lockstr
+{
+    const char *s;
+    lockstr* next;
+
+    lockstr(const char *s) : s(s)
+    {
+        next = lockedstrings;
+        lockedstrings = this;
+    }
+
+    ~lockstr()
+    {
+        if(lockedstrings == this) lockedstrings = next;
+        else delete[] s;
+    }
+};
+
+static inline void freeidentstr(char *s)
+{
+    for(lockstr *prev = NULL, *cur = lockedstrings; cur; prev = cur, cur = cur->next) if(cur->s == s)
+    {
+        if(prev) prev->next = cur->next;
+        else lockedstrings = cur->next;
+        return;
+    }
+    delete[] s;
+}
+
+inline void ident::forcenull()
+{
+    if(valtype==VAL_STR) freeidentstr(val.s);
+    valtype = VAL_NULL;
+}
+
 struct nullval : tagval
 {
     nullval() { setnull(); }
@@ -139,7 +176,7 @@ void clearoverride(ident &i)
             if(i.valtype==VAL_STR)
             {
                 if(!i.val.s[0]) break;
-                delete[] i.val.s;
+                freeidentstr(i.val.s);
             }
             cleancode(i);
             i.valtype = VAL_STR;
@@ -154,7 +191,7 @@ void clearoverride(ident &i)
             i.changed();
             break;
         case ID_SVAR:
-            delete[] *i.storage.s;
+            freeidentstr(*i.storage.s);
             *i.storage.s = i.overrideval.s;
             i.changed();
             break;
@@ -301,7 +338,7 @@ static inline void poparg(ident &id)
 {
     if(!id.stack) return;
     identstack *stack = id.stack;
-    if(id.valtype == VAL_STR) delete[] id.val.s;
+    if(id.valtype == VAL_STR) freeidentstr(id.val.s);
     id.setval(*stack);
     cleancode(id);
     id.stack = stack->next;
@@ -476,7 +513,7 @@ static inline void setarg(ident &id, tagval &v)
 {
     if(aliasstack->usedargs&(1<<id.index))
     {
-        if(id.valtype == VAL_STR) delete[] id.val.s;
+        if(id.valtype == VAL_STR) freeidentstr(id.val.s);
         id.setval(v);
         cleancode(id);
     }
@@ -489,7 +526,7 @@ static inline void setarg(ident &id, tagval &v)
 
 static inline void setalias(ident &id, tagval &v)
 {
-    if(id.valtype == VAL_STR) delete[] id.val.s;
+    if(id.valtype == VAL_STR) freeidentstr(id.val.s);
     id.setval(v);
     cleancode(id);
     id.flags = (id.flags & identflags) | identflags;
@@ -3312,7 +3349,7 @@ void loopiter(ident *id, identstack &stack, const tagval &v)
     }
     else
     {
-        if(id->valtype == VAL_STR) delete[] id->val.s;
+        if(id->valtype == VAL_STR) freeidentstr(id->val.s);
         cleancode(*id);
         id->setval(v);
     }
@@ -3329,7 +3366,7 @@ static inline void setiter(ident &id, int i, identstack &stack)
     {
         if(id.valtype != VAL_INT)
         {
-            if(id.valtype == VAL_STR) delete[] id.val.s;
+            if(id.valtype == VAL_STR) freeidentstr(id.val.s);
             cleancode(id);
             id.valtype = VAL_INT;
         }
@@ -3681,7 +3718,7 @@ static inline void setiter(ident &id, char *val, identstack &stack)
 {
     if(id.stack == &stack)
     {
-        if(id.valtype == VAL_STR) delete[] id.val.s;
+        if(id.valtype == VAL_STR) freeidentstr(id.val.s);
         else id.valtype = VAL_STR;
         cleancode(id);
         id.val.s = val;

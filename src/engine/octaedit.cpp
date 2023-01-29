@@ -356,6 +356,7 @@ VAR(gridlookup, 0, 0, 1);
 VAR(passthroughcube, 0, 1, 1);
 VAR(passthroughent, 0, 1, 1);
 VARF(passthrough, 0, 0, 1, { passthroughsel = passthrough; entcancel(); });
+VARP(selectionoffset, 0, 1, 1);
 
 void rendereditcursor()
 {
@@ -508,9 +509,18 @@ void rendereditcursor()
 
     renderentselection(player->o, camdir, entmoving!=0);
 
-    boxoutline = outline!=0;
-
-    enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
+    if(outline!=0)
+    {
+        if(selectionoffset)
+        {
+            boxoutline = true;
+            enablepolygonoffset(GL_POLYGON_OFFSET_LINE);
+        }
+        else
+        {
+            enablepolygonoffset(GL_POLYGON_OFFSET_LINE, 2.0f);
+        }
+    }
 
     if(!moving && !hovering && !hidecursor)
     {

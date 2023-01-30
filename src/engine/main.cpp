@@ -1198,7 +1198,7 @@ int main(int argc, char **argv)
     if(!notexture) fatal("Could not find core textures");
 
     logoutf("init: console");
-    if(!execfile("config/stdlib.cfg", false)) fatal("Cannot find data files (you are running from the wrong folder, try .bat file in the main folder)");   // this is the first file we load.
+    if(!execfile("config/stdlib.cfg", false)) fatal("Cannot find required configuration files (\"/config/stdlib.cfg\")!\nYou might not be running from the main folder.");   // this is the first file we load.
     if(!execfile("config/font.cfg", false)) fatal("Cannot find font definitions");
     if(!setfont("default")) fatal("No default font specified");
 

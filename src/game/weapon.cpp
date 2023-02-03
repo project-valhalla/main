@@ -13,8 +13,6 @@ namespace game
     };
     vector<hitmsg> hits;
 
-    SVARP(primaryweapon, "");
-
     ICOMMAND(getweapon, "", (), intret(self->gunselect));
 
     void gunselect(int gun, gameent *d)
@@ -62,17 +60,6 @@ namespace game
         if(force || self->ammo[gun]) gunselect(gun, self);
     }
     ICOMMAND(setweapon, "si", (char *name, int *force), setweapon(name, *force!=0));
-
-    void setprimaryweapon(const char *alternative)
-    {
-        if(!m_multipleweapons(mutators)) gunselect(self->primary, self);
-        else
-        {
-            int weapon = getweapon(alternative);
-            if(self->ammo[weapon]) gunselect(weapon, self);
-        }
-    }
-    ICOMMAND(setprimaryweapon, "s", (char *alternative), setprimaryweapon(alternative));
 
     void cycleweapon(int numguns, int *guns, bool force = false)
     {

@@ -323,10 +323,6 @@ namespace game
                 lastspawnattempt = lastmillis;
                 return;
             }
-            int weapon = -1;
-            if(primaryweapon[0]) weapon = getweapon(primaryweapon);
-            self->primary = weapon;
-            addmsg(N_PRIMARYWEAPON, "ri", self->primary);
             respawnself();
         }
     }

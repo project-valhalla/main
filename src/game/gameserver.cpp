@@ -3771,14 +3771,6 @@ namespace server
                 break;
             }
 
-            case N_PRIMARYWEAPON:
-            {
-                int primaryweapon = getint(p);
-                if(validgun(primaryweapon)) ci->state.primary = primaryweapon;
-                QUEUE_MSG;
-                break;
-            }
-
             case N_SPAWN:
             {
                 int ls = getint(p), gunselect = getint(p);

@@ -158,7 +158,7 @@ enum
     N_SHOOT, N_EXPLODE, N_HURTPLAYER, N_SUICIDE,
     N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_USEITEM,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
-    N_GUNSELECT, N_PRIMARYWEAPON, N_TAUNT,
+    N_GUNSELECT, N_TAUNT,
     N_ANNOUNCE,
     N_MAPCHANGE, N_SERVERVARIABLES, N_MAPVOTE, N_SENDVARIABLES, N_TEAMINFO, N_ITEMSPAWN, N_ITEMPICKUP, N_ITEMACC, N_TELEPORT, N_JUMPPAD,
     N_PING, N_PONG, N_CLIENTPING,
@@ -188,7 +188,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_SHOOT, 0, N_EXPLODE, 0, N_HURTPLAYER, 0, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 8, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 12, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3, N_USEITEM, 1,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 8, N_SPAWN, 3, N_FORCEDEATH, 2,
-    N_GUNSELECT, 2, N_PRIMARYWEAPON, 2, N_TAUNT, 1,
+    N_GUNSELECT, 2, N_TAUNT, 1,
     N_ANNOUNCE, 4,
     N_MAPCHANGE, 0, N_SERVERVARIABLES, 8, N_MAPVOTE, 0, N_SENDVARIABLES, 0, N_TEAMINFO, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
     N_PING, 2, N_PONG, 2, N_CLIENTPING, 2,
@@ -738,7 +738,6 @@ namespace game
     extern void sendposition(gameent *d, bool reliable = false);
 
     // weapon
-    extern char *primaryweapon;
     extern int getweapon(const char *name);
     extern void shoot(gameent *d, const vec &targ);
     extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);

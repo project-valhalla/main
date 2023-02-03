@@ -1909,13 +1909,6 @@ namespace game
                 break;
             }
 
-            case N_PRIMARYWEAPON:
-            {
-                int primaryweapon = getint(p);
-                if(d && validgun(primaryweapon)) d->primary = primaryweapon;
-                break;
-            }
-
             case N_TAUNT:
             {
                 if(!d) return;

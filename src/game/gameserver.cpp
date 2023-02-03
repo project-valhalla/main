@@ -2954,16 +2954,6 @@ namespace server
             }
             if(ci->state.state == CS_ALIVE)
             {
-                if((m_regen(mutators) || (!m_vampire(mutators) && m_infection && ci->state.zombie)) && !ci->state.juggernaut)
-                {
-                    int paindelay = ci->state.zombie? 8000: 2800, regendelay = ci->state.zombie? 1000: 1500, healthadd = ci->state.zombie? 10: 5;
-                    if(ci->state.health<ci->state.maxhealth && lastmillis-ci->state.lastpain>paindelay && lastmillis-ci->state.lastregeneration>regendelay)
-                    {
-                        ci->state.health = min(ci->state.health+healthadd, ci->state.maxhealth);
-                        sendf(-1, 1, "ri3", N_REGENERATE, ci->clientnum, ci->state.health);
-                        ci->state.lastregeneration = lastmillis;
-                    }
-                }
                 if((m_edit || m_effic(mutators)) && ci->state.health>ci->state.maxhealth && lastmillis-ci->state.lastregeneration>1000 && !(ci->state.juggernaut || ci->state.zombie))
                 {
                     ci->state.health = max(ci->state.health-1, ci->state.maxhealth);

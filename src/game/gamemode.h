@@ -90,7 +90,6 @@ static struct mutatorinfo
 };
 
 #define NUMMUTATORS              ((int)(sizeof(mutator)/sizeof(mutator[0])))
-#define m_classic(b)             (b&MUT_CLASSIC)
 #define m_insta(b)               (b&MUT_INSTAGIB)
 #define m_effic(b)               (b&MUT_EFFIC)
 #define m_randomweapon(b)        (b&MUT_RANDOMWEAPON)

@@ -418,12 +418,7 @@ struct gamestate
 
     void spawnstate(int gamemode, int mutators, int forceweapon)
     {
-        if(m_classic(mutators) && !m_randomweapon(mutators))
-        {
-            gunselect = GUN_PISTOL;
-            ammo[GUN_PISTOL] = 100;
-        }
-        else if(m_insta(mutators))
+        if(m_insta(mutators))
         {
             maxhealth = health = 100;
             gunselect = GUN_INSTA;
@@ -443,13 +438,7 @@ struct gamestate
         }
         else
         {
-            if(primary < GUN_SG || primary > GUN_RAIL || aitype  != AI_NONE)
-            // randomize primary weapon at each respawn in case it is not an existing/allowed weapon or the player is a bot
-            {
-                primary = rnd(5);
-            }
-            baseammo(primary);
-            gunselect = primary;
+            gunselect = GUN_PISTOL;
             ammo[GUN_PISTOL] = 100;
         }
     }

@@ -2954,15 +2954,16 @@ namespace server
             }
             if(ci->state.state == CS_ALIVE)
             {
-                if((m_edit || m_effic(mutators)) && ci->state.health>ci->state.maxhealth && lastmillis-ci->state.lastregeneration>1000 && !(ci->state.juggernaut || ci->state.zombie))
+                if(!(ci->state.juggernaut || ci->state.zombie) // zombies and juggernauts are unaffected by this
+                   && ci->state.health > ci->state.maxhealth && lastmillis - ci->state.lastregeneration > 1000)
                 {
-                    ci->state.health = max(ci->state.health-1, ci->state.maxhealth);
+                    ci->state.health = max(ci->state.health - 1, ci->state.maxhealth);
                     sendf(-1, 1, "ri3", N_REGENERATE, ci->clientnum, ci->state.health);
                     ci->state.lastregeneration = lastmillis;
                 }
                 if((m_juggernaut && ci->state.juggernaut) || m_vampire(mutators))
                 {
-                    if(lastmillis-ci->state.lastpain > 2800 && lastmillis-ci->state.lastregeneration>1000)
+                    if(lastmillis-ci->state.lastpain > 2800 && lastmillis-ci->state.lastregeneration > 1000)
                     {
                         int subtract = ci->state.juggernaut ? 5 : 1;
                         ci->state.health = max(ci->state.health-subtract, 0);

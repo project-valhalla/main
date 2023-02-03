@@ -420,7 +420,7 @@ struct gamestate
 
     void spawnstate(int gamemode, int mutators, int forceweapon)
     {
-        if(m_classic(mutators) && !(m_randomweapon(mutators) || m_oneweapon(mutators)))
+        if(m_classic(mutators) && !m_randomweapon(mutators))
         {
             gunselect = GUN_PISTOL;
             ammo[GUN_PISTOL] = 100;
@@ -437,7 +437,7 @@ struct gamestate
             loopi(NUMGUNS-3) baseammo(i);
             gunselect = GUN_SMG;
         }
-        else if((m_randomweapon(mutators) || m_oneweapon(mutators)) && forceweapon >= 0)
+        else if(m_randomweapon(mutators) && forceweapon >= 0)
         {
             loopi(NUMGUNS) ammo[i] = 0;
             ammo[forceweapon] = 100;

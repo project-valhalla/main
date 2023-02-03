@@ -61,8 +61,14 @@ static struct gamemodeinfo
 
 enum
 {
-    MUT_CLASSIC = 1<<0, MUT_INSTAGIB = 1<<1, MUT_EFFIC = 1<<2, MUT_RANDOMWEAPON = 1<<3, MUT_ONEWEAPON = 1<<4,
-    MUT_VAMPIRE = 1<<5, MUT_MAYHEM = 1<<6, MUT_NOPOWERUP = 1<<7, MUT_NOITEMS = 1<<8
+    MUT_CLASSIC      = 1<<0,
+    MUT_INSTAGIB     = 1<<1,
+    MUT_EFFIC        = 1<<2,
+    MUT_RANDOMWEAPON = 1<<3,
+    MUT_VAMPIRE      = 1<<5,
+    MUT_MAYHEM       = 1<<6,
+    MUT_NOPOWERUP    = 1<<7,
+    MUT_NOITEMS      = 1<<8
 };
 
 
@@ -74,10 +80,9 @@ static struct mutatorinfo
 } mutator[] =
 {
     { "classic", "Classic", MUT_CLASSIC, MUT_INSTAGIB|MUT_EFFIC|MUT_NOITEMS, "\f6Classic\ff: collect items for ammo, shield and health" },
-    { "instagib", "Instagib", MUT_INSTAGIB, MUT_CLASSIC|MUT_EFFIC|MUT_VAMPIRE|MUT_RANDOMWEAPON|MUT_ONEWEAPON, "\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot" },
-    { "effic", "Efficiency", MUT_EFFIC, MUT_CLASSIC|MUT_INSTAGIB|MUT_RANDOMWEAPON|MUT_ONEWEAPON, "\f6Efficiency\ff: you spawn with shield and all the main weapons" },
-    { "voosh", "Voosh", MUT_RANDOMWEAPON, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC|MUT_ONEWEAPON, "\f6Voosh\ff: all players switch to a random weapon every 15 seconds" },
-    { "weapon-arena", "Weapon Arena", MUT_ONEWEAPON, MUT_INSTAGIB|MUT_EFFIC|MUT_RANDOMWEAPON, "\f6Weapon Arena\ff: only one weapon is available (set in server/offline game settings)" },
+    { "instagib", "Instagib", MUT_INSTAGIB, MUT_CLASSIC|MUT_EFFIC|MUT_VAMPIRE|MUT_RANDOMWEAPON, "\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot" },
+    { "effic", "Efficiency", MUT_EFFIC, MUT_CLASSIC|MUT_INSTAGIB|MUT_RANDOMWEAPON, "\f6Efficiency\ff: you spawn with shield and all the main weapons" },
+    { "voosh", "Voosh", MUT_RANDOMWEAPON, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC, "\f6Voosh\ff: all players switch to a random weapon every 15 seconds" },
     { "vamp", "Vampire", MUT_VAMPIRE, MUT_INSTAGIB, "\f6Vampire\ff: your health slowly decreases, deal damage to regenerate it" },
     { "mayhem", "Mayhem", MUT_MAYHEM, NULL, "\f6Mayhem\ff: headshots landed with hitscan weapons instantly kill opponents" },
     { "no-power", "No Power-ups", MUT_NOPOWERUP, NULL, "\f6No Power-ups\ff: power-ups do not spawn" },
@@ -89,7 +94,6 @@ static struct mutatorinfo
 #define m_insta(b)               (b&MUT_INSTAGIB)
 #define m_effic(b)               (b&MUT_EFFIC)
 #define m_randomweapon(b)        (b&MUT_RANDOMWEAPON)
-#define m_oneweapon(b)           (b&MUT_ONEWEAPON)
 #define m_vampire(b)             (b&MUT_VAMPIRE)
 #define m_mayhem(b)              (b&MUT_MAYHEM)
 #define m_nopowerups(b)          (b&MUT_NOPOWERUP)

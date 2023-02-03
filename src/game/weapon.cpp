@@ -25,7 +25,7 @@ namespace game
         d->gunselect = gun;
         d->lastswitch = lastmillis;
         playsound(S_WEAPON_LOAD, d);
-        disablezoom();
+        d->lastattack = -1;
     }
 
     void nextweapon(int dir, bool force = false)

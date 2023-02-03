@@ -11,13 +11,12 @@ enum
 enum
 {
     ACT_IDLE = 0,
-    ACT_MELEE, // use melee attack, currently the same for all weapons
-    ACT_PRIMARY, // either use the weapon primary fire
+    ACT_MELEE,     // use melee attack, currently the same for all weapons
+    ACT_PRIMARY,   // either use the weapon primary fire
     ACT_SECONDARY, // or use the secondary fire
     NUMACTS
 };
-
-#define validact(n) ((n) >= 0 && (n) < NUMACTS)
+inline bool validact(int act) { return act >= 0 && act < NUMACTS; }
 
 enum
 {
@@ -29,8 +28,7 @@ enum
 
     NUMGUNS
 };
-
-#define validgun(n) ((n) >= 0 && (n) < NUMGUNS)
+inline bool validgun(int gun) { return gun >= 0 && gun < NUMGUNS; }
 
 // weapon attacks
 enum
@@ -48,15 +46,14 @@ enum
 
     NUMATKS
 };
+inline bool validatk(int atk) { return atk >= 0 && atk < NUMATKS; }
 
-#define validatk(n) ((n) >= 0 && (n) <= ATK_ZOMBIE)
+const float EXP_SELFPUSH  = 2.5f; // how much our player is going to be pushed from our own projectiles
+const float EXP_DISTSCALE = 1.5f; // explosion damage is going to be scaled by distance
 
-#define MAXRAYS 20
-#define EXP_SELFPUSH 2.5f
-#define EXP_DISTSCALE 1.5f
-
-#define ALLY_DAMDIV 2 // divide damage dealt to self or allies
-#define ENV_DAM 5 // environmental damage like lava, damage material and fall damage
+const int MAXRAYS     = 20; // maximum rays a player can shoot, we can't change that
+const int ALLY_DAMDIV = 2;  // divide damage dealt to self or allies
+const int ENV_DAM     = 5;  // environmental damage like lava, damage material and fall damage
 
 static const struct attackinfo
 {

@@ -52,9 +52,9 @@ enum
 };
 
 // network quantization scale
-#define DMF 16.0f                // for world locations
-#define DNF 100.0f              // for normalized vectors
-#define DVELF 1.0f              // for playerspeed based velocity vectors
+const float DMF   = 16.0f;  // for world locations
+const float DNF   = 100.0f; // for normalized vectors
+const float DVELF = 1.0f;   // for velocity vectors based on player's speed
 
 struct gameentity : extentity
 {
@@ -224,8 +224,6 @@ struct demoheader
     char magic[16];
     int version, protocol;
 };
-
-#define MAXNAMELEN 15
 
 enum
 {
@@ -481,15 +479,17 @@ struct gamestate
     }
 };
 
-#define MAXTEAMS 2
+const int MAXNAMELEN = 15;
+
+const int MAXTEAMS = 2;
 static const char * const teamnames[1+MAXTEAMS] = { "", "Aesir", "Vanir" };
 static const char * const teamtextcode[1+MAXTEAMS] = { "\ff", "\f1", "\f3" };
 static const int teamtextcolor[1+MAXTEAMS] = { 0xFFFFFF, 0x6496FF, 0xFF4B19 };
 static const int teamscoreboardcolor[1+MAXTEAMS] = { 0, 0x3030C0, 0xC03030 };
 static const char * const teamblipcolor[1+MAXTEAMS] = { "_neutral", "_blue", "_red" };
 static inline int teamnumber(const char *name) { loopi(MAXTEAMS) if(!strcmp(teamnames[1+i], name)) return 1+i; return 0; }
-#define validteam(n) ((n) >= 1 && (n) <= MAXTEAMS)
-#define teamname(n) (teamnames[validteam(n) ? (n) : 0])
+inline bool validteam(int team) { return team >= 1 && team <= MAXTEAMS; }
+inline const char *teamname(int team) { return teamnames[validteam(team) ? team : 0]; }
 
 struct gameent : dynent, gamestate
 {

@@ -316,18 +316,6 @@ void inputcommand(char *init, char *action = NULL, char *prompt = NULL, char *fl
 ICOMMAND(saycommand, "C", (char *init), inputcommand(init));
 COMMAND(inputcommand, "ssss");
 
-void pasteconsole()
-{
-    if(!SDL_HasClipboardText()) return;
-    char *cb = SDL_GetClipboardText();
-    if(!cb) return;
-    size_t cblen = strlen(cb),
-           commandlen = strlen(commandbuf),
-           decoded = decodeutf8((uchar *)&commandbuf[commandlen], sizeof(commandbuf)-1-commandlen, (const uchar *)cb, cblen);
-    commandbuf[commandlen + decoded] = '\0';
-    SDL_free(cb);
-}
-
 struct hline
 {
     char *buf, *action, *prompt;
@@ -491,6 +479,18 @@ bool consoleinput(const char *str, int len)
     commandbuf[cmdlen + len] = '\0';
 
     return true;
+}
+
+void pasteconsole()
+{
+    if(!SDL_HasClipboardText()) return;
+    char *cb = SDL_GetClipboardText();
+    if(!cb) return;
+    string paste;
+    size_t decoded = decodeutf8((uchar *)paste, sizeof(paste)-1, (const uchar *)cb, strlen(cb));
+    paste[decoded] = '\0';
+    consoleinput(paste, decoded);
+    SDL_free(cb);
 }
 
 static char *skipword(char *s)

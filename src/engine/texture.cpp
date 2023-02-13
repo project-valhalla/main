@@ -2547,6 +2547,7 @@ void texsmooth(int *id, int *angle)
     s.smooth = smoothangle(*id, *angle);
 }
 COMMAND(texsmooth, "ib");
+ICOMMAND(getvsmooth, "i", (int *tex), intret(lookupvslot(*tex, false).slot->smooth));
 
 void texmaterial(int *material)
 {

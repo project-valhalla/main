@@ -591,19 +591,19 @@ ICOMMAND(alias, "sT", (const char *name, tagval *v),
 
 int variable(const char *name, int min, int cur, int max, int *storage, identfun fun, int flags)
 {
-    addident(ident(ID_VAR, name, min, max, storage, (void *)fun, flags));
+    addident(ident(ID_VAR, name, min, max, storage, fun, flags));
     return cur;
 }
 
 float fvariable(const char *name, float min, float cur, float max, float *storage, identfun fun, int flags)
 {
-    addident(ident(ID_FVAR, name, min, max, storage, (void *)fun, flags));
+    addident(ident(ID_FVAR, name, min, max, storage, fun, flags));
     return cur;
 }
 
 char *svariable(const char *name, const char *cur, char **storage, identfun fun, int flags)
 {
-    addident(ident(ID_SVAR, name, storage, (void *)fun, flags));
+    addident(ident(ID_SVAR, name, storage, fun, flags));
     return newstring(cur);
 }
 
@@ -896,7 +896,7 @@ bool addcommand(const char *name, identfun fun, const char *args, int type)
         default: fatal("Builtin %s declared with illegal type: %s", name, args); break;
     }
     if(limit && numargs > MAXCOMARGS) fatal("Builtin %s declared with too many args: %d", name, numargs);
-    addident(ident(type, name, args, argmask, numargs, (void *)fun, flags));
+    addident(ident(type, name, args, argmask, numargs, fun, flags));
     return false;
 }
 

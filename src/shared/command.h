@@ -142,16 +142,16 @@ struct ident
 
     ident() {}
     // ID_VAR
-    ident(int t, const char *n, int m, int x, int *s, void *f = NULL, int flags = 0)
-        : type(t), flags(flags | (m > x ? IDF_READONLY : 0)), name(n), minval(m), maxval(x), fun((identfun)f)
+    ident(int t, const char *n, int m, int x, int *s, identfun f = NULL, int flags = 0)
+        : type(t), flags(flags | (m > x ? IDF_READONLY : 0)), name(n), minval(m), maxval(x), fun(f)
     { storage.i = s; }
     // ID_FVAR
-    ident(int t, const char *n, float m, float x, float *s, void *f = NULL, int flags = 0)
-        : type(t), flags(flags | (m > x ? IDF_READONLY : 0)), name(n), minvalf(m), maxvalf(x), fun((identfun)f)
+    ident(int t, const char *n, float m, float x, float *s, identfun f = NULL, int flags = 0)
+        : type(t), flags(flags | (m > x ? IDF_READONLY : 0)), name(n), minvalf(m), maxvalf(x), fun(f)
     { storage.f = s; }
     // ID_SVAR
-    ident(int t, const char *n, char **s, void *f = NULL, int flags = 0)
-        : type(t), flags(flags), name(n), fun((identfun)f)
+    ident(int t, const char *n, char **s, identfun f = NULL, int flags = 0)
+        : type(t), flags(flags), name(n), fun(f)
     { storage.s = s; }
     // ID_ALIAS
     ident(int t, const char *n, char *a, int flags)
@@ -170,8 +170,8 @@ struct ident
         : type(t), valtype(v.type), flags(flags), name(n), code(NULL), stack(NULL)
     { val = v; }
     // ID_COMMAND
-    ident(int t, const char *n, const char *args, uint argmask, int numargs, void *f = NULL, int flags = 0)
-        : type(t), numargs(numargs), flags(flags), name(n), args(args), argmask(argmask), fun((identfun)f)
+    ident(int t, const char *n, const char *args, uint argmask, int numargs, identfun f = NULL, int flags = 0)
+        : type(t), numargs(numargs), flags(flags), name(n), args(args), argmask(argmask), fun(f)
     {}
 
     void changed() { if(fun) fun(this); }
@@ -306,8 +306,8 @@ inline void ident::getcval(tagval &v) const
 }
 
 // nasty macros for registering script functions, abuses globals to avoid excessive infrastructure
-#define KEYWORD(name, type) UNUSED static bool __dummy_##type = addcommand(#name, (identfun)NULL, NULL, type)
-#define COMMANDKN(name, type, fun, nargs) UNUSED static bool __dummy_##fun = addcommand(#name, (identfun)fun, nargs, type)
+#define KEYWORD(name, type) UNUSED static bool __dummy_##type = addcommand(#name, NULL, NULL, type)
+#define COMMANDKN(name, type, fun, nargs) UNUSED static bool __dummy_##fun = addcommand(#name, fun, nargs, type)
 #define COMMANDK(name, type, nargs) COMMANDKN(name, type, name, nargs)
 #define COMMANDN(name, fun, nargs) COMMANDKN(name, ID_COMMAND, fun, nargs)
 #define COMMAND(name, nargs) COMMANDN(name, name, nargs)
@@ -395,7 +395,7 @@ inline void ident::getcval(tagval &v) const
 // anonymous inline commands, uses nasty template trick with line numbers to keep names unique
 #define ICOMMANDNAME(name) _icmd_##name
 #define ICOMMANDSNAME _icmds_
-#define ICOMMANDKNS(name, type, cmdname, nargs, proto, b) template<int N> struct cmdname; template<> struct cmdname<__LINE__> { static bool init; static void run proto; }; bool cmdname<__LINE__>::init = addcommand(name, (identfun)cmdname<__LINE__>::run, nargs, type); void cmdname<__LINE__>::run proto \
+#define ICOMMANDKNS(name, type, cmdname, nargs, proto, b) template<int N> struct cmdname; template<> struct cmdname<__LINE__> { static bool init; static void run proto; }; bool cmdname<__LINE__>::init = addcommand(name, cmdname<__LINE__>::run, nargs, type); void cmdname<__LINE__>::run proto \
     { b; }
 #define ICOMMANDKN(name, type, cmdname, nargs, proto, b) ICOMMANDKNS(#name, type, cmdname, nargs, proto, b)
 #define ICOMMANDK(name, type, nargs, proto, b) ICOMMANDKN(name, type, ICOMMANDNAME(name), nargs, proto, b)

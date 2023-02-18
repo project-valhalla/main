@@ -329,9 +329,20 @@ namespace game
 
     // inputs
 
+    inline bool shouldzoom(int gun, int act)
+    {
+        return act == ACT_SECONDARY &&
+               guns[gun].attacks[ACT_PRIMARY] == guns[gun].attacks[ACT_SECONDARY];
+    }
+
     void doaction(int act)
     {
         if(!connected || intermission) return;
+        if(shouldzoom(self->gunselect, act))
+        {
+            execident("dozoom");
+            return;
+        }
         if((self->attacking = act)) respawn();
         self->lastact = act;
     }

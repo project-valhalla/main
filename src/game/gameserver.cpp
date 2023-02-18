@@ -2662,27 +2662,27 @@ namespace server
         if(!firstblood)
         {
             firstblood = true;
-            kflags |= K_FIRST;
+            kflags |= KILL_FIRST;
         }
         switch(actor->state.kills)
         {
-            case 1: kflags |= K_DOUBLE; break;
-            case 3: kflags |= K_MULTI; break;
+            case 1: kflags |= KILL_DOUBLE; break;
+            case 3: kflags |= KILL_MULTI; break;
         }
         if(actor->state.spree > 0) switch(actor->state.spree)
         {
-            case 5: kflags |= K_SPREE; break;
-            case 10: kflags |= K_UNSTOPPABLE; break;
+            case 5: kflags |= KILL_SPREE; break;
+            case 10: kflags |= KILL_UNSTOPPABLE; break;
             case 15: actor->state.spree = 5; break; // restarts
         }
-        if(flags & HIT_HEAD) kflags |= K_HEADSHOT;
+        if(flags & HIT_HEAD) kflags |= KILL_HEADSHOT;
         if(m_juggernaut)
         {
             if(target->state.juggernaut) nojuggernaut = true;
             if(target!=actor && (nojuggernaut || target->state.juggernaut))
             {
                 makejuggernaut(actor);
-                kflags |= K_JUGGERNAUT;
+                kflags |= KILL_JUGGERNAUT;
             }
             if(!m_vampire(mutators) && actor->state.juggernaut)
             {

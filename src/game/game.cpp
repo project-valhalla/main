@@ -509,11 +509,11 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-        writeobituary(d, actor, atk, flags&K_HEADSHOT); // obituary (console messages, kill feed)
+        writeobituary(d, actor, atk, flags&KILL_HEADSHOT); // obituary (console messages, kill feed)
         if(flags)
         {
             if(actor->aitype == AI_BOT) taunt(actor);
-            if(flags & K_HEADSHOT && actor == followingplayer(self))
+            if(flags & KILL_HEADSHOT && actor == followingplayer(self))
             {
                 playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
             }

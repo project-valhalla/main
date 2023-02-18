@@ -266,9 +266,16 @@ static const char * const iconnames[] =
 
 enum
 {
-    K_NONE = 1<<0, K_FIRST = 1<<1, K_DOUBLE = 1<<2, K_MULTI = 1<<3, K_SPREE = 1<<4, K_UNSTOPPABLE = 1<<5,  K_HEADSHOT = 1<<6,
-    K_TELEFRAG = 1<<7, K_STOMP = 1<<8,
-    K_JUGGERNAUT = 1<<9
+    KILL_NONE        = 1<<0,
+    KILL_FIRST       = 1<<1,
+    KILL_DOUBLE      = 1<<2,
+    KILL_MULTI       = 1<<3,
+    KILL_SPREE       = 1<<4,
+    KILL_UNSTOPPABLE = 1<<5,
+    KILL_HEADSHOT    = 1<<6,
+    KILL_TELEFRAG    = 1<<7,
+    KILL_STOMP       = 1<<8,
+    KILL_JUGGERNAUT  = 1<<9
 };
 
 #include "weapon.h"
@@ -710,7 +717,7 @@ namespace game
     extern void deathstate(gameent *d, bool restore = false);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
     extern void writeobituary(gameent *d, gameent *actor, int atk, bool headshot = false);
-    extern void kill(gameent *d, gameent *actor, int atk, int flags = K_NONE);
+    extern void kill(gameent *d, gameent *actor, int atk, int flags = KILL_NONE);
     extern void timeupdate(int timeremain);
     extern void msgsound(int n, physent *d = NULL);
     extern void doaction(int act);

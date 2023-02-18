@@ -128,7 +128,13 @@ namespace game
         }
     }
 
-    enum { BNC_GRENADE, BNC_ROCKET, BNC_GIB, BNC_CARTRIDGE };
+    enum
+    {
+        BNC_GRENADE,
+        BNC_ROCKET,
+        BNC_GIB,
+        BNC_CARTRIDGE
+    };
 
     struct bouncer : physent
     {
@@ -327,7 +333,12 @@ namespace game
 
     void clearbouncers() { bouncers.deletecontents(); }
 
-   enum { PROJ_PULSE = 0, PROJ_PLASMA, PROJ_ROCKET };
+   enum
+   {
+       PROJ_PULSE,
+       PROJ_PLASMA,
+       PROJ_ROCKET
+    };
 
     struct projectile
     {

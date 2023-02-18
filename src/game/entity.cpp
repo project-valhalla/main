@@ -39,19 +39,19 @@ namespace entities
         {
             case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL:
             case I_YELLOWSHIELD: case I_REDSHIELD:
-                if(!m_classic(mutators) || m_noitems(mutators)) return false;
-                    break;
+                if(m_noitems(mutators)) return false;
+                break;
             case I_HEALTH:
-                if(!m_classic(mutators) || m_vampire(mutators) || m_noitems(mutators)) return false;
+                if(m_vampire(mutators) || m_noitems(mutators)) return false;
                 break;
             case I_SUPERHEALTH: case I_MEGAHEALTH:
-                    if(m_insta(mutators) || m_vampire(mutators) || m_noitems(mutators)) return false;
-                    break;
-                case I_DDAMAGE: case I_ARMOUR: case I_UAMMO:
-                    if(m_insta(mutators) || m_noitems(mutators) || m_nopowerups(mutators)) return false;
-                    break;
-                case I_HASTE: case I_AGILITY: case I_INVULNERABILITY:
-                    if(m_noitems(mutators) || m_nopowerups(mutators)) return false;
+                if(m_insta(mutators) || m_vampire(mutators) || m_noitems(mutators)) return false;
+                break;
+            case I_DDAMAGE: case I_ARMOUR: case I_UAMMO:
+                if(m_insta(mutators) || m_noitems(mutators) || m_nopowerups(mutators)) return false;
+                break;
+            case I_HASTE: case I_AGILITY: case I_INVULNERABILITY:
+                if(m_noitems(mutators) || m_nopowerups(mutators)) return false;
                 break;
         }
         return true;

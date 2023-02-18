@@ -2787,20 +2787,13 @@ namespace server
     void explodeevent::process(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        switch(atk)
+        if(attacks[atk].gravity && attacks[atk].elasticity)
         {
-            case ATK_PULSE1:
-            case ATK_RL1:
-            case ATK_PISTOL2:
-                if(!gs.projs.remove(id)) return;
-                break;
-            case ATK_RL2:
-            case ATK_SG2:
-                if(!gs.bouncers.remove(id)) return;
-                break;
-
-            default:
-                return;
+            if(!gs.bouncers.remove(id)) return;
+        }
+        else if(attacks[atk].projspeed)
+        {
+            if(!gs.projs.remove(id)) return;
         }
         sendf(-1, 1, "ri4x", N_EXPLODEFX, ci->clientnum, atk, id, ci->ownernum);
         loopv(hits)
@@ -2846,50 +2839,54 @@ namespace server
         sendf(-1, 1, "ri3x", N_SHOTEVENT, ci->clientnum, atk, ci->ownernum);
         gs.shotdamage += attacks[atk].damage*attacks[atk].rays;
         bool hit = false;
-        switch(atk)
+        if(attacks[atk].gravity && attacks[atk].elasticity) // elasticity and gravity means it's a bouncer (grenade)
         {
-            case ATK_PULSE1: case ATK_RL1: case ATK_PISTOL2: gs.projs.add(id); break;
-            case ATK_RL2: case ATK_SG2: gs.bouncers.add(id); break;
-            default:
+            gs.bouncers.add(id);
+            return;
+        }
+        else if(attacks[atk].projspeed) // projectile speed with no elasticity or gravity means we have a regular projectile (rocket)
+        {
+            gs.projs.add(id);
+            return;
+        }
+        else
+        {
+            int totalrays = 0, maxrays = attacks[atk].rays;
+            loopv(hits)
             {
-                int totalrays = 0, maxrays = attacks[atk].rays;
-                loopv(hits)
-                {
-                    hitinfo &h = hits[i];
-                    clientinfo *target = getinfo(h.target);
-                    if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.rays<1 || h.dist > attacks[atk].range + 1) continue;
+                hitinfo &h = hits[i];
+                clientinfo *target = getinfo(h.target);
+                if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.rays<1 || h.dist > attacks[atk].range + 1) continue;
 
-                    totalrays += h.rays;
-                    if(totalrays>maxrays) continue;
-                    bool headshot = (validatk(atk) && attacks[atk].headshotdam) || (m_mayhem(mutators) && !attacks[atk].projspeed);
-                    int damage = h.rays*attacks[atk].damage;
-                    if(attacks[atk].headshotdam) // no headshot damage no locational damage
+                totalrays += h.rays;
+                if(totalrays>maxrays) continue;
+                bool headshot = (validatk(atk) && attacks[atk].headshotdam) || (m_mayhem(mutators) && !attacks[atk].projspeed);
+                int damage = h.rays*attacks[atk].damage;
+                if(attacks[atk].headshotdam) // no headshot damage no locational damage
+                {
+                    if(h.flags & HIT_HEAD)
                     {
-                        if(h.flags & HIT_HEAD)
+                        if(m_mayhem(mutators))
                         {
-                            if(m_mayhem(mutators))
-                            {
-                                target->state.shield = 0;
-                                damage = target->state.health;
-                            }
-                            else damage += attacks[atk].headshotdam;
+                            target->state.shield = 0;
+                            damage = target->state.health;
                         }
-                        if(h.flags & HIT_LEGS) damage /= 2;
+                        else damage += attacks[atk].headshotdam;
                     }
-                    if(gs.haspowerup(PU_DAMAGE) || gs.juggernaut) damage *= 2;
-                    if(target->state.haspowerup(PU_ARMOR) || target->state.juggernaut) damage /= 2;
-                    if(target->state.haspowerup(PU_INVULNERABILITY) && ci!=target && !gs.haspowerup(PU_INVULNERABILITY)) damage = 0;
-                    if(damage > 0)
-                    {
-                        dodamage(target, ci, damage, atk, h.flags, h.dir);
-                        if(m_mayhem(mutators) && h.flags & HIT_HEAD && headshot) died(target, ci, atk, damage, h.flags);
-                    }
-                    sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, target->clientnum, damage, h.flags,
+                    if(h.flags & HIT_LEGS) damage /= 2;
+                }
+                if(gs.haspowerup(PU_DAMAGE) || gs.juggernaut) damage *= 2;
+                if(target->state.haspowerup(PU_ARMOR) || target->state.juggernaut) damage /= 2;
+                if(target->state.haspowerup(PU_INVULNERABILITY) && ci!=target && !gs.haspowerup(PU_INVULNERABILITY)) damage = 0;
+                if(damage > 0)
+                {
+                    dodamage(target, ci, damage, atk, h.flags, h.dir);
+                    if(m_mayhem(mutators) && h.flags & HIT_HEAD && headshot) died(target, ci, atk, damage, h.flags);
+                }
+                sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, target->clientnum, damage, h.flags,
                                            int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
                                            int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
-                    hit = true;
-                }
-                break;
+                hit = true;
             }
         }
         if(hit) return;

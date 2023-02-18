@@ -962,14 +962,20 @@ namespace game
             case S_WEAPON_LOAD:
             case S_WEAPON_NOAMMO:
                 return 350;
+
             case S_FOOTSTEP:
             case S_FOOTSTEP_SOFT:
             case S_FOOTSTEP_METAL:
             case S_FOOTSTEP_WOOD:
             case S_FOOTSTEP_WATER:
                 return 300;
-            default:
-                return 500;
+
+            case S_BOUNCE_CARTRIDGE_SG:
+            case S_BOUNCE_CARTRIDGE_SMG:
+            case S_BOUNCE_CARTRIDGE_RAILGUN:
+                return 100;
+
+            default: return 500;
         }
     }
 

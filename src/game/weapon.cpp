@@ -136,20 +136,23 @@ namespace game
         BNC_CARTRIDGE
     };
 
+    inline bool weaponbouncer(int type) { return type >= BNC_GRENADE && type <= BNC_ROCKET; }
+
     struct bouncer : physent
     {
-        int lifetime, bounces;
-        float lastyaw, roll, gravity, elasticity;
-        bool local;
         gameent *owner;
-        int bouncetype, variant;
+
         vec offset;
-        int offsetmillis;
-        float offsetheight;
-        int id, atk;
+
+        bool local;
+
+        float lastyaw, roll, gravity, elasticity, offsetheight;
+
+        int id, atk, bouncetype, lifetime;
+        int variant, bounces, offsetmillis;
         int lastbounce, bouncesound, bouncerloopchan, bouncerloopsound;
 
-        bouncer() : bounces(0), roll(0), gravity(0.8f), elasticity(0.6f), variant(0), lastbounce(0), bouncesound(-1), bouncerloopchan(-1), bouncerloopsound(-1)
+        bouncer() : roll(0), variant(0), bounces(0), lastbounce(0), bouncesound(-1), bouncerloopchan(-1), bouncerloopsound(-1)
         {
             type = ENT_BOUNCE;
         }
@@ -172,29 +175,36 @@ namespace game
 
         void limitoffset()
         {
-            if(bouncetype >= BNC_GRENADE && bouncetype <= BNC_ROCKET && offsetmillis > 0 && offset.z < 0)
+            if(weaponbouncer(bouncetype) && offsetmillis > 0 && offset.z < 0)
                 offsetheight = raycube(vec(o.x + offset.x, o.y + offset.y, o.z), vec(0, 0, -1), -offset.z);
             else offsetheight = -1;
+        }
+
+        void setradius(int type)
+        {
+            float typeradius = 1.4f;
+            if(type == BNC_CARTRIDGE) typeradius = 0.3f;
+            radius = xradius = yradius = typeradius;
+            eyeheight = aboveeye = radius;
         }
     };
 
     vector<bouncer *> bouncers;
 
-    void newbouncer(const vec &from, const vec &to, bool local, int id, gameent *owner, int atk, int type, int lifetime, int speed, float gravity = 0.8f, float elasticity = 0.6f)
+    void newbouncer(gameent *owner, const vec &from, const vec &to, bool local, int id, int atk, int type, int lifetime, int speed, float gravity, float elasticity)
     {
         bouncer &bnc = *bouncers.add(new bouncer);
-        bnc.o = from;
-        bnc.radius = bnc.xradius = bnc.yradius = type==BNC_CARTRIDGE? 0.3f: 1.4f;
-        bnc.eyeheight = bnc.radius;
-        bnc.aboveeye = bnc.radius;
-        bnc.lifetime = lifetime;
-        bnc.gravity = gravity;
-        bnc.elasticity = elasticity;
-        bnc.local = local;
         bnc.owner = owner;
+        bnc.o = from;
+        bnc.setradius(type);
+        bnc.local = local;
+        bnc.id = local ? lastmillis : id;
         bnc.atk = atk;
         bnc.bouncetype = type;
-        bnc.id = local ? lastmillis : id;
+        bnc.lifetime = lifetime;
+        bnc.speed = speed;
+        bnc.gravity = gravity;
+        bnc.elasticity = elasticity;
 
         switch(type)
         {
@@ -225,7 +235,7 @@ namespace game
 
         avoidcollision(&bnc, dir, owner, 0.1f);
 
-        if(type>=BNC_GRENADE && type<=BNC_ROCKET)
+        if(weaponbouncer(bnc.bouncetype))
         {
             bnc.offset = hudgunorigin(attacks[bnc.atk].gun, from, to, owner);
             if(owner==hudplayer() && !isthirdperson()) bnc.offset.sub(owner->o).rescale(16).add(owner->o);
@@ -246,14 +256,22 @@ namespace game
         bouncer *b = (bouncer *)d;
         b->bounces++;
         int type = b->bouncetype;
-        if((type == BNC_CARTRIDGE && b->bounces > 1) || lastmillis-b->lastbounce < 100) return;
-        if(!(lookupmaterial(b->o)&MAT_WATER))
+        if((type == BNC_CARTRIDGE && b->bounces > 1) // prevent bounce sound spam
+           || lastmillis - b->lastbounce < 100)
+        {
+            return;
+        }
+        if(!(lookupmaterial(b->o) & MAT_WATER))
         {
             if(b->bouncesound >= 0 && b->vel.magnitude() > 5.0f)
-                playsound(b->bouncesound, NULL, &b->o, NULL, 0, 0, 0, -1, type == BNC_CARTRIDGE? 100: 0);
+            {
+                playsound(b->bouncesound, NULL, &b->o, NULL, 0, 0, 0, -1);
+            }
+            if(blood && type == BNC_GIB && b->bounces <= 2 && goreeffect <= 0)
+            {
+                addstain(STAIN_BLOOD, vec(b->o).sub(vec(surface).mul(b->radius)), surface, 2.96f/b->bounces, (b->owner->zombie ? bvec(0xFF, 0x60, 0xFF) : bvec(0x60, 0xFF, 0xFF)), rnd(4));
+            }
         }
-        if(blood && type == BNC_GIB && b->bounces <= 2 && goreeffect <= 0)
-            addstain(STAIN_BLOOD, vec(b->o).sub(vec(surface).mul(b->radius)), surface, 2.96f/b->bounces, (b->owner->zombie ? bvec(0xFF, 0x60, 0xFF) : bvec(0x60, 0xFF, 0xFF)), rnd(4));
         b->lastbounce = lastmillis;
     }
 
@@ -293,14 +311,14 @@ namespace game
                     if((bnc.lifetime -= qtime)<0 || bounce(&bnc, qtime/1000.0f, 0.5f, 0.4f, 0.7f)) { destroyed = true; break; }
                 }
             }
-            else if(bnc.bouncetype >= BNC_GRENADE && bnc.bouncetype <= BNC_ROCKET)
+            else if(weaponbouncer(bnc.bouncetype))
             {
                 destroyed = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity) || (bnc.lifetime -= time)<0 || isdeadly(lookupmaterial(bnc.o)&MAT_LAVA) ||
                             (bnc.bouncetype == BNC_GRENADE && bnc.bounces >= 1);
             }
             if(destroyed)
             {
-                if(bnc.bouncetype >= BNC_GRENADE && bnc.bouncetype <= BNC_ROCKET)
+                if(weaponbouncer(bnc.bouncetype))
                 {
                     int damage = attacks[bnc.atk].damage;
                     if(bnc.owner->haspowerup(PU_DAMAGE) || bnc.owner->juggernaut)
@@ -331,7 +349,10 @@ namespace game
         loopv(bouncers) if(bouncers[i]->owner==owner) { delete bouncers[i]; bouncers.remove(i--); }
     }
 
-    void clearbouncers() { bouncers.deletecontents(); }
+    void clearbouncers()
+    {
+        bouncers.deletecontents();
+    }
 
    enum
    {
@@ -342,19 +363,20 @@ namespace game
 
     struct projectile
     {
-        vec dir, o, from, to, offset;
-        float speed;
         gameent *owner;
-        int atk;
-        bool local, destroyed;
-        int offsetmillis;
-        int id, lifetime;
-        int projtype;
+
+        vec dir, o, from, to, offset;
+
+        bool local;
+
+        float speed;
+
+        int id, atk, projtype, lifetime, offsetmillis;
+
         int projchan, projsound;
 
         projectile() : projchan(-1), projsound(-1)
         {
-            destroyed = false;
         }
         ~projectile()
         {
@@ -365,25 +387,29 @@ namespace game
     };
     vector<projectile> projs;
 
-    void clearprojectiles() { projs.shrink(0); }
+    void clearprojectiles()
+    {
+        projs.shrink(0);
+    }
 
-    void newprojectile(int type, const vec &from, const vec &to, float speed, bool local, int id, int lifetime, gameent *owner, int atk)
+    void newprojectile(gameent *owner, const vec &from, const vec &to, bool local, int id, int atk, int type)
     {
         projectile &p = projs.add();
-        p.projtype = type;
+        p.owner = owner;
         p.dir = vec(to).sub(from).safenormalize();
         p.o = from;
         p.from = from;
         p.to = to;
         p.offset = hudgunorigin(attacks[atk].gun, from, to, owner);
         p.offset.sub(from);
-        p.speed = speed;
         p.local = local;
-        p.owner = owner;
-        p.atk = atk;
-        p.offsetmillis = OFFSETMILLIS;
         p.id = local ? lastmillis : id;
-        p.lifetime = lifetime;
+        p.atk = atk;
+        p.projtype = type;
+
+        p.speed = attacks[atk].projspeed;
+        p.lifetime = attacks[atk].lifetime;
+        p.offsetmillis = OFFSETMILLIS;
     }
 
     void removeprojectiles(gameent *owner)
@@ -422,18 +448,20 @@ namespace game
         if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOUR, f, &f->o);
     }
 
-    void spawnbouncer(const vec &p, gameent *d, int type)
+    void spawnbouncer(const vec &from, gameent *d, int type)
     {
         vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
+        float elasticity = 0.6f;
         if(type == BNC_CARTRIDGE)
         {
             to = vec(-50, 1, rnd(30)-15);
             to.rotate_around_z(d->yaw*RAD);
+            elasticity = 0.4f;
         }
         if(to.iszero()) to.z += 1;
         to.normalize();
-        to.add(p);
-        newbouncer(p, to, true, 0, d, NULL, type, rnd(1000)+1000, rnd(100)+20, 0.8f, type == BNC_GIB? 0.6f: 0.4f);
+        to.add(from);
+        newbouncer(d, from, to, true, 0, -1, type, rnd(1000)+1000, rnd(100)+20, 0.3f + rndscale(0.8f), elasticity);
     }
 
     void gibeffect(int damage, const vec &vel, gameent *d)
@@ -619,7 +647,7 @@ namespace game
                 loopv(bouncers)
                 {
                     bouncer &bnc = *bouncers[i];
-                    if(bnc.bouncetype < BNC_GRENADE && bnc.bouncetype > BNC_ROCKET) break;
+                    if(!weaponbouncer(bnc.bouncetype)) break;
                     if(bnc.owner == d && bnc.id == id && !bnc.local)
                     {
                         explode(bnc.local, bnc.owner, bnc.offsetpos(), bnc.vel, NULL, 0, atk);
@@ -707,7 +735,12 @@ namespace game
                         exploded = true;
                     }
                 }
-                if(dist<4)
+                if(lookupmaterial(p.o) & MAT_LAVA)
+                {
+                    projsplash(p, v, NULL, damage);
+                    exploded = true;
+                }
+                else if(dist<4)
                 {
                     if(p.o!=p.to) // if original target was moving, reevaluate endpoint
                     {
@@ -758,11 +791,6 @@ namespace game
                     }
                     p.projchan = playsound(p.projsound, NULL, &pos, NULL, 0, -1, 100, p.projchan);
                 }
-            }
-            if(p.destroyed || lookupmaterial(p.o)&MAT_LAVA)
-            {
-                projsplash(p, v, NULL, damage);
-                exploded = true;
             }
             if(exploded)
             {
@@ -887,11 +915,12 @@ namespace game
                 loopi(attacks[atk].rays) particle_flare(hudgunorigin(gun, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.18f);
                 break;
             }
-
             case ATK_SG2:
+            {
                 up.z += dist/16;
-                newbouncer(from, up, local, id, d, atk, BNC_GRENADE, attacks[atk].lifetime, attacks[atk].projspeed, 1.0f, 0);
+                newbouncer(d, from, up, local, id, atk, BNC_GRENADE, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
                 break;
+            }
 
             case ATK_SMG1:
             case ATK_SMG2:
@@ -911,11 +940,14 @@ namespace game
             }
 
             case ATK_PULSE1:
+            {
                 if(muzzleflash && d->muzzle.x >= 0)
+                {
                     particle_flare(d->muzzle, d->muzzle, 115, PART_MUZZLE_FLASH2, 0xDD88DD, 1.8f, d);
-                newprojectile(PROJ_PULSE, from, to, attacks[atk].projspeed, local, id, attacks[atk].lifetime, d, atk);
+                }
+                newprojectile(d, from, to, local, id, atk, PROJ_PULSE);
                 break;
-
+            }
             case ATK_PULSE2:
             {
                 if(muzzleflash && d->muzzle.x >= 0)
@@ -930,16 +962,20 @@ namespace game
             }
 
             case ATK_RL1:
-
+            {
                 if(muzzleflash && d->muzzle.x >= 0)
+                {
                     particle_flare(d->muzzle, d->muzzle, 140, PART_MUZZLE_FLASH2, 0xEFE898, 0.1f, d, 0.2f);
-                newprojectile(PROJ_ROCKET, from, to, attacks[atk].projspeed, local, id, attacks[atk].lifetime, d, atk);
+                }
+                newprojectile(d, from, to, local, id, atk, PROJ_ROCKET);
                 break;
-
+            }
             case ATK_RL2:
+            {
                 up.z += dist/8;
-                newbouncer(from, up, local, id, d, atk, BNC_ROCKET, attacks[atk].lifetime, attacks[atk].projspeed, 0.8f, 0.7f);
+                newbouncer(d, from, up, local, id, atk, BNC_ROCKET, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
                 break;
+            }
 
             case ATK_RAIL:
             {
@@ -967,7 +1003,7 @@ namespace game
                 }
                 if(atk == ATK_PISTOL2)
                 {
-                    newprojectile(PROJ_PLASMA, from, to, attacks[atk].projspeed, local, id, attacks[atk].lifetime, d, atk);
+                    newprojectile(d, from, to, local, id, atk, PROJ_PLASMA);
                     break;
                 }
                 particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
@@ -1287,7 +1323,7 @@ namespace game
         loopv(bouncers)
         {
             bouncer &bnc = *bouncers[i];
-            if(bnc.bouncetype<BNC_GRENADE && bnc.bouncetype>BNC_ROCKET) continue;
+            if(!weaponbouncer(bnc.bouncetype)) continue;
             vec pos(bnc.o);
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
         }
@@ -1446,7 +1482,7 @@ namespace game
         loopv(bouncers)
         {
             bouncer &bnc = *bouncers[i];
-            if(bnc.bouncetype <= BNC_GRENADE && bnc.bouncetype >= BNC_ROCKET) continue;
+            if(!weaponbouncer(bnc.bouncetype)) continue;
             obstacles.avoidnear(NULL, bnc.o.z + attacks[bnc.atk].exprad + 1, bnc.o, radius + attacks[bnc.atk].exprad);
         }
     }

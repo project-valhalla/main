@@ -488,7 +488,7 @@ struct gameent : dynent, gamestate
     int respawned, suicided;
     int lastpain;
     int lastaction, lastattack, lasthit;
-    int attacking, lastact;
+    int attacking;
     int lasttaunt, lastfootstep, lastyelp, lastswitch;
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots;
@@ -568,7 +568,7 @@ struct gameent : dynent, gamestate
         respawned = suicided = -1;
         lastaction = 0;
         lastattack = -1;
-        attacking = lastact = ACT_IDLE;
+        attacking = ACT_IDLE;
         lasttaunt = 0;
         lastpickup = -1;
         lastpickupmillis = 0;

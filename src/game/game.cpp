@@ -344,7 +344,6 @@ namespace game
             return;
         }
         if((self->attacking = act)) respawn();
-        self->lastact = act;
     }
     ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));

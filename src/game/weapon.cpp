@@ -113,12 +113,12 @@ namespace game
         playsound(S_WEAPON_NOAMMO);
     });
 
-    void offsetray(const vec &from, const vec &to, int spread, float range, vec &dest)
+    void offsetray(const vec &from, const vec &to, int spread, float range, vec &dest, gameent *d)
     {
         vec offset;
         do offset = vec(rndscale(1), rndscale(1), rndscale(1)).sub(0.5f);
-        while(offset.squaredlen() > 0.5f*0.5f);
-        offset.mul((to.dist(from)/1024)*spread);
+        while(offset.squaredlen() > 0.5f * 0.5f);
+        offset.mul((to.dist(from) / 1024) * spread / (d->crouched() && d->crouching ? 1.5f : 1));
         offset.z /= 2;
         dest = vec(offset).add(to);
         if(dest != from)
@@ -126,11 +126,6 @@ namespace game
             vec dir = vec(dest).sub(from).normalize();
             raycubepos(from, dir, dest, range, RAY_CLIPMAT|RAY_ALPHAPOLY);
         }
-    }
-
-    void createrays(int atk, const vec &from, const vec &to)             // create random spread of rays
-    {
-        loopi(attacks[atk].rays) offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i]);
     }
 
     enum { BNC_GRENADE, BNC_ROCKET, BNC_GIB, BNC_CARTRIDGE };
@@ -872,8 +867,11 @@ namespace game
                 }
                 if(!local)
                 {
-                    createrays(atk, from, to);
-                    loopi(attacks[atk].rays) rayhit(atk, d, from, rays[i], hit);
+                    loopi(attacks[atk].rays)
+                    {
+                        offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i], d);
+                        rayhit(atk, d, from, rays[i], hit);
+                    }
                 }
                 loopi(attacks[atk].rays) particle_flare(hudgunorigin(gun, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.18f);
                 break;
@@ -1213,8 +1211,17 @@ namespace game
             shorten = barrier;
         if(shorten) to = vec(dir).mul(shorten).add(from);
 
-        if(attacks[atk].rays > 1) createrays(atk, from, to);
-        else if(attacks[atk].spread) offsetray(from, to, attacks[atk].spread, attacks[atk].range, to);
+        if(attacks[atk].rays > 1)
+        {
+            loopi(attacks[atk].rays)
+            {
+                offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i], d);
+            }
+        }
+        else if(attacks[atk].spread)
+        {
+            offsetray(from, to, attacks[atk].spread, attacks[atk].range, to, d);
+        }
 
         hits.setsize(0);
 

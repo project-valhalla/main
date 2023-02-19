@@ -93,14 +93,15 @@ static const struct guninfo
 {
     const char *name, *model, *worldmodel;
     int attacks[NUMACTS];
+    bool haszoom;
 } guns[NUMGUNS] =
 {
-    { "shotgun",  "shotgun",    "weapon/shotgun/world",    { -1, ATK_MELEE,  ATK_SG1,     ATK_SG2     }, },
-    { "smg",      "smg",        "weapon/smg/world",        { -1, ATK_MELEE,  ATK_SMG1,    ATK_SMG2    }, },
-    { "pulse",    "pulserifle", "weapon/pulserifle/world", { -1, ATK_MELEE,  ATK_PULSE1,  ATK_PULSE2  }, },
-    { "rocket",   "rocket",     "weapon/rocket/world",     { -1, ATK_MELEE,  ATK_RL1,     ATK_RL2     }, },
-    { "railgun",  "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_RAIL1,   ATK_RAIL2   }, },
-    { "pistol",   "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1, ATK_PISTOL2 }, },
-    { "instagun", "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,   ATK_INSTA   }, },
-    { "zombie",   "zombie",     "",                        { -1, ATK_ZOMBIE, ATK_ZOMBIE,  ATK_ZOMBIE  }  }
+    { "shotgun",  "shotgun",    "weapon/shotgun/world",    { -1, ATK_MELEE,  ATK_SG1,     ATK_SG2     }, false },
+    { "smg",      "smg",        "weapon/smg/world",        { -1, ATK_MELEE,  ATK_SMG1,    ATK_SMG2    }, false },
+    { "pulse",    "pulserifle", "weapon/pulserifle/world", { -1, ATK_MELEE,  ATK_PULSE1,  ATK_PULSE2  }, false },
+    { "rocket",   "rocket",     "weapon/rocket/world",     { -1, ATK_MELEE,  ATK_RL1,     ATK_RL2     }, false },
+    { "railgun",  "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_RAIL1,   ATK_RAIL2   }, true  },
+    { "pistol",   "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1, ATK_PISTOL2 }, false },
+    { "instagun", "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,   ATK_INSTA   }, true  },
+    { "zombie",   "zombie",     "",                        { -1, ATK_ZOMBIE, ATK_ZOMBIE,  ATK_ZOMBIE  }, false }
 };

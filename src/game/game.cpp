@@ -1,5 +1,7 @@
 #include "game.h"
 
+extern int zoom;
+
 namespace game
 {
     bool intermission = false;
@@ -329,20 +331,27 @@ namespace game
 
     // inputs
 
-    inline bool shouldzoom(int gun, int act)
+    inline bool checkaction(int &act, const int gun)
     {
-        return act == ACT_SECONDARY &&
-               guns[gun].attacks[ACT_PRIMARY] == guns[gun].attacks[ACT_SECONDARY];
+        if(guns[gun].haszoom)
+        {
+            if(act == ACT_SECONDARY)
+            {
+                execident("dozoom");
+                return false;
+            }
+            if(act == ACT_PRIMARY)
+            {
+               if(zoom) act = ACT_SECONDARY;
+            }
+        }
+        return true;
     }
 
     void doaction(int act)
     {
         if(!connected || intermission) return;
-        if(shouldzoom(self->gunselect, act))
-        {
-            execident("dozoom");
-            return;
-        }
+        if(!checkaction(act, self->gunselect)) return;
         if((self->attacking = act)) respawn();
     }
     ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));

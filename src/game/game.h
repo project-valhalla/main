@@ -503,8 +503,8 @@ struct gameent : dynent, gamestate
     float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll;
     int smoothmillis;
 
-    int attackchan, attacksound, idlechan, idlesound;
-    int powerupchan, powerupsound;
+    int attackchan, idlechan, powerupchan, gunchan;
+    int attacksound, idlesound, powerupsound;
 
     string name, info;
     int team, playermodel, playercolor;
@@ -520,7 +520,7 @@ struct gameent : dynent, gamestate
                 lastpain(0), lastfootstep(0), lastyelp(0), lastswitch(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0),
                 edit(NULL), smoothmillis(-1),
-                attackchan(-1), attacksound(-1), powerupchan(-1),
+                attackchan(-1), idlechan(-1), powerupchan(-1), gunchan(-1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1), muzzle(-1, -1, -1)
     {
         name[0] = info[0] = 0;

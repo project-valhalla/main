@@ -24,9 +24,10 @@ namespace game
         addmsg(N_GUNSELECT, "rci", d, gun);
         d->gunselect = gun;
         d->lastswitch = lastmillis;
-        playsound(S_WEAPON_LOAD, d);
         d->lastattack = -1;
         if(d == self) disablezoom();
+        stopownersounds(d, d->gunchan);
+        playsound(S_WEAPON_LOAD, d);
     }
 
     void nextweapon(int dir, bool force = false)
@@ -892,6 +893,7 @@ namespace game
         int gun = attacks[atk].gun, sound = attacks[atk].sound;
         float dist = from.dist(to);
         vec up = to;
+        gameent *hud = followingplayer(self);
         switch(atk)
         {
             case ATK_SG1:
@@ -1034,7 +1036,10 @@ namespace game
             case S_SG2:
             {
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
-                if(d==hudplayer()) playsound(S_SG1_B, d);
+                if(d == hud)
+                {
+                    d->gunchan = playsound(S_SG1_B, d, NULL, NULL, 0, 0, 0, d->gunchan);
+                }
                 break;
             }
             case S_PULSE2_A:
@@ -1042,14 +1047,17 @@ namespace game
                 if(d->attacksound >= 0) looped = true;
                 d->attacksound = sound;
                 d->attackchan = playsound(sound, NULL, &d->o, NULL, 0, -1, 100, d->attackchan);
-                if(lastmillis-prevaction>200 && !looped) playsound(S_PULSE2_B, d);
+                if(lastmillis - prevaction > 200 && !looped) playsound(S_PULSE2_B, d);
                 break;
             }
             case S_RAIL_A:
             case S_RAIL_INSTAGIB:
             {
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
-                if(d==hudplayer()) playsound(S_RAIL_B, d);
+                if(d == hud)
+                {
+                    d->gunchan = playsound(S_RAIL_B, d, NULL, NULL, 0, 0, 0, d->gunchan);
+                }
                 break;
             }
             default: playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);

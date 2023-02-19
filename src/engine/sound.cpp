@@ -550,11 +550,12 @@ void checkmapsounds()
     }
 }
 
-void stopownersounds(physent *d)
+void stopownersounds(physent *d, int chanid)
 {
     loopv(channels)
     {
         soundchannel &chan = channels[i];
+        if(chanid > -1 && chan.id != chanid) continue;
         if(chan.inuse && chan.owner == d)
         {
             Mix_HaltChannel(i);

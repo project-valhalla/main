@@ -1340,7 +1340,7 @@ void pushhudtranslate(float tx, float ty, float sx, float sy)
 int vieww = -1, viewh = -1;
 float curfov, curavatarfov, fovy, aspect;
 int farplane;
-VARP(zoominvel, 0, 40, 500);
+VARP(zoominvel, 0, 60, 500);
 VARP(zoomoutvel, 0, 50, 500);
 VARP(zoomfov, 10, 42, 90);
 VARP(fov, 10, 100, 150);

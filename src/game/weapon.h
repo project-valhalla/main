@@ -103,5 +103,5 @@ static const struct guninfo
     { "railgun",  "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_RAIL1,   ATK_RAIL2   }, true  },
     { "pistol",   "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1, ATK_PISTOL2 }, false },
     { "instagun", "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,   ATK_INSTA   }, true  },
-    { "zombie",   "zombie",     "",                        { -1, ATK_ZOMBIE, ATK_ZOMBIE,  ATK_ZOMBIE  }, false }
+    { "zombie",   "zombie",     "",                        { -1, ATK_ZOMBIE, ATK_ZOMBIE,  ATK_ZOMBIE  }, true  }
 };

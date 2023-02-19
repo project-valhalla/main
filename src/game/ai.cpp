@@ -127,15 +127,26 @@ namespace ai
                 int aiskew = 1;
                 switch(atk)
                 {
-                    case ATK_RAIL: case ATK_INSTA: aiskew = 6; break;
+                    case ATK_RAIL1:
+                    case ATK_RAIL2:
+                    case ATK_INSTA: aiskew = 6; break;
+
                     case ATK_PULSE1: aiskew = 20; break;
+
                     case ATK_PULSE2: aiskew = 8; break;
+
                     case ATK_RL1: aiskew = 5; break;
+
                     case ATK_RL2: aiskew = 1; break;
+
                     case ATK_SG1: aiskew = 10; break;
+
                     case ATK_SG2: aiskew = 3; break;
+
                     case ATK_SMG1: aiskew = 50; break;
+
                     case ATK_SMG2: aiskew = 30; break;
+
                     default: break;
                 }
                 #define rndaioffset(r) ((rnd(int(r*aiskew*2)+1)-(r*aiskew))*(1.f/float(max(d->skill, 1))))

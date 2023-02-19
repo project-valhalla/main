@@ -840,10 +840,11 @@ namespace game
                 break;
             }
 
-            case ATK_RAIL:
+            case ATK_RAIL1:
+            case ATK_RAIL2:
             case ATK_INSTA:
             {
-                bool insta=atk==ATK_INSTA;
+                bool insta = attacks[atk].gun == GUN_INSTA;
                 adddynlight(vec(to).madd(dir, 4), 20, !insta? vec(0.25f, 1.0f, 0.75f):  vec(0.25f, 0.75f, 1.0f), 180, 75, DL_EXPAND);
                 if(hit || water || glass) break;
                 particle_splash(PART_SPARK1, 80, 80, to, !insta? 0x77DD77: 0x50CFE5, 1.25f, 100, 80);
@@ -977,7 +978,8 @@ namespace game
                 break;
             }
 
-            case ATK_RAIL:
+            case ATK_RAIL1:
+            case ATK_RAIL2:
             {
                 if(d->muzzle.x >= 0)
                 {

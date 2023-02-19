@@ -328,7 +328,7 @@ namespace game
                 gameent *hud = followingplayer(self);
                 if(isally(hud, d) && hud->o.dist(d->o) > maxparticletextdistance)
                 {
-                    particle_icon(d->abovehead(), HICON_GL, HICON_GL, PART_HUD_ICON, 1, 0xFFFFFF, 3.0f, NULL);
+                    particle_icon(d->abovehead(), 1, 3, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f, 0);
                 }
                 else particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
             }

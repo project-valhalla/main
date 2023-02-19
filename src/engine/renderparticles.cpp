@@ -867,8 +867,7 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/muzzle01.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // muzzle flash
     new quadrenderer("data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // pulse muzzle flash
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
-    new quadrenderer("data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                                            // hud icon
-    new quadrenderer("<colorify:1/1/1>data/interface/hud/items.png", PT_PART|PT_FEW|PT_ICON),                            // grey hud icon
+    new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_ICON|PT_LERP),                                 // game icons
     new quadrenderer("data/interface/particle/light.png", PT_PART),
     new quadrenderer("data/interface/particle/envmap.png", PT_PART),
     new quadrenderer("data/interface/particle/player.png", PT_PART),
@@ -1083,7 +1082,7 @@ void particle_trail(int type, int fade, const vec &s, const vec &e, int color, f
 }
 
 VARP(particletext, 0, 1, 1);
-VARP(maxparticletextdistance, 0, 128, 10000);
+VARP(maxparticletextdistance, 0, 64, 10000);
 
 void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
 {
@@ -1467,23 +1466,23 @@ void updateparticles()
             {
                 case ET_LIGHT:
                 case ET_SPOTLIGHT:
-                    icon = PART_LIGHT;
+                    icon = PART_ICON_LIGHT;
                     break;
 
                 case ET_ENVMAP:
-                    icon = PART_ENVMAP;
+                    icon = PART_ICON_ENVMAP;
                     break;
 
                 case ET_PLAYERSTART:
-                    icon = PART_PLAYER;
+                    icon = PART_ICON_PLAYER;
                     break;
 
                 case ET_SOUND:
-                    icon = PART_SOUND;
+                    icon = PART_ICON_SOUND;
                     break;
 
                 case ET_PARTICLES:
-                    icon = PART_PARTICLE;
+                    icon = PART_ICON_PARTICLE;
                     break;
 
                 default: break;

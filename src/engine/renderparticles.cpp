@@ -868,12 +868,7 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // pulse muzzle flash
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
     new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_ICON|PT_LERP),                                 // game icons
-    new quadrenderer("data/interface/particle/light.png", PT_PART),
-    new quadrenderer("data/interface/particle/envmap.png", PT_PART),
-    new quadrenderer("data/interface/particle/player.png", PT_PART),
-    new quadrenderer("data/interface/particle/entity.png", PT_PART),
-    new quadrenderer("data/interface/particle/particle.png", PT_PART),
-    new quadrenderer("data/interface/particle/sound.png", PT_PART),
+    new quadrenderer("data/interface/particle/editor_icons.png", PT_PART|PT_ICON|PT_LERP),                               // edit icons
     &texts,                                                                                                              // text
     &meters,                                                                                                             // meter
     &metervs,                                                                                                            // meter vs.
@@ -1392,6 +1387,7 @@ void seedparticles()
 }
 
 VARP(entityicons, 0, 1, 1);
+VARP(entityiconscolor, 0, 0, 1);
 
 void updateparticles()
 {
@@ -1442,8 +1438,8 @@ void updateparticles()
     }
     if(editmode) // show sparkly thingies for map entities in edit mode
     {
-        static const int entcolor[]   = { 0xFFFFFF, 0xFFFFFF,  0xFF8C00, 0x90EE90, 0xBF40BF, 0xFF7F7F, 0xFFFF00, 0xFFFFFF, 0x0096FF};
         const vector<extentity *> &ents = entities::getents();
+        static const int entcolor[] = { 0xFFFFFF, 0xFFFFFF,  0xFF8C00, 0x90EE90, 0xBF40BF, 0xFF7F7F, 0xFFFF00, 0xFFFFFF, 0x0096FF }; // from ET_LIGHT to ET_DECAL (8 entities)
         // note: order matters in this case as particles of the same type are drawn in the reverse order that they are added
         loopv(entgroup)
         {
@@ -1457,37 +1453,13 @@ void updateparticles()
             if(e.type >= ET_LIGHT && e.type <= ET_DECAL)
             {
                 particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, entcolor[e.type], 2.0f);
-                regular_particle_splash(PART_EDIT, 4, 50, e.o, entcolor[e.type], 0.32f*particlesize/100.0f, 200);
+                if(entityicons) particle_icon(e.o, e.type%4, e.type/4, PART_EDITOR_ICONS, 1, entityiconscolor ? entcolor[e.type] : 0xFFFFFF, 2.0f, 0);
             }
-            else particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, 0x00FFFF, 2.0f);
-            if(!entityicons) continue;
-            int icon = 0;
-            switch(e.type)
+            else
             {
-                case ET_LIGHT:
-                case ET_SPOTLIGHT:
-                    icon = PART_ICON_LIGHT;
-                    break;
-
-                case ET_ENVMAP:
-                    icon = PART_ICON_ENVMAP;
-                    break;
-
-                case ET_PLAYERSTART:
-                    icon = PART_ICON_PLAYER;
-                    break;
-
-                case ET_SOUND:
-                    icon = PART_ICON_SOUND;
-                    break;
-
-                case ET_PARTICLES:
-                    icon = PART_ICON_PARTICLE;
-                    break;
-
-                default: break;
+                particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, 0x00FFFF, 2.0f);
+                regular_particle_splash(PART_EDIT, 2, 80, e.o, 0x00FFFF, 0.16f*particlesize/100.0f);
             }
-            if(icon) particle_splash(icon, 1, 1, e.o, entcolor[e.type], 1.0f+particlesize/100.0f);
         }
     }
 }

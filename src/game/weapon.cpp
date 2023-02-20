@@ -704,13 +704,13 @@ namespace game
             p.offsetmillis = max(p.offsetmillis-time, 0);
             vec dv;
             float dist = p.to.dist(p.o, dv);
+            dv.mul(time/max(dist*1000/p.speed, float(time)));
+            vec v = vec(p.o).add(dv);
             float damage = attacks[p.atk].damage;
             if(p.owner->haspowerup(PU_DAMAGE) || p.owner->juggernaut)
             {
                 damage *= 2;
             }
-            dv.mul(time/max(dist*1000/p.speed, float(time)));
-            vec v = vec(p.o).add(dv);
             bool exploded = false;
             hits.setsize(0);
             if(p.local)
@@ -743,7 +743,7 @@ namespace game
                 }
                 else if(dist<4)
                 {
-                    if(p.o!=p.to) // if original target was moving, reevaluate endpoint
+                    if(p.o!=p.to) // if original target was moving, re-evaluate endpoint
                     {
                         if(raycubepos(p.o, p.dir, p.to, 0, RAY_CLIPMAT|RAY_ALPHAPOLY)>=4) continue;
                     }

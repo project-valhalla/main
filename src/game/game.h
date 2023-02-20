@@ -504,7 +504,7 @@ struct gameent : dynent, gamestate
     int smoothmillis;
 
     int attackchan, idlechan, powerupchan, gunchan;
-    int attacksound, idlesound, powerupsound;
+    int attacksound, idlesound, powerupsound, gunsound;
 
     string name, info;
     int team, playermodel, playercolor;

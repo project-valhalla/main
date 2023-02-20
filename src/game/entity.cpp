@@ -314,8 +314,8 @@ namespace entities
 
     void updatepowerups(int time, gameent *d)
     {
-        d->powerupsound = S_LOOP_DAMAGE + d->poweruptype-1;
         gameent *hud = followingplayer(self);
+        d->powerupsound = S_LOOP_DAMAGE + d->poweruptype-1;
         d->powerupchan = playsound(d->powerupsound, NULL, d==hud ? NULL : &d->o, NULL, 0, -1, 200, d->powerupchan);
         if((d->powerupmillis -= time)<=0)
         {

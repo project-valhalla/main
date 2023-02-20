@@ -26,7 +26,7 @@ namespace game
         d->lastswitch = lastmillis;
         d->lastattack = -1;
         if(d == self) disablezoom();
-        stopownersounds(d, d->gunchan);
+        stopsound(d->gunsound, d->gunchan);
         playsound(S_WEAPON_LOAD, d);
     }
 
@@ -1038,7 +1038,8 @@ namespace game
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
                 if(d == hud)
                 {
-                    d->gunchan = playsound(S_SG1_B, d, NULL, NULL, 0, 0, 0, d->gunchan);
+                    d->gunsound = S_SG1_B;
+                    d->gunchan = playsound(d->gunsound, d, NULL, NULL, 0, 0, 0, d->gunchan);
                 }
                 break;
             }
@@ -1056,7 +1057,8 @@ namespace game
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
                 if(d == hud)
                 {
-                    d->gunchan = playsound(S_RAIL_B, d, NULL, NULL, 0, 0, 0, d->gunchan);
+                    d->gunsound = S_RAIL_B;
+                    d->gunchan = playsound(d->gunsound, d, NULL, NULL, 0, 0, 0, d->gunchan);
                 }
                 break;
             }

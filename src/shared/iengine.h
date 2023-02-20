@@ -433,7 +433,7 @@ extern void preloadmapsound(int n);
 extern bool stopsound(int n, int chanid, int fade = 0);
 extern void stopsounds(int exclude = 0);
 extern void stopmapsounds();
-extern void stopownersounds(physent *d, int chanid = -1);
+extern void stopownersounds(physent *d);
 extern void initsound();
 
 // rendermodel

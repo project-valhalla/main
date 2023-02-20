@@ -1439,7 +1439,7 @@ void updateparticles()
     if(editmode) // show sparkly thingies for map entities in edit mode
     {
         const vector<extentity *> &ents = entities::getents();
-        static const int entcolor[] = { 0xFFFFFF, 0xFFFFFF,  0xFF8C00, 0x90EE90, 0xBF40BF, 0xFF7F7F, 0xFFFF00, 0xFFFFFF, 0x0096FF }; // from ET_LIGHT to ET_DECAL (8 entities)
+        static const int entcolor[] = { 0xFFFFFF, 0xFFFFFF,  0xFF8C00, 0x90EE90, 0xBF40BF, 0xFF7F7F, 0xFFFF00, 0xFFC0FB, 0x0096FF }; // from ET_LIGHT to ET_DECAL (8 entities)
         // note: order matters in this case as particles of the same type are drawn in the reverse order that they are added
         loopv(entgroup)
         {

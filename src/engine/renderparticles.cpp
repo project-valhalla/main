@@ -854,7 +854,7 @@ static partrenderer *parts[] =
     new quadrenderer("<grey>data/texture/particle/smoke.png", PT_PART|PT_FLIP|PT_LERP),                                  // smoke
     new quadrenderer("<grey>data/texture/particle/steam.png", PT_PART|PT_FLIP),                                          // steam
     new quadrenderer("<grey>data/texture/particle/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_BRIGHT),                      // flame
-    new quadrenderer("data/texture/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE),                              // colliding snow
+    new quadrenderer("data/texture/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE, STAIN_SNOW),                  // colliding snow
     new taperenderer("data/texture/particle/trail.png", PT_TAPE|PT_BRIGHT),                                              // bullet trail
     new taperenderer("data/texture/particle/trail_projectile.png", PT_TAPE|PT_FEW|PT_BRIGHT),                            // projectile trail
     &lightnings,                                                                                                         // lightning

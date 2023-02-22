@@ -1102,6 +1102,8 @@ namespace game
         ignores.setsize(0);
         connected = remote = false;
         self->clientnum = -1;
+        servdesc[0] = '\0';
+        servauth[0] = '\0';
         if(editmode) toggleedit();
         sessionid = 0;
         mastermode = MM_OPEN;

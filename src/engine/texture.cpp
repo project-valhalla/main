@@ -509,7 +509,7 @@ void texmad(ImageData &s, const vec &mul, const vec &add)
     if(s.bpp < 3 && (mul.x != mul.y || mul.y != mul.z || add.x != add.y || add.y != add.z))
         swizzleimage(s);
     writetex(s,
-        loopk(min(s.bpp, 3)) dst[k] = round(dst[k]*mul[k] + 255*add[k]);
+        loopk(min(s.bpp, 3)) dst[k] = uchar(clamp(round(dst[k]*mul[k] + 255*add[k]), 0.0f, 255.0f));
     );
 }
 
@@ -522,7 +522,7 @@ void texintmul(ImageData &s, const uint32_t &color)
     if(s.bpp < 3 && (mul.x != mul.y || mul.y != mul.z))
         swizzleimage(s);
     writetex(s,
-        loopk(min(s.bpp, 3)) dst[k] = round((mul[k]/255.0f)*dst[k]);
+        loopk(min(s.bpp, 3)) dst[k] = uchar(clamp(round((mul[k]/255.0f)*dst[k]), 0.0f, 255.0f));
     );
 }
 
@@ -532,7 +532,7 @@ void texcolorify(ImageData &s, const vec &color, vec weights)
     if(weights.iszero()) weights = vec(0.21f, 0.72f, 0.07f);
     writetex(s,
         float lum = dst[0]*weights.x + dst[1]*weights.y + dst[2]*weights.z;
-        loopk(3) dst[k] = round(lum*color[k]);
+        loopk(3) dst[k] = uchar(clamp(round(lum*color[k]), 0.0f, 255.0f));
     );
 }
 
@@ -543,7 +543,7 @@ void texcolormask(ImageData &s, const vec &color1, const vec &color2)
     readwritetex(d, s,
         vec color;
         color.lerp(color2, color1, src[3]/255.0f);
-        loopk(3) dst[k] = round(color[k]*src[k]);
+        loopk(3) dst[k] = uchar(clamp(round(color[k]*src[k]), 0.0f, 255.0f));
     );
     s.replace(d);
 }
@@ -595,27 +595,29 @@ void texpremul(ImageData &s)
     {
         case 2:
             writetex(s,
-                dst[0] = round(dst[0]*dst[1]/255.0f);
+                dst[0] = uchar(round(dst[0]*dst[1]/255.0f));
             );
             break;
         case 4:
             writetex(s,
-                dst[0] = round(dst[0]*dst[3]/255.0f);
-                dst[1] = round(dst[1]*dst[3]/255.0f);
-                dst[2] = round(dst[2]*dst[3]/255.0f);
+                dst[0] = uchar(round(dst[0]*dst[3]/255.0f));
+                dst[1] = uchar(round(dst[1]*dst[3]/255.0f));
+                dst[2] = uchar(round(dst[2]*dst[3]/255.0f));
             );
             break;
     }
 }
 
-void texfade(ImageData &s, const float &alpha) {
+void texfade(ImageData &s, float opacity = 1.0f)
+{
+    opacity = clamp(opacity, 0.0f, 1.0f);
     switch(s.bpp)
     {
         case 2:
-            writetex(s, dst[1] = round(dst[1]*alpha));
+            writetex(s, dst[1] = uchar(round(dst[1]*opacity)));
             break;
         case 4:
-            writetex(s, dst[3] = round(dst[3]*alpha));
+            writetex(s, dst[3] = uchar(round(dst[3]*opacity)));
             break;
     }
 }

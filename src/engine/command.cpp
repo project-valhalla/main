@@ -3500,17 +3500,10 @@ ICOMMAND(loopconcatwordrev+, "riie", (ident *id, int *offset, int *n, uint *body
 ICOMMAND(loopconcatwordrev*, "riie", (ident *id, int *step, int *n, uint *body), loopconc(*id, 0, *n, *step, true, body, false));
 ICOMMAND(loopconcatwordrev+*, "riiie", (ident *id, int *offset, int *step, int *n, uint *body), loopconc(*id, *offset, *n, *step, true, body, false));
 
-void concat(tagval *v, int n)
-{
-    commandret->setstr(conc(v, n, true));
-}
-COMMAND(concat, "V");
 
-void concatword(tagval *v, int n)
-{
-    commandret->setstr(conc(v, n, false));
-}
-COMMAND(concatword, "V");
+ICOMMAND(concat,     "V", (tagval *v, int n), commandret->setstr(conc(v, n, true)));
+ICOMMAND(concatword, "V", (tagval *v, int n), commandret->setstr(conc(v, n, false)));
+ICOMMAND(+s,         "V", (tagval *v, int n), commandret->setstr(conc(v, n, false)));
 
 void append(ident *id, tagval *v, bool space)
 {
@@ -4480,7 +4473,9 @@ void strsplice(const char *s, const char *vals, int *skip, int *count)
 COMMAND(strsplice, "ssii");
 
 #ifndef STANDALONE
-ICOMMAND(getmillis, "i", (int *total), intret(*total ? totalmillis : lastmillis));
+ICOMMAND(getmillis, "i", (int *total),
+    intret(*total > 0 ? totalmillis : (*total < 0 ? SDL_GetTicks() : lastmillis))
+);
 
 struct sleepcmd
 {

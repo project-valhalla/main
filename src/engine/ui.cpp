@@ -175,6 +175,8 @@ namespace UI
     void resetblend() { changeblend(BLEND_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); }
     void modblend() { changeblend(BLEND_MOD, GL_ZERO, GL_SRC_COLOR); }
 
+    FVARP(uiscale, 0.5f, 1.0f, 1.5f);
+
     struct Object
     {
         Object *parent;
@@ -880,7 +882,7 @@ namespace UI
         void setup(float space_ = 0)
         {
             Object::setup();
-            space = space_;
+            space = space_ * uiscale;
         }
 
         uchar childalign() const { return ALIGN_VCENTER; }
@@ -926,7 +928,7 @@ namespace UI
         void setup(float space_ = 0)
         {
             Object::setup();
-            space = space_;
+            space = space_ * uiscale;
         }
 
         uchar childalign() const { return ALIGN_HCENTER; }
@@ -974,8 +976,8 @@ namespace UI
         {
             Object::setup();
             columns = columns_;
-            spacew = spacew_;
-            spaceh = spaceh_;
+            spacew = spacew_ * uiscale;
+            spaceh = spaceh_ * uiscale;
         }
 
         uchar childalign() const { return 0; }
@@ -1113,8 +1115,8 @@ namespace UI
         void setup(float spacew_ = 0, float spaceh_ = 0)
         {
             Object::setup();
-            spacew = spacew_;
-            spaceh = spaceh_;
+            spacew = spacew_ * uiscale;
+            spaceh = spaceh_ * uiscale;
         }
 
         uchar childalign() const { return 0; }
@@ -1186,8 +1188,8 @@ namespace UI
         void setup(float spacew_, float spaceh_)
         {
             Object::setup();
-            spacew = spacew_;
-            spaceh = spaceh_;
+            spacew = spacew_ * uiscale;
+            spaceh = spaceh_ * uiscale;
         }
 
         static const char *typestr() { return "#Spacer"; }
@@ -1222,8 +1224,8 @@ namespace UI
         void setup(float offsetx_, float offsety_)
         {
             Object::setup();
-            offsetx = offsetx_;
-            offsety = offsety_;
+            offsetx = offsetx_ * uiscale;
+            offsety = offsety_ * uiscale;
         }
 
         static const char *typestr() { return "#Offsetter"; }
@@ -1256,8 +1258,8 @@ namespace UI
         void setup(float minw_, float minh_)
         {
             Object::setup();
-            minw = minw_;
-            minh = minh_;
+            minw = minw_ * uiscale;
+            minh = minh_ * uiscale;
         }
 
         static const char *typestr() { return "#Filler"; }
@@ -1693,8 +1695,8 @@ namespace UI
         void setup(Texture *tex_, float minw_ = 0, float minh_ = 0, float tilew_ = 0, float tileh_ = 0)
         {
             Image::setup(tex_, minw_, minh_);
-            tilew = tilew_;
-            tileh = tileh_;
+            tilew = tilew_ * uiscale;
+            tileh = tileh_ * uiscale;
         }
 
         static const char *typestr() { return "#TiledImage"; }
@@ -1878,7 +1880,7 @@ namespace UI
         {
             Object::setup();
 
-            scale = scale_;
+            scale = scale_ * uiscale;
             color = color_;
             wrap = wrap_;
         }
@@ -2084,8 +2086,8 @@ namespace UI
         void setup(float clipw_ = 0, float cliph_ = 0)
         {
             Object::setup();
-            clipw = clipw_;
-            cliph = cliph_;
+            clipw = clipw_ * uiscale;
+            cliph = cliph_ * uiscale;
             virtw = virth = 0;
         }
 

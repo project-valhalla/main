@@ -729,6 +729,7 @@ extern void cleanupsky();
 
 namespace UI
 {
+    extern float uiscale;
     bool hascursor();
     void getcursorpos(float &x, float &y);
     void resetcursor();

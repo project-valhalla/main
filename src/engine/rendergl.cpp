@@ -2663,7 +2663,7 @@ void drawcrosshair(int w, int h)
         static Texture *cursor = NULL;
         if(!cursor) cursor = textureload("data/interface/cursor.png", 3, true);
         crosshair = cursor;
-        chsize = cursorsize*3;
+        chsize = cursorsize*3 * UI::uiscale;
         UI::getcursorpos(cx, cy);
     }
     else
@@ -2678,7 +2678,7 @@ void drawcrosshair(int w, int h)
             loadcrosshair(NULL, index);
             crosshair = crosshairs[index];
         }
-        chsize = crosshairsize*3;
+        chsize = crosshairsize*3 * UI::uiscale;
     }
     if(crosshair->type&Texture::ALPHA) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     else glBlendFunc(GL_ONE, GL_ONE);

@@ -4237,8 +4237,10 @@ ICOMMANDK(||, ID_OR, "E1V", (tagval *args, int numargs),
 #define DIVCMD(name, fmt, type, op) MATHCMD(#name, fmt, type, { if(val2) op; else val = 0; }, 0, )
 
 DIVCMD(div, i, int, val /= val2);
+DIVCMD("/", i, int, val /= val2);
 DIVCMD(mod, i, int, val %= val2);
 DIVCMD(divf, f, float, val /= val2);
+DIVCMD("/f", f, float, val /= val2);
 DIVCMD(modf, f, float, val = fmod(val, val2));
 MATHCMD("pow", f, float, val = pow(val, val2), 0, );
 

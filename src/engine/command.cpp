@@ -4482,28 +4482,54 @@ ICOMMAND(getmillis, "i", (int *total),
 struct sleepcmd
 {
     int delay, millis, flags;
-    char *command;
+    char *command, *id;
 };
 vector<sleepcmd> sleepcmds;
 
-void addsleep(int *msec, char *cmd)
+int findsleepcmd(const char *id)
 {
-    sleepcmd &s = sleepcmds.add();
-    s.delay = max(*msec, 1);
-    s.millis = lastmillis;
-    s.command = newstring(cmd);
-    s.flags = identflags;
+    if(!*id) return 0;
+    loopv(sleepcmds) if(!strcmp(sleepcmds[i].id, id)) return 1;
+    return 0;
 }
+ICOMMAND(findsleep, "s", (char *id), intret(findsleepcmd(id)));
 
-COMMANDN(sleep, addsleep, "is");
+void addsleep(const int *msec, const char *cmd, const char *id)
+{
+    if(!*cmd) return;
+    if(*id) loopv(sleepcmds) if(!strcmp(sleepcmds[i].id, id)) return;
 
-void checksleep(int millis)
+    sleepcmd &s = sleepcmds.add();
+    s.delay     = max(*msec, 1);
+    s.millis    = lastmillis;
+    s.command   = newstring(cmd);
+    s.id        = newstring(id);
+    s.flags     = identflags;
+}
+COMMANDN(sleep, addsleep, "iss");
+
+void delsleep(const char *id)
+{
+    if(!*id) return;
+    loopv(sleepcmds) if(!strcmp(sleepcmds[i].id, id))
+    {
+        delete[] sleepcmds[i].command;
+        delete[] sleepcmds[i].id;
+        sleepcmds.remove(i);
+        return;
+    }
+}
+COMMAND(delsleep, "s");
+
+void checksleep(const int millis)
 {
     loopv(sleepcmds)
     {
         sleepcmd &s = sleepcmds[i];
         if(millis - s.millis >= s.delay)
         {
+            s.id = NULL;
+            delete[] s.id;
             char *cmd = s.command; // execute might create more sleep commands
             s.command = NULL;
             int oldflags = identflags;
@@ -4516,22 +4542,25 @@ void checksleep(int millis)
     }
 }
 
-void clearsleep(bool clearoverrides)
+void clearsleep(const bool clearoverrides)
 {
     int len = 0;
-    loopv(sleepcmds) if(sleepcmds[i].command)
-    {
-        if(clearoverrides && !(sleepcmds[i].flags&IDF_OVERRIDDEN)) sleepcmds[len++] = sleepcmds[i];
-        else delete[] sleepcmds[i].command;
-    }
+    loopv(sleepcmds)
+        if((clearoverrides && !(sleepcmds[i].flags&IDF_OVERRIDDEN)) \
+            || sleepcmds[i].id[0] != '\0') sleepcmds[len++] = sleepcmds[i];
+        else {
+            delete[] sleepcmds[i].command;
+            delete[] sleepcmds[i].id;
+        }
     sleepcmds.shrink(len);
+    execident("on_clearsleep");
 }
 
-void clearsleep_(int *clearoverrides)
+void clearsleep_(const int *clearoverrides)
 {
     clearsleep(*clearoverrides!=0 || identflags&IDF_OVERRIDDEN);
 }
-
 COMMANDN(clearsleep, clearsleep_, "i");
+
 #endif
 

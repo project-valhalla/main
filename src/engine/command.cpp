@@ -4478,6 +4478,8 @@ COMMAND(strsplice, "ssii");
 ICOMMAND(getmillis, "i", (int *total),
     intret(*total > 0 ? totalmillis : (*total < 0 ? SDL_GetTicks() : lastmillis))
 );
+ICOMMAND(getframemillis, "", (), intret(curtime));
+
 
 struct sleepcmd
 {

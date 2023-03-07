@@ -4528,8 +4528,8 @@ void checksleep(const int millis)
         sleepcmd &s = sleepcmds[i];
         if(millis - s.millis >= s.delay)
         {
-            s.id = NULL;
             delete[] s.id;
+            s.id = NULL;
             char *cmd = s.command; // execute might create more sleep commands
             s.command = NULL;
             int oldflags = identflags;

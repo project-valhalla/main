@@ -3422,6 +3422,7 @@ static inline void loopwhile(ident &id, int offset, int n, int step, bool rev, u
         loopirev(n)
         {
             setiter(id, offset + i*step, stack);
+            if(!executebool(cond)) break;
             execute(body);
         }
     }
@@ -3430,6 +3431,7 @@ static inline void loopwhile(ident &id, int offset, int n, int step, bool rev, u
         loopi(n)
         {
             setiter(id, offset + i*step, stack);
+            if(!executebool(cond)) break;
             execute(body);
         }
     }

@@ -512,7 +512,7 @@ namespace game
 
     void preload()
     {
-        if(hudgun) preloadweapons();
+        preloadweapons();
         preloadbouncers();
         preloadplayermodel();
         preloadsounds();

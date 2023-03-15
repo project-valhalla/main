@@ -1341,11 +1341,12 @@ namespace game
         }
     }
 
+    static const char * const projectilenames[3] = { "projectile/grenade", "projectile/rocket", "projectile/eject/cartridge01" };
     static const char * const gibnames[5] = { "projectile/gib/gib01", "projectile/gib/gib02", "projectile/gib/gib03", "projectile/gib/gib04", "projectile/gib/gib05" };
-    static const char * const gunnames[5] = { "item/ammo/shells", "item/ammo/bullets", "worldgun/pulserifle", "item/ammo/rockets", "item/ammo/rrounds" };
 
     void preloadbouncers()
     {
+        loopi(sizeof(projectilenames)/sizeof(projectilenames[0])) preloadmodel(projectilenames[i]);
         loopi(sizeof(gibnames)/sizeof(gibnames[0])) preloadmodel(gibnames[i]);
     }
 
@@ -1384,7 +1385,7 @@ namespace game
                 {
                     case BNC_GRENADE: mdl = "projectile/grenade"; break;
                     case BNC_ROCKET: mdl = "projectile/rocket"; break;
-                    default: mdl = "projectile/grenade01"; break;
+                    default: mdl = "projectile/grenade"; break;
                 }
             }
             rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, bnc.roll, cull);

@@ -1270,6 +1270,9 @@ int main(int argc, char **argv)
     inputgrab(grabinput = true);
     ignoremousemotion();
 
+    game::preload();
+    flushpreloadedmodels();
+
     for(;;)
     {
         static int frames = 0;

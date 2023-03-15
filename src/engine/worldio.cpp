@@ -887,10 +887,6 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     identflags &= ~IDF_OVERRIDDEN;
 
     preloadusedmapmodels(true);
-
-    game::preload();
-    flushpreloadedmodels();
-
     preloadmapsounds();
 
     entitiesinoctanodes();

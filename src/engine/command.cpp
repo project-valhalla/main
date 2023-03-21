@@ -4200,6 +4200,7 @@ MATHICMD(&~, 0, );
 MATHICMD(|~, 0, );
 MATHCMD("<<", i, int, val = val2 < 32 ? val << max(val2, 0) : 0, 0, );
 MATHCMD(">>", i, int, val >>= clamp(val2, 0, 31), 0, );
+MATHCMD(">>>", i, int, val = (int)((uint)val >> clamp(val2, 0, 31)), 0, );
 
 MATHFCMD(+, 0, );
 MATHFCMD(*, 1, );

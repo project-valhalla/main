@@ -285,6 +285,11 @@ ICOMMAND(clearspecbinds, "", (), enumerate(keyms, keym, km, km.clear(keym::ACTIO
 ICOMMAND(cleareditbinds, "", (), enumerate(keyms, keym, km, km.clear(keym::ACTION_EDITING)));
 ICOMMAND(clearallbinds, "", (), enumerate(keyms, keym, km, km.clear()));
 
+bool isfullconsoletoggled = false;
+ICOMMAND(togglefullconsole, "", (),
+{
+    isfullconsoletoggled = UI::toggleui("fullconsole");
+});
 VARP(fullconsolecommand, 0, 1, 1);
 
 void inputcommand(char *init, char *action = NULL, char *prompt = NULL, char *flags = NULL) // turns input to the command line on or off
@@ -306,7 +311,7 @@ void inputcommand(char *init, char *action = NULL, char *prompt = NULL, char *fl
         case 's': commandflags |= CF_COMPLETE|CF_EXECUTE; break;
     }
     else if(init) commandflags |= CF_COMPLETE|CF_EXECUTE;
-    if(fullconsolecommand)
+    if(!isfullconsoletoggled && fullconsolecommand)
     {
         if(init) UI::showui("fullconsole");
         else UI::hideui("fullconsole");

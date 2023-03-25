@@ -4274,6 +4274,13 @@ MINMAXCMD(minf, f, float, min);
 MINMAXCMD(maxf, f, float, max);
 
 ICOMMAND(bitscan, "i", (int *n), intret(bitscan(*n)));
+ICOMMAND(bitbloat, "i", (int *n),
+{
+    *n = (*n << 12 | *n) & 0x000F000F;
+    *n = (*n <<  6 | *n) & 0x03030303;
+    *n = (*n <<  3 | *n) & 0x11111111;
+    intret(*n);
+});
 
 ICOMMAND(abs, "i", (int *n), intret(abs(*n)));
 ICOMMAND(absf, "f", (float *n), floatret(fabs(*n)));

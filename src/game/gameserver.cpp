@@ -913,10 +913,10 @@ namespace server
         {
             case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL:
             case I_YELLOWSHIELD: case I_REDSHIELD:
-                if(m_effic(mutators)) return false;
+                if(m_insta(mutators) || m_effic(mutators)) return false;
                 break;
             case I_HEALTH:
-                if(m_effic(mutators) || m_vampire(mutators)) return false;
+                if(m_insta(mutators) || m_effic(mutators) || m_vampire(mutators)) return false;
                 break;
             case I_SUPERHEALTH: case I_MEGAHEALTH:
                 if(m_insta(mutators) || m_vampire(mutators)) return false;

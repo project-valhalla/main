@@ -535,8 +535,16 @@ namespace game
         deathstate(d);
         ai::kill(d, actor);
         // events
-        if(d == self) execident("on_death");
-        if(actor == self && actor != d) execident("on_kill");
+        if(d == self)
+        {
+            execident("on_death");
+            if(d == actor) execident("on_suicide");
+        }
+        else if(actor == self)
+        {
+            execident("on_kill");
+            if(isally(actor, d)) execident("on_teamkill");
+        }
     }
 
     void timeupdate(int secs)

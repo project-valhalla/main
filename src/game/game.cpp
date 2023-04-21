@@ -493,8 +493,11 @@ namespace game
             if(d==actor) act = "got infected";
             else act = "infected";
         }
-        else if(d==actor) act = "suicided";
-        if(d==actor) conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
+        else if(d == actor)
+        {
+            act = "suicided";
+            conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
+        }
         else if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
         else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
         // kill feed
@@ -533,7 +536,7 @@ namespace game
         ai::kill(d, actor);
         // events
         if(d == self) execident("on_death");
-        if(actor == self) execident("on_kill");
+        if(actor == self && actor != d) execident("on_kill");
     }
 
     void timeupdate(int secs)

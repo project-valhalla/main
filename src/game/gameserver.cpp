@@ -2842,12 +2842,10 @@ namespace server
         if(attacks[atk].gravity && attacks[atk].elasticity) // elasticity and gravity means it's a bouncer (grenade)
         {
             gs.bouncers.add(id);
-            return;
         }
         else if(attacks[atk].projspeed) // projectile speed with no elasticity or gravity means we have a regular projectile (rocket)
         {
             gs.projs.add(id);
-            return;
         }
         else
         {

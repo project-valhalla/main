@@ -1469,7 +1469,7 @@ void crouchplayer(physent *pl, int moveres, bool local)
         {
             float diff = min(pl->eyeheight - minheight, speed);
             pl->eyeheight -= diff;
-            if(pl->physstate > PHYS_FALL)
+            if(pl->physstate >= PHYS_FALL)
             {
                 pl->o.z -= diff;
                 pl->newpos.z -= diff;
@@ -1480,7 +1480,7 @@ void crouchplayer(physent *pl, int moveres, bool local)
     {
         float diff = min(pl->maxheight - pl->eyeheight, speed), step = diff/moveres;
         pl->eyeheight += diff;
-        if(pl->physstate > PHYS_FALL)
+        if(pl->physstate >= PHYS_FALL)
         {
             pl->o.z += diff;
             pl->newpos.z += diff;
@@ -1488,10 +1488,10 @@ void crouchplayer(physent *pl, int moveres, bool local)
         pl->crouching = 0;
         loopi(moveres)
         {
-            if(!collide(pl, vec(0, 0, pl->physstate <= PHYS_FALL ? -1 : 1), 0, true)) break;
+            if(!collide(pl, vec(0, 0, pl->physstate < PHYS_FALL ? -1 : 1), 0, true)) break;
             pl->crouching = 1;
             pl->eyeheight -= step;
-            if(pl->physstate > PHYS_FALL)
+            if(pl->physstate >= PHYS_FALL)
             {
                 pl->o.z -= step;
                 pl->newpos.z -= step;

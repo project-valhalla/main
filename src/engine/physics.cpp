@@ -1699,7 +1699,6 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
     {
         if(pl->jumping)
         {
-            pl->jumping = false;
             pl->vel.z = max(pl->vel.z, JUMPVEL);
         }
     }

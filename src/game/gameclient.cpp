@@ -374,6 +374,12 @@ namespace game
         if(d) intret(d->ammo[d->gunselect]);
     });
 
+    ICOMMAND(getclientitem, "i", (int *cn),
+    {
+        gameent *d = getclient(*cn);
+        if(d) intret(d->item);
+    });
+
     ICOMMAND(getclientpowerup, "i", (int *cn),
     {
         gameent *d = getclient(*cn);

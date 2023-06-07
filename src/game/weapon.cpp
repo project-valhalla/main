@@ -858,11 +858,11 @@ namespace game
 
             case ATK_PISTOL1:
             {
-                adddynlight(vec(to).madd(dir, 4), 10, vec(0.2f, 1.5f, 1.5f), 180, 50, DL_EXPAND);
-                particle_splash(PART_SPARK1, 10, 50, to, 0x00FFFF, 1.5f, 300, 50);
+                adddynlight(vec(to).madd(dir, 4), 10, vec(0, 1.5f, 1.5f), 200, 10, DL_SHRINK);
                 if(hit || water || glass) break;
-                particle_splash(PART_SPARK2, 1+rnd(10), 100+rnd(280), to, 0x00FFFF, 0.01f+rndscale(0.18f), 300, 2);
-                addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 2.0f);
+                particle_fireball(to, 2.2f, PART_EXPLOSION1, 140, 0x00FFFF, 0.1f);
+                particle_splash(PART_SPARK2, 50, 180, to, 0x00FFFF, 0.08f+rndscale(0.18f));
+                addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 0.80f+rndscale(1.0f));
                 addstain(STAIN_RAIL_GLOW, to, dir, 1.50f, 0x00FFFF);
                 break;
             }

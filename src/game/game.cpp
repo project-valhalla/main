@@ -529,7 +529,7 @@ namespace game
         }
         if(actor == followingplayer(self))
         {
-            if(killsound) playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
+            if(killsound && actor != d) playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
             if(flags & KILL_HEADSHOT) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
         }
         // update player state and reset ai

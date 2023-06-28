@@ -496,7 +496,7 @@ namespace game
             {
                 extern int hitsound;
                 if(hitsound && at->lasthit != lastmillis)
-                    playsound(isally(f, at) ? S_HIT_ALLY : (hitsound == 1 ? S_HIT1 : S_HIT2));
+                    playsound(isally(f, at) ? S_HIT_ALLY : S_HIT);
                 at->lasthit = lastmillis;
             }
         }

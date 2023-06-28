@@ -399,7 +399,7 @@ namespace game
 
     bool editing() { return m_edit; }
 
-    VARP(hitsound, 0, 0, 2);
+    VARP(hitsound, 0, 0, 1);
     VARP(playheadshotsound, 0, 1, 2);
 
     void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
@@ -419,7 +419,7 @@ namespace game
         if(h!=self && actor==h && d!=actor)
         {
             if(hitsound && actor->lasthit != lastmillis)
-                playsound(isally(d, actor) ? S_HIT_ALLY : (hitsound == 1 ? S_HIT1 : S_HIT2));
+                playsound(isally(d, actor) ? S_HIT_ALLY : S_HIT);
         }
         if(d!=actor) actor->lasthit = lastmillis;
         if(d->haspowerup(PU_INVULNERABILITY) && !actor->haspowerup(PU_INVULNERABILITY)) playsound(S_ACTION_INVULNERABILITY, d);
@@ -469,8 +469,6 @@ namespace game
         d->stoppowerupsound();
     }
 
-    VARP(killsound, 0, 0, 2);
-
     void juggernauteffect(gameent *d)
     {
         msgsound(S_JUGGERNAUT, d);
@@ -512,6 +510,8 @@ namespace game
     ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
     ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
+    VARP(killsound, 0, 0, 1);
+
     void kill(gameent *d, gameent *actor, int atk, int flags)
     {
         if(d->state==CS_EDITING)
@@ -522,14 +522,15 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-        writeobituary(d, actor, atk, flags&KILL_HEADSHOT); // obituary (console messages, kill feed)
-        if(flags)
+        writeobituary(d, actor, atk, flags & KILL_HEADSHOT); // obituary (console messages, kill feed)
+        if(flags && actor->aitype == AI_BOT)
         {
-            if(actor->aitype == AI_BOT) taunt(actor);
-            if(flags & KILL_HEADSHOT && actor == followingplayer(self))
-            {
-                playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
-            }
+            taunt(actor); // bots taunting players when getting extraordinary kills
+        }
+        if(actor == followingplayer(self))
+        {
+            if(killsound) playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
+            if(flags & KILL_HEADSHOT) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
         }
         // update player state and reset ai
         deathstate(d);

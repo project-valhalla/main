@@ -977,6 +977,9 @@ namespace game
     {
         switch(n)
         {
+            case S_ROCKET_EXPLODE:
+                return 600;
+
             case S_JUMP1:
             case S_JUMP2:
             case S_LAND:

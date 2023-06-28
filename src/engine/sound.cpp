@@ -50,7 +50,7 @@ struct soundchannel
     physent *owner;
     extentity *ent;
     int radius, volume, pan, flags;
-    bool dirty;
+    bool dirty, allowstereo;
 
     soundchannel(int id) : id(id) { reset(); }
 
@@ -69,6 +69,7 @@ struct soundchannel
         pan = -1;
         flags = 0;
         dirty = false;
+        allowstereo = true;
     }
 };
 vector<soundchannel> channels;
@@ -586,7 +587,7 @@ bool updatechannel(soundchannel &chan)
         }
         else if(chan.radius > 0) rad = chan.radius;
         if(rad > 0) volf -= clamp(dist/rad, 0.0f, 1.0f); // simple mono distance attenuation
-        if(stereo && (v.x != 0 || v.y != 0) && dist>0)
+        if(stereo && chan.allowstereo && (v.x != 0 || v.y != 0) && dist>0)
         {
             v.rotate_around_z(-camera1->yaw*RAD);
             panf = 0.5f - 0.5f*v.x/v.magnitude2(); // range is from 0 (left) to 1 (right)
@@ -731,6 +732,14 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
     if(chanid < 0) return -1;
 
     soundchannel &chan = newchannel(chanid, &slot, owner, loc, ent, flags, radius);
+
+    if(!owner && !loc)
+    {
+        /* If a sound has no owner or location, then disable stereo for the current channel,
+         * as we want announcer sounds and noises with no source to sound more "in your face" as possible.
+         */
+        chan.allowstereo = false;
+    }
     updatechannel(chan);
     int playing = -1;
     if(fade)

@@ -620,10 +620,10 @@ void renderentring(const extentity &e, float radius, int axis)
     if(radius <= 0) return;
     gle::defvertex();
     gle::begin(GL_LINE_LOOP);
-    loopi(15)
+    loopi(16)
     {
         vec p(e.o);
-        const vec2 &sc = sincos360[i*(360/15)];
+        const vec2 &sc = sincos360[(i*360+8)/16];
         p[axis>=2 ? 1 : 0] += radius*sc.x;
         p[axis>=1 ? 2 : 1] += radius*sc.y;
         gle::attrib(p);

@@ -134,7 +134,8 @@ namespace game
         BNC_GRENADE,
         BNC_ROCKET,
         BNC_GIB,
-        BNC_CARTRIDGE
+        BNC_DEBRIS,
+        BNC_CARTRIDGE,
     };
 
     inline bool weaponbouncer(int type) { return type >= BNC_GRENADE && type <= BNC_ROCKET; }
@@ -285,6 +286,13 @@ namespace game
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
             switch(bnc.bouncetype)
             {
+                case BNC_GRENADE:
+                case BNC_ROCKET:
+                {
+                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_SMOKE, 5, 200, pos, 0x555555, 1.60f, 10, 500);
+                    break;
+                }
+
                 case BNC_GIB:
                 {
                     if(blood && goreeffect <= 0 && bnc.vel.magnitude() > 30.0f)
@@ -292,11 +300,12 @@ namespace game
                     break;
                 }
 
-                case BNC_GRENADE:
-                case BNC_ROCKET:
+                case BNC_DEBRIS:
                 {
-                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_SMOKE, 5, 200, pos, 0x555555, 1.60f, 10, 500);
-                    break;
+                    if (bnc.vel.magnitude() <= 30.0f) break;
+                    regular_particle_splash(PART_SMOKE, 5, 100, pos, 0x555555, 1.80f, 30, 500);
+                    regular_particle_splash(PART_SPARK1, 1, 40, pos, 0xF83B09, 1.20f, 10, 500);
+                    particle_flare(bnc.o, bnc.o, 1, PART_EDIT, 0xFFC864, 0.5+rndscale(1.5f));
                 }
             }
             if(bnc.bouncerloopsound >= 0) bnc.bouncerloopchan = playsound(bnc.bouncerloopsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerloopchan);
@@ -462,7 +471,7 @@ namespace game
         if(to.iszero()) to.z += 1;
         to.normalize();
         to.add(from);
-        newbouncer(d, from, to, true, 0, -1, type, rnd(1000)+1000, rnd(100)+20, 0.3f + rndscale(0.8f), elasticity);
+        newbouncer(d, from, to, true, 0, -1, type, type == BNC_DEBRIS ? 400 : rnd(1000)+1000, rnd(100)+20, 0.3f + rndscale(0.8f), elasticity);
     }
 
     void gibeffect(int damage, const vec &vel, gameent *d)
@@ -576,9 +585,11 @@ namespace game
         }
     }
 
+    VARP(maxdebris, 10, 60, 1000);
+
     void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int damage, int atk)
     {
-        vec debrisorigin = vec(v).sub(vec(vel).mul(5)), dynlight = vec(1.0f, 3.0f, 4.0f);
+        vec dynlight = vec(1.0f, 3.0f, 4.0f);
         int fireball = 0x50CFE5;
         switch(atk)
         {
@@ -588,9 +599,9 @@ namespace game
             {
                 dynlight = vec(2, 1.5f, 1);
                 fireball = 0xC8E66B;
-                particle_splash(PART_SPARK1, 30, 140, v, 0xFFC864, 9.0f, 200, 100);
-                particle_splash(PART_SPARK2, 10, 200, v, 0xFFC864, 0.10f+rndscale(0.35f), 600, 2);
-                particle_splash(PART_SMOKE, 30, 200, v, 0x444444, 8.8f, 200, 200, 0.01f);
+                particle_splash(PART_SPARK1, 50, 190, v, 0xF3A612, 0.50f + rndscale(0.90f), 180, 40, 0.3f);
+                particle_splash(PART_SPARK2, 100, 250, v, 0xFFC864, 0.10f+rndscale(0.50f), 600, 1);
+                particle_splash(PART_SMOKE, 50, 280, v, 0x444444, 10.0f, 250, 200, 0.09f);
                 break;
             }
             case ATK_PULSE1:
@@ -610,10 +621,27 @@ namespace game
             }
             default: break;
         }
-        particle_fireball(v, 1.15f*attacks[atk].exprad, atk == ATK_PULSE1? PART_EXPLOSION2: PART_EXPLOSION1, 300, fireball, 0.10f);
-        adddynlight(safe ? v : debrisorigin, 2*attacks[atk].exprad, dynlight, 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
+        particle_fireball(v, 1.15f*attacks[atk].exprad, atk == ATK_PULSE1? PART_EXPLOSION2: PART_EXPLOSION1, 400, fireball, 0.10f);
+        adddynlight(v, 2*attacks[atk].exprad, dynlight, 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
         playsound(attacks[atk].impactsound, NULL, &v);
-        if(lookupmaterial(v)==MAT_WATER) playsound(S_IMPACT_WATER_PROJ, NULL, &v);
+        if(lookupmaterial(v) & MAT_WATER) playsound(S_IMPACT_WATER_PROJ, NULL, &v);
+        else // no debris in water
+        {
+            int numdebris = rnd(maxdebris - 5) + 5;
+            vec debrisvel = vec(owner->o).sub(v).safenormalize(),
+                debrisorigin(v);
+            if (atk == ATK_RL1)
+            {
+                debrisorigin.add(vec(debrisvel).mul(8));
+            }
+            if (numdebris && (attacks[atk].gun == GUN_RL || attacks[atk].gun == GUN_SG))
+            {
+                loopi(numdebris)
+                {
+                    spawnbouncer(debrisorigin, owner, BNC_DEBRIS);
+                }
+            }
+        }
         if(!local) return;
         int numdyn = numdynents();
         loopi(numdyn)
@@ -814,14 +842,24 @@ namespace game
         switch(atk)
         {
             case ATK_SG1:
+            {
+                adddynlight(vec(to).madd(dir, 4), 6, vec(0.5f, 0.375f, 0.25f), 140, 10);
+                if(hit || water || glass) break;
+                particle_splash(PART_SPARK2, 1+rnd(6), 80+rnd(380), to, 0xFFC864, 0.08f + rndscale(0.3f), 250);
+                particle_splash(PART_SMOKE, 1+rnd(5), 150, to, 0x606060, 1.8f+rndscale(2.2f), 100, 100, 0.01f);
+                addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
+            }
+            break;
+
             case ATK_SMG1:
             case ATK_SMG2:
             {
-                adddynlight(vec(to).madd(dir, 4), atk == ATK_SG1 ? 6: 12, vec(0.5f, 0.375f, 0.25f), 140, 10);
+                adddynlight(vec(to).madd(dir, 4), 12, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if(hit || water || glass) break;
-                particle_splash(PART_SPARK1, 30, 50, to, 0xFFC864, 0.70f);
-                particle_splash(PART_SPARK2, 1+rnd(6), 80+rnd(380), to, 0xFFC864, 0.05f+rndscale(0.09f), 250);
-                particle_splash(PART_SMOKE, atk==ATK_SG1? 1+rnd(5): 5+rnd(10), 150, to, 0x606060, 1.8f+rndscale(2.2f), 100, 100, 0.01f);
+                particle_fireball(to, 0.5f, PART_EXPLOSION1, 120, 0xFFC864, 2.0f);
+                particle_splash(PART_SPARK1, 50, 40, to, 0xFFC864, 1.0f);
+                particle_splash(PART_SPARK2, 10+rnd(30), 150, to, 0xFFC864, 0.05f+rndscale(0.09f), 250);
+                particle_splash(PART_SMOKE, 30, 180, to, 0x444444, 2.20f, 80, 100, 0.01f);
                 addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
                 break;
 

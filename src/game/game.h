@@ -375,19 +375,19 @@ struct gamestate
 
     void baseammo(int gun, int k = 3)
     {
-        ammo[gun] = itemstats[gun-GUN_SG].add*k;
+        ammo[gun] = itemstats[gun-GUN_SCATTER].add*k;
     }
 
     void addammo(int gun, int k = 1, int scale = 1)
     {
-        itemstat &is = itemstats[gun-GUN_SG];
+        itemstat &is = itemstats[gun-GUN_SCATTER];
         ammo[gun] = min(ammo[gun] + (is.add*k)/scale, is.max);
     }
 
     bool hasmaxammo(int type)
     {
        const itemstat &is = itemstats[type-I_AMMO_SG];
-       return ammo[type-I_AMMO_SG+GUN_SG]>=is.max;
+       return ammo[type-I_AMMO_SG+GUN_SCATTER]>=is.max;
     }
 
     void resetitems()

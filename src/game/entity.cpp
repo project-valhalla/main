@@ -118,7 +118,7 @@ namespace entities
     }
     void repammo(gameent *d, int type, bool local)
     {
-        addammo(type, d->ammo[type-I_AMMO_SG+GUN_SG], local);
+        addammo(type, d->ammo[type-I_AMMO_SG+GUN_SCATTER], local);
     }
 
    /* This function is called once the server acknowledges that you really

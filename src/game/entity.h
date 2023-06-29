@@ -68,10 +68,10 @@ enum // power-up types
 
 static struct itemstat { int add, max, spawntime, info, sound, announcersound; } itemstats[] =
 {
-    { 12,    60,    15,  GUN_SG,             S_AMMO_SG,         NULL,                        }, // shotgun ammo
+    { 12,    60,    15,  GUN_SCATTER,        S_AMMO_SG,         NULL,                        }, // shotgun ammo
     { 40,    200,   15,  GUN_SMG,            S_AMMO_SMG,        NULL,                        }, // SMG ammo
     { 80,    400,   15,  GUN_PULSE,          S_AMMO_PULSE,      NULL,                        }, // pulse battery
-    { 6,     30,    15,  GUN_RL,             S_AMMO_ROCKET,     NULL,                        }, // rockets
+    { 6,     30,    15,  GUN_ROCKET,         S_AMMO_ROCKET,     NULL,                        }, // rockets
     { 8,     40,    15,  GUN_RAIL,           S_AMMO_RAIL,       NULL,                        }, // railgun ammo
     { 25,    100,   25,  NULL,               S_HEALTH,          NULL,                        }, // regular health
     { 50,    200,   35,  NULL,               S_SHIELD_LIGHT,    NULL,                        }, // light shield

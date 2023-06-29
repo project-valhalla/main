@@ -91,11 +91,26 @@ namespace game
     {
         if(d->state!=CS_ALIVE) return;
         int s = d->gunselect;
-        if(s!=GUN_SG && d->ammo[GUN_SG])            s = GUN_SG;
-        else if(s!=GUN_SMG && d->ammo[GUN_SMG])     s = GUN_SMG;
-        else if(s!=GUN_PULSE && d->ammo[GUN_PULSE]) s = GUN_PULSE;
-        else if(s!=GUN_RL && d->ammo[GUN_RL])       s = GUN_RL;
-        else if(s!=GUN_RAIL && d->ammo[GUN_RAIL])   s = GUN_RAIL;
+        if(s!=GUN_SCATTER && d->ammo[GUN_SCATTER])
+        {
+            s = GUN_SCATTER;
+        }
+        else if(s!=GUN_SMG && d->ammo[GUN_SMG])
+        {
+            s = GUN_SMG;
+        }
+        else if(s!=GUN_PULSE && d->ammo[GUN_PULSE])
+        {
+            s = GUN_PULSE;
+        }
+        else if(s!=GUN_ROCKET && d->ammo[GUN_ROCKET])
+        {
+            s = GUN_ROCKET;
+        }
+        else if(s!=GUN_RAIL && d->ammo[GUN_RAIL])
+        {
+            s = GUN_RAIL;
+        }
         gunselect(s, d);
     }
 
@@ -225,7 +240,7 @@ namespace game
             case BNC_CARTRIDGE:
             {
                 int gun = bnc.owner->gunselect;
-                bnc.bouncesound = gun == GUN_SG? S_BOUNCE_CARTRIDGE_SG: (gun == GUN_SMG? S_BOUNCE_CARTRIDGE_SMG: S_BOUNCE_CARTRIDGE_RAILGUN);
+                bnc.bouncesound = gun == GUN_SCATTER? S_BOUNCE_CARTRIDGE_SG: (gun == GUN_SMG? S_BOUNCE_CARTRIDGE_SMG: S_BOUNCE_CARTRIDGE_RAILGUN);
                 break;
             }
         }
@@ -593,9 +608,9 @@ namespace game
         int fireball = 0x50CFE5;
         switch(atk)
         {
-            case ATK_SG2:
-            case ATK_RL1:
-            case ATK_RL2:
+            case ATK_SCATTER2:
+            case ATK_ROCKET1:
+            case ATK_ROCKET2:
             {
                 dynlight = vec(2, 1.5f, 1);
                 fireball = 0xC8E66B;
@@ -630,11 +645,11 @@ namespace game
             int numdebris = rnd(maxdebris - 5) + 5;
             vec debrisvel = vec(owner->o).sub(v).safenormalize(),
                 debrisorigin(v);
-            if (atk == ATK_RL1)
+            if (atk == ATK_ROCKET1)
             {
                 debrisorigin.add(vec(debrisvel).mul(8));
             }
-            if (numdebris && (attacks[atk].gun == GUN_RL || attacks[atk].gun == GUN_SG))
+            if (numdebris && (attacks[atk].gun == GUN_ROCKET || attacks[atk].gun == GUN_SCATTER))
             {
                 loopi(numdebris)
                 {
@@ -671,8 +686,8 @@ namespace game
         if(local) return;
         switch(atk)
         {
-            case ATK_SG2:
-            case ATK_RL2:
+            case ATK_SCATTER2:
+            case ATK_ROCKET2:
                 loopv(bouncers)
                 {
                     bouncer &bnc = *bouncers[i];
@@ -687,7 +702,7 @@ namespace game
                 }
                 break;
             case ATK_PULSE1:
-            case ATK_RL1:
+            case ATK_ROCKET1:
             case ATK_PISTOL1:
                 loopv(projs)
                 {
@@ -841,7 +856,7 @@ namespace game
         bool water = (mat&MATF_VOLUME) == MAT_WATER, glass = (mat&MATF_VOLUME) == MAT_GLASS;
         switch(atk)
         {
-            case ATK_SG1:
+            case ATK_SCATTER1:
             {
                 adddynlight(vec(to).madd(dir, 4), 6, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if(hit || water || glass) break;
@@ -934,7 +949,7 @@ namespace game
         gameent *hud = followingplayer(self);
         switch(atk)
         {
-            case ATK_SG1:
+            case ATK_SCATTER1:
             {
                 if(d->muzzle.x >= 0)
                 {
@@ -956,7 +971,7 @@ namespace game
                 loopi(attacks[atk].rays) particle_flare(hudgunorigin(gun, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.18f);
                 break;
             }
-            case ATK_SG2:
+            case ATK_SCATTER2:
             {
                 up.z += dist/16;
                 newbouncer(d, from, up, local, id, atk, BNC_GRENADE, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
@@ -1002,7 +1017,7 @@ namespace game
                 break;
             }
 
-            case ATK_RL1:
+            case ATK_ROCKET1:
             {
                 if(muzzleflash && d->muzzle.x >= 0)
                 {
@@ -1011,7 +1026,7 @@ namespace game
                 newprojectile(d, from, to, local, id, atk, PROJ_ROCKET);
                 break;
             }
-            case ATK_RL2:
+            case ATK_ROCKET2:
             {
                 up.z += dist/8;
                 newbouncer(d, from, up, local, id, atk, BNC_ROCKET, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);

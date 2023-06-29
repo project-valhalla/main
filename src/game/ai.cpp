@@ -135,13 +135,13 @@ namespace ai
 
                     case ATK_PULSE2: aiskew = 8; break;
 
-                    case ATK_RL1: aiskew = 5; break;
+                    case ATK_ROCKET1: aiskew = 5; break;
 
-                    case ATK_RL2: aiskew = 1; break;
+                    case ATK_ROCKET2: aiskew = 1; break;
 
-                    case ATK_SG1: aiskew = 10; break;
+                    case ATK_SCATTER1: aiskew = 10; break;
 
-                    case ATK_SG2: aiskew = 3; break;
+                    case ATK_SCATTER2: aiskew = 3; break;
 
                     case ATK_SMG1: aiskew = 50; break;
 
@@ -415,11 +415,11 @@ namespace ai
         return false;
     }
 
-    int isgoodammo(int gun) { return gun >= GUN_SG && gun <= GUN_RAIL; }
+    int isgoodammo(int gun) { return gun >= GUN_SCATTER && gun <= GUN_RAIL; }
 
     bool hasgoodammo(gameent *d)
     {
-        static const int goodguns[] = { GUN_SG, GUN_PULSE, GUN_RL, GUN_RAIL };
+        static const int goodguns[] = { GUN_SCATTER, GUN_PULSE, GUN_ROCKET, GUN_RAIL };
         loopi(sizeof(goodguns)/sizeof(goodguns[0])) if(d->hasammo(goodguns[0])) return true;
         return false;
     }
@@ -466,7 +466,7 @@ namespace ai
             {
                 if(e.type >= I_AMMO_SG && e.type <= I_AMMO_RAIL && !d->hasmaxammo(e.type))
                 {
-                    int gun = e.type - I_AMMO_SG + GUN_SG;
+                    int gun = e.type - I_AMMO_SG + GUN_SCATTER;
                     // go get a weapon upgrade
                     if(gun == d->ai->weappref) score = 1e8f;
                     else if(isgoodammo(gun)) score = hasgoodammo(d) ? 1e2f : 1e4f;
@@ -1205,7 +1205,7 @@ namespace ai
         gameent *e = getclient(d->ai->enemy);
         if(!d->hasammo(d->gunselect) || !hasrange(d, e, d->gunselect) || (d->gunselect != d->ai->weappref && (!isgoodammo(d->gunselect) || d->hasammo(d->ai->weappref))))
         {
-            static const int gunprefs[] = { GUN_SMG, GUN_RL, GUN_SG, GUN_RAIL, GUN_PISTOL };
+            static const int gunprefs[] = { GUN_SMG, GUN_ROCKET, GUN_SCATTER, GUN_RAIL, GUN_PISTOL };
             int gun = -1;
             if(d->hasammo(d->ai->weappref) && hasrange(d, e, d->ai->weappref)) gun = d->ai->weappref;
             else

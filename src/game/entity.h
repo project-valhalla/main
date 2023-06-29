@@ -37,7 +37,7 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "teledest",        "Portal Destination", NULL                   },
     { "jumppad",         "Jump Pad",           NULL                   },
     { "flag",            "Flag",               NULL                   },
-    { "shotgun",         "Shotgun",            "item/ammo/shotgun"    },
+    { "scattergun",      "Scattergun",         "item/ammo/scattergun" },
     { "smg",             "Submachine Gun",     "item/ammo/smg"        },
     { "pulse",           "Pulse Rifle",        "item/ammo/pulse"      },
     { "rocket",          "Rocket Launcher",    "item/ammo/rocket"     },

@@ -2729,12 +2729,6 @@ void gl_drawhud()
 
     debugparticles();
 
-    if(!mainmenu)
-    {
-        drawdamagescreen(w, h);
-        drawdamagecompass(w, h);
-    }
-
     float conw = w/conscale, conh = h/conscale, abovehud = conh - FONTH;
     if(!hidehud && !mainmenu)
     {
@@ -2832,7 +2826,17 @@ void gl_drawframe()
     vieww = hudw;
     viewh = hudh;
     if(mainmenu) gl_drawmainmenu();
-    else gl_drawview();
+    else
+    {
+        gl_drawview();
+        if(!editmode)
+        {
+            glEnable(GL_BLEND);
+            drawdamagescreen(hudw, hudh);
+            drawdamagecompass(hudw, hudh);
+            glDisable(GL_BLEND);
+        }
+    }
     UI::render();
     gl_drawhud();
 }

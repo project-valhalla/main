@@ -129,13 +129,13 @@ namespace server
         int state, editstate;
         int lastdeath, deadflush, lastspawn, lifesequence, lastpain;
         int lastregeneration;
-        int lastshot, lastkill;
+        int lastshot;
         projectilestate<8> projs, bouncers;
-        int frags, flags, deaths, points, teamkills, shotdamage, damage, kills, spree;
+        int frags, flags, deaths, points, teamkills, shotdamage, damage, spree;
         int lasttimeplayed, timeplayed;
         float effectiveness;
 
-        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastregeneration(0), lastkill(0), kills(0), spree(0) {}
+        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastregeneration(0), spree(0) {}
 
         bool isalive(int gamemillis)
         {
@@ -158,7 +158,7 @@ namespace server
             effectiveness = 0;
             frags = flags = deaths = points = teamkills = shotdamage = damage = 0;
             juggernaut = zombie = 0;
-            kills = spree = 0;
+            spree = 0;
 
             lastdeath = 0;
 
@@ -172,7 +172,7 @@ namespace server
             deadflush = 0;
             lastspawn = -1;
             lastshot = 0;
-            kills = spree = 0;
+            spree = 0;
         }
 
         void reassign()
@@ -2637,18 +2637,15 @@ namespace server
     {
         servstate &ts = target->state;
         ts.deaths++;
-        ts.spree = ts.kills = 0;
+        ts.spree = 0;
         int value = (m_juggernaut && target->state.juggernaut) ? 5 : 1,
             fragvalue = smode ? smode->fragvalue(target, actor) : (target==actor || isally(target, actor) ? -1 : value);
         actor->state.frags += fragvalue;
         if(!isally(target, actor))
         {
-            if(lastmillis-actor->state.lastkill>2000) actor->state.kills = 0;
-            else actor->state.kills++;
             actor->state.spree++;
-            actor->state.lastkill = lastmillis;
         }
-        else actor->state.spree = actor->state.kills = 0;
+        else actor->state.spree = 0;
         if(fragvalue>0)
         {
             int friends = 0, enemies = 0; // note: friends also includes the fragger
@@ -2664,16 +2661,13 @@ namespace server
             firstblood = true;
             kflags |= KILL_FIRST;
         }
-        switch(actor->state.kills)
-        {
-            case 1: kflags |= KILL_DOUBLE; break;
-            case 3: kflags |= KILL_MULTI; break;
-        }
         if(actor->state.spree > 0) switch(actor->state.spree)
         {
             case 5: kflags |= KILL_SPREE; break;
-            case 10: kflags |= KILL_UNSTOPPABLE; break;
-            case 15: actor->state.spree = 5; break; // restarts
+            case 10: kflags |= KILL_SAVAGE; break;
+            case 15: kflags |= KILL_UNSTOPPABLE; break;
+            case 20: kflags |= KILL_LEGENDARY; break;
+            case 25: actor->state.spree = 5; break; // restarts
         }
         if(flags & HIT_HEAD) kflags |= KILL_HEADSHOT;
         if(m_juggernaut)

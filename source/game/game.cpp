@@ -523,9 +523,34 @@ namespace game
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
         writeobituary(d, actor, atk, flags & KILL_HEADSHOT); // obituary (console messages, kill feed)
-        if(flags && actor->aitype == AI_BOT)
+        if(flags)
         {
-            taunt(actor); // bots taunting players when getting extraordinary kills
+            const char *spree = "";
+            if(actor->aitype == AI_BOT) taunt(actor); // bots taunting players when getting extraordinary kills
+            if(actor == followingplayer(self))
+            {
+                if(flags & KILL_SPREE)
+                {
+                    playsound(S_ANNOUNCER_KILLING_SPREE, NULL, NULL, NULL, SND_ANNOUNCER);
+                    spree = "\f2killing";
+                }
+                if(flags & KILL_SAVAGE)
+                {
+                    playsound(S_ANNOUNCER_SAVAGE, NULL, NULL, NULL, SND_ANNOUNCER);
+                    spree = "\f6savage";
+                }
+                if(flags & KILL_UNSTOPPABLE)
+                {
+                    playsound(S_ANNOUNCER_UNSTOPPABLE, NULL, NULL, NULL, SND_ANNOUNCER);
+                    spree = "\f3unstoppable";
+                }
+                if(flags & KILL_LEGENDARY)
+                {
+                    playsound(S_ANNOUNCER_LEGENDARY, NULL, NULL, NULL, SND_ANNOUNCER);
+                    spree = "\f5legendary";
+                }
+                if(spree[0] != '\0') conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
+            }
         }
         if(actor == followingplayer(self))
         {

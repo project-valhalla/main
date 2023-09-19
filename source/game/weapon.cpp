@@ -464,7 +464,7 @@ namespace game
         {
             if(f == hud) damageblend(damage);
             else if(f->shield) playsound(S_SHIELD_HIT, NULL, &f->o);
-            playsound(f->painsound(), f, &f->o);
+            playsound(getplayermodelinfo(f).painsound, f, &f->o);
             f->lastyelp = lastmillis;
         }
         if(f->shield) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);

@@ -78,7 +78,8 @@ enum
 
     S_SPAWN, S_REGENERATION, S_PLAYER_DAMAGE,
 
-    S_PAIN, S_DIE, S_TAUNT,
+    S_PAIN_MALE, S_DIE_MALE, S_TAUNT_MALE,
+    S_PAIN_FEMALE, S_DIE_FEMALE, S_TAUNT_FEMALE,
     S_PAIN_ZOMBIE, S_DIE_ZOMBIE, S_TAUNT_ZOMBIE,
 
     S_CORPSE, S_GIB,
@@ -597,13 +598,10 @@ struct gameent : dynent, gamestate
 
     bool gibbed() { return state == CS_DEAD && health<=-50; }
 
-    int painsound(){ return !zombie? S_PAIN: S_PAIN_ZOMBIE; }
-
-    int diesound() { return !zombie? S_DIE: S_DIE_ZOMBIE; }
-
-    int tauntsound() { return !zombie? S_TAUNT: S_TAUNT_ZOMBIE; }
-
-    int bloodcolour() { return !zombie? 0x60FFFFF: 0xFF90FF; }
+    int bloodcolour()
+    {
+        return !zombie? 0x60FFFFF: 0xFF90FF;
+    }
 };
 
 struct teamscore
@@ -782,8 +780,9 @@ namespace game
     // render
     struct playermodelinfo
     {
-        const char *directory, *zombiemodel;
+        const char *directory, *armdirectory, *zombiedirectory;
         bool ragdoll;
+        int painsound, diesound, tauntsound;
     };
 
     extern void saveragdoll(gameent *d);

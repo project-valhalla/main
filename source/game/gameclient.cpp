@@ -1923,7 +1923,7 @@ namespace game
             {
                 if(!d) return;
                 d->lasttaunt = lastmillis;
-                playsound(d->tauntsound(), d);
+                playsound(getplayermodelinfo(d).tauntsound, d);
                 break;
             }
 

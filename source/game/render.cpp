@@ -81,7 +81,8 @@ namespace game
 
     static const playermodelinfo playermodels[] =
     {
-        { "player/bones", "player/zombie", true }
+        { "player/bones",  "player/bones/arm", "player/zombie", true, S_PAIN_MALE,   S_DIE_MALE,   S_TAUNT_MALE,   },
+        { "player/bonnie", "player/bones/arm", "player/zombie", true, S_PAIN_FEMALE, S_DIE_FEMALE, S_TAUNT_FEMALE  }
     };
 
     extern void changedplayermodel();
@@ -233,7 +234,7 @@ namespace game
             d->muzzle = vec(-1, -1, -1);
             if(guns[d->gunselect].worldmodel) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         }
-        const char *playermodelfile = !d->zombie ? playermodel.directory : playermodel.zombiemodel;
+        const char *playermodelfile = !d->zombie ? playermodel.directory : playermodel.zombiedirectory;
         float yaw = testanims && d==self ? 0 : d->yaw,
               pitch = testpitch && d==self ? testpitch : d->pitch;
         vec o = d->feetpos();
@@ -409,7 +410,7 @@ namespace game
 
         const playermodelinfo &playermodel = getplayermodelinfo(d);
         int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
-        defformatstring(gunname, "%s/arm/%s", playermodel.directory, file);
+        defformatstring(gunname, "%s/%s", playermodel.armdirectory, file);
         modelattach a[2];
         d->muzzle = vec(-1, -1, -1);
         a[0] = modelattach("tag_muzzle", &d->muzzle);
@@ -498,7 +499,7 @@ namespace game
             const char *file = guns[i].model;
             if(!file) continue;
             string fname;
-            formatstring(fname, "%s/arm/%s", playermodel.directory, file);
+            formatstring(fname, "%s/%s", playermodel.armdirectory, file);
             preloadmodel(fname);
             if(guns[i].worldmodel) preloadmodel(guns[i].worldmodel);
         }

@@ -355,10 +355,10 @@ namespace game
     VARP(hudgun, 0, 1, 1);
     VARP(hudgunsway, 0, 1, 1);
 
-    FVAR(swaystep, 1, 39.2f, 100);
-    FVAR(swayside, 0, 0.06f, 1);
+    FVAR(swaystep, 1, 33.5f, 100);
+    FVAR(swayside, 0, 0.05f, 1);
     FVAR(swayup, -1, 0.11f, 1);
-    FVAR(swayrollfactor, 1, 3, 30);
+    FVAR(swayrollfactor, 1, 4.2f, 30);
 
     float swayfade = 0, swayspeed = 0, swaydist = 0;
     vec swaydir(0, 0, 0);

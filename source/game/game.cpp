@@ -752,6 +752,7 @@ namespace game
     }
 
     VARP(footstepssound, 0, 1, 1);
+    VARP(footstepdelay, 1, 44000, 50000);
 
     void footstep(physent *pl, int sound)
     {
@@ -763,7 +764,7 @@ namespace game
         gameent *d = (gameent *)pl;
         if(d->move || d->strafe)
         {
-            if(lastmillis-d->lastfootstep < (d->vel.magnitude()*380/d->vel.magnitude())) return;
+            if(lastmillis - d->lastfootstep < (footstepdelay / d->vel.magnitude())) return;
             else playsound(sound, d);
         }
         d->lastfootstep = lastmillis;

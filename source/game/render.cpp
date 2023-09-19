@@ -359,9 +359,55 @@ namespace game
     FVAR(swayside, 0, 0.05f, 1);
     FVAR(swayup, -1, 0.11f, 1);
     FVAR(swayrollfactor, 1, 4.2f, 30);
+    FVAR(swaydecay, 0.1f, 0.996f, 0.9999f);
+    FVAR(swayinertia, 0.0f, 0.04f, 1.0f);
+    FVAR(swaymaxinertia, 0.0f, 15.0f, 1000.0f);
 
-    float swayfade = 0, swayspeed = 0, swaydist = 0;
+    float swayfade = 0, swayspeed = 0, swaydist = 0, swayyaw = 0, swaypitch = 0;
     vec swaydir(0, 0, 0);
+
+    static void updatesway(gameent* d, vec& sway, int curtime)
+    {
+        vec sidedir = vec((d->yaw + 90) * RAD, 0.0f),
+            translation = vec(0, 0, 0);
+
+        float steplen = swaystep, steps = swaydist / steplen * M_PI;
+
+        // magic floats to generate the animation cycle
+        float f1 = sinf(steps * 2.0f) + 1,
+              f2 = (f1 * f1 * 0.25f) - 0.5f;
+
+        float rotyaw = 0, rotpitch = 0;
+
+        rotyaw += swayside * f2 * 24.0f;
+        rotpitch += swayup * f1 * -10.0f;
+
+        // "Look-around" animation.
+        static int lastsway = 0;
+        static vec2 lastcamera = vec2(camera1->yaw, camera1->pitch);
+        static vec2 cameravel = vec2(0, 0);
+
+        if (lastmillis != lastsway) // prevent running the inertia math multiple times in the same frame
+        {
+            vec2 curcamera = vec2(camera1->yaw, camera1->pitch);
+            vec2 camerarot = vec2(lastcamera).sub(curcamera);
+
+            if (camerarot.x > 180.0f) camerarot.x -= 360.0f;
+            else if (camerarot.x < -180.0f) camerarot.x += 360.0f;
+
+            cameravel.mul(powf(swaydecay, curtime));
+            cameravel.add(vec2(camerarot).mul(swayinertia));
+            cameravel.clamp(-swaymaxinertia, swaymaxinertia);
+
+            lastcamera = curcamera;
+            lastsway = lastmillis;
+        }
+        translation.add(sidedir.mul(cameravel.x * 0.06f));
+        translation.z += cameravel.y * 0.045f; // translation vector for the calculations.
+        sway.add(translation); // add the translation to the swaydir vector, where the weapon model is at
+        swayyaw += rotyaw;
+        swaypitch += rotpitch;
+    }
 
     void swayhudgun(int curtime)
     {
@@ -405,6 +451,7 @@ namespace game
         float steps = swaydist/swaystep*M_PI;
         sway.mul(swayside*cosf(steps));
         sway.z = swayup*(fabs(sinf(steps)) - 1);
+        updatesway(d, sway, curtime);
         sway.add(swaydir).add(d->o);
         if(!hudgunsway) sway = d->o;
 

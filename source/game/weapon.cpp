@@ -147,6 +147,7 @@ namespace game
     enum
     {
         BNC_GRENADE,
+        BNC_GRENADE2,
         BNC_ROCKET,
         BNC_GIB,
         BNC_DEBRIS,
@@ -230,6 +231,12 @@ namespace game
                 bnc.collidetype = COLLIDE_ELLIPSE;
                 break;
             }
+            case BNC_GRENADE2:
+            {
+                bnc.collidetype = COLLIDE_ELLIPSE;
+                bnc.bouncesound = S_BOUNCE_GRENADE;
+                break;
+            }
             case BNC_ROCKET:
             {
                 bnc.collidetype = COLLIDE_ELLIPSE;
@@ -304,7 +311,13 @@ namespace game
                 case BNC_GRENADE:
                 case BNC_ROCKET:
                 {
-                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_SMOKE, 5, 200, pos, 0x555555, 1.60f, 10, 500);
+                    if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SMOKE, 5, 200, pos, 0x555555, 1.60f, 10, 500);
+                    break;
+                }
+
+                case BNC_GRENADE2:
+                {
+                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_RING, 3, 200, pos, 0x74BCF9, 1.0f, 10, 500);
                     break;
                 }
 
@@ -339,7 +352,7 @@ namespace game
             else if(weaponbouncer(bnc.bouncetype))
             {
                 destroyed = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity) || (bnc.lifetime -= time)<0 || isdeadly(lookupmaterial(bnc.o)&MAT_LAVA) ||
-                            (bnc.bouncetype == BNC_GRENADE && bnc.bounces >= 1);
+                            ((bnc.bouncetype == BNC_GRENADE && bnc.bounces >= 1) || (bnc.bouncetype == BNC_ROCKET && bnc.bounces >= 2));
             }
             if(destroyed)
             {
@@ -353,6 +366,7 @@ namespace game
                     hits.setsize(0);
                     explode(bnc.local, bnc.owner, bnc.o, bnc.vel, NULL, damage, bnc.atk);
                     addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
+                    if(bnc.atk == ATK_GRENADE) addstain(STAIN_PULSE_GLOW, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad/2, 0x74BCF9);
                     if(bnc.local)
                         addmsg(N_EXPLODE, "rci3iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime,
                                                     hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
@@ -626,6 +640,13 @@ namespace game
                 particle_splash(PART_SPARK2, 5+rnd(20), 200, v, 0xEE88EE, 0.08f+rndscale(0.35f), 400, 2);
                 break;
             }
+            case ATK_GRENADE:
+            {
+                dynlight = vec(0, 0.3f, 1.0f);
+                fireball = 0x74BCF9;
+                particle_flare(v, v, 120, PART_ELECTRICITY, fireball, 25.0f, NULL, 0.5f);
+                break;
+            }
             case ATK_PISTOL2:
             {
                 dynlight = vec(0, 1.5f, 1.5f);
@@ -636,7 +657,7 @@ namespace game
             }
             default: break;
         }
-        particle_fireball(v, 1.15f*attacks[atk].exprad, atk == ATK_PULSE1? PART_EXPLOSION2: PART_EXPLOSION1, 400, fireball, 0.10f);
+        particle_fireball(v, 1.15f*attacks[atk].exprad, atk == ATK_PULSE1 || atk == ATK_GRENADE? PART_EXPLOSION2: PART_EXPLOSION1, atk == ATK_GRENADE ? 200 : 400, fireball, 0.10f);
         adddynlight(v, 2*attacks[atk].exprad, dynlight, 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
         playsound(attacks[atk].impactsound, NULL, &v);
         if(lookupmaterial(v) & MAT_WATER) playsound(S_IMPACT_WATER_PROJ, NULL, &v);
@@ -1028,8 +1049,8 @@ namespace game
             }
             case ATK_ROCKET2:
             {
-                up.z += dist/8;
-                newbouncer(d, from, up, local, id, atk, BNC_ROCKET, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
+                // up.z += dist/8;
+                newbouncer(d, from, to, local, id, atk, BNC_ROCKET, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
                 break;
             }
 
@@ -1047,6 +1068,20 @@ namespace game
                 }
                 particle_flare(hudgunorigin(gun, from, to, d), to, 600, PART_TRAIL, 0x55DD55, 0.6f);
                 if(!local) rayhit(atk, d, from, to, hit);
+                break;
+            }
+
+            case ATK_GRENADE:
+            {
+                if(d->muzzle.x >= 0)
+                {
+                    if(muzzleflash)
+                    {
+                        particle_flare(d->muzzle, d->muzzle, 100, PART_ELECTRICITY, 0x74BCF9, 0.1f, d, 0.3f);
+                    }
+                }
+                up.z += dist/8;
+                newbouncer(d, from, up, local, id, atk, BNC_GRENADE2, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
                 break;
             }
 
@@ -1394,7 +1429,7 @@ namespace game
         }
     }
 
-    static const char * const projectilenames[3] = { "projectile/grenade", "projectile/rocket", "projectile/eject/cartridge01" };
+    static const char * const projectilenames[4] = { "projectile/grenade", "projectile/grenade/v2", "projectile/rocket", "projectile/eject/cartridge01" };
     static const char * const gibnames[5] = { "projectile/gib/gib01", "projectile/gib/gib02", "projectile/gib/gib03", "projectile/gib/gib04", "projectile/gib/gib05" };
 
     void preloadbouncers()
@@ -1437,6 +1472,7 @@ namespace game
                 switch(bnc.bouncetype)
                 {
                     case BNC_GRENADE: mdl = "projectile/grenade"; break;
+                    case BNC_GRENADE2: mdl = "projectile/grenade/v2"; break;
                     case BNC_ROCKET: mdl = "projectile/rocket"; break;
                     default: mdl = "projectile/grenade"; break;
                 }

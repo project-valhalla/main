@@ -119,7 +119,7 @@ namespace ai
     {
         vec o = e->o;
         if(attacks[atk].projspeed) o.z += (e->aboveeye*0.2f)-(0.8f*d->eyeheight);
-        else o.z += (e->aboveeye-e->eyeheight)*0.5f;
+        else if(!attacks[atk].gravity) o.z += (e->aboveeye-e->eyeheight)*0.5f; // it's probably a grenade
         if(d->skill <= 100)
         {
             if(lastmillis >= d->ai->lastaimrnd)
@@ -127,25 +127,27 @@ namespace ai
                 int aiskew = 1;
                 switch(atk)
                 {
+
+                    case ATK_SCATTER1: aiskew = 10; break;
+                    case ATK_SCATTER2: aiskew = 3; break;
+
+                    case ATK_SMG1: aiskew = 50; break;
+                    case ATK_SMG2: aiskew = 30; break;
+
+                    case ATK_PULSE1: aiskew = 20; break;
+                    case ATK_PULSE2: aiskew = 8; break;
+
+                    case ATK_ROCKET1: aiskew = 5; break;
+                    case ATK_ROCKET2: aiskew = 1; break;
+
                     case ATK_RAIL1:
                     case ATK_RAIL2:
                     case ATK_INSTA: aiskew = 6; break;
 
-                    case ATK_PULSE1: aiskew = 20; break;
+                    case ATK_GRENADE: aiskew = 1; break;
 
-                    case ATK_PULSE2: aiskew = 8; break;
-
-                    case ATK_ROCKET1: aiskew = 5; break;
-
-                    case ATK_ROCKET2: aiskew = 1; break;
-
-                    case ATK_SCATTER1: aiskew = 10; break;
-
-                    case ATK_SCATTER2: aiskew = 3; break;
-
-                    case ATK_SMG1: aiskew = 50; break;
-
-                    case ATK_SMG2: aiskew = 30; break;
+                    case ATK_PISTOL1:
+                    case ATK_PISTOL2: aiskew = 100; break;
 
                     default: break;
                 }
@@ -415,11 +417,11 @@ namespace ai
         return false;
     }
 
-    int isgoodammo(int gun) { return gun >= GUN_SCATTER && gun <= GUN_RAIL; }
+    int isgoodammo(int gun) { return gun >= GUN_SCATTER && gun <= GUN_GRENADE; }
 
     bool hasgoodammo(gameent *d)
     {
-        static const int goodguns[] = { GUN_SCATTER, GUN_PULSE, GUN_ROCKET, GUN_RAIL };
+        static const int goodguns[] = { GUN_SCATTER, GUN_PULSE, GUN_ROCKET, GUN_RAIL, GUN_GRENADE };
         loopi(sizeof(goodguns)/sizeof(goodguns[0])) if(d->hasammo(goodguns[0])) return true;
         return false;
     }
@@ -1205,7 +1207,7 @@ namespace ai
         gameent *e = getclient(d->ai->enemy);
         if(!d->hasammo(d->gunselect) || !hasrange(d, e, d->gunselect) || (d->gunselect != d->ai->weappref && (!isgoodammo(d->gunselect) || d->hasammo(d->ai->weappref))))
         {
-            static const int gunprefs[] = { GUN_SMG, GUN_ROCKET, GUN_SCATTER, GUN_RAIL, GUN_PISTOL };
+            static const int gunprefs[] = { GUN_SMG, GUN_ROCKET, GUN_SCATTER, GUN_RAIL, GUN_GRENADE, GUN_PISTOL };
             int gun = -1;
             if(d->hasammo(d->ai->weappref) && hasrange(d, e, d->ai->weappref)) gun = d->ai->weappref;
             else

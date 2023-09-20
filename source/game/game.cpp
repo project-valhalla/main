@@ -529,6 +529,11 @@ namespace game
             if(actor->aitype == AI_BOT) taunt(actor); // bots taunting players when getting extraordinary kills
             if(actor == followingplayer(self))
             {
+                if(flags & KILL_FIRST)
+                {
+                    playsound(S_ANNOUNCER_FIRST_BLOOD, NULL, NULL, NULL, SND_ANNOUNCER);
+                    conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor), spree);
+                }
                 if(flags & KILL_SPREE)
                 {
                     playsound(S_ANNOUNCER_KILLING_SPREE, NULL, NULL, NULL, SND_ANNOUNCER);

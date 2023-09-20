@@ -107,7 +107,7 @@ static const float WOBBLE = 1.25f;
 struct fireballrenderer : listrenderer
 {
     fireballrenderer(const char *texname)
-        : listrenderer(texname, 0, PT_FIREBALL|PT_SHADER)
+        : listrenderer(texname, 0, PT_FIREBALL|PT_BRIGHT|PT_SHADER)
     {}
 
     void startrender()

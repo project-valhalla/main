@@ -111,6 +111,10 @@ namespace game
         {
             s = GUN_RAIL;
         }
+        else if(s!=GUN_GRENADE && d->ammo[GUN_GRENADE])
+        {
+            s = GUN_GRENADE;
+        }
         gunselect(s, d);
     }
 

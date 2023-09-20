@@ -446,6 +446,7 @@ struct gamestate
         {
             gunselect = GUN_PISTOL;
             ammo[GUN_PISTOL] = 100;
+            ammo[GUN_GRENADE] = 1;
         }
     }
 

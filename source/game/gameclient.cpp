@@ -1552,6 +1552,7 @@ namespace game
                 }
                 if(a) conoutf(CON_GAMEINFO, "%s \fs\f2%s the game\fr", colorname(a), val ? "paused" : "resumed");
                 else conoutf(CON_GAMEINFO, "\f2Game is %s", val ? "paused" : "resumed");
+                pauseaudio(val);
                 break;
             }
 

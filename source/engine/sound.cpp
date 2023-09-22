@@ -826,6 +826,20 @@ void resetsound()
 
 COMMAND(resetsound, "");
 
+void pauseaudio(int value)
+{
+    if (value == 1)
+    {
+        Mix_Pause(-1);
+        if(!Mix_PausedMusic()) Mix_PauseMusic();
+    }
+    else
+    {
+        Mix_Resume(-1);
+        if(Mix_PausedMusic()) Mix_ResumeMusic();
+    }
+}
+
 #ifdef WIN32
 
 #include <wchar.h>

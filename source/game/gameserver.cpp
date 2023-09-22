@@ -2174,6 +2174,8 @@ namespace server
         }
         clientinfo *zombie = hostzombie(spec);
         infect(zombie, zombie);
+        zombiechosen = true;
+        betweenrounds = false;
     }
 
     static void startzombieround()

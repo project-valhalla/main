@@ -532,7 +532,7 @@ namespace game
                 if(flags & KILL_FIRST)
                 {
                     playsound(S_ANNOUNCER_FIRST_BLOOD, NULL, NULL, NULL, SND_ANNOUNCER);
-                    conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor), spree);
+                    conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor));
                 }
                 if(flags & KILL_SPREE)
                 {

@@ -2656,7 +2656,7 @@ namespace server
         teaminfo *t = m_teammode && validteam(actor->team) ? &teaminfos[actor->team-1] : NULL;
         if(t) t->frags += fragvalue;
         int kflags = 0; // flags = hit flags, kflags = kill flags
-        if(!firstblood)
+        if(!firstblood && target != actor && !isally(target, actor))
         {
             firstblood = true;
             kflags |= KILL_FIRST;

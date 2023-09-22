@@ -14,7 +14,7 @@ enum                            // static entity types
     JUMPPAD,                    // attr1 = zpush, attr2 = ypush, attr3 = xpush
     FLAG,                       // attr1 = angle, attr2 = team
 
-    I_AMMO_SG, I_AMMO_SMG, I_AMMO_PULSE, I_AMMO_RL, I_AMMO_RAIL,
+    I_AMMO_SG, I_AMMO_SMG, I_AMMO_PULSE, I_AMMO_RL, I_AMMO_RAIL, I_AMMO_GRENADE,
     I_HEALTH, I_YELLOWSHIELD, I_REDSHIELD,
     I_SUPERHEALTH, I_MEGAHEALTH, I_DDAMAGE, I_HASTE, I_ARMOUR, I_UAMMO, I_AGILITY, I_INVULNERABILITY,
     MAXENTTYPES
@@ -42,6 +42,7 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "pulse",           "Pulse Rifle",        "item/ammo/pulse"      },
     { "rocket",          "Rocket Launcher",    "item/ammo/rocket"     },
     { "railgun",         "Railgun",            "item/ammo/railgun"    },
+    { "grenade",         "Grenade",            "item/ammo/grenade"    },
     { "health",          "Health",             "item/health"          },
     { "light_shield",    "Light Shield",       "item/shield/yellow"   },
     { "heavy_shield",    "Heavy Shield",       "item/shield/red"      },
@@ -73,6 +74,7 @@ static struct itemstat { int add, max, spawntime, info, sound, announcersound; }
     { 80,    400,   15,  GUN_PULSE,          S_AMMO_PULSE,      NULL,                        }, // pulse battery
     { 6,     30,    15,  GUN_ROCKET,         S_AMMO_ROCKET,     NULL,                        }, // rockets
     { 8,     40,    15,  GUN_RAIL,           S_AMMO_RAIL,       NULL,                        }, // railgun ammo
+    { 6,     30,    15,  GUN_GRENADE,        S_AMMO_GRENADE,    NULL,                        }, // grenades
     { 25,    100,   25,  NULL,               S_HEALTH,          NULL,                        }, // regular health
     { 50,    200,   35,  NULL,               S_SHIELD_LIGHT,    NULL,                        }, // light shield
     { 100,   200,   35,  NULL,               S_SHIELD_HEAVY,    NULL,                        }, // heavy shield

@@ -1496,7 +1496,6 @@ namespace game
                 v = dist < 1e-6f ? p.dir : vec(p.to).sub(pos).normalize();
             // the amount of distance in front of the smoke trail needs to change if the model does
             vectoyawpitch(v, yaw, pitch);
-            yaw += 90;
             v.mul(3);
             v.add(pos);
             const char *mdl = NULL;

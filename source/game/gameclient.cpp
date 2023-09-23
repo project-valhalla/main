@@ -2261,6 +2261,7 @@ namespace game
                 d->infect();
                 d->stoppowerupsound();
                 playsound(S_INFECTED, d);
+                particle_splash(PART_SPARK1, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
                 break;
             }
 

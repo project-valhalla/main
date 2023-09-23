@@ -157,7 +157,7 @@ enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
     N_SHOOT, N_EXPLODE, N_HURTPLAYER, N_SUICIDE,
-    N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_USEITEM,
+    N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT,
     N_ANNOUNCE,
@@ -187,7 +187,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
     N_SHOOT, 0, N_EXPLODE, 0, N_HURTPLAYER, 0, N_SUICIDE, 1,
-    N_DIED, 7, N_DAMAGE, 8, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 12, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3, N_USEITEM, 1,
+    N_DIED, 7, N_DAMAGE, 8, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 12, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 8, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
     N_ANNOUNCE, 4,
@@ -289,7 +289,7 @@ struct gamestate
     int gunselect, gunwait, primary;
     int ammo[NUMGUNS];
     int aitype, skill;
-    int poweruptype, powerupmillis, item;
+    int poweruptype, powerupmillis;
     int lastdamage;
     int juggernaut, zombie;
 
@@ -316,7 +316,7 @@ struct gamestate
             case I_UAMMO:
             case I_AGILITY:
             case I_INVULNERABILITY:
-                if(!item && (powerupmillis < is.info || poweruptype == is.info))
+                if(powerupmillis < is.info || poweruptype == is.info)
                 {
                     return true;
                 }
@@ -348,28 +348,16 @@ struct gamestate
             case I_ARMOUR:
             case I_HASTE:
             case I_UAMMO:
-                poweruptype = is.info;
-                powerupmillis = min(powerupmillis+is.add, is.max);
-                break;
-
             case I_AGILITY:
             case I_INVULNERABILITY:
-                item = type;
+                poweruptype = is.info;
+                powerupmillis = min(powerupmillis+is.add, is.max);
                 break;
 
             default:
                 ammo[is.info] = min(ammo[is.info]+is.add, is.max);
                 break;
         }
-    }
-
-    void useitem()
-    {
-        if(!item || !validitem(item)) return;
-        itemstat &is = itemstats[item-I_AMMO_SG];
-        powerupmillis = min(powerupmillis+is.add, is.max);
-        poweruptype = is.info;
-        item = 0;
     }
 
     void baseammo(int gun, int k = 3)
@@ -393,7 +381,7 @@ struct gamestate
     {
         shield = 0;
         poweruptype = PU_NONE;
-        powerupmillis = item = 0;
+        powerupmillis = 0;
     }
 
     void resetweapons()

@@ -374,12 +374,6 @@ namespace game
         if(d) intret(d->ammo[d->gunselect]);
     });
 
-    ICOMMAND(getclientitem, "i", (int *cn),
-    {
-        gameent *d = getclient(*cn);
-        if(d) intret(d->item);
-    });
-
     ICOMMAND(getclientpowerup, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
@@ -1470,7 +1464,6 @@ namespace game
             {
                 getint(p); // poweruptype
                 getint(p); // powerupmillis
-                getint(p); // item
                 getint(p); // juggernaut
                 getint(p); // zombie
             }
@@ -1478,7 +1471,6 @@ namespace game
             {
                 d->poweruptype = getint(p);
                 d->powerupmillis = getint(p);
-                d->item = getint(p);
                 d->juggernaut = getint(p);
                 d->zombie = getint(p);
             }
@@ -1845,15 +1837,6 @@ namespace game
                 int cn = getint(p), gun = getint(p), ammo = getint(p);
                 gameent *d = cn==self->clientnum ? self : getclient(cn);
                 d->ammo[gun] = ammo;
-                break;
-            }
-
-            case N_USEITEM:
-            {
-                int ucn = getint(p);
-                gameent *user = getclient(ucn);
-                user->useitem();
-                playsound(S_ACTIVATION_AGILITY+user->poweruptype-5, user);
                 break;
             }
 

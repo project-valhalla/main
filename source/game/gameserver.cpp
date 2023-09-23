@@ -2036,7 +2036,6 @@ namespace server
                 putint(p, oi->state.points);
                 putint(p, oi->state.poweruptype);
                 putint(p, oi->state.powerupmillis);
-                putint(p, oi->state.item);
                 putint(p, oi->state.juggernaut);
                 putint(p, oi->state.zombie);
                 sendstate(oi->state, p);
@@ -2063,9 +2062,9 @@ namespace server
     void sendresume(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        sendf(-1, 1, "ri3i9i5vi", N_RESUME, ci->clientnum, gs.state,
+        sendf(-1, 1, "ri3i9i4vi", N_RESUME, ci->clientnum, gs.state,
             gs.frags, gs.flags, gs.deaths, gs.points,
-            gs.poweruptype, gs.powerupmillis, gs.item,
+            gs.poweruptype, gs.powerupmillis,
             gs.juggernaut, gs.zombie, gs.lifesequence,
             gs.health, gs.maxhealth, gs.shield, gs.gunselect,
             NUMGUNS, gs.ammo, -1);
@@ -3847,14 +3846,6 @@ namespace server
                 }
                 if(cq) cq->addevent(exp);
                 else delete exp;
-                break;
-            }
-
-            case N_USEITEM:
-            {
-                if(!cq || cq->state.state!=CS_ALIVE || !cq->state.item) break;
-                cq->state.useitem();
-                sendf(-1, 1, "ri2", N_USEITEM, cq->clientnum);
                 break;
             }
 

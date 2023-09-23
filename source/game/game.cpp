@@ -359,13 +359,6 @@ namespace game
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
 
-    void useitem()
-    {
-        if(!self->item || !validitem(self->item)) return;
-        addmsg(N_USEITEM, "rc", self);
-    }
-    COMMAND(useitem, "");
-
     bool canjump()
     {
         if(!connected || intermission) return false;

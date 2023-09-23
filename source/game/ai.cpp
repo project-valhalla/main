@@ -1306,10 +1306,6 @@ namespace ai
                 if(d->state==CS_ALIVE && !d->zombie)
                 {
                     if(d->powerupmillis) entities::updatepowerups(curtime, d);
-                    if(d->item && (badhealth(d) || !hasgoodammo(d)))
-                    {
-                        addmsg(N_USEITEM, "rc", d);
-                    }
                 }
 				entities::checkitems(d);
 				if(cmode) cmode->checkitems(d);

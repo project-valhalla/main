@@ -1560,15 +1560,14 @@ namespace server
         return false;
     }
 
-    void mute(clientinfo *ci, int victim, int val, const char *reason = NULL)
+    void trymute(clientinfo *ci, int victim, int val, const char *reason = NULL)
     {
         if((ci->privilege || ci->local) && ci->clientnum!=victim)
         {
             clientinfo *vinfo = (clientinfo *)getclientinfo(victim);
             if(vinfo && vinfo->connected && (ci->privilege >= vinfo->privilege || ci->local) && vinfo->privilege < PRIV_AUTH && !vinfo->local)
             {
-                const char *action = "muted";
-                if(val <= 0) action = "unmuted";
+                const char *action = val <= 0 ? "unmuted" : "muted";
                 if(reason && reason[0])
                 {
                     sendservmsgf("%s %s %s because: %s", colorname(ci), action, colorname(vinfo), reason);
@@ -3471,6 +3470,13 @@ namespace server
 
     VAR(spectatorchat, 0, 0, 1);
 
+    bool canseemessage(clientinfo *a, clientinfo *b)
+    {
+        if(spectatorchat && a->state.state == CS_SPECTATOR && b->state.state != CS_SPECTATOR) return false;
+        if(m_round && a->state.state == CS_DEAD && b->state.state != CS_DEAD) return false;
+        return true;
+    }
+
     void parsepacket(int sender, int chan, packetbuf &p)     // has to parse exactly each byte of the packet
     {
         if(sender<0 || p.packet->flags&ENET_PACKET_FLAG_UNSEQUENCED || chan > 2) return;
@@ -3864,15 +3870,14 @@ namespace server
                 getstring(text, p);
                 if(cq->mute) break;
                 filtertext(text, text, false, false, true, true);
-                bool ghost = cq->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state==CS_DEAD));
                 loopv(clients)
                 {
                     clientinfo *c = clients[i];
-                    if(c == cq || c->state.aitype != AI_NONE || (spectatorchat && ((cq->state.state == CS_SPECTATOR && c->state.state != CS_SPECTATOR) ||
-                                                                                   (m_round && cq->state.state == CS_DEAD && c->state.state!=CS_DEAD)))) continue;
+                    if(c == cq || c->state.aitype != AI_NONE || !canseemessage(cq, c)) continue;
                     sendf(c->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
                 }
-                if(isdedicatedserver() && cq) logoutf("%s %s %s", colorname(cq), ghost? "<spectator>:": ":", text);
+                bool ghost = cq->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state==CS_DEAD));
+                if(isdedicatedserver() && cq) logoutf("%s %s %s", colorname(cq), ghost ? "<spectator>:" : ":", text);
                 break;
             }
 
@@ -3897,12 +3902,16 @@ namespace server
                 getstring(text, p);
                 if(!cq || cq->mute) break;
                 filtertext(text, text, false, false);
+                clientinfo *rec = NULL;
                 loopv(clients)
                 {
                     clientinfo *r = clients[i];
                     if(r==cq || r->state.aitype != AI_NONE || r->clientnum != recipient) continue;
-                    sendf(r->clientnum, 1, "riis", N_WHISPER, cq->clientnum, text);
+                    rec = r;
+                    break;
                 }
+                sendf(rec->clientnum, 1, "riis", N_WHISPER, cq->clientnum, text);
+                if(isdedicatedserver() && cq) logoutf("%s <whisper to %s> %s", colorname(cq), colorname(rec), text);
                 break;
             }
 
@@ -4074,7 +4083,7 @@ namespace server
                 int victim = getint(p), val = getint(p);
                 getstring(text, p);
                 filtertext(text, text);
-                mute(ci, victim, val, text);
+                trymute(ci, victim, val, text);
                 break;
             }
 

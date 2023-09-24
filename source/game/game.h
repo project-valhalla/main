@@ -687,6 +687,7 @@ namespace game
     extern const char *colorname(gameent *d, const char *name = NULL, const char *alt = NULL, const char *color = "");
     extern const char *teamcolorname(gameent *d, const char *alt = NULL);
     extern const char *teamcolor(const char *prefix, const char *suffix, int team, const char *alt);
+    extern const char *chatcolor(gameent *d);
     extern gameent *pointatplayer();
     extern gameent *hudplayer();
     extern gameent *followingplayer(gameent *fallback = NULL);

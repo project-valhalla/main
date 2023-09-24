@@ -907,6 +907,18 @@ namespace game
         return tempformatstring("\fs%s%s%s%s\fr", teamtextcode[team], prefix, teamnames[team], suffix);
     }
 
+    bool isghost(gameent *d)
+    {
+        return m_round && (d->state==CS_DEAD || (d->state==CS_SPECTATOR && d->queue));
+    }
+
+    const char *chatcolor(gameent *d)
+    {
+        if(isghost(d)) return "\f4";
+        else if(d->state==CS_SPECTATOR) return "\f8";
+        else return "\ff";
+    }
+
     void damage(physent *d)
     {
         if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))

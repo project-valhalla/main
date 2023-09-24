@@ -705,11 +705,14 @@ namespace game
         }
 
         const char *info = m_valid(gamemode) ? gamemodes[gamemode - STARTGAMEMODE].info : NULL;
-        if(showmodeinfo && info) conoutf("%s", info);
-        if(mutators) loopi(NUMMUTATORS)
+        if(showmodeinfo && info)
         {
-           if(!(mutators & mutator[i].flags)) continue;
-           conoutf("%s", mutator[i].info);
+            conoutf("%s", info);
+            if(mutators) loopi(NUMMUTATORS)
+            {
+                if(!(mutators & mutator[i].flags)) continue;
+                conoutf("%s", mutator[i].info);
+            }
         }
 
         syncplayer();
@@ -738,23 +741,16 @@ namespace game
 
     const char *getmapinfo()
     {
-       static char info[1000];
-       info[0] = '\0';
-       strcat(info, gamemodes[gamemode - STARTGAMEMODE].info);
-       /*if(mutators != 0) loopi(NUMMUTATORS)
-       {
-           if(mutators & mutator[i].flags)
-           {
-               strcat(info, "\n");
-               strcat(info, mutator[i].info);
-           }
-       }
-       else*/ if(!tips.empty())
-       {
-            strcat(info, "\n\n");
-            strcat(info, tips[rnd(tips.length())]);
-       }
-       return showmodeinfo && m_valid(gamemode) ? info : NULL;
+        bool hasmodeinfo = showmodeinfo && m_valid(gamemode);
+        static char info[1000];
+        info[0] = '\0';
+        if(hasmodeinfo) strcat(info, gamemodes[gamemode - STARTGAMEMODE].info);
+        if(!tips.empty())
+        {
+             if(hasmodeinfo) strcat(info, "\n\n");
+             strcat(info, tips[rnd(tips.length())]);
+        }
+        return showmodeinfo && m_valid(gamemode) ? info : NULL;
     }
 
     const char *getscreenshotinfo()

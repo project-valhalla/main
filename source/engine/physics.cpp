@@ -1689,12 +1689,22 @@ VAR(floatspeed, 1, 100, 10000);
 
 #include "game.h"
 
+bool canjump(gameent *d)
+{
+    return d->physstate >= PHYS_SLOPE || ((d->haspowerup(PU_AGILITY) || d->zombie || d->juggernaut) && !d->doublejumping);
+}
+
+float calcspeed(gameent *d)
+{
+    float speed = d->speed;
+    if(d->haspowerup(PU_AGILITY)) speed += (d->powerupmillis/1000);
+    else if(d->zombie || d->juggernaut) speed += 10.0f; // speed bonus
+    return speed;
+}
+
 void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime)
 {
-    gameent *e = (gameent *)pl;
-    bool canjump = pl->physstate >= PHYS_SLOPE
-                   || ((e->haspowerup(PU_AGILITY)
-                   || e->zombie || e->juggernaut) && !pl->doublejumping);
+    gameent *d = (gameent *)pl;
     if(floating)
     {
         if(pl->jumping)
@@ -1702,7 +1712,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
             pl->vel.z = max(pl->vel.z, JUMPVEL);
         }
     }
-    else if(canjump || water)
+    else if(canjump(d) || water)
     {
         if(water && !pl->inwater) pl->vel.div(8);
         if(pl->jumping)
@@ -1738,22 +1748,19 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
         m.normalize();
     }
 
-    vec d(m);
-    float speed = pl->speed;
-    if(e->haspowerup(PU_AGILITY)) speed += (e->powerupmillis/1000);
-    else if(e->zombie || e->juggernaut) speed += 10.0f; // speed bonus
-    d.mul(speed);
+    vec dir(m);
+    dir.mul(calcspeed(d));
     if(pl->type==ENT_PLAYER)
     {
         if(floating)
         {
-            if(pl==player) d.mul(floatspeed/100.0f);
+            if(pl==player) dir.mul(floatspeed/100.0f);
         }
-        else if(pl->crouching) d.mul(0.4f);
-        else if(!water) d.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f));
+        else if(pl->crouching) dir.mul(0.4f);
+        else if(!water) dir.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f));
     }
     float fric = water && !floating ? 20.0f : (pl->physstate >= PHYS_SLOPE || floating ? 4.0f : 25.0f);
-    pl->vel.lerp(d, pl->vel, pow(1 - 1/fric, curtime/20.0f));
+    pl->vel.lerp(dir, pl->vel, pow(1 - 1/fric, curtime/20.0f));
 }
 
 void modifygravity(physent *pl, bool water, int curtime)

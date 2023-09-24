@@ -947,7 +947,7 @@ namespace game
 
             default: break;
         }
-        if(attacks[atk].action == ACT_MELEE || atk == ATK_PULSE2 || hit) return;
+        if(attacks[atk].action == ACT_MELEE || atk == ATK_PULSE2 || atk == ATK_ZOMBIE || hit) return;
         int impactsnd = attacks[atk].impactsound;
         if(water)
         {

@@ -80,7 +80,9 @@ enum
 
     S_PAIN_MALE, S_DIE_MALE, S_TAUNT_MALE,
     S_PAIN_FEMALE, S_DIE_FEMALE, S_TAUNT_FEMALE,
-    S_PAIN_ZOMBIE, S_DIE_ZOMBIE, S_TAUNT_ZOMBIE,
+
+    S_PAIN_ZOMBIE_MALE, S_DIE_ZOMBIE_MALE, S_TAUNT_ZOMBIE_MALE,
+    S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE,
 
     S_CORPSE, S_GIB,
 
@@ -475,6 +477,16 @@ static inline int teamnumber(const char *name) { loopi(MAXTEAMS) if(!strcmp(team
 inline bool validteam(int team) { return team >= 1 && team <= MAXTEAMS; }
 inline const char *teamname(int team) { return teamnames[validteam(team) ? team : 0]; }
 
+static const struct zombieinfo
+{
+    const char *directory;
+    int painsound, diesound, tauntsound;
+} zombies[2] =
+{
+    { "player/bones/zombie",  S_PAIN_ZOMBIE_MALE,    S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
+    { "player/bonnie/zombie", S_PAIN_ZOMBIE_FEMALE,  S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE }
+};
+
 struct gameent : dynent, gamestate
 {
     int weight;                         // affects the effectiveness of hitpush
@@ -768,7 +780,7 @@ namespace game
     // render
     struct playermodelinfo
     {
-        const char *directory, *armdirectory, *zombiedirectory;
+        const char *directory, *armdirectory;
         bool ragdoll;
         int painsound, diesound, tauntsound;
     };

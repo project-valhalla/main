@@ -79,10 +79,10 @@ namespace game
     VARFP(playercolorblue, 0, 0, sizeof(playercolorsblue)/sizeof(playercolorsblue[0])-1, changedplayercolor());
     VARFP(playercolorred, 0, 0, sizeof(playercolorsred)/sizeof(playercolorsred[0])-1, changedplayercolor());
 
-    static const playermodelinfo playermodels[] =
+    static const playermodelinfo playermodels[2] =
     {
-        { "player/bones",  "player/bones/arm", "player/zombie", true, S_PAIN_MALE,   S_DIE_MALE,   S_TAUNT_MALE,   },
-        { "player/bonnie", "player/bones/arm", "player/zombie", true, S_PAIN_FEMALE, S_DIE_FEMALE, S_TAUNT_FEMALE  }
+        { "player/bones",  "player/bones/arm", true, S_PAIN_MALE,   S_DIE_MALE,   S_TAUNT_MALE,   },
+        { "player/bonnie", "player/bones/arm", true, S_PAIN_FEMALE, S_DIE_FEMALE, S_TAUNT_FEMALE  }
     };
 
     extern void changedplayermodel();
@@ -188,7 +188,7 @@ namespace game
             if(!mdl) break;
             if(i != playermodel && (!multiplayer(false) || forceplayermodels)) continue;
             preloadmodel(mdl->directory);
-            preloadmodel(mdl->zombiedirectory);
+            preloadmodel(zombies[playermodel].directory);
         }
     }
 
@@ -235,7 +235,7 @@ namespace game
             d->muzzle = vec(-1, -1, -1);
             if(guns[d->gunselect].worldmodel) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         }
-        const char *playermodelfile = !d->zombie ? playermodel.directory : playermodel.zombiedirectory;
+        const char *playermodelfile = !d->zombie ? playermodel.directory : zombies[d->playermodel].directory;
         float yaw = testanims && d==self ? 0 : d->yaw,
               pitch = testpitch && d==self ? testpitch : d->pitch;
         vec o = d->feetpos();

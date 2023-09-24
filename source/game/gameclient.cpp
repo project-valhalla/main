@@ -1907,7 +1907,7 @@ namespace game
             {
                 if(!d) return;
                 d->lasttaunt = lastmillis;
-                playsound(getplayermodelinfo(d).tauntsound, d);
+                playsound(!d->zombie ? getplayermodelinfo(d).tauntsound : zombies[d->playermodel].tauntsound, d);
                 break;
             }
 

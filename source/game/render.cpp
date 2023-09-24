@@ -188,6 +188,7 @@ namespace game
             if(!mdl) break;
             if(i != playermodel && (!multiplayer(false) || forceplayermodels)) continue;
             preloadmodel(mdl->directory);
+            preloadmodel(mdl->zombiedirectory);
         }
     }
 

@@ -260,7 +260,7 @@ namespace entities
                     addmsg(N_ITEMPICKUP, "rci", d, n);
                     ents[n]->clearspawned(); // even if someone else gets it first
                     // first time you pick up a weapon you switch to it automatically
-                    if(d->aitype == AI_BOT || !autoswitch || (ents[n]->type < I_AMMO_SG || ents[n]->type > I_AMMO_RAIL)) break;
+                    if(d->aitype == AI_BOT || !autoswitch || (ents[n]->type < I_AMMO_SG || ents[n]->type > I_AMMO_GRENADE)) break;
                     itemstat &is = itemstats[ents[n]->type-I_AMMO_SG];
                     if(d->gunselect != is.info && !d->ammo[is.info]) gunselect(is.info, d);
                 }

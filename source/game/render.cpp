@@ -207,16 +207,25 @@ namespace game
     {
         if(gore && d->gibbed()) return;
         int lastaction = d->lastaction, anim = ANIM_IDLE|ANIM_LOOP, attack = 0, delay = 0;
-        if(d->lastattack >= 0)
+        if(d->state==CS_ALIVE)
         {
-            attack = attacks[d->lastattack].anim;
-            delay = attacks[d->lastattack].attackdelay+50;
-        }
-        if(d->state==CS_ALIVE && d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-d->lastaction>delay)
-        {
-            lastaction = d->lasttaunt;
-            anim = attack = ANIM_TAUNT;
-            delay = 1000;
+            if(d->lastattack >= 0)
+            {
+                attack = attacks[d->lastattack].anim;
+                delay = attacks[d->lastattack].attackdelay+50;
+            }
+            if(d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-d->lastaction>delay)
+            {
+                lastaction = d->lasttaunt;
+                anim = attack = ANIM_TAUNT;
+                delay = 1000;
+            }
+            if(d->lastswitch && lastmillis-d->lastswitch <= 600)
+            {
+                lastaction = d->lastswitch;
+                anim = attack = ANIM_SWITCH;
+                delay = 600;
+            }
         }
         modelattach a[5];
         int ai = 0;

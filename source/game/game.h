@@ -14,7 +14,7 @@ enum
     ANIM_CROUCH, ANIM_CROUCH_N, ANIM_CROUCH_NE, ANIM_CROUCH_E, ANIM_CROUCH_SE, ANIM_CROUCH_S, ANIM_CROUCH_SW, ANIM_CROUCH_W, ANIM_CROUCH_NW,
     ANIM_CROUCH_JUMP, ANIM_CROUCH_JUMP_N, ANIM_CROUCH_JUMP_NE, ANIM_CROUCH_JUMP_E, ANIM_CROUCH_JUMP_SE, ANIM_CROUCH_JUMP_S, ANIM_CROUCH_JUMP_SW, ANIM_CROUCH_JUMP_W, ANIM_CROUCH_JUMP_NW,
     ANIM_CROUCH_SINK, ANIM_CROUCH_SWIM,
-    ANIM_SHOOT, ANIM_MELEE,
+    ANIM_SHOOT, ANIM_MELEE, ANIM_SWITCH,
     ANIM_PAIN,
     ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
     ANIM_GUN_IDLE, ANIM_GUN_SHOOT, ANIM_GUN_MELEE, ANIM_GUN_SWITCH,
@@ -32,11 +32,11 @@ static const char * const animnames[] =
     "crouch", "crouch N", "crouch NE", "crouch E", "crouch SE", "crouch S", "crouch SW", "crouch W", "crouch NW",
     "crouch jump", "crouch jump N", "crouch jump NE", "crouch jump E", "crouch jump SE", "crouch jump S", "crouch jump SW", "crouch jump W", "crouch jump NW",
     "crouch sink", "crouch swim",
-    "shoot", "melee",
+    "shoot", "melee", "switch",
     "pain",
     "edit", "lag", "taunt", "win", "lose",
     "gun idle", "gun shoot", "gun melee", "gun switch",
-    "vwep idle", "vwep shoot", "vwep melee"
+    "vwep idle", "vwep shoot", "vwep melee",
 };
 
 // console message types

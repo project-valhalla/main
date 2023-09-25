@@ -93,6 +93,11 @@ namespace game
         return (seed&0xFFFF)%(sizeof(playermodels)/sizeof(playermodels[0]));
     }
 
+    int getplayermodel(gameent *d)
+    {
+        return d==self || forceplayermodels ? playermodel : d->playermodel;
+    }
+
     const playermodelinfo *getplayermodelinfo(int n)
     {
         if(size_t(n) >= sizeof(playermodels)/sizeof(playermodels[0])) return NULL;
@@ -101,7 +106,7 @@ namespace game
 
     const playermodelinfo &getplayermodelinfo(gameent *d)
     {
-        const playermodelinfo *mdl = getplayermodelinfo(d==self || forceplayermodels ? playermodel : d->playermodel);
+        const playermodelinfo *mdl = getplayermodelinfo(playermodel);
         if(!mdl) mdl = getplayermodelinfo(playermodel);
         return *mdl;
     }

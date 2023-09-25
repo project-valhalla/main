@@ -791,6 +791,7 @@ namespace game
     extern const playermodelinfo &getplayermodelinfo(gameent *d);
     extern int getplayercolor(gameent *d, int team);
     extern int chooserandomplayermodel(int seed);
+    extern int getplayermodel(gameent *d);
     extern void syncplayer();
     extern void swayhudgun(int curtime);
     extern vec hudgunorigin(int gun, const vec &from, const vec &to, gameent *d);

@@ -129,7 +129,7 @@ namespace server
         int state, editstate;
         int lastdeath, deadflush, lastspawn, lifesequence, lastpain;
         int lastregeneration;
-        int lastshot;
+        int lastshot, lastatk;
         projectilestate<8> projs, bouncers;
         int frags, flags, deaths, points, teamkills, shotdamage, damage, spree;
         int lasttimeplayed, timeplayed;
@@ -2781,6 +2781,10 @@ namespace server
     void explodeevent::process(clientinfo *ci)
     {
         servstate &gs = ci->state;
+        if(atk == ATK_PISTOL_COMBO)
+        {
+            if(attacks[gs.lastatk].gun != GUN_PISTOL || attacks[gs.lastatk].projspeed) return;
+        }
         if(attacks[atk].gravity && attacks[atk].elasticity)
         {
             if(!gs.bouncers.remove(id)) return;
@@ -2824,6 +2828,7 @@ namespace server
             gs.ammo[gun] -= attacks[atk].use;
         }
         gs.lastshot = millis;
+        gs.lastatk = atk;
         int gunwait = attacks[atk].attackdelay;
         if(gs.haspowerup(PU_HASTE) || gs.juggernaut)
         {

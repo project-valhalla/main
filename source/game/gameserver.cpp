@@ -3022,7 +3022,7 @@ namespace server
                 {
                     sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_5_MINUTES, NULL, "\f2Five minutes remain");
                 }
-                if (remainingminutes((gamelimit/2)/60000, oldgamemillis))
+                if (remainingminutes((gamelimit/2)/60000, oldgamemillis)) // halfway through the match
                 {
                     execident("on_halfwaymatch");
                 }

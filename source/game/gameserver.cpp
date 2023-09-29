@@ -1324,7 +1324,7 @@ namespace server
         {
             if(!interm) sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
 #ifndef STANDALONE
-            cleardamagescreen();
+            clearscreeneffects();
 #endif
         }
     }

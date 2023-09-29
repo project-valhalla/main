@@ -330,7 +330,8 @@ namespace game
     {
         if(d==followingplayer(self))
         {
-            cleardamagescreen();
+            clearscreeneffects();
+            addscreenfx(200);
         }
         stopownersounds(d);
         playsound(S_SPAWN, d);

@@ -1356,7 +1356,7 @@ namespace ai
                 c.override = false;
                 cleannext = false;
             }
-            if(d->state == CS_DEAD && d->respawned!=d->lifesequence && (!cmode || cmode->respawnwait(d) <= 0) && lastmillis - d->lastpain > 1500)
+            if(d->state == CS_DEAD && d->respawned!=d->lifesequence && (!cmode || cmode->respawnwait(d) <= 0) && lastmillis - d->lastpain > RESPAWN_WAIT)
             {
                 addmsg(N_TRYSPAWN, "rc", d);
                 d->respawned = d->lifesequence;

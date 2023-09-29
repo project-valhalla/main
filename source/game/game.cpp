@@ -116,9 +116,16 @@ namespace game
         return d;
     }
 
+    VARP(queuerespawn, 0, 1, 1);
+
     void respawnself()
     {
         if(ispaused()) return;
+        if(queuerespawn && lastmillis - self->lastpain <= RESPAWN_WAIT)
+        {
+            self->respawnqueued = true;
+            return;
+        }
         if(m_mp(gamemode))
         {
             int seq = (self->lifesequence<<16)|((lastmillis/1000)&0xFFFF);
@@ -274,6 +281,11 @@ namespace game
                 {
                     self->move = self->strafe = 0;
                     moveplayer(self, 10, true);
+                }
+                if(self->respawnqueued && lastmillis - self->lastpain > RESPAWN_WAIT)
+                {
+                    respawnself();
+                    self->respawnqueued = false;
                 }
             }
             else if(!intermission)

@@ -3756,7 +3756,7 @@ namespace server
             }
 
             case N_TRYSPAWN:
-                if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (!m_edit && cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath < 1500)) break;
+                if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (!m_edit && cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath <= RESPAWN_WAIT)) break;
                 if((smode && !smode->canspawn(cq)) || (m_infection && zombiechosen) || (m_round && !m_infection && numclients(-1, true, false) > 1))
                 {
                     if(cq->state.aitype==AI_NONE)

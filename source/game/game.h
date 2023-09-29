@@ -512,7 +512,7 @@ struct gameent : dynent, gamestate
     int team, playermodel, playercolor;
     ai::aiinfo *ai;
     int ownernum, lastnode;
-    bool respawnqueue, ghost;
+    bool respawnqueued, ghost;
 
     vec muzzle;
 
@@ -526,7 +526,7 @@ struct gameent : dynent, gamestate
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1), muzzle(-1, -1, -1)
     {
         name[0] = info[0] = 0;
-        respawnqueue = ghost = false;
+        ghost = false;
         respawn();
     }
     ~gameent()
@@ -586,6 +586,7 @@ struct gameent : dynent, gamestate
         lasthit = 0;
         stopweaponsound();
         stoppowerupsound();
+        respawnqueued = false;
     }
 
     void stoppowerupsound()
@@ -712,7 +713,7 @@ namespace game
     extern void clientdisconnected(int cn, bool notify = true);
     extern void clearclients(bool notify = true);
     extern void startgame();
-    extern void spawnplayer(gameent *);
+    extern void spawnplayer(gameent *d);
     extern bool isally(gameent *a, gameent *b);
     extern void deathstate(gameent *d, bool restore = false);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);

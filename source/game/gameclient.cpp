@@ -145,13 +145,6 @@ namespace game
 
     VARP(deadpush, 1, 2, 20);
 
-    void spawneffect(gameent *s)
-    {
-        cleardamagescreen();
-        stopownersounds(s);
-        msgsound(S_SPAWN, s);
-    }
-
     void switchname(const char *name)
     {
         filtertext(self->name, name, false, false, true, false, MAXNAMELEN);
@@ -1778,6 +1771,7 @@ namespace game
                 ai::spawned(s);
                 checkfollow();
                 addmsg(N_SPAWN, "rcii", s, s->lifesequence, s->gunselect);
+                spawneffect(s);
                 break;
             }
 

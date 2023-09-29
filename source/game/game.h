@@ -714,6 +714,7 @@ namespace game
     extern void clearclients(bool notify = true);
     extern void startgame();
     extern void spawnplayer(gameent *d);
+    extern void spawneffect(gameent *d);
     extern bool isally(gameent *a, gameent *b);
     extern void deathstate(gameent *d, bool restore = false);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);

@@ -326,6 +326,17 @@ namespace game
         checkfollow();
     }
 
+    void spawneffect(gameent *d)
+    {
+        if(d==followingplayer(self))
+        {
+            cleardamagescreen();
+        }
+        stopownersounds(d);
+        playsound(S_SPAWN, d);
+        particle_splash(PART_SPARK2, 250, 200, d->o, getplayercolor(d, d->team), 0.60f, 200, 5);
+    }
+
     void respawn()
     {
         if(self->state==CS_DEAD)

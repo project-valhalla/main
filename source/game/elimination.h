@@ -179,7 +179,7 @@ struct eliminationclientmode : clientmode
         if(s->state!= CS_SPECTATOR || f->state == CS_DEAD) return false;
         if(sameteam(s->team, f->team)) return true;
         loopv(players)
-        { // if any living players are on your team, you can't spec an opponent
+        { // if any living players are on your team, you can't spectate an opponent
             gameent *p = players[i];
             if(p->state == CS_ALIVE && sameteam(p->team, s->team)) return false;
         }

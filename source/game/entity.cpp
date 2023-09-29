@@ -135,6 +135,10 @@ namespace entities
         itemstat &is = itemstats[type-I_AMMO_SG];
         playsound(is.sound, NULL, d != h ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
         d->pickup(type);
+        if(d==followingplayer(self))
+        {
+            addscreenfx(80);
+        }
         if(type < I_DDAMAGE || type > I_INVULNERABILITY) return;
         if(d == self) conoutf(CON_GAMEINFO, "\f2%s obtained", gentities[type].prettyname);
         else conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
@@ -143,11 +147,11 @@ namespace entities
 
     // these functions are called when the client touches the item
 
-    void tpeffects(vec p)
+    void teleportparticleeffects(gameent *d, vec p)
     {
-        particle_splash(PART_SPARK2, 50, 200, p, 0x89E5FB, 0.20f, 250, 8);
-        particle_fireball(p, 10.0f, PART_EXPLOSION2, 500, 0x89E5FB, 1.0f);
-        adddynlight(p, 100, vec(0.50f, 1.0f, 1.4f), 500, 100);
+        if(d==followingplayer(self)) particle_splash(PART_SPARK2, 250, 500, p, getplayercolor(d, d->team), 0.50f, 800, -5);
+        else particle_splash(PART_SPARK2, 250, 200, p, getplayercolor(d, d->team), 0.50f, 250, 5);
+        adddynlight(p, 100, vec(0.50f, 1.0f, 1.5f), 500, 100);
     }
 
     void teleporteffects(gameent *d, int tp, int td, bool local)
@@ -160,22 +164,14 @@ namespace entities
             {
                 int snd = S_TELEPORT, flags = 0;
                 if(e.attr4 > 0) { snd = e.attr4; flags = SND_MAP; }
-                if(d==hudplayer() && !isthirdperson())
+                playsound(snd, NULL, d==followingplayer(self)? NULL : &e.o, NULL, NULL, flags);
+                if(ents.inrange(td) && ents[td]->type == TELEDEST)
                 {
-                    playsound(snd, NULL, NULL, NULL, flags);
-                    if(ents.inrange(td) && ents[td]->type == TELEDEST)
-                        adddynlight(ents[td]->o, 100, vec(0.50f, 1.0f, 1.4f), 800, 100);
+                    if(d!=followingplayer(self)) playsound(S_TELEDEST, NULL, &ents[td]->o, NULL, flags);
+                    else addscreenfx(150);
+                    teleportparticleeffects(d, ents[td]->o);
                 }
-                else
-                {
-                    playsound(snd, NULL, &e.o, NULL, flags);
-                    tpeffects(d->o);
-                    if(ents.inrange(td) && ents[td]->type == TELEDEST)
-                    {
-                        playsound(S_TELEDEST, NULL, &ents[td]->o, NULL, flags);
-                        tpeffects(ents[td]->o);
-                    }
-                }
+                teleportparticleeffects(d, d->o);
             }
         }
         if(local && d->clientnum >= 0)

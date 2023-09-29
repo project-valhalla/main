@@ -29,9 +29,9 @@ Anyone can contribute features, assets and ideas to the project to help it devel
 Some of the goals we have in mind are:
 - **Accessibility**: Add tutorials and other important features to help new players get into the game.
 - **Cross-Platform Support**: Support Windows, Mac, and Linux.
-- **Depth**: Create simple yet convincing lore to give the game's universe a story with depth and realism.
+- **Depth**: Create simple yet convincing lore to give the game a sense of purpose and its universe a story with depth.
 - **Game Engine**: Tweak, maintain, and update the engine together with the community.
-- **Immersion**: Implement audio, effects, and gunplay on par with modern standards.
+- **Immersion**: Bring audio, effects, and gunplay closer to modern standards.
 - **Iterate on the Arena Shooter Formula**: Experiment with new ideas and enhance the arena shooter experience.
 - **Map Editor Improvements**: Make most features of the map editor accessible through a simple and clear user interface.
 - **Simplicity**: Build gameplay that is interesting and varied while keeping the game itself simple, polished, and fun.

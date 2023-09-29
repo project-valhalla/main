@@ -2997,11 +2997,36 @@ namespace server
         ci->timesync = false;
     }
 
+    bool remainingminutes(int remaining, int oldgamemillis)
+    {
+        int milliseconds = remaining * 60000;
+        if (milliseconds == gamelimit) return false;
+        return (gamemillis >= (gamelimit - milliseconds) && oldgamemillis < (gamelimit - milliseconds));
+    }
+
     void serverupdate()
     {
         if(shouldstep && !gamepaused)
         {
+            int oldgamemillis = gamemillis;
             gamemillis += curtime;
+
+            if(m_timed)
+            {
+                if(remainingminutes(1, oldgamemillis)) // one minute
+                {
+                    sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_1_MINUTE, NULL, "\f2One minute remains");
+                    execident("on_lastminute");
+                }
+                else if(remainingminutes(5, oldgamemillis)) // five minutes
+                {
+                    sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_5_MINUTES, NULL, "\f2Five minutes remain");
+                }
+                if (remainingminutes((gamelimit/2)/60000, oldgamemillis))
+                {
+                    execident("on_halfwaymatch");
+                }
+            }
 
             if(m_demo) readdemo();
             else if(timelimit <= 0 || !m_timed || (m_round && !interm) || gamemillis < gamelimit)

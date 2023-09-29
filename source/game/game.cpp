@@ -579,11 +579,11 @@ namespace game
 
     void timeupdate(int secs)
     {
-        if(secs > 0)
+        if(secs > 0) // set client side timer
         {
             maplimit = lastmillis + secs*1000;
         }
-        else
+        else // end the game and start intermission timer
         {
             maplimit = lastmillis + 45*1000;
             intermission = true;

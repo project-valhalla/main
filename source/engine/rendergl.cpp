@@ -2601,6 +2601,17 @@ void cleardamagescreen()
     loopi(8) damagedirs[i] = 0;
 }
 
+void drawzoom(int w, int h)
+{
+    if(mainmenu || minimized || !game::shoulddrawzoom()) return;
+    hudshader->set();
+    static Texture* zoomtex = textureload("data/interface/shadow.png", 3);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glBindTexture(GL_TEXTURE_2D, zoomtex->id);
+    gle::colorf(1, 1, 1, 1);
+    hudquad(0, 0, w, h);
+}
+
 VAR(hidestats, 0, 0, 1);
 VAR(hidehud, 0, 0, 1);
 VAR(editcursor, 0, 1, 1);
@@ -2834,6 +2845,7 @@ void gl_drawframe()
             glEnable(GL_BLEND);
             drawdamagescreen(hudw, hudh);
             drawdamagecompass(hudw, hudh);
+            drawzoom(hudw, hudh);
             glDisable(GL_BLEND);
         }
     }

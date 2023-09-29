@@ -392,6 +392,12 @@ namespace game
 
     bool editing() { return m_edit; }
 
+    bool shoulddrawzoom()
+    {
+        return zoom && guns[self->gunselect].haszoom
+               && (self->state == CS_ALIVE || self->state == CS_LAGGED);
+    }
+
     VARP(hitsound, 0, 0, 1);
     VARP(playheadshotsound, 0, 1, 2);
 

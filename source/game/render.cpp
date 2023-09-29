@@ -106,7 +106,7 @@ namespace game
 
     const playermodelinfo &getplayermodelinfo(gameent *d)
     {
-        const playermodelinfo *mdl = getplayermodelinfo(playermodel);
+        const playermodelinfo *mdl = getplayermodelinfo(d==self || forceplayermodels ? playermodel : d->playermodel);
         if(!mdl) mdl = getplayermodelinfo(playermodel);
         return *mdl;
     }

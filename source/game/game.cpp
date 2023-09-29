@@ -911,7 +911,7 @@ namespace game
 
     bool isghost(gameent *d)
     {
-        return m_round && (d->state==CS_DEAD || (d->state==CS_SPECTATOR && d->queue));
+        return m_round && (d->state==CS_DEAD || (d->state==CS_SPECTATOR && d->ghost));
     }
 
     const char *chatcolor(gameent *d)

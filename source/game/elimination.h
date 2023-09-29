@@ -80,16 +80,16 @@ struct eliminationclientmode : clientmode
         resetgamelimit();
         loopv(clients)
         {
-            if(clients[i]->state.state!=CS_EDITING && (clients[i]->state.state!=CS_SPECTATOR || clients[i]->queue))
+            if(clients[i]->state.state!=CS_EDITING && (clients[i]->state.state!=CS_SPECTATOR || clients[i]->ghost))
             {
                 clientinfo *ci = clients[i];
-                if(ci->queue)
+                if(ci->ghost)
                 {
-                    ci->queue = false;
+                    ci->ghost = false;
                     ci->state.state = CS_DEAD;
                     ci->state.respawn();
                     ci->state.lasttimeplayed = lastmillis;
-                    sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 0, ci->queue);
+                    sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 0, ci->ghost);
                 }
                 ci->state.reassign();
                 sendspawn(ci);

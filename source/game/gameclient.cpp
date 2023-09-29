@@ -2207,7 +2207,7 @@ namespace game
                     deathstate(s, true);
                     conoutf("%s \fs\f0has left spectator mode\fr", colorname(s));
                 }
-                s->queue = waiting;
+                s->ghost = waiting;
                 checkfollow();
                 break;
             }

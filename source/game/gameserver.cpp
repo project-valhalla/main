@@ -227,7 +227,7 @@ namespace server
         int team, playermodel, playercolor;
         int modevote, mutsvote;
         int privilege;
-        bool connected, local, timesync, queue, mute;
+        bool connected, local, timesync, ghost, mute;
         int gameoffset, lastevent, pushed, exceeded;
         servstate state;
         vector<gameevent *> events;
@@ -355,7 +355,7 @@ namespace server
             playermodel = -1;
             playercolor = 0;
             privilege = PRIV_NONE;
-            connected = local = queue = false;
+            connected = local = ghost = false;
             connectauth = 0;
             position.setsize(0);
             messages.setsize(0);
@@ -842,7 +842,7 @@ namespace server
         loopv(clients)
         {
             clientinfo *ci = clients[i];
-            if(ci->clientnum!=exclude && (!nospec || ci->queue || ci->state.state!=CS_SPECTATOR || (priv && (ci->privilege || ci->local))) && (!noai || ci->state.aitype == AI_NONE)) n++;
+            if(ci->clientnum!=exclude && (!nospec || ci->ghost || ci->state.state!=CS_SPECTATOR || (priv && (ci->privilege || ci->local))) && (!noai || ci->state.aitype == AI_NONE)) n++;
         }
         return n;
     }
@@ -2017,8 +2017,8 @@ namespace server
             putint(p, N_SPECTATOR);
             putint(p, ci->clientnum);
             putint(p, 1);
-            putint(p, ci->queue);
-            sendf(-1, 1, "ri4x", N_SPECTATOR, ci->clientnum, 1, ci->queue, ci->clientnum);
+            putint(p, ci->ghost);
+            sendf(-1, 1, "ri4x", N_SPECTATOR, ci->clientnum, 1, ci->ghost, ci->clientnum);
         }
         if(!ci || clients.length()>1)
         {
@@ -2194,12 +2194,12 @@ namespace server
         rounds++;
         loopv(clients)
         {
-            if(clients[i]->state.state!=CS_EDITING && (clients[i]->state.state!=CS_SPECTATOR || clients[i]->queue))
+            if(clients[i]->state.state!=CS_EDITING && (clients[i]->state.state!=CS_SPECTATOR || clients[i]->ghost))
             {
                 clientinfo *ci = clients[i];
-                if(ci->queue)
+                if(ci->ghost)
                 {
-                    ci->queue = false;
+                    ci->ghost = false;
                     extern void unspectate(clientinfo *ci);
                     unspectate(ci);
                 }
@@ -3088,7 +3088,7 @@ namespace server
         ci->state.state = CS_SPECTATOR;
         ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
         if(!ci->local && (!ci->privilege || ci->warned)) aimanager::removeai(ci);
-        sendf(-1, 1, "ri4", N_SPECTATOR, ci->clientnum, 1, ci->queue);
+        sendf(-1, 1, "ri4", N_SPECTATOR, ci->clientnum, 1, ci->ghost);
     }
 
     struct crcinfo
@@ -3169,7 +3169,7 @@ namespace server
         ci->state.respawn();
         ci->state.lasttimeplayed = lastmillis;
         aimanager::addclient(ci);
-        sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 0, ci->queue);
+        sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 0, ci->ghost);
         if(ci->clientmap[0] || ci->mapcrc) checkmaps();
         if(!hasmap(ci)) rotatemap(true);
     }
@@ -3761,14 +3761,14 @@ namespace server
                 {
                     if(cq->state.aitype==AI_NONE)
                     {
-                        cq->queue = true;
+                        cq->ghost = true;
                         forcespectator(cq);
                     }
                     break;
                 }
                 else if(cq->state.aitype==AI_NONE)
                 {
-                    cq->queue = false;
+                    cq->ghost = false;
                     unspectate(cq);
                 }
                 if(!ci->clientmap[0] && !ci->mapcrc)
@@ -3906,7 +3906,7 @@ namespace server
                     if(c == cq || c->state.aitype != AI_NONE || !canseemessage(cq, c)) continue;
                     sendf(c->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
                 }
-                bool ghost = cq->state.state==CS_SPECTATOR || (m_round && (cq->queue || cq->state.state==CS_DEAD));
+                bool ghost = cq->state.state==CS_SPECTATOR || (m_round && (cq->ghost || cq->state.state==CS_DEAD));
                 if(isdedicatedserver() && cq) logoutf("%s %s %s", colorname(cq), ghost ? "<spectator>:" : ":", text);
                 break;
             }
@@ -4123,7 +4123,7 @@ namespace server
                 if(!ci->privilege && !ci->local && (spectator!=sender || (ci->state.state==CS_SPECTATOR && mastermode>=MM_LOCKED))) break;
                 clientinfo *spinfo = (clientinfo *)getclientinfo(spectator); // no bots
                 if(!spinfo || !spinfo->connected || (spinfo->state.state==CS_SPECTATOR ? val : !val)) break;
-                spinfo->queue = waiting;
+                spinfo->ghost = waiting;
                 if(spinfo->state.state!=CS_SPECTATOR && val)
                     forcespectator(spinfo);
                 else if(spinfo->state.state==CS_SPECTATOR && !val)

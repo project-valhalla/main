@@ -512,7 +512,7 @@ struct gameent : dynent, gamestate
     int team, playermodel, playercolor;
     ai::aiinfo *ai;
     int ownernum, lastnode;
-    bool queue;
+    bool respawnqueue, ghost;
 
     vec muzzle;
 
@@ -526,7 +526,7 @@ struct gameent : dynent, gamestate
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1), muzzle(-1, -1, -1)
     {
         name[0] = info[0] = 0;
-        queue = false;
+        respawnqueue = ghost = false;
         respawn();
     }
     ~gameent()

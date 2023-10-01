@@ -53,7 +53,7 @@ namespace game
         loopv(players)
         {
             gameent *o = players[i];
-            if((o->state!=CS_SPECTATOR || (o->state==CS_SPECTATOR && o->queue))) best.add(o);
+            if((o->state!=CS_SPECTATOR || (o->state==CS_SPECTATOR && o->ghost))) best.add(o);
         }
         best.sort(playersort);
         while(best.length() > 1 && best.last()->frags < best[0]->frags) best.drop();
@@ -95,7 +95,7 @@ namespace game
         {
             gameent *o = players[i];
             if(!showconnecting && !o->name[0]) continue;
-            if(!o->queue && o->state==CS_SPECTATOR) { spectators.add(o); continue; }
+            if(!o->ghost && o->state==CS_SPECTATOR) { spectators.add(o); continue; }
             int team = m_teammode && validteam(o->team) ? o->team : 0;
             teamplayers[team].add(o);
         }
@@ -134,7 +134,7 @@ namespace game
         gameent *d = getclient(*cn);
         if(d)
         {
-            int status = d->state!=CS_DEAD && !d->queue ? 0xFFFFFF : 0x606060;
+            int status = d->state!=CS_DEAD && !d->ghost ? 0xFFFFFF : 0x606060;
             if(d->privilege)
             {
                 status = d->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;

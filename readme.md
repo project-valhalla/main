@@ -27,14 +27,14 @@ Anyone can contribute features, assets and ideas to the project to help it devel
 
 ## Goals
 Some of the goals we have in mind are:
-- **accessibility**: add tutorials and other important features that help new players get into the game;
-- **colourful graphics**: avoid hyper-realistic and gloomy stuff, we do not need *another* gritty sci-fi shooter;
-- **cross-platform**: support for Windows, Mac and Linux;
-- **depth**: create a simple yet convincing lore that does not limit our creativity in order to give the game's universe depth and plausibility;
-- **immersion**: decent audio, decent effects, decent gunplay. Try to catch up a bit with today's standards;
-- **iterate on the arena shooter formula**: pick up where the genre left off, experiment with new things, and enhance the user experience;
-- **maintenance**: tweak and maintain the engine, develop features with the community;
-- **map editor improvements**: simplify its appearance, more features accessible through clear user interface;
-- **simplicity**: gameplay aims to be interesting and various but also simple, polished and fun;
-- **UI/HUD improvements and customization**: we plan to make a clear and accessible UI that is scriptable and easily customizable;
-- **unique aesthetics**: the art direction, which tries to create something distinct and original, is given significant weight;
+- **Accessibility**: Add tutorials and other important features to help new players get into the game.
+- **Cross-Platform Support**: Support Windows, Mac, and Linux.
+- **Depth**: Create simple yet convincing lore to give the game a sense of purpose and its universe a story with depth.
+- **Game Engine**: Tweak, maintain, and update the engine together with the community.
+- **Immersion**: Bring audio, effects, and gunplay closer to modern standards.
+- **Iterate on the Arena Shooter Formula**: Experiment with new ideas and enhance the arena shooter experience.
+- **Map Editor Improvements**: Make most features of the map editor accessible through a simple and clear user interface.
+- **Simplicity**: Build gameplay that is interesting and varied while keeping the game itself simple, polished, and fun.
+- **UI/HUD Improvements and Customization**: Make the UI clear and accessible while allowing easy customization.
+- **Unique Aesthetics**: Maintain an art direction that helps create something distinct and original.
+- **Vibrant Atmosphere**: Avoid hyper-realistic and gloomy design language, build levels that feel open and bright.

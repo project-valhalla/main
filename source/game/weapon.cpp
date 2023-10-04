@@ -321,7 +321,7 @@ namespace game
 
                 case BNC_GRENADE2:
                 {
-                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_RING, 3, 200, pos, 0x74BCF9, 1.0f, 10, 500);
+                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_RING, 1, 200, pos, 0x74BCF9, 1.0f, 1, 500);
                     break;
                 }
 

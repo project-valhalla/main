@@ -363,10 +363,6 @@ namespace game
                 if(weaponbouncer(bnc.bouncetype))
                 {
                     int damage = attacks[bnc.atk].damage;
-                    if(bnc.owner->haspowerup(PU_DAMAGE) || bnc.owner->juggernaut)
-                    {
-                        damage *= 2;
-                    }
                     hits.setsize(0);
                     explode(bnc.local, bnc.owner, bnc.o, bnc.vel, NULL, damage, bnc.atk);
                     addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
@@ -470,10 +466,16 @@ namespace game
 
     void damageeffect(int damage, dynent *d, vec p, int atk, bool thirdperson)
     {
-        if(!damage) return;
         gameent *f = (gameent *)d,
                 *hud = followingplayer(self);
         if(f == hud) p.z += 0.6f*(d->eyeheight + d->aboveeye) - d->eyeheight;
+        if(f->haspowerup(PU_INVULNERABILITY))
+        {
+            msgsound(S_ACTION_INVULNERABILITY, f);
+            particle_splash(PART_SPARK2, 100, 150, p, getplayercolor(f, f->team), 0.50f);
+            return;
+        }
+        if(!damage) return;
         if(blood)
         {
             particle_splash(PART_BLOOD, damage/10, 1000, p, 0x60FFFF, 2.60f);
@@ -528,26 +530,20 @@ namespace game
     {
         gameent *f = (gameent *)d;
 
-        int dam = damage;
-        if((!selfdam && f==at) || (!teamdam && isally(f, at))) dam = 0;
-        if(f!=at && isally(f, at)) dam = max(dam/2, 1);
-        if(dam > 0)
+        f->lastpain = lastmillis;
+        if(at->type==ENT_PLAYER && f!=at && !isally(f, at)) at->totaldamage += damage;
+        if(at==self && d!=at)
         {
-            f->lastpain = lastmillis;
-            if(at->type==ENT_PLAYER && f!=at && !isally(f, at)) at->totaldamage += dam;
-            if(at==self && d!=at)
-            {
-                extern int hitsound;
-                if(hitsound && at->lasthit != lastmillis)
-                    playsound(isally(f, at) ? S_HIT_ALLY : S_HIT);
-                at->lasthit = lastmillis;
-            }
+            extern int hitsound;
+            if(hitsound && at->lasthit != lastmillis)
+                playsound(isally(f, at) ? S_HIT_ALLY : S_HIT);
+            at->lasthit = lastmillis;
         }
 
         if(!m_mp(gamemode) || f==at) f->hitpush(damage, vel, at, atk);
         if(!m_mp(gamemode))
         {
-            damaged(dam, f->o, f, at, atk, flags);
+            damaged(damage, f->o, f, at, atk, flags);
         }
         else
         {
@@ -558,16 +554,12 @@ namespace game
             h.info2 = info2;
             h.flags = flags;
             h.dir = f==at ? ivec(0, 0, 0) : ivec(vec(vel).mul(DNF));
-            if(at==self && dam > 0)
+            if(at==self)
             {
-                if(f==self)
+                if(f == self)
                 {
-                    if(lastmillis-f->lastyelp > 500) damageblend(dam);
-                    if(f!=at) damagecompass(dam, at ? at->o : f->o);
-                }
-                if(f->haspowerup(PU_INVULNERABILITY) && f!=at && !at->haspowerup(PU_INVULNERABILITY))
-                {
-                    playsound(S_ACTION_INVULNERABILITY, f);
+                    if(lastmillis-f->lastyelp > 500) damageblend(damage);
+                    if(f != at) damagecompass(damage, at ? at->o : f->o);
                 }
                 if(flags & HIT_HEAD)
                 {
@@ -578,44 +570,60 @@ namespace game
         }
     }
 
-    void hitpush(int damage, dynent *d, gameent *at, vec &from, vec &to, int atk, int rays, int flags)
+    int calcdamage(int damage, gameent *target, gameent *actor, int atk, int flags = HIT_TORSO)
     {
-        gameent *f = (gameent *)d;
-        if(f->haspowerup(PU_ARMOR) || f->juggernaut) damage /= 2;
-        if(f->haspowerup(PU_INVULNERABILITY) && f!=at && !at->haspowerup(PU_INVULNERABILITY)) damage = 0;
-        if(flags&HIT_HEAD && m_mayhem(mutators)) damage = f->health;
-        hit(damage, d, at, vec(to).sub(from).safenormalize(), atk, from.dist(to), rays, flags);
+        if(target != actor)
+        {
+            if(target->haspowerup(PU_INVULNERABILITY) && !actor->haspowerup(PU_INVULNERABILITY))
+            {
+                return 0;
+            }
+        }
+        if (!(flags & HIT_MATERIAL))
+        {
+            if (attacks[atk].headshotdam && !attacks[atk].projspeed) // weapons deal locational damage only if headshot damage is specified (except for projectiles)
+            {
+                if (flags & HIT_HEAD)
+                {
+                    if(m_mayhem(mutators)) return (damage = target->health); // force death if it's a blow to the head when the Mayhem mutator is enabled
+                    else damage += attacks[atk].headshotdam;
+                }
+                if (flags & HIT_LEGS) damage /= 2;
+            }
+            if (actor->haspowerup(PU_DAMAGE) || actor->juggernaut) damage *= 2;
+            if (isally(target, actor) || target == actor) damage /= ALLY_DAMDIV;
+        }
+        if (target->haspowerup(PU_ARMOR) || target->juggernaut) damage /= 2;
+        if(!damage) damage = 1;
+        return damage;
     }
 
-    float projdist(dynent *o, vec &dir, const vec &v, const vec &vel, int atk)
+    void calcpushdamage(int damage, dynent *d, gameent *at, vec &from, vec &to, int atk, int rays, int flags)
+    {
+        gameent *f = (gameent *)d;
+        hit(calcdamage(damage, f, at, atk, flags), d, at, vec(to).sub(from).safenormalize(), atk, from.dist(to), rays, flags);
+    }
+
+    float projdist(dynent *o, vec &dir, const vec &v, const vec &vel)
     {
         vec middle = o->o;
         middle.z += (o->aboveeye-o->eyeheight)/2;
-        dir = vec(middle).sub(v).add(vec(vel).mul(5)).safenormalize();
-
-        float low = min(o->o.z - o->eyeheight + o->radius, middle.z),
-              high = max(o->o.z + o->aboveeye - o->radius, middle.z);
-        vec closest(o->o.x, o->o.y, clamp(v.z, low, high));
-        return max(closest.dist(v) - o->radius, 0.0f);
+        float dist = middle.dist(v, dir);
+        dir.div(dist);
+        if(dist<0) dist = 0;
+        return dist;
     }
 
     void radialeffect(dynent *o, const vec &v, const vec &vel, int damage, gameent *at, int atk)
     {
         if(server::betweenrounds || o->state!=CS_ALIVE) return;
         vec dir;
-        float dist = projdist(o, dir, v, vel, atk);
+        float dist = projdist(o, dir, v, vel);
         if(dist<attacks[atk].exprad)
         {
-            float dam = damage*(1-dist/EXP_DISTSCALE/attacks[atk].exprad);
-            if(o==at) damage /= ALLY_DAMDIV;
-            if(damage > 0)
-            {
-                gameent *f = (gameent *)o;
-                if(f->haspowerup(PU_INVULNERABILITY) || f->juggernaut) damage /= 2;
-                if(f->haspowerup(PU_INVULNERABILITY) && f!=at && !at->haspowerup(PU_INVULNERABILITY)) damage = 0;
-                hit(dam, o, at, dir, atk, dist);
-                damageeffect(dam, o, o->o, atk);
-            }
+            float radiusdamage = damage*(1-dist/EXP_DISTSCALE/attacks[atk].exprad), damage = calcdamage(radiusdamage, (gameent *)o, at, atk);
+            hit(damage, o, at, dir, atk, dist);
+            damageeffect(damage, o, o->o, atk);
         }
     }
 
@@ -755,12 +763,11 @@ namespace game
         if(!intersect(o, p.o, v, attacks[p.atk].margin)) return false;
         projsplash(p, v, o, damage);
         vec dir;
-        projdist(o, dir, v, p.dir, p.atk);
+        projdist(o, dir, v, p.dir);
         gameent *f = (gameent *)o;
-        if(f->haspowerup(PU_ARMOR) || f->juggernaut) damage /= 2;
-        if(f->haspowerup(PU_INVULNERABILITY) && f!=p.owner && !p.owner->haspowerup(PU_INVULNERABILITY)) damage = 0;
-        hit(damage, o, p.owner, dir, p.atk, 0);
-        damageeffect(damage, o, o->o, p.atk);
+        int cdamage = calcdamage(damage, f, p.owner, p.atk);
+        hit(cdamage, o, p.owner, dir, p.atk, 0);
+        damageeffect(cdamage, o, o->o, p.atk);
         return true;
     }
 
@@ -777,10 +784,6 @@ namespace game
             dv.mul(time/max(dist*1000/p.speed, float(time)));
             vec v = vec(p.o).add(dv);
             float damage = attacks[p.atk].damage;
-            if(p.owner->haspowerup(PU_DAMAGE) || p.owner->juggernaut)
-            {
-                damage *= 2;
-            }
             hits.setsize(0);
             if(p.local)
             {
@@ -1332,7 +1335,7 @@ namespace game
                         flags |= HIT_LEGS;
                     }
                 }
-                hitpush(numhits*damage, o, d, from, to, atk, numhits, flags);
+                calcpushdamage(numhits*damage, o, d, from, to, atk, numhits, flags);
                 damageeffect(damage, o, rays[i], atk);
             }
         }
@@ -1357,7 +1360,7 @@ namespace game
                         flags |= HIT_LEGS;
                     }
                 }
-                hitpush(attacks[atk].damage, o, d, from, to, atk, 1, flags);
+                calcpushdamage(attacks[atk].damage, o, d, from, to, atk, 1, flags);
                 damageeffect(damage, o, to, atk);
             }
             else

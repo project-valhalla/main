@@ -2787,18 +2787,26 @@ namespace server
                 return 0;
             }
         }
-        if(!(flags & Hit_Material))
+        if(!(flags & HIT_MATERIAL))
         {
-            if(!attacks[atk].projectileSpeed) // weapons deal locational damage only if headshot damage is specified (except for projectiles)
+            if(attacks[atk].headshotdam && !attacks[atk].projspeed) // weapons deal locational damage only if headshot damage is specified (except for projectiles)
             {
-                if(flags & Hit_Head) damage += attacks[atk].headshotDam;
-                if(flags & Hit_Legs) damage /= 2;
+                if(flags & HIT_HEAD)
+                {
+                    if(m_mayhem(mutators)) // force death if it's a blow to the head when the Mayhem mutator is enabled
+                    {
+                        died(target, actor, atk, damage, flags);
+                        return (damage = target->state.health);
+                    }
+                    else damage += attacks[atk].headshotdam;
+                }
+                if(flags & HIT_LEGS) damage /= 2;
             }
-            if(actor->state.haspowerup(PowerUp_Damage)) damage *= 2;
-            if(isally(target, actor) || (target == actor && !isSuperWeapon(attacks[atk].weapon))) damage /= ALLY_DAMDIV;
+            if(actor->state.haspowerup(PU_DAMAGE) || actor->state.juggernaut) damage *= 2;
+            if(isally(target, actor) || target == actor) damage /= ALLY_DAMDIV;
         }
-        if (target->state.haspowerup(PowerUp_Armor)) damage /= 2;
-        if (!damage) damage = 1;
+        if (target->state.haspowerup(PU_ARMOR) || target->state.juggernaut) damage /= 2;
+        if(!damage) damage = 1;
         return damage;
     }
 
@@ -2827,12 +2835,8 @@ namespace server
             bool dup = false;
             loopj(i) if(hits[j].target==h.target) { dup = true; break; }
             if(dup) continue;
-            float damage = attacks[atk].damage*(1-h.dist/EXP_DISTSCALE/attacks[atk].exprad);
-            if(gs.haspowerup(PU_DAMAGE) || gs.juggernaut) damage *= 2;
-            if(target->state.haspowerup(PU_DAMAGE) || target->state.juggernaut) damage /= 2;
-            if(target->state.haspowerup(PU_INVULNERABILITY) && ci!=target && !gs.haspowerup(PU_INVULNERABILITY)) damage = 0;
-            if(target==ci) damage /= ALLY_DAMDIV;
-            if(damage > 0) dodamage(target, ci, damage, atk, 0, h.dir);
+            float radiusdamage = attacks[atk].damage*(1-h.dist/EXP_DISTSCALE/attacks[atk].exprad);
+            dodamage(target, ci, calcdamage(radiusdamage, target, ci, atk, h.flags), atk, 0, h.dir);
         }
     }
 
@@ -2881,29 +2885,8 @@ namespace server
 
                 totalrays += h.rays;
                 if(totalrays>maxrays) continue;
-                bool headshot = (validatk(atk) && attacks[atk].headshotdam) || (m_mayhem(mutators) && !attacks[atk].projspeed);
-                int damage = h.rays*attacks[atk].damage;
-                if(attacks[atk].headshotdam) // no headshot damage no locational damage
-                {
-                    if(h.flags & HIT_HEAD)
-                    {
-                        if(m_mayhem(mutators))
-                        {
-                            target->state.shield = 0;
-                            damage = target->state.health;
-                        }
-                        else damage += attacks[atk].headshotdam;
-                    }
-                    if(h.flags & HIT_LEGS) damage /= 2;
-                }
-                if(gs.haspowerup(PU_DAMAGE) || gs.juggernaut) damage *= 2;
-                if(target->state.haspowerup(PU_ARMOR) || target->state.juggernaut) damage /= 2;
-                if(target->state.haspowerup(PU_INVULNERABILITY) && ci!=target && !gs.haspowerup(PU_INVULNERABILITY)) damage = 0;
-                if(damage > 0)
-                {
-                    dodamage(target, ci, damage, atk, h.flags, h.dir);
-                    if(m_mayhem(mutators) && h.flags & HIT_HEAD && headshot) died(target, ci, atk, damage, h.flags);
-                }
+                int raydamage = h.rays*attacks[atk].damage, damage = calcdamage(raydamage, target, ci, atk, h.flags);
+                dodamage(target, ci, damage, atk, h.flags, h.dir);
                 sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, target->clientnum, damage, h.flags,
                                            int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
                                            int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);

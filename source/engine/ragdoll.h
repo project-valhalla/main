@@ -448,6 +448,8 @@ FVAR(ragdollgravity, 0, 198.0f, 200);
 VAR(ragdollexpireoffset, 0, 2500, 30000);
 VAR(ragdollwaterexpireoffset, 0, 4000, 30000);
 
+#include "game.h"
+
 void ragdolldata::move(dynent *pl, float ts)
 {
     if(collidemillis && lastmillis > collidemillis) return;
@@ -467,11 +469,17 @@ void ragdolldata::move(dynent *pl, float ts)
     float tsfric = timestep ? ts/timestep : 1,
           airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
     collisions = 0;
+    gameent *d = (gameent *)pl;
+    bool pistolcombo = d->deathattack == ATK_PISTOL_COMBO;
     loopv(skel->verts)
     {
         vert &v = verts[i];
         vec dpos = vec(v.pos).sub(v.oldpos);
-        dpos.z -= ragdollgravity*ts*ts;
+        if(pistolcombo && lastmillis - d->lastpain <= 6000)
+        {
+            particle_splash(PART_RING, 1, 120, v.pos, 0x00FFFF, 1.4f, 10, 5);
+        }
+        else dpos.z -= ragdollgravity*ts*ts;
         if(water) dpos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
         dpos.mul(pow((water ? ragdollwaterfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*tsfric);
         v.oldpos = v.pos;

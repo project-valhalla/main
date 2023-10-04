@@ -1934,8 +1934,8 @@ namespace game
                 entities::setspawn(i, true);
                 ai::itemspawned(i);
                 playsound(S_ITEM_SPAWN, NULL, &entities::ents[i]->o, NULL, 0, 0, 0, -1, 0, 1500);
-                particle_splash(PART_SPARK1, 20, 100, entities::ents[i]->o, 0x903020, 7.5f, 50, -1, 0.04f);
-                particle_splash(PART_SPARK1, 40, 60, entities::ents[i]->o, 0x905030, 5.5f, 100, 60, 0.08f);
+                particle_splash(PART_SPARK, 20, 100, entities::ents[i]->o, 0x903020, 7.5f, 50, -1, 0.04f);
+                particle_splash(PART_SPARK, 40, 60, entities::ents[i]->o, 0x905030, 5.5f, 100, 60, 0.08f);
                 adddynlight(entities::ents[i]->o, 20, vec(2, 1.2f, 1), 250, 0, DL_SHRINK);
                 break;
             }
@@ -2238,7 +2238,7 @@ namespace game
                 d->infect();
                 d->stoppowerupsound();
                 playsound(S_INFECTED, d);
-                particle_splash(PART_SPARK1, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
+                particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
                 d->lastswitch = lastmillis;
                 break;
             }

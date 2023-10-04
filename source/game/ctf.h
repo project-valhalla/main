@@ -524,7 +524,7 @@ struct ctfclientmode : clientmode
         else { fcolor = 0x802020; color = vec(1, 0.25f, 0.25f); }
         particle_fireball(loc, 30, PART_EXPLOSION1, -1, fcolor, 4.8f);
         adddynlight(loc, 35, color, 900, 100);
-        particle_splash(PART_SPARK1, 150, 300, loc, fcolor, 0.24f);
+        particle_splash(PART_SPARK, 150, 300, loc, fcolor, 0.24f);
     }
 
     void flageffect(int i, int team, const vec &from, const vec &to)

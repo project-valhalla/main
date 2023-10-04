@@ -586,6 +586,7 @@ namespace game
             if(flags & KILL_HEADSHOT) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
         }
         // update player state and reset ai
+        d->deathattack = atk;
         deathstate(d);
         ai::kill(d, actor);
         // events

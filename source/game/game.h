@@ -496,7 +496,7 @@ struct gameent : dynent, gamestate
     int lifesequence;                   // sequence id for each respawn, used in damage test
     int respawned, suicided;
     int lastpain;
-    int lastaction, lastattack, lasthit;
+    int lastaction, lastattack, deathattack, lasthit;
     int attacking;
     int lasttaunt, lastfootstep, lastyelp, lastswitch;
     int lastpickup, lastpickupmillis, flagpickup;
@@ -576,7 +576,7 @@ struct gameent : dynent, gamestate
         gamestate::respawn();
         respawned = suicided = -1;
         lastaction = 0;
-        lastattack = -1;
+        lastattack = deathattack = -1;
         attacking = ACT_IDLE;
         lasttaunt = 0;
         lastpickup = -1;

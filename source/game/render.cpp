@@ -1,6 +1,6 @@
 #include "game.h"
 
-extern int maxparticletextdistance;
+extern int maxparticletextdistance, zoom;
 
 namespace game
 {
@@ -234,7 +234,7 @@ namespace game
         }
         modelattach a[5];
         int ai = 0;
-        if(guns[d->gunselect].worldmodel)
+        if(guns[d->gunselect].worldmodel && d->deathattack != ATK_PISTOL_COMBO)
         {
             int vanim = ANIM_VWEP_IDLE|ANIM_LOOP, vtime = 0;
             if(lastaction && d->lastattack >= 0 && attacks[d->lastattack].gun==d->gunselect && lastmillis < lastaction + delay)
@@ -316,7 +316,7 @@ namespace game
         float trans = 1;
         if(d->state == CS_LAGGED) trans = 0.5f;
         else if(d->state == CS_ALIVE && camera1->o.dist(d->o) < d->radius) trans = 0.1f;
-        else flags &= ~(MDL_NOSHADOW);
+        else if(d->deathattack == ATK_PISTOL_COMBO) trans = 0.8f;
         rendermodel(playermodelfile, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), trans));
     }
 
@@ -510,27 +510,10 @@ namespace game
         drawhudgun();
     }
 
-    void renderplayerpreview(int model, int color, int team, int weap)
-    {
-        static gameent *previewent = NULL;
-        if(!previewent)
-        {
-            previewent = new gameent;
-            loopi(NUMGUNS) previewent->ammo[i] = 1;
-        }
-        float height = previewent->eyeheight + previewent->aboveeye,
-              zrad = height/2;
-        vec2 xyrad = vec2(previewent->xradius, previewent->yradius).max(height/4);
-        previewent->o = calcmodelpreviewpos(vec(xyrad, zrad), previewent->yaw).addz(previewent->eyeheight - zrad);
-        previewent->gunselect = validgun(weap) ? weap : GUN_RAIL;
-        const playermodelinfo *mdlinfo = getplayermodelinfo(model);
-        if(!mdlinfo) return;
-        renderplayer(previewent, *mdlinfo, getplayercolor(team, color), team, 1, 0, false);
-    }
-
     vec hudgunorigin(int gun, const vec &from, const vec &to, gameent *d)
     {
-        if(d->muzzle.x >= 0) return d->muzzle;
+        if(zoom && d == self) return d->feetpos(2);
+        else if(d->muzzle.x >= 0) return d->muzzle;
         vec offset(from);
         if(d!=hudplayer() || isthirdperson())
         {
@@ -551,6 +534,24 @@ namespace game
         }
         else offset.sub(vec(camup).mul(0.8f));
         return offset;
+    }
+
+    void renderplayerpreview(int model, int color, int team, int weap)
+    {
+        static gameent *previewent = NULL;
+        if(!previewent)
+        {
+            previewent = new gameent;
+            loopi(NUMGUNS) previewent->ammo[i] = 1;
+        }
+        float height = previewent->eyeheight + previewent->aboveeye,
+              zrad = height/2;
+        vec2 xyrad = vec2(previewent->xradius, previewent->yradius).max(height/4);
+        previewent->o = calcmodelpreviewpos(vec(xyrad, zrad), previewent->yaw).addz(previewent->eyeheight - zrad);
+        previewent->gunselect = validgun(weap) ? weap : GUN_RAIL;
+        const playermodelinfo *mdlinfo = getplayermodelinfo(model);
+        if(!mdlinfo) return;
+        renderplayer(previewent, *mdlinfo, getplayercolor(team, color), team, 1, 0, false);
     }
 
     void preloadweapons()

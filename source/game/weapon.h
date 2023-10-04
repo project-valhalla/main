@@ -76,7 +76,7 @@ static const struct attackinfo
     { GUN_SMG,     ACT_SECONDARY,  240,  35, 40,  30, 0,    0, 10, 1000,  1,  40,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON  },
     // pulse
     { GUN_PULSE,   ACT_PRIMARY,    180,  22,  0,   0, 1, 1000,  5, 2048,  1,  75, 18, 3000, 2,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_PULSE1,        S_PULSE_EXPLODE,   S_HIT_WEAPON  },
-    { GUN_PULSE,   ACT_SECONDARY,   80,  12,  4,   0, 0,    0,  0,  200,  1, 100,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_IDLE,  S_PULSE2_A,      S_IMPACT_PULSE,    S_HIT_WEAPON  },
+    { GUN_PULSE,   ACT_SECONDARY,   80,  12,  0,   0, 0,    0,  0,  200,  1, 100,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_IDLE,  S_PULSE2_A,      S_IMPACT_PULSE,    S_HIT_WEAPON  },
     // rocket
     { GUN_ROCKET,  ACT_PRIMARY,    920, 110,  0,   0, 0,  300,  0, 2048,  1, 120, 33, 5000, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_ROCKET1,       S_ROCKET_EXPLODE,  S_HIT_WEAPON  },
     { GUN_ROCKET,  ACT_SECONDARY,  920, 110,  0,   0, 0,  300,  0, 2048,  1, 120, 33, 2000, 1, 0.6f, 0.7f, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT, S_ROCKET2,       S_ROCKET_EXPLODE,  S_HIT_WEAPON  },

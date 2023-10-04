@@ -2778,6 +2778,30 @@ namespace server
         suicide(ci);
     }
 
+    int calcdamage(int damage, clientinfo *target, clientinfo *actor, int atk, int flags)
+    {
+        if(target != actor)
+        {
+            if(target->state.haspowerup(PU_INVULNERABILITY) && !actor->state.haspowerup(PU_INVULNERABILITY))
+            {
+                return 0;
+            }
+        }
+        if(!(flags & Hit_Material))
+        {
+            if(!attacks[atk].projectileSpeed) // weapons deal locational damage only if headshot damage is specified (except for projectiles)
+            {
+                if(flags & Hit_Head) damage += attacks[atk].headshotDam;
+                if(flags & Hit_Legs) damage /= 2;
+            }
+            if(actor->state.haspowerup(PowerUp_Damage)) damage *= 2;
+            if(isally(target, actor) || (target == actor && !isSuperWeapon(attacks[atk].weapon))) damage /= ALLY_DAMDIV;
+        }
+        if (target->state.haspowerup(PowerUp_Armor)) damage /= 2;
+        if (!damage) damage = 1;
+        return damage;
+    }
+
     void explodeevent::process(clientinfo *ci)
     {
         servstate &gs = ci->state;

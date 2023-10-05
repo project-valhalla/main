@@ -488,12 +488,17 @@ void resetchannels()
     channels.shrink(0);
 }
 
+const int MAX_QUEUE_SOUNDS = 10; // queued sounds up to a maximum of 10
+int soundqueue[MAX_QUEUE_SOUNDS],  // define an array to store the sounds
+    queuedsounds = 0; // define a variable to keep track of the sounds in the queue
+
 void clear_sound()
 {
     closemumble();
     if(nosound) return;
     stopmusic();
 
+    queuedsounds = 0;
     gamesounds.cleanup();
     mapsounds.cleanup();
     Mix_CloseAudio();
@@ -621,6 +626,17 @@ void syncchannels()
     }
 }
 
+void playqueuedsounds()
+{
+    if(!queuedsounds) return;
+    playsound(soundqueue[0], NULL, NULL, NULL, SND_ANNOUNCER); // always play the first sound in the queue
+    for(int i = 1; i < queuedsounds; i++) // shift the remaining sounds down in the queue
+    {
+        soundqueue[i-1] = soundqueue[i];
+    }
+    queuedsounds--; // decrement the count of sounds in the queue
+}
+
 VARP(minimizedsounds, 0, 0, 1);
 
 void updatesounds()
@@ -641,6 +657,7 @@ void updatesounds()
         if(!Mix_PlayingMusic()) musicdone();
         else if(Mix_PausedMusic()) Mix_ResumeMusic();
     }
+    playqueuedsounds();
 }
 
 VARP(maxsoundsatonce, 0, 0, 100);
@@ -664,6 +681,16 @@ void preloadmapsounds()
     {
         extentity &e = *ents[i];
         if(e.type==ET_SOUND) mapsounds.preloadsound(e.attr1);
+    }
+}
+
+void queuesound(int n)
+{
+    if(queuedsounds < MAX_QUEUE_SOUNDS)
+    {
+        // add the sound to the queue and increment the count
+        soundqueue[queuedsounds] = n;
+        queuedsounds++;
     }
 }
 
@@ -731,6 +758,18 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
     if(chanid < 0) loopv(channels) if(!channels[i].volume) { Mix_HaltChannel(i); freechannel(i); chanid = i; break; }
     if(chanid < 0) return -1;
 
+    if(flags & SND_ANNOUNCER)
+    {
+        loopv(channels)
+        {
+            if(channels[i].flags & SND_ANNOUNCER && channels[i].inuse)
+            {
+                queuesound(n);
+                return -1;
+            }
+        }
+    }
+
     soundchannel &chan = newchannel(chanid, &slot, owner, loc, ent, flags, radius);
 
     if(!owner && !loc)
@@ -761,6 +800,7 @@ void stopsounds(int exclude)
         Mix_HaltChannel(i);
         freechannel(i);
     }
+    queuedsounds = 0;
 }
 
 bool stopsound(int n, int chanid, int fade)

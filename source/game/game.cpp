@@ -19,6 +19,7 @@ namespace game
         d->lasttaunt = lastmillis;
         addmsg(N_TAUNT, "rc", self);
         playsound(!d->zombie ? getplayermodelinfo(d).tauntsound : zombies[getplayermodel(d)].tauntsound, d);
+        self->attacking = ACT_IDLE;
     }
     ICOMMAND(taunt, "", (), taunt(self));
 
@@ -375,7 +376,7 @@ namespace game
 
     void doaction(int act)
     {
-        if(!connected || intermission) return;
+        if(!connected || intermission || lastmillis-self->lasttaunt < 1000) return;
         if(!checkaction(act, self->gunselect)) return;
         if((self->attacking = act)) respawn();
     }

@@ -496,11 +496,17 @@ namespace game
         {
             if(anim >= 0) anim = attacks[d->lastattack].hudanim;
             basetime = d->lastaction;
+            d->lastswitch = 0;
         }
-        if(lastmillis - d->lastswitch <= 600)
+        if(d->lastswitch && lastmillis - d->lastswitch <= 600)
         {
             if(anim >= 0) anim = ANIM_GUN_SWITCH;
             basetime = d->lastswitch;
+        }
+        if(d->lasttaunt && lastmillis-d->lasttaunt < 1000)
+        {
+            if(anim >= 0) anim = ANIM_GUN_TAUNT;
+            basetime = d->lasttaunt;
         }
         drawhudmodel(d, anim, basetime);
     }

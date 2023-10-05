@@ -37,7 +37,7 @@ namespace entities
         if(!validitem(type) || m_noitems(mutators)) return false;
         switch(type)
         {
-            case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL:
+            case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL: case I_AMMO_GRENADE:
                 if(m_voosh(mutators)) return false;
             case I_YELLOWSHIELD: case I_REDSHIELD:
                 if(m_insta(mutators) || m_effic(mutators)) return false;

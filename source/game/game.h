@@ -423,6 +423,16 @@ struct gamestate
             loopi(NUMGUNS-3) baseammo(i);
             gunselect = GUN_SMG;
         }
+        else if(m_tactics(mutators))
+        {
+            maxhealth = health = 150;
+            ammo[GUN_PISTOL] = 100;
+            int spawngun1 = rnd(5)+1, spawngun2;
+            gunselect = spawngun1;
+            baseammo(spawngun1, m_noitems(mutators) ? 5 : 3);
+            do spawngun2 = rnd(5)+1; while(spawngun1==spawngun2);
+            baseammo(spawngun2, m_noitems(mutators) ? 5 : 3);
+        }
         else if(m_voosh(mutators) && forceweapon >= 0)
         {
             loopi(NUMGUNS) ammo[i] = 0;

@@ -2123,7 +2123,7 @@ namespace server
             {
                 defformatstring(announcement, "\f2%d kill%s remain%s", remain, remain == 1 ? "" : "s", remain == 1 ? "s" : "");
                 int announcementsound = remain == 10 ? S_ANNOUNCER_10_KILLS : (remain == 5 ? S_ANNOUNCER_5_KILLS : S_ANNOUNCER_1_KILL);
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, announcementsound, NULL, announcement);
+                sendf(-1, 1, "ri2s", N_ANNOUNCE, announcementsound, announcement);
             }
         }
         if(highscore >= scorelimit)
@@ -2131,7 +2131,7 @@ namespace server
             if(m_dm) startintermission();
             else if(m_round && !m_elimination && !interm) gameover();
             defformatstring(winner, "%s%s \fs\f2wins the match\fr", team ? teamtextcode[ci->team] : "", team ? teamnames[ci->team] : colorname(ci));
-            sendf(-1, 1, "ri3s", N_ANNOUNCE, NULL, NULL, winner);
+            sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, winner);
         }
     }
 
@@ -2159,7 +2159,7 @@ namespace server
         if(!m_infection || !ci || ci->state.state!=CS_ALIVE) return;
         ci->state.infect();
         sendf(-1, 1, "ri3", N_INFECT, ci->clientnum, actor->clientnum);
-        if(!zombiechosen) sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_INFECTION, S_INFECTION, "\fs\f2Infection has begun\fr");
+        if(!zombiechosen) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_INFECTION, "\fs\f2Infection has begun\fr");
     }
 
     void choosezombie()
@@ -2245,12 +2245,12 @@ namespace server
         {
             if((survivors <= 0 && zombies <= 0) || (timeisup && survivors <= 0 && zombies > 0))
             {
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_WIN_SURVIVORS, NULL, timeisup? "\f2Time is up": "\f2Nobody survived");
+                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_SURVIVORS, timeisup? "\f2Time is up": "\f2Nobody survived");
                 endround();
             }
             else if(zombies <= 0 || (timeisup && survivors > 0))
             {
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_SURVIVOR, S_WIN_SURVIVORS, "\f2Survivors win the round");
+                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_SURVIVORS, "\f2Survivors win the round");
                 loopv(clients)
                 {
                     clientinfo *ci = clients[i];
@@ -2261,7 +2261,7 @@ namespace server
             }
             else if(survivors <= 0 && numclients(-1, true, false) > 1)
             {
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_ZOMBIE, S_WIN_ZOMBIES, "\f2Zombies win the round");
+                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_ZOMBIES, "\f2Zombies win the round");
                 endround();
             }
         }
@@ -2269,7 +2269,7 @@ namespace server
         {
             if(alive <= 0 || timeisup)
             {
-                sendf(-1, 1, "ri3s", N_ANNOUNCE, S_LMS_ROUND, NULL, timeisup ? "\f2Time is up" : "\f2Nobody survived");
+                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, timeisup ? "\f2Time is up" : "\f2Nobody survived");
                 endround();
             }
             else if(alive < 2)
@@ -2279,7 +2279,7 @@ namespace server
                 {
                     clientinfo *ci = clients[i];
                     if(ci->state.state == CS_ALIVE || ci->state.aitype != AI_NONE) continue;
-                    sendf(ci->clientnum, 1, "ri3s", N_ANNOUNCE, S_LMS_ROUND, NULL, "");
+                    sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, "");
                 }
                 loopv(clients)
                 {
@@ -2287,7 +2287,7 @@ namespace server
                     if(ci->state.state != CS_ALIVE) continue;
                     score(ci);
                     if(ci->state.aitype != AI_NONE) continue;
-                    sendf(ci->clientnum, 1, "ri3s", N_ANNOUNCE, S_LMS_ROUND_WIN, S_ANNOUNCER_WIN_ROUND, "\f2You win the round");
+                    sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND_WIN, "\f2You win the round");
                 }
                 endround();
             }
@@ -2305,7 +2305,7 @@ namespace server
             ci->state.baseammo(gun);
             ci->state.gunselect = gun;
             sendf(-1, 1, "ri3", N_FORCEWEAPON, ci->clientnum, gun);
-            if(m_randomweapon(mutators)) sendf(-1, 1, "ri3s", N_ANNOUNCE, S_VOOSH, NULL, "");
+            if(m_randomweapon(mutators)) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_VOOSH, "");
         }
     }
 
@@ -2562,7 +2562,7 @@ namespace server
             }
         }
         if(!tied) return false;
-        sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, NULL, "\f2Overtime: scores are tied");
+        sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, "\f2Overtime: scores are tied");
         gamelimit = max(gamemillis, gamelimit) + 2*60000;
         sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
         return true;
@@ -3022,12 +3022,12 @@ namespace server
             {
                 if(remainingminutes(1, oldgamemillis)) // one minute
                 {
-                    sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_1_MINUTE, NULL, "\f2One minute remains");
+                    sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_1_MINUTE, "\f2One minute remains");
                     execident("on_lastminute");
                 }
                 else if(remainingminutes(5, oldgamemillis)) // five minutes
                 {
-                    sendf(-1, 1, "ri3s", N_ANNOUNCE, S_ANNOUNCER_5_MINUTES, NULL, "\f2Five minutes remain");
+                    sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_5_MINUTES, "\f2Five minutes remain");
                 }
                 if (remainingminutes((gamelimit/2)/60000, oldgamemillis)) // halfway through the match
                 {

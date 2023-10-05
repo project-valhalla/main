@@ -584,7 +584,6 @@ struct ctfclientmode : clientmode
         d->flags = dflags;
         conoutf(CON_GAMEINFO, "%s \fs\f2scored for\fr %s", teamcolorname(d), teamcolor("\fs\f2team\fr ", "", team, "\fs\f2a team\fr"));
         playsound(team==self->team ? S_FLAGSCORE : S_FLAGFAIL);
-        playsound(team==1 ? S_ANNOUNCER_FLAGSCORE_BLUE : S_ANNOUNCER_FLAGSCORE_RED, NULL, NULL, NULL, SND_ANNOUNCER);
         if(d->aitype==AI_BOT) taunt(d);
 
         if(score >= Scorelimit)

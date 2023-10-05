@@ -1907,11 +1907,10 @@ namespace game
 
             case N_ANNOUNCE:
             {
-                int snd1 = getint(p), snd2 = getint(p);
+                int sound = getint(p);
                 getstring(text, p);
+                if(sound >= 0) playsound(sound, NULL, NULL, NULL, SND_ANNOUNCER);
                 if(text[0]) conoutf(CON_GAMEINFO, "%s", text);
-                if(snd1 >= 0) playsound(snd1);
-                if(snd2 >= 0) playsound(snd2);
                 break;
             }
 

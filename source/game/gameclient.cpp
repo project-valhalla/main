@@ -2251,7 +2251,7 @@ namespace game
                 loopi(NUMGUNS) d->ammo[i] = 0;
                 d->baseammo(gun);
                 d->gunselect = gun;
-                if(m_randomweapon(mutators) && self->zombie)
+                if(m_voosh(mutators) && self->zombie)
                     playsound(S_VOOSH, d, &d->o);
                 break;
             }

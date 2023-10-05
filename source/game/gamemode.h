@@ -89,14 +89,13 @@ static struct mutatorinfo
     { "no-items", "No Items", MUT_NOITEMS, MUT_CLASSIC, "\f6No items\ff: items do not spawn" }
 };
 
-#define NUMMUTATORS              ((int)(sizeof(mutator)/sizeof(mutator[0])))
-#define m_insta(b)               (b&MUT_INSTAGIB)
-#define m_effic(b)               (b&MUT_EFFIC)
-#define m_randomweapon(b)        (b&MUT_RANDOMWEAPON)
-#define m_vampire(b)             (b&MUT_VAMPIRE)
-#define m_mayhem(b)              (b&MUT_MAYHEM)
-#define m_nopowerups(b)          (b&MUT_NOPOWERUP)
-#define m_noitems(b)             (b&MUT_NOITEMS)
-
-#define m_regen(b)               (!(b&MUT_CLASSIC) && !(b&MUT_INSTAGIB) && !(b&MUT_EFFIC) && !(b&MUT_VAMPIRE))
-#define m_multipleweapons(b)     (b&MUT_CLASSIC || b&MUT_EFFIC)
+#define NUMMUTATORS            ((int)(sizeof(mutator)/sizeof(mutator[0])))
+#define m_insta(mut)           (mut&MUT_INSTAGIB)
+#define m_effic(mut)           (mut&MUT_EFFIC)
+#define m_voosh(mut)           (mut&MUT_RANDOMWEAPON)
+#define m_vampire(mut)         (mut&MUT_VAMPIRE)
+#define m_mayhem(mut)          (mut&MUT_MAYHEM)
+#define m_nopowerups(mut)      (mut&MUT_NOPOWERUP)
+#define m_noitems(mut)         (mut&MUT_NOITEMS)
+#define m_regen(mut)           (!(mut&MUT_CLASSIC) && !(mut&MUT_INSTAGIB) && !(mut&MUT_EFFIC) && !(mut&MUT_VAMPIRE))
+#define m_multipleweapons(mut) (mut&MUT_CLASSIC || mut&MUT_EFFIC)

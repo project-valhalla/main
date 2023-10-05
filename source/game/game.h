@@ -423,7 +423,7 @@ struct gamestate
             loopi(NUMGUNS-3) baseammo(i);
             gunselect = GUN_SMG;
         }
-        else if(m_randomweapon(mutators) && forceweapon >= 0)
+        else if(m_voosh(mutators) && forceweapon >= 0)
         {
             loopi(NUMGUNS) ammo[i] = 0;
             ammo[forceweapon] = 100;

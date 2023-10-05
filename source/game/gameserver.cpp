@@ -912,6 +912,7 @@ namespace server
         switch(type)
         {
             case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL:
+                if(m_voosh(mutators)) return false;
             case I_YELLOWSHIELD: case I_REDSHIELD:
                 if(m_insta(mutators) || m_effic(mutators)) return false;
                 break;
@@ -2216,7 +2217,7 @@ namespace server
         }
         else betweenrounds = false;
         extern void voosh();
-        if(m_randomweapon(mutators)) serverevents::add(&voosh, 15000);
+        if(m_voosh(mutators)) serverevents::add(&voosh, 15000);
     }
 
     void endround()
@@ -2305,7 +2306,7 @@ namespace server
             ci->state.baseammo(gun);
             ci->state.gunselect = gun;
             sendf(-1, 1, "ri3", N_FORCEWEAPON, ci->clientnum, gun);
-            if(m_randomweapon(mutators)) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_VOOSH, "");
+            if(m_voosh(mutators)) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_VOOSH, "");
         }
     }
 
@@ -2313,7 +2314,7 @@ namespace server
 
     void voosh()
     {
-        if(!m_randomweapon(mutators)) return;
+        if(!m_voosh(mutators)) return;
         do vooshgun = rnd(NUMGUNS-1); while(vooshgun==serverweapon);
         setserverweapon(vooshgun);
         serverevents::add(&voosh, 15000);
@@ -2373,7 +2374,7 @@ namespace server
         }
         else betweenrounds = false;
 
-        if(m_randomweapon(mutators))
+        if(m_voosh(mutators))
         {
             vooshgun = serverweapon = rnd(NUMGUNS-1);
             serverevents::add(&voosh, 15000);

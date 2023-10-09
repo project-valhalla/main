@@ -68,6 +68,7 @@ struct eliminationclientmode : clientmode
         betweenrounds = true;
         sendservmsgf("%s%s \f2team won the round", teamtextcode[winner], teamnames[winner]);
         sendf(-1, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, "");
+        extern int scorelimit;
         if(scorelimit && sc.total >= scorelimit)
         {
             gameover();
@@ -77,7 +78,7 @@ struct eliminationclientmode : clientmode
 
     static void startround()
     {
-        resetgamelimit();
+        resetroundtimer();
         loopv(clients)
         {
             if(clients[i]->state.state!=CS_EDITING && (clients[i]->state.state!=CS_SPECTATOR || clients[i]->ghost))

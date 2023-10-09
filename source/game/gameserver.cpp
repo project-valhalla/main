@@ -157,7 +157,7 @@ namespace server
             timeplayed = 0;
             effectiveness = 0;
             frags = flags = deaths = points = teamkills = shotdamage = damage = 0;
-            juggernaut = zombie = 0;
+            role = ROLE_NONE;
             spree = 0;
 
             lastdeath = 0;
@@ -315,12 +315,6 @@ namespace server
             gameclip = false;
         }
 
-        void roundreset()
-        {
-            events.deletecontents();
-            lastevent = 0;
-        }
-
         void reassign()
         {
             state.reassign();
@@ -407,15 +401,21 @@ namespace server
 
     bool notgotitems = true;        // true when map has changed and waiting for clients to send item
     int gamemode = 0, mutators = 0;
-    int gamemillis = 0, gamelimit = 0, nextexceeded = 0, gamespeed = 100;
+    int gamemillis = 0, gamelimit = 0, roundgamelimit = 0, nextexceeded = 0, gamespeed = 100;
     bool gamepaused = false, shouldstep = true;
     string smapname = "";
     int interm = 0;
     enet_uint32 lastsend = 0;
     int mastermode = MM_OPEN, mastermask = MM_PRIVSERV;
     stream *mapdata = NULL;
-    int timelimit = 10, scorelimit = 30, roundlimit = 20, rounds = 0,
-        selfdam = 1, teamdam = 1, serverweapon = -1;
+
+    VAR(timelimit, 0, 10, 60);
+    VAR(scorelimit, 0, 30, 5000);
+    VAR(roundtimelimit, 1, 3, 6);
+    VAR(roundlimit, 0, 10, 30);
+
+    VAR(selfdamage, 0, 1, 1);
+    VAR(teamdamage, 0, 1, 1);
 
     namespace serverevents
     {
@@ -943,8 +943,14 @@ namespace server
         return false;
     }
 
+    bool allowpickup()
+    {
+        return !((!m_infection && betweenrounds) || (m_infection && zombiechosen && betweenrounds));
+    }
+
     bool pickup(int i, int sender)         // server side item pickup, acknowledge first client that gets it
     {
+        if(!allowpickup()) return false;
         if((m_timed && gamemillis>=gamelimit) || !sents.inrange(i) || !sents[i].spawned) return false;
         clientinfo *ci = getinfo(sender);
         if(!ci) return false;
@@ -1323,7 +1329,10 @@ namespace server
         }
         if(gamemillis > prevmillis)
         {
-            if(!interm) sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
+            if(!interm)
+            {
+                sendf(-1, 1, "ri2", N_TIMEUP, !m_round ? max((gamelimit - gamemillis)/1000, 1) : max((roundgamelimit - gamemillis)/1000, 1));
+            }
 #ifndef STANDALONE
             clearscreeneffects();
 #endif
@@ -1449,7 +1458,10 @@ namespace server
     void revokemaster(clientinfo *ci)
     {
         ci->privilege = PRIV_NONE;
-        if(ci->state.state==CS_SPECTATOR && !ci->local) aimanager::removeai(ci);
+        if(ci->state.state==CS_SPECTATOR && !ci->local)
+        {
+            aimanager::removeai(ci);
+        }
     }
 
     extern void connected(clientinfo *ci);
@@ -1639,7 +1651,7 @@ namespace server
         }
 
         uchar operator[](int msg) const { return msg >= 0 && msg < NUMMSG ? msgmask[msg] : 0; }
-    } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVERVARIABLES, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_DIED, 4, N_FORCEDEATH, N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_ROUNDSCORE, N_JUGGERNAUT, N_INFECT, N_SCORE, N_TRAITOR, N_FORCEWEAPON, N_CLIENT, N_AUTHCHAL, N_INITAI, N_DEMOPACKET, -2, N_CALCLIGHT, N_REMIP, N_NEWMAP, N_GETMAP, N_SENDMAP, N_CLIPBOARD, -3, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_EDITVAR, N_EDITVSLOT, N_UNDO, N_REDO, -4, N_POS, NUMMSG),
+    } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_DIED, 4, N_FORCEDEATH, N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_ROUNDSCORE, N_ASSIGNROLE, N_SCORE, N_VOOSH, N_CLIENT, N_AUTHCHAL, N_INITAI, N_DEMOPACKET, -2, N_CALCLIGHT, N_REMIP, N_NEWMAP, N_GETMAP, N_SENDMAP, N_CLIPBOARD, -3, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_EDITVAR, N_EDITVSLOT, N_UNDO, N_REDO, -4, N_POS, NUMMSG),
       connectfilter(-1, N_CONNECT, -2, N_AUTHANS, -3, N_PING, NUMMSG);
 
     int checktype(int type, clientinfo *ci)
@@ -1852,7 +1864,7 @@ namespace server
     void spawnstate(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        gs.spawnstate(gamemode, mutators, serverweapon);
+        gs.spawnstate(gamemode, mutators, vooshgun);
         gs.lifesequence = (gs.lifesequence + 1)&0x7F;
     }
 
@@ -1925,17 +1937,11 @@ namespace server
         putint(p, gamemode);
         putint(p, mutators);
         putint(p, notgotitems ? 1 : 0);
-        putint(p, N_SERVERVARIABLES);
-        putint(p, timelimit);
-        putint(p, scorelimit);
-        putint(p, roundlimit);
-        putint(p, selfdam);
-        putint(p, teamdam);
-        putint(p, serverweapon);
         if(!ci || (timelimit>0 && m_timed && smapname[0]))
         {
             putint(p, N_TIMEUP);
-            putint(p, (m_round && !interm) || (gamemillis < gamelimit && !interm) ? max((gamelimit - gamemillis)/1000, 1) : 0);
+            int timeupdate = !m_round ? max((gamelimit - gamemillis)/1000, 1) : max((roundgamelimit - gamemillis)/1000, 1);
+            putint(p, gamemillis < gamelimit && !interm ? timeupdate : 0);
         }
         if(!notgotitems)
         {
@@ -2036,8 +2042,7 @@ namespace server
                 putint(p, oi->state.points);
                 putint(p, oi->state.poweruptype);
                 putint(p, oi->state.powerupmillis);
-                putint(p, oi->state.juggernaut);
-                putint(p, oi->state.zombie);
+                putint(p, oi->state.role);
                 sendstate(oi->state, p);
             }
             putint(p, -1);
@@ -2062,10 +2067,10 @@ namespace server
     void sendresume(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        sendf(-1, 1, "ri3i9i4vi", N_RESUME, ci->clientnum, gs.state,
+        sendf(-1, 1, "ri3i9i3vi", N_RESUME, ci->clientnum, gs.state,
             gs.frags, gs.flags, gs.deaths, gs.points,
             gs.poweruptype, gs.powerupmillis,
-            gs.juggernaut, gs.zombie, gs.lifesequence,
+            gs.role, gs.lifesequence,
             gs.health, gs.maxhealth, gs.shield, gs.gunselect,
             NUMGUNS, gs.ammo, -1);
     }
@@ -2094,6 +2099,83 @@ namespace server
         notgotitems = false;
     }
 
+    /* intermission logic:
+     * useful to decide whether to end a game or a round
+     * when to start overtime or when to reset a timer
+     */
+    VAR(overtime, 0, 1, 1);
+
+    bool checkovertime()
+    {
+        if(!m_timed || m_round || !overtime) return false;
+        int topteam = 0;
+        int topscore = INT_MIN;
+        bool tied = false;
+        if(m_teammode)
+        {
+            vector<teamscore> scores;
+            if(smode && smode->hidefrags()) smode->getteamscores(scores);
+            loopv(clients)
+            {
+                clientinfo *ci = clients[i];
+                if(ci->state.state==CS_SPECTATOR || !validteam(ci->team)) continue;
+                int score = 0;
+                if(smode && smode->hidefrags())
+                {
+                    int idx = scores.htfind(ci->team);
+                    if(idx >= 0) score = scores[idx].score;
+                }
+                else score = teaminfos[ci->team-1].frags;
+                if(!topteam || score > topscore) { topteam = ci->team; topscore = score; tied = false; }
+                else if(score == topscore && ci->team != topteam) tied = true;
+            }
+        }
+        else
+        {
+            loopv(clients)
+            {
+                clientinfo *ci = clients[i];
+                if(ci->state.state==CS_SPECTATOR) continue;
+                int score = ci->state.frags;
+                if(score > topscore) { topscore = score; tied = false; }
+                else if(score == topscore) tied = true;
+            }
+        }
+        if(!tied) return false;
+        sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, "\f2Overtime: scores are tied");
+        gamelimit = max(gamemillis, gamelimit) + 2*60000;
+        sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
+        return true;
+    }
+
+    void gameover()
+    {
+        sendf(-1, 1, "ri2", N_TIMEUP, 0);
+        if(smode) smode->intermission();
+        changegamespeed(100);
+        serverevents::invalidate();
+        interm = gamemillis + 45000;
+    }
+
+    void checkintermission()
+    {
+        if(gamemillis >= gamelimit && !checkovertime() && !interm)
+        {
+            gameover();
+        }
+    }
+
+    void startintermission()
+    {
+        gamelimit = min(gamelimit, gamemillis);
+        checkintermission();
+    }
+
+    /* score system:
+     * here we do things like checking for the best (winning) player,
+     * adding score to individual players or teams,
+     * checking the frag limit, etc.
+     */
     clientinfo *winningclient()
     {
         clientinfo *best = NULL;
@@ -2136,7 +2218,7 @@ namespace server
         }
     }
 
-    void score(clientinfo *ci, int score = 1)
+    void addscore(clientinfo *ci, int score = 1)
     {
         ci->state.points += score;
         sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
@@ -2145,34 +2227,41 @@ namespace server
         if(ci == best) checkscorelimit(best);
     }
 
-    clientinfo *hostzombie(clientinfo *exclude1 = NULL, clientinfo *exclude2 = NULL)
+    // function to choose a random client used in certain game modes
+    clientinfo *random(clientinfo *exclude = NULL)
     {
-        if(clients.length() <= (exclude1 ? 1 : 0)) return NULL;
-        if(exclude2 && clients.length() < 3) exclude2 = NULL;
-        clientinfo *host = NULL;
-        do host = clients[rnd(clients.length())];
-        while(host==exclude1 || host==exclude2);
-        return host;
+        if(clients.length() <= (exclude? 1: 0)) return NULL;
+        clientinfo *client = NULL;
+        do client = clients[rnd(clients.length())];
+        while(client == exclude || (client->state.state != CS_ALIVE && client->state.state != CS_LAGGED));
+        return client;
     }
 
+    // function to convert a player to a juggernaut in the same game mode
+    void makejuggernaut(clientinfo *ci)
+    {
+        if(!m_juggernaut || !ci || ci->state.state!=CS_ALIVE || !nojuggernaut) return;
+        ci->state.makejuggernaut();
+        sendf(-1, 1, "ri4", N_ASSIGNROLE, ci->clientnum, ci->clientnum, ROLE_JUGGERNAUT);
+        nojuggernaut = false;
+    }
+
+    /* functions used to manage "infection" mode specifically:
+     * things like choosing random player(s) to infect at the beginning
+     * of each round, infect message and effects, etc.
+     */
     void infect(clientinfo *ci, clientinfo *actor)
     {
         if(!m_infection || !ci || ci->state.state!=CS_ALIVE) return;
         ci->state.infect();
-        sendf(-1, 1, "ri3", N_INFECT, ci->clientnum, actor->clientnum);
+        sendf(-1, 1, "ri4", N_ASSIGNROLE, ci->clientnum, actor->clientnum, ROLE_ZOMBIE);
         if(!zombiechosen) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_INFECTION, "\fs\f2Infection has begun\fr");
     }
 
     void choosezombie()
     {
-        clientinfo *spec = NULL;
-        loopv(clients)
-        {
-            clientinfo *ci = clients[i];
-            if(clients[i]->state.state!=CS_ALIVE) spec = ci;
-        }
-        clientinfo *zombie = hostzombie(spec);
-        infect(zombie, zombie);
+        clientinfo *zombie = random();
+        if(zombie != NULL) infect(zombie, zombie);
         zombiechosen = true;
         betweenrounds = false;
     }
@@ -2183,19 +2272,28 @@ namespace server
         const int numplayers = numclients(-1, true, false);
         if(numplayers > 0)
         {
-            int np = max(numplayers/5, 1);
+            int np = max(numplayers/4, 1);
             loopi(np) choosezombie();
         }
     }
 
-    static void newround()
+    /* functions used to manage rounds and check players
+     * in round-based modes only
+     */
+    void resetroundtimer()
     {
-        if(interm) return;
-        resetgamelimit();
-        rounds++;
+        roundgamelimit = gamemillis + roundtimelimit*60000;
+        if(timelimit>0 && m_timed && smapname[0])
+        {
+            sendf(-1, 1, "ri2", N_TIMEUP, max((roundgamelimit - gamemillis)/1000, 1));
+        }
+    }
+
+    void roundrespawn()
+    {
         loopv(clients)
         {
-            if(clients[i]->state.state!=CS_EDITING && (clients[i]->state.state!=CS_SPECTATOR || clients[i]->ghost))
+            if(clients[i]->state.state != CS_EDITING && (clients[i]->state.state != CS_SPECTATOR || clients[i]->ghost))
             {
                 clientinfo *ci = clients[i];
                 if(ci->ghost)
@@ -2204,20 +2302,32 @@ namespace server
                     extern void unspectate(clientinfo *ci);
                     unspectate(ci);
                 }
-                ci->state.reassign();
+                ci->state.respawn();
                 sendspawn(ci);
                 ci->state.projs.reset();
                 ci->state.bouncers.reset();
             }
         }
+    }
+
+    int rounds = 0;
+
+    static void newround()
+    {
+        if(interm) return;
+        if(roundlimit)
+        {
+            rounds++;
+            if(rounds >= roundlimit) gameover();
+        }
+        resetroundtimer();
+        roundrespawn();
         if(m_infection)
         {
             zombiechosen = false;
             serverevents::add(&startzombieround, 10000);
         }
         else betweenrounds = false;
-        extern void voosh();
-        if(m_voosh(mutators)) serverevents::add(&voosh, 15000);
     }
 
     void endround()
@@ -2227,21 +2337,19 @@ namespace server
         serverevents::add(&newround, 5000);
     }
 
-    void checkplayers()
+    void checkplayers(bool timeisup)
     {
-        if(betweenrounds || interm) return;
-        int alive = 0, zombies = 0, survivors = 0;
+        if(betweenrounds || interm || gamepaused) return;
+        int survivors = 0, zombies = 0;
         loopv(clients)
         {
-            if(clients[i]->state.state != CS_ALIVE) continue;
-            if(m_infection)
-            {
-                if(clients[i]->state.zombie) zombies++;
-                else survivors++;
-            }
-            else if(m_lms) alive++;
+            clientinfo *ci = clients[i];
+            if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED) continue;
+            if(ci->state.role == ROLE_ZOMBIE) zombies++;
+            else survivors++;
         }
-        bool timeisup = gamemillis >= gamelimit;
+        bool rewardzombies = false, rewardsurvivors = false;
+        int score = 0;
         if (m_infection && zombiechosen)
         {
             if((survivors <= 0 && zombies <= 0) || (timeisup && survivors <= 0 && zombies > 0))
@@ -2252,83 +2360,74 @@ namespace server
             else if(zombies <= 0 || (timeisup && survivors > 0))
             {
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_SURVIVORS, "\f2Survivors win the round");
-                loopv(clients)
-                {
-                    clientinfo *ci = clients[i];
-                    if(ci->state.state!=CS_ALIVE || ci->state.zombie) continue;
-                    score(ci, 5);
-                }
+                rewardsurvivors = true;
+                score = 5;
                 endround();
             }
             else if(survivors <= 0 && numclients(-1, true, false) > 1)
             {
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_ZOMBIES, "\f2Zombies win the round");
+                rewardzombies = true;
+                score = 1;
                 endround();
             }
         }
-        else
+        else if(m_lms)
         {
-            if(alive <= 0 || timeisup)
+            if(survivors <= 0 || timeisup)
             {
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, timeisup ? "\f2Time is up" : "\f2Nobody survived");
                 endround();
             }
-            else if(alive < 2)
+            else if(survivors < 2)
             {
                 if(numclients(-1, true, false) < 2) return;
-                loopv(clients)
-                {
-                    clientinfo *ci = clients[i];
-                    if(ci->state.state == CS_ALIVE || ci->state.aitype != AI_NONE) continue;
-                    sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, "");
-                }
-                loopv(clients)
-                {
-                    clientinfo *ci = clients[i];
-                    if(ci->state.state != CS_ALIVE) continue;
-                    score(ci);
-                    if(ci->state.aitype != AI_NONE) continue;
-                    sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND_WIN, "\f2You win the round");
-                }
+                rewardsurvivors = true;
+                score = 1;
                 endround();
+            }
+        }
+        if(rewardsurvivors || rewardzombies) loopv(clients)
+        {
+            clientinfo *ci = clients[i];
+            if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED)
+            {
+                if(m_lms && ci->state.aitype == AI_NONE) sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, "\f2Round completed");
+                continue;
+            }
+            if((rewardsurvivors && ci->state.role == ROLE_ZOMBIE) || (rewardzombies && ci->state.role != ROLE_ZOMBIE)) continue;
+            addscore(ci, score);
+            if(m_lms && ci->state.aitype == AI_NONE)
+            {
+                sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND_WIN, "\f2You win the round");
             }
         }
     }
 
-    void setserverweapon(int gun)
+    /* here we manage stuff like that freaking voosh mutator
+     * crazy stuff
+     */
+    int vooshtime = 0, vooshgun = -1, previousvooshgun = -1;
+
+    void sendvoosh(int gun)
     {
-        serverweapon = gun;
         loopv(clients)
         {
             clientinfo *ci = clients[i];
-            if(ci->state.state!=CS_ALIVE || ci->state.zombie) continue;
-            loopi(NUMGUNS) ci->state.ammo[i] = 0;
-            ci->state.baseammo(gun);
-            ci->state.gunselect = gun;
-            sendf(-1, 1, "ri3", N_FORCEWEAPON, ci->clientnum, gun);
-            if(m_voosh(mutators)) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_VOOSH, "");
+            sendf(-1, 1, "ri3", N_VOOSH, ci->clientnum, gun);
+            if((ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED) || ci->state.role == ROLE_ZOMBIE) continue;
+            ci->state.voosh(gun);
         }
     }
 
-    int vooshgun;
-
     void voosh()
     {
-        if(!m_voosh(mutators)) return;
-        do vooshgun = rnd(NUMGUNS-1); while(vooshgun==serverweapon);
-        setserverweapon(vooshgun);
-        serverevents::add(&voosh, 15000);
+        previousvooshgun = vooshgun;
+        do vooshgun = rnd(NUMGUNS-1); while(vooshgun == previousvooshgun);
+        sendvoosh(vooshgun);
     }
 
-    void forcevariables(int _roundlimit, int selfdamage, int teamdamage, int forceweapon)
-    {
-        roundlimit = _roundlimit;
-        selfdam = selfdamage;
-        teamdam = teamdamage;
-        serverweapon = forceweapon;
-    }
-
-    void changemap(const char *s, int mode, int muts, int _timelimit = timelimit, int _scorelimit = -1)
+    void changemap(const char *s, int mode, int muts)
     {
         stopdemo();
         pausegame(false);
@@ -2340,19 +2439,18 @@ namespace server
         gamemode = mode;
         mutators = muts;
         gamemillis = 0;
-        timelimit = _timelimit;
         if(m_round)
         {
-            int roundlimit = max(timelimit/5, 1);
-            gamelimit = roundlimit*60000;
+            roundgamelimit = gamemillis + roundtimelimit*60000;
+            int roundtime = roundtimelimit * roundlimit;
+            gamelimit = roundtime*60000;
         }
         else gamelimit = timelimit*60000;
         if(m_ctf) scorelimit = 5;
-        else if(m_elimination || m_lms) scorelimit = 8;
+        else if(m_elimination || m_lms) scorelimit = 10;
         else if(m_teammode) scorelimit = 60;
         else scorelimit = 30;
-        rounds = interm = 0;
-        nextexceeded = 0;
+        interm = rounds = nextexceeded = 0;
         copystring(smapname, s);
         loaditems();
         scores.shrink(0);
@@ -2376,14 +2474,13 @@ namespace server
 
         if(m_voosh(mutators))
         {
-            vooshgun = serverweapon = rnd(NUMGUNS-1);
-            serverevents::add(&voosh, 15000);
+            vooshtime = gamemillis + 20000;
+            vooshgun = rnd(NUMGUNS-1);
         }
 
         if(!m_mp(gamemode)) kicknonlocalclients(DISC_LOCAL);
 
         sendf(-1, 1, "risi3", N_MAPCHANGE, smapname, gamemode, mutators, 1);
-        sendf(-1, 1, "ri7", N_SERVERVARIABLES, timelimit, scorelimit, roundlimit, selfdam, teamdam, serverweapon);
 
         clearteaminfo();
         if(m_teammode) autoteam();
@@ -2393,7 +2490,11 @@ namespace server
         else smode = NULL;
 
         if(timelimit>0 && m_timed && smapname[0])
-            sendf(-1, 1, "ri2", N_TIMEUP, (m_round || gamemillis < gamelimit) && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
+        {
+            int timeupdate = !m_round ? max((gamelimit - gamemillis)/1000, 1) : max((roundgamelimit- gamemillis)/1000, 1);
+            sendf(-1, 1, "ri2", N_TIMEUP, gamemillis < gamelimit && !interm ? timeupdate : 0);
+        }
+
         loopv(clients)
         {
             clientinfo *ci = clients[i];
@@ -2476,7 +2577,7 @@ namespace server
         }
     }
 
-    void forcemap(const char *map, int mode, int muts, int tl, int sl)
+    void forcemap(const char *map, int mode, int muts)
     {
         stopdemo();
         if(!map[0] && !m_check(mode, M_EDIT))
@@ -2487,7 +2588,7 @@ namespace server
             map = maprotations[idx].map;
         }
         if(hasnonlocalclients()) sendservmsgf("local player forced %s on map %s", modeprettyname(mode), map[0] ? map : "[new map]");
-        changemap(map, mode, muts, tl, sl);
+        changemap(map, mode, muts);
     }
 
     void vote(const char *map, int reqmode, int reqmuts, int sender)
@@ -2524,114 +2625,11 @@ namespace server
         }
     }
 
-    VAR(overtime, 0, 1, 1);
-
-    bool checkovertime()
-    {
-        if(!m_timed || m_round || !overtime) return false;
-        int topteam = 0;
-        int topscore = INT_MIN;
-        bool tied = false;
-        if(m_teammode)
-        {
-            vector<teamscore> scores;
-            if(smode && smode->hidefrags()) smode->getteamscores(scores);
-            loopv(clients)
-            {
-                clientinfo *ci = clients[i];
-                if(ci->state.state==CS_SPECTATOR || !validteam(ci->team)) continue;
-                int score = 0;
-                if(smode && smode->hidefrags())
-                {
-                    int idx = scores.htfind(ci->team);
-                    if(idx >= 0) score = scores[idx].score;
-                }
-                else score = teaminfos[ci->team-1].frags;
-                if(!topteam || score > topscore) { topteam = ci->team; topscore = score; tied = false; }
-                else if(score == topscore && ci->team != topteam) tied = true;
-            }
-        }
-        else
-        {
-            loopv(clients)
-            {
-                clientinfo *ci = clients[i];
-                if(ci->state.state==CS_SPECTATOR) continue;
-                int score = ci->state.frags;
-                if(score > topscore) { topscore = score; tied = false; }
-                else if(score == topscore) tied = true;
-            }
-        }
-        if(!tied) return false;
-        sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, "\f2Overtime: scores are tied");
-        gamelimit = max(gamemillis, gamelimit) + 2*60000;
-        sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
-        return true;
-    }
-
-    void resetgamelimit()
-    {
-        gamemillis = 0;
-        if(m_round)
-        {
-            int roundlimit = max(timelimit/5, 1);
-            gamelimit = roundlimit*60000;
-        }
-        else gamelimit = timelimit*60000;
-
-        if(timelimit>0 && m_timed && smapname[0])
-            sendf(-1, 1, "ri2", N_TIMEUP, m_round && !interm ? max((gamelimit - gamemillis)/1000, 1) : 0);
-
-        loopv(clients)
-        {
-            clientinfo *ci = clients[i];
-            ci->roundreset();
-            ci->state.lasttimeplayed = lastmillis;
-        }
-    }
-
-    void gameover()
-    {
-        sendf(-1, 1, "ri2", N_TIMEUP, 0);
-        if(smode) smode->intermission();
-        changegamespeed(100);
-        serverevents::invalidate();
-        interm = gamemillis + 45000;
-    }
-
-    void checkintermission()
-    {
-        if(gamemillis >= gamelimit && !interm && !checkovertime())
-        {
-            if(m_round)
-            {
-                if(smode) smode->endround();
-            }
-            else gameover();
-        }
-    }
-
-    void startintermission()
-    {
-        gamelimit = min(gamelimit, gamemillis);
-        checkintermission();
-    }
-
-    void makejuggernaut(clientinfo *ci, int actor = -1)
-    {
-        if(!m_juggernaut || !ci || ci->state.state!=CS_ALIVE || !nojuggernaut) return;
-        servstate &gs = ci->state;
-        gs.juggernaut = 1;
-        int health = gs.maxhealth*2;
-        gs.maxhealth = gs.health = health;
-        sendf(-1, 1, "ri3", N_JUGGERNAUT, ci->clientnum, health);
-        nojuggernaut = false;
-    }
-
     bool isally(clientinfo *target, clientinfo *actor)
     {
-        return sameteam(target->team, actor->team) || (m_infection && ((actor->state.zombie && target->state.zombie) ||
-                     (!actor->state.zombie && !target->state.zombie)));
+        return sameteam(target->team, actor->team)
+               || (m_infection && ((actor->state.role == ROLE_ZOMBIE && target->state.role == ROLE_ZOMBIE)
+               || (actor->state.role != ROLE_ZOMBIE && target->state.role != ROLE_ZOMBIE)));
     }
 
     void died(clientinfo *target, clientinfo *actor, int atk, int damage, int flags = 0)
@@ -2639,7 +2637,7 @@ namespace server
         servstate &ts = target->state;
         ts.deaths++;
         ts.spree = 0;
-        int value = (m_juggernaut && target->state.juggernaut) ? 5 : 1,
+        int value = (m_juggernaut && target->state.role == ROLE_JUGGERNAUT) ? 5 : 1,
             fragvalue = smode ? smode->fragvalue(target, actor) : (target==actor || isally(target, actor) ? -1 : value);
         actor->state.frags += fragvalue;
         if(!isally(target, actor))
@@ -2673,13 +2671,13 @@ namespace server
         if(flags & HIT_HEAD) kflags |= KILL_HEADSHOT;
         if(m_juggernaut)
         {
-            if(target->state.juggernaut) nojuggernaut = true;
-            if(target!=actor && (nojuggernaut || target->state.juggernaut))
+            if(target->state.role == ROLE_JUGGERNAUT) nojuggernaut = true;
+            if(target!=actor && (nojuggernaut || target->state.role == ROLE_JUGGERNAUT))
             {
                 makejuggernaut(actor);
                 kflags |= KILL_JUGGERNAUT;
             }
-            if(!m_vampire(mutators) && actor->state.juggernaut)
+            if(!m_vampire(mutators) && actor->state.role == ROLE_JUGGERNAUT)
             {
                 actor->state.health = min(actor->state.health+damage/2, actor->state.maxhealth*2);
                 sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
@@ -2695,7 +2693,7 @@ namespace server
             actor->state.teamkills++;
             addteamkill(actor, target, 1);
         }
-        score(actor, fragvalue);
+        addscore(actor, fragvalue);
         ts.deadflush = ts.lastdeath + DEATHMILLIS;
         // don't issue respawn yet until DEATHMILLIS has elapsed
         // ts.respawn();
@@ -2703,28 +2701,25 @@ namespace server
 
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int atk, int flags = 0, const vec &hitpush = vec(0, 0, 0))
     {
-        if(m_round && betweenrounds) return;
+        if((target == actor && !selfdamage) || (isally(target, actor) && !teamdamage) || (m_round && betweenrounds)) return;
         servstate &ts = target->state;
-        int dam = damage;
-        if((!selfdam && target==actor) || (!teamdam && isally(target, actor))) dam = 0;
-        if(target!=actor && isally(target, actor)) dam = max(dam/2, 1);
-        if(dam > 0)
+        if(damage > 0)
         {
-            ts.dodamage(dam, flags&HIT_MATERIAL? true : false);
+            ts.dodamage(damage, flags & HIT_MATERIAL? true : false);
             target->state.lastpain = lastmillis;
-            sendf(-1, 1, "ri8", N_DAMAGE, target->clientnum, actor->clientnum, atk, dam, flags, ts.health, ts.shield);
+            sendf(-1, 1, "ri8", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield);
             if(target!=actor)
             {
                 if(!isally(target, actor))
                 {
-                    actor->state.damage += dam;
+                    actor->state.damage += damage;
                     if(m_vampire(mutators))
                     {
-                        actor->state.health = min(actor->state.health+dam/(actor->state.juggernaut? 2 : 1), actor->state.maxhealth*2);
+                        actor->state.health = min(actor->state.health+damage/(actor->state.role==ROLE_JUGGERNAUT? 2: 1), actor->state.maxhealth*2);
                         sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
                     }
                 }
-                else if(!m_teammode) dodamage(actor, actor, dam, atk, flags);
+                else if(!m_teammode) dodamage(actor, actor, damage, atk, flags);
             }
         }
         if(target==actor) target->setpushed();
@@ -2736,17 +2731,18 @@ namespace server
         }
         if(ts.health<=0)
         {
-            if(isally(target, actor) && !m_teammode) died(actor, actor, atk, dam, flags);
+            if(isally(target, actor) && !m_teammode) died(actor, actor, atk, damage, flags);
             if(m_infection)
             {
-                if(target == actor || target->state.zombie) died(target, actor, atk, damage, flags);
+                if(target == actor || target->state.role == ROLE_ZOMBIE) died(target, actor, atk, damage, flags);
                 else
                 {
                     infect(target, actor);
-                    score(actor);
+                    addscore(actor);
                 }
             }
             else died(target, actor, atk, damage, flags);
+            if(!smode && m_round) checkplayers();
         }
     }
 
@@ -2754,7 +2750,7 @@ namespace server
     {
         servstate &gs = ci->state;
         if(gs.state!=CS_ALIVE) return;
-        if(m_juggernaut && gs.juggernaut) nojuggernaut = true;
+        if(m_juggernaut && gs.role == ROLE_JUGGERNAUT) nojuggernaut = true;
         teaminfo *t = NULL;
         if(!betweenrounds && !zombiechosen && !interm)
         {
@@ -2772,6 +2768,7 @@ namespace server
         gs.state = CS_DEAD;
         gs.lastdeath = gamemillis;
         gs.respawn();
+        if(!smode && m_round) checkplayers();
     }
 
     void suicideevent::process(clientinfo *ci)
@@ -2803,10 +2800,10 @@ namespace server
                 }
                 if(flags & HIT_LEGS) damage /= 2;
             }
-            if(actor->state.haspowerup(PU_DAMAGE) || actor->state.juggernaut) damage *= 2;
+            if(actor->state.haspowerup(PU_DAMAGE) || actor->state.role == ROLE_JUGGERNAUT) damage *= 2;
             if(isally(target, actor) || target == actor) damage /= ALLY_DAMDIV;
         }
-        if (target->state.haspowerup(PU_ARMOR) || target->state.juggernaut) damage /= 2;
+        if (target->state.haspowerup(PU_ARMOR) || target->state.role == ROLE_JUGGERNAUT) damage /= 2;
         if(!damage) damage = 1;
         return damage;
     }
@@ -2852,14 +2849,14 @@ namespace server
         int gun = attacks[atk].gun;
         if(attacks[atk].action != ACT_MELEE && !gs.ammo[gun]) return;
         if(attacks[atk].range && from.dist(to) > attacks[atk].range + 1) return;
-        if(!gs.haspowerup(PU_AMMO) && !gs.juggernaut)
+        if(!gs.haspowerup(PU_AMMO))
         {
             gs.ammo[gun] -= attacks[atk].use;
         }
         gs.lastshot = millis;
         gs.lastatk = atk;
         int gunwait = attacks[atk].attackdelay;
-        if(gs.haspowerup(PU_HASTE) || gs.juggernaut)
+        if(gs.haspowerup(PU_HASTE) || gs.role == ROLE_JUGGERNAUT)
         {
             gunwait /= 2;
         }
@@ -2956,18 +2953,18 @@ namespace server
             }
             if(ci->state.state == CS_ALIVE)
             {
-                if(!(ci->state.juggernaut || ci->state.zombie) // zombies and juggernauts are unaffected by this
+                if(!(ci->state.role == ROLE_JUGGERNAUT || ci->state.role == ROLE_ZOMBIE) // zombies and juggernauts are unaffected by this
                    && ci->state.health > ci->state.maxhealth && lastmillis - ci->state.lastregeneration > 1000)
                 {
                     ci->state.health = max(ci->state.health - 1, ci->state.maxhealth);
                     sendf(-1, 1, "ri3", N_REGENERATE, ci->clientnum, ci->state.health);
                     ci->state.lastregeneration = lastmillis;
                 }
-                if((m_juggernaut && ci->state.juggernaut) || m_vampire(mutators))
+                if((m_juggernaut && ci->state.role == ROLE_JUGGERNAUT) || m_vampire(mutators))
                 {
                     if(lastmillis-ci->state.lastpain > 2800 && lastmillis-ci->state.lastregeneration > 1000)
                     {
-                        int subtract = ci->state.juggernaut ? 5 : 1;
+                        int subtract = ci->state.role == ROLE_JUGGERNAUT ? 5 : 1;
                         ci->state.health = max(ci->state.health-subtract, 0);
                         sendf(-1, 1, "ri3", N_REGENERATE, ci->clientnum, ci->state.health);
                         if(ci->state.health<=0) suicide(ci);
@@ -2977,11 +2974,6 @@ namespace server
             }
         }
         serverevents::process();
-        if(!interm)
-        {
-            if(roundlimit && rounds >= roundlimit) gameover();
-            if(m_round && !m_elimination) serverevents::add(&checkplayers, 100);
-        }
     }
 
     void cleartimedevents(clientinfo *ci)
@@ -3056,6 +3048,22 @@ namespace server
                 aimanager::checkai();
                 if(smode) smode->update();
             }
+
+            if(!interm)
+            {
+                if(m_voosh(mutators))
+                {
+                    if(gamemillis > vooshtime)
+                    {
+                        voosh();
+                        vooshtime = gamemillis + 20000;
+                    }
+                }
+                if(gamemillis >= roundgamelimit)
+                {
+                    checkplayers(true);
+                }
+            }
         }
 
         while(bannedips.length() && bannedips[0].expire-totalmillis <= 0) bannedips.remove(0);
@@ -3095,7 +3103,10 @@ namespace server
         if(smode) smode->leavegame(ci);
         ci->state.state = CS_SPECTATOR;
         ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-        if(!ci->local && (!ci->privilege || ci->warned)) aimanager::removeai(ci);
+        if(!ci->local && (!ci->privilege || ci->warned))
+        {
+            aimanager::removeai(ci);
+        }
         sendf(-1, 1, "ri4", N_SPECTATOR, ci->clientnum, 1, ci->ghost);
     }
 
@@ -3233,9 +3244,12 @@ namespace server
             if(ci->privilege) setmaster(ci, false);
             if(smode) smode->leavegame(ci, true);
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
-            if(m_juggernaut && ci->state.juggernaut) nojuggernaut = true;
             savescore(ci);
             sendf(-1, 1, "ri2", N_CDIS, n);
+            if(m_juggernaut && ci->state.role == ROLE_JUGGERNAUT)
+            {
+                nojuggernaut = true;
+            }
             clients.removeobj(ci);
             aimanager::removeai(ci);
             if(!numclients(-1, false, true)) noclients(); // bans clear when server empties
@@ -3732,36 +3746,6 @@ namespace server
             case N_CHECKMAPS:
                 checkmaps(sender);
                 break;
-
-            case N_SENDVARIABLES:
-            {
-                int _timelimit = getint(p), _scorelimit = getint(p), _roundlimit = getint(p),
-                    selfdamage = getint(p), teamdamage = getint(p), weapon = getint(p); // there might be a better way
-                if(ci->privilege || ci->local)
-                {
-                    if(timelimit != _timelimit)
-                    {
-                        if(_timelimit>0) sendservmsgf("%s set time limit to %d minutes", ci->name, _timelimit);
-                        else sendservmsgf("%s removed time limit", ci->name);
-                        timelimit = _timelimit;
-                    }
-                    if(scorelimit != _scorelimit)
-                    {
-                        if(_scorelimit>0) sendservmsgf("%s set score limit to %d", ci->name, _scorelimit);
-                        else sendservmsgf("%s removed score limit", ci->name);
-                        scorelimit = _scorelimit;
-                    }
-                    if(roundlimit != _roundlimit)
-                    {
-                        if(_roundlimit>0) sendservmsgf("%s set round limit to %d", ci->name, _roundlimit);
-                        roundlimit = _roundlimit;
-                    }
-                    if(selfdam != selfdamage) selfdam = selfdamage;
-                    if(teamdam != teamdamage) teamdam = teamdamage;
-                    if(serverweapon != weapon) serverweapon = weapon;
-                }
-                break;
-            }
 
             case N_TRYSPAWN:
                 if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (!m_edit && cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath <= RESPAWN_WAIT)) break;

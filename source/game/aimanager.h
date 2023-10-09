@@ -184,7 +184,6 @@ namespace aimanager
 
     void removeai(clientinfo *ci)
     { // either schedules a removal, or someone else to assign to
-
         loopvrev(ci->bots) shiftai(ci->bots[i], findaiclient(ci));
     }
 

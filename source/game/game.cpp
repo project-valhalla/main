@@ -18,7 +18,7 @@ namespace game
         if(d->state!=CS_ALIVE || lastmillis-d->lasttaunt<1000) return;
         d->lasttaunt = lastmillis;
         addmsg(N_TAUNT, "rc", self);
-        playsound(!d->zombie ? getplayermodelinfo(d).tauntsound : zombies[getplayermodel(d)].tauntsound, d);
+        playsound(d->role != ROLE_ZOMBIE ? getplayermodelinfo(d).tauntsound : zombies[getplayermodel(d)].tauntsound, d);
         self->attacking = ACT_IDLE;
     }
     ICOMMAND(taunt, "", (), taunt(self));
@@ -110,10 +110,12 @@ namespace game
         clearbouncers();
     }
 
-    gameent *spawnstate(gameent *d)              // reset player state not persistent across spawns
+    int vooshgun;
+
+    gameent *spawnstate(gameent *d) // reset player state not persistent across spawns
     {
         d->respawn();
-        d->spawnstate(gamemode, mutators, forceweapon);
+        d->spawnstate(gamemode, mutators, vooshgun);
         return d;
     }
 
@@ -223,7 +225,10 @@ namespace game
             else if(!intermission && d->state==CS_ALIVE)
             {
                 if(lastmillis - d->lastaction >= d->gunwait) d->gunwait = 0;
-                if(d->powerupmillis) entities::updatepowerups(curtime, d);
+                if(d->powerupmillis || d->role == ROLE_JUGGERNAUT)
+                {
+                    entities::updatepowerups(curtime, d);
+                }
             }
             const int lagtime = totalmillis-d->lastupdate;
             if(!lagtime || intermission) continue;
@@ -263,7 +268,7 @@ namespace game
         ai::navigate();
         if(self->state != CS_DEAD && !intermission)
         {
-            if(self->powerupmillis)
+            if(self->powerupmillis || self->role == ROLE_JUGGERNAUT)
             {
                 entities::updatepowerups(curtime, self);
             }
@@ -406,7 +411,7 @@ namespace game
     bool isally(gameent *a, gameent *b)
     {
         return (validteam(a->team) && validteam(b->team) && sameteam(a->team, b->team)) ||
-               (m_infection && ((a->zombie && b->zombie) || (!a->zombie && !b->zombie)));
+               (m_infection && ((a->role == ROLE_ZOMBIE && b->role == ROLE_ZOMBIE) || (a->role != ROLE_ZOMBIE && b->role != ROLE_ZOMBIE)));
     }
 
     bool allowthirdperson()
@@ -429,10 +434,6 @@ namespace game
     void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
     {
         if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-
-        if((!selfdam && d==actor) || (!teamdam && isally(d, actor))) damage = 0;
-
-        if(damage <= 0) return;
 
         if(local) damage = d->dodamage(damage);
 
@@ -470,7 +471,7 @@ namespace game
         if(!restore)
         {
             if(gore && d->gibbed()) gibeffect(max(-d->health, 0), d->vel, d);
-            else playsound(!d->zombie ? getplayermodelinfo(d).diesound : zombies[getplayermodel(d)].diesound, d);
+            else playsound(d->role != ROLE_ZOMBIE ? getplayermodelinfo(d).diesound : zombies[getplayermodel(d)].diesound, d);
             d->deaths++;
         }
         if(d==self)
@@ -491,13 +492,6 @@ namespace game
         }
         d->stopweaponsound();
         d->stoppowerupsound();
-    }
-
-    void juggernauteffect(gameent *d)
-    {
-        msgsound(S_JUGGERNAUT, d);
-        if(d!=hudplayer() || isthirdperson()) particle_splash(PART_SPARK2, 100, 200, d->o, 0xFF80FF, 0.40f, 200, 8);
-        adddynlight(d->headpos(), 50, vec(1.0f, 0.80f, 1.0f), 100, 60, DL_FLASH, 0, vec(0, 0, 0), d);
     }
 
     int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;

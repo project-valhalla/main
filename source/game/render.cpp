@@ -249,7 +249,7 @@ namespace game
             d->muzzle = vec(-1, -1, -1);
             if(guns[d->gunselect].worldmodel) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         }
-        const char *playermodelfile = !d->zombie ? playermodel.directory : zombies[d->playermodel].directory;
+        const char *playermodelfile = d->role != ROLE_ZOMBIE ? playermodel.directory : zombies[d->playermodel].directory;
         float yaw = testanims && d==self ? 0 : d->yaw,
               pitch = testpitch && d==self ? testpitch : d->pitch;
         vec o = d->feetpos();
@@ -342,11 +342,18 @@ namespace game
             {
                 int team = m_teammode && validteam(d->team) ? d->team : 0;
                 gameent *hud = followingplayer(self);
-                if(isally(hud, d) && hud->o.dist(d->o) > maxparticletextdistance)
+                if(isally(hud, d))
                 {
-                    particle_icon(d->abovehead(), 1, 3, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f, 0);
+                    if(hud->o.dist(d->o) > maxparticletextdistance)
+                    {
+                        particle_icon(d->abovehead(), 1, 3, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f, 0);
+                    }
+                    else particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
                 }
-                else particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
+                else if(d->role == ROLE_JUGGERNAUT)
+                {
+                    particle_icon(d->abovehead(), 3, 2, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f, 0);
+                }
             }
         }
         loopv(ragdolls)

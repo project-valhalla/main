@@ -252,7 +252,7 @@ namespace entities
         switch(ents[n]->type)
         {
             default:
-                if(d->canpickup(ents[n]->type))
+                if(d->canpickup(ents[n]->type) && server::allowpickup())
                 {
                     addmsg(N_ITEMPICKUP, "rci", d, n);
                     ents[n]->clearspawned(); // even if someone else gets it first
@@ -312,14 +312,27 @@ namespace entities
     void updatepowerups(int time, gameent *d)
     {
         gameent *hud = followingplayer(self);
-        d->powerupsound = S_LOOP_DAMAGE + d->poweruptype-1;
-        d->powerupchan = playsound(d->powerupsound, NULL, d==hud ? NULL : &d->o, NULL, 0, -1, 200, d->powerupchan);
-        if((d->powerupmillis -= time)<=0)
+        if(d->role != ROLE_JUGGERNAUT)
         {
-            d->powerupmillis = 0;
-            playsound(S_TIMEOUT_DAMAGE + d->poweruptype-1, d);
-            d->poweruptype = PU_NONE;
-            d->stoppowerupsound();
+            d->powerupsound = S_LOOP_DAMAGE + d->poweruptype-1;
+            d->powerupchan = playsound(d->powerupsound, NULL, d==hud ? NULL : &d->o, NULL, 0, -1, 200, d->powerupchan);
+            if((d->powerupmillis -= time)<=0)
+            {
+                d->powerupmillis = 0;
+                playsound(S_TIMEOUT_DAMAGE + d->poweruptype-1, d);
+                d->poweruptype = PU_NONE;
+                d->stoppowerupsound();
+            }
+        }
+        else
+        {
+            d->powerupsound = S_JUGGERNAUT_LOOP;
+            d->powerupchan = playsound(d->powerupsound, NULL, d==hud ? NULL : &d->o, NULL, 0, -1, 200, d->powerupchan);
+            if(!(d == hud && !isthirdperson()))
+            {
+                // signal the juggernaut with questionable particle effects
+                regular_particle_flame(PART_FLAME, d->o, 0.8f, 1.0f, 0xFF80FF, 1, 2.2f, 150.0f, 300.0f, -5);
+            }
         }
     }
 

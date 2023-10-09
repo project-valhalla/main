@@ -66,8 +66,6 @@ static const char * const mastermodenames[] =  { "Default", "Open",        "Veto
 static const char * const mastermodecolors[] = { "",        "\f0",         "\f2",         "\f4",           "\f3",            "\f7"         };
 static const char * const mastermodeicons[] =  { "server",  "server_open", "server_veto", "server_locked", "server_private", "server_pass" };
 
-enum { VAR_TIMELIMIT = 0, VAR_SCORELIMIT, VAR_MAXROUNDS, VAR_SELFDAMAGE, VAR_TEAMDAMAGE, VAR_WEAPON, VAR_TEAM1, VAR_TEAM2 };
-
 // hardcoded sounds, defined in sound.cfg
 enum
 {
@@ -160,7 +158,7 @@ enum
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT,
     N_ANNOUNCE,
-    N_MAPCHANGE, N_SERVERVARIABLES, N_MAPVOTE, N_SENDVARIABLES, N_TEAMINFO, N_ITEMSPAWN, N_ITEMPICKUP, N_ITEMACC, N_TELEPORT, N_JUMPPAD,
+    N_MAPCHANGE, N_MAPVOTE, N_TEAMINFO, N_ITEMSPAWN, N_ITEMPICKUP, N_ITEMACC, N_TELEPORT, N_JUMPPAD,
     N_PING, N_PONG, N_CLIENTPING,
     N_TIMEUP, N_FORCEINTERMISSION,
     N_SERVMSG, N_ITEMLIST, N_RESUME,
@@ -169,7 +167,7 @@ enum
     N_LISTDEMOS, N_SENDDEMOLIST, N_GETDEMO, N_SENDDEMO,
     N_DEMOPLAYBACK, N_RECORDDEMO, N_STOPDEMO, N_CLEARDEMOS,
     N_TAKEFLAG, N_RETURNFLAG, N_RESETFLAG, N_TRYDROPFLAG, N_DROPFLAG, N_SCOREFLAG, N_INITFLAGS,
-    N_ROUNDSCORE, N_JUGGERNAUT, N_INFECT, N_SCORE, N_TRAITOR, N_FORCEWEAPON,
+    N_ROUNDSCORE, N_ASSIGNROLE, N_SCORE, N_VOOSH,
     N_SAYTEAM, N_WHISPER,
     N_CLIENT,
     N_AUTHTRY, N_AUTHKICK, N_AUTHCHAL, N_AUTHANS, N_REQAUTH,
@@ -190,7 +188,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_TRYSPAWN, 1, N_SPAWNSTATE, 8, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
     N_ANNOUNCE, 3,
-    N_MAPCHANGE, 0, N_SERVERVARIABLES, 8, N_MAPVOTE, 0, N_SENDVARIABLES, 0, N_TEAMINFO, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
+    N_MAPCHANGE, 0, N_MAPVOTE, 0, N_TEAMINFO, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
     N_PING, 2, N_PONG, 2, N_CLIENTPING, 2,
     N_TIMEUP, 2, N_FORCEINTERMISSION, 1,
     N_SERVMSG, 0, N_ITEMLIST, 0, N_RESUME, 0,
@@ -199,7 +197,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_LISTDEMOS, 1, N_SENDDEMOLIST, 0, N_GETDEMO, 3, N_SENDDEMO, 0,
     N_DEMOPLAYBACK, 3, N_RECORDDEMO, 2, N_STOPDEMO, 1, N_CLEARDEMOS, 2,
     N_TAKEFLAG, 3, N_RETURNFLAG, 4, N_RESETFLAG, 3, N_TRYDROPFLAG, 1, N_DROPFLAG, 7, N_SCOREFLAG, 9, N_INITFLAGS, 0,
-    N_ROUNDSCORE, 0, N_JUGGERNAUT, 3, N_INFECT, 3, N_SCORE, 3, N_TRAITOR, 2,  N_FORCEWEAPON, 3,
+    N_ROUNDSCORE, 0, N_ASSIGNROLE, 4, N_SCORE, 3, N_VOOSH, 3,
     N_SAYTEAM, 0, N_WHISPER, 0,
     N_CLIENT, 0,
     N_AUTHTRY, 0, N_AUTHKICK, 0, N_AUTHCHAL, 0, N_AUTHANS, 0, N_REQAUTH, 0,
@@ -281,6 +279,13 @@ enum
 #include "gamemode.h"
 #include "entity.h"
 
+enum
+{
+    ROLE_NONE = 0,
+    ROLE_JUGGERNAUT,
+    ROLE_ZOMBIE
+};
+
 // inherited by gameent and server clients
 struct gamestate
 {
@@ -290,13 +295,13 @@ struct gamestate
     int aitype, skill;
     int poweruptype, powerupmillis;
     int lastdamage;
-    int juggernaut, zombie;
+    int role;
 
     gamestate() : maxhealth(100), aitype(AI_NONE), skill(0), lastdamage(0) { }
 
     bool canpickup(int type)
     {
-        if(!validitem(type) || juggernaut || zombie) return false;
+        if(!validitem(type) || role == ROLE_JUGGERNAUT || role == ROLE_ZOMBIE) return false;
         itemstat &is = itemstats[type-I_AMMO_SG];
         switch(type)
         {
@@ -328,7 +333,7 @@ struct gamestate
 
     void pickup(int type)
     {
-        if(!validitem(type) || juggernaut || zombie) return;
+        if(!validitem(type) || role == ROLE_JUGGERNAUT || role == ROLE_ZOMBIE) return;
         itemstat &is = itemstats[type-I_AMMO_SG];
         switch(type)
         {
@@ -396,20 +401,41 @@ struct gamestate
         resetitems();
         resetweapons();
         gunselect = GUN_PISTOL;
-        juggernaut = zombie = 0;
+        role = ROLE_NONE;
     }
 
     void infect()
     {
+        role = ROLE_ZOMBIE;
+        maxhealth = health = 1000;
         resetitems();
         resetweapons();
-        zombie = 1;
-        maxhealth = health = 1000;
         ammo[GUN_ZOMBIE] = 1;
         gunselect = GUN_ZOMBIE;
     }
 
-    void spawnstate(int gamemode, int mutators, int forceweapon)
+    void makejuggernaut()
+    {
+        role = ROLE_JUGGERNAUT;
+        maxhealth = health = maxhealth*2;
+        loopi(NUMGUNS)
+        {
+            if(!ammo[i]) continue;
+            baseammo(i, 5);
+        }
+    }
+
+    void voosh(int gun)
+    {
+        loopi(NUMGUNS)
+        {
+            ammo[i] = 0;
+        }
+        baseammo(gun);
+        gunselect = gun;
+    }
+
+    void spawnstate(int gamemode, int mutators, int forcegun)
     {
         if(m_insta(mutators))
         {
@@ -433,11 +459,9 @@ struct gamestate
             do spawngun2 = rnd(5)+1; while(spawngun1==spawngun2);
             baseammo(spawngun2, m_noitems(mutators) ? 5 : 3);
         }
-        else if(m_voosh(mutators) && forceweapon >= 0)
+        else if(m_voosh(mutators))
         {
-            loopi(NUMGUNS) ammo[i] = 0;
-            ammo[forceweapon] = 100;
-            gunselect = forceweapon;
+            voosh(forcegun);
         }
         else
         {
@@ -547,7 +571,7 @@ struct gameent : dynent, gamestate
     {
         vec push(dir);
         if(attacks[atk].projspeed) falling.z = 1; // projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further
-        if(zombie) damage *= 3; // zombies are pushed "a bit" more
+        if(role == ROLE_ZOMBIE) damage *= 3; // zombies are pushed "a bit" more
         push.mul((actor==this && attacks[atk].exprad ? EXP_SELFPUSH : 1.0f)*attacks[atk].hitpush*damage/weight);
         vel.add(push);
     }
@@ -607,7 +631,7 @@ struct gameent : dynent, gamestate
 
     int bloodcolour()
     {
-        return !zombie? 0x60FFFFF: 0xFF90FF;
+        return role != ROLE_ZOMBIE ? 0x60FFFFF : 0xFF90FF;
     }
 };
 
@@ -689,8 +713,7 @@ namespace game
     extern void setclientmode();
 
     // game
-    extern int nextmode, Timelimit, nexttimelimit, Scorelimit, nextscorelimit;
-    extern int selfdam, teamdam, forceweapon;
+    extern int vooshgun;
     extern string clientmap;
     extern bool intermission;
     extern int maptime, maprealtime, maplimit;
@@ -747,7 +770,7 @@ namespace game
     extern void switchplayercolor(int playercolor);
     extern void sendmapinfo();
     extern void stopdemo();
-    extern void changemap(const char *name, int mode, int muts, int tl, int sl);
+    extern void changemap(const char *name, int mode, int muts);
     extern void c2sinfo(bool force = false);
     extern void sendposition(gameent *d, bool reliable = false);
 
@@ -811,23 +834,30 @@ namespace server
     extern const char *modename(int n, const char *unknown = "unknown");
     extern const char *modeprettyname(int n, const char *unknown = "unknown");
     extern const char *mastermodename(int n, const char *unknown = "unknown");
+    extern const char *getdemofile(const char *file, bool init);
+
     extern void startintermission();
     extern void stopdemo();
     extern void timeupdate(int secs);
-    extern const char *getdemofile(const char *file, bool init);
-    extern void forcemap(const char *map, int mode, int muts, int tl, int sl);
-    extern void forcevariables(int roundlimit, int selfdamage, int teamdamage, int forceweapon);
+    extern void forcemap(const char *map, int mode, int muts);
     extern void forcepaused(bool paused);
     extern void forcegamespeed(int speed);
     extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
-    extern void resetgamelimit();
+    extern void endround();
+    extern void resetroundtimer();
     extern void gameover();
-    extern int msgsizelookup(int msg);
+    extern void checkplayers(bool timeisup = false);
+
     extern bool serveroption(const char *arg);
     extern bool delayspawn(int type);
     extern bool canspawnitem(int type);
+    extern bool allowpickup();
     extern bool betweenrounds;
-    extern int teamdamage, selfdamage;
+
+    extern int msgsizelookup(int msg);
+    extern int lastround;
+    extern int scorelimit, timelimit, roundlimit, roundtimelimit, selfdamage, teamdamage;
+    extern int vooshtime, vooshgun;
 }
 
 #endif

@@ -422,6 +422,7 @@ namespace ai
 
     bool hasgoodammo(gameent *d)
     {
+        if(m_tactics(mutators) || m_voosh(mutators)) return true;
         static const int goodguns[] = { GUN_SCATTER, GUN_PULSE, GUN_ROCKET, GUN_RAIL, GUN_GRENADE };
         loopi(sizeof(goodguns)/sizeof(goodguns[0])) if(d->hasammo(goodguns[0])) return true;
         return false;
@@ -617,8 +618,9 @@ namespace ai
         d->ai->clearsetup();
         d->ai->reset(true);
         d->ai->lastrun = lastmillis;
-        if(m_insta(mutators)) d->ai->weappref = GUN_INSTA;
-        else if(d->zombie) d->ai->weappref = GUN_ZOMBIE;
+        if(d->role == ROLE_ZOMBIE) d->ai->weappref = GUN_ZOMBIE;
+        else if(m_insta(mutators)) d->ai->weappref = GUN_INSTA;
+        else if(m_voosh(mutators)) d->ai->weappref = vooshgun;
         else
         {
         	if(forcegun >= 0 && forcegun < NUMGUNS) d->ai->weappref = forcegun;
@@ -753,7 +755,7 @@ namespace ai
                 if(entities::ents.inrange(b.target))
                 {
                     extentity &e = *(extentity *)entities::ents[b.target];
-                    if(!e.spawned() || !validitem(e.type) || d->hasmaxammo(e.type) || d->zombie || d->juggernaut) return 0;
+                    if(!e.spawned() || !validitem(e.type) || d->hasmaxammo(e.type) || d->role == ROLE_JUGGERNAUT || d->role == ROLE_ZOMBIE) return 0;
                     //if(d->feetpos().squaredist(e.o) <= CLOSEDIST*CLOSEDIST)
                     //{
                     //    b.idle = 1;
@@ -950,7 +952,7 @@ namespace ai
         vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
         bool sequenced = d->ai->blockseq || d->ai->targseq,
              offground = d->timeinair && !d->inwater,
-             doublejump = (d->haspowerup(PU_AGILITY) || d->zombie || d->juggernaut) && !d->doublejumping,
+             doublejump = (d->haspowerup(PU_AGILITY) || d->role == ROLE_JUGGERNAUT || d->role == ROLE_ZOMBIE) && !d->doublejumping,
              canjump = doublejump || !offground,
              jump = canjump && lastmillis >= d->ai->jumpseed && (sequenced || off.z >= JUMPMIN || lastmillis >= d->ai->jumprand);
         if(jump)
@@ -1303,9 +1305,12 @@ namespace ai
                 if(d->ragdoll) cleanragdoll(d);
                 moveplayer(d, 10, true);
                 if(allowmove && !b.idle) timeouts(d, b);
-                if(d->state==CS_ALIVE && !d->zombie)
+                if(d->state==CS_ALIVE && d->role != ROLE_ZOMBIE)
                 {
-                    if(d->powerupmillis) entities::updatepowerups(curtime, d);
+                    if(d->powerupmillis || d->role == ROLE_JUGGERNAUT)
+                    {
+                        entities::updatepowerups(curtime, d);
+                    }
                 }
 				entities::checkitems(d);
 				if(cmode) cmode->checkitems(d);

@@ -297,7 +297,7 @@ namespace game
             }
             if(blood && type == BNC_GIB && b->bounces <= 2 && goreeffect <= 0)
             {
-                addstain(STAIN_BLOOD, vec(b->o).sub(vec(surface).mul(b->radius)), surface, 2.96f/b->bounces, (b->owner->zombie ? bvec(0xFF, 0x60, 0xFF) : bvec(0x60, 0xFF, 0xFF)), rnd(4));
+                addstain(STAIN_BLOOD, vec(b->o).sub(vec(surface).mul(b->radius)), surface, 2.96f/b->bounces, (b->owner->role == ROLE_ZOMBIE ? bvec(0xFF, 0x60, 0xFF) : bvec(0x60, 0xFF, 0xFF)), rnd(4));
             }
         }
         b->lastbounce = lastmillis;
@@ -485,7 +485,7 @@ namespace game
         {
             if(f == hud) damageblend(damage);
             else if(f->shield) playsound(S_SHIELD_HIT, NULL, &f->o);
-            playsound(!f->zombie ? getplayermodelinfo(f).painsound : zombies[getplayermodel(f)].painsound, f, &f->o);
+            playsound(f->role != ROLE_ZOMBIE ? getplayermodelinfo(f).painsound : zombies[getplayermodel(f)].painsound, f, &f->o);
             f->lastyelp = lastmillis;
         }
         if(f->shield) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);
@@ -590,10 +590,10 @@ namespace game
                 }
                 if (flags & HIT_LEGS) damage /= 2;
             }
-            if (actor->haspowerup(PU_DAMAGE) || actor->juggernaut) damage *= 2;
+            if (actor->haspowerup(PU_DAMAGE) || actor->role == ROLE_JUGGERNAUT) damage *= 2;
             if (isally(target, actor) || target == actor) damage /= ALLY_DAMDIV;
         }
-        if (target->haspowerup(PU_ARMOR) || target->juggernaut) damage /= 2;
+        if (target->haspowerup(PU_ARMOR) || target->role == ROLE_JUGGERNAUT) damage /= 2;
         if(!damage) damage = 1;
         return damage;
     }
@@ -1166,7 +1166,7 @@ namespace game
         }
         if(lastmillis-prevaction>200 && !looped)
         {
-            if(d->juggernaut)
+            if(d->role == ROLE_JUGGERNAUT)
             {
                 playsound(S_JUGGERNAUT_ACTION, d);
                 return;
@@ -1390,7 +1390,7 @@ namespace game
             }
             return;
         }
-        if(!d->haspowerup(PU_AMMO) && !d->juggernaut) d->ammo[gun] -= attacks[atk].use;
+        if(!d->haspowerup(PU_AMMO)) d->ammo[gun] -= attacks[atk].use;
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
@@ -1432,7 +1432,7 @@ namespace game
         }
         if(!attacks[atk].isfullauto) d->attacking = ACT_IDLE;
         int gunwait = attacks[atk].attackdelay;
-        if(d->haspowerup(PU_HASTE) || d->juggernaut) gunwait /= 2;
+        if(d->haspowerup(PU_HASTE) || d->role == ROLE_JUGGERNAUT) gunwait /= 2;
         d->gunwait = gunwait;
         if(attacks[atk].action != ACT_MELEE && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;

@@ -252,6 +252,7 @@ struct ctfclientmode : clientmode
         ci->state.flags++;
         int team = ci->team, score = addscore(team, 1);
         sendf(-1, 1, "ri9", N_SCOREFLAG, ci->clientnum, relay, relay >= 0 ? ++flags[relay].version : -1, goal, ++flags[goal].version, team, score, ci->state.flags);
+        extern int scorelimit;
         if(score >= scorelimit) startintermission();
     }
 
@@ -586,7 +587,7 @@ struct ctfclientmode : clientmode
         playsound(team==self->team ? S_FLAGSCORE : S_FLAGFAIL);
         if(d->aitype==AI_BOT) taunt(d);
 
-        if(score >= Scorelimit)
+        if(score >= server::scorelimit)
             conoutf(CON_GAMEINFO, "%s \fs\f2captured %d flags\fr", teamcolor("\fs\f2team\fr ", "", team, "\fs\f2a team\fr"), score);
     }
 

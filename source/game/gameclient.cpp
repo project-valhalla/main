@@ -631,30 +631,6 @@ namespace game
 
     ICOMMAND(checkmaps, "", (), addmsg(N_CHECKMAPS, "r"));
 
-    int Timelimit = 10, Scorelimit = 30, nexttimelimit = 10, nextscorelimit = 30, Roundlimit = 20, nextroundlimit = 20,
-        selfdam = 1, teamdam = 1, forceweapon = -1;
-    const char *team1name = "Blue", *team2name = "Red";
-
-    void setvariable(int val, int var, char *s = NULL)
-    {
-        switch(var)
-        {
-            case VAR_TIMELIMIT: nexttimelimit = val; break;
-            case VAR_SCORELIMIT: nextscorelimit = val; break;
-            case VAR_MAXROUNDS: nextroundlimit = val; break;
-            case VAR_SELFDAMAGE: selfdam = val; break;
-            case VAR_TEAMDAMAGE: teamdam = val; break;
-            case VAR_WEAPON: forceweapon = val; break;
-        }
-    }
-
-    VARF(timelimit, 0, 10, 60, setvariable(timelimit, VAR_TIMELIMIT));
-    VARF(scorelimit, 0, 30, 1000, setvariable(scorelimit, VAR_SCORELIMIT));
-    VARF(roundlimit, 0, 20, 30, setvariable(roundlimit, VAR_MAXROUNDS));
-    VARF(selfdamage, 0, 1, 1, setvariable(selfdamage, VAR_SELFDAMAGE));
-    VARF(teamdamage, 0, 1, 1, setvariable(teamdamage, VAR_TEAMDAMAGE));
-    VARF(forceweap, 0, 4, NUMGUNS-1, setvariable(forceweap, VAR_WEAPON));
-
     int gamemode = INT_MAX, nextmode = INT_MAX;
     int mutators = 0, nextmutators = 0;
     string clientmap = "";
@@ -729,22 +705,11 @@ namespace game
     }
     ICOMMAND(getactivemutators, "", (), result(muts()));
 
-    // temporary solution for my poor cube script skills
     int ismutatorselected(int mut)
     {
        return 1<<mut & nextmutators;
     }
     ICOMMAND(ismutselected, "i", (int *mut), intret(ismutatorselected(*mut)));
-
-    void getservervariables(int tl, int sl, int rl, int teamdam, int selfdam, int weapon) // this is probably still a mess, did not check it out in a while
-    {
-        Timelimit = nexttimelimit = tl;
-        Scorelimit = nextscorelimit = sl;
-        Roundlimit = nextroundlimit = rl;
-        teamdam = teamdam;
-        selfdam = selfdam;
-        forceweapon = weapon;
-    }
 
     ICOMMAND(timeremaining, "i", (int *formatted),
     {
@@ -753,7 +718,7 @@ namespace game
         else intret(val);
     });
     ICOMMAND(intermission, "", (), intret(intermission ? 1 : 0));
-    ICOMMAND(getscorelimit, "", (), intret(Scorelimit));
+    ICOMMAND(getscorelimit, "", (), intret(server::scorelimit));
 
     ICOMMANDS("m_ctf", "i", (int *mode), { int gamemode = *mode; intret(m_ctf); });
     ICOMMANDS("m_teammode", "i", (int *mode), { int gamemode = *mode; intret(m_teammode); });
@@ -767,29 +732,27 @@ namespace game
     ICOMMANDS("m_lobby", "i", (int *mode), { int gamemode = *mode; intret(m_lobby); });
     ICOMMANDS("m_timed", "i", (int *mode), { int gamemode = *mode; intret(m_timed); });
 
-    void changemap(const char *name, int mode, int muts, int tl, int sl) // request map change, server may ignore
+    void changemap(const char *name, int mode, int muts) // request map change, server may ignore
     {
         if(!remote)
         {
-            server::forcemap(name, mode, muts, tl, sl);
-            server::forcevariables(roundlimit, selfdam, teamdam, forceweapon);
+            server::forcemap(name, mode, muts);
             if(!isconnected()) localconnect();
         }
         else if(self->state!=CS_SPECTATOR || self->privilege)
         {
             addmsg(N_MAPVOTE, "rsii", name, mode, muts);
-            addmsg(N_SENDVARIABLES, "ri6", tl, sl, roundlimit, selfdam, teamdam, forceweapon);
         }
     }
     void changemap(const char *name)
     {
-        changemap(name, m_valid(nextmode) ? nextmode : (remote ? 1 : 0), nextmutators, nexttimelimit, nextscorelimit);
+        changemap(name, m_valid(nextmode) ? nextmode : (remote ? 1 : 0), nextmutators);
     }
     ICOMMAND(map, "s", (char *name), changemap(name));
 
     void forceedit(const char *name)
     {
-        changemap(name, 0, 0, 0, 0);
+        changemap(name, 0, 0);
     }
 
     void newmap(int size)
@@ -1117,8 +1080,6 @@ namespace game
         {
             nextmode = gamemode = INT_MAX;
             nextmutators = mutators = 0;
-            nexttimelimit = Timelimit =  10;
-            nextscorelimit = Scorelimit = 30;
             clientmap[0] = '\0';
         }
         execident("on_disconnect");
@@ -1458,15 +1419,13 @@ namespace game
             {
                 getint(p); // poweruptype
                 getint(p); // powerupmillis
-                getint(p); // juggernaut
-                getint(p); // zombie
+                getint(p); // role
             }
             else
             {
                 d->poweruptype = getint(p);
                 d->powerupmillis = getint(p);
-                d->juggernaut = getint(p);
-                d->zombie = getint(p);
+                d->role = getint(p);
             }
         }
         d->lifesequence = getint(p);
@@ -1625,14 +1584,6 @@ namespace game
                 break;
             }
 
-            case N_SERVERVARIABLES:
-            {
-                int tl = getint(p), sl = getint(p), rl = getint(p),
-                    selfdam = getint(p), teamdam = getint(p), serverweapon = getint(p);
-                getservervariables(tl, sl, rl, selfdam, teamdam, serverweapon);
-                break;
-            }
-
             case N_FORCEDEATH:
             {
                 int cn = getint(p);
@@ -1782,7 +1733,7 @@ namespace game
                 if(!s || !validatk(atk)) break;
                 int gun = attacks[atk].gun;
                 if(gun >= 0) s->gunselect = gun;
-                if(!s->haspowerup(PU_AMMO) && !s->juggernaut)
+                if(!s->haspowerup(PU_AMMO) && s->role != ROLE_JUGGERNAUT)
                 {
                     s->ammo[gun] -= attacks[atk].use;
                 }
@@ -1821,7 +1772,7 @@ namespace game
                 int cn = getint(p), health = getint(p);
                 gameent *d = cn==self->clientnum ? self : getclient(cn);
                 d->health = health;
-                if(regensound && m_regen(mutators) && d->health <= d->maxhealth && !d->juggernaut && !d->zombie)
+                if(regensound && m_regen(mutators) && d->health <= d->maxhealth && d->role != ROLE_JUGGERNAUT && d->role != ROLE_ZOMBIE)
                     playsound(S_REGENERATION, d);
                 break;
             }
@@ -1901,7 +1852,7 @@ namespace game
             {
                 if(!d) return;
                 d->lasttaunt = lastmillis;
-                playsound(!d->zombie ? getplayermodelinfo(d).tauntsound : zombies[getplayermodel(d)].tauntsound, d);
+                playsound(d->role != ROLE_ZOMBIE ? getplayermodelinfo(d).tauntsound : zombies[getplayermodel(d)].tauntsound, d);
                 break;
             }
 
@@ -2217,42 +2168,46 @@ namespace game
                 break;
             }
 
-            case N_JUGGERNAUT:
+            case N_ASSIGNROLE:
             {
-                int cn = getint(p), health = getint(p);
-                gameent *d = getclient(cn);
-                if(!m_juggernaut || !d) break;
-                d->juggernaut = 1;
-                d->maxhealth = d->health = health;
-                break;
-            }
-
-            case N_INFECT:
-            {
-                int tcn = getint(p), acn = getint(p);
+                int tcn = getint(p), acn = getint(p),
+                    role = getint(p);
                 gameent *d = getclient(tcn),
                         *actor = getclient(acn);
-                if(!m_infection || !d) break;
-                writeobituary(d, actor, ATK_ZOMBIE);
-                d->infect();
-                d->stoppowerupsound();
-                playsound(S_INFECTED, d);
-                particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
-                d->lastswitch = lastmillis;
+                if(!d) break;
+                if(role == ROLE_JUGGERNAUT)
+                {
+                    if(!m_juggernaut) break;
+                    d->makejuggernaut();
+                    playsound(S_JUGGERNAUT, d);
+                    particle_splash(PART_SPARK2, 100, 200, d->o, 0xFF80FF, 0.40f, 200, 8);
+                    conoutf(CON_GAMEINFO, "%s \f2is the juggernaut", colorname(d));
+                }
+                else if(role == ROLE_ZOMBIE)
+                {
+                    if(!m_infection) break;
+                    writeobituary(d, actor, ATK_ZOMBIE);
+                    d->infect();
+                    d->stoppowerupsound();
+                    playsound(S_INFECTED, d);
+                    particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
+                    d->lastswitch = lastmillis;
+                }
                 break;
             }
 
-            case N_FORCEWEAPON:
+            case N_VOOSH:
             {
                 int cn = getint(p), gun = getint(p);
-                forceweapon = gun;
+                vooshgun = gun;
                 gameent *d = getclient(cn);
-                if(!d || d->zombie) break;
-                loopi(NUMGUNS) d->ammo[i] = 0;
-                d->baseammo(gun);
-                d->gunselect = gun;
-                if(m_voosh(mutators) && self->zombie)
-                    playsound(S_VOOSH, d, &d->o);
+                if(!d) return;
+                if((d->state == CS_ALIVE || d->state == CS_LAGGED) && d->role != ROLE_ZOMBIE)
+                {
+                    d->voosh(gun);
+                    d->lastswitch = lastmillis;
+                }
+                if(d == self) playsound(S_VOOSH);
                 break;
             }
 

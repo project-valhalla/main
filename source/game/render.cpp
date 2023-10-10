@@ -211,7 +211,7 @@ namespace game
     void renderplayer(gameent *d, const playermodelinfo &playermodel, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
         if(gore && d->gibbed()) return;
-        int lastaction = d->lastaction, anim = ANIM_IDLE|ANIM_LOOP, attack = 0, delay = 0;
+        int lastaction = d->lastaction, anim = ANIM_IDLE|ANIM_LOOP, attack = ANIM_SHOOT, delay = 0;
         if(d->state==CS_ALIVE)
         {
             if(d->lastattack >= 0)

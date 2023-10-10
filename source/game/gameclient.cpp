@@ -2180,7 +2180,7 @@ namespace game
                     if(!m_juggernaut) break;
                     d->makejuggernaut();
                     playsound(S_JUGGERNAUT, d);
-                    particle_splash(PART_SPARK2, 100, 200, d->o, 0xFF80FF, 0.40f, 200, 8);
+                    particle_flare(d->o, d->o, 350, PART_COMICS, 0xFFFFFF, 5.0f, NULL, 0.8f);
                     conoutf(CON_GAMEINFO, "%s \f2is the juggernaut", colorname(d));
                 }
                 else if(role == ROLE_ZOMBIE)
@@ -2193,6 +2193,7 @@ namespace game
                     particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
                     d->lastswitch = lastmillis;
                 }
+                if(d == followingplayer(self)) addscreenfx(150);
                 break;
             }
 

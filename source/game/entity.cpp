@@ -328,11 +328,6 @@ namespace entities
         {
             d->powerupsound = S_JUGGERNAUT_LOOP;
             d->powerupchan = playsound(d->powerupsound, NULL, d==hud ? NULL : &d->o, NULL, 0, -1, 200, d->powerupchan);
-            if(!(d == hud && !isthirdperson()))
-            {
-                // signal the juggernaut with questionable particle effects
-                regular_particle_flame(PART_FLAME, d->o, 0.8f, 1.0f, 0xFF80FF, 1, 2.2f, 150.0f, 300.0f, -5);
-            }
         }
     }
 

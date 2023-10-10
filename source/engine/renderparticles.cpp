@@ -869,6 +869,7 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // pulse muzzle flash
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
     new quadrenderer("data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                // electricity explosion
+    new quadrenderer("data/texture/particle/comics.png", PT_PART|PT_FEW|PT_BRIGHT|PT_LERP|PT_TRACK),                                       // BOOM! comics effect
     new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_ICON|PT_LERP),                                 // game icons
     new quadrenderer("data/interface/particle/editor_icons.png", PT_PART|PT_ICON|PT_LERP),                               // edit icons
     &texts,                                                                                                              // text

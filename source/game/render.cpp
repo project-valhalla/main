@@ -111,6 +111,13 @@ namespace game
         return *mdl;
     }
 
+    const char *playermodelfile(gameent *d)
+    {
+        if(d->role == ROLE_ZOMBIE) return zombies[d->playermodel].directory;
+        else if(d->role == ROLE_JUGGERNAUT) return "player/juggernaut";
+        else return getplayermodelinfo(d).directory;
+    }
+
     int getplayercolor(int team, int color)
     {
         #define GETPLAYERCOLOR(playercolors) \
@@ -249,7 +256,6 @@ namespace game
             d->muzzle = vec(-1, -1, -1);
             if(guns[d->gunselect].worldmodel) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         }
-        const char *playermodelfile = d->role != ROLE_ZOMBIE ? playermodel.directory : zombies[d->playermodel].directory;
         float yaw = testanims && d==self ? 0 : d->yaw,
               pitch = testpitch && d==self ? testpitch : d->pitch;
         vec o = d->feetpos();
@@ -317,7 +323,7 @@ namespace game
         if(d->state == CS_LAGGED) trans = 0.5f;
         else if(d->state == CS_ALIVE && camera1->o.dist(d->o) < d->radius) trans = 0.1f;
         else if(d->deathattack == ATK_PISTOL_COMBO) trans = 0.8f;
-        rendermodel(playermodelfile, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), trans));
+        rendermodel(playermodelfile(d), anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), trans));
     }
 
     static inline void renderplayer(gameent *d, float fade = 1, int flags = 0)

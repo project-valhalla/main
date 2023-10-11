@@ -420,8 +420,9 @@ struct gamestate
         maxhealth = health = maxhealth*2;
         loopi(NUMGUNS)
         {
-            if(!ammo[i]) continue;
-            baseammo(i, 5);
+            if(!ammo[i] || i == GUN_INSTA || i == GUN_ZOMBIE) continue;
+            if(i == GUN_PISTOL) ammo[i] = 100;
+            else ammo[i] = max(itemstats[i-GUN_SCATTER].max, itemstats[i-GUN_SCATTER].add*5);
         }
     }
 

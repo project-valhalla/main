@@ -430,6 +430,7 @@
     <ClInclude Include="..\game\elimination.h" />
     <ClInclude Include="..\game\entity.h" />
     <ClInclude Include="..\game\gamemode.h" />
+    <ClInclude Include="..\game\monster.h" />
     <ClInclude Include="..\game\weapon.h" />
     <ClInclude Include="..\shared\command.h" />
     <ClInclude Include="..\shared\cube.h" />
@@ -976,6 +977,7 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)engine.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)engine.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="..\game\monster.cpp" />
     <ClCompile Include="..\shared\crypto.cpp" />
     <ClCompile Include="..\shared\geom.cpp" />
     <ClCompile Include="..\shared\glemu.cpp" />

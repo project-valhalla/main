@@ -11,7 +11,8 @@ enum
     M_ELIMINATION = 1<<7,
     M_LASTMAN     = 1<<8,
     M_JUGGERNAUT  = 1<<9,
-    M_INFECTION   = 1<<10
+    M_INFECTION   = 1<<10,
+    M_INVASION    = 1<<11
 };
 
 static struct gamemodeinfo
@@ -49,6 +50,7 @@ static struct gamemodeinfo
 #define m_lms             (m_check(gamemode, M_LASTMAN))
 #define m_juggernaut      (m_check(gamemode, M_JUGGERNAUT))
 #define m_infection       (m_check(gamemode, M_INFECTION))
+#define m_invasion        (m_check(gamemode, M_INVASION))
 
 #define m_demo            (m_check(gamemode, M_DEMO))
 #define m_edit            (m_check(gamemode, M_EDIT))

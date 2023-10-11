@@ -278,6 +278,7 @@ enum
 #include "ai.h"
 #include "gamemode.h"
 #include "entity.h"
+#include "monster.h"
 
 enum
 {
@@ -792,6 +793,21 @@ namespace game
     extern void weaponswitch(gameent *d);
     extern void avoidweapons(ai::avoidset &obstacles, float radius);
 
+    // monster
+    struct monster;
+    extern vector<monster *> monsters;
+
+    extern void clearmonsters();
+    extern void preloadmonsters();
+    extern void stackmonster(monster *d, physent *o);
+    extern void updatemonsters(int curtime);
+    extern void rendermonsters();
+    extern void suicidemonster(monster *m);
+    extern void hitmonster(int damage, monster *m, gameent *at, const vec &vel, int gun);
+    extern void monsterkilled();
+    extern void endsp(bool allkilled);
+    extern void spsummary(int accuracy);
+
     // scoreboard
     extern void hidescoreboard();
     extern void getbestplayers(vector<gameent *> &best);
@@ -817,6 +833,7 @@ namespace game
     extern int getplayermodel(gameent *d);
     extern void syncplayer();
     extern void swayhudgun(int curtime);
+    extern void renderai(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade = 1, bool ragdoll = false);
     extern vec hudgunorigin(int gun, const vec &from, const vec &to, gameent *d);
 }
 

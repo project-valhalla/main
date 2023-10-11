@@ -30,7 +30,8 @@ static struct gamemodeinfo
     { "elim", "Elimination", M_ELIMINATION | M_TEAM, "\f2Elimination\ff: eliminate the enemy team to win the round and score points for your team" },
     { "lms", "Last Man Standing", M_LASTMAN, "\f2Last Man Standing\ff: eliminate everyone to win the round and score points" },
     { "jugg", "Juggernaut", M_JUGGERNAUT, "\f2Juggernaut\ff: kill the juggernaut to become the juggernaut and score points" },
-    { "infect", "Infection", M_INFECTION, "\f2Infection\ff: survive the infection or infect survivors to score points" }
+    { "infect", "Infection", M_INFECTION, "\f2Infection\ff: survive the infection or infect survivors to score points" },
+    { "invasion", "Invasion", M_INVASION, "\f2Invasion\ff: survive waves of monsters to score points" }
 };
 
 #define STARTGAMEMODE (-1)

@@ -108,6 +108,7 @@ namespace game
     {
         clearprojectiles();
         clearbouncers();
+        clearmonsters();
     }
 
     int vooshgun;
@@ -278,6 +279,7 @@ namespace game
         ai::update();
         moveragdolls();
         gets2c();
+        updatemonsters(curtime);
         if(connected)
         {
             if(self->state == CS_DEAD)
@@ -711,6 +713,7 @@ namespace game
     {
         clearprojectiles();
         clearbouncers();
+        clearmonsters();
         clearragdolls();
 
         clearteaminfo();
@@ -872,6 +875,14 @@ namespace game
         }
     }
 
+    void dynentcollide(physent *d, physent *o, const vec &dir)
+    {
+        if(d->type == ENT_AI)
+        {
+            if(dir.z > 0) stackmonster((monster *)d, o);
+        }
+    }
+
     void msgsound(int n, physent *d)
     {
         if(!d || d == self)
@@ -887,11 +898,17 @@ namespace game
         }
     }
 
-    int numdynents() { return players.length(); }
+    int numdynents()
+    {
+        return players.length() + monsters.length();
+    }
 
     dynent *iterdynents(int i)
     {
         if(i<players.length()) return players[i];
+        i -= players.length();
+        if(i<monsters.length()) return (dynent *)monsters[i];
+        i -= monsters.length();
         return NULL;
     }
 
@@ -972,6 +989,7 @@ namespace game
                 if(pl->suicided!=seq) { addmsg(N_SUICIDE, "rc", pl); pl->suicided = seq; }
             }
         }
+        else if(d->type==ENT_AI) suicidemonster((monster *)d);
     }
     ICOMMAND(suicide, "", (), suicide(self));
 

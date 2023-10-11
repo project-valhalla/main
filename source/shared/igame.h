@@ -51,6 +51,7 @@ namespace game
     extern void loadconfigs();
 
     extern void updateworld();
+    extern void dynentcollide(physent *d, physent *o, const vec &dir);
     extern void initclient();
     extern void triggerphysicsevent(physent *pl, int event, int material = 0);
     extern void bounced(physent *d, const vec &surface);

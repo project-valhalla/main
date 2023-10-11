@@ -151,7 +151,8 @@ namespace game
                     if(trigger<lastmillis)
                     {
                         lastaction = 0;
-                        attacking = true;
+                        int atk = monstertypes[mtype].atk;
+                        attacking = attacks[atk].action;
                         shoot(this, attacktarget);
                         transition(MS_ATTACKING, 0, 600, 0);
                     }
@@ -230,10 +231,7 @@ namespace game
                 lastpain = lastmillis;
                 playsound(monstertypes[mtype].diesound, this);
                 monsterkilled();
-                gibeffect(max(-health, 0), vel, this);
-
-                defformatstring(id, "monster_dead_%d", tag);
-                execident(id);
+                if(gore && gibbed()) gibeffect(max(-health, 0), vel, this);
             }
             else
             {
@@ -285,16 +283,10 @@ namespace game
         spawnremain = 0;
         remain = 0;
         monsterhurt = false;
-        if(m_invasion)
-        {
-            nextmonster = mtimestart = lastmillis+10000;
-            monstertotal = spawnremain = skill*10;
-        }
+        nextmonster = mtimestart = lastmillis+10000;
+        monstertotal = spawnremain = skill*10;
         teleports.setsize(0);
-        if(m_invasion)
-        {
-            loopv(entities::ents) if(entities::ents[i]->type==TELEPORT) teleports.add(i);
-        }
+        loopv(entities::ents) if(entities::ents[i]->type==TELEPORT) teleports.add(i);
     }
 
     void endsp(bool allkilled)
@@ -359,7 +351,7 @@ namespace game
                 vwep[0] = modelattach("tag_weapon", monstertypes[m.mtype].vwepname, ANIM_VWEP_IDLE|ANIM_LOOP, 0);
                 float fade = 1;
                 if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);
-                renderai(&m, monstertypes[m.mtype].mdlname, vwep, 0, m.monsterstate == MS_ATTACKING ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade);
+                if(!m.gibbed()) renderai(&m, monstertypes[m.mtype].mdlname, vwep, 0, m.monsterstate == MS_ATTACKING ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade);
             }
         }
     }
@@ -369,7 +361,7 @@ namespace game
         m->monsterpain(400, self);
     }
 
-    void hitmonster(int damage, monster *m, gameent *at, const vec &vel, int gun)
+    void hitmonster(int damage, monster *m, gameent *at, const vec &vel, int atk)
     {
         m->monsterpain(damage, at);
     }

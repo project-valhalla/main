@@ -539,9 +539,9 @@ namespace game
                 playsound(isally(f, at) ? S_HIT_ALLY : S_HIT);
             at->lasthit = lastmillis;
         }
-
-        if(!m_mp(gamemode) || f==at) f->hitpush(damage, vel, at, atk);
-        if(!m_mp(gamemode))
+        if(f->type==ENT_AI || !m_mp(gamemode) || f==at) f->hitpush(damage, vel, at, atk);
+        if(f->type == ENT_AI) hitmonster(damage, (monster *)f, at, vel, atk);
+        else if(!m_mp(gamemode))
         {
             damaged(damage, f->o, f, at, atk, flags);
         }
@@ -1180,7 +1180,7 @@ namespace game
 
     void particletrack(physent *owner, vec &o, vec &d)
     {
-        if(owner->type!=ENT_PLAYER) return;
+        if(owner->type != ENT_PLAYER && owner->type != ENT_AI) return;
         gameent *pl = (gameent *)owner;
         if(pl->muzzle.x < 0 || pl->lastattack < 0 || attacks[pl->lastattack].gun != pl->gunselect) return;
         float dist = o.dist(d);
@@ -1196,7 +1196,7 @@ namespace game
 
     void dynlighttrack(physent *owner, vec &o, vec &hud)
     {
-        if(owner->type!=ENT_PLAYER) return;
+        if(owner->type!=ENT_PLAYER && owner->type != ENT_AI) return;
         gameent *pl = (gameent *)owner;
         if(pl->muzzle.x < 0 || pl->lastattack < 0 || attacks[pl->lastattack].gun != pl->gunselect) return;
         o = pl->muzzle;

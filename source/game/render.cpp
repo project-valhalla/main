@@ -79,23 +79,21 @@ namespace game
     VARFP(playercolorblue, 0, 0, sizeof(playercolorsblue)/sizeof(playercolorsblue[0])-1, changedplayercolor());
     VARFP(playercolorred, 0, 0, sizeof(playercolorsred)/sizeof(playercolorsred[0])-1, changedplayercolor());
 
-    static const playermodelinfo playermodels[2] =
+    static const playermodelinfo playermodels[5] =
     {
-        { "player/bones",  "player/bones/arm", true, S_PAIN_MALE,   S_DIE_MALE,   S_TAUNT_MALE,   },
-        { "player/bonnie", "player/bones/arm", true, S_PAIN_FEMALE, S_DIE_FEMALE, S_TAUNT_FEMALE  }
+        { "player/bones",         "player/bones/arm", true, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE,         },
+        { "player/bonnie",        "player/bones/arm", true, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
+        { "player/bones/zombie",  "player/bones/arm", true, S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
+        { "player/bonnie/zombie", "player/bones/arm", true, S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
+        { "player/juggernaut",    "player/bones/arm", true, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
     };
 
     extern void changedplayermodel();
-    VARFP(playermodel, 0, 0, sizeof(playermodels)/sizeof(playermodels[0])-1, changedplayermodel());
+    VARFP(playermodel, 0, 0, 1, changedplayermodel());
 
     int chooserandomplayermodel(int seed)
     {
-        return (seed&0xFFFF)%(sizeof(playermodels)/sizeof(playermodels[0]));
-    }
-
-    int getplayermodel(gameent *d)
-    {
-        return d==self || forceplayermodels ? playermodel : d->playermodel;
+        return (seed&0xFFFF)%(sizeof(playermodels)/sizeof(playermodels[0]))-3;
     }
 
     const playermodelinfo *getplayermodelinfo(int n)
@@ -104,18 +102,19 @@ namespace game
         return &playermodels[n];
     }
 
-    const playermodelinfo &getplayermodelinfo(gameent *d)
+    int getplayermodel(gameent *d)
     {
-        const playermodelinfo *mdl = getplayermodelinfo(d==self || forceplayermodels ? playermodel : d->playermodel);
-        if(!mdl) mdl = getplayermodelinfo(playermodel);
-        return *mdl;
+        int model = d==self || forceplayermodels ? playermodel : d->playermodel;
+        if(d->role == ROLE_JUGGERNAUT) return 4;
+        else if(d->role == ROLE_ZOMBIE) return model == 0 ? 2 : 3;
+        else return model;
     }
 
-    const char *playermodelfile(gameent *d)
+    const playermodelinfo &getplayermodelinfo(gameent *d)
     {
-        if(d->role == ROLE_ZOMBIE) return zombies[d->playermodel].directory;
-        else if(d->role == ROLE_JUGGERNAUT) return "player/juggernaut";
-        else return getplayermodelinfo(d).directory;
+        const playermodelinfo *mdl = getplayermodelinfo(getplayermodel(d));
+        if(!mdl) mdl = getplayermodelinfo(playermodel);
+        return *mdl;
     }
 
     int getplayercolor(int team, int color)
@@ -200,7 +199,6 @@ namespace game
             if(!mdl) break;
             if(i != playermodel && (!multiplayer(false) || forceplayermodels)) continue;
             preloadmodel(mdl->directory);
-            preloadmodel(zombies[playermodel].directory);
         }
     }
 
@@ -323,7 +321,7 @@ namespace game
         if(d->state == CS_LAGGED) trans = 0.5f;
         else if(d->state == CS_ALIVE && camera1->o.dist(d->o) < d->radius) trans = 0.1f;
         else if(d->deathattack == ATK_PISTOL_COMBO) trans = 0.8f;
-        rendermodel(playermodelfile(d), anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), trans));
+        rendermodel(playermodel.directory, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), trans));
     }
 
     static inline void renderplayer(gameent *d, float fade = 1, int flags = 0)

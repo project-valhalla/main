@@ -18,7 +18,7 @@ namespace game
         if(d->state!=CS_ALIVE || lastmillis-d->lasttaunt<1000) return;
         d->lasttaunt = lastmillis;
         addmsg(N_TAUNT, "rc", self);
-        playsound(d->role != ROLE_ZOMBIE ? getplayermodelinfo(d).tauntsound : zombies[getplayermodel(d)].tauntsound, d);
+        playsound(getplayermodelinfo(d).tauntsound, d);
         self->attacking = ACT_IDLE;
     }
     ICOMMAND(taunt, "", (), taunt(self));
@@ -471,7 +471,7 @@ namespace game
         if(!restore)
         {
             if(gore && d->gibbed()) gibeffect(max(-d->health, 0), d->vel, d);
-            else playsound(d->role != ROLE_ZOMBIE ? getplayermodelinfo(d).diesound : zombies[getplayermodel(d)].diesound, d);
+            else playsound(getplayermodelinfo(d).diesound, d);
             d->deaths++;
         }
         if(d==self)

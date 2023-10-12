@@ -483,14 +483,16 @@ namespace game
         }
         if(f->health > 0 && lastmillis-f->lastyelp > 600)
         {
-            if(f == hud) damageblend(damage);
-            else if(f->shield) playsound(S_SHIELD_HIT, f);
-            playsound(getplayermodelinfo(f).painsound, f);
-            f->lastyelp = lastmillis;
+            if(f != hud && f->shield) playsound(S_SHIELD_HIT, f);
+            if(f->type == ENT_PLAYER)
+            {
+                playsound(getplayermodelinfo(f).painsound, f);
+                f->lastyelp = lastmillis;
+            }
         }
         if(f->shield) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);
         if(validatk(atk) && attacks[atk].hitsound) playsound(attacks[atk].hitsound, f);
-        else playsound(S_DAMAGE, f);
+        else playsound(S_PLAYER_DAMAGE, f);
         if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOUR, f);
     }
 

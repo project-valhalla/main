@@ -1,4 +1,4 @@
-// monster.h: implements AI for single player monsters, currently client only
+// monster.h: implements AI for invasion monsters, currently client only
 #include "game.h"
 
 extern int physsteps;
@@ -7,7 +7,7 @@ namespace game
 {
     static vector<int> teleports;
 
-    VAR(skill, 1, 3, 10);
+    VAR(skill, 1, 8, 10);
     VAR(killsendsp, 0, 1, 1);
 
     bool monsterhurt;
@@ -15,16 +15,17 @@ namespace game
 
     struct monster : gameent
     {
-        int monsterstate;                   // one of MS_*, MS_NONE means human
+        int monsterstate; // one of MS_*, MS_NONE means it's not an NPC
 
-        int mtype, tag;                     // see monstertypes table
-        gameent *enemy;                      // monster wants to kill this entity
-        float targetyaw;                    // monster wants to look in this direction
-        int trigger;                        // millis at which transition to another monsterstate takes place
-        vec attacktarget;                   // delayed attacks
-        int anger;                          // how many times already hit by fellow monster
+        int mtype, tag; // see monstertypes table
+        gameent *enemy; // monster wants to kill this entity
+        float targetyaw; // monster wants to look in this direction
+        int trigger; // millis at which transition to another monsterstate takes place
+        vec attacktarget; // delayed attacks
+        int anger; // how many times already hit by fellow monster
         physent *stacked;
         vec stackpos;
+        bool halted;
 
         monster(int _type, int _yaw, int _tag, int _state, int _trigger, int _move) :
             monsterstate(_state), tag(_tag),
@@ -33,7 +34,7 @@ namespace game
         {
             type = ENT_AI;
             respawn();
-            if(_type>=NUMMONSTERTYPES || _type < 0)
+            if(_type>=NUMMONSTERS || _type < 0)
             {
                 conoutf(CON_WARN, "warning: unknown monster in spawn: %d", _type);
                 _type = 0;
@@ -62,6 +63,7 @@ namespace game
             state = CS_ALIVE;
             anger = 0;
             copystring(name, t.name);
+            halted = false;
         }
 
         void normalize_yaw(float angle)
@@ -70,11 +72,12 @@ namespace game
             while(yaw>angle+180.0f) yaw -= 360.0f;
         }
 
-        // monster AI is sequenced using transitions: they are in a particular state where
-        // they execute a particular behaviour until the trigger time is hit, and then they
-        // reevaluate their situation based on the current state, the environment etc., and
-        // transition to the next state. Transition timeframes are parametrized by difficulty
-        // level (skill), faster transitions means quicker decision making means tougher AI.
+        /* monster AI is sequenced using transitions: they are in a particular state where
+         * they execute a particular behaviour until the trigger time is hit, and then they
+         * reevaluate their situation based on the current state, the environment etc., and
+         * transition to the next state. Transition timeframes are parametrized by difficulty
+         * level (skill), faster transitions means quicker decision making means tougher AI.
+         */
 
         void transition(int _state, int _moving, int n, int r) // n = at skill 0, n/2 = at skill 10, r = added random factor
         {
@@ -84,11 +87,15 @@ namespace game
             trigger = lastmillis+n-skill*(n/16)+rnd(r+1);
         }
 
-        void monsteraction(int curtime)           // main AI thinking routine, called every frame for every monster
+        void monsteraction(int curtime) // main AI thinking routine, called every frame for every monster
         {
-            if(enemy->state==CS_DEAD) { enemy = self; anger = 0; }
+            if(enemy->state==CS_DEAD)
+            {
+                enemy = self;
+                anger = 0;
+            }
             normalize_yaw(targetyaw);
-            if(targetyaw>yaw)             // slowly turn monster towards his target
+            if(targetyaw>yaw) // slowly turn monster towards his target
             {
                 yaw += curtime*0.5f;
                 if(targetyaw<yaw) yaw = targetyaw;
@@ -101,16 +108,16 @@ namespace game
             float dist = enemy->o.dist(o);
             if(monsterstate!=MS_SLEEP) pitch = asin((enemy->o.z - o.z) / dist) / RAD;
 
-            if(blocked)                                                              // special case: if we run into scenery
+            if(blocked) // special case: if we run into scenery
             {
                 blocked = false;
-                if(!rnd(20000/monstertypes[mtype].speed))                            // try to jump over obstackle (rare)
+                if(!rnd(20000/monstertypes[mtype].speed)) // try to jump over obstackle (rare)
                 {
                     jumping = true;
                 }
-                else if(trigger<lastmillis && (monsterstate!=MS_HOME || !rnd(5)))  // search for a way around (common)
+                else if(trigger<lastmillis && (monsterstate!=MS_HOME || !rnd(5))) // search for a way around (common)
                 {
-                    targetyaw += 90+rnd(180);                                        // patented "random walk" AI pathfinding (tm) ;)
+                    targetyaw += 90+rnd(180); // patented "random walk" AI path-finding (TM) ;)
                     transition(MS_SEARCH, 1, 100, 1000);
                 }
             }
@@ -122,15 +129,23 @@ namespace game
                 case MS_PAIN:
                 case MS_ATTACKING:
                 case MS_SEARCH:
-                    if(trigger<lastmillis) transition(MS_HOME, 1, 100, 200);
+                {
+                    if(trigger<lastmillis && !monstertypes[mtype].neutral) transition(MS_HOME, 1, 100, 200);
+                    vec target;
+                    if(!halted && monsterstate == MS_SEARCH && raycubelos(o, enemy->o, target))
+                    {
+                        playsound(monstertypes[mtype].haltsound, this);
+                        halted = true;
+                    }
                     break;
+                }
 
-                case MS_SLEEP:                       // state classic sp monster start in, wait for visual contact
+                case MS_SLEEP: // state classic monsters start in, wait for visual contact
                 {
                     if(editmode) break;
                     normalize_yaw(enemyyaw);
                     float angle = (float)fabs(enemyyaw-yaw);
-                    if(dist<32                   // the better the angle to the player, the further the monster can see/hear
+                    if(dist<32 // the better the angle to the player, the further the monster can see/hear
                     ||(dist<64 && angle<135)
                     ||(dist<128 && angle<90)
                     ||(dist<256 && angle<45)
@@ -141,13 +156,14 @@ namespace game
                         if(raycubelos(o, enemy->o, target))
                         {
                             transition(MS_HOME, 1, 500, 200);
-                            playsound(S_TAUNT_MALE+rnd(2), this);
+                            playsound(monstertypes[mtype].haltsound, this);
+                            halted = true;
                         }
                     }
                     break;
                 }
 
-                case MS_AIMING:                      // this state is the delay between wanting to shoot and actually firing
+                case MS_AIMING: // this state is the delay between wanting to shoot and actually firing
                     if(trigger<lastmillis)
                     {
                         lastaction = 0;
@@ -158,12 +174,12 @@ namespace game
                     }
                     break;
 
-                case MS_HOME:                        // monster has visual contact, heads straight for player and may want to shoot at any time
+                case MS_HOME: // monster has visual contact, heads straight for player and may want to shoot at any time
                     targetyaw = enemyyaw;
                     if(trigger<lastmillis)
                     {
                         vec target;
-                        if(!raycubelos(o, enemy->o, target))    // no visual contact anymore, let monster get as close as possible then search for player
+                        if(!raycubelos(o, enemy->o, target)) // no visual contact anymore, let monster gets as close as possible then search for the player
                         {
                             transition(MS_HOME, 1, 800, 500);
                         }
@@ -176,12 +192,12 @@ namespace game
                                 case ATK_RAIL1: longrange = true; break;
                             }
                             // the closer the monster is the more likely he wants to shoot,
-                            if((!melee || dist<20) && !rnd(longrange ? (int)dist/12+1 : min((int)dist/12+1,6)) && enemy->state==CS_ALIVE)      // get ready to fire
+                            if((!melee || dist<20) && !rnd(longrange ? (int)dist/12+1 : min((int)dist/12+1,6)) && enemy->state==CS_ALIVE)  // get ready to fire
                             {
                                 attacktarget = target;
                                 transition(MS_AIMING, 0, monstertypes[mtype].lag, 10);
                             }
-                            else                                                        // track player some more
+                            else // track player some more
                             {
                                 transition(MS_HOME, 1, monstertypes[mtype].rate, 0);
                             }
@@ -214,7 +230,7 @@ namespace game
                 {
                     anger++; // don't attack straight away, first get angry
                     int _anger = d->type==ENT_AI && mtype==((monster *)d)->mtype ? anger/2 : anger;
-                    if(_anger>=monstertypes[mtype].loyalty) enemy = d;     // monster infight if very angry
+                    if(_anger>=monstertypes[mtype].loyalty) enemy = d; // monster infight if very angry
                 }
             }
             else if(d->type==ENT_PLAYER) // player hit us
@@ -224,22 +240,34 @@ namespace game
                 monsterhurt = true;
                 monsterhurtpos = o;
             }
-            damageeffect(damage, this, o, self->lastattack);
             if((health -= damage)<=0)
             {
                 state = CS_DEAD;
                 lastpain = lastmillis;
-                playsound(monstertypes[mtype].diesound, this);
-                monsterkilled();
                 if(gore && gibbed()) gibeffect(max(-health, 0), vel, this);
+                else playsound(monstertypes[mtype].diesound, this);
+                monsterkilled();
             }
             else
             {
                 transition(MS_PAIN, 0, monstertypes[mtype].pain, 200); // in this state monster won't attack
-                playsound(monstertypes[mtype].painsound, this);
+                if(health > 0 && lastmillis - lastyelp > 600)
+                {
+                    playsound(monstertypes[mtype].painsound, this);
+                    lastyelp = lastmillis;
+                }
             }
         }
     };
+
+    int getbloodcolor(dynent *d)
+    {
+        if(d->type == ENT_AI)
+        {
+            return monstertypes[((monster *)d)->mtype].bloodcolor;
+        }
+        return getplayermodelinfo((gameent *)d).bloodcolor;
+    }
 
     void stackmonster(monster *d, physent *o)
     {
@@ -257,7 +285,7 @@ namespace game
 
     void preloadmonsters()
     {
-        loopi(NUMMONSTERTYPES) preloadmodel(monstertypes[i].mdlname);
+        loopi(NUMMONSTERS) preloadmodel(monstertypes[i].mdlname);
     }
 
     vector<monster *> monsters;
@@ -293,7 +321,7 @@ namespace game
     {
         conoutf(CON_GAMEINFO, allkilled ? "\f2you have cleared the map!" : "\f2you reached the exit!");
         monstertotal = 0;
-        timeupdate(0); //forceintermission();
+        timeupdate(0);
     }
     ICOMMAND(endsp, "", (), endsp(false));
 
@@ -315,7 +343,7 @@ namespace game
                 conoutf(CON_GAMEINFO, "\f2The invasion has begun!");
                 playsound(S_INFECTION);
             }
-            nextmonster = lastmillis+1000;
+            nextmonster = lastmillis+2000;
             spawnmonster();
         }
 
@@ -330,11 +358,12 @@ namespace game
             {
                 if(lastmillis-monsters[i]->lastpain<2000)
                 {
-                    //monsters[i]->move = 0;
                     monsters[i]->move = monsters[i]->strafe = 0;
                     moveplayer(monsters[i], 1, true);
                 }
+                if(monsters[i]->ragdoll) moveragdoll(monsters[i]);
             }
+            else if(monsters[i]->ragdoll) cleanragdoll(monsters[i]);
         }
 
         if(monsterwashurt) monsterhurt = false;
@@ -351,7 +380,7 @@ namespace game
                 vwep[0] = modelattach("tag_weapon", monstertypes[m.mtype].vwepname, ANIM_VWEP_IDLE|ANIM_LOOP, 0);
                 float fade = 1;
                 if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);
-                if(!m.gibbed()) renderai(&m, monstertypes[m.mtype].mdlname, vwep, 0, m.monsterstate == MS_ATTACKING ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade);
+                if(!m.gibbed()) renderai(&m, monstertypes[m.mtype].mdlname, vwep, 0, m.monsterstate == MS_ATTACKING ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].ragdoll);
             }
         }
     }

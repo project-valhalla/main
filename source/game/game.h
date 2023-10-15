@@ -135,6 +135,13 @@ enum
     S_ANNOUNCER_UAMMO, S_ANNOUNCER_AGILITY, S_ANNOUNCER_INVULNERABILITY,
 
     // miscellaneous
+    S_OGRO_PAIN, S_OGRO_DEATH, S_OGRO_HALT,
+    S_RATA_PAIN, S_RATA_DEATH, S_RATA_HALT,
+    S_SLITH_PAIN, S_SLITH_DEATH, S_SLITH_HALT,
+    S_BAUUL_PAIN, S_BAUUL_DEATH, S_BAUUL_HALT,
+    S_HELLPIG_PAIN, S_HELLPIG_DEATH, S_HELLPIG_HALT,
+    S_SPIDER_PAIN, S_SPIDER_DEATH, S_SPIDER_HALT,
+
     S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET, S_FLAGFAIL, S_FLAGLOOP,
     S_JUGGERNAUT, S_JUGGERNAUT_LOOP, S_JUGGERNAUT_ACTION,
     S_INFECTION, S_INFECTED, S_WIN_ZOMBIES, S_WIN_SURVIVORS,
@@ -278,7 +285,6 @@ enum
 #include "ai.h"
 #include "gamemode.h"
 #include "entity.h"
-#include "monster.h"
 
 enum
 {
@@ -498,6 +504,8 @@ struct gamestate
     }
 };
 
+#include "monster.h"
+
 const int MAXNAMELEN = 15;
 
 const int MAXTEAMS = 2;
@@ -620,11 +628,6 @@ struct gameent : dynent, gamestate
     }
 
     bool gibbed() { return state == CS_DEAD && health<=-50; }
-
-    int bloodcolour()
-    {
-        return role != ROLE_ZOMBIE ? 0x60FFFFF : 0xFF90FF;
-    }
 };
 
 struct teamscore
@@ -772,7 +775,7 @@ namespace game
     extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
     extern void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int dam, int atk);
     extern void explodeeffects(int atk, gameent *d, bool local, int id = 0);
-    extern void damageeffect(int damage, dynent *d, vec p, int atk, bool thirdperson = true);
+    extern void damageeffect(int damage, dynent *d, vec p, int atk, int color);
     extern void gibeffect(int damage, const vec &vel, gameent *d);
     extern float intersectdist;
     extern bool intersect(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);
@@ -807,6 +810,7 @@ namespace game
     extern void monsterkilled();
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);
+    extern int getbloodcolor(dynent *d);
 
     // scoreboard
     extern void hidescoreboard();
@@ -821,7 +825,7 @@ namespace game
     {
         const char *directory, *armdirectory;
         bool ragdoll;
-        int painsound, diesound, tauntsound;
+        int bloodcolor, painsound, diesound, tauntsound;
     };
 
     extern void saveragdoll(gameent *d);

@@ -412,8 +412,10 @@ namespace game
 
     bool isally(gameent *a, gameent *b)
     {
-        return (validteam(a->team) && validteam(b->team) && sameteam(a->team, b->team)) ||
-               (m_infection && ((a->role == ROLE_ZOMBIE && b->role == ROLE_ZOMBIE) || (a->role != ROLE_ZOMBIE && b->role != ROLE_ZOMBIE)));
+        return (validteam(a->team) && validteam(b->team) && sameteam(a->team, b->team))
+               || (m_infection && ((a->role == ROLE_ZOMBIE && b->role == ROLE_ZOMBIE)
+               || (a->role != ROLE_ZOMBIE && b->role != ROLE_ZOMBIE)))
+               || (m_invasion && a->type == ENT_PLAYER && b->type == ENT_PLAYER);
     }
 
     bool allowthirdperson()

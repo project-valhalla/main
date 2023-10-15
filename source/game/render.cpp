@@ -81,11 +81,11 @@ namespace game
 
     static const playermodelinfo playermodels[5] =
     {
-        { "player/bones",         "player/bones/arm", true, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE,         },
-        { "player/bonnie",        "player/bones/arm", true, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
-        { "player/bones/zombie",  "player/bones/arm", true, S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
-        { "player/bonnie/zombie", "player/bones/arm", true, S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
-        { "player/juggernaut",    "player/bones/arm", true, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
+        { "player/bones",         "player/bones/arm", true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE,         },
+        { "player/bonnie",        "player/bones/arm", true, 0x60FFFFF, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
+        { "player/bones/zombie",  "player/bones/arm", true, 0xFF90FF,  S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
+        { "player/bonnie/zombie", "player/bones/arm", true, 0xFF90FF,  S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
+        { "player/juggernaut",    "player/bones/arm", true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
     };
 
     extern void changedplayermodel();
@@ -328,8 +328,6 @@ namespace game
     {
         if(d->type != ENT_AI) return;
         int anim = hold ? hold : ANIM_IDLE|ANIM_LOOP;
-        float yaw = testanims && d==self ? 0 : d->yaw+90,
-              pitch = testpitch && d==self ? testpitch : d->pitch;
         vec o = d->feetpos();
         int basetime = 0;
         if(animoverride) anim = (animoverride<0 ? ANIM_ALL : animoverride)|ANIM_LOOP;
@@ -337,7 +335,8 @@ namespace game
         {
             anim = ANIM_DYING|ANIM_NOPITCH;
             basetime = lastpain;
-            if(lastmillis-basetime>1000) anim = ANIM_DEAD|ANIM_LOOP|ANIM_NOPITCH;
+            if(ragdoll) anim |= ANIM_RAGDOLL;
+            else if(lastmillis-basetime>1000) anim = ANIM_DEAD|ANIM_LOOP|ANIM_NOPITCH;
         }
         else
         {
@@ -369,7 +368,7 @@ namespace game
         }
         if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
         int flags = MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY |  MDL_CULL_DIST;
-        rendermodel(mdlname, anim, o, yaw, pitch, 0, flags, d, attachments, basetime, 0, fade);
+        rendermodel(mdlname, anim, o, d->yaw+90, d->pitch, 0, flags, d, attachments, basetime, 0, fade);
     }
 
     static inline void renderplayer(gameent *d, float fade = 1, int flags = 0)

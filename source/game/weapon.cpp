@@ -328,7 +328,7 @@ namespace game
                 case BNC_GIB:
                 {
                     if(blood && goreeffect <= 0 && bnc.vel.magnitude() > 30.0f)
-                        regular_particle_splash(PART_BLOOD, 0+rnd(4), 400, pos, bnc.owner->bloodcolour(), 0.80f, 25);
+                        regular_particle_splash(PART_BLOOD, 0+rnd(4), 400, pos, getbloodcolor(bnc.owner), 0.80f, 25);
                     break;
                 }
 
@@ -464,7 +464,7 @@ namespace game
         }
     }
 
-    void damageeffect(int damage, dynent *d, vec p, int atk, bool thirdperson)
+    void damageeffect(int damage, dynent *d, vec p, int atk, int color)
     {
         gameent *f = (gameent *)d,
                 *hud = followingplayer(self);
@@ -476,10 +476,14 @@ namespace game
             return;
         }
         if(!damage) return;
-        if(blood)
+        if(blood && color != -1)
         {
-            particle_splash(PART_BLOOD, damage/10, 1000, p, 0x60FFFF, 2.60f);
-            particle_splash(PART_BLOOD2, 200, 250, p, f->bloodcolour(), 0.50f);
+            particle_splash(PART_BLOOD, damage/10, 1000, p, color, 2.60f);
+            particle_splash(PART_BLOOD2, 200, 250, p, color, 0.50f);
+        }
+        else
+        {
+            particle_splash(PART_SPARK2, damage/10, 500, p, 0xFFFF66, 0.9f, 300);
         }
         if(f->health > 0 && lastmillis-f->lastyelp > 600)
         {
@@ -521,8 +525,8 @@ namespace game
             loopi(min(damage, 8)+1) spawnbouncer(from, d, BNC_GIB);
             if(blood)
             {
-                particle_splash(PART_BLOOD, 3, 180, d->o, d->bloodcolour(), 3.0f+rndscale(5.0f), 150, 0, 0.1f);
-                particle_splash(PART_BLOOD2, damage, 300, d->o, d->bloodcolour(), 0.89f, 300, 5);
+                particle_splash(PART_BLOOD, 3, 180, d->o, getbloodcolor(d), 3.0f+rndscale(5.0f), 150, 0, 0.1f);
+                particle_splash(PART_BLOOD2, damage, 300, d->o, getbloodcolor(d), 0.89f, 300, 5);
             }
         }
         msgsound(S_GIB, d);
@@ -541,7 +545,10 @@ namespace game
                 playsound(isally(f, at) ? S_HIT_ALLY : S_HIT);
             at->lasthit = lastmillis;
         }
-        if(f->type==ENT_AI || !m_mp(gamemode) || f==at) f->hitpush(damage, vel, at, atk);
+        if(f->type==ENT_AI || !m_mp(gamemode) || f==at)
+        {
+            f->hitpush(damage, vel, at, atk);
+        }
         if(f->type == ENT_AI) hitmonster(damage, (monster *)f, at, vel, atk);
         else if(!m_mp(gamemode))
         {
@@ -625,7 +632,7 @@ namespace game
         {
             float radiusdamage = damage*(1-dist/EXP_DISTSCALE/attacks[atk].exprad), damage = calcdamage(radiusdamage, (gameent *)o, at, atk);
             hit(damage, o, at, dir, atk, dist);
-            damageeffect(damage, o, o->o, atk);
+            damageeffect(damage, o, o->o, atk, getbloodcolor(o));
         }
     }
 
@@ -769,7 +776,7 @@ namespace game
         gameent *f = (gameent *)o;
         int cdamage = calcdamage(damage, f, p.owner, p.atk);
         hit(cdamage, o, p.owner, dir, p.atk, 0);
-        damageeffect(cdamage, o, o->o, p.atk);
+        damageeffect(cdamage, o, o->o, p.atk, getbloodcolor(o));
         return true;
     }
 
@@ -1338,7 +1345,7 @@ namespace game
                     }
                 }
                 calcpushdamage(numhits*damage, o, d, from, to, atk, numhits, flags);
-                damageeffect(damage, o, rays[i], atk);
+                damageeffect(damage, o, rays[i], atk, getbloodcolor(o));
             }
         }
         else
@@ -1363,7 +1370,7 @@ namespace game
                     }
                 }
                 calcpushdamage(attacks[atk].damage, o, d, from, to, atk, 1, flags);
-                damageeffect(damage, o, to, atk);
+                damageeffect(damage, o, to, atk, getbloodcolor(o));
             }
             else
             {

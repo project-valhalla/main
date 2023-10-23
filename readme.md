@@ -49,26 +49,27 @@ Below, we have provided an overview of the recommended or available methods for 
 The binaries will be available in `bin/bin64` and `bin/bin32`. They can be launched by using the `valhalla.bat` batch script located in the root directory of the repository.
 
 ### Code::Blocks
-In order to build the project on [Code::Blocks](https://www.codeblocks.org/downloads/binaries/), you can use [TDM-GCC](http://tdm-gcc.tdragon.net/download).  
-Make sure Code::Blocks is using the chosen compiler by checking the directory used at `Settings` > `Compiler` > `Toolchain executables` > `Compiler's installation directory` in Code::Blocks.  
-Once the compiler is configured, open the `valhalla.cbp` project located in `source/vcpp` and click on `Build` > `Build`.
+In order to build the project on [Code::Blocks](https://www.codeblocks.org/downloads/binaries/), you can use [TDM-GCC](http://tdm-gcc.tdragon.net/download).
+Make sure Code::Blocks is using the chosen compiler by checking the directory used at `Settings` -> `Compiler` -> `Toolchain executables` -> `Compiler's installation directory` in Code::Blocks.
+Once the compiler is configured, open the `valhalla.cbp` project located in `source/vcpp` and click on `Build` -> `Build`.
 
 ### Visual Studio
-In order to build the project on [Visual Studio](https://visualstudio.microsoft.com/en/), you will require one of the latest versions of Visual Studio and its C/C++ extension pack.  
-Open the `valhalla.sln` solution or the `valhalla.vcxproj` project located in `source/vcpp` and click on `Build` > `Build valhalla`.
+In order to build the project on [Visual Studio](https://visualstudio.microsoft.com/en/), you will require one of the latest versions of Visual Studio and its C/C++ extension pack.
+Open the `valhalla.sln` solution or the `valhalla.vcxproj` project located in `source/vcpp` and click on `Build` -> `Build valhalla`.
 
 ## Linux
-In order to build the source code by using the Makefile included in the `source` directory, you need to ensure you have the **SDL2**, **SDL2-image**, **SDL2-mixer** and **OpenGL** development libraries installed.  
+In order to build the source code by using the Makefile included in the `source` directory, you need to ensure you have the **SDL2**, **SDL2-image**, **SDL2-mixer** and **OpenGL** development libraries installed.
 After configuring the required libraries, change the current directory into the root directory of the repository in your terminal and execute the `make install` command:
 ```
 cd ~/main/source
 make install
 ```
-This will also install the binaries and make them accessible in the `bin/bin_unix` directory, which can be executed using the `valhalla_unix` bash script located in the root directory of the repository.
+This will also install the binaries and make them accessible in the `bin/bin_unix` directory, which can be executed using the `valhalla_unix` shell script located in the root directory of the repository.
 
 ## macOS
 ### Makefile
-You can use the Makefile located in the `source` directory to build the source code.
+You can use the Makefile located in the `source` directory to build the source code, similarly to the steps described in the [Linux](#linux) section.
+To launch the application, you can run the shell script `valhalla.sh` found in `bin/valhalla.app/Contents/MacOS`.
 
 ### Code::Blocks
-Alternatively, you can use Code::Blocks to load and build the project by opening the `source/vcpp/valhalla.cbp` file and following similar steps to those described in the Windows section.
+Alternatively, you can use Code::Blocks to load and build the project by opening the `source/vcpp/valhalla.cbp` file and following similar steps to those described in the [Windows](#windows) section.

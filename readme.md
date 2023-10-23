@@ -15,7 +15,7 @@
   </a>
 </p>
 
-## About
+# About
 We are a team of volunteers that have been collaborating since 2019 and are brought together by our shared enthusiasm and creativity.
 In an effort to enhance our skills and learn new things, we are working to bring the project's shared goal to life.
 
@@ -25,7 +25,7 @@ We strive to offer the majority of players a satisfying gaming experience by mak
 
 Anyone can contribute features, assets and ideas to the project to help it develop.
 
-## Goals
+# Goals
 Some of the goals we have in mind are:
 - **Accessibility**: Add tutorials and other important features to help new players get into the game.
 - **Cross-Platform Support**: Support Windows, Mac, and Linux.
@@ -38,3 +38,37 @@ Some of the goals we have in mind are:
 - **UI/HUD Improvements and Customization**: Make the UI clear and accessible while allowing easy customization.
 - **Unique Aesthetics**: Maintain an art direction that helps create something distinct and original.
 - **Vibrant Atmosphere**: Avoid hyper-realistic and gloomy design language, build levels that feel open and bright.
+
+# Contributing
+If you would like to know how to make significant contributions to the project, please take a moment to read our [contribution guidelines](https://github.com/project-valhalla/.github/blob/main/CONTRIBUTING.md).
+
+# Build Instructions
+Below, we have provided an overview of the recommended or available methods for building the source code.
+
+## Windows
+The binaries will be available in `bin/bin64` and `bin/bin32`. They can be launched by using the `valhalla.bat` batch script located in the root directory of the repository.
+
+### Code::Blocks
+In order to build the project on [Code::Blocks](https://www.codeblocks.org/downloads/binaries/), you can use [TDM-GCC](http://tdm-gcc.tdragon.net/download).  
+Make sure Code::Blocks is using the chosen compiler by checking the directory used at `Settings` > `Compiler` > `Toolchain executables` > `Compiler's installation directory` in Code::Blocks.  
+Once the compiler is configured, open the `valhalla.cbp` project located in `source/vcpp` and click on `Build` > `Build`.
+
+### Visual Studio
+In order to build the project on [Visual Studio](https://visualstudio.microsoft.com/en/), you will require one of the latest versions of Visual Studio and its C/C++ extension pack.  
+Open the `valhalla.sln` solution or the `valhalla.vcxproj` project located in `source/vcpp` and click on `Build` > `Build valhalla`.
+
+## Linux
+In order to build the source code by using the Makefile included in the `source` directory, you need to ensure you have the **SDL2**, **SDL2-image**, **SDL2-mixer** and **OpenGL** development libraries installed.  
+After configuring the required libraries, change the current directory into the root directory of the repository in your terminal and execute the `make install` command:
+```
+cd ~/main/source
+make install
+```
+This will also install the binaries and make them accessible in the `bin/bin_unix` directory, which can be executed using the `valhalla_unix` bash script located in the root directory of the repository.
+
+## macOS
+### Makefile
+You can use the Makefile located in the `source` directory to build the source code.
+
+### Code::Blocks
+Alternatively, you can use Code::Blocks to load and build the project by opening the `source/vcpp/valhalla.cbp` file and following similar steps to those described in the Windows section.

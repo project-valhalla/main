@@ -368,8 +368,8 @@ bool checkquery(occludequery *query, bool nowait)
             glGetQueryObjectiv_(query->id, GL_QUERY_RESULT_AVAILABLE, &avail);
             if(!avail) return false;
         }
-     
-        GLuint fragments;   
+
+        GLuint fragments;
         glGetQueryObjectuiv_(query->id, GL_QUERY_RESULT, &fragments);
         query->fragments = querytarget() == GL_SAMPLES_PASSED || !fragments ? int(fragments) : oqfrags;
     }
@@ -512,8 +512,11 @@ static inline void rendermapmodel(extentity &e)
     rendermapmodel(e.attr1, anim, e.o, e.attr2, e.attr3, e.attr4, MDL_CULL_VFC | MDL_CULL_DIST, basetime, e.attr5 > 0 ? e.attr5/100.0f : 1.0f);
 }
 
+VAR(hidemapmodels, 0, 0, 1);
+
 void rendermapmodels()
 {
+    if(hidemapmodels && editmode) return;
     static int skipoq = 0;
     bool doquery = !drawtex && oqfrags && oqmm;
     const vector<extentity *> &ents = entities::getents();
@@ -2440,7 +2443,7 @@ static void renderdecalbatches(decalrenderer &cur, int pass)
         {
             updateshader(cur);
         }
- 
+
         renderdecalbatch(cur, pass, b);
     }
 

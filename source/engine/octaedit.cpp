@@ -97,7 +97,6 @@ int gridsize = 8;
 ivec cor, lastcor;
 ivec cur, lastcur;
 
-extern int entediting;
 bool editmode = false;
 bool havesel = false;
 bool hmapsel = false;
@@ -179,7 +178,7 @@ void toggleedit(bool force)
     cancelsel();
     stoppaintblendmap();
     keyrepeat(editmode, KR_EDITMODE);
-    editing = entediting = editmode;
+    editing = editmode;
     if(!force) game::edittoggled(editmode);
     execident("on_edittoggle");
 }
@@ -347,6 +346,7 @@ bool editmoveplane(const vec &o, const vec &ray, int d, float off, vec &handle, 
 namespace hmap { inline bool isheightmap(int orient, int d, bool empty, cube *c); }
 extern int entorient;
 extern int enthover;
+extern int entediting;
 extern void entdrag(const vec &ray);
 extern bool hoveringonent(int ent, int orient);
 extern void renderentselection(const vec &o, const vec &ray, bool entmoving);

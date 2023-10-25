@@ -39,8 +39,16 @@ Some of the goals we have in mind are:
 - **Unique Aesthetics**: Maintain an art direction that helps create something distinct and original.
 - **Vibrant Atmosphere**: Avoid hyper-realistic and gloomy design language, build levels that feel open and bright.
 
-# Contributing
-If you would like to know how to make significant contributions to the project, please take a moment to read our [contribution guidelines](https://github.com/project-valhalla/.github/blob/main/CONTRIBUTING.md).
+# License
+Valhalla's source code and related configuration files and scripts are licensed under the [permissive zlib license](./license.md).  
+The included [ENet network library](./source/enet) which the project uses is covered by an MIT-style license, which is however compatible with the above license for all practical purposes.
+
+The game assets are excluded from the licenses mentioned above as these may be subject to individual copyright and have specific distribution restrictions.
+
+# Contributions
+Without invaluable contributions, this project would not have reached this stage.  
+To view a list of people who have contributed to the source code and related configuration files and scripts, consult our [contributors.md](./contributors.md) file.  
+If you would like to know how to make significant contributions to the project, please take a moment to read our [contribution guidelines](https://github.com/project-valhalla/.github/blob/main/CONTRIBUTING.md).  
 
 # Build Instructions
 Below, we have provided an overview of the recommended or available methods for building the source code.
@@ -49,16 +57,16 @@ Below, we have provided an overview of the recommended or available methods for 
 The binaries will be available in `bin/bin64` and `bin/bin32`. They can be launched by using the `valhalla.bat` batch script located in the root directory of the repository.
 
 ### Code::Blocks
-In order to build the project on [Code::Blocks](https://www.codeblocks.org/downloads/binaries/), you can use [TDM-GCC](http://tdm-gcc.tdragon.net/download).
-Make sure Code::Blocks is using the chosen compiler by checking the directory used at `Settings` -> `Compiler` -> `Toolchain executables` -> `Compiler's installation directory` in Code::Blocks.
+In order to build the project on [Code::Blocks](https://www.codeblocks.org/downloads/binaries/), you can use [TDM-GCC](http://tdm-gcc.tdragon.net/download).  
+Make sure Code::Blocks is using the chosen compiler by checking the directory used at `Settings` -> `Compiler` -> `Toolchain executables` -> `Compiler's installation directory` in Code::Blocks.  
 Once the compiler is configured, open the `valhalla.cbp` project located in `source/vcpp` and click on `Build` -> `Build`.
 
 ### Visual Studio
-In order to build the project on [Visual Studio](https://visualstudio.microsoft.com/en/), you will require one of the latest versions of Visual Studio and its C/C++ extension pack.
+In order to build the project on [Visual Studio](https://visualstudio.microsoft.com/en/), you will require one of the latest versions of Visual Studio and its C/C++ extension pack.  
 Open the `valhalla.sln` solution or the `valhalla.vcxproj` project located in `source/vcpp` and click on `Build` -> `Build valhalla`.
 
 ## Linux
-In order to build the source code by using the Makefile included in the `source` directory, you need to ensure you have the **SDL2**, **SDL2-image**, **SDL2-mixer** and **OpenGL** development libraries installed.
+In order to build the source code by using the Makefile included in the `source` directory, you need to ensure you have the **SDL2**, **SDL2-image**, **SDL2-mixer** and **OpenGL** development libraries installed.  
 After configuring the required libraries, change the current directory into the root directory of the repository in your terminal and execute the `make install` command:
 ```
 cd ~/main/source
@@ -68,7 +76,7 @@ This will also install the binaries and make them accessible in the `bin/bin_uni
 
 ## macOS
 ### Makefile
-You can use the Makefile located in the `source` directory to build the source code, similarly to the steps described in the [Linux](#linux) section.
+You can use the Makefile located in the `source` directory to build the source code, similarly to the steps described in the [Linux](#linux) section.  
 To launch the application, you can run the shell script `valhalla.sh` found in `bin/valhalla.app/Contents/MacOS`.
 
 ### Code::Blocks

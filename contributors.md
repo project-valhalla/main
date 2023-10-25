@@ -13,4 +13,4 @@ Copyright © 2019-2022 Valhalla Project source code and related configuration fi
 - [Robert "rspeele" Peele](https://github.com/rspeele)
 - [Waldhar](https://github.com/WallaceWallaceWallace)
 
-Valhalla is a derivative work of [Cube 2: Sauerbraten](http://sauerbraten.org) and [Tesseract](http://tesseract.gg/). To view a complete list of these projects' contributors, please refer to the [readme_sauerbraten.txt](.src/readme_sauerbraten.txt) and [readme_tesseract.txt](.src/readme_tesseract.txt) files located in the src/ directory of this repository.
+Valhalla is a derivative work of [Cube 2: Sauerbraten](http://sauerbraten.org) and [Tesseract](http://tesseract.gg/). To view a complete list of these projects' contributors, please refer to the [readme_sauerbraten.txt](.src/readme_sauerbraten.txt) and [readme_tesseract.txt](.src/readme_tesseract.txt) files located in the `src/` directory of this repository.

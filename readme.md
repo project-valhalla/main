@@ -76,7 +76,7 @@ This will also install the binaries and make them accessible in the `bin/bin_uni
 
 ## macOS
 ### Makefile
-You can use the Makefile located in the `source` directory to build the source code, similarly to the steps described in the [Linux](#linux) section.
+You can use the Makefile located in the `source/` directory to build the source code, similarly to the steps described in the [Linux](#linux) section.
 To launch the application, you can run the shell script `valhalla.sh` found in `bin/valhalla.app/Contents/MacOS/`.
 
 ### Code::Blocks

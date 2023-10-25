@@ -532,7 +532,7 @@ namespace game
     ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
     ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
-    VARP(killsound, 0, 0, 1);
+    VARP(killsound, 0, 1, 1);
 
     void kill(gameent *d, gameent *actor, int atk, int flags)
     {

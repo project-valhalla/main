@@ -2599,7 +2599,7 @@ int screenfxmillis = 0;
 
 VARFP(screenfx, 0, 1, 1, { if(!screenfx) screenfxmillis = 0; });
 VARP(screenfxfactor, 1, 5, 100);
-VARP(screenfxalpha, 1, 70, 100);
+VARP(screenfxalpha, 1, 25, 100);
 VARP(screenfxfade, 0, 600, 1000);
 VARP(screenfxmin, 1, 20, 1000);
 VARP(screenfxmax, 1, 200, 1000);
@@ -2615,7 +2615,7 @@ void drawscreenfx(int w, int h)
 {
     if(lastmillis >= screenfxmillis) return;
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    float fade = damagescreenalpha/100.0f;
+    float fade = screenfxalpha/100.0f;
     if(screenfxmillis - lastmillis < screenfxfade)
         fade *= float(screenfxmillis - lastmillis)/screenfxfade;
     gle::colorf(fade, fade, fade, fade);

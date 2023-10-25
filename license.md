@@ -1,7 +1,7 @@
 ## Preamble
 Valhalla is licensed under the permissive zlib license, as it is derived from the Cube 2 and Tesseract source code, as specified in the original licensing statements provided under the files "readme_sauerbraten.txt" and "readme_tesseract.txt", which are found in this repository's /src directory.
 
-This license applies to the source code contained in the /src directory of this repository and all the related configuration files and scripts.
+This license applies to the source code contained in the src/ directory of this repository and all the related configuration files and scripts.
 
 The included ENet network library which Cube 2 and Tesseract use is covered by an MIT-style license, which is however compatible with the above license for all practical purposes.
 

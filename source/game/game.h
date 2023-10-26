@@ -190,7 +190,7 @@ enum
 static const int msgsizes[] =               // size inclusive message token, 0 for variable or not-checked sizes
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
-    N_SHOOT, 0, N_EXPLODE, 0, N_HURTPLAYER, 0, N_SUICIDE, 1,
+    N_SHOOT, 0, N_EXPLODE, 0, N_HURTPLAYER, 1, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 8, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 12, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 8, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
@@ -301,10 +301,10 @@ struct gamestate
     int ammo[NUMGUNS];
     int aitype, skill;
     int poweruptype, powerupmillis;
-    int lastdamage;
     int role;
+    int lasthurt;
 
-    gamestate() : maxhealth(100), aitype(AI_NONE), skill(0), lastdamage(0) { }
+    gamestate() : maxhealth(100), aitype(AI_NONE), skill(0), lasthurt(0) {}
 
     bool canpickup(int type)
     {
@@ -548,7 +548,8 @@ struct gameent : dynent, gamestate
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
-                lastpain(0), lastfootstep(0), lastyelp(0), lastswitch(0),
+                lastpain(0),
+                lastfootstep(0), lastyelp(0), lastswitch(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0),
                 edit(NULL), smoothmillis(-1),
                 attackchan(-1), idlechan(-1), powerupchan(-1), gunchan(-1),
@@ -740,6 +741,7 @@ namespace game
     extern void spawneffect(gameent *d);
     extern bool isally(gameent *a, gameent *b);
     extern void deathstate(gameent *d, bool restore = false);
+    extern void damagehud(int damage, gameent *d, gameent *actor);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
     extern void writeobituary(gameent *d, gameent *actor, int atk, bool headshot = false);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = KILL_NONE);
@@ -777,6 +779,7 @@ namespace game
     extern void explodeeffects(int atk, gameent *d, bool local, int id = 0);
     extern void damageeffect(int damage, dynent *d, vec p, int atk, int color);
     extern void gibeffect(int damage, const vec &vel, gameent *d);
+    extern int calcdamage(int damage, gameent *target, gameent *actor, int atk, int flags = HIT_TORSO);
     extern float intersectdist;
     extern bool intersect(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);
     extern dynent *intersectclosest(const vec &from, const vec &to, gameent *at, float margin = 0, float &dist = intersectdist);
@@ -806,7 +809,7 @@ namespace game
     extern void updatemonsters(int curtime);
     extern void rendermonsters();
     extern void suicidemonster(monster *m);
-    extern void hitmonster(int damage, monster *m, gameent *at, const vec &vel, int gun);
+    extern void hitmonster(int damage, monster *m, gameent *at);
     extern void monsterkilled();
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);

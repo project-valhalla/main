@@ -111,7 +111,8 @@ const struct material
     {"gameclip", MAT_GAMECLIP},
     {"death", MAT_DEATH},
     {"nogi", MAT_NOGI},
-    {"alpha", MAT_ALPHA}
+    {"alpha", MAT_ALPHA},
+    {"damage", MAT_DAMAGE}
 };
 
 int findmaterial(const char *name)
@@ -131,7 +132,7 @@ const char *findmaterialname(int mat)
 
 const char *getmaterialdesc(int mat, const char *prefix)
 {
-    static const ushort matmasks[] = { MATF_VOLUME|MATF_INDEX, MATF_CLIP, MAT_DEATH, MAT_NOGI, MAT_ALPHA };
+    static const ushort matmasks[] = { MATF_VOLUME|MATF_INDEX, MATF_CLIP, MAT_DEATH, MAT_NOGI, MAT_ALPHA, MAT_DAMAGE };
     static string desc;
     desc[0] = '\0';
     loopi(sizeof(matmasks)/sizeof(matmasks[0])) if(mat&matmasks[i])
@@ -177,7 +178,7 @@ void genmatsurfs(const cube &c, const ivec &co, int size, vector<materialsurface
 {
     loopi(6)
     {
-        static const ushort matmasks[] = { MATF_VOLUME|MATF_INDEX, MATF_CLIP, MAT_DEATH, MAT_NOGI, MAT_ALPHA };
+        static const ushort matmasks[] = { MATF_VOLUME|MATF_INDEX, MATF_CLIP, MAT_DEATH, MAT_NOGI, MAT_ALPHA, MAT_DAMAGE };
         loopj(sizeof(matmasks)/sizeof(matmasks[0]))
         {
             ushort matmask = matmasks[j];
@@ -498,6 +499,7 @@ void rendermatgrid()
                 case MAT_DEATH:    color = bvec4(40, 40, 40, 255); break; // black
                 case MAT_NOGI:     color = bvec4(40, 30,  0, 255); break; // brown
                 case MAT_ALPHA:    color = bvec4(85,  0, 85, 255); break; // pink
+                case MAT_DAMAGE:   color = bvec4(48, 50, 48, 255); break; // grey
                 default: continue;
             }
             lastmat = m.material;
@@ -762,6 +764,7 @@ void rendereditmaterials()
                 case MAT_DEATH:    color = bvec4(192, 192, 192, 255); break; // black
                 case MAT_NOGI:     color = bvec4(128, 160, 255, 255); break; // brown
                 case MAT_ALPHA:    color = bvec4(  0, 255,   0, 255); break; // pink
+                case MAT_DAMAGE:   color = bvec4(192, 192, 192, 255); break; // grey
                 default: continue;
             }
             lastmat = m.material;

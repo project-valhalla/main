@@ -11,7 +11,7 @@ namespace ai
     bool clipped(const vec &o)
     {
         int material = lookupmaterial(o), clipmat = material&MATF_CLIP;
-        return clipmat == MAT_CLIP || material&MAT_DEATH || (material&MATF_VOLUME) == MAT_LAVA;
+        return clipmat == MAT_CLIP || material&MAT_DEATH || material&MAT_DAMAGE || (material&MATF_VOLUME) == MAT_LAVA;
     }
 
     int getweight(const vec &o)
@@ -26,7 +26,7 @@ namespace ai
             weight = int(dist/ai::JUMPMIN);
             pos.z -= clamp(dist-8.0f, 0.0f, pos.z);
             int trgmat = lookupmaterial(pos);
-            if(trgmat&MAT_DEATH || (trgmat&MATF_VOLUME) == MAT_LAVA) weight *= 10;
+            if(trgmat&MAT_DEATH || (trgmat&MATF_VOLUME) == MAT_LAVA || trgmat&MAT_DAMAGE) weight *= 10;
             else if(isliquid(trgmat&MATF_VOLUME)) weight *= 2;
         }
         return weight;
@@ -568,7 +568,7 @@ namespace ai
         if(d->state != CS_ALIVE) { d->lastnode = -1; return; }
         bool dropping = shoulddrop(d);
         int mat = lookupmaterial(v);
-        if((mat&MATF_CLIP) == MAT_CLIP || (mat&MATF_VOLUME) == MAT_LAVA || mat&MAT_DEATH) dropping = false;
+        if((mat&MATF_CLIP) == MAT_CLIP || (mat&MATF_VOLUME) == MAT_LAVA || mat&MAT_DEATH || mat&MAT_DAMAGE) dropping = false;
         float dist = dropping ? WAYPOINTRADIUS : (d->ai ? WAYPOINTRADIUS : SIGHTMIN);
         int curnode = closestwaypoint(v, dist, false, d), prevnode = d->lastnode;
         if(!iswaypoint(curnode) && dropping)

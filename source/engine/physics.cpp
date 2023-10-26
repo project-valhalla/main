@@ -1841,7 +1841,6 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
         if(!pl->timeinair && !water) // if we land after long time must have been a high jump, make thud sound
         {
             pl->doublejumping = false; // now that we landed, double jump resets
-            material = lookupmaterial(pl->feetpos());
             if(timeinair > 350 && timeinair < 800) game::triggerphysicsevent(pl, PHYSEVENT_LAND_SHORT, material);
             else if(timeinair >= 800) game::triggerphysicsevent(pl, PHYSEVENT_LAND_MEDIUM, material);
             game::triggerphysicsevent(pl, PHYSEVENT_FOOTSTEP, material);
@@ -1866,8 +1865,15 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 
     if(pl->state==CS_ALIVE)
     {
-        if(material&MAT_DAMAGE || isharmful(lookupmaterial(pl->feetpos()))) game::damage(pl); // damage the player if their feet or body are inside damage/lava material
-        if(pl->o.z < 0 || material&MAT_DEATH) game::suicide(pl); // kill the player if inside death material or outside of world (below origin)
+        vec feet = pl->feetpos();
+        if(material & MAT_DAMAGE || lookupmaterial(feet) & MAT_DAMAGE || lookupmaterial(feet) & MAT_LAVA)
+        {
+            game::hurt(pl); // damage the player if their feet or body are inside damage/lava material
+        }
+        if(pl->o.z < 0 || material & MAT_DEATH)
+        {
+            game::suicide(pl); // kill the player if inside death material or outside of world (below origin)
+        }
     }
     return true;
 }

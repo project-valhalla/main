@@ -55,8 +55,9 @@ const float EXP_DISTSCALE = 1.5f; // explosion damage is going to be scaled by d
 const int MAXRAYS     = 20; // maximum rays a player can shoot, we can't change that
 const int ALLY_DAMDIV = 2;  // divide damage dealt to self or allies
 const int ENV_DAM     = 5;  // environmental damage like lava, damage material and fall damage
+const int ENV_DAM_DELAY = 500; // environmental damage is dealt again after a specific number of milliseconds
 
-const int RESPAWN_WAIT = 1500;
+const int RESPAWN_WAIT = 1500; // spawn is possible after a specific number of milliseconds has elapsed
 
 static const struct attackinfo
 {

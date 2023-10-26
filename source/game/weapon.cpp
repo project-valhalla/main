@@ -549,7 +549,7 @@ namespace game
         {
             f->hitpush(damage, vel, at, atk);
         }
-        if(f->type == ENT_AI) hitmonster(damage, (monster *)f, at, vel, atk);
+        if(f->type == ENT_AI) hitmonster(damage, (monster *)f, at);
         else if(!m_mp(gamemode))
         {
             damaged(damage, f->o, f, at, atk, flags);
@@ -567,8 +567,7 @@ namespace game
             {
                 if(f == self)
                 {
-                    if(lastmillis-f->lastyelp > 500) damageblend(damage);
-                    if(f != at) damagecompass(damage, at ? at->o : f->o);
+                    damagehud(damage, f, at);
                 }
                 if(flags & HIT_HEAD)
                 {
@@ -579,7 +578,7 @@ namespace game
         }
     }
 
-    int calcdamage(int damage, gameent *target, gameent *actor, int atk, int flags = HIT_TORSO)
+    int calcdamage(int damage, gameent *target, gameent *actor, int atk, int flags)
     {
         if(target != actor)
         {

@@ -435,30 +435,48 @@ namespace game
     VARP(hitsound, 0, 0, 1);
     VARP(playheadshotsound, 0, 1, 2);
 
+    void damagehud(int damage, gameent *d, gameent *actor)
+    {
+        damageblend(damage);
+        if(d!=actor) damagecompass(damage, actor->o);
+    }
+
     void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
     {
         if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
 
-        if(local) damage = d->dodamage(damage);
+        if(local)
+        {
+            damage = d->dodamage(damage);
+        }
 
         ai::damaged(d, actor);
+
+        if(d != actor) d->lastpain = lastmillis;
 
         gameent *h = hudplayer();
 
         if(h!=self && actor==h && d!=actor)
         {
             if(hitsound && actor->lasthit != lastmillis)
+            {
                 playsound(isally(d, actor) ? S_HIT_ALLY : S_HIT);
+            }
         }
         if(d!=actor) actor->lasthit = lastmillis;
         if(d->haspowerup(PU_INVULNERABILITY) && !actor->haspowerup(PU_INVULNERABILITY)) playsound(S_ACTION_INVULNERABILITY, d);
         if(!d->haspowerup(PU_INVULNERABILITY) || (d->haspowerup(PU_INVULNERABILITY) && actor->haspowerup(PU_INVULNERABILITY)))
         {
-            if(d==h && d!=actor) damagecompass(damage, actor->o);
-            damageeffect(damage, d, p, atk, d!=h);
+            if(d==h)
+            {
+                damagehud(damage, d, actor);
+            }
+            damageeffect(damage, d, p, atk, getbloodcolor(d));
             if(flags & HIT_HEAD)
             {
-                if(playheadshotsound) playsound(S_HIT_WEAPON_HEAD, NULL, &d->o);
+                if(playheadshotsound) {
+                    playsound(S_HIT_WEAPON_HEAD, NULL, &d->o);
+                }
             }
         }
         if(d->health<=0) { if(local) kill(d, actor, NULL); }
@@ -960,22 +978,27 @@ namespace game
         else return "\ff";
     }
 
-    void damage(physent *d)
+    void hurt(physent *d)
     {
-        if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
+        if(d->state != CS_ALIVE) return;
+        gameent *pl = (gameent *)d;
+        if(pl->lasthurt && lastmillis - pl->lasthurt <= ENV_DAM_DELAY) return;
+        int damage = calcdamage(ENV_DAM, pl, pl, -1, HIT_MATERIAL);
+        if(pl==self || (pl->type == ENT_PLAYER && pl->ai))
         {
-            if(d->state!=CS_ALIVE) return;
-            gameent *e = (gameent *)d;
-            int damage = ENV_DAM;
-            if(e->haspowerup(PU_INVULNERABILITY)) damage = 0;
             if(!m_mp(gamemode))
             {
-                if(lastmillis-e->lastdamage <= 800) return;
-                damaged(damage, e->o, e, e, -1);
+                damaged(damage, pl->o, pl, pl, -1, HIT_MATERIAL, true);
+                pl->lasthurt = lastmillis;
             }
-            else addmsg(N_HURTPLAYER, "rci", e, damage);
-            e->lastdamage = lastmillis;
+            else addmsg(N_HURTPLAYER, "rc", pl);
+            if(pl == self)
+            {
+                damagehud(damage, pl, pl);
+                pl->lastpain = lastmillis;
+            }
         }
+        else if(pl->type == ENT_AI) hitmonster(damage, (monster *)d, pl);
     }
 
     void suicide(physent *d)

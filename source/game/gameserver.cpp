@@ -127,15 +127,15 @@ namespace server
     {
         vec o;
         int state, editstate;
-        int lastdeath, deadflush, lastspawn, lifesequence, lastpain;
-        int lastregeneration;
+        int lastdeath, deadflush, lastspawn, lifesequence;
+        int lastpain, lastdamage, lastregeneration;
         int lastshot, lastatk;
         projectilestate<8> projs, bouncers;
         int frags, flags, deaths, points, teamkills, shotdamage, damage, spree;
         int lasttimeplayed, timeplayed;
         float effectiveness;
 
-        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastregeneration(0), spree(0) {}
+        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastdamage(0), lastregeneration(0), spree(0) {}
 
         bool isalive(int gamemillis)
         {
@@ -2731,7 +2731,7 @@ namespace server
         }
         if(ts.health<=0)
         {
-            if(isally(target, actor) && !m_teammode) died(actor, actor, atk, damage, flags);
+            if(!m_teammode && isally(target, actor) && !m_teammode) died(actor, actor, atk, damage, flags);
             if(m_infection)
             {
                 if(target == actor || target->state.role == ROLE_ZOMBIE) died(target, actor, atk, damage, flags);
@@ -3811,11 +3811,8 @@ namespace server
 
             case N_HURTPLAYER:
             {
-                int damage = getint(p);
-                if(!cq) break;
-                if(cq->state.haspowerup(PU_INVULNERABILITY)) damage = 0;
-                if(lastmillis-cq->state.lastdamage<=800) break;
-                dodamage(cq, cq, damage, -1, HIT_MATERIAL);
+                if(!cq || lastmillis-cq->state.lastdamage <= ENV_DAM_DELAY) break;
+                dodamage(cq, cq, calcdamage(ENV_DAM, cq, cq, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
                 cq->state.lastdamage = lastmillis;
                 break;
             }

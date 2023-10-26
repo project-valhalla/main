@@ -1800,7 +1800,6 @@ namespace game
                 if(!target || !actor) break;
                 target->health = health;
                 target->shield = shield;
-                if(target->state == CS_ALIVE && actor != self) target->lastpain = lastmillis;
                 if(attacks[atk].projspeed || target == actor) damaged(damage, target->o, target, actor, atk, flags, false);
                 break;
             }

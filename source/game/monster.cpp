@@ -390,7 +390,7 @@ namespace game
         m->monsterpain(400, self);
     }
 
-    void hitmonster(int damage, monster *m, gameent *at, const vec &vel, int atk)
+    void hitmonster(int damage, monster *m, gameent *at)
     {
         m->monsterpain(damage, at);
     }

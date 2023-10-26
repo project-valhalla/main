@@ -61,7 +61,7 @@ namespace game
     extern const char *getmapinfo();
     extern const char *getscreenshotinfo();
     extern void resetgamestate();
-    extern void damage(physent *d);
+    extern void hurt(physent *d);
     extern void suicide(physent *d);
     extern void newmap(int size);
     extern void startmap(const char *name);

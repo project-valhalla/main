@@ -1377,7 +1377,14 @@ namespace game
                     d->smoothmillis = lastmillis;
                 }
                 else d->smoothmillis = 0;
-                if(d->state==CS_LAGGED || d->state==CS_SPAWNING) d->state = CS_ALIVE;
+                if(d->state==CS_LAGGED || d->state==CS_SPAWNING)
+                {
+                    if(d->state == CS_SPAWNING)
+                    {
+                        spawneffect(d);
+                    }
+                    d->state = CS_ALIVE;
+                }
                 break;
             }
 
@@ -1706,7 +1713,11 @@ namespace game
             {
                 int scn = getint(p);
                 gameent *s = getclient(scn);
-                if(!s) { parsestate(NULL, p); break; }
+                if(!s)
+                {
+                    parsestate(NULL, p);
+                    break;
+                }
                 if(s!=hudplayer() && s->state==CS_DEAD && s->lastpain) saveragdoll(s);
                 else cleanragdoll(s);
                 if(s==self)
@@ -1723,7 +1734,6 @@ namespace game
                 ai::spawned(s);
                 checkfollow();
                 addmsg(N_SPAWN, "rcii", s, s->lifesequence, s->gunselect);
-                spawneffect(s);
                 break;
             }
 

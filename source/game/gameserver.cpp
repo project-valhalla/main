@@ -1339,7 +1339,7 @@ namespace server
         }
     }
 
-    ICOMMAND(seekdemo, "sN$", (char *t, int *numargs, ident *id),
+    ICOMMAND(demotime, "sN$", (char *t, int *numargs, ident *id),
     {
         if(*numargs > 0) seekdemo(t);
         else

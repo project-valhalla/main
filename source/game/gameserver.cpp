@@ -677,7 +677,7 @@ namespace server
     bool firstblood    = false,
          betweenrounds = false,
          nojuggernaut  = true,
-         zombiechosen  = false;
+         hunterchosen  = false;
 
     struct teamkillkick
     {
@@ -945,7 +945,7 @@ namespace server
 
     bool allowpickup()
     {
-        return !((!m_infection && betweenrounds) || (m_infection && zombiechosen && betweenrounds));
+        return !((!m_infection && !m_betrayal && betweenrounds) || ((m_infection || m_betrayal) && hunterchosen && betweenrounds));
     }
 
     bool pickup(int i, int sender)         // server side item pickup, acknowledge first client that gets it
@@ -2002,7 +2002,7 @@ namespace server
         }
         if(ci && (m_demo || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
         {
-            if((smode && !smode->canspawn(ci, true)) || (((m_infection && zombiechosen) || (m_round && !m_infection)) && numclients(-1, true, false) > 1))
+            if((smode && !smode->canspawn(ci, true)) || ((((m_infection || m_betrayal) && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
             {
                 ci->state.state = CS_DEAD;
                 putint(p, N_FORCEDEATH);
@@ -2255,25 +2255,47 @@ namespace server
         if(!m_infection || !ci || ci->state.state!=CS_ALIVE) return;
         ci->state.infect();
         sendf(-1, 1, "ri4", N_ASSIGNROLE, ci->clientnum, actor->clientnum, ROLE_ZOMBIE);
-        if(!zombiechosen) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_INFECTION, "\fs\f2Infection has begun\fr");
+        if(!hunterchosen) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_INFECTION, "\fs\f2Infection has begun\fr");
     }
 
     void choosezombie()
     {
         clientinfo *zombie = random();
         if(zombie != NULL) infect(zombie, zombie);
-        zombiechosen = true;
+        hunterchosen = true;
         betweenrounds = false;
     }
 
     static void startzombieround()
     {
-        if(zombiechosen || interm) return;
+        if(hunterchosen || interm) return;
         const int numplayers = numclients(-1, true, false);
         if(numplayers > 0)
         {
             int np = max(numplayers/4, 1);
             loopi(np) choosezombie();
+        }
+    }
+
+    static void startbetrayalround()
+    {
+        if(hunterchosen || interm) return;
+        clientinfo *traitor = random();
+        if(traitor != NULL)
+        {
+            traitor->state.role = ROLE_TRAITOR;
+        }
+        hunterchosen = true;
+        betweenrounds = false;
+        loopv(clients)
+        {
+            clientinfo *ci = clients[i];
+            if(ci->state.role == ROLE_TRAITOR)
+            {
+                sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_TRAITOR, "\f2You are the traitor");
+                continue;
+            }
+            sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_VICTIM, "\f2You are a victim");
         }
     }
 
@@ -2322,10 +2344,10 @@ namespace server
         }
         resetroundtimer();
         roundrespawn();
-        if(m_infection)
+        if(m_infection || m_betrayal)
         {
-            zombiechosen = false;
-            serverevents::add(&startzombieround, 10000);
+            hunterchosen = false;
+            serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
         }
         else betweenrounds = false;
     }
@@ -2340,24 +2362,27 @@ namespace server
     void checkplayers(bool timeisup)
     {
         if(betweenrounds || interm || gamepaused) return;
-        int survivors = 0, zombies = 0;
+        int survivors = 0, zombies = 0, traitors = 0;
         loopv(clients)
         {
             clientinfo *ci = clients[i];
             if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED) continue;
             if(ci->state.role == ROLE_ZOMBIE) zombies++;
+            else if(ci->state.role == ROLE_TRAITOR) traitors++;
             else survivors++;
         }
-        bool rewardzombies = false, rewardsurvivors = false;
+        bool rewardhunters = false, // reward zombies in "infection" or traitors in "betrayal"
+             rewardsurvivors = false;
         int score = 0;
-        if (m_infection && zombiechosen)
+        if(hunterchosen && (m_infection || m_betrayal))
         {
-            if((survivors <= 0 && zombies <= 0) || (timeisup && survivors <= 0 && zombies > 0))
+            int hunters = m_infection ? zombies : traitors;
+            if((survivors <= 0 && hunters <= 0) || (timeisup && survivors <= 0 && hunters > 0))
             {
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_SURVIVORS, timeisup? "\f2Time is up": "\f2Nobody survived");
                 endround();
             }
-            else if(zombies <= 0 || (timeisup && survivors > 0))
+            else if(hunters <= 0 || (timeisup && survivors > 0))
             {
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_SURVIVORS, "\f2Survivors win the round");
                 rewardsurvivors = true;
@@ -2366,9 +2391,9 @@ namespace server
             }
             else if(survivors <= 0 && numclients(-1, true, false) > 1)
             {
-                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_ZOMBIES, "\f2Zombies win the round");
-                rewardzombies = true;
-                score = 1;
+                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_ZOMBIES, m_infection ? "\f2Zombies win the round" : "\f2Traitor wins the round");
+                rewardhunters = true;
+                score = m_infection ? 1 : 5;
                 endround();
             }
         }
@@ -2387,7 +2412,7 @@ namespace server
                 endround();
             }
         }
-        if(rewardsurvivors || rewardzombies) loopv(clients)
+        if(rewardsurvivors || rewardhunters) loopv(clients)
         {
             clientinfo *ci = clients[i];
             if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED)
@@ -2395,7 +2420,7 @@ namespace server
                 if(m_lms && ci->state.aitype == AI_NONE) sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, "\f2Round completed");
                 continue;
             }
-            if((rewardsurvivors && ci->state.role == ROLE_ZOMBIE) || (rewardzombies && ci->state.role != ROLE_ZOMBIE)) continue;
+            if((rewardsurvivors && ci->state.role >= ROLE_ZOMBIE) || (rewardhunters && ci->state.role < ROLE_ZOMBIE)) continue;
             addscore(ci, score);
             if(m_lms && ci->state.aitype == AI_NONE)
             {
@@ -2464,11 +2489,11 @@ namespace server
 
         firstblood = false;
         if(m_juggernaut) nojuggernaut = true;
-        if(m_infection)
+        if(m_infection || m_betrayal)
         {
-            zombiechosen = false;
+            hunterchosen = false;
             betweenrounds = true;
-            serverevents::add(&choosezombie, 10000);
+            serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
         }
         else betweenrounds = false;
 
@@ -2629,7 +2654,8 @@ namespace server
     {
         return sameteam(target->team, actor->team)
                || (m_infection && ((actor->state.role == ROLE_ZOMBIE && target->state.role == ROLE_ZOMBIE)
-               || (actor->state.role != ROLE_ZOMBIE && target->state.role != ROLE_ZOMBIE)));
+               || (actor->state.role != ROLE_ZOMBIE && target->state.role != ROLE_ZOMBIE)))
+               || (m_betrayal && target->state.role != ROLE_TRAITOR && actor->state.role != ROLE_TRAITOR);
     }
 
     void died(clientinfo *target, clientinfo *actor, int atk, int damage, int flags = 0)
@@ -2683,7 +2709,8 @@ namespace server
                 sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
             }
         }
-        sendf(-1, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, atk, kflags);
+        bool hidekillinfo = m_betrayal && actor->state.role == ROLE_TRAITOR; // cover traitor's kills and display them as suicides in the obituary
+        sendf(-1, 1, "ri7", N_DIED, target->clientnum, hidekillinfo ? target->clientnum : actor->clientnum, hidekillinfo ? 0 : actor->state.frags, t ? t->frags : 0, atk, kflags);
         target->position.setsize(0);
         if(smode) smode->died(target, actor);
         ts.state = CS_DEAD;
@@ -2697,6 +2724,31 @@ namespace server
         ts.deadflush = ts.lastdeath + DEATHMILLIS;
         // don't issue respawn yet until DEATHMILLIS has elapsed
         // ts.respawn();
+    }
+
+    void suicide(clientinfo *ci)
+    {
+        servstate &gs = ci->state;
+        if(gs.state!=CS_ALIVE) return;
+        if(m_juggernaut && gs.role == ROLE_JUGGERNAUT) nojuggernaut = true;
+        teaminfo *t = NULL;
+        if(!betweenrounds && !hunterchosen && !interm)
+        {
+            int fragvalue = smode ? smode->fragvalue(ci, ci) : -1;
+            ci->state.frags += fragvalue;
+            ci->state.points--;
+            sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
+            ci->state.deaths++;
+            if(m_teammode && validteam(ci->team)) t = &teaminfos[ci->team-1];
+            if(t) t->frags += fragvalue;
+        }
+        sendf(-1, 1, "ri7", N_DIED, ci->clientnum, ci->clientnum, gs.frags, t ? t->frags : 0, -1, 0);
+        ci->position.setsize(0);
+        if(smode) smode->died(ci, NULL);
+        gs.state = CS_DEAD;
+        gs.lastdeath = gamemillis;
+        gs.respawn();
+        if(!smode && m_round) checkplayers();
     }
 
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int atk, int flags = 0, const vec &hitpush = vec(0, 0, 0))
@@ -2719,7 +2771,7 @@ namespace server
                         sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
                     }
                 }
-                else if(!m_teammode) dodamage(actor, actor, damage, atk, flags);
+                else if(!m_teammode && !m_betrayal) dodamage(actor, actor, damage, atk, flags);
             }
         }
         if(target==actor) target->setpushed();
@@ -2731,7 +2783,7 @@ namespace server
         }
         if(ts.health<=0)
         {
-            if(!m_teammode && isally(target, actor) && !m_teammode) died(actor, actor, atk, damage, flags);
+            if(!m_teammode && isally(target, actor)) suicide(actor);
             if(m_infection)
             {
                 if(target == actor || target->state.role == ROLE_ZOMBIE) died(target, actor, atk, damage, flags);
@@ -2744,31 +2796,6 @@ namespace server
             else died(target, actor, atk, damage, flags);
             if(!smode && m_round) checkplayers();
         }
-    }
-
-    void suicide(clientinfo *ci)
-    {
-        servstate &gs = ci->state;
-        if(gs.state!=CS_ALIVE) return;
-        if(m_juggernaut && gs.role == ROLE_JUGGERNAUT) nojuggernaut = true;
-        teaminfo *t = NULL;
-        if(!betweenrounds && !zombiechosen && !interm)
-        {
-            int fragvalue = smode ? smode->fragvalue(ci, ci) : -1;
-            ci->state.frags += fragvalue;
-            ci->state.points--;
-            sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
-            ci->state.deaths++;
-            if(m_teammode && validteam(ci->team)) t = &teaminfos[ci->team-1];
-            if(t) t->frags += fragvalue;
-        }
-        sendf(-1, 1, "ri7", N_DIED, ci->clientnum, ci->clientnum, gs.frags, t ? t->frags : 0, -1, 0);
-        ci->position.setsize(0);
-        if(smode) smode->died(ci, NULL);
-        gs.state = CS_DEAD;
-        gs.lastdeath = gamemillis;
-        gs.respawn();
-        if(!smode && m_round) checkplayers();
     }
 
     void suicideevent::process(clientinfo *ci)
@@ -2801,7 +2828,7 @@ namespace server
                 if(flags & HIT_LEGS) damage /= 2;
             }
             if(actor->state.haspowerup(PU_DAMAGE) || actor->state.role == ROLE_JUGGERNAUT) damage *= 2;
-            if(isally(target, actor) || target == actor) damage /= ALLY_DAMDIV;
+            if((isally(target, actor) || target == actor) && !m_betrayal) damage /= ALLY_DAMDIV;
         }
         if (target->state.haspowerup(PU_ARMOR) || target->state.role == ROLE_JUGGERNAUT) damage /= 2;
         if(!damage) damage = 1;
@@ -3745,7 +3772,7 @@ namespace server
 
             case N_TRYSPAWN:
                 if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (!m_edit && cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath <= RESPAWN_WAIT)) break;
-                if((smode && !smode->canspawn(cq)) || (m_infection && zombiechosen) || (m_round && !m_infection && numclients(-1, true, false) > 1))
+                if((smode && !smode->canspawn(cq)) || ((((m_infection || m_betrayal) && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
                 {
                     if(cq->state.aitype==AI_NONE)
                     {

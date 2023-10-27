@@ -727,6 +727,7 @@ namespace game
     ICOMMANDS("m_jugg", "i", (int *mode), { int gamemode = *mode; intret(m_juggernaut); });
     ICOMMANDS("m_infect", "i", (int *mode), { int gamemode = *mode; intret(m_infection); });
     ICOMMANDS("m_invasion", "i", (int *mode), { int gamemode = *mode; intret(m_invasion); });
+    ICOMMANDS("m_betrayal", "i", (int *mode), { int gamemode = *mode; intret(m_betrayal); });
     ICOMMANDS("m_dm", "i", (int *mode), { int gamemode = *mode; intret(m_dm); });
     ICOMMANDS("m_demo", "i", (int *mode), { int gamemode = *mode; intret(m_demo); });
     ICOMMANDS("m_edit", "i", (int *mode), { int gamemode = *mode; intret(m_edit); });

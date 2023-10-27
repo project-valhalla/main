@@ -12,7 +12,8 @@ enum
     M_LASTMAN     = 1<<8,
     M_JUGGERNAUT  = 1<<9,
     M_INFECTION   = 1<<10,
-    M_INVASION    = 1<<11
+    M_INVASION    = 1<<11,
+    M_BETRAYAL    = 1<<12
 };
 
 static struct gamemodeinfo
@@ -31,7 +32,8 @@ static struct gamemodeinfo
     { "lms", "Last Man Standing", M_LASTMAN, "\f2Last Man Standing\ff: eliminate everyone to win the round and score points" },
     { "jugg", "Juggernaut", M_JUGGERNAUT, "\f2Juggernaut\ff: kill the juggernaut to become the juggernaut and score points" },
     { "infect", "Infection", M_INFECTION, "\f2Infection\ff: survive the infection or infect survivors to score points" },
-    { "invasion", "Invasion", M_INVASION, "\f2Invasion\ff: survive waves of monsters to score points" }
+    { "invasion", "Invasion", M_INVASION, "\f2Invasion\ff: survive waves of monsters to score points" },
+    { "betrayal", "Betrayal", M_BETRAYAL, "\f2Betrayal\ff: survive the traitor as a victim or kill victims as a traitor to score points" }
 };
 
 #define STARTGAMEMODE (-1)
@@ -46,12 +48,13 @@ static struct gamemodeinfo
 #define m_teammode        (m_check(gamemode, M_TEAM))
 #define m_overtime        (m_check(gamemode, M_OVERTIME))
 #define m_elimination     (m_check(gamemode, M_ELIMINATION))
-#define m_round           (m_check(gamemode, M_ELIMINATION|M_LASTMAN|M_INFECTION))
+#define m_round           (m_check(gamemode, M_ELIMINATION|M_LASTMAN|M_INFECTION|M_BETRAYAL))
 #define m_dm              (m_checknot(gamemode, M_EDIT|M_CTF|M_ELIMINATION|M_LASTMAN|M_INFECTION))
 #define m_lms             (m_check(gamemode, M_LASTMAN))
 #define m_juggernaut      (m_check(gamemode, M_JUGGERNAUT))
 #define m_infection       (m_check(gamemode, M_INFECTION))
 #define m_invasion        (m_check(gamemode, M_INVASION))
+#define m_betrayal        (m_check(gamemode, M_BETRAYAL))
 
 #define m_demo            (m_check(gamemode, M_DEMO))
 #define m_edit            (m_check(gamemode, M_EDIT))
@@ -105,3 +108,11 @@ static struct mutatorinfo
 #define m_noitems(mut)         (mut&MUT_NOITEMS)
 #define m_regen(mut)           (!(mut&MUT_CLASSIC) && !(mut&MUT_INSTAGIB) && !(mut&MUT_EFFIC) && !(mut&MUT_VAMPIRE))
 #define m_multipleweapons(mut) (mut&MUT_CLASSIC || mut&MUT_EFFIC)
+
+enum
+{
+    ROLE_NONE = 0,
+    ROLE_JUGGERNAUT,
+    ROLE_ZOMBIE,
+    ROLE_TRAITOR
+};

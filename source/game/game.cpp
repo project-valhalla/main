@@ -493,7 +493,10 @@ namespace game
         if(!restore)
         {
             if(gore && d->gibbed()) gibeffect(max(-d->health, 0), d->vel, d);
-            else playsound(getplayermodelinfo(d).diesound, d);
+            else if(attacks[d->deathattack].action != ACT_MELEE)
+            {
+                playsound(getplayermodelinfo(d).diesound, d); // silent melee kills?
+            }
             d->deaths++;
         }
         if(d==self)

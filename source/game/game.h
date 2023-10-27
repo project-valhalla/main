@@ -147,6 +147,7 @@ enum
     S_INFECTION, S_INFECTED, S_WIN_ZOMBIES, S_WIN_SURVIVORS,
     S_LMS_ROUND, S_LMS_ROUND_WIN,
     S_VOOSH,
+    S_TRAITOR, S_VICTIM,
 
     S_HIT, S_HIT_ALLY, S_KILL, S_KILL_ALLY, S_SUICIDE,
     S_CHAT,
@@ -285,13 +286,6 @@ enum
 #include "ai.h"
 #include "gamemode.h"
 #include "entity.h"
-
-enum
-{
-    ROLE_NONE = 0,
-    ROLE_JUGGERNAUT,
-    ROLE_ZOMBIE
-};
 
 // inherited by gameent and server clients
 struct gamestate

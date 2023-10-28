@@ -2709,7 +2709,7 @@ namespace server
                 sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
             }
         }
-        bool hidekillinfo = m_betrayal && actor->state.role == ROLE_TRAITOR; // cover traitor's kills and display them as suicides in the obituary
+        bool hidekillinfo = m_betrayal && actor->state.role == ROLE_TRAITOR; // cover up traitor's kills and display them as suicides in the obituary
         sendf(-1, 1, "ri7", N_DIED, target->clientnum, hidekillinfo ? target->clientnum : actor->clientnum, hidekillinfo ? 0 : actor->state.frags, t ? t->frags : 0, atk, kflags);
         target->position.setsize(0);
         if(smode) smode->died(target, actor);

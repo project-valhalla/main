@@ -2290,6 +2290,7 @@ namespace server
         loopv(clients)
         {
             clientinfo *ci = clients[i];
+            if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED) continue;
             if(ci->state.role == ROLE_TRAITOR)
             {
                 sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_TRAITOR, "\f2You are the traitor");

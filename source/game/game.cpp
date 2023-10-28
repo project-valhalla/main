@@ -522,30 +522,40 @@ namespace game
     int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;
     bool killfeedheadshot = false;
 
-    void writeobituary(gameent *d, gameent *actor, int atk, bool headshot)
+    void writeobituary(gameent *d, gameent *actor, int atk, int flags)
     {
         // console messages
         gameent *h = followingplayer(self);
         if(!h) h = self;
         int contype = d==h || actor==h ? CON_FRAG_SELF : CON_FRAG_OTHER;
         const char *act = "killed";
-        if(attacks[atk].gun == GUN_ZOMBIE)
+        if(flags & KILL_TRAITOR)
         {
-            if(d==actor) act = "got infected";
-            else act = "infected";
+            act = "was assassinated";
+            conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
+            killfeedweaponinfo = -3;
         }
-        else if(d == actor)
+        else if(d == actor && d->role != ROLE_ZOMBIE)
         {
             act = "suicided";
             conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
+            killfeedweaponinfo = -2;
         }
-        else if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
-        else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
+        else
+        {
+            if(attacks[atk].gun == GUN_ZOMBIE)
+            {
+                if(d==actor) act = "got infected";
+                else act = "infected";
+            }
+            if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
+            else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
+            killfeedweaponinfo = attacks[atk].action == ACT_MELEE ? -1 : attacks[atk].gun;
+        }
         // kill feed
         killfeedactorcn = actor->clientnum;
         killfeedtargetcn = d->clientnum;
-        killfeedweaponinfo = validatk(atk)? (attacks[atk].action == ACT_MELEE? -1 : attacks[atk].gun) : -2;
-        killfeedheadshot = headshot;
+        killfeedheadshot = flags & KILL_HEADSHOT;
         execident("on_killfeed");
     }
     ICOMMAND(getkillfeedactor, "", (), intret(killfeedactorcn));
@@ -565,7 +575,7 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-        writeobituary(d, actor, atk, flags & KILL_HEADSHOT); // obituary (console messages, kill feed)
+        writeobituary(d, actor, atk, flags); // obituary (console messages, kill feed)
         if(flags)
         {
             const char *spree = "";

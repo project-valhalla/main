@@ -279,7 +279,8 @@ enum
     KILL_UNSTOPPABLE = 1<<4,
     KILL_LEGENDARY   = 1<<5,
     KILL_HEADSHOT    = 1<<6,
-    KILL_JUGGERNAUT  = 1<<7
+    KILL_JUGGERNAUT  = 1<<7,
+    KILL_TRAITOR     = 1<<8
 };
 
 #include "weapon.h"
@@ -737,7 +738,7 @@ namespace game
     extern void deathstate(gameent *d, bool restore = false);
     extern void damagehud(int damage, gameent *d, gameent *actor);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
-    extern void writeobituary(gameent *d, gameent *actor, int atk, bool headshot = false);
+    extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = KILL_NONE);
     extern void timeupdate(int timeremain);
     extern void msgsound(int n, physent *d = NULL);

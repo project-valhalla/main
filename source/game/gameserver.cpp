@@ -2710,7 +2710,20 @@ namespace server
             }
         }
         bool hidekillinfo = m_betrayal && actor->state.role == ROLE_TRAITOR; // cover up traitor's kills and display them as suicides in the obituary
-        sendf(-1, 1, "ri7", N_DIED, target->clientnum, hidekillinfo ? target->clientnum : actor->clientnum, hidekillinfo ? 0 : actor->state.frags, t ? t->frags : 0, atk, kflags);
+        if(hidekillinfo)
+        {
+            kflags |= KILL_TRAITOR;
+            loopv(clients)
+            {
+                if(clients[i] == actor)
+                {
+                    sendf(clients[i]->clientnum, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, 0, atk, kflags);
+                    continue;
+                }
+                sendf(clients[i]->clientnum, 1, "ri7", N_DIED, target->clientnum, target->clientnum, 0, 0, atk, kflags);
+            }
+        }
+        else sendf(-1, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, atk, kflags);
         target->position.setsize(0);
         if(smode) smode->died(target, actor);
         ts.state = CS_DEAD;

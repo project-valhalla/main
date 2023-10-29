@@ -2363,13 +2363,12 @@ namespace server
     void checkplayers(bool timeisup)
     {
         if(betweenrounds || interm || gamepaused) return;
-        int survivors = 0, zombies = 0, traitors = 0;
+        int survivors = 0, hunters = 0;
         loopv(clients)
         {
             clientinfo *ci = clients[i];
             if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED) continue;
-            if(ci->state.role == ROLE_ZOMBIE) zombies++;
-            else if(ci->state.role == ROLE_TRAITOR) traitors++;
+            if(ci->state.role == ROLE_ZOMBIE || ci->state.role == ROLE_TRAITOR) hunters++;
             else survivors++;
         }
         bool rewardhunters = false, // reward zombies in "infection" or traitors in "betrayal"
@@ -2377,7 +2376,6 @@ namespace server
         int score = 0;
         if(hunterchosen && (m_infection || m_betrayal))
         {
-            int hunters = m_infection ? zombies : traitors;
             if((survivors <= 0 && hunters <= 0) || (timeisup && survivors <= 0 && hunters > 0))
             {
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_SURVIVORS, timeisup? "\f2Time is up": "\f2Nobody survived");

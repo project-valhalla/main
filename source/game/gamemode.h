@@ -106,7 +106,6 @@ static struct mutatorinfo
 #define m_mayhem(mut)          (mut&MUT_MAYHEM)
 #define m_nopowerups(mut)      (mut&MUT_NOPOWERUP)
 #define m_noitems(mut)         (mut&MUT_NOITEMS)
-#define m_multipleweapons(mut) (mut&MUT_CLASSIC || mut&MUT_EFFIC)
 
 enum
 {

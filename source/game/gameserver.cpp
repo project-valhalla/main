@@ -2712,15 +2712,8 @@ namespace server
         if(hidekillinfo)
         {
             kflags |= KILL_TRAITOR;
-            loopv(clients)
-            {
-                if(clients[i] == actor)
-                {
-                    sendf(clients[i]->clientnum, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, 0, atk, kflags);
-                    continue;
-                }
-                sendf(clients[i]->clientnum, 1, "ri7", N_DIED, target->clientnum, target->clientnum, 0, 0, atk, kflags);
-            }
+            sendf(actor->clientnum, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, 0, atk, kflags); // send only to actor
+            sendf(-1, 1, "ri7x", N_DIED, target->clientnum, target->clientnum, 0, 0, atk, kflags, actor->clientnum); // send to other players excluding actor
         }
         else sendf(-1, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, atk, kflags);
         target->position.setsize(0);

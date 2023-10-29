@@ -876,7 +876,7 @@ namespace game
             {
                 if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
                 int surface = lookuptexturematerial(pl->feetpos(-1)),
-                    sound = footstepsound(surface, material);
+                    sound = footstepsound(surface, lookupmaterial(pl->feetpos()));
                 if(event == PHYSEVENT_FOOTSTEP) footstep(pl, sound);
                 else msgsound(sound, pl);
                 break;

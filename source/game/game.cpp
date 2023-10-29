@@ -443,31 +443,32 @@ namespace game
 
     void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
     {
-        if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-
+        if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission)
+        {
+            return;
+        }
+        if(actor != self) {
+            d->lastpain = lastmillis;
+        }
         if(local)
         {
             damage = d->dodamage(damage);
         }
-
         ai::damaged(d, actor);
 
-        if(d != actor) d->lastpain = lastmillis;
-
-        gameent *h = hudplayer();
-
-        if(h!=self && actor==h && d!=actor)
+        gameent *hud = hudplayer();
+        if(hud != self && actor == hud && d != actor)
         {
             if(hitsound && actor->lasthit != lastmillis)
             {
                 playsound(isally(d, actor) ? S_HIT_ALLY : S_HIT);
             }
         }
-        if(d!=actor) actor->lasthit = lastmillis;
+        if(d != actor) actor->lasthit = lastmillis;
         if(d->haspowerup(PU_INVULNERABILITY) && !actor->haspowerup(PU_INVULNERABILITY)) playsound(S_ACTION_INVULNERABILITY, d);
         if(!d->haspowerup(PU_INVULNERABILITY) || (d->haspowerup(PU_INVULNERABILITY) && actor->haspowerup(PU_INVULNERABILITY)))
         {
-            if(d==h)
+            if(d == hud)
             {
                 damagehud(damage, d, actor);
             }
@@ -479,7 +480,10 @@ namespace game
                 }
             }
         }
-        if(d->health<=0) { if(local) kill(d, actor, NULL); }
+        if(local)
+        {
+            if(d->health <= 0) kill(d, actor, NULL);
+        }
     }
 
     VARP(gore, 0, 1, 1);

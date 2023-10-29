@@ -2881,10 +2881,10 @@ namespace server
     {
         servstate &gs = ci->state;
         int wait = millis - gs.lastshot;
-        if(!gs.isalive(gamemillis) ||
-           wait<gs.gunwait ||
-           !validatk(atk))
+        if(!gs.isalive(gamemillis) || wait<gs.gunwait || !validatk(atk))
+        {
             return;
+        }
         int gun = attacks[atk].gun;
         if(attacks[atk].action != ACT_MELEE && !gs.ammo[gun]) return;
         if(attacks[atk].range && from.dist(to) > attacks[atk].range + 1) return;
@@ -2925,15 +2925,15 @@ namespace server
                 int raydamage = h.rays*attacks[atk].damage, damage = calcdamage(raydamage, target, ci, atk, h.flags);
                 dodamage(target, ci, damage, atk, h.flags, h.dir);
                 sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, target->clientnum, damage, h.flags,
-                                           int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
-                                           int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
+                      int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
+                      int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
                 hit = true;
             }
         }
         if(hit) return;
         sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, -1, 0, 0,
-                               int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
-                               int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
+              int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
+              int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
     }
 
     void pickupevent::process(clientinfo *ci)

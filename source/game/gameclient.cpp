@@ -1760,13 +1760,18 @@ namespace game
                 vec from, to;
                 loopk(3) from[k] = getint(p)/DMF;
                 loopk(3) to[k] = getint(p)/DMF;
-                gameent *actor = getclient(acn);
-                gameent *target = getclient(tcn);
-                if(!actor || !validatk(atk)) break;
-                if(target && damage) damaged(damage, to, target, actor, atk, flags, false);
-                int prevaction = actor->lastaction;
+                gameent *actor = getclient(acn), *target = getclient(tcn);
+                if(!actor || !validatk(atk))
+                {
+                    break;
+                }
+                bool hastarget = target->clientnum > -1 && damage;
+                if(hastarget)
+                {
+                    damaged(damage, to, target, actor, atk, flags, false);
+                }
                 actor->lastaction = lastmillis;
-                shoteffects(atk, from, to, actor, false, id, prevaction, target? true: false);
+                shoteffects(atk, from, to, actor, false, id, actor->lastaction, hastarget);
                 break;
             }
 

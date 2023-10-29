@@ -466,16 +466,20 @@ namespace game
 
     void damageeffect(int damage, dynent *d, vec p, int atk, int color)
     {
-        gameent *f = (gameent *)d,
-                *hud = followingplayer(self);
-        if(f == hud) p.z += 0.6f*(d->eyeheight + d->aboveeye) - d->eyeheight;
-        if(f->haspowerup(PU_INVULNERABILITY))
+        gameent *f = (gameent *)d, *hud = followingplayer(self);
+        if(f == hud)
         {
-            msgsound(S_ACTION_INVULNERABILITY, f);
-            particle_splash(PART_SPARK2, 100, 150, p, getplayercolor(f, f->team), 0.50f);
-            return;
+            p.z += 0.6f*(d->eyeheight + d->aboveeye) - d->eyeheight;
         }
-        if(!damage) return;
+        if(f->haspowerup(PU_INVULNERABILITY) || f->shield)
+        {
+            particle_splash(PART_SPARK2, 100, 150, p, f->haspowerup(PU_INVULNERABILITY) ? getplayercolor(f, f->team) : 0xFFFF66, 0.50f);
+            if(f->haspowerup(PU_INVULNERABILITY))
+            {
+                msgsound(S_ACTION_INVULNERABILITY, f);
+                return;
+            }
+        }
         if(blood && color != -1)
         {
             particle_splash(PART_BLOOD, damage/10, 1000, p, color, 2.60f);
@@ -494,8 +498,10 @@ namespace game
                 f->lastyelp = lastmillis;
             }
         }
-        if(f->shield) particle_splash(PART_SPARK2, 5, 100, p, 0xFFFF66, 0.40f, 200);
-        if(validatk(atk) && attacks[atk].hitsound) playsound(attacks[atk].hitsound, NULL, &f->o);
+        if(validatk(atk))
+        {
+            if(attacks[atk].hitsound) playsound(attacks[atk].hitsound, NULL, &f->o);
+        }
         else playsound(S_PLAYER_DAMAGE, NULL, &f->o);
         if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOUR, NULL, &f->o);
     }
@@ -535,14 +541,17 @@ namespace game
     void hit(int damage, dynent *d, gameent *at, const vec &vel, int atk, float info1, int info2 = 1, int flags = HIT_TORSO)
     {
         gameent *f = (gameent *)d;
-
         f->lastpain = lastmillis;
-        if(at->type==ENT_PLAYER && f!=at && !isally(f, at)) at->totaldamage += damage;
-        if(at==self && d!=at)
+        if(at->type==ENT_PLAYER && f!=at && !isally(f, at))
+        {
+            at->totaldamage += damage;
+        }
+        if(at == self && d != at)
         {
             extern int hitsound;
-            if(hitsound && at->lasthit != lastmillis)
+            if(hitsound && at->lasthit != lastmillis) {
                 playsound(isally(f, at) ? S_HIT_ALLY : S_HIT);
+            }
             at->lasthit = lastmillis;
         }
         if(f->type==ENT_AI || !m_mp(gamemode) || f==at)
@@ -563,7 +572,7 @@ namespace game
             h.info2 = info2;
             h.flags = flags;
             h.dir = f==at ? ivec(0, 0, 0) : ivec(vec(vel).mul(DNF));
-            if(at==self)
+            if(at == self)
             {
                 if(f == self)
                 {

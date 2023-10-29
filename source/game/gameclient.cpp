@@ -1721,9 +1721,10 @@ namespace game
                 }
                 if(s!=hudplayer() && s->state==CS_DEAD && s->lastpain) saveragdoll(s);
                 else cleanragdoll(s);
-                if(s==self)
+                if(s == self)
                 {
                     if(editmode) toggleedit();
+                    spawneffect(s);
                 }
                 s->respawn();
                 parsestate(s, p);

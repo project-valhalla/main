@@ -633,6 +633,7 @@ namespace ai
     void spawned(gameent *d)
     {
         if(d->ai) setup(d);
+        spawneffect(d);
     }
 
     void kill(gameent *d, gameent *e)

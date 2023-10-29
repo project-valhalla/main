@@ -1784,8 +1784,6 @@ namespace game
                 int cn = getint(p), health = getint(p);
                 gameent *d = cn==self->clientnum ? self : getclient(cn);
                 d->health = health;
-                if(regensound && m_regen(mutators) && d->health <= d->maxhealth && d->role != ROLE_JUGGERNAUT && d->role != ROLE_ZOMBIE)
-                    playsound(S_REGENERATION, d);
                 break;
             }
 

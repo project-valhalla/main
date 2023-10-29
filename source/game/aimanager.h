@@ -232,25 +232,25 @@ namespace aimanager
         else clearai();
     }
 
-    void reqadd(clientinfo *ci, int skill)
+    bool botsallowed(clientinfo *ci)
     {
         if(m_nobot)
         {
             sendf(ci->clientnum, 1, "ris", N_SERVMSG, "bots are not supported in this game mode");
-            return;
+            return false;
         }
-        if(!ci->local && !ci->privilege) return;
+        return true;
+    }
+
+    void reqadd(clientinfo *ci, int skill)
+    {
+        if(!botsallowed(ci) || (!ci->local && !ci->privilege)) return;
         if(!addai(skill, !ci->local && ci->privilege < PRIV_ADMIN ? botlimit : -1)) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to create or assign bot");
     }
 
     void reqdel(clientinfo *ci)
     {
-        if(m_nobot)
-        {
-            sendf(ci->clientnum, 1, "ris", N_SERVMSG, "bots are not supported in this game mode");
-            return;
-        }
-        if(!ci->local && !ci->privilege) return;
+        if(!botsallowed(ci) || (!ci->local && !ci->privilege)) return;
         if(!deleteai()) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to remove any bots");
     }
 

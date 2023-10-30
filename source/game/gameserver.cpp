@@ -674,10 +674,11 @@ namespace server
     });
     SVAR(servermotd, "");
 
-    bool firstblood    = false,
-         betweenrounds = false,
-         nojuggernaut  = true,
-         hunterchosen  = false;
+    bool firstblood    = false;
+
+    bool betweenrounds = false, checkround = false;
+
+    bool nojuggernaut  = true, hunterchosen  = false;
 
     struct teamkillkick
     {
@@ -842,7 +843,16 @@ namespace server
         loopv(clients)
         {
             clientinfo *ci = clients[i];
-            if(ci->clientnum!=exclude && (!nospec || ci->ghost || ci->state.state!=CS_SPECTATOR || (priv && (ci->privilege || ci->local))) && (!noai || ci->state.aitype == AI_NONE)) n++;
+            if(ci->clientnum != exclude)
+            {
+                if(nospec && ci->state.state == CS_SPECTATOR && !ci->ghost) {
+                    continue;
+                }
+                if(!priv || (priv && (ci->privilege || ci->local)) || !noai || (noai && ci->state.aitype == AI_NONE))
+                {
+                    n++;
+                }
+            }
         }
         return n;
     }
@@ -2285,8 +2295,7 @@ namespace server
         {
             traitor->state.role = ROLE_TRAITOR;
         }
-        hunterchosen = true;
-        betweenrounds = false;
+        hunterchosen = true; betweenrounds = false;
         loopv(clients)
         {
             clientinfo *ci = clients[i];
@@ -2360,9 +2369,15 @@ namespace server
         serverevents::add(&newround, 5000);
     }
 
+    void shouldcheckround()
+    {
+        if(smode || !m_round) return; // team modes like elimination have their own check rules
+        checkround = true;
+    }
+
     void checkplayers(bool timeisup)
     {
-        if(betweenrounds || interm || gamepaused) return;
+        if(betweenrounds || numclients(-1, true, false) <= 1) return;
         int survivors = 0, hunters = 0;
         loopv(clients)
         {
@@ -2371,10 +2386,9 @@ namespace server
             if(ci->state.role == ROLE_ZOMBIE || ci->state.role == ROLE_TRAITOR) hunters++;
             else survivors++;
         }
-        bool rewardhunters = false, // reward zombies in "infection" or traitors in "betrayal"
-             rewardsurvivors = false;
+        bool rewardhunters = false, rewardsurvivors = false;
         int score = 0;
-        if(hunterchosen && (m_infection || m_betrayal))
+        if (m_infection && hunterchosen)
         {
             if((survivors <= 0 && hunters <= 0) || (timeisup && survivors <= 0 && hunters > 0))
             {
@@ -2392,7 +2406,7 @@ namespace server
             {
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_ZOMBIES, m_infection ? "\f2Zombies win the round" : "\f2Traitor wins the round");
                 rewardhunters = true;
-                score = m_infection ? 1 : 5;
+                score = 1;
                 endround();
             }
         }
@@ -2753,7 +2767,7 @@ namespace server
         gs.state = CS_DEAD;
         gs.lastdeath = gamemillis;
         gs.respawn();
-        if(!smode && m_round) checkplayers();
+        shouldcheckround();
     }
 
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int atk, int flags = 0, const vec &hitpush = vec(0, 0, 0))
@@ -2799,7 +2813,7 @@ namespace server
                 }
             }
             else died(target, actor, atk, damage, flags);
-            if(!smode && m_round) checkplayers();
+            shouldcheckround();
         }
     }
 
@@ -3087,9 +3101,15 @@ namespace server
                         vooshtime = gamemillis + 20000;
                     }
                 }
+                bool timeisup = false;
                 if(gamemillis >= roundgamelimit)
                 {
-                    checkplayers(true);
+                    checkround = timeisup = true;
+                }
+                if(checkround)
+                {
+                    checkplayers(timeisup);
+                    checkround = timeisup = false;
                 }
             }
         }
@@ -3282,6 +3302,7 @@ namespace server
             aimanager::removeai(ci);
             if(!numclients(-1, false, true)) noclients(); // bans clear when server empties
             if(ci->local) checkpausegame();
+            checkround = true;
         }
         else connects.removeobj(ci);
     }
@@ -3546,6 +3567,8 @@ namespace server
         if(m_demo) setupdemoplayback();
 
         if(servermotd[0]) sendf(ci->clientnum, 1, "ris", N_SERVMSG, servermotd);
+
+        checkround = true;
     }
 
     VAR(spectatorchat, 0, 0, 1);

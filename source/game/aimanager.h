@@ -129,7 +129,7 @@ namespace aimanager
         ci->playercolor = rnd(0x8000);
         ci->aireinit = 2;
         ci->connected = true;
-        dorefresh = true;
+        dorefresh = checkround = true;
         return true;
     }
 
@@ -143,7 +143,7 @@ namespace aimanager
         if(owner) owner->bots.removeobj(ci);
         clients.removeobj(ci);
         DELETEP(bots[cn]);
-        dorefresh = true;
+        dorefresh = checkround = true;
     }
 
     bool deleteai()

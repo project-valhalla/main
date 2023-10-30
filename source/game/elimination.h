@@ -102,7 +102,6 @@ struct eliminationclientmode : clientmode
     }
     void endround() { serverevents::add(&startround, 5000); }
 
-    bool checkround;
     struct winstate
     {
         bool over;

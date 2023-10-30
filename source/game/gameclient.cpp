@@ -1454,8 +1454,6 @@ namespace game
         }
     }
 
-    VARP(regensound, 0, 1, 1);
-
     void parsemessages(int cn, gameent *d, ucharbuf &p)
     {
         static char text[MAXTRANS];

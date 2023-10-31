@@ -2388,7 +2388,7 @@ namespace server
         }
         bool rewardhunters = false, rewardsurvivors = false;
         int score = 0;
-        if (m_infection && hunterchosen)
+        if(hunterchosen && (m_infection || m_betrayal))
         {
             if((survivors <= 0 && hunters <= 0) || (timeisup && survivors <= 0 && hunters > 0))
             {
@@ -2406,7 +2406,7 @@ namespace server
             {
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_ZOMBIES, m_infection ? "\f2Zombies win the round" : "\f2Traitor wins the round");
                 rewardhunters = true;
-                score = 1;
+                score = m_infection ? 1 : 5;
                 endround();
             }
         }

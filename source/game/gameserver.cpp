@@ -2938,7 +2938,7 @@ namespace server
             }
         }
         if(hit) return;
-        sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, -1, 0, 0,
+        sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, -2, 0, 0,
               int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
               int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
     }

@@ -1760,11 +1760,8 @@ namespace game
                 loopk(3) from[k] = getint(p)/DMF;
                 loopk(3) to[k] = getint(p)/DMF;
                 gameent *actor = getclient(acn), *target = getclient(tcn);
-                if(!actor || !validatk(atk))
-                {
-                    break;
-                }
-                bool hastarget = target->clientnum > -1 && damage;
+                if(!actor || !validatk(atk)) break;
+                bool hastarget = target && damage;
                 if(hastarget)
                 {
                     damaged(damage, to, target, actor, atk, flags, false);

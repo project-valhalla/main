@@ -522,7 +522,7 @@ struct gameent : dynent, gamestate
     int lastpain;
     int lastaction, lastattack, deathattack, lasthit;
     int attacking;
-    int lasttaunt, lastfootstep, lastyelp, lastswitch;
+    int lasttaunt, lastfootstep, lastland, lastyelp, lastswitch;
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots;
     editinfo *edit;
@@ -544,7 +544,7 @@ struct gameent : dynent, gamestate
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
                 lastpain(0),
-                lastfootstep(0), lastyelp(0), lastswitch(0),
+                lastfootstep(0), lastland(0), lastyelp(0), lastswitch(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0),
                 edit(NULL), smoothmillis(-1),
                 attackchan(-1), idlechan(-1), powerupchan(-1), gunchan(-1),

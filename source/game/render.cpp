@@ -509,6 +509,13 @@ namespace game
                 swayfade -= 0.5f*(curtime*d->speed)/(swaystep*1000.0f);
             }
 
+            if(d->lastland && lastmillis - d->lastland <= 500)
+            {
+                float landing = clamp((lastmillis - d->lastland) / (float)300, 0.0f, 1.0f);
+                swaypitch = d->pitch - 10 * sinf(landing * PI);
+            }
+            else swaypitch = d->pitch;
+
             float k = pow(0.7f, curtime/10.0f);
             swaydir.mul(k);
             vec vel(d->vel);

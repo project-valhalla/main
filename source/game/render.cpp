@@ -429,9 +429,9 @@ namespace game
     VARP(hudgun, 0, 1, 1);
     VARP(hudgunsway, 0, 1, 1);
 
-    FVAR(swaystep, 1, 33.5f, 100);
-    FVAR(swayside, 0, 0.05f, 1);
-    FVAR(swayup, -1, 0.11f, 1);
+    FVAR(swaystep, 1, 35.5f, 100);
+    FVAR(swayside, 0, 0.03f, 1);
+    FVAR(swayup, -1, 0.02f, 1);
     FVAR(swayrollfactor, 1, 4.2f, 30);
     FVAR(swaydecay, 0.1f, 0.996f, 0.9999f);
     FVAR(swayinertia, 0.0f, 0.04f, 1.0f);
@@ -442,29 +442,36 @@ namespace game
 
     static void updatesway(gameent* d, vec& sway, int curtime)
     {
-        vec sidedir = vec((d->yaw + 90) * RAD, 0.0f),
-            translation = vec(0, 0, 0);
+        vec sidedir = vec((d->yaw + 90)*RAD, 0.0f), trans = vec(0, 0, 0);
+        float steplen = swaystep;
+        float steps = swaydist / steplen * M_PI;
 
-        float steplen = swaystep, steps = swaydist / steplen * M_PI;
+        // Magic floats to generate the animation cycle
+        float f1 = cosf(steps) + 1,
+            f2 = sinf(steps * 2.0f) + 1,
+            f3 = (f1 * f1 * 0.25f) - 0.5f,
+            f4 = (f2 * f2 * 0.25f) - 0.5f,
+            f5 = sinf(lastmillis * 0.001f); // Low frequency detail
+        vec dirforward = vec(d->yaw*RAD, 0.0f), dirside = vec((d->yaw + 90)*RAD, 0.0f);
+        float rotyaw = 0, rotpitch = 0, side = swayside;
 
-        // magic floats to generate the animation cycle
-        float f1 = sinf(steps * 2.0f) + 1,
-              f2 = (f1 * f1 * 0.25f) - 0.5f;
-
-        float rotyaw = 0, rotpitch = 0;
-
-        rotyaw += swayside * f2 * 24.0f;
-        rotpitch += swayup * f1 * -10.0f;
+        // Walk cycle animation
+        trans.add(vec(dirforward).mul(side*f4*2.0f));
+        trans.add(vec(dirside).mul(side*f5*2.0f));
+        trans.add(vec(sway).mul(-4.0f));
+        trans.z += swayup * f2 * 1.5f;
+        rotyaw += swayside * f3 * 24.0f;
+        rotpitch += swayup * f2 * -10.0f;
 
         // "Look-around" animation.
         static int lastsway = 0;
         static vec2 lastcamera = vec2(camera1->yaw, camera1->pitch);
         static vec2 cameravel = vec2(0, 0);
 
-        if (lastmillis != lastsway) // prevent running the inertia math multiple times in the same frame
+        if(lastmillis != lastsway) // Prevent running the inertia math multiple times in the same frame
         {
-            vec2 curcamera = vec2(camera1->yaw, camera1->pitch);
-            vec2 camerarot = vec2(lastcamera).sub(curcamera);
+            vec2 curcam = vec2(camera1->yaw, camera1->pitch);
+            vec2 camerarot = vec2(lastcamera).sub(curcam);
 
             if (camerarot.x > 180.0f) camerarot.x -= 360.0f;
             else if (camerarot.x < -180.0f) camerarot.x += 360.0f;
@@ -473,12 +480,12 @@ namespace game
             cameravel.add(vec2(camerarot).mul(swayinertia));
             cameravel.clamp(-swaymaxinertia, swaymaxinertia);
 
-            lastcamera = curcamera;
+            lastcamera = curcam;
             lastsway = lastmillis;
         }
-        translation.add(sidedir.mul(cameravel.x * 0.06f));
-        translation.z += cameravel.y * 0.045f; // translation vector for the calculations.
-        sway.add(translation); // add the translation to the swaydir vector, where the weapon model is at
+        trans.add(sidedir.mul(cameravel.x * 0.06f));
+        trans.z += cameravel.y * 0.045f;
+        sway.add(trans); // add the translation to swaydir, where the weapon model is at
         swayyaw += rotyaw;
         swaypitch += rotpitch;
     }
@@ -536,7 +543,7 @@ namespace game
         d->muzzle = vec(-1, -1, -1);
         a[0] = modelattach("tag_muzzle", &d->muzzle);
         float swayroll = d->roll * swayrollfactor;
-        rendermodel(gunname, anim, sway, d->yaw, d->pitch, swayroll, MDL_NOBATCH, NULL, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
+        rendermodel(gunname, anim, sway, d->yaw, swaypitch, swayroll, MDL_NOBATCH, NULL, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
         if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
     }
 

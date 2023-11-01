@@ -1345,7 +1345,7 @@ VARP(zoomoutvel, 0, 50, 500);
 VARP(zoomfov, 10, 42, 90);
 VARP(fov, 10, 100, 150);
 VAR(avatarzoomfov, 1, 1, 1);
-VAR(avatarfov, 10, 40, 100);
+VAR(avatarfov, 10, 39, 100);
 FVAR(avatardepth, 0, 0.7f, 1);
 FVARNP(aspect, forceaspect, 0, 0, 1e3f);
 

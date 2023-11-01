@@ -2718,7 +2718,7 @@ namespace server
             }
             if(!m_vampire(mutators) && actor->state.role == ROLE_JUGGERNAUT)
             {
-                actor->state.health = min(actor->state.health+damage/2, actor->state.maxhealth*2);
+                actor->state.health = min(actor->state.health+damage/2, maximumhealth(actor->state.role == ROLE_ZOMBIE));
                 sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
             }
         }
@@ -2786,7 +2786,7 @@ namespace server
                     actor->state.damage += damage;
                     if(m_vampire(mutators))
                     {
-                        actor->state.health = min(actor->state.health+damage/(actor->state.role==ROLE_JUGGERNAUT? 2: 1), actor->state.maxhealth*2);
+                        actor->state.health = min(actor->state.health+damage/(actor->state.role==ROLE_JUGGERNAUT? 2: 1), maximumhealth(actor->state.role == ROLE_ZOMBIE));
                         sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
                     }
                 }

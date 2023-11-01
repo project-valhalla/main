@@ -108,6 +108,11 @@ static struct mutatorinfo
 #define m_nopowerups(mut)      (mut&MUT_NOPOWERUP)
 #define m_noitems(mut)         (mut&MUT_NOITEMS)
 
+inline const int maximumhealth(bool iszombie)
+{
+    return iszombie ? 1000 : 250;
+}
+
 enum
 {
     ROLE_NONE = 0,

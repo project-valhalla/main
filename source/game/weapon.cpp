@@ -1286,8 +1286,6 @@ namespace game
                 if (p.projtype != PROJ_PLASMA) continue;
                 if (attacks[atk].gun == GUN_PISTOL && p.o.dist(point) <= attacks[p.atk].margin)
                 {
-                    shorten(from, to, dist);
-                    rayhit(atk, d, from, to);
                     if(p.local && (d==self || d->ai))
                     {
                         p.owner = d;

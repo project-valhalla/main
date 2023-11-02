@@ -270,19 +270,6 @@ static const char * const iconnames[] =
     "data/interface/hud/armor.png"
 };
 
-enum
-{
-    KILL_NONE        = 1<<0,
-    KILL_FIRST       = 1<<1,
-    KILL_SPREE       = 1<<2,
-    KILL_SAVAGE      = 1<<3,
-    KILL_UNSTOPPABLE = 1<<4,
-    KILL_LEGENDARY   = 1<<5,
-    KILL_HEADSHOT    = 1<<6,
-    KILL_JUGGERNAUT  = 1<<7,
-    KILL_TRAITOR     = 1<<8
-};
-
 #include "weapon.h"
 #include "ai.h"
 #include "gamemode.h"

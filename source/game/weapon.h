@@ -113,3 +113,16 @@ static const struct guninfo
     { "instagun",   "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,    ATK_INSTA    }, true  },
     { "zombie",     "zombie",     "",                        { -1, ATK_ZOMBIE, ATK_ZOMBIE,   ATK_ZOMBIE   }, true  }
 };
+
+enum
+{
+    KILL_NONE        = 1<<0,
+    KILL_FIRST       = 1<<1,
+    KILL_SPREE       = 1<<2,
+    KILL_SAVAGE      = 1<<3,
+    KILL_UNSTOPPABLE = 1<<4,
+    KILL_LEGENDARY   = 1<<5,
+    KILL_HEADSHOT    = 1<<6,
+    KILL_JUGGERNAUT  = 1<<7,
+    KILL_TRAITOR     = 1<<8
+};

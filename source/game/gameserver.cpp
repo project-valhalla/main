@@ -2770,7 +2770,7 @@ namespace server
         shouldcheckround();
     }
 
-    void dodamage(clientinfo *target, clientinfo *actor, int damage, int atk, int flags = 0, const vec &hitpush = vec(0, 0, 0))
+    void dodamage(clientinfo *target, clientinfo *actor, int damage, int atk, int flags = 0, const vec &hitpush = vec(0, 0, 0), const vec to = vec(0, 0, 0))
     {
         if((target == actor && !selfdamage) || (isally(target, actor) && !teamdamage) || (m_round && betweenrounds)) return;
         servstate &ts = target->state;
@@ -2778,7 +2778,7 @@ namespace server
         {
             ts.dodamage(damage, flags & HIT_MATERIAL? true : false);
             target->state.lastpain = lastmillis;
-            sendf(-1, 1, "ri8", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield);
+            sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield, int(to.x*DMF), int(to.y*DMF), int(to.z*DMF));
             if(target!=actor)
             {
                 if(!isally(target, actor))
@@ -2930,17 +2930,13 @@ namespace server
                 totalrays += h.rays;
                 if(totalrays>maxrays) continue;
                 int raydamage = h.rays*attacks[atk].damage, damage = calcdamage(raydamage, target, ci, atk, h.flags);
-                dodamage(target, ci, damage, atk, h.flags, h.dir);
-                sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, target->clientnum, damage, h.flags,
-                      int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
-                      int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
+                dodamage(target, ci, damage, atk, h.flags, h.dir, to);
+                sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
                 hit = true;
             }
         }
         if(hit) return;
-        sendf(-1, 1, "ri4i9x", N_SHOTFX, ci->clientnum, atk, id, -2, 0, 0,
-              int(from.x*DMF), int(from.y*DMF), int(from.z*DMF),
-              int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
+        sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
     }
 
     void pickupevent::process(clientinfo *ci)

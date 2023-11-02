@@ -464,7 +464,9 @@ namespace game
         }
     }
 
-    void damageeffect(int damage, dynent *d, vec p, int atk, int color)
+    VARP(playheadshotsound, 0, 1, 1);
+
+    void damageeffect(int damage, dynent *d, vec p, int atk, int color, bool headshot)
     {
         gameent *f = (gameent *)d, *hud = followingplayer(self);
         if(f == hud)
@@ -500,7 +502,12 @@ namespace game
         }
         if(validatk(atk))
         {
-            if(attacks[atk].hitsound) playsound(attacks[atk].hitsound, NULL, &f->o);
+            if(headshot && playheadshotsound) {
+                playsound(S_HIT_WEAPON_HEAD, NULL, &f->o);
+            }
+            else if(attacks[atk].hitsound) {
+                playsound(attacks[atk].hitsound, NULL, &f->o);
+            }
         }
         else playsound(S_PLAYER_DAMAGE, NULL, &f->o);
         if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOUR, NULL, &f->o);
@@ -572,18 +579,8 @@ namespace game
             h.info2 = info2;
             h.flags = flags;
             h.dir = f==at ? ivec(0, 0, 0) : ivec(vec(vel).mul(DNF));
-            if(at == self)
-            {
-                if(f == self)
-                {
-                    damagehud(damage, f, at);
-                }
-                if(flags & HIT_HEAD)
-                {
-                    extern int playheadshotsound;
-                    if(playheadshotsound) playsound(S_HIT_WEAPON_HEAD, NULL, &f->o);
-                }
-            }
+
+            if(at == self && f == at) damagehud(damage, f, at);
         }
     }
 
@@ -1351,7 +1348,7 @@ namespace game
                     }
                 }
                 calcpushdamage(numhits*damage, o, d, from, to, atk, numhits, flags);
-                damageeffect(damage, o, rays[i], atk, getbloodcolor(o));
+                damageeffect(damage, o, rays[i], atk, getbloodcolor(o), hithead);
             }
         }
         else
@@ -1376,7 +1373,7 @@ namespace game
                     }
                 }
                 calcpushdamage(attacks[atk].damage, o, d, from, to, atk, 1, flags);
-                damageeffect(damage, o, to, atk, getbloodcolor(o));
+                damageeffect(damage, o, to, atk, getbloodcolor(o), hithead);
             }
             else
             {

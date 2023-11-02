@@ -432,14 +432,13 @@ namespace game
                && (self->state == CS_ALIVE || self->state == CS_LAGGED);
     }
 
-    VARP(hitsound, 0, 0, 1);
-    VARP(playheadshotsound, 0, 1, 2);
-
     void damagehud(int damage, gameent *d, gameent *actor)
     {
         damageblend(damage);
         if(d!=actor) damagecompass(damage, actor->o);
     }
+
+    VARP(hitsound, 0, 0, 1);
 
     void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
     {
@@ -447,14 +446,12 @@ namespace game
         {
             return;
         }
-        if(actor != self) {
-            d->lastpain = lastmillis;
-        }
         if(local)
         {
             damage = d->dodamage(damage);
         }
-        ai::damaged(d, actor);
+        else if(actor == self) return;
+        else d->lastpain = lastmillis;
 
         gameent *hud = hudplayer();
         if(hud != self && actor == hud && d != actor)
@@ -462,27 +459,19 @@ namespace game
             if(hitsound && actor->lasthit != lastmillis)
             {
                 playsound(isally(d, actor) ? S_HIT_ALLY : S_HIT);
+                actor->lasthit = lastmillis;
             }
         }
-        if(d != actor) actor->lasthit = lastmillis;
-        if(d->haspowerup(PU_INVULNERABILITY) && !actor->haspowerup(PU_INVULNERABILITY)) playsound(S_ACTION_INVULNERABILITY, d);
-        if(!d->haspowerup(PU_INVULNERABILITY) || (d->haspowerup(PU_INVULNERABILITY) && actor->haspowerup(PU_INVULNERABILITY)))
+        if(d == hud)
         {
-            if(d == hud)
-            {
-                damagehud(damage, d, actor);
-            }
-            damageeffect(damage, d, p, atk, getbloodcolor(d));
-            if(flags & HIT_HEAD)
-            {
-                if(playheadshotsound) {
-                    playsound(S_HIT_WEAPON_HEAD, NULL, &d->o);
-                }
-            }
+            damagehud(damage, d, actor);
         }
-        if(local)
+        damageeffect(damage, d, p, atk, getbloodcolor(d), flags & HIT_HEAD);
+
+        ai::damaged(d, actor);
+        if(local && d->health <= 0)
         {
-            if(d->health <= 0) kill(d, actor, NULL);
+            kill(d, actor, NULL);
         }
     }
 

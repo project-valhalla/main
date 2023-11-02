@@ -1755,19 +1755,15 @@ namespace game
 
             case N_SHOTFX:
             {
-                int acn = getint(p), atk = getint(p), id = getint(p), tcn = getint(p), damage = getint(p), flags = getint(p);
+                int acn = getint(p), atk = getint(p), id = getint(p);
+                bool hit = getint(p);
                 vec from, to;
                 loopk(3) from[k] = getint(p)/DMF;
                 loopk(3) to[k] = getint(p)/DMF;
-                gameent *actor = getclient(acn), *target = getclient(tcn);
+                gameent *actor = getclient(acn);
                 if(!actor || !validatk(atk)) break;
-                bool hastarget = target && damage;
-                if(hastarget)
-                {
-                    damaged(damage, to, target, actor, atk, flags, false);
-                }
                 actor->lastaction = lastmillis;
-                shoteffects(atk, from, to, actor, false, id, actor->lastaction, hastarget);
+                shoteffects(atk, from, to, actor, false, id, actor->lastaction, hit);
                 break;
             }
 
@@ -1798,19 +1794,17 @@ namespace game
 
             case N_DAMAGE:
             {
-                int tcn = getint(p),
-                    acn = getint(p),
-                    atk = getint(p),
-                    damage = getint(p),
-                    flags = getint(p),
-                    health = getint(p),
-                    shield = getint(p);
+                int tcn = getint(p), acn = getint(p),
+                    atk = getint(p), damage = getint(p),
+                    flags = getint(p), health = getint(p), shield = getint(p);
+                vec to;
+                loopk(3) to[k] = getint(p)/DMF;
                 gameent *target = getclient(tcn),
                        *actor = getclient(acn);
                 if(!target || !actor) break;
                 target->health = health;
                 target->shield = shield;
-                if(attacks[atk].projspeed || target == actor) damaged(damage, target->o, target, actor, atk, flags, false);
+                damaged(damage, to.iszero() ? target->o : to, target, actor, atk, flags, false);
                 break;
             }
 

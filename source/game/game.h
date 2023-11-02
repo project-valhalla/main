@@ -231,45 +231,6 @@ struct demoheader
     int version, protocol;
 };
 
-enum
-{
-    HICON_RED_FLAG = 0,
-    HICON_BLUE_FLAG,
-
-    HICON_SHIELD, HICON_HEALTH,
-    HICON_SG, HICON_SMG, HICON_PULSE, HICON_RL, HICON_RAIL, HICON_GL, HICON_PUNCH, HICON_INSTAGIB, HICON_PISTOL, HICON_ZOMBIE,
-    HICON_ALLY,
-    HICON_HASTE, HICON_DDAMAGE, HICON_ARMOUR, HICON_UAMMO,
-    HICON_MEDKIT, HICON_INVULNERABILITY,
-
-
-    HICON_X       = 20,
-    HICON_Y       = 1650,
-    HICON_TEXTY   = 1644,
-    HICON_STEP    = 490,
-    HICON_SIZE    = 120,
-    HICON_SPACE   = 40
-};
-
-static const char * const iconnames[] =
-{
-    "data/interface/hud/flag_red.png",
-    "data/interface/hud/flag_blue.png",
-    "data/interface/hud/shield.png",
-    "data/interface/hud/health.png",
-    "data/interface/hud/shotgun.png",
-    "data/interface/hud/smg.png",
-    "data/interface/hud/pulse.png",
-    "data/interface/hud/rocket.png",
-    "data/interface/hud/railgun.png",
-    "data/interface/hud/pistol.png",
-
-    "data/interface/hud/zombie.png",
-    "data/interface/hud/ally.png",
-    "data/interface/hud/haste.png",
-    "data/interface/hud/armor.png"
-};
-
 #include "weapon.h"
 #include "ai.h"
 #include "gamemode.h"

@@ -325,6 +325,8 @@ extern void pushhudscale(float sx, float sy = 0);
 extern void pushhudtranslate(float tx, float ty, float sx = 0, float sy = 0);
 extern void resethudshader();
 
+extern void fixcamerarange();
+
 // renderparticles
 enum
 {

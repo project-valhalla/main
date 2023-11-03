@@ -1450,7 +1450,7 @@ namespace game
         d->gunwait = gunwait;
         if(attacks[atk].action != ACT_MELEE && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;
-        d->pitchrecoil = kickamount * 0.05f;
+        d->pitchrecoil = kickamount * 0.10f;
     }
 
     void updaterecoil(gameent *d, int curtime)
@@ -1458,8 +1458,8 @@ namespace game
         if(!d->pitchrecoil || !curtime) return;
         const float amount = d->pitchrecoil * (curtime / 1000.0f) * d->speed * 0.12f;
         d->pitch += amount;
-        float fric = 4.0f / curtime * 30.0f;
-        d->pitchrecoil = d->pitchrecoil * (fric - 2.8f) / fric;
+        float friction = 4.0f / curtime * 30.0f;
+        d->pitchrecoil = d->pitchrecoil * (friction - 2.8f) / friction;
         fixcamerarange();
     }
 

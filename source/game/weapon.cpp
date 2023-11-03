@@ -1406,9 +1406,11 @@ namespace game
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
-        if(attacks[atk].kickamount && !(d->physstate >= PHYS_SLOPE && d->crouching && d->crouched()))
+        int kickamount = attacks[atk].kickamount;
+        if(d->haspowerup(PU_DAMAGE)) kickamount *= 2;
+        if(kickamount && !(d->physstate >= PHYS_SLOPE && d->crouching && d->crouched()))
         {
-            vec kickback = vec(dir).mul(attacks[atk].kickamount*-2.5f);
+            vec kickback = vec(dir).mul(kickamount*-2.5f);
             d->vel.add(kickback);
         }
         float shorten = attacks[atk].range && dist > attacks[atk].range ? attacks[atk].range : 0,
@@ -1448,6 +1450,17 @@ namespace game
         d->gunwait = gunwait;
         if(attacks[atk].action != ACT_MELEE && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;
+        d->pitchrecoil = kickamount * 0.05f;
+    }
+
+    void updaterecoil(gameent *d, int curtime)
+    {
+        if(!d->pitchrecoil || !curtime) return;
+        const float amount = d->pitchrecoil * (curtime / 1000.0f) * d->speed * 0.12f;
+        d->pitch += amount;
+        float fric = 4.0f / curtime * 30.0f;
+        d->pitchrecoil = d->pitchrecoil * (fric - 2.8f) / fric;
+        fixcamerarange();
     }
 
     void adddynlights()
@@ -1636,6 +1649,7 @@ namespace game
         updateprojectiles(curtime);
         if(self->clientnum>=0 && self->state==CS_ALIVE) shoot(self, worldpos); // only shoot when connected to server
         updatebouncers(curtime); // need to do this after the player shoots so bouncers don't end up inside player's BB next frame
+        updaterecoil(self, curtime);
         gameent *following = followingplayer();
         if(!following) following = self;
         loopv(players)

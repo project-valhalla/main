@@ -1755,15 +1755,14 @@ namespace game
 
             case N_SHOTFX:
             {
-                int acn = getint(p), atk = getint(p), id = getint(p);
-                bool hit = getint(p);
+                int acn = getint(p), atk = getint(p), id = getint(p), hit = getint(p);
                 vec from, to;
                 loopk(3) from[k] = getint(p)/DMF;
                 loopk(3) to[k] = getint(p)/DMF;
                 gameent *actor = getclient(acn);
                 if(!actor || !validatk(atk)) break;
                 actor->lastaction = lastmillis;
-                shoteffects(atk, from, to, actor, false, id, actor->lastaction, hit);
+                shoteffects(atk, from, to, actor, false, id, actor->lastaction, hit ? 1 : 0);
                 break;
             }
 

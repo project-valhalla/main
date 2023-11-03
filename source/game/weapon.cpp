@@ -473,7 +473,7 @@ namespace game
         {
             p.z += 0.6f*(d->eyeheight + d->aboveeye) - d->eyeheight;
         }
-        if(f->haspowerup(PU_INVULNERABILITY) || f->shield)
+        if((f->haspowerup(PU_INVULNERABILITY) && !damage) || f->shield)
         {
             particle_splash(PART_SPARK2, 100, 150, p, f->haspowerup(PU_INVULNERABILITY) ? getplayercolor(f, f->team) : 0xFFFF66, 0.50f);
             if(f->haspowerup(PU_INVULNERABILITY))
@@ -548,7 +548,7 @@ namespace game
     void hit(int damage, dynent *d, gameent *at, const vec &vel, int atk, float info1, int info2 = 1, int flags = HIT_TORSO)
     {
         gameent *f = (gameent *)d;
-        f->lastpain = lastmillis;
+        if(!isinvulnerable(f, at)) f->lastpain = lastmillis;
         if(at->type==ENT_PLAYER && f!=at && !isally(f, at))
         {
             at->totaldamage += damage;
@@ -586,12 +586,9 @@ namespace game
 
     int calcdamage(int damage, gameent *target, gameent *actor, int atk, int flags)
     {
-        if(target != actor)
+        if(target != actor && isinvulnerable(target, actor))
         {
-            if(target->haspowerup(PU_INVULNERABILITY) && !actor->haspowerup(PU_INVULNERABILITY))
-            {
-                return 0;
-            }
+            return 0;
         }
         if (!(flags & HIT_MATERIAL))
         {
@@ -612,10 +609,9 @@ namespace game
         return damage;
     }
 
-    void calcpushdamage(int damage, dynent *d, gameent *at, vec &from, vec &to, int atk, int rays, int flags)
+    void calcpush(int damage, dynent *d, gameent *at, vec &from, vec &to, int atk, int rays, int flags)
     {
-        gameent *f = (gameent *)d;
-        hit(calcdamage(damage, f, at, atk, flags), d, at, vec(to).sub(from).safenormalize(), atk, from.dist(to), rays, flags);
+        hit(damage, d, at, vec(to).sub(from).safenormalize(), atk, from.dist(to), rays, flags);
     }
 
     float projdist(dynent *o, vec &dir, const vec &v, const vec &vel)
@@ -1338,16 +1334,15 @@ namespace game
                 {
                     if(hithead)
                     {
-                        damage += attacks[atk].headshotdam;
                         flags |= HIT_HEAD;
                     }
                     if(hitlegs)
                     {
-                        damage /= 2;
                         flags |= HIT_LEGS;
                     }
                 }
-                calcpushdamage(numhits*damage, o, d, from, to, atk, numhits, flags);
+                damage = calcdamage(damage, (gameent *)o, d, atk, flags);
+                calcpush(numhits*damage, o, d, from, to, atk, numhits, flags);
                 damageeffect(damage, o, rays[i], atk, getbloodcolor(o), hithead);
             }
         }
@@ -1363,16 +1358,15 @@ namespace game
                 {
                     if(hithead)
                     {
-                        damage += attacks[atk].headshotdam;
                         flags |= HIT_HEAD;
                     }
                     else if(hitlegs)
                     {
-                        damage /= 2;
                         flags |= HIT_LEGS;
                     }
                 }
-                calcpushdamage(attacks[atk].damage, o, d, from, to, atk, 1, flags);
+                damage = calcdamage(damage, (gameent *)o, d, atk, flags);
+                calcpush(damage, o, d, from, to, atk, 1, flags);
                 damageeffect(damage, o, to, atk, getbloodcolor(o), hithead);
             }
             else

@@ -418,6 +418,11 @@ namespace game
                || (m_invasion && a->type == ENT_PLAYER && b->type == ENT_PLAYER);
     }
 
+    bool isinvulnerable(gameent *target, gameent *actor)
+    {
+        return target->haspowerup(PU_INVULNERABILITY) && !actor->haspowerup(PU_INVULNERABILITY);
+    }
+
     bool allowthirdperson()
     {
         return self->state==CS_SPECTATOR || m_edit;
@@ -456,7 +461,7 @@ namespace game
             damage = d->dodamage(damage);
         }
         else if(actor == self) return;
-        else d->lastpain = lastmillis;
+        else if(!isinvulnerable(d, actor)) d->lastpain = lastmillis;
 
         gameent *hud = hudplayer();
         if(hud != self && actor == hud && d != actor)
@@ -920,12 +925,13 @@ namespace game
         if(!d || d == self)
         {
             addmsg(N_SOUND, "ci", d, n);
-            playsound(n, camera1);
+            playsound(n, NULL, NULL);
         }
         else
         {
-            if(d->type==ENT_PLAYER && ((gameent *)d)->ai)
+            if(d->type==ENT_PLAYER && ((gameent *)d)->ai) {
                 addmsg(N_SOUND, "ci", d, n);
+            }
             playsound(n, d);
         }
     }

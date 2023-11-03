@@ -2931,7 +2931,7 @@ namespace server
                 if(totalrays>maxrays) continue;
                 int raydamage = h.rays*attacks[atk].damage, damage = calcdamage(raydamage, target, ci, atk, h.flags);
                 dodamage(target, ci, damage, atk, h.flags, h.dir, to);
-                sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
+                sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit ? 1 : 0, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
                 hit = true;
             }
         }

@@ -1722,7 +1722,6 @@ namespace game
                 if(s == self)
                 {
                     if(editmode) toggleedit();
-                    spawneffect(s);
                 }
                 s->respawn();
                 parsestate(s, p);
@@ -1732,6 +1731,7 @@ namespace game
                 if(s == self) hidescoreboard();
                 if(cmode) cmode->respawned(s);
                 ai::spawned(s);
+                if(s == self) spawneffect(s);
                 checkfollow();
                 addmsg(N_SPAWN, "rcii", s, s->lifesequence, s->gunselect);
                 break;

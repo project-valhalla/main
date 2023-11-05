@@ -683,6 +683,7 @@ namespace game
     extern void spawnplayer(gameent *d);
     extern void spawneffect(gameent *d);
     extern bool isally(gameent *a, gameent *b);
+    extern bool isinvulnerable(gameent *target, gameent *actor);
     extern void deathstate(gameent *d, bool restore = false);
     extern void damagehud(int damage, gameent *d, gameent *actor);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);

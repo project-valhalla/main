@@ -56,7 +56,7 @@ namespace ai
 
     bool targetable(gameent *d, gameent *e)
     {
-        if(d == e || !canmove(d) || (!d->haspowerup(PU_INVULNERABILITY) && e->haspowerup(PU_INVULNERABILITY)))
+        if(d == e || !canmove(d) || isinvulnerable(e, d))
         {
             return false;
         }

@@ -161,7 +161,7 @@ enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_AUTH};
 enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
-    N_SHOOT, N_EXPLODE, N_HURTPLAYER, N_SUICIDE,
+    N_SHOOT, N_EXPLODE, N_SUICIDE,
     N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT,
@@ -191,7 +191,7 @@ enum
 static const int msgsizes[] =               // size inclusive message token, 0 for variable or not-checked sizes
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
-    N_SHOOT, 0, N_EXPLODE, 0, N_HURTPLAYER, 1, N_SUICIDE, 1,
+    N_SHOOT, 0, N_EXPLODE, 0, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 8, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
@@ -245,9 +245,8 @@ struct gamestate
     int aitype, skill;
     int poweruptype, powerupmillis;
     int role;
-    int lasthurt;
 
-    gamestate() : maxhealth(100), aitype(AI_NONE), skill(0), lasthurt(0) {}
+    gamestate() : maxhealth(100), aitype(AI_NONE), skill(0) {}
 
     bool canpickup(int type)
     {

@@ -460,7 +460,7 @@ namespace game
         {
             damage = d->dodamage(damage);
         }
-        else if(actor == self) return;
+        else if(actor == self && !(flags & HIT_MATERIAL)) return;
         else if(!isinvulnerable(d, actor)) d->lastpain = lastmillis;
 
         gameent *hud = hudplayer();
@@ -994,29 +994,6 @@ namespace game
         if(isghost(d)) return "\f4";
         else if(d->state==CS_SPECTATOR) return "\f8";
         else return "\ff";
-    }
-
-    void hurt(physent *d)
-    {
-        if(d->state != CS_ALIVE) return;
-        gameent *pl = (gameent *)d;
-        if(pl->lasthurt && lastmillis - pl->lasthurt <= ENV_DAM_DELAY) return;
-        int damage = calcdamage(ENV_DAM, pl, pl, -1, HIT_MATERIAL);
-        if(pl==self || (pl->type == ENT_PLAYER && pl->ai))
-        {
-            if(!m_mp(gamemode))
-            {
-                damaged(damage, pl->o, pl, pl, -1, HIT_MATERIAL, true);
-                pl->lasthurt = lastmillis;
-            }
-            else addmsg(N_HURTPLAYER, "rc", pl);
-            if(pl == self)
-            {
-                damagehud(damage, pl, pl);
-                pl->lastpain = lastmillis;
-            }
-        }
-        else if(pl->type == ENT_AI) hitmonster(damage, (monster *)d, pl);
     }
 
     void suicide(physent *d)

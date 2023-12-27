@@ -238,7 +238,7 @@ namespace server
         int ping, aireinit;
         string clientmap;
         int mapcrc;
-        bool warned, gameclip;
+        bool warned, damagemat;
         ENetPacket *getdemo, *getmap, *clipboard;
         int lastclipboard, needclipboard;
         int connectauth;
@@ -312,7 +312,7 @@ namespace server
             clientmap[0] = '\0';
             mapcrc = 0;
             warned = false;
-            gameclip = false;
+            damagemat = false;
         }
 
         void reassign()
@@ -3013,7 +3013,16 @@ namespace server
                         ci->state.lastregeneration = lastmillis;
                     }
                 }
+                if(ci->damagemat)
+                {
+                    if(lastmillis-ci->state.lastdamage >= ENV_DAM_DELAY)
+                    {
+                        dodamage(ci, ci, calcdamage(ENV_DAM, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
+                        ci->state.lastdamage = lastmillis;
+                    }
+                }
             }
+
         }
         serverevents::process();
     }
@@ -3692,9 +3701,9 @@ namespace server
                         cp->position.setsize(0);
                         while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
                     }
-                    if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, cp->state.o, cp->gameclip, pos, (flags&0x80)!=0);
+                    if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, cp->state.o, cp->damagemat, pos, (flags&0x80)!=0);
                     cp->state.o = pos;
-                    cp->gameclip = (flags&0x80)!=0;
+                    cp->damagemat = (flags&0x80)!=0;
                 }
                 break;
             }
@@ -3857,14 +3866,6 @@ namespace server
             case N_SUICIDE:
             {
                 if(cq) cq->addevent(new suicideevent);
-                break;
-            }
-
-            case N_HURTPLAYER:
-            {
-                if(!cq || lastmillis-cq->state.lastdamage <= ENV_DAM_DELAY) break;
-                dodamage(cq, cq, calcdamage(ENV_DAM, cq, cq, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
-                cq->state.lastdamage = lastmillis;
                 break;
             }
 

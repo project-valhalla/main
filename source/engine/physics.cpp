@@ -1865,11 +1865,6 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 
     if(pl->state==CS_ALIVE)
     {
-        vec feet = pl->feetpos();
-        if(material & MAT_DAMAGE || lookupmaterial(feet) & MAT_DAMAGE || lookupmaterial(feet) & MAT_LAVA)
-        {
-            game::hurt(pl); // damage the player if their feet or body are inside damage/lava material
-        }
         if(pl->o.z < 0 || material & MAT_DEATH)
         {
             game::suicide(pl); // kill the player if inside death material or outside of world (below origin)

@@ -406,7 +406,7 @@ namespace game
 
         vec dir, o, from, to, offset;
 
-        bool local, destroyed;
+        bool local;
 
         float speed;
 
@@ -416,7 +416,6 @@ namespace game
 
         projectile() : projchan(-1), projsound(-1)
         {
-            destroyed = false;
         }
         ~projectile()
         {
@@ -618,11 +617,14 @@ namespace game
     {
         vec middle = o->o;
         middle.z += (o->aboveeye-o->eyeheight)/2;
-        float dist = middle.dist(v, dir);
-        dir.div(dist);
-        if(dist<0) dist = 0;
-        return dist;
+        dir = vec(middle).sub(v).add(vec(vel).mul(5)).safenormalize();
+
+        float low = min(o->o.z - o->eyeheight + o->radius, middle.z),
+              high = max(o->o.z + o->aboveeye - o->radius, middle.z);
+        vec closest(o->o.x, o->o.y, clamp(v.z, low, high));
+        return max(closest.dist(v) - o->radius, 0.0f);
     }
+
 
     void radialeffect(dynent *o, const vec &v, const vec &vel, int damage, gameent *at, int atk)
     {
@@ -794,6 +796,7 @@ namespace game
             dv.mul(time/max(dist*1000/p.speed, float(time)));
             vec v = vec(p.o).add(dv);
             float damage = attacks[p.atk].damage;
+            bool exploded = false;
             hits.setsize(0);
             if(p.local)
             {
@@ -805,12 +808,12 @@ namespace game
                     if(p.owner==o || o->o.reject(bo, o->radius + br)) continue;
                     if(projdamage(o, p, v, damage))
                     {
-                        p.destroyed = true;
+                        exploded = true;
                         break;
                     }
                 }
             }
-            if(!p.destroyed)
+            if(!exploded)
             {
                 for(int rtime = time; rtime > 0;)
                 {
@@ -818,12 +821,14 @@ namespace game
                     rtime -= qtime;
                     if((p.lifetime -= qtime)<0)
                     {
-                        p.destroyed = true;
+                        exploded = true;
+                        projsplash(p, v, NULL, damage);
                     }
                 }
                 if(lookupmaterial(p.o) & MAT_LAVA)
                 {
-                    p.destroyed = true;
+                    exploded = true;
+                    projsplash(p, v, NULL, damage);
                 }
                 else if(dist<4)
                 {
@@ -831,7 +836,8 @@ namespace game
                     {
                         if(raycubepos(p.o, p.dir, p.to, 0, RAY_CLIPMAT|RAY_ALPHAPOLY)>=4) continue;
                     }
-                    p.destroyed = true;
+                    exploded = true;
+                    projsplash(p, v, NULL, damage);
                 }
                 else
                 {
@@ -876,12 +882,13 @@ namespace game
                     p.projchan = playsound(p.projsound, NULL, &pos, NULL, 0, -1, 100, p.projchan);
                 }
             }
-            if(p.destroyed)
+            if(exploded)
             {
-                projsplash(p, v, NULL, damage);
                 if(p.local)
+                {
                     addmsg(N_EXPLODE, "rci3iv", p.owner, lastmillis-maptime, p.atk, p.id-maptime,
-                            hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+                           hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+                }
                 stopsound(p.projsound, p.projchan);
                 projs.remove(i--);
             }
@@ -1265,7 +1272,7 @@ namespace game
 
     bool scanprojs(vec &from, vec &to, gameent *d, int atk)
     {
-        vec stepv;
+        /*vec stepv;
         float dist = to.dist(from, stepv);
         int steps = clamp(int(dist * 2), 1, 200);
         stepv.div(steps);
@@ -1279,16 +1286,20 @@ namespace game
                 if (p.projtype != PROJ_PLASMA) continue;
                 if (attacks[atk].gun == GUN_PISTOL && p.o.dist(point) <= attacks[p.atk].margin)
                 {
-                    if(p.local && (d==self || d->ai))
+                    //p.owner = d;
+                    p.atk = ATK_PISTOL_COMBO;
+                    projsplash(p, p.o, NULL, attacks[p.atk].damage);
+                    if(d == self || d->ai)
                     {
-                        p.owner = d;
-                        p.atk = ATK_PISTOL_COMBO;
-                        p.destroyed = true;
+                        addmsg(N_EXPLODE, "rci3iv", p.owner, lastmillis-maptime, p.atk, p.id-maptime,
+                               hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
                     }
+                    stopsound(p.projsound, p.projchan);
+                    projs.remove(i--);
                     return true;
                 }
             }
-        }
+        }*/
         return false;
     }
 

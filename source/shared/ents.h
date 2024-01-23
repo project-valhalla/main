@@ -77,6 +77,7 @@ struct physent                                  // base entity type, can be affe
     float radius, eyeheight, maxheight, aboveeye; // bounding box size
     float xradius, yradius, zmargin;
     float headradius, legsradius;
+    vec head;
     vec floor;                                  // the normal of floor the dynent is on
 
     int inwater;
@@ -92,7 +93,7 @@ struct physent                                  // base entity type, can be affe
 
     physent() : o(0, 0, 0), deltapos(0, 0, 0), newpos(0, 0, 0), yaw(0), pitch(0), roll(0), speed(100),
                radius(4.1f), eyeheight(15.5f), maxheight(16), aboveeye(2),  xradius(4.1f), yradius(4.1f), zmargin(0),
-               headradius(2.0f), legsradius(5.0f),
+               headradius(2.0f), legsradius(5.0f), head(0, 0, 0),
                state(CS_ALIVE), editstate(CS_ALIVE), type(ENT_PLAYER),
                collidetype(COLLIDE_ELLIPSE),
                blocked(false)

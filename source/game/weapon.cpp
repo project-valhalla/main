@@ -1222,15 +1222,15 @@ namespace game
 
     float intersectdist = 1e16f;
 
-    bool intersecthead(dynent *d, const vec &from, const vec &to, float &dist)
+    bool isheadhitbox(dynent *d, const vec &from, const vec &to, float &dist)
     {
-        vec bottom(d->o), top(d->o);
-        bottom.z -= d->aboveeye-2.0f;
-        top.z += d->aboveeye;
+        vec bottom(d->head), top(d->head);
+        bottom.z -= d->headradius/4.75f;
+        top.z += d->headradius;
         return linecylinderintersect(from, to, bottom, top, d->headradius, dist);
     }
 
-    bool intersectlegs(dynent *d, const vec &from, const vec &to, float &dist)
+    bool islegshitbox(dynent *d, const vec &from, const vec &to, float &dist)
     {
         vec bottom(d->o), top(d->o);
         bottom.z -= d->eyeheight;
@@ -1324,8 +1324,8 @@ namespace game
             {
                 if((hits[i] = intersectclosest(from, rays[i], d, margin, dist)))
                 {
-                    hitlegs = intersectlegs(hits[i], from, rays[i], dist);
-                    hithead = intersecthead(hits[i], from, rays[i], dist);
+                    hitlegs = islegshitbox(hits[i], from, rays[i], dist);
+                    hithead = isheadhitbox(hits[i], from, rays[i], dist);
                     shorten(from, rays[i], dist);
                     rayhit(atk, d, from, rays[i], true);
                 }
@@ -1361,8 +1361,8 @@ namespace game
         {
             if((o = intersectclosest(from, to, d, margin, dist)))
             {
-                hithead = intersecthead(o, from, to, dist);
-                hitlegs = intersectlegs(o, from, to, dist);
+                hitlegs = islegshitbox(o, from, to, dist);
+                hithead = isheadhitbox(o, from, to, dist);
                 shorten(from, to, dist);
                 rayhit(atk, d, from, to, true);
                 if(attacks[atk].headshotdam) // if an attack does not have headshot damage, then it does not deal locational damage

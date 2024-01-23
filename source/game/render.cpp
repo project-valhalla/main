@@ -237,7 +237,7 @@ namespace game
                 delay = 600;
             }
         }
-        modelattach a[5];
+        modelattach a[6];
         int ai = 0;
         if(guns[d->gunselect].worldmodel && d->deathattack != ATK_PISTOL_COMBO)
         {
@@ -253,6 +253,10 @@ namespace game
         {
             d->muzzle = vec(-1, -1, -1);
             if(guns[d->gunselect].worldmodel) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
+        }
+        if(d->state == CS_ALIVE)
+        {
+            a[ai++] = modelattach("tag_head", &d->head);
         }
         float yaw = testanims && d==self ? 0 : d->yaw,
               pitch = testpitch && d==self ? testpitch : d->pitch;

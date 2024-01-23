@@ -437,14 +437,14 @@ namespace game
                && (self->state == CS_ALIVE || self->state == CS_LAGGED);
     }
 
-    FVARP(damageroll, 0, 2.0f, 2.0f);
+    FVARP(damagerolldiv, 0, 2.0f, 5.0f);
 
     void damagehud(int damage, gameent *d, gameent *actor)
     {
         damageblend(damage);
         if(d != actor) damagecompass(damage, actor->o);
-        if(!damageroll) return;
-        float damroll = damage/damageroll;
+        if(!damagerolldiv) return;
+        float damroll = damage/damagerolldiv;
         d->roll += d->roll > 0 ? damroll : (d->roll < 0 ? -damroll : (rnd(2) ? damroll : -damroll));
     }
 

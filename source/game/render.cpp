@@ -521,8 +521,13 @@ namespace game
             {
                 float progress = clamp((lastmillis - d->lastland) / (float)350, 0.0f, 1.0f);
                 swaylandpitch = -10 * sinf(progress * PI);
-
             }
+            else if (d->lastswitch > 0 && lastmillis - d->lastswitch <= 500)
+            {
+                float progress = clamp((lastmillis - d->lastswitch) / (float)500, 0.0f, 1.0f);
+                swaylandpitch = -15 * sinf(progress * PI);
+            }
+            else swaylandpitch = 0;
 
             float k = pow(0.7f, curtime/10.0f);
             swaydir.mul(k);

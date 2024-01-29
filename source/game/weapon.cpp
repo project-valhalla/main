@@ -719,7 +719,7 @@ namespace game
         vec dir = vec(p.dir).neg();
         float rad = attacks[p.atk].exprad*0.75f;
         addstain(STAIN_PULSE_SCORCH, pos, dir, rad);
-        if(p.atk == ATK_PISTOL2) addstain(STAIN_PULSE_GLOW, pos, dir, rad, 0x00FFFF);
+        if(p.atk == ATK_PISTOL2 || p.atk == ATK_PISTOL_COMBO) addstain(STAIN_PULSE_GLOW, pos, dir, rad, 0x00FFFF);
     }
 
     void projsplash(projectile &p, const vec &v, dynent *safe, int damage)
@@ -750,7 +750,8 @@ namespace game
                 break;
             case ATK_PULSE1:
             case ATK_ROCKET1:
-            case ATK_PISTOL1:
+            case ATK_PISTOL2:
+            case ATK_PISTOL_COMBO:
                 loopv(projs)
                 {
                     projectile &p = projs[i];
@@ -1272,7 +1273,7 @@ namespace game
 
     bool scanprojs(vec &from, vec &to, gameent *d, int atk)
     {
-        /*vec stepv;
+        vec stepv;
         float dist = to.dist(from, stepv);
         int steps = clamp(int(dist * 2), 1, 200);
         stepv.div(steps);
@@ -1287,7 +1288,7 @@ namespace game
                 if (attacks[atk].gun == GUN_PISTOL && p.o.dist(point) <= attacks[p.atk].margin)
                 {
                     //p.owner = d;
-                    p.atk = ATK_PISTOL_COMBO;
+                    //p.atk = ATK_PISTOL_COMBO;
                     projsplash(p, p.o, NULL, attacks[p.atk].damage);
                     if(d == self || d->ai)
                     {
@@ -1299,7 +1300,7 @@ namespace game
                     return true;
                 }
             }
-        }*/
+        }
         return false;
     }
 

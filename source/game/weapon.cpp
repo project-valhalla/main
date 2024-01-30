@@ -368,7 +368,7 @@ namespace game
                     addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
                     if(bnc.atk == ATK_GRENADE) addstain(STAIN_PULSE_GLOW, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad/2, 0x74BCF9);
                     if(bnc.local)
-                        addmsg(N_EXPLODE, "rci4iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime, bnc.owner->clientnum,
+                        addmsg(N_EXPLODE, "rci3iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime,
                                                     hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
                 }
                 stopsound(bnc.bouncerloopsound, bnc.bouncerloopchan);
@@ -758,13 +758,13 @@ namespace game
                 loopv(projs)
                 {
                     projectile &p = projs[i];
-                    if(atk == ATK_PISTOL_COMBO)
+                    if(p.owner == d && p.id == id && !p.local)
                     {
-                        p.owner = d;
-                        p.atk = atk;
-                    }
-                    if(p.atk == atk && p.owner == d && p.id == id && !p.local)
-                    {
+                        if(atk == ATK_PISTOL_COMBO)
+                        {
+                            p.atk = atk;
+                        }
+                        else if(p.atk != atk) continue;
                         vec pos = vec(p.offset).mul(p.offsetmillis/float(OFFSETMILLIS)).add(p.o);
                         explode(p.local, p.owner, pos, p.dir, NULL, 0, atk);
                         stain(p, pos);
@@ -876,7 +876,7 @@ namespace game
                         case PROJ_PLASMA:
                         {
                             tails = 5.0f; tailc = 0x00FFFF;
-                            particle_splash(PART_ORB, 1, 1, pos, tailc, tails, 150, 20);
+                            particle_splash(PART_ORB, 1, 1, pos, tailc, p.owner == self ? tails : tails-2.0f, 150, 20);
                             p.projsound = S_PISTOL_LOOP;
                             break;
                         }
@@ -896,7 +896,7 @@ namespace game
             {
                 if(p.local)
                 {
-                    addmsg(N_EXPLODE, "rci4iv", p.owner, lastmillis-maptime, p.atk, p.id-maptime, p.owner->clientnum,
+                    addmsg(N_EXPLODE, "rci3iv", p.owner, lastmillis-maptime, p.atk, p.id-maptime,
                            hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
                 }
                 stopsound(p.projsound, p.projchan);
@@ -1293,16 +1293,14 @@ namespace game
             loopv(projs)
             {
                 projectile &p = projs[i];
-                if (p.projtype != PROJ_PLASMA) continue;
+                if (p.projtype != PROJ_PLASMA || (p.owner != self || (d->ai && p.owner != d))) continue;
                 if (attacks[atk].gun == GUN_PISTOL && p.o.dist(point) <= attacks[p.atk].margin)
                 {
-                    int prevowner = p.owner->clientnum;
-                    if(p.owner != d) p.owner = d;
                     p.atk = ATK_PISTOL_COMBO;
                     projsplash(p, p.o, NULL, attacks[p.atk].damage);
                     if(d == self || d->ai)
                     {
-                        addmsg(N_EXPLODE, "rci4iv", p.owner, lastmillis-maptime, p.atk, p.id-maptime, prevowner,
+                        addmsg(N_EXPLODE, "rci3iv", p.owner, lastmillis-maptime, p.atk, p.id-maptime,
                                hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
                     }
                     stopsound(p.projsound, p.projchan);
@@ -1323,7 +1321,11 @@ namespace game
             else rayhit(atk, d, from, to);
             return;
         }
-        if(scanprojs(from, to, d, atk)) return;
+
+        if(scanprojs(from, to, d, atk))
+        {
+            return;
+        }
         dynent *o;
         float dist;
         int margin = attacks[atk].margin, damage = attacks[atk].damage, flags = HIT_TORSO;

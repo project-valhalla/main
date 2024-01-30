@@ -76,7 +76,7 @@ namespace server
 
     struct explodeevent : timedevent
     {
-        int id, atk, prevowner;
+        int id, atk;
         vector<hitinfo> hits;
 
         bool keepable() const { return true; }
@@ -2857,22 +2857,13 @@ namespace server
     void explodeevent::process(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        clientinfo *powner = getinfo(prevowner);
         if(attacks[atk].gravity && attacks[atk].elasticity)
         {
-            if(ci != powner)
-            {
-                if(!powner->state.bouncers.remove(id)) return;
-            }
-            else if(!gs.bouncers.remove(id)) return;
+            if(!gs.bouncers.remove(id)) return;
         }
         else if(attacks[atk].projspeed)
         {
-            if(ci != powner)
-            {
-                if(!powner->state.projs.remove(id)) return;
-            }
-            else if(!gs.projs.remove(id)) return;
+            if(!gs.projs.remove(id)) return;
         }
         sendf(-1, 1, "ri4x", N_EXPLODEFX, ci->clientnum, atk, id, ci->ownernum);
         loopv(hits)
@@ -3910,7 +3901,6 @@ namespace server
                 exp->millis = cq ? cq->geteventmillis(gamemillis, cmillis) : 0;
                 exp->atk = getint(p);
                 exp->id = getint(p);
-                exp->prevowner = getint(p);
                 int hits = getint(p);
                 loopk(hits)
                 {

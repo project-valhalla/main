@@ -875,7 +875,7 @@ namespace game
 
                         case PROJ_PLASMA:
                         {
-                            tails = 5.0f; tailc = 0x00FFFF;
+                            tails = 6.0f; tailc = 0x00FFFF;
                             particle_splash(PART_ORB, 1, 1, pos, tailc, p.owner == self ? tails : tails-2.0f, 150, 20);
                             p.projsound = S_PISTOL_LOOP;
                             break;
@@ -1013,7 +1013,7 @@ namespace game
                 {
                     if(muzzleflash)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 70, PART_MUZZLE_FLASH, 0xEFE598, 3.80f, d);
+                        particle_flare(d->muzzle, d->muzzle, 70, PART_MUZZLE_FLASH2, 0xEFE598, 2.80f, d);
                         adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                     }
                     if(d==hudplayer()) spawnbouncer(d->muzzle, d, BNC_CARTRIDGE); // using muzzle vec temporarily
@@ -1043,7 +1043,7 @@ namespace game
                 {
                     if(muzzleflash)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0xEFE898, 2.5f, d);
+                        particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH2, 0xEFE898, 1.5f, d);
                         adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                     }
                     if(d==hudplayer()) spawnbouncer(d->muzzle, d, BNC_CARTRIDGE); // using muzzle vec temporarily

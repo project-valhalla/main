@@ -32,7 +32,7 @@ static struct gamemodeinfo
     { "lms", "Last Man Standing", M_LASTMAN, "\f2Last Man Standing\ff: eliminate everyone to win the round and score points" },
     { "jugg", "Juggernaut", M_JUGGERNAUT, "\f2Juggernaut\ff: kill the juggernaut to become the juggernaut and score points" },
     { "infect", "Infection", M_INFECTION, "\f2Infection\ff: survive the infection or infect survivors to score points" },
-    { "invasion", "Invasion", M_INVASION, "\f2Invasion\ff: survive waves of monsters to score points" },
+    { "invasion", "Invasion", M_INVASION | M_LOCAL, "\f2Invasion\ff: survive waves of monsters to score points" },
     { "betrayal", "Betrayal", M_BETRAYAL, "\f2Betrayal\ff: survive the traitor as a victim or kill victims as a traitor to score points" }
 };
 

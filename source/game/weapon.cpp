@@ -472,12 +472,12 @@ namespace game
         {
             p.z += 0.6f*(d->eyeheight + d->aboveeye) - d->eyeheight;
         }
-        if((f->haspowerup(PU_INVULNERABILITY) && !damage) || f->shield)
+        if(f->haspowerup(PU_INVULNERABILITY) || f->shield)
         {
             particle_splash(PART_SPARK2, 100, 150, p, f->haspowerup(PU_INVULNERABILITY) ? getplayercolor(f, f->team) : 0xFFFF66, 0.50f);
             if(f->haspowerup(PU_INVULNERABILITY))
             {
-                msgsound(S_ACTION_INVULNERABILITY, f);
+                playsound(S_ACTION_INVULNERABILITY, f);
                 return;
             }
         }

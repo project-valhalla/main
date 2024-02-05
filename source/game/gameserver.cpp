@@ -2774,24 +2774,21 @@ namespace server
     {
         if((target == actor && !selfdamage) || (isally(target, actor) && !teamdamage) || (m_round && betweenrounds)) return;
         servstate &ts = target->state;
-        if(damage > 0)
+        ts.dodamage(damage, flags & HIT_MATERIAL? true : false);
+        target->state.lastpain = lastmillis;
+        sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield, int(to.x*DMF), int(to.y*DMF), int(to.z*DMF));
+        if(target!=actor && damage > 0)
         {
-            ts.dodamage(damage, flags & HIT_MATERIAL? true : false);
-            target->state.lastpain = lastmillis;
-            sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield, int(to.x*DMF), int(to.y*DMF), int(to.z*DMF));
-            if(target!=actor)
+            if(!isally(target, actor))
             {
-                if(!isally(target, actor))
+                actor->state.damage += damage;
+                if(m_vampire(mutators))
                 {
-                    actor->state.damage += damage;
-                    if(m_vampire(mutators))
-                    {
-                        actor->state.health = min(actor->state.health+damage/(actor->state.role==ROLE_JUGGERNAUT? 2: 1), maximumhealth(actor->state.role == ROLE_ZOMBIE));
-                        sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
-                    }
+                    actor->state.health = min(actor->state.health+damage/(actor->state.role==ROLE_JUGGERNAUT? 2: 1), maximumhealth(actor->state.role == ROLE_ZOMBIE));
+                    sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
                 }
-                else if(!m_teammode && !m_betrayal) dodamage(actor, actor, damage, atk, flags);
             }
+            else if(!m_teammode && !m_betrayal) dodamage(actor, actor, damage, atk, flags);
         }
         if(target==actor) target->setpushed();
         else if(!hitpush.iszero())
@@ -2927,8 +2924,9 @@ namespace server
                 if(totalrays>maxrays) continue;
                 int raydamage = h.rays*attacks[atk].damage, damage = calcdamage(raydamage, target, ci, atk, h.flags);
                 dodamage(target, ci, damage, atk, h.flags, h.dir, to);
-                sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit ? 1 : 0, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
                 hit = true;
+                sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
+
             }
         }
         if(hit) return;

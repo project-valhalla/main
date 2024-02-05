@@ -463,6 +463,10 @@ namespace game
         else if(actor == self && !(flags & HIT_MATERIAL)) return;
         else if(!isinvulnerable(d, actor)) d->lastpain = lastmillis;
 
+        damageeffect(damage, d, p, atk, getbloodcolor(d), flags & HIT_HEAD);
+
+        if(isinvulnerable(d, actor)) return;
+
         gameent *hud = hudplayer();
         if(hud != self && actor == hud && d != actor)
         {
@@ -476,7 +480,6 @@ namespace game
         {
             damagehud(damage, d, actor);
         }
-        damageeffect(damage, d, p, atk, getbloodcolor(d), flags & HIT_HEAD);
 
         ai::damaged(d, actor);
         if(local && d->health <= 0)

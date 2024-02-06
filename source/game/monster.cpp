@@ -222,7 +222,7 @@ namespace game
             }
         }
 
-        void monsterpain(int damage, gameent *d)
+        void monsterpain(int damage, gameent *d, int atk)
         {
             if(d->type==ENT_AI) // a monster hit us
             {
@@ -246,6 +246,7 @@ namespace game
                 lastpain = lastmillis;
                 if(gore && gibbed()) gibeffect(max(-health, 0), vel, this);
                 else playsound(monstertypes[mtype].diesound, this);
+                if(validatk(atk)) deathattack = atk;
                 monsterkilled();
             }
             else
@@ -297,6 +298,24 @@ namespace game
         int n = rnd(TOTMFREQ), type;
         for(int i = 0; ; i++) if((n -= monstertypes[i].freq)<0) { type = i; break; }
         monsters.add(new monster(type, rnd(360), 0, MS_SEARCH, 1000, 1));
+    }
+
+    void healmonsters()
+    {
+        loopv(monsters)
+        {
+            if(monsters[i]->state==CS_ALIVE)
+            {
+                // heal monsters when player dies
+                monster *m = monsters[i];
+                m->health = min(m->health + monstertypes[m->mtype].healthbonus, monstertypes[m->mtype].health);
+            }
+        }
+    }
+
+    int getmonstertype(gameent *d)
+    {
+        return ((monster *)d)->mtype;
     }
 
     void clearmonsters() // called after map start or when toggling edit mode to reset/spawn all monsters to initial state
@@ -387,12 +406,12 @@ namespace game
 
     void suicidemonster(monster *m)
     {
-        m->monsterpain(400, self);
+        m->monsterpain(400, self, -1);
     }
 
-    void hitmonster(int damage, monster *m, gameent *at)
+    void hitmonster(int damage, monster *m, gameent *at, int atk)
     {
-        m->monsterpain(damage, at);
+        m->monsterpain(damage, at, atk);
     }
 
     void spsummary(int accuracy)

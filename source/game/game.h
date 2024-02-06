@@ -752,11 +752,13 @@ namespace game
     extern void updatemonsters(int curtime);
     extern void rendermonsters();
     extern void suicidemonster(monster *m);
-    extern void hitmonster(int damage, monster *m, gameent *at);
+    extern void healmonsters();
+    extern void hitmonster(int damage, monster *m, gameent *at, int atk);
     extern void monsterkilled();
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);
     extern int getbloodcolor(dynent *d);
+    extern int getmonstertype(gameent *d);
 
     // scoreboard
     extern void hidescoreboard();

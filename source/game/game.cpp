@@ -358,6 +358,10 @@ namespace game
                 return;
             }
             respawnself();
+            if(m_invasion)
+            {
+                healmonsters();
+            }
         }
     }
     COMMAND(respawn, "");
@@ -484,7 +488,7 @@ namespace game
         ai::damaged(d, actor);
         if(local && d->health <= 0)
         {
-            kill(d, actor, NULL);
+            kill(d, actor, atk, flags);
         }
     }
 
@@ -557,6 +561,10 @@ namespace game
             if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
             else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
             killfeedweaponinfo = attacks[atk].action == ACT_MELEE ? -1 : attacks[atk].gun;
+        }
+        if(m_invasion && actor->type == ENT_AI)
+        {
+            killfeedweaponinfo = -4;
         }
         // kill feed
         killfeedactorcn = actor->clientnum;

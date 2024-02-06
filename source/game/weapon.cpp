@@ -564,7 +564,7 @@ namespace game
         {
             f->hitpush(damage, vel, at, atk);
         }
-        if(f->type == ENT_AI) hitmonster(damage, (monster *)f, at);
+        if(f->type == ENT_AI) hitmonster(damage, (monster *)f, at, atk);
         else if(!m_mp(gamemode))
         {
             damaged(damage, f->o, f, at, atk, flags);
@@ -876,7 +876,7 @@ namespace game
                         case PROJ_PLASMA:
                         {
                             tails = 6.0f; tailc = 0x00FFFF;
-                            particle_splash(PART_ORB, 1, 1, pos, tailc, p.owner == self ? tails : tails-2.0f, 150, 20);
+                            particle_splash(PART_ORB, 1, 1, pos, tailc, p.owner == self || p.owner->type == ENT_AI ? tails : tails-2.0f, 150, 20);
                             p.projsound = S_PISTOL_LOOP;
                             break;
                         }
@@ -1293,7 +1293,7 @@ namespace game
             loopv(projs)
             {
                 projectile &p = projs[i];
-                if (p.projtype != PROJ_PLASMA || (p.owner != self || (d->ai && p.owner != d))) continue;
+                if (p.projtype != PROJ_PLASMA || (d != p.owner && p.owner->type != ENT_AI)) continue;
                 if (attacks[atk].gun == GUN_PISTOL && p.o.dist(point) <= attacks[p.atk].margin)
                 {
                     p.atk = ATK_PISTOL_COMBO;
@@ -1466,7 +1466,7 @@ namespace game
         int gunwait = attacks[atk].attackdelay;
         if(d->haspowerup(PU_HASTE) || d->role == ROLE_JUGGERNAUT) gunwait /= 2;
         d->gunwait = gunwait;
-        if(attacks[atk].action != ACT_MELEE && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
+        if(d->gunselect == GUN_PISTOL && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;
         d->pitchrecoil = kickamount * 0.10f;
     }

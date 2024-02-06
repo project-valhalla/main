@@ -421,20 +421,19 @@ namespace game
 
     void spsummary(int accuracy)
     {
-        conoutf(CON_GAMEINFO, "\f2--- single player time score: ---");
         int pen, score = 0;
-        pen = ((lastmillis-maptime)*100)/game::scaletime(1000); score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2time taken: %d seconds (%d simulated seconds)", pen, (lastmillis-maptime)/1000);
-        pen = self->deaths*60; score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2time penalty for %d deaths (1 minute each): %d seconds", self->deaths, pen);
-        pen = remain*10;          score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2time penalty for %d monsters remaining (10 seconds each): %d seconds", remain, pen);
-        pen = (10-skill)*20;      score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2time penalty for lower skill level (20 seconds each): %d seconds", pen);
-        pen = 100-accuracy;       score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2time penalty for missed shots (1 second each %%): %d seconds", pen);
+        pen = ((lastmillis-maptime)*100)/game::scaletime(1000); score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time taken: %d seconds (%d simulated seconds)", pen, (lastmillis-maptime)/1000);
+        pen = self->deaths*60; score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time penalty for %d deaths (1 minute each): %d seconds", self->deaths, pen);
+        pen = remain*10;          score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time penalty for %d monsters remaining (10 seconds each): %d seconds", remain, pen);
+        pen = (10-skill)*20;      score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time penalty for lower skill level (20 seconds each): %d seconds", pen);
+        pen = 100-accuracy;       score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time penalty for missed shots (1 second each %%): %d seconds", pen);
         defformatstring(aname, "bestscore_%s", getclientmap());
         const char *bestsc = getalias(aname);
         int bestscore = *bestsc ? parseint(bestsc) : score;
         if(score<bestscore) bestscore = score;
         defformatstring(nscore, "%d", bestscore);
         alias(aname, nscore);
-        conoutf(CON_GAMEINFO, "\f2TOTAL SCORE (time + time penalties): %d seconds (best so far: %d seconds)", score, bestscore);
+        conoutf(CON_GAMEINFO, "\f2Total score (time + time penalties): %d seconds (best so far: %d seconds)", score, bestscore);
     }
 }
 

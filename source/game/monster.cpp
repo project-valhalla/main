@@ -397,7 +397,7 @@ namespace game
             {
                 modelattach a[3];
                 int ai = 0;
-                a[ai++] = modelattach("tag_weapon", monstertypes[m.mtype].vwepname, ANIM_VWEP_IDLE|ANIM_LOOP, 0);
+                a[ai++] = modelattach("tag_weapon", monstertypes[m.mtype].worldgunmodel, ANIM_VWEP_IDLE|ANIM_LOOP, 0);
                 if(m.state == CS_ALIVE)
                 {
                     a[ai++] = modelattach("tag_head", &m.head);

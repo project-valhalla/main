@@ -26,7 +26,7 @@ struct monstertype // see docs for how these values modify behaviour
 {
     int type, atk, speed, healthbonus, health, freq, lag, rate, pain, loyalty, bscale, weight, bloodcolor;
     int painsound, diesound, haltsound;
-    const char *name, *mdlname, *vwepname;
+    const char *name, *mdlname, *worldgunmodel;
     bool neutral, ragdoll;
 };
 

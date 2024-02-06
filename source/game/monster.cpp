@@ -345,7 +345,11 @@ namespace game
         numkilled++;
         self->frags = numkilled;
         remain = monstertotal-numkilled;
-        if(remain>0 && remain<=5) conoutf(CON_GAMEINFO, "\f2only %d monster(s) remaining", remain);
+        if(remain>0 && remain<=5) conoutf(CON_GAMEINFO, "\f2%d monster(s) remaining", remain);
+        if(remain == 5 || remain == 1)
+        {
+            playsound(remain == 5 ? S_ANNOUNCER_5_KILLS : S_ANNOUNCER_1_KILL, NULL, NULL, NULL, SND_ANNOUNCER);
+        }
     }
 
     void updatemonsters(int curtime)

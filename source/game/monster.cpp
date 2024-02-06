@@ -313,11 +313,6 @@ namespace game
         }
     }
 
-    int getmonstertype(gameent *d)
-    {
-        return ((monster *)d)->mtype;
-    }
-
     void clearmonsters() // called after map start or when toggling edit mode to reset/spawn all monsters to initial state
     {
         removetrackedparticles();

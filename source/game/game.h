@@ -758,7 +758,6 @@ namespace game
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);
     extern int getbloodcolor(dynent *d);
-    extern int getmonstertype(gameent *d);
 
     // scoreboard
     extern void hidescoreboard();

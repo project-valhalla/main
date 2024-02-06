@@ -544,6 +544,8 @@ namespace game
         msgsound(S_GIB, d);
     }
 
+    VARP(monsterdeadpush, 1, 5, 20);
+
     void hit(int damage, dynent *d, gameent *at, const vec &vel, int atk, float info1, int info2 = 1, int flags = HIT_TORSO)
     {
         gameent *f = (gameent *)d;
@@ -560,11 +562,15 @@ namespace game
             }
             at->lasthit = lastmillis;
         }
-        if(f->type==ENT_AI || !m_mp(gamemode) || f==at)
+        if(f->type != ENT_AI && (!m_mp(gamemode) || f==at))
         {
             f->hitpush(damage, vel, at, atk);
         }
-        if(f->type == ENT_AI) hitmonster(damage, (monster *)f, at, atk);
+        if(f->type == ENT_AI)
+        {
+            hitmonster(damage, (monster *)f, at, atk);
+            f->hitpush(damage * (f->health<=0 ? monsterdeadpush : 1), vel, at, atk);
+        }
         else if(!m_mp(gamemode))
         {
             damaged(damage, f->o, f, at, atk, flags);

@@ -392,13 +392,19 @@ namespace game
         loopv(monsters)
         {
             monster &m = *monsters[i];
-            if(m.state!=CS_DEAD || lastmillis-m.lastpain<10000)
+            if(m.gibbed()) continue;
+            if(m.state != CS_DEAD || lastmillis-m.lastpain<10000)
             {
-                modelattach vwep[2];
-                vwep[0] = modelattach("tag_weapon", monstertypes[m.mtype].vwepname, ANIM_VWEP_IDLE|ANIM_LOOP, 0);
+                modelattach a[3];
+                int ai = 0;
+                a[ai++] = modelattach("tag_weapon", monstertypes[m.mtype].vwepname, ANIM_VWEP_IDLE|ANIM_LOOP, 0);
+                if(m.state == CS_ALIVE)
+                {
+                    a[ai++] = modelattach("tag_head", &m.head);
+                }
                 float fade = 1;
                 if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);
-                if(!m.gibbed()) renderai(&m, monstertypes[m.mtype].mdlname, vwep, 0, m.monsterstate == MS_ATTACKING ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].ragdoll);
+                renderai(&m, monstertypes[m.mtype].mdlname, a, 0, m.monsterstate == MS_ATTACKING ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].ragdoll);
             }
         }
     }

@@ -297,7 +297,7 @@ namespace game
     {
         int n = rnd(TOTMFREQ), type;
         for(int i = 0; ; i++) if((n -= monstertypes[i].freq)<0) { type = i; break; }
-        monsters.add(new monster(type, rnd(360), 0, MS_SEARCH, 1000, 1));
+        monsters.add(new monster(4, rnd(360), 0, MS_SEARCH, 1000, 1));
     }
 
     void healmonsters()

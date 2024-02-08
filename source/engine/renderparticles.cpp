@@ -10,7 +10,6 @@ VARP(particlesize, 20, 100, 500);
 
 VARP(softparticles, 0, 1, 1);
 VARP(softparticleblend, 1, 8, 64);
-VARP(growingparticles, 0, 1, 1);
 
 // Check canemitparticles() to limit the rate that paricles can be emitted for models/sparklies
 // Automatically stops particles being emitted when paused or in reflective drawing
@@ -131,7 +130,7 @@ struct particle
     int gravity, fade, millis;
     bvec color;
     uchar flags;
-    float size, grow;
+    float size;
     union
     {
         const char *text;
@@ -154,6 +153,9 @@ struct partvert
 
 #define COLLIDERADIUS 8.0f
 #define COLLIDEERROR 1.0f
+
+
+    #include "game.h"
 
 struct partrenderer
 {
@@ -179,7 +181,7 @@ struct partrenderer
     virtual void init(int n) { }
     virtual void reset() = 0;
     virtual void resettracked(physent *owner) { }
-    virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity = 0, float grow = 0) = 0;
+    virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity = 0) = 0;
     virtual void update() { }
     virtual void render() = 0;
     virtual bool haswork() = 0;
@@ -210,11 +212,6 @@ struct partrenderer
         {
             ts = lastmillis-p->millis;
             blend = max(255 - (ts<<8)/p->fade, 0);
-            if(growingparticles && p->grow != 0)
-            {
-                /*if(p->grow < 0) p->size -= p->grow;
-                else */p->size += p->grow;
-            }
             if(p->gravity)
             {
                 if(ts > p->fade) ts = p->fade;
@@ -320,7 +317,7 @@ struct listrenderer : partrenderer
         }
     }
 
-    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity, float grow)
+    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity)
     {
         if(!parempty)
         {
@@ -342,7 +339,6 @@ struct listrenderer : partrenderer
         p->size = size;
         p->owner = NULL;
         p->flags = 0;
-        p->grow = grow;
         return p;
     }
 
@@ -678,13 +674,12 @@ struct varenderer : partrenderer
         return (numparts > 0);
     }
 
-    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity, float grow)
+    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity)
     {
         particle *p = parts + (numparts < maxparts ? numparts++ : rnd(maxparts)); //next free slot, or kill a random kitten
         p->o = o;
         p->d = d;
         p->gravity = gravity;
-        p->grow = grow;
         p->fade = fade;
         p->millis = lastmillis + emitoffset;
         p->color = bvec::hexcolor(color);
@@ -1001,7 +996,7 @@ void renderparticles(int layer)
 
 static int addedparticles = 0;
 
-static inline particle *newparticle(const vec &o, const vec &d, int fade, int type, int color, float size, int gravity = 0, float grow = 0)
+static inline particle *newparticle(const vec &o, const vec &d, int fade, int type, int color, float size, int gravity = 0)
 {
     static particle dummy;
     if(seedemitter)
@@ -1011,12 +1006,12 @@ static inline particle *newparticle(const vec &o, const vec &d, int fade, int ty
     }
     if(fade + emitoffset < 0) return &dummy;
     addedparticles++;
-    return parts[type]->addpart(o, d, fade, color, size, gravity, grow);
+    return parts[type]->addpart(o, d, fade, color, size, gravity);
 }
 
 VARP(maxparticledistance, 256, 1024, 4096);
 
-static void splash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity, float grow)
+static void splash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity)
 {
     if(camera1->o.dist(p) > maxparticledistance && !seedemitter) return;
     float collidez = parts[type]->type&PT_COLLIDE ? p.z - raycube(p, vec(0, 0, -1), COLLIDERADIUS, RAY_CLIPMAT) + (parts[type]->stain >= 0 ? COLLIDEERROR : 0) : -1;
@@ -1034,14 +1029,14 @@ static void splash(int type, int color, int radius, int num, int fade, const vec
         while(x*x+y*y+z*z>radius*radius);
         vec tmp = vec((float)x, (float)y, (float)z);
         int f = (num < 10) ? (fmin + rnd(fmax)) : (fmax - (i*(fmax-fmin))/(num-1)); //help deallocater by using fade distribution rather than random
-        newparticle(p, tmp, f, type, color, size, gravity, grow)->val = collidez;
+        newparticle(p, tmp, f, type, color, size, gravity)->val = collidez;
     }
 }
 
 static void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity, int delay = 0)
 {
     if(!canemitparticles() || (delay > 0 && rnd(delay) != 0)) return;
-    splash(type, color, radius, num, fade, p, size, gravity, 0);
+    splash(type, color, radius, num, fade, p, size, gravity);
 }
 
 bool canaddparticles()
@@ -1055,10 +1050,10 @@ void regular_particle_splash(int type, int num, int fade, const vec &p, int colo
     regularsplash(type, color, radius, num, fade, p, size, gravity, delay);
 }
 
-void particle_splash(int type, int num, int fade, const vec &p, int color, float size, int radius, int gravity, float grow)
+void particle_splash(int type, int num, int fade, const vec &p, int color, float size, int radius, int gravity)
 {
     if(!canaddparticles()) return;
-    splash(type, color, radius, num, fade, p, size, gravity, grow);
+    splash(type, color, radius, num, fade, p, size, gravity);
 }
 
 VARP(maxtrail, 1, 500, 10000);
@@ -1116,10 +1111,10 @@ void particle_meter(const vec &s, float val, int type, int fade, int color, int 
     p->progress = clamp(int(val*100), 0, 100);
 }
 
-void particle_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *owner, float grow)
+void particle_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *owner)
 {
     if(!canaddparticles()) return;
-    newparticle(p, dest, fade, type, color, size, 0, grow)->owner = owner;
+    newparticle(p, dest, fade, type, color, size, 0)->owner = owner;
 }
 
 void particle_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size)

@@ -2869,6 +2869,9 @@ void gl_drawframe()
         gl_drawview();
         if(!editmode)
         {
+            hudmatrix.ortho(0, hudw, hudh, 0, -1, 1);
+            resethudmatrix();
+            resethudshader();
             glEnable(GL_BLEND);
             drawdamagescreen(hudw, hudh);
             drawdamagecompass(hudw, hudh);

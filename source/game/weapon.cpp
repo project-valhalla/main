@@ -537,7 +537,7 @@ namespace game
             loopi(min(damage, 8)+1) spawnbouncer(from, d, BNC_GIB);
             if(blood)
             {
-                particle_splash(PART_BLOOD, 3, 180, d->o, getbloodcolor(d), 3.0f+rndscale(5.0f), 150, 0, 0.1f);
+                particle_splash(PART_BLOOD, 3, 180, d->o, getbloodcolor(d), 3.0f+rndscale(5.0f), 150, 0);
                 particle_splash(PART_BLOOD2, damage, 300, d->o, getbloodcolor(d), 0.89f, 300, 5);
             }
         }
@@ -659,9 +659,9 @@ namespace game
             {
                 dynlight = vec(0.5f, 0.375f, 0.25f);
                 fireball = 0xC8E66B;
-                particle_splash(PART_SPARK, 50, 190, v, 0xF3A612, 0.50f + rndscale(0.90f), 180, 40, 0.3f);
+                particle_splash(PART_SPARK, 30, 180, v, 0xF3A612, 6.0f + rndscale(8.0f), 180, 50);
                 particle_splash(PART_SPARK2, 100, 250, v, 0xFFC864, 0.10f+rndscale(0.50f), 600, 1);
-                particle_splash(PART_SMOKE, 50, 280, v, 0x444444, 10.0f, 250, 200, 0.09f);
+                particle_splash(PART_SMOKE, 50, 280, v, 0x444444, 10.0f, 250, 200);
                 break;
             }
             case ATK_PULSE1:
@@ -675,7 +675,7 @@ namespace game
             {
                 dynlight = vec(0, 0.25f, 1.0f);
                 fireball = 0x74BCF9;
-                particle_flare(v, v, 120, PART_ELECTRICITY, fireball, 25.0f, NULL, 0.5f);
+                particle_flare(v, v, 120, PART_ELECTRICITY, fireball, 30.0f);
                 break;
             }
             case ATK_PISTOL2:
@@ -684,7 +684,7 @@ namespace game
                 dynlight = vec(0.25f, 1.0f, 1.0f);
                 fireball = 0x00FFFF;
                 particle_fireball(v, 1.0f, PART_EXPLOSION2, atk == ATK_PISTOL2 ? 200 : 500, 0x00FFFF, attacks[atk].exprad);
-                particle_splash(PART_SPARK2, 3+rnd(20), 200, v, 0x00FFFF, 0.05f+rndscale(0.10f), 180, 5);
+                particle_splash(PART_SPARK2, 50, 180, v, 0x00FFFF, 0.18f, 380);
                 break;
             }
             default: break;
@@ -925,7 +925,7 @@ namespace game
                 adddynlight(vec(to).madd(dir, 4), 6, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if(hit || water || glass) break;
                 particle_splash(PART_SPARK2, 1+rnd(6), 80+rnd(380), to, 0xFFC864, 0.08f + rndscale(0.3f), 250);
-                particle_splash(PART_SMOKE, 1+rnd(5), 150, to, 0x606060, 1.8f+rndscale(2.2f), 100, 100, 0.01f);
+                particle_splash(PART_SMOKE, 1+rnd(5), 150, to, 0x606060, 1.8f+rndscale(2.2f), 100, 100);
                 addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
             }
             break;
@@ -938,7 +938,7 @@ namespace game
                 particle_fireball(to, 0.5f, PART_EXPLOSION1, 120, 0xFFC864, 2.0f);
                 particle_splash(PART_SPARK, 50, 40, to, 0xFFC864, 1.0f);
                 particle_splash(PART_SPARK2, 10+rnd(30), 150, to, 0xFFC864, 0.05f+rndscale(0.09f), 250);
-                particle_splash(PART_SMOKE, 30, 180, to, 0x444444, 2.20f, 80, 100, 0.01f);
+                particle_splash(PART_SMOKE, 30, 180, to, 0x444444, 2.20f, 80, 100);
                 addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
                 break;
 
@@ -951,7 +951,7 @@ namespace game
                 if(from.dist(to) <= attacks[atk].range-1)
                 {
                     particle_splash(PART_SPARK2, 1+rnd(5), 300, to, 0xEE88EE, 0.01f+rndscale(0.10f), 350, 2);
-                    particle_splash(PART_SMOKE, 20, 120, to, 0x777777, 2.0f, 100, 80, 0.02f);
+                    particle_splash(PART_SMOKE, 20, 120, to, 0x777777, 2.0f, 100, 80);
                 }
                 addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 1.0f+rndscale(1.10f));
                 playsound(attacks[atk].impactsound, NULL, &to);
@@ -967,7 +967,7 @@ namespace game
                 if(hit || water || glass) break;
                 particle_splash(PART_SPARK, 80, 80, to, !insta? 0x77DD77: 0x50CFE5, 1.25f, 100, 80);
                 particle_splash(PART_SPARK2, 5+rnd(20), 200+rnd(380), to, !insta? 0x77DD77: 0x50CFE5, 0.1f+rndscale(0.3f), 200, 3);
-                particle_splash(PART_SMOKE, 20, 180, to, 0x808080, 2.0f, 60, 80, 0.05f);
+                particle_splash(PART_SMOKE, 20, 180, to, 0x808080, 2.0f, 60, 80);
                 addstain(STAIN_RAIL_HOLE, to, dir, 3.5f);
                 addstain(STAIN_RAIL_GLOW, to, dir, 3.0f, !insta? 0x77DD77: 0x50CFE5);
                 break;
@@ -1085,7 +1085,7 @@ namespace game
             {
                 if(muzzleflash && d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 140, PART_MUZZLE_FLASH2, 0xEFE898, 0.1f, d, 0.2f);
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH2, 0xEFE898, 4.0f, d);
                 }
                 newprojectile(d, from, to, local, id, atk, PROJ_ROCKET);
                 break;
@@ -1104,7 +1104,7 @@ namespace game
                 {
                     if(muzzleflash)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 100, PART_MUZZLE_FLASH, 0x77DD77, 0.1f, d, 0.3f);
+                        particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 3.5f, d);
                         adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.25f, 1.0f, 0.75f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                     }
                     if(d==hudplayer()) spawnbouncer(d->muzzle, d, BNC_CARTRIDGE); // using muzzle vec temporarily
@@ -1121,7 +1121,7 @@ namespace game
                 {
                     if(muzzleflash)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 100, PART_ELECTRICITY, 0x74BCF9, 0.1f, d, 0.3f);
+                        particle_flare(d->muzzle, d->muzzle, 80, PART_ELECTRICITY, 0x74BCF9, 2.8f, d);
                     }
                 }
                 up.z += dist/8;

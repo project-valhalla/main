@@ -441,7 +441,7 @@ namespace game
                && (self->state == CS_ALIVE || self->state == CS_LAGGED);
     }
 
-    FVARP(damagerolldiv, 0, 2.0f, 5.0f);
+    FVARP(damagerolldiv, 0, 2.8f, 5.0f);
 
     void damagehud(int damage, gameent *d, gameent *actor)
     {

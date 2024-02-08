@@ -713,6 +713,7 @@ namespace game
     extern void changemap(const char *name, int mode, int muts);
     extern void c2sinfo(bool force = false);
     extern void sendposition(gameent *d, bool reliable = false);
+    extern int gamespeed;
 
     // weapon
     extern int getweapon(const char *name);

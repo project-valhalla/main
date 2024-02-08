@@ -93,7 +93,8 @@ namespace game
 
     int chooserandomplayermodel(int seed)
     {
-        return (seed&0xFFFF)%(sizeof(playermodels)/sizeof(playermodels[0]))-3;
+        int sizeofplayermodels = sizeof(playermodels) / sizeof(playermodels[0]);
+        return (seed&0xFFFF) % (sizeofplayermodels - 3);
     }
 
     const playermodelinfo *getplayermodelinfo(int n)

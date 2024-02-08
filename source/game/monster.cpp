@@ -130,7 +130,7 @@ namespace game
                 case MS_ATTACKING:
                 case MS_SEARCH:
                 {
-                    if(trigger<lastmillis && !monstertypes[mtype].neutral) transition(MS_HOME, 1, 100, 200);
+                    if(trigger<lastmillis) transition(MS_HOME, 1, 100, 200);
                     vec target;
                     if(!halted && monsterstate == MS_SEARCH && raycubelos(o, enemy->o, target))
                     {
@@ -175,7 +175,7 @@ namespace game
                     break;
 
                 case MS_HOME: // monster has visual contact, heads straight for player and may want to shoot at any time
-                    targetyaw = enemyyaw;
+                    if(!monstertypes[mtype].neutral) targetyaw = enemyyaw;
                     if(trigger<lastmillis)
                     {
                         vec target;
@@ -183,7 +183,7 @@ namespace game
                         {
                             transition(MS_HOME, 1, 800, 500);
                         }
-                        else
+                        else if(!monstertypes[mtype].neutral)
                         {
                             bool melee = false, longrange = false;
                             switch(monstertypes[mtype].atk)
@@ -297,7 +297,7 @@ namespace game
     {
         int n = rnd(TOTMFREQ), type;
         for(int i = 0; ; i++) if((n -= monstertypes[i].freq)<0) { type = i; break; }
-        monsters.add(new monster(4, rnd(360), 0, MS_SEARCH, 1000, 1));
+        monsters.add(new monster(type, rnd(360), 0, MS_SEARCH, 1000, 1));
     }
 
     void healmonsters()

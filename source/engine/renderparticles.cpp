@@ -154,9 +154,6 @@ struct partvert
 #define COLLIDERADIUS 8.0f
 #define COLLIDEERROR 1.0f
 
-
-    #include "game.h"
-
 struct partrenderer
 {
     Texture *tex;

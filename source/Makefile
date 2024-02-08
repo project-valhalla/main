@@ -63,9 +63,9 @@ endif
 ifeq ($(PLATFORM),LINUX)
 CLIENT_LIBS+= -lrt
 else
-ifneq (,$(findstring GNU,$(PLATFORM)))
-CLIENT_LIBS+= -lrt
-endif
+ifneq (,$(findstring GNU,$(PLATFORM))) 
+CLIENT_LIBS+= -lrt 
+endif 
 endif
 
 CLIENT_OBJS= \
@@ -119,7 +119,6 @@ CLIENT_OBJS= \
 	game/scoreboard.o \
 	game/gameserver.o \
 	game/waypoint.o \
-	game/monster.o \
 	game/weapon.o
 
 CLIENT_PCH= shared/cube.h.gch engine/engine.h.gch game/game.h.gch
@@ -190,7 +189,7 @@ $(SERVER_MASTER_OBJS): standalone/%.o: %.cpp
 
 ifneq (,$(findstring MINGW,$(PLATFORM)))
 client: $(CLIENT_OBJS)
-	$(WINDRES) -I vcpp -i vcpp/mingw.rc -J rc -o vcpp/mingw.res -O coff
+	$(WINDRES) -I vcpp -i vcpp/mingw.rc -J rc -o vcpp/mingw.res -O coff 
 	$(CXX) $(CXXFLAGS) -o $(WINBIN)/tesseract.exe vcpp/mingw.res $(CLIENT_OBJS) $(CLIENT_LIBS)
 
 server: $(SERVER_OBJS)
@@ -209,10 +208,10 @@ ifneq (,$(findstring DARWIN,$(PLATFORM)))
 endif
 
 server:	libenet $(SERVER_OBJS)
-	$(CXX) $(CXXFLAGS) -o tess_server $(SERVER_OBJS) $(SERVER_LIBS)
-
+	$(CXX) $(CXXFLAGS) -o tess_server $(SERVER_OBJS) $(SERVER_LIBS)  
+	
 master: libenet $(MASTER_OBJS)
-	$(CXX) $(CXXFLAGS) -o tess_master $(MASTER_OBJS) $(MASTER_LIBS)
+	$(CXX) $(CXXFLAGS) -o tess_master $(MASTER_OBJS) $(MASTER_LIBS)  
 
 shared/tessfont.o: shared/tessfont.c
 	$(CXX) $(CXXFLAGS) -c -o $@ $< `freetype-config --cflags`
@@ -463,9 +462,6 @@ game/gameserver.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/gameserver.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/gameserver.o: shared/iengine.h shared/igame.h game/ai.h game/ctf.h game/elimination.h
 game/gameserver.o: game/extinfo.h game/aimanager.h
-game/monster.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
-game/monster.o: shared/ents.h shared/command.h shared/glexts.h
-game/monster.o: shared/glemu.h shared/iengine.h shared/igame.h game/ai.h
 game/waypoint.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/waypoint.o: shared/ents.h shared/command.h shared/glexts.h
 game/waypoint.o: shared/glemu.h shared/iengine.h shared/igame.h game/ai.h

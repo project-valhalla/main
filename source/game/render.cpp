@@ -677,7 +677,7 @@ namespace game
         preloadplayermodel();
         preloadsounds();
         entities::preloadentities();
-        if(m_invasion) preloadmonsters();
+        preloadmonsters();
     }
 
 }

@@ -17,6 +17,8 @@ mingw.res
 .objs/
 .vs/
 bin_unix/
+source/tess_client
+source/tess_server
 
 # Created by https://www.gitignore.io/api/c,c++,intellij+all
 # Edit at https://www.gitignore.io/?templates=c,c++,intellij+all

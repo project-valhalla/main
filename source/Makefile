@@ -119,6 +119,7 @@ CLIENT_OBJS= \
 	game/scoreboard.o \
 	game/gameserver.o \
 	game/waypoint.o \
+	game/monster.o \
 	game/weapon.o
 
 CLIENT_PCH= shared/cube.h.gch engine/engine.h.gch game/game.h.gch
@@ -452,9 +453,11 @@ game/entity.o: shared/glemu.h shared/iengine.h shared/igame.h game/ai.h
 game/game.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/game.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/game.o: shared/iengine.h shared/igame.h game/ai.h
+game/game.o: game/monster.h
 game/render.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/render.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/render.o: shared/iengine.h shared/igame.h game/ai.h
+game/render.o: game/monster.h
 game/scoreboard.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/scoreboard.o: shared/ents.h shared/command.h shared/glexts.h
 game/scoreboard.o: shared/glemu.h shared/iengine.h shared/igame.h game/ai.h
@@ -462,12 +465,17 @@ game/gameserver.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/gameserver.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/gameserver.o: shared/iengine.h shared/igame.h game/ai.h game/ctf.h game/elimination.h
 game/gameserver.o: game/extinfo.h game/aimanager.h
+game/monster.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
+game/monster.o: shared/ents.h shared/command.h shared/glexts.h
+game/monster.o: shared/glemu.h shared/iengine.h shared/igame.h game/ai.h
+game/monster.o: game/monster.h
 game/waypoint.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/waypoint.o: shared/ents.h shared/command.h shared/glexts.h
 game/waypoint.o: shared/glemu.h shared/iengine.h shared/igame.h game/ai.h
 game/weapon.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/weapon.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/weapon.o: shared/iengine.h shared/igame.h game/ai.h
+game/weapon.o: game/monster.h
 
 shared/cube.h.gch: shared/tools.h shared/geom.h shared/ents.h
 shared/cube.h.gch: shared/command.h shared/glexts.h shared/glemu.h

@@ -411,11 +411,10 @@ namespace game
 
     bool isspectator(int cn)
     {
-        gameent *d = getclient(cn);
+        gameent *d = cn < 0 ? self : getclient(cn);
         return d && d->state==CS_SPECTATOR;
     }
-    ICOMMAND(isspectator, "i", (int *cn), intret(isspectator(*cn) ? 1 : 0));
-    ICOMMAND(spectating, "", (), intret(isspectator(self->clientnum) ? 1 : 0));
+    ICOMMAND(isspectator, "b", (int *cn), intret(isspectator(*cn) ? 1 : 0));
 
     ICOMMAND(islagged, "i", (int *cn),
     {

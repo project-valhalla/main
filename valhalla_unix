@@ -50,17 +50,16 @@ then
   MACHINE_NAME=
 fi
 
-if [ -x ./bin/bin_unix/${SYSTEM_NAME}client ]
+if [ -x ${TESS_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ]
 then
   cd ${TESS_DATA}
-  exec ./bin/bin_unix/${SYSTEM_NAME}client ${TESS_OPTIONS} "$@"
+  exec ${TESS_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ${TESS_OPTIONS} "$@"
 else
-  echo "Your platform does not have a pre-compiled Tesseract client."
+  echo "Your platform does not have a pre-compiled Valhalla client."
   echo "Please follow the following steps to build a native client:"
   echo "1) Ensure you have the SDL2, SDL2-image, SDL2-mixer, and OpenGL libraries installed."
   echo "2) Type \"make -C source install\"."
   echo "3) If the build succeeds, run this script again."
-  echo "4) In case binaries won't run, make sure they have the permission \"is executable\". "
   exit 1
 fi
 

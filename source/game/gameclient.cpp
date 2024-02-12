@@ -684,31 +684,9 @@ namespace game
     }
     ICOMMAND(mutator, "i", (int *val), setmutator(*val));
 
-    ICOMMAND(getmutators, "", (), intret(mutators));
     ICOMMAND(getnextmutators, "", (), intret(nextmutators));
-    ICOMMAND(getmutdesc, "i", (int *mut), result(mutator[*mut].info));
-
-    const char *muts()
-    {
-       static char mutn[1000];
-       mutn[0] = '\0';
-       if(mutators > 0) loopi(NUMMUTATORS)
-       {
-           if(mutators & mutator[i].flags)
-           {
-               strcat(mutn, mutator[i].name);
-               strcat(mutn, " ");
-           }
-       }
-       return mutn;
-    }
-    ICOMMAND(getactivemutators, "", (), result(muts()));
-
-    int ismutatorselected(int mut)
-    {
-       return 1<<mut & nextmutators;
-    }
-    ICOMMAND(ismutselected, "i", (int *mut), intret(ismutatorselected(*mut)));
+    ICOMMAND(getmutatordesc, "i", (int *mut), result(mutator[*mut].info));
+    ICOMMAND(getmutatorprettyname, "i", (int *mut), result(mutator[*mut].prettyname));
 
     ICOMMAND(timeremaining, "i", (int *formatted),
     {

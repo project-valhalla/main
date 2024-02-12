@@ -240,7 +240,7 @@ namespace game
                 monsterhurt = true;
                 monsterhurtpos = o;
             }
-            if((health -= damage)<=0)
+            if((health -= damage)<=0 || (m_insta(mutators) && d->type != ENT_AI))
             {
                 state = CS_DEAD;
                 lastpain = lastmillis;

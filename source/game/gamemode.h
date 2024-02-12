@@ -88,10 +88,10 @@ static struct mutatorinfo
 } mutator[] =
 {
     { "classic", "Classic", MUT_CLASSIC, MUT_INSTAGIB|MUT_EFFIC|MUT_NOITEMS, "\f6Classic\ff: collect items for ammo, shield and health" },
-    { "instagib", "Instagib", MUT_INSTAGIB, MUT_CLASSIC|MUT_EFFIC|MUT_VAMPIRE|MUT_RANDOMWEAPON, "\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot" },
-    { "effic", "Efficiency", MUT_EFFIC, MUT_CLASSIC|MUT_INSTAGIB|MUT_RANDOMWEAPON, "\f6Efficiency\ff: you spawn with all the main weapons and an extra 100 to your max health" },
+    { "instagib", "Instagib", MUT_INSTAGIB, MUT_CLASSIC|MUT_EFFIC|MUT_TACTICS|MUT_VAMPIRE|MUT_RANDOMWEAPON, "\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot" },
+    { "effic", "Efficiency", MUT_EFFIC, MUT_CLASSIC|MUT_INSTAGIB|MUT_TACTICS|MUT_RANDOMWEAPON, "\f6Efficiency\ff: you spawn with all the main weapons and an extra 100 to your max health" },
     { "tactics", "Tactics", MUT_TACTICS, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC|MUT_RANDOMWEAPON, "\f6Tactics\ff: you spawn with two random weapons and an extra 50 to your max health" },
-    { "voosh", "Voosh", MUT_RANDOMWEAPON, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC, "\f6Voosh\ff: all players switch to a random weapon every 20 seconds" },
+    { "voosh", "Voosh", MUT_RANDOMWEAPON, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC|MUT_TACTICS, "\f6Voosh\ff: all players switch to a random weapon every 20 seconds" },
     { "vamp", "Vampire", MUT_VAMPIRE, MUT_INSTAGIB, "\f6Vampire\ff: your health slowly decreases, deal damage to regenerate it" },
     { "mayhem", "Mayhem", MUT_MAYHEM, NULL, "\f6Mayhem\ff: headshots landed with hitscan weapons instantly kill opponents" },
     { "no-power", "No Power-ups", MUT_NOPOWERUP, NULL, "\f6No Power-ups\ff: power-ups do not spawn" },

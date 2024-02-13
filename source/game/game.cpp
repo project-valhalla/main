@@ -357,11 +357,17 @@ namespace game
                 lastspawnattempt = lastmillis;
                 return;
             }
-            respawnself();
             if(m_invasion)
             {
-                healmonsters();
+                if(self->lives <= 0)
+                {
+                    // if we have no more lives in Invasion, we try the same map again just like in Sauer
+                    changemap(clientmap, gamemode, mutators);
+                    return;
+                }
+                if(!m_insta(mutators)) healmonsters(); // give monsters a health bonus each time we die
             }
+            respawnself();
         }
     }
     COMMAND(respawn, "");
@@ -518,6 +524,11 @@ namespace game
                 d->pitch = -90; // lower your pitch to see your death from above
             }
             d->roll = 0;
+            if(m_invasion)
+            {
+                self->lives--;
+                if(self->lives > 0) conoutf(CON_GAMEINFO, "\f2Lives remaining: %d", self->lives);
+            }
         }
         else
         {

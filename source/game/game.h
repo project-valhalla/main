@@ -471,7 +471,7 @@ struct gameent : dynent, gamestate
     int attacking;
     int lasttaunt, lastfootstep, lastland, lastyelp, lastswitch;
     int lastpickup, lastpickupmillis, flagpickup;
-    int frags, flags, deaths, points, totaldamage, totalshots;
+    int frags, flags, deaths, points, totaldamage, totalshots, lives;
     editinfo *edit;
     float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, pitchrecoil;
     int smoothmillis;
@@ -492,7 +492,7 @@ struct gameent : dynent, gamestate
                 lifesequence(0), respawned(-1), suicided(-1),
                 lastpain(0),
                 lastfootstep(0), lastland(0), lastyelp(0), lastswitch(0),
-                frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0),
+                frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
                 attackchan(-1), idlechan(-1), powerupchan(-1), gunchan(-1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1), muzzle(-1, -1, -1)
@@ -523,6 +523,7 @@ struct gameent : dynent, gamestate
     {
         frags = flags = deaths = points = 0;
         totaldamage = totalshots = 0;
+        lives = 3;
         maxhealth = 100;
         shield = 0;
         lifesequence = -1;

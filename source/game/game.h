@@ -221,7 +221,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 #define VALHALLA_SERVER_PORT 21217
 #define VALHALLA_LANINFO_PORT 21216
 #define VALHALLA_MASTER_PORT 21215
-#define PROTOCOL_VERSION 2              // bump when protocol changes
+#define PROTOCOL_VERSION 0              // bump when protocol changes
 #define DEMO_VERSION 1                  // bump when demo format changes
 #define DEMO_MAGIC "VALHALLA_DEMO\0\0"
 

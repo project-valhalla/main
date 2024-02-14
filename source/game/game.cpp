@@ -1146,6 +1146,11 @@ namespace game
             const char *name = server::mastermodename(mm, NULL);
             if(name) stringret(newconcatstring(mastermodecolor(mm, ""), name));
         }));
+    ICOMMAND(servinfomastermodeicon, "i", (int *i),
+        GETSERVINFOATTR(*i, 2, mm,
+        {
+            result(si->maxplayers > 0 && si->numplayers >= si->maxplayers ? "server_full" : mastermodeicon(mm, "server_unknown"));
+        }));
     ICOMMAND(servinfotime, "ii", (int *i, int *raw),
         GETSERVINFOATTR(*i, 1, secs,
         {
@@ -1157,12 +1162,6 @@ namespace game
                 secs %= 60;
                 result(tempformatstring("%d:%02d", mins, secs));
             }
-        }));
-    ICOMMAND(servinfoicon, "i", (int *i),
-        GETSERVINFO(*i, si,
-        {
-            int mm = si->attr.inrange(2) ? si->attr[2] : MM_INVALID;
-            result(si->maxplayers > 0 && si->numplayers >= si->maxplayers ? "server_full" : mastermodeicon(mm, "server_unknown"));
         }));
 
     // any data written into this vector will get saved with the map data. Must take care to do own versioning, and endianess if applicable. Will not get called when loading maps from other games, so provide defaults.

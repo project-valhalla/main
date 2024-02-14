@@ -412,7 +412,7 @@ namespace server
     VAR(timelimit, 0, 10, 60);
     VAR(scorelimit, 0, 30, 5000);
     VAR(roundtimelimit, 1, 3, 6);
-    VAR(roundlimit, 0, 10, 30);
+    VAR(roundlimit, 0, 8, 30);
 
     VAR(selfdamage, 0, 1, 1);
     VAR(teamdamage, 0, 1, 1);

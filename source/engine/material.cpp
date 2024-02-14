@@ -499,7 +499,7 @@ void rendermatgrid()
                 case MAT_DEATH:    color = bvec4(40, 40, 40, 255); break; // black
                 case MAT_NOGI:     color = bvec4(40, 30,  0, 255); break; // brown
                 case MAT_ALPHA:    color = bvec4(85,  0, 85, 255); break; // pink
-                case MAT_DAMAGE:   color = bvec4(48, 50, 48, 255); break; // grey
+                case MAT_DAMAGE:   color = bvec4(60, 40, 40, 255); break; // grey
                 default: continue;
             }
             lastmat = m.material;
@@ -764,7 +764,7 @@ void rendereditmaterials()
                 case MAT_DEATH:    color = bvec4(192, 192, 192, 255); break; // black
                 case MAT_NOGI:     color = bvec4(128, 160, 255, 255); break; // brown
                 case MAT_ALPHA:    color = bvec4(  0, 255,   0, 255); break; // pink
-                case MAT_DAMAGE:   color = bvec4(192, 192, 192, 255); break; // grey
+                case MAT_DAMAGE:   color = bvec4(128, 128, 128, 255); break; // grey
                 default: continue;
             }
             lastmat = m.material;

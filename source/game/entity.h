@@ -17,6 +17,10 @@ enum                            // static entity types
     I_AMMO_SG, I_AMMO_SMG, I_AMMO_PULSE, I_AMMO_RL, I_AMMO_RAIL, I_AMMO_GRENADE,
     I_HEALTH, I_YELLOWSHIELD, I_REDSHIELD,
     I_SUPERHEALTH, I_MEGAHEALTH, I_DDAMAGE, I_HASTE, I_ARMOUR, I_UAMMO, I_AGILITY, I_INVULNERABILITY,
+
+    TRIGGER, // attr1 = idx, attr2 = model, attr3 = radius, attr4 = delay
+    TARGET, // attr1 = idx, attr2 = hostile, att3 = can move
+
     MAXENTTYPES
 };
 
@@ -53,7 +57,9 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "armour",          "Armor",              "item/armour"          },
     { "unlimited_ammo",  "Unlimited Ammo",     "item/ammo/unlimited"  },
     { "agility",         "Agility",            "item/agility"         },
-    { "invulnerability", "Invulnerability",    "item/invulnerability" }
+    { "invulnerability", "Invulnerability",    "item/invulnerability" },
+    { "trigger",         "Trigger",            "item/trigger"         },
+    { "target",          "Target",             NULL                   }
 };
 
 enum // power-up types

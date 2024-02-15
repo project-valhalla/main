@@ -24,7 +24,7 @@ namespace entities
 
     const char *entmodel(const entity &e)
     {
-        if(e.type == TELEPORT)
+        if(e.type == TELEPORT || e.type == TRIGGER)
         {
             if(e.attr2 > 0) return mapmodelname(e.attr2);
             if(e.attr2 < 0) return NULL;
@@ -73,6 +73,7 @@ namespace entities
             switch(e.type)
             {
                 case TELEPORT:
+                case TRIGGER:
                     if(e.attr2 > 0) preloadmodel(mapmodelname(e.attr2));
                 case JUMPPAD:
                     if(e.attr4 > 0) preloadmapsound(e.attr4);
@@ -92,6 +93,7 @@ namespace entities
             switch(e.type)
             {
                 case TELEPORT:
+                case TRIGGER:
                     if(e.attr2 < 0) continue;
                     break;
                 default:
@@ -291,6 +293,18 @@ namespace entities
                 d->vel = vec(ents[n]->attr3*10.0f, ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
                 break;
             }
+
+            case TRIGGER:
+            {
+                if(d->lastpickup == ents[n]->type && lastmillis-d->lastpickupmillis < 500) break;
+                if(ents[n]->attr4 && lastmillis - ents[n]->lastplayed <= ents[n]->attr4) break;
+                d->lastpickup = ents[n]->type;
+                d->lastpickupmillis = lastmillis;
+                defformatstring(identname, "trigger_%d", ents[n]->attr1);
+                execident(identname);
+                if(ents[n]->attr4) ents[n]->lastplayed = lastmillis;
+                break;
+            }
         }
     }
 
@@ -301,10 +315,14 @@ namespace entities
         loopv(ents)
         {
             extentity &e = *ents[i];
-            if(e.type!=TELEPORT && d->state!=CS_ALIVE) continue;
             if(e.type==NOTUSED) continue;
-            if(!e.spawned() && e.type!=TELEPORT && e.type!=JUMPPAD) continue;
             float dist = e.o.dist(o);
+            if(e.type == TRIGGER)// && e.spawned())
+            {
+                if(dist < e.attr3) trypickup(i, d);
+                continue;
+            }
+            if(!e.spawned() && e.type!=TELEPORT && e.type!=JUMPPAD) continue;
             if(dist<(e.type==TELEPORT ? 16 : 12)) trypickup(i, d);
         }
     }
@@ -377,7 +395,10 @@ namespace entities
                 e.attr3 = e.attr2;
                 e.attr2 = e.attr1;
                 e.attr1 = (int)self->yaw;
+             case TARGET:
+                e.attr2 = e.attr1;
                 break;
+
         }
     }
 
@@ -399,12 +420,17 @@ namespace entities
 
             case FLAG:
             case TELEDEST:
+            case TARGET:
             {
                 vec dir;
                 vecfromyawpitch(e.attr1, 0, 1, 0, dir);
                 renderentarrow(e, dir, 4);
                 break;
             }
+
+            case TRIGGER:
+                renderentsphere(e, e.attr3);
+                break;
         }
     }
 

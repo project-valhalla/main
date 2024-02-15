@@ -385,12 +385,12 @@ namespace game
         if(d) intret(d->privilege);
     });
 
-    bool ismaster(int cn)
+    bool isprivileged(int cn)
     {
         gameent *d = getclient(cn);
         return d && d->privilege >= PRIV_MASTER;
     }
-    ICOMMAND(ismaster, "i", (int *cn), intret(ismaster(*cn) ? 1 : 0));
+    ICOMMAND(isprivileged, "i", (int *cn), intret(ismaster(*cn) ? 1 : 0));
 
     bool isauth(int cn)
     {

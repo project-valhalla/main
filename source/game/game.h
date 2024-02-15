@@ -17,7 +17,7 @@ enum
     ANIM_SHOOT, ANIM_MELEE, ANIM_SWITCH,
     ANIM_PAIN,
     ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
-    ANIM_GUN_IDLE, ANIM_GUN_SHOOT, ANIM_GUN_MELEE, ANIM_GUN_SWITCH, ANIM_GUN_TAUNT,
+    ANIM_GUN_IDLE, ANIM_GUN_SHOOT, ANIM_GUN_SHOOT2, ANIM_GUN_MELEE, ANIM_GUN_SWITCH, ANIM_GUN_TAUNT,
     ANIM_VWEP_IDLE, ANIM_VWEP_SHOOT, ANIM_VWEP_MELEE,
     NUMANIMS
 };
@@ -35,7 +35,7 @@ static const char * const animnames[] =
     "shoot", "melee", "switch",
     "pain",
     "edit", "lag", "taunt", "win", "lose",
-    "gun idle", "gun shoot", "gun melee", "gun switch", "gun taunt",
+    "gun idle", "gun shoot", "gun shoot 2", "gun melee", "gun switch", "gun taunt",
     "vwep idle", "vwep shoot", "vwep melee",
 };
 

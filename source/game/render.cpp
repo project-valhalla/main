@@ -564,6 +564,11 @@ namespace game
         a[0] = modelattach("tag_muzzle", &d->muzzle);
         swaypitch += swaylandpitch;
         float yaw = d->yaw + swayyaw, pitch = d->pitch + swaypitch, roll = d->roll * swayrollfactor;
+        if (d->attacking == ACT_SECONDARY && d->gunselect == GUN_PULSE)
+        {
+            anim |= ANIM_LOOP;
+            basetime = 0;
+        }
         rendermodel(gunname, anim, sway, yaw, pitch, roll, MDL_NOBATCH, &guninterp, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
         if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
     }

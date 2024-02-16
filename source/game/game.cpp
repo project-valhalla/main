@@ -1112,6 +1112,8 @@ namespace game
     {
         switch(n)
         {
+            case S_JUGGERNAUT:
+            case S_JUGGERNAUT_LOOP:
             case S_ROCKET_EXPLODE:
                 return 600;
 

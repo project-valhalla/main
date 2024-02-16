@@ -239,7 +239,7 @@ namespace game
                 delay = 600;
             }
         }
-        modelattach a[7];
+        modelattach a[9];
         int ai = 0;
         if(guns[d->gunselect].worldmodel)
         {
@@ -259,6 +259,8 @@ namespace game
         if(d->state == CS_ALIVE)
         {
             a[ai++] = modelattach("tag_head", &d->head);
+            a[ai++] = modelattach("tag_rfoot", &d->rfoot);
+            a[ai++] = modelattach("tag_lfoot", &d->lfoot);
         }
         if(d->state != CS_SPECTATOR && d->powerupmillis)
         {
@@ -388,6 +390,16 @@ namespace game
         renderplayer(d, getplayermodelinfo(d), getplayercolor(d, team), team, fade, flags);
     }
 
+    void booteffect(gameent *d)
+    {
+        if(!d->doublejumping && !d->haspowerup(PU_AGILITY) && !(d->timeinair && d->role && d->role < ROLE_TRAITOR)) return;
+
+        particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.5f);
+        particle_flare(d->lastfootleft, d->lfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.5f);
+        d->lastfootright = d->rfoot;
+        d->lastfootleft = d->lfoot;
+    }
+
     void rendergame()
     {
         ai::render();
@@ -413,6 +425,7 @@ namespace game
                 }
                 else if(alive) particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
             }
+            booteffect(d);
         }
         loopv(ragdolls)
         {
@@ -426,6 +439,7 @@ namespace game
             renderplayer(exclude, 1, MDL_ONLYSHADOW);
         else if(!f && (self->state==CS_ALIVE || (self->state==CS_EDITING && third) || (self->state==CS_DEAD && !hidedead)))
             renderplayer(self, 1, third ? 0 : MDL_ONLYSHADOW);
+        booteffect(self);
         entities::renderentities();
         renderbouncers();
         renderprojectiles();

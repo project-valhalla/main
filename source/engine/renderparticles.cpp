@@ -854,6 +854,7 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE, STAIN_SNOW),                  // colliding snow
     new taperenderer("data/texture/particle/trail.png", PT_TAPE|PT_BRIGHT),                                              // bullet trail
     new taperenderer("data/texture/particle/trail_projectile.png", PT_TAPE|PT_FEW|PT_BRIGHT),                            // projectile trail
+    new taperenderer("data/texture/particle/trail_boot.png", PT_TAPE|PT_BRIGHT),                                         // boot trail
     &lightnings,                                                                                                         // lightning
     &fireballs,                                                                                                          // explosion fireball
     &pulsebursts,                                                                                                        // pulse burst

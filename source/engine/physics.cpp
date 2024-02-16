@@ -1725,6 +1725,8 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
             if(pl->timeinair)
             {
                 pl->doublejumping = true;
+                pl->lastfootright = pl->rfoot;
+                pl->lastfootleft = pl->lfoot;
                 pl->falling.z = 1;
             }
             pl->vel.z = max(pl->vel.z, JUMPVEL); // physics impulse upwards

@@ -67,18 +67,19 @@ enum { COLLIDE_NONE = 0, COLLIDE_ELLIPSE, COLLIDE_OBB, COLLIDE_TRI };
 #define CROUCHTIME 200
 #define CROUCHHEIGHT 0.75f
 
-struct physent                                  // base entity type, can be affected by physics
+struct physent // base entity type, can be affected by physics
 {
-    vec o, vel, falling;                        // origin, velocity
-    vec deltapos, newpos;                       // movement interpolation
+    vec o, vel, falling; // origin, velocity
+    vec deltapos, newpos; // movement interpolation
     float yaw, pitch, roll;
-    float speed;                             // cubes per second, 90 for player
+    float speed; // cubes per second, 90 for player
     int timeinair;
     float radius, eyeheight, maxheight, aboveeye; // bounding box size
     float xradius, yradius, zmargin;
     float headradius, legsradius;
     vec head;
-    vec floor;                                  // the normal of floor the dynent is on
+    vec rfoot, lfoot, lastfootright, lastfootleft;
+    vec floor; // the normal of floor the dynent is on
 
     int inwater;
     bool jumping, doublejumping;
@@ -94,6 +95,7 @@ struct physent                                  // base entity type, can be affe
     physent() : o(0, 0, 0), deltapos(0, 0, 0), newpos(0, 0, 0), yaw(0), pitch(0), roll(0), speed(100),
                radius(4.1f), eyeheight(15.5f), maxheight(16), aboveeye(2),  xradius(4.1f), yradius(4.1f), zmargin(0),
                headradius(2.0f), legsradius(5.0f), head(0, 0, 0),
+               rfoot(0, 0, 0), lfoot(0, 0, 0), lastfootright(0, 0, 0), lastfootleft(0, 0, 0),
                state(CS_ALIVE), editstate(CS_ALIVE), type(ENT_PLAYER),
                collidetype(COLLIDE_ELLIPSE),
                blocked(false)

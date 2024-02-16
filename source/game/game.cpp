@@ -1018,6 +1018,19 @@ namespace game
         else return "\ff";
     }
 
+    void hurt(physent *d)
+    {
+        if(m_mp(gamemode)) return;
+        if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
+        {
+            if(d->state!=CS_ALIVE) return;
+            gameent *pl = (gameent *)d;
+            if(pl->lasthurt && lastmillis - pl->lasthurt < ENV_DAM_DELAY) return;
+            damaged(ENV_DAM, pl->o, pl, pl, -1, HIT_MATERIAL, true);
+            pl->lasthurt = lastmillis;
+        }
+    }
+
     void suicide(physent *d)
     {
         if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))

@@ -417,7 +417,7 @@ struct gamestate
         {
             gunselect = GUN_PISTOL;
             ammo[GUN_PISTOL] = 100;
-            ammo[GUN_GRENADE] = 1;
+            if(!m_tutorial) ammo[GUN_GRENADE] = 1;
         }
     }
 
@@ -466,7 +466,7 @@ struct gameent : dynent, gamestate
     int clientnum, privilege, lastupdate, plag, ping;
     int lifesequence;                   // sequence id for each respawn, used in damage test
     int respawned, suicided;
-    int lastpain;
+    int lastpain, lasthurt;
     int lastaction, lastattack, deathattack, lasthit;
     int attacking;
     int lasttaunt, lastfootstep, lastland, lastyelp, lastswitch;
@@ -490,7 +490,7 @@ struct gameent : dynent, gamestate
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
-                lastpain(0),
+                lastpain(0), lasthurt(0),
                 lastfootstep(0), lastland(0), lastyelp(0), lastswitch(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),

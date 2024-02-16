@@ -1869,6 +1869,10 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
         {
             game::suicide(pl); // kill the player if inside death material or outside of world (below origin)
         }
+        if(lookupmaterial(pl->feetpos()) & MAT_DAMAGE || lookupmaterial(pl->feetpos()) & MAT_LAVA)
+        {
+            game::hurt(pl);
+        }
     }
     return true;
 }

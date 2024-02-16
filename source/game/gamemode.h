@@ -13,7 +13,8 @@ enum
     M_JUGGERNAUT  = 1<<9,
     M_INFECTION   = 1<<10,
     M_INVASION    = 1<<11,
-    M_BETRAYAL    = 1<<12
+    M_BETRAYAL    = 1<<12,
+    M_SP          = 1<<13
 };
 
 static struct gamemodeinfo
@@ -23,17 +24,18 @@ static struct gamemodeinfo
     const char *info;
 } gamemodes[] =
 {
-    { "demo", "Demo", M_DEMO | M_LOCAL, NULL},
-    { "edit", "Edit", M_EDIT, "\f2Cooperative Editing\ff: edit maps with multiple players simultaneously" },
-    { "dm", "Deathmatch", M_LOBBY, "\f2Deathmatch\ff: kill everyone to score points" },
-    { "tdm", "Team Deathmatch", M_TEAM, "\f2Team Deathmatch\ff: kill the enemy team to score points for your team" },
-    { "ctf", "Capture The Flag", M_CTF | M_TEAM, "\f2Capture The Flag\ff: capture the enemy flag and bring it back to your flag to score points for your team" },
-    { "elim", "Elimination", M_ELIMINATION | M_TEAM, "\f2Elimination\ff: eliminate the enemy team to win the round and score points for your team" },
-    { "lms", "Last Man Standing", M_LASTMAN, "\f2Last Man Standing\ff: eliminate everyone to win the round and score points" },
-    { "jugg", "Juggernaut", M_JUGGERNAUT, "\f2Juggernaut\ff: kill the juggernaut to become the juggernaut and score points" },
-    { "infect", "Infection", M_INFECTION, "\f2Infection\ff: survive the infection or infect survivors to score points" },
-    { "invasion", "Invasion", M_INVASION | M_LOCAL, "\f2Invasion\ff: survive waves of monsters to score points" },
-    { "betrayal", "Betrayal", M_BETRAYAL, "\f2Betrayal\ff: survive the traitor as a victim or kill victims as a traitor to score points" }
+    { "demo", "Demo",             M_DEMO | M_LOCAL,       NULL                                                                                                          },
+    { "edit", "Edit",             M_EDIT,                 "\f2Cooperative Editing\ff: edit maps with multiple players simultaneously"                                   },
+    { "dm", "Deathmatch",         M_LOBBY,                "\f2Deathmatch\ff: kill everyone to score points"                                                             },
+    { "tdm", "Team Deathmatch",   M_TEAM,                 "\f2Team Deathmatch\ff: kill the enemy team to score points for your team"                                    },
+    { "ctf", "Capture The Flag",  M_CTF | M_TEAM,         "\f2Capture The Flag\ff: capture the enemy flag and bring it back to your flag to score points for your team" },
+    { "elim", "Elimination",      M_ELIMINATION | M_TEAM, "\f2Elimination\ff: eliminate the enemy team to win the round and score points for your team"                 },
+    { "lms", "Last Man Standing", M_LASTMAN,              "\f2Last Man Standing\ff: eliminate everyone to win the round and score points"                               },
+    { "jugg", "Juggernaut",       M_JUGGERNAUT,           "\f2Juggernaut\ff: kill the juggernaut to become the juggernaut and score points"                             },
+    { "infect", "Infection",      M_INFECTION,            "\f2Infection\ff: survive the infection or infect survivors to score points"                                  },
+    { "invasion", "Invasion",     M_INVASION | M_LOCAL,   "\f2Invasion\ff: survive waves of monsters to score points"                                                   },
+    { "betrayal", "Betrayal",     M_BETRAYAL,             "\f2Betrayal\ff: survive the traitor as a victim or kill victims as a traitor to score points"                },
+    { "tutorial", "Tutorial",     M_SP | M_LOCAL,         "aaa"                                                                                                         }
 };
 
 #define STARTGAMEMODE (-1)
@@ -53,8 +55,10 @@ static struct gamemodeinfo
 #define m_lms             (m_check(gamemode, M_LASTMAN))
 #define m_juggernaut      (m_check(gamemode, M_JUGGERNAUT))
 #define m_infection       (m_check(gamemode, M_INFECTION))
-#define m_invasion        (m_check(gamemode, M_INVASION))
 #define m_betrayal        (m_check(gamemode, M_BETRAYAL))
+
+#define m_invasion        (m_check(gamemode, M_INVASION))
+#define m_tutorial        (m_check(gamemode, M_SP))
 
 #define m_demo            (m_check(gamemode, M_DEMO))
 #define m_edit            (m_check(gamemode, M_EDIT))
@@ -87,15 +91,15 @@ static struct mutatorinfo
     const char *info;
 } mutator[] =
 {
-    { "classic", "Classic", MUT_CLASSIC, MUT_INSTAGIB|MUT_EFFIC|MUT_NOITEMS, "\f6Classic\ff: collect items for ammo, shield and health" },
-    { "instagib", "Instagib", MUT_INSTAGIB, MUT_CLASSIC|MUT_EFFIC|MUT_TACTICS|MUT_VAMPIRE|MUT_RANDOMWEAPON, "\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot" },
-    { "effic", "Efficiency", MUT_EFFIC, MUT_CLASSIC|MUT_INSTAGIB|MUT_TACTICS|MUT_RANDOMWEAPON, "\f6Efficiency\ff: you spawn with all the main weapons and an extra 100 to your max health" },
-    { "tactics", "Tactics", MUT_TACTICS, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC|MUT_RANDOMWEAPON, "\f6Tactics\ff: you spawn with two random weapons and an extra 50 to your max health" },
-    { "voosh", "Voosh", MUT_RANDOMWEAPON, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC|MUT_TACTICS, "\f6Voosh\ff: all players switch to a random weapon every 20 seconds" },
-    { "vamp", "Vampire", MUT_VAMPIRE, MUT_INSTAGIB, "\f6Vampire\ff: your health slowly decreases, deal damage to regenerate it" },
-    { "mayhem", "Mayhem", MUT_MAYHEM, NULL, "\f6Mayhem\ff: headshots landed with hitscan weapons instantly kill opponents" },
-    { "no-power", "No Power-ups", MUT_NOPOWERUP, NULL, "\f6No Power-ups\ff: power-ups do not spawn" },
-    { "no-items", "No Items", MUT_NOITEMS, MUT_CLASSIC, "\f6No items\ff: items do not spawn" }
+    { "classic", "Classic",       MUT_CLASSIC,      MUT_INSTAGIB|MUT_EFFIC|MUT_NOITEMS,                             "\f6Classic\ff: collect items for ammo, shield and health"                                  },
+    { "instagib", "Instagib",     MUT_INSTAGIB,     MUT_CLASSIC|MUT_EFFIC|MUT_TACTICS|MUT_VAMPIRE|MUT_RANDOMWEAPON, "\f6Instagib\ff: you spawn with unlimited railgun ammo and die instantly from one shot"     },
+    { "effic", "Efficiency",      MUT_EFFIC,        MUT_CLASSIC|MUT_INSTAGIB|MUT_TACTICS|MUT_RANDOMWEAPON,          "\f6Efficiency\ff: you spawn with all the main weapons and an extra 100 to your max health" },
+    { "tactics", "Tactics",       MUT_TACTICS,      MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC|MUT_RANDOMWEAPON,            "\f6Tactics\ff: you spawn with two random weapons and an extra 50 to your max health"       },
+    { "voosh", "Voosh",           MUT_RANDOMWEAPON, MUT_CLASSIC|MUT_INSTAGIB|MUT_EFFIC|MUT_TACTICS,                 "\f6Voosh\ff: all players switch to a random weapon every 20 seconds"                       },
+    { "vamp", "Vampire",          MUT_VAMPIRE,      MUT_INSTAGIB,                                                   "\f6Vampire\ff: your health slowly decreases, deal damage to regenerate it"                 },
+    { "mayhem", "Mayhem",         MUT_MAYHEM,       NULL,                                                           "\f6Mayhem\ff: headshots landed with hitscan weapons instantly kill opponents"              },
+    { "no-power", "No Power-ups", MUT_NOPOWERUP,    NULL,                                                           "\f6No Power-ups\ff: power-ups do not spawn"                                                },
+    { "no-items", "No Items",     MUT_NOITEMS,      MUT_CLASSIC,                                                    "\f6No items\ff: items do not spawn"                                                        }
 };
 
 #define NUMMUTATORS            ((int)(sizeof(mutator)/sizeof(mutator[0])))

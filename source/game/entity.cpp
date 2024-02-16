@@ -94,7 +94,7 @@ namespace entities
             {
                 case TELEPORT:
                 case TRIGGER:
-                    if(e.attr2 < 0) continue;
+                    if(e.attr2 < 0 || (e.type == TRIGGER && !m_tutorial)) continue;
                     break;
                 default:
                     if((!editmode && !e.spawned()) || !validitem(e.type)) continue;
@@ -317,7 +317,7 @@ namespace entities
             extentity &e = *ents[i];
             if(e.type==NOTUSED) continue;
             float dist = e.o.dist(o);
-            if(e.type == TRIGGER)// && e.spawned())
+            if(e.type == TRIGGER && m_tutorial)
             {
                 if(dist < e.attr3) trypickup(i, d);
                 continue;
@@ -420,7 +420,6 @@ namespace entities
 
             case FLAG:
             case TELEDEST:
-            case TARGET:
             {
                 vec dir;
                 vecfromyawpitch(e.attr1, 0, 1, 0, dir);
@@ -431,6 +430,14 @@ namespace entities
             case TRIGGER:
                 renderentsphere(e, e.attr3);
                 break;
+
+            case TARGET:
+            {
+                vec dir;
+                vecfromyawpitch(e.attr2+90, 0, 1, 0, dir);
+                renderentarrow(e, dir, 4);
+                break;
+            }
         }
     }
 

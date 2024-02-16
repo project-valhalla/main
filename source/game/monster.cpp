@@ -25,9 +25,9 @@ namespace game
         int anger; // how many times already hit by fellow monster
         physent *stacked;
         vec stackpos;
-        bool halted;
+        bool halted, canmove;
 
-        monster(int _type, int _yaw, int _tag, int _state, int _trigger, int _move) :
+        monster(int _type, int _yaw, int _tag, bool _canmove, int _state, int _trigger, int _move) :
             monsterstate(_state), tag(_tag),
             stacked(NULL),
             stackpos(0, 0, 0)
@@ -64,6 +64,7 @@ namespace game
             anger = 0;
             copystring(name, t.name);
             halted = false;
+            canmove = _canmove;
         }
 
         void normalize_yaw(float angle)
@@ -130,7 +131,7 @@ namespace game
                 case MS_ATTACKING:
                 case MS_SEARCH:
                 {
-                    if(trigger<lastmillis) transition(MS_HOME, 1, 100, 200);
+                    if(trigger<lastmillis && canmove) transition(MS_HOME, 1, 100, 200);
                     vec target;
                     if(!halted && monsterstate == MS_SEARCH && raycubelos(o, enemy->o, target))
                     {
@@ -142,7 +143,7 @@ namespace game
 
                 case MS_SLEEP: // state classic monsters start in, wait for visual contact
                 {
-                    if(editmode) break;
+                    if(editmode || !canmove) break;
                     normalize_yaw(enemyyaw);
                     float angle = (float)fabs(enemyyaw-yaw);
                     if(dist<32 // the better the angle to the player, the further the monster can see/hear
@@ -297,7 +298,7 @@ namespace game
     {
         int n = rnd(TOTMFREQ), type;
         for(int i = 0; ; i++) if((n -= monstertypes[i].freq)<0) { type = i; break; }
-        monsters.add(new monster(type, rnd(360), 0, MS_SEARCH, 1000, 1));
+        monsters.add(new monster(type, rnd(360), 0, true, MS_SEARCH, 1000, 1));
     }
 
     void healmonsters()
@@ -325,8 +326,26 @@ namespace game
         spawnremain = 0;
         remain = 0;
         monsterhurt = false;
-        nextmonster = mtimestart = lastmillis+10000;
-        monstertotal = spawnremain = skill*10;
+        if(m_invasion)
+        {
+            nextmonster = mtimestart = lastmillis+10000;
+            monstertotal = spawnremain = skill*10;
+        }
+        else if(m_tutorial || m_edit)
+        {
+            mtimestart = lastmillis;
+            loopv(entities::ents)
+            {
+                extentity &e = *entities::ents[i];
+                if(e.type != TARGET) continue;
+                monster *m = new monster(e.attr1, e.attr2, e.attr3, e.attr4, MS_SLEEP, 100, 0);
+                monsters.add(m);
+                m->o = e.o;
+                entinmap(m);
+                updatedynentcache(m);
+                monstertotal++;
+            }
+        }
         teleports.setsize(0);
         loopv(entities::ents) if(entities::ents[i]->type==TELEPORT) teleports.add(i);
     }
@@ -344,6 +363,7 @@ namespace game
     {
         numkilled++;
         self->frags = numkilled;
+        if(m_tutorial) return;
         remain = monstertotal-numkilled;
         if(remain>0 && remain<=5) conoutf(CON_GAMEINFO, "\f2%d monster(s) remaining", remain);
         if(remain == 5 || remain == 1)

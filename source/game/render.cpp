@@ -262,7 +262,7 @@ namespace game
             a[ai++] = modelattach("tag_rfoot", &d->rfoot);
             a[ai++] = modelattach("tag_lfoot", &d->lfoot);
         }
-        if(d->state != CS_SPECTATOR && d->powerupmillis)
+        if(d->state != CS_SPECTATOR && d->powerupmillis && !d->haspowerup(PU_INVULNERABILITY))
         {
             int type = clamp(d->poweruptype, (int)PU_DAMAGE, (int)PU_AGILITY);
             a[ai++] = modelattach(d->haspowerup(PU_AGILITY) ? "tag_back" : "tag_hat", playermodel.powerup[type-1], ANIM_MAPMODEL|ANIM_LOOP, 0);

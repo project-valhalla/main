@@ -688,6 +688,7 @@ namespace game
     extern void damagehud(int damage, gameent *d, gameent *actor);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
+    extern void checkannouncements(gameent *actor, int flags);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = KILL_NONE);
     extern void timeupdate(int timeremain);
     extern void msgsound(int n, physent *d = NULL);
@@ -755,8 +756,8 @@ namespace game
     extern void rendermonsters();
     extern void suicidemonster(monster *m);
     extern void healmonsters();
-    extern void hitmonster(int damage, monster *m, gameent *at, int atk);
-    extern void monsterkilled();
+    extern void hitmonster(int damage, monster *m, gameent *at, int atk, int flags = 0);
+    extern void monsterkilled(int flags = 0);
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);
     extern int getbloodcolor(dynent *d);

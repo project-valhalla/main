@@ -568,7 +568,7 @@ namespace game
         }
         if(f->type == ENT_AI)
         {
-            hitmonster(damage, (monster *)f, at, atk);
+            hitmonster(damage, (monster *)f, at, atk, flags);
             f->hitpush(damage * (f->health<=0 ? monsterdeadpush : 1), vel, at, atk);
         }
         else if(!m_mp(gamemode))

@@ -223,7 +223,7 @@ namespace game
             }
         }
 
-        void monsterpain(int damage, gameent *d, int atk)
+        void monsterpain(int damage, gameent *d, int atk, int flags)
         {
             if(d->type==ENT_AI) // a monster hit us
             {
@@ -248,7 +248,7 @@ namespace game
                 if(gore && gibbed()) gibeffect(max(-health, 0), vel, this);
                 else playsound(monstertypes[mtype].diesound, this);
                 if(validatk(atk)) deathattack = atk;
-                monsterkilled();
+                monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
             }
             else
             {
@@ -352,17 +352,17 @@ namespace game
 
     void endsp(bool allkilled)
     {
-        conoutf(CON_GAMEINFO, allkilled ? "\f2you have cleared the map!" : "\f2you reached the exit!");
+        conoutf(CON_GAMEINFO, "\f2You have cleared the map!");
         monstertotal = 0;
         timeupdate(0);
     }
     ICOMMAND(endsp, "", (), endsp(false));
 
-
-    void monsterkilled()
+    void monsterkilled(int flags)
     {
         numkilled++;
         self->frags = numkilled;
+        if(flags) checkannouncements(self, flags);
         if(m_tutorial) return;
         remain = monstertotal-numkilled;
         if(remain>0 && remain<=5) conoutf(CON_GAMEINFO, "\f2%d monster(s) remaining", remain);
@@ -431,12 +431,12 @@ namespace game
 
     void suicidemonster(monster *m)
     {
-        m->monsterpain(400, self, -1);
+        m->monsterpain(400, self, -1, 0);
     }
 
-    void hitmonster(int damage, monster *m, gameent *at, int atk)
+    void hitmonster(int damage, monster *m, gameent *at, int atk, int flags)
     {
-        m->monsterpain(damage, at, atk);
+        m->monsterpain(damage, at, atk, flags);
     }
 
     void spsummary(int accuracy)

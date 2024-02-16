@@ -435,7 +435,7 @@ namespace game
 
     bool allowthirdperson()
     {
-        return self->state==CS_SPECTATOR || m_edit;
+        return self->state==CS_SPECTATOR || m_edit || (m_juggernaut && self->role == ROLE_JUGGERNAUT);
     }
     ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
 
@@ -529,6 +529,7 @@ namespace game
                 self->lives--;
                 if(self->lives > 0) conoutf(CON_GAMEINFO, "\f2Lives remaining: %d", self->lives);
             }
+            if(thirdperson) thirdperson = 0;
         }
         else
         {

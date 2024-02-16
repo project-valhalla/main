@@ -2165,6 +2165,7 @@ namespace game
                     playsound(S_JUGGERNAUT, d);
                     particle_flare(d->o, d->o, 350, PART_COMICS, 0xFFFFFF, 10.0f);
                     conoutf(CON_GAMEINFO, "%s \f2is the juggernaut", colorname(d));
+                    if(d == self) thirdperson = 1;
                 }
                 else if(role == ROLE_ZOMBIE)
                 {

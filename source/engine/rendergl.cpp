@@ -1380,9 +1380,12 @@ VARP(invmouse, 0, 0, 1);
 FVARP(mouseaccel, 0, 0, 1000);
 
 VAR(thirdperson, 0, 0, 2);
-FVAR(thirdpersondistance, 0, 30, 50);
-FVAR(thirdpersonup, -25, 0, 25);
-FVAR(thirdpersonside, -25, 0, 25);
+FVAR(thirdpersondistance, 0, 14, 50);
+FVAR(thirdpersonup, -25, 0.5f, 25);
+FVAR(thirdpersonside, -25, 5.0f, 25);
+FVAR(thirdpersondistancedead, 0, 30, 50);
+FVAR(thirdpersonupdead, -25, 0, 25);
+FVAR(thirdpersonsidedead, -25, 0, 25);
 physent *camera1 = NULL;
 bool detachedcamera = false;
 bool isthirdperson() { return player!=camera1 || detachedcamera; }
@@ -1464,32 +1467,35 @@ void recomputecamera()
         orient.rotate_around_y(camera1->roll*-RAD);
         vec dir = vec(orient.b).neg(), side = vec(orient.a).neg(), up = orient.c;
 
+        bool alive = player->state == CS_ALIVE;
+        float tup = alive ? thirdpersonup : thirdpersonupdead, tside = alive ? thirdpersonside : thirdpersonsidedead,
+              tdist = alive ? thirdpersondistance : thirdpersondistancedead;
         if(game::collidecamera())
         {
-            movecamera(camera1, dir, thirdpersondistance, 1);
-            movecamera(camera1, dir, clamp(thirdpersondistance - camera1->o.dist(player->o), 0.0f, 1.0f), 0.1f);
-            if(thirdpersonup)
+            movecamera(camera1, dir, tdist, 1);
+            movecamera(camera1, dir, clamp(tdist - camera1->o.dist(player->o), 0.0f, 1.0f), 0.1f);
+            if(tup)
             {
                 vec pos = camera1->o;
-                float dist = fabs(thirdpersonup);
-                if(thirdpersonup < 0) up.neg();
+                float dist = fabs(tup);
+                if(tup < 0) up.neg();
                 movecamera(camera1, up, dist, 1);
                 movecamera(camera1, up, clamp(dist - camera1->o.dist(pos), 0.0f, 1.0f), 0.1f);
             }
-            if(thirdpersonside)
+            if(tside)
             {
                 vec pos = camera1->o;
-                float dist = fabs(thirdpersonside);
-                if(thirdpersonside < 0) side.neg();
+                float dist = fabs(tside);
+                if(tside < 0) side.neg();
                 movecamera(camera1, side, dist, 1);
                 movecamera(camera1, side, clamp(dist - camera1->o.dist(pos), 0.0f, 1.0f), 0.1f);
             }
         }
         else
         {
-            camera1->o.add(vec(dir).mul(thirdpersondistance));
-            if(thirdpersonup) camera1->o.add(vec(up).mul(thirdpersonup));
-            if(thirdpersonside) camera1->o.add(vec(side).mul(thirdpersonside));
+            camera1->o.add(vec(dir).mul(tdist));
+            if(tup) camera1->o.add(vec(up).mul(tup));
+            if(tside) camera1->o.add(vec(side).mul(tside));
         }
     }
 

@@ -85,7 +85,7 @@ namespace game
         { "player/bonnie",        "player/bones/arm", { "cosmetic/skull", "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
         { "player/bones/zombie",  "player/bones/arm", { NULL,             NULL,              NULL,               NULL,              NULL             }, true, 0xFF90FF,  S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
         { "player/bonnie/zombie", "player/bones/arm", { NULL,             NULL,              NULL,               NULL,              NULL,            }, true, 0xFF90FF,  S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
-        { "player/juggernaut",    "player/bones/arm", { NULL,             NULL,              NULL,               NULL,              NULL,            }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
+        { "player/juggernaut",    NULL,               { NULL,             NULL,              NULL,               NULL,              NULL,            }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
     };
 
     extern void changedplayermodel();
@@ -196,11 +196,10 @@ namespace game
     {
         loopi(sizeof(playermodels)/sizeof(playermodels[0]))
         {
-            const playermodelinfo *mdl = getplayermodelinfo(i);
-            if(!mdl) break;
-            if(i != playermodel && (!multiplayer(false) || forceplayermodels)) continue;
-            preloadmodel(mdl->directory);
-            loopj(5) if(mdl->powerup[j]) preloadmodel(mdl->powerup[j]);
+            const playermodelinfo *pm = getplayermodelinfo(i);
+            if(!pm) break;
+            preloadmodel(pm->directory);
+            loopj(5) if(pm->powerup[j]) preloadmodel(pm->powerup[j]);
         }
     }
 
@@ -687,8 +686,7 @@ namespace game
 
     void preloadsounds()
     {
-        for(int i = S_JUMP1; i <= S_ANNOUNCER_INVULNERABILITY; i++) preloadsound(i);
-        for(int i = S_HIT; i <= S_INTERMISSION_WIN; i++) preloadsound(i);
+        for(int i = S_JUMP1; i <= S_INTERMISSION_WIN; i++) preloadsound(i);
     }
 
     void preload()

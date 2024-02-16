@@ -410,14 +410,13 @@ struct ctfclientmode : clientmode
             const char *flagname = f.team==1 ? "item/flag/azul" : "item/flag/rojo";
             float angle;
             vec pos = interpflagpos(f, angle);
-            rendermodel(flagname, ANIM_MAPMODEL|ANIM_LOOP,
-                        pos, angle, 0, 0,
-                        MDL_CULL_VFC | MDL_CULL_OCCLUDED);
+            rendermodel(flagname, ANIM_MAPMODEL|ANIM_LOOP, pos, angle, 0, 0, MDL_CULL_VFC | MDL_CULL_OCCLUDED);
+            particle_icon_mark(pos, f.team == 1 ? 1 : 0, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
             vec color;
             if(f.team==1) color = vec(0.25f, 0.25f, 1);
             else if(f.team==2) color = vec(1, 0.25f, 0.25f);
-            else color = vec(0.80f, 0.80f, 0.80f);
-            adddynlight(pos, 30, color, 1, 20);
+            else color = vec(0.25f, 0.25f, 0.25f);
+            adddynlight(pos, 32, color, 1, 64);
             if(self->state!=CS_EDITING) f.chan = playsound(S_FLAGLOOP, NULL, f.owner == self? NULL: &pos, NULL, 0, -1, 500, f.chan, 200);
             else
             {

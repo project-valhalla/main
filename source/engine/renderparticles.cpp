@@ -119,6 +119,7 @@ enum
     PT_SHADER    = 1<<21,
     PT_NOLAYER   = 1<<22,
     PT_COLLIDE   = 1<<23,
+    PT_HUD       = 1<<24,
     PT_FLIP      = PT_HFLIP | PT_VFLIP | PT_ROT
 };
 
@@ -233,6 +234,10 @@ struct partrenderer
                 }
                 else blend = 0;
             }
+        }
+        if (type&PT_HUD)
+        {
+            p->size = p->size / 100.0f * sqrt(o.dist(camera1->o));
         }
     }
 
@@ -861,9 +866,9 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // pulse muzzle flash
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
     new quadrenderer("data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                // electricity explosion
-    new quadrenderer("data/texture/particle/comics.png", PT_PART|PT_FEW|PT_BRIGHT|PT_LERP|PT_TRACK),                                       // BOOM! comics effect
-    new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_ICON|PT_LERP),                                 // game icons
-    new quadrenderer("data/interface/particle/editor_icons.png", PT_PART|PT_ICON|PT_LERP),                               // edit icons
+    new quadrenderer("data/texture/particle/comics.png", PT_PART|PT_LERP|PT_ICON|PT_NOLAYER),                            // BOOM! comics effect
+    new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_ICON|PT_HUD|PT_LERP|PT_NOLAYER),               // game icons
+    new quadrenderer("data/interface/particle/editor_icons.png", PT_PART|PT_ICON|PT_LERP|PT_NOLAYER),                    // editor icons
     &texts,                                                                                                              // text
     &meters,                                                                                                             // meter
     &metervs,                                                                                                            // meter vs.
@@ -940,6 +945,7 @@ void renderparticles(int layer)
             rendered = true;
             glDepthMask(GL_FALSE);
             glEnable(GL_BLEND);
+            if (p->type&PT_HUD) glDisable(GL_DEPTH_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             glActiveTexture_(GL_TEXTURE2);
@@ -984,6 +990,7 @@ void renderparticles(int layer)
 
     if(rendered)
     {
+        if (lastflags&PT_HUD) glEnable(GL_DEPTH_TEST);
         if(lastflags&(PT_LERP|PT_MOD)) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
         if(!(lastflags&PT_LERP)) resetfogcolor();
         glDisable(GL_BLEND);
@@ -1095,6 +1102,20 @@ void particle_icon(const vec &s, int ix, int iy, int type, int fade, int color, 
 {
     if(!canaddparticles()) return;
     particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
+    p->flags |= ix | (iy<<2);
+}
+
+VARP(iconmindist, 0, 64, 512);
+
+void particle_icon_mark(const vec &s, int ix, int iy, int type, int fade, int color, float size)
+{
+    if(!canaddparticles()) return;
+    vec o;
+    if(camera1->o.dist(s) <= iconmindist && raycubelos(s, camera1->o, o)) return;
+    o = s;
+    vec camera = camera1->o;
+    o.sub(camera).normalize();
+    particle *p = newparticle(camera.add(o), vec(0, 0, 1), fade, type, color, size, 0);
     p->flags |= ix | (iy<<2);
 }
 

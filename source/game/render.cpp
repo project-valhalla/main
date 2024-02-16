@@ -81,11 +81,11 @@ namespace game
 
     static const playermodelinfo playermodels[5] =
     {
-        { "player/bones",         "player/bones/arm", true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE,         },
-        { "player/bonnie",        "player/bones/arm", true, 0x60FFFFF, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
-        { "player/bones/zombie",  "player/bones/arm", true, 0xFF90FF,  S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
-        { "player/bonnie/zombie", "player/bones/arm", true, 0xFF90FF,  S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
-        { "player/juggernaut",    "player/bones/arm", true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
+        { "player/bones",         "player/bones/arm", { "cosmetic/skull", "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE,         },
+        { "player/bonnie",        "player/bones/arm", { "cosmetic/skull", "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
+        { "player/bones/zombie",  "player/bones/arm", { NULL,             NULL,              NULL,               NULL,              NULL             }, true, 0xFF90FF,  S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
+        { "player/bonnie/zombie", "player/bones/arm", { NULL,             NULL,              NULL,               NULL,              NULL,            }, true, 0xFF90FF,  S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
+        { "player/juggernaut",    "player/bones/arm", { NULL,             NULL,              NULL,               NULL,              NULL,            }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
     };
 
     extern void changedplayermodel();
@@ -200,6 +200,7 @@ namespace game
             if(!mdl) break;
             if(i != playermodel && (!multiplayer(false) || forceplayermodels)) continue;
             preloadmodel(mdl->directory);
+            loopj(5) if(mdl->powerup[j]) preloadmodel(mdl->powerup[j]);
         }
     }
 
@@ -238,9 +239,9 @@ namespace game
                 delay = 600;
             }
         }
-        modelattach a[6];
+        modelattach a[7];
         int ai = 0;
-        if(guns[d->gunselect].worldmodel && d->deathattack != ATK_PISTOL_COMBO)
+        if(guns[d->gunselect].worldmodel)
         {
             int vanim = ANIM_VWEP_IDLE|ANIM_LOOP, vtime = 0;
             if(lastaction && d->lastattack >= 0 && attacks[d->lastattack].gun==d->gunselect && lastmillis < lastaction + delay)
@@ -258,6 +259,11 @@ namespace game
         if(d->state == CS_ALIVE)
         {
             a[ai++] = modelattach("tag_head", &d->head);
+        }
+        if(d->state != CS_SPECTATOR && d->powerupmillis)
+        {
+            int type = clamp(d->poweruptype, (int)PU_DAMAGE, (int)PU_AGILITY);
+            a[ai++] = modelattach(d->haspowerup(PU_AGILITY) ? "tag_back" : "tag_hat", playermodel.powerup[type-1], ANIM_MAPMODEL|ANIM_LOOP, 0);
         }
         float yaw = testanims && d==self ? 0 : d->yaw,
               pitch = testpitch && d==self ? testpitch : d->pitch;
@@ -394,22 +400,18 @@ namespace game
             if(d == self || d->state==CS_SPECTATOR || d->state==CS_SPAWNING || d->lifesequence < 0 || d == exclude || (d->state==CS_DEAD && hidedead)) continue;
             renderplayer(d);
             copystring(d->info, colorname(d));
-            if(d->state!=CS_DEAD)
+            if(d->state == CS_ALIVE || d->state == CS_DEAD)
             {
                 int team = m_teammode && validteam(d->team) ? d->team : 0;
                 gameent *hud = followingplayer(self);
-                if(isally(hud, d) && hud->o.dist(d->o) > maxparticletextdistance)
+                bool alive = d->state == CS_ALIVE;
+                if(hud->o.dist(d->o) > maxparticletextdistance)
                 {
-                    particle_icon(d->abovehead(), 1, 3, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f, 0);
+                    if(isally(hud, d)) particle_icon_mark(d->abovehead(), alive ? 2 : 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                    else if(d->role == ROLE_JUGGERNAUT) particle_icon_mark(d->abovehead(), 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
+                    if(d->haspowerup(PU_INVULNERABILITY)) particle_icon_mark(d->o, 0, 1, PART_GAME_ICONS, 1, 0xF9B303, 4.0f);
                 }
-                else
-                {
-                    if(d->role == ROLE_JUGGERNAUT)
-                    {
-                        particle_icon(d->abovehead(), 3, 2, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f, 0);
-                    }
-                    else particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
-                }
+                else if(alive) particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
             }
         }
         loopv(ragdolls)

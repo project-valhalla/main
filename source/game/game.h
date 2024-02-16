@@ -773,7 +773,7 @@ namespace game
     // render
     struct playermodelinfo
     {
-        const char *directory, *armdirectory;
+        const char *directory, *armdirectory, *powerup[5];
         bool ragdoll;
         int bloodcolor, painsound, diesound, tauntsound;
     };

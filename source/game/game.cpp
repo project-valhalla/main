@@ -588,6 +588,39 @@ namespace game
     ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
     ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
+    void checkannouncements(gameent *actor, int flags)
+    {
+        if(flags & KILL_HEADSHOT) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
+
+        const char *spree = "";
+        if(flags & KILL_FIRST)
+        {
+            playsound(S_ANNOUNCER_FIRST_BLOOD, NULL, NULL, NULL, SND_ANNOUNCER);
+            conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor));
+        }
+        if(flags & KILL_SPREE)
+        {
+            playsound(S_ANNOUNCER_KILLING_SPREE, NULL, NULL, NULL, SND_ANNOUNCER);
+            spree = "\f2killing";
+        }
+        if(flags & KILL_SAVAGE)
+        {
+            playsound(S_ANNOUNCER_SAVAGE, NULL, NULL, NULL, SND_ANNOUNCER);
+            spree = "\f6savage";
+        }
+        if(flags & KILL_UNSTOPPABLE)
+        {
+            playsound(S_ANNOUNCER_UNSTOPPABLE, NULL, NULL, NULL, SND_ANNOUNCER);
+            spree = "\f3unstoppable";
+        }
+        if(flags & KILL_LEGENDARY)
+        {
+            playsound(S_ANNOUNCER_LEGENDARY, NULL, NULL, NULL, SND_ANNOUNCER);
+            spree = "\f5legendary";
+        }
+        if(spree[0] != '\0') conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
+    }
+
     VARP(killsound, 0, 1, 1);
 
     void kill(gameent *d, gameent *actor, int atk, int flags)
@@ -603,42 +636,12 @@ namespace game
         writeobituary(d, actor, atk, flags); // obituary (console messages, kill feed)
         if(flags)
         {
-            const char *spree = "";
             if(actor->aitype == AI_BOT) taunt(actor); // bots taunting players when getting extraordinary kills
-            if(actor == followingplayer(self))
-            {
-                if(flags & KILL_FIRST)
-                {
-                    playsound(S_ANNOUNCER_FIRST_BLOOD, NULL, NULL, NULL, SND_ANNOUNCER);
-                    conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor));
-                }
-                if(flags & KILL_SPREE)
-                {
-                    playsound(S_ANNOUNCER_KILLING_SPREE, NULL, NULL, NULL, SND_ANNOUNCER);
-                    spree = "\f2killing";
-                }
-                if(flags & KILL_SAVAGE)
-                {
-                    playsound(S_ANNOUNCER_SAVAGE, NULL, NULL, NULL, SND_ANNOUNCER);
-                    spree = "\f6savage";
-                }
-                if(flags & KILL_UNSTOPPABLE)
-                {
-                    playsound(S_ANNOUNCER_UNSTOPPABLE, NULL, NULL, NULL, SND_ANNOUNCER);
-                    spree = "\f3unstoppable";
-                }
-                if(flags & KILL_LEGENDARY)
-                {
-                    playsound(S_ANNOUNCER_LEGENDARY, NULL, NULL, NULL, SND_ANNOUNCER);
-                    spree = "\f5legendary";
-                }
-                if(spree[0] != '\0') conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
-            }
+            if(actor == followingplayer(self)) checkannouncements(actor, flags);
         }
-        if(actor == followingplayer(self))
+        if(actor == followingplayer(self) && killsound && actor != d)
         {
-            if(killsound && actor != d) playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
-            if(flags & KILL_HEADSHOT) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
+           playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
         }
         // update player state and reset ai
         d->deathattack = atk;
@@ -1025,7 +1028,7 @@ namespace game
         {
             if(d->state!=CS_ALIVE) return;
             gameent *pl = (gameent *)d;
-            if(pl->lasthurt && lastmillis - pl->lasthurt < ENV_DAM_DELAY) return;
+            if((pl->lasthurt && lastmillis - pl->lasthurt < ENV_DAM_DELAY) || pl->haspowerup(PU_INVULNERABILITY)) return;
             damaged(ENV_DAM, pl->o, pl, pl, -1, HIT_MATERIAL, true);
             pl->lasthurt = lastmillis;
         }

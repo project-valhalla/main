@@ -3009,7 +3009,7 @@ namespace server
                 }
                 if(ci->damagemat)
                 {
-                    if(lastmillis-ci->state.lastdamage >= ENV_DAM_DELAY)
+                    if(lastmillis-ci->state.lastdamage >= ENV_DAM_DELAY && !ci->state.haspowerup(PU_INVULNERABILITY))
                     {
                         dodamage(ci, ci, calcdamage(ENV_DAM, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
                         ci->state.lastdamage = lastmillis;

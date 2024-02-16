@@ -35,7 +35,7 @@ static struct gamemodeinfo
     { "infect", "Infection",      M_INFECTION,            "\f2Infection\ff: survive the infection or infect survivors to score points"                                  },
     { "invasion", "Invasion",     M_INVASION | M_LOCAL,   "\f2Invasion\ff: survive waves of monsters to score points"                                                   },
     { "betrayal", "Betrayal",     M_BETRAYAL,             "\f2Betrayal\ff: survive the traitor as a victim or kill victims as a traitor to score points"                },
-    { "tutorial", "Tutorial",     M_SP | M_LOCAL,         "aaa"                                                                                                         }
+    { "tutorial", "Tutorial",     M_SP | M_LOCAL,         NULL                                                                                                          }
 };
 
 #define STARTGAMEMODE (-1)

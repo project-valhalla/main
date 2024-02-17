@@ -411,7 +411,7 @@ namespace server
 
     VAR(timelimit, 0, 10, 60);
     VAR(scorelimit, -1, -1, 1000);
-    VAR(roundtimelimit, 1, 3, 6);
+    VAR(roundtimelimit, 1, 3, 10);
     VAR(roundlimit, 0, 8, 30);
 
     VAR(selfdamage, 0, 1, 1);

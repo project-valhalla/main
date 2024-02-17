@@ -2487,9 +2487,9 @@ namespace server
         else gamelimit = timelimit*60000;
         if(scorelimit < 0) // automatically determine a suitable score limit for each mode
         {
-            if(m_ctf) scorelimit = 10;
-            else if(m_elimination || m_lms) scorelimit = 15;
-            else if(m_teammode) scorelimit = 60;
+            if(m_ctf || m_elimination) scorelimit = 10;
+            else if(m_lms) scorelimit = 6;
+            else if(m_dm && m_teammode) scorelimit = 60; // TDM
             else scorelimit = 30;
         }
         interm = rounds = nextexceeded = 0;

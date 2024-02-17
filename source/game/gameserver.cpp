@@ -410,7 +410,7 @@ namespace server
     stream *mapdata = NULL;
 
     VAR(timelimit, 0, 10, 60);
-    VAR(scorelimit, 0, 30, 5000);
+    VAR(scorelimit, -1, -1, 1000);
     VAR(roundtimelimit, 1, 3, 6);
     VAR(roundlimit, 0, 8, 30);
 
@@ -2206,6 +2206,7 @@ namespace server
 
     void checkscorelimit(clientinfo *ci)
     {
+        if(scorelimit == 0) return;
         teaminfo *team = m_teammode && validteam(ci->team) ? &teaminfos[ci->team-1] : NULL;
         int highscore = m_teammode ? team->frags : ci->state.frags;
         if(!m_dm) highscore = ci->state.points;
@@ -2232,7 +2233,7 @@ namespace server
     {
         ci->state.points += score;
         sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
-        if(m_edit || !scorelimit) return;
+        if(m_edit || scorelimit == 0) return;
         clientinfo *best = winningclient();
         if(ci == best) checkscorelimit(best);
     }
@@ -2484,10 +2485,13 @@ namespace server
             gamelimit = roundtime*60000;
         }
         else gamelimit = timelimit*60000;
-        if(m_ctf) scorelimit = 5;
-        else if(m_elimination || m_lms) scorelimit = 10;
-        else if(m_teammode) scorelimit = 60;
-        else scorelimit = 30;
+        if(scorelimit < 0) // automatically determine a suitable score limit for each mode
+        {
+            if(m_ctf) scorelimit = 10;
+            else if(m_elimination || m_lms) scorelimit = 15;
+            else if(m_teammode) scorelimit = 60;
+            else scorelimit = 30;
+        }
         interm = rounds = nextexceeded = 0;
         copystring(smapname, s);
         loaditems();

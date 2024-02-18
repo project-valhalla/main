@@ -75,31 +75,10 @@ struct eliminationclientmode : clientmode
         }
     }
 
-    static void startround()
+    void endround()
     {
-        resetroundtimer();
-        loopv(clients)
-        {
-            if(clients[i]->state.state!=CS_EDITING && (clients[i]->state.state!=CS_SPECTATOR || clients[i]->ghost))
-            {
-                clientinfo *ci = clients[i];
-                if(ci->ghost)
-                {
-                    ci->ghost = false;
-                    ci->state.state = CS_DEAD;
-                    ci->state.respawn();
-                    ci->state.lasttimeplayed = lastmillis;
-                    sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 0, ci->ghost);
-                }
-                ci->state.reassign();
-                sendspawn(ci);
-                ci->state.projs.reset();
-                ci->state.bouncers.reset();
-            }
-        }
-        betweenrounds = false;
+        serverevents::add(&newround, 5000);
     }
-    void endround() { serverevents::add(&startround, 5000); }
 
     struct winstate
     {

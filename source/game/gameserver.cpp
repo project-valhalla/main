@@ -401,7 +401,8 @@ namespace server
 
     bool notgotitems = true;        // true when map has changed and waiting for clients to send item
     int gamemode = 0, mutators = 0;
-    int gamemillis = 0, gamelimit = 0, gamescorelimit = 0, roundgamelimit = 0, nextexceeded = 0, gamespeed = 100;
+    int gamemillis = 0, gamelimit = 0, gamescorelimit = 0, roundgamelimit = 0, gameroundlimit = 0;
+    int nextexceeded = 0, gamespeed = 100;
     bool gamepaused = false, shouldstep = true;
     string smapname = "";
     int interm = 0;
@@ -2345,13 +2346,13 @@ namespace server
 
     int rounds = 0;
 
-    static void newround()
+    void newround()
     {
         if(interm) return;
-        if(roundlimit)
+        if(gameroundlimit)
         {
             rounds++;
-            if(rounds >= roundlimit) gameover();
+            if(rounds >= gameroundlimit) gameover();
         }
         resetroundtimer();
         roundrespawn();
@@ -2483,6 +2484,7 @@ namespace server
             roundgamelimit = gamemillis + roundtimelimit*60000;
             int roundtime = roundtimelimit * roundlimit;
             gamelimit = roundtime*60000;
+            gameroundlimit = roundlimit;
         }
         else gamelimit = timelimit*60000;
         if(scorelimit < 0) // automatically determine a suitable score limit for each mode

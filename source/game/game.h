@@ -806,7 +806,7 @@ namespace server
     extern void forcepaused(bool paused);
     extern void forcegamespeed(int speed);
     extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
-    extern void endround();
+    extern void newround();
     extern void resetroundtimer();
     extern void gameover();
     extern void checkplayers(bool timeisup = false);
@@ -818,9 +818,7 @@ namespace server
     extern bool betweenrounds;
 
     extern int msgsizelookup(int msg);
-    extern int lastround;
-    extern int scorelimit, timelimit, roundlimit, roundtimelimit, selfdamage, teamdamage;
-    extern int vooshtime, vooshgun;
+    extern int scorelimit, timelimit, selfdamage, vooshgun;
 }
 
 #endif

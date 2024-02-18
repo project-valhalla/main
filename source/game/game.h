@@ -820,7 +820,7 @@ namespace server
     extern bool betweenrounds;
 
     extern int msgsizelookup(int msg);
-    extern int scorelimit, timelimit, selfdamage, vooshgun;
+    extern int gamescorelimit, timelimit, selfdamage, vooshgun;
 }
 
 #endif

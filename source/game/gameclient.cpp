@@ -703,7 +703,7 @@ namespace game
         else intret(val);
     });
     ICOMMAND(intermission, "", (), intret(intermission ? 1 : 0));
-    ICOMMAND(getscorelimit, "", (), intret(server::scorelimit));
+    ICOMMAND(getscorelimit, "", (), intret(server::gamescorelimit));
 
     ICOMMANDS("m_ctf", "i", (int *mode), { int gamemode = *mode; intret(m_ctf); });
     ICOMMANDS("m_teammode", "i", (int *mode), { int gamemode = *mode; intret(m_teammode); });

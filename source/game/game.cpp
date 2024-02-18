@@ -435,7 +435,7 @@ namespace game
 
     bool allowthirdperson()
     {
-        return self->state==CS_SPECTATOR || m_edit || (m_juggernaut && self->role == ROLE_JUGGERNAUT);
+        return true;
     }
     ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
 
@@ -640,9 +640,10 @@ namespace game
             if(actor->aitype == AI_BOT) taunt(actor); // bots taunting players when getting extraordinary kills
             if(actor == followingplayer(self)) checkannouncements(actor, flags);
         }
-        if(actor == followingplayer(self) && killsound && actor != d)
+        if(actor == followingplayer(self) && actor != d)
         {
-           playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
+           if(actor->role == ROLE_JUGGERNAUT) playsound(S_JUGGERNAUT);
+           else if(killsound) playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
         }
         // update player state and reset ai
         d->deathattack = atk;

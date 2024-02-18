@@ -415,14 +415,20 @@ namespace game
             {
                 int team = m_teammode && validteam(d->team) ? d->team : 0;
                 gameent *hud = followingplayer(self);
-                bool alive = d->state == CS_ALIVE;
                 if(hud->o.dist(d->o) > maxparticletextdistance)
                 {
-                    if(isally(hud, d)) particle_icon_mark(d->abovehead(), alive ? 2 : 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                    if(isally(hud, d))
+                    {
+                        if(d->state == CS_ALIVE) particle_icon_mark(d->abovehead(), 2, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                        else if(d->deaths)
+                        {
+                            particle_icon_mark(d->abovehead(), 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                        }
+                    }
                     else if(d->role == ROLE_JUGGERNAUT) particle_icon_mark(d->abovehead(), 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
                     if(d->haspowerup(PU_INVULNERABILITY)) particle_icon_mark(d->o, 0, 1, PART_GAME_ICONS, 1, 0xF9B303, 4.0f);
                 }
-                else if(alive) particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
+                else if(d->state == CS_ALIVE) particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
             }
             booteffect(d);
         }

@@ -2725,7 +2725,7 @@ namespace server
         if(flags & HIT_HEAD) kflags |= KILL_HEADSHOT;
         if(m_juggernaut)
         {
-            checkjuggernaut(actor);
+            checkjuggernaut(target);
             if(target!=actor && (nojuggernaut || target->state.role == ROLE_JUGGERNAUT))
             {
                 makejuggernaut(actor);

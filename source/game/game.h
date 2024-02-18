@@ -391,7 +391,7 @@ struct gamestate
     {
         if(m_insta(mutators))
         {
-            maxhealth = health = 100;
+            maxhealth = health = 1;
             gunselect = GUN_INSTA;
             ammo[GUN_INSTA] = 1;
         }

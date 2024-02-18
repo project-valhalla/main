@@ -2812,7 +2812,7 @@ namespace server
             sendf(ts.health<=0 ? -1 : target->ownernum, 1, "ri7", N_HITPUSH, target->clientnum, atk, damage, v.x, v.y, v.z);
             target->setpushed();
         }
-        if(ts.health<=0 || (m_insta(mutators) && target != actor))
+        if(ts.health<=0 || atk == ATK_INSTA)
         {
             if(!m_teammode && isally(target, actor)) suicide(actor);
             if(m_infection)

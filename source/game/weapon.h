@@ -91,7 +91,7 @@ static const struct attackinfo
     { GUN_PISTOL,  ACT_SECONDARY,  600,  15,  0,   0, 5,  400, 15, 2048,  1, 500,  8, 2000, 2,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_PISTOL2,       S_IMPACT_PULSE,    S_HIT_WEAPON  },
     { GUN_PISTOL,  ACT_SECONDARY, 1000,  80,  0,   0, 0,  400,  0, 2048,  1, 350, 50,    0, 0,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  NULL,            S_IMPACT_PISTOL,   S_HIT_RAILGUN },
     // instagib
-    { GUN_INSTA,   ACT_PRIMARY,   1200, 150,  0,   0, 0,    0, 50, 4000,  1,  30,  0,    0, 0,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_RAIL_INSTAGIB, S_IMPACT_RAILGUN,  S_HIT_WEAPON  },
+    { GUN_INSTA,   ACT_PRIMARY,   1200,   1,  0,   0, 0,    0, 50, 4000,  1,  30,  0,    0, 0,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_RAIL_INSTAGIB, S_IMPACT_RAILGUN,  S_HIT_WEAPON  },
     // zombie
     { GUN_ZOMBIE,  ACT_PRIMARY,    600, 100,  0,   0, 4,    0,  0,   15,  1,  20,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_ZOMBIE,        S_HIT_MELEE,       S_HIT_MELEE   }
 };

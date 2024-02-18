@@ -290,10 +290,14 @@ namespace game
                     self->move = self->strafe = 0;
                     moveplayer(self, 10, true);
                 }
-                if(self->respawnqueued && lastmillis - self->lastpain > RESPAWN_WAIT)
+                if(lastmillis - self->lastpain > RESPAWN_WAIT)
                 {
-                    respawnself();
-                    self->respawnqueued = false;
+                    if(self->respawnqueued)
+                    {
+                        respawnself();
+                        self->respawnqueued = false;
+                    }
+                    setsvar("lastkillinfo", m_round ? "Spectate now" : "Respawn now");
                 }
             }
             else if(!intermission)
@@ -544,6 +548,9 @@ namespace game
     int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;
     bool killfeedheadshot = false;
 
+    SVAR(lastkillinfo, "");
+    string killinfo;
+
     void writeobituary(gameent *d, gameent *actor, int atk, int flags)
     {
         // console messages
@@ -555,12 +562,14 @@ namespace game
         {
             act = "was assassinated";
             conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
+            formatstring(killinfo, "\fs\f2You %s\fr", act);
             killfeedweaponinfo = -3;
         }
         else if(d == actor && d->role != ROLE_ZOMBIE)
         {
             act = "suicided";
             conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
+            formatstring(killinfo, "\fs\f2You %s\fr", act);
             killfeedweaponinfo = -2;
         }
         else
@@ -573,7 +582,9 @@ namespace game
             if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
             else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
             killfeedweaponinfo = attacks[atk].action == ACT_MELEE ? -1 : attacks[atk].gun;
+            formatstring(killinfo, "\fs\f2You %s%s%s \fr%s", d == self ? "got " : "", act, d == self ? " by" : "", d == self ? colorname(actor) : colorname(d));
         }
+        setsvar("lastkillinfo", killinfo);
         if(m_invasion && actor->type == ENT_AI)
         {
             killfeedweaponinfo = -4;

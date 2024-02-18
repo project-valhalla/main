@@ -422,11 +422,12 @@ namespace game
         if(d) intret(d->state==CS_LAGGED ? 1 : 0);
     });
 
-    ICOMMAND(isdead, "i", (int *cn),
+    bool isdead(int cn)
     {
-        gameent *d = getclient(*cn);
-        if(d) intret(d->state==CS_DEAD ? 1 : 0);
-    });
+        gameent *d = cn < 0 ? self : getclient(cn);
+        return d && d->state==CS_DEAD;
+    }
+    ICOMMAND(isdead, "b", (int *cn), intret(isdead(*cn) ? 1 : 0));
 
     bool isai(int cn, int type)
     {

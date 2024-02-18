@@ -2673,7 +2673,7 @@ namespace server
         }
         else
         {
-            sendservmsgf("%s suggests %s on map %s (select map to vote)", colorname(ci), modeprettyname(reqmode), map[0] ? map : "[new map]");
+            sendservmsgf("%s proposes %s on map %s (select map to vote)", colorname(ci), modeprettyname(reqmode), map[0] ? map : "[new map]");
             checkvotes();
         }
     }
@@ -3076,7 +3076,6 @@ namespace server
                 if(remainingminutes(1, oldgamemillis)) // one minute
                 {
                     sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_1_MINUTE, "\f2One minute remains");
-                    execident("on_lastminute");
                 }
                 else if(remainingminutes(5, oldgamemillis)) // five minutes
                 {

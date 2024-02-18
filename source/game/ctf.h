@@ -506,6 +506,7 @@ struct ctfclientmode : clientmode
         f.interptime = lastmillis;
         dropflag(i, droploc, d->yaw, 1);
         d->flagpickup |= 1<<f.id;
+        d->holdingflag = 0;
         if(!droptofloor(f.droploc.addz(4), 4, 0))
         {
             f.droploc = vec(-1, -1, -1);
@@ -577,6 +578,7 @@ struct ctfclientmode : clientmode
             f.interptime = 0;
             returnflag(relay >= 0 ? relay : goal);
             d->flagpickup &= ~(1<<f.id);
+            d->holdingflag = 0;
             if(d->feetpos().dist(f.spawnloc) < FLAGRADIUS) d->flagpickup |= 1<<f.id;
         }
         if(d!=self) particle_textcopy(d->abovehead(), tempformatstring("%d", score), PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
@@ -596,6 +598,7 @@ struct ctfclientmode : clientmode
         f.version = version;
         f.interploc = interpflagpos(f, f.interpangle);
         f.interptime = lastmillis;
+        d->holdingflag = f.team;
         if(f.droptime) conoutf(CON_GAMEINFO, "%s \fs\f2picked up\fr %s", teamcolorname(d), teamcolorflag(f));
         else conoutf(CON_GAMEINFO, "%s \fs\f2stole\fr %s", teamcolorname(d), teamcolorflag(f));
         ownflag(i, d, lastmillis);

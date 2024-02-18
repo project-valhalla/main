@@ -138,6 +138,7 @@ namespace aimanager
         int cn = ci->clientnum - MAXCLIENTS;
         if(!bots.inrange(cn)) return;
         if(ci->ownernum >= 0 && !ci->aireinit && smode) smode->leavegame(ci, true);
+        checkjuggernaut(ci);
         sendf(-1, 1, "ri2", N_CDIS, ci->clientnum);
         clientinfo *owner = (clientinfo *)getclientinfo(ci->ownernum);
         if(owner) owner->bots.removeobj(ci);

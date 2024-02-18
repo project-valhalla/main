@@ -2258,6 +2258,14 @@ namespace server
         nojuggernaut = false;
     }
 
+    void checkjuggernaut(clientinfo *ci)
+    {
+        if(m_juggernaut && ci->state.role == ROLE_JUGGERNAUT)
+        {
+            nojuggernaut = true;
+        }
+    }
+
     /* functions used to manage "infection" mode specifically:
      * things like choosing random player(s) to infect at the beginning
      * of each round, infect message and effects, etc.
@@ -2717,7 +2725,7 @@ namespace server
         if(flags & HIT_HEAD) kflags |= KILL_HEADSHOT;
         if(m_juggernaut)
         {
-            if(target->state.role == ROLE_JUGGERNAUT) nojuggernaut = true;
+            checkjuggernaut(actor);
             if(target!=actor && (nojuggernaut || target->state.role == ROLE_JUGGERNAUT))
             {
                 makejuggernaut(actor);
@@ -2756,7 +2764,7 @@ namespace server
     {
         servstate &gs = ci->state;
         if(gs.state!=CS_ALIVE) return;
-        if(m_juggernaut && gs.role == ROLE_JUGGERNAUT) nojuggernaut = true;
+        checkjuggernaut(ci);
         teaminfo *t = NULL;
         if(!betweenrounds && !hunterchosen && !interm)
         {
@@ -3299,11 +3307,8 @@ namespace server
             if(smode) smode->leavegame(ci, true);
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
             savescore(ci);
+            checkjuggernaut(ci);
             sendf(-1, 1, "ri2", N_CDIS, n);
-            if(m_juggernaut && ci->state.role == ROLE_JUGGERNAUT)
-            {
-                nojuggernaut = true;
-            }
             clients.removeobj(ci);
             aimanager::removeai(ci);
             if(!numclients(-1, false, true)) noclients(); // bans clear when server empties

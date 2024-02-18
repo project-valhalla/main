@@ -51,7 +51,7 @@ static struct gamemodeinfo
 #define m_overtime        (m_check(gamemode, M_OVERTIME))
 #define m_elimination     (m_check(gamemode, M_ELIMINATION))
 #define m_round           (m_check(gamemode, M_ELIMINATION|M_LASTMAN|M_INFECTION|M_BETRAYAL))
-#define m_dm              (m_checknot(gamemode, M_EDIT|M_CTF|M_ELIMINATION|M_LASTMAN|M_INFECTION))
+#define m_dm              (m_checknot(gamemode, M_EDIT|M_CTF|M_ELIMINATION|M_LASTMAN|M_INFECTION|M_BETRAYAL))
 #define m_lms             (m_check(gamemode, M_LASTMAN))
 #define m_juggernaut      (m_check(gamemode, M_JUGGERNAUT))
 #define m_infection       (m_check(gamemode, M_INFECTION))

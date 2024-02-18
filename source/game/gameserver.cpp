@@ -2754,7 +2754,7 @@ namespace server
             actor->state.teamkills++;
             addteamkill(actor, target, 1);
         }
-        addscore(actor, fragvalue);
+        if(m_dm) addscore(actor, fragvalue);
         ts.deadflush = ts.lastdeath + DEATHMILLIS;
         // don't issue respawn yet until DEATHMILLIS has elapsed
         // ts.respawn();

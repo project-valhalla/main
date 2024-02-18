@@ -401,7 +401,7 @@ namespace server
 
     bool notgotitems = true;        // true when map has changed and waiting for clients to send item
     int gamemode = 0, mutators = 0;
-    int gamemillis = 0, gamelimit = 0, roundgamelimit = 0, nextexceeded = 0, gamespeed = 100;
+    int gamemillis = 0, gamelimit = 0, gamescorelimit = 0, roundgamelimit = 0, nextexceeded = 0, gamespeed = 100;
     bool gamepaused = false, shouldstep = true;
     string smapname = "";
     int interm = 0;
@@ -2206,13 +2206,13 @@ namespace server
 
     void checkscorelimit(clientinfo *ci)
     {
-        if(scorelimit == 0) return;
+        if(gamescorelimit == 0) return;
         teaminfo *team = m_teammode && validteam(ci->team) ? &teaminfos[ci->team-1] : NULL;
         int highscore = m_teammode ? team->frags : ci->state.frags;
         if(!m_dm) highscore = ci->state.points;
         else
         {
-            int remain = scorelimit - highscore;
+            int remain = gamescorelimit - highscore;
             if(remain == 10 || remain == 5 || remain == 1)
             {
                 defformatstring(announcement, "\f2%d kill%s remain%s", remain, remain == 1 ? "" : "s", remain == 1 ? "s" : "");
@@ -2220,7 +2220,7 @@ namespace server
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, announcementsound, announcement);
             }
         }
-        if(highscore >= scorelimit)
+        if(highscore >= gamescorelimit)
         {
             if(m_dm) startintermission();
             else if(m_round && !m_elimination && !interm) gameover();
@@ -2233,7 +2233,7 @@ namespace server
     {
         ci->state.points += score;
         sendf(-1, 1, "ri3", N_SCORE, ci->clientnum, ci->state.points);
-        if(m_edit || scorelimit == 0) return;
+        if(m_edit || gamescorelimit == 0) return;
         clientinfo *best = winningclient();
         if(ci == best) checkscorelimit(best);
     }
@@ -2487,11 +2487,12 @@ namespace server
         else gamelimit = timelimit*60000;
         if(scorelimit < 0) // automatically determine a suitable score limit for each mode
         {
-            if(m_ctf || m_elimination) scorelimit = 10;
-            else if(m_lms) scorelimit = 6;
-            else if(m_dm && m_teammode) scorelimit = 60; // TDM
-            else scorelimit = 30;
+            if(m_ctf || m_elimination) gamescorelimit = 10;
+            else if(m_lms) gamescorelimit = 6;
+            else if(m_dm && m_teammode) gamescorelimit = 60; // TDM
+            else gamescorelimit = 30;
         }
+        else gamescorelimit = scorelimit;
         interm = rounds = nextexceeded = 0;
         copystring(smapname, s);
         loaditems();

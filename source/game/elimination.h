@@ -68,8 +68,7 @@ struct eliminationclientmode : clientmode
         betweenrounds = true;
         sendservmsgf("%s%s \f2team won the round", teamtextcode[winner], teamnames[winner]);
         sendf(-1, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, "");
-        extern int scorelimit;
-        if(scorelimit && sc.total >= scorelimit)
+        if(gamescorelimit && sc.total >= gamescorelimit)
         {
             gameover();
             sendservmsgf("%s%s \f2team reached score limit", teamtextcode[winner], teamnames[winner]);

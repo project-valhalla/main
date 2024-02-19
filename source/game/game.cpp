@@ -582,9 +582,9 @@ namespace game
             if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
             else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
             killfeedweaponinfo = attacks[atk].action == ACT_MELEE ? -1 : attacks[atk].gun;
-            formatstring(killinfo, "\fs\f2You %s%s%s \fr%s", d == self ? "got " : "", act, d == self ? " by" : "", d == self ? colorname(actor) : colorname(d));
+            formatstring(killinfo, "\fs\f2You %s%s%s \fr%s", d == h ? "got " : "", act, d == h ? " by" : "", d == h ? colorname(actor) : colorname(d));
         }
-        setsvar("lastkillinfo", killinfo);
+        if(d == h || actor == h) setsvar("lastkillinfo", killinfo);
         if(m_invasion && actor->type == ENT_AI)
         {
             killfeedweaponinfo = -4;

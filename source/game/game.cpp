@@ -564,6 +564,7 @@ namespace game
             conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
             formatstring(killinfo, "\fs\f2You %s\fr", act);
             killfeedweaponinfo = -3;
+            playsound(S_TRAITOR_KILL);
         }
         else if(d == actor && d->role != ROLE_ZOMBIE)
         {

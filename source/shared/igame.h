@@ -41,6 +41,7 @@ namespace game
     extern bool ispaused();
     extern int scaletime(int t);
     extern bool allowmouselook();
+    extern bool intermission;
 
     extern const char *gameident();
     extern const char *gameconfig();

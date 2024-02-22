@@ -221,7 +221,15 @@ namespace ai
 
     void update()
     {
-        if(intermission) { loopv(players) if(players[i]->ai) players[i]->stopmoving(); }
+        if(intermission)
+        {
+            loopv(players)
+            {
+                if(!players[i]->ai) continue;
+                players[i]->stopmoving();
+                if(players[i]->ragdoll) moveragdoll(players[i]);
+            }
+        }
         else // fixed rate logic done out-of-sequence at 1 frame per second for each ai
         {
             if(totalmillis-updatemillis > 1000)

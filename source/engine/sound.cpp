@@ -556,19 +556,6 @@ void checkmapsounds()
     }
 }
 
-void stopownersounds(physent *d)
-{
-    loopv(channels)
-    {
-        soundchannel &chan = channels[i];
-        if(chan.inuse && chan.owner == d)
-        {
-            Mix_HaltChannel(i);
-            freechannel(i);
-        }
-    }
-}
-
 VAR(stereo, 0, 1, 1);
 
 bool updatechannel(soundchannel &chan)
@@ -813,6 +800,19 @@ bool stopsound(int n, int chanid, int fade)
         freechannel(chanid);
     }
     return true;
+}
+
+void stopownersounds(physent *d)
+{
+    loopv(channels)
+    {
+        soundchannel &chan = channels[i];
+        if(chan.inuse && chan.owner == d)
+        {
+            Mix_HaltChannel(i);
+            freechannel(i);
+        }
+    }
 }
 
 int playsoundname(const char *s, physent *owner, const vec *loc, int vol, int flags, int loops, int fade, int chanid, int radius, int expire)

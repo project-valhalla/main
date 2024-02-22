@@ -1085,7 +1085,7 @@ namespace game
             {
                 if(muzzleflash && d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH2, 0xEFE898, 4.0f, d);
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH2, 0xEFE898, 3.2f, d);
                 }
                 newprojectile(d, from, to, local, id, atk, PROJ_ROCKET);
                 break;

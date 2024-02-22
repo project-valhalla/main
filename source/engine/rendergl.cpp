@@ -1467,9 +1467,9 @@ void recomputecamera()
         orient.rotate_around_y(camera1->roll*-RAD);
         vec dir = vec(orient.b).neg(), side = vec(orient.a).neg(), up = orient.c;
 
-        bool alive = player->state == CS_ALIVE;
-        float tup = alive ? thirdpersonup : thirdpersonupdead, tside = alive ? thirdpersonside : thirdpersonsidedead,
-              tdist = alive ? thirdpersondistance : thirdpersondistancedead;
+        bool playing = player->state == CS_ALIVE && !game::intermission;
+        float tup = playing ? thirdpersonup : thirdpersonupdead, tside = playing ? thirdpersonside : thirdpersonsidedead,
+              tdist = playing ? thirdpersondistance : thirdpersondistancedead;
         if(game::collidecamera())
         {
             movecamera(camera1, dir, tdist, 1);

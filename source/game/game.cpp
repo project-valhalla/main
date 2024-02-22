@@ -297,7 +297,7 @@ namespace game
                         respawnself();
                         self->respawnqueued = false;
                     }
-                    setsvar("lastkillinfo", m_round ? "Spectate now" : "Respawn now");
+                    setsvar("lasthudkillinfo", m_round ? "Spectate now" : "Respawn now");
                 }
             }
             else if(!intermission)
@@ -548,8 +548,8 @@ namespace game
     int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;
     bool killfeedheadshot = false;
 
-    SVAR(lastkillinfo, "");
-    string killinfo;
+    SVAR(lasthudkillinfo, "");
+    string hudkillinfo;
 
     void writeobituary(gameent *d, gameent *actor, int atk, int flags)
     {
@@ -562,7 +562,7 @@ namespace game
         {
             act = "was assassinated";
             conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
-            formatstring(killinfo, "\fs\f2You %s\fr", act);
+            if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
             killfeedweaponinfo = -3;
             playsound(S_TRAITOR_KILL);
         }
@@ -570,7 +570,7 @@ namespace game
         {
             act = "suicided";
             conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
-            formatstring(killinfo, "\fs\f2You %s\fr", act);
+            if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
             killfeedweaponinfo = -2;
         }
         else
@@ -582,10 +582,10 @@ namespace game
             }
             if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
             else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
+            if(d == h || actor == h) formatstring(hudkillinfo, "\fs\f2You %s%s%s \fr%s", d == h ? "got " : "", act, d == h ? " by" : "", d == h ? colorname(actor) : colorname(d));
             killfeedweaponinfo = attacks[atk].action == ACT_MELEE ? -1 : attacks[atk].gun;
-            formatstring(killinfo, "\fs\f2You %s%s%s \fr%s", d == h ? "got " : "", act, d == h ? " by" : "", d == h ? colorname(actor) : colorname(d));
         }
-        if(d == h || actor == h) setsvar("lastkillinfo", killinfo);
+        if(d == h || actor == h) setsvar("lasthudkillinfo", hudkillinfo);
         if(m_invasion && actor->type == ENT_AI)
         {
             killfeedweaponinfo = -4;

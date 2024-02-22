@@ -148,7 +148,7 @@ enum
     S_INFECTION, S_INFECTED, S_WIN_ZOMBIES, S_WIN_SURVIVORS,
     S_LMS_ROUND, S_LMS_ROUND_WIN,
     S_VOOSH,
-    S_TRAITOR, S_VICTIM,
+    S_TRAITOR, S_TRAITOR_KILL, S_VICTIM,
 
     // miscellaneous
     S_HIT, S_HIT_ALLY, S_KILL, S_KILL_ALLY, S_SUICIDE,
@@ -809,8 +809,6 @@ namespace server
     extern void forcegamespeed(int speed);
     extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
     extern void newround();
-    extern void resetroundtimer();
-    extern void gameover();
     extern void checkplayers(bool timeisup = false);
 
     extern bool serveroption(const char *arg);

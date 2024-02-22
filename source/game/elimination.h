@@ -71,7 +71,8 @@ struct eliminationclientmode : clientmode
         if(gamescorelimit && sc.total >= gamescorelimit)
         {
             startintermission();
-            sendservmsgf("%s%s \f2team reached score limit", teamtextcode[winner], teamnames[winner]);
+            defformatstring(win, "%s%s \fs\f2team reached the score limit\fr", teamtextcode[winner], teamnames[winner]);
+            sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, win);
         }
     }
 

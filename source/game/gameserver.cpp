@@ -2224,8 +2224,8 @@ namespace server
         if(highscore >= gamescorelimit)
         {
             if(m_dm) startintermission();
-            else if(m_round && !m_elimination && !interm) gameover();
-            defformatstring(winner, "%s%s \fs\f2wins the match\fr", team ? teamtextcode[ci->team] : "", team ? teamnames[ci->team] : colorname(ci));
+            else if(m_round && !m_elimination && !interm) startintermission();
+            defformatstring(winner, "%s%s \fs\f2reached the score limit\fr", team ? teamtextcode[ci->team] : "", team ? teamnames[ci->team] : colorname(ci));
             sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, winner);
         }
     }
@@ -2360,7 +2360,11 @@ namespace server
         if(gameroundlimit)
         {
             rounds++;
-            if(rounds >= gameroundlimit) gameover();
+            if(rounds >= gameroundlimit)
+            {
+                startintermission();
+                sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, "\f2Maximum number of rounds has been reached");
+            }
         }
         resetroundtimer();
         roundrespawn();

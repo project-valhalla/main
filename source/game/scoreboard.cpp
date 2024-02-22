@@ -204,7 +204,7 @@ namespace game
 
     ICOMMAND(scoreboardtime, "", (),
     {
-        if(server::timelimit > 0 && m_timed && getclientmap() && (maplimit >= 0 || intermission))
+        if(server::gamelimit && m_timed && getclientmap() && (maplimit >= 0 || intermission))
         {
             int secs = max(maplimit-lastmillis, 0)/1000;
             result(tempformatstring("%d:%02d", secs/60, secs%60));

@@ -391,6 +391,7 @@ namespace game
 
     void booteffect(gameent *d)
     {
+        if(d == followingplayer(self) && !isthirdperson()) return;
         if(!d->doublejumping && !d->haspowerup(PU_AGILITY) && !(d->timeinair && d->role && d->role < ROLE_TRAITOR)) return;
 
         particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.5f);

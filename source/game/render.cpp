@@ -399,6 +399,11 @@ namespace game
         d->lastfootleft = d->lfoot;
     }
 
+    inline bool hidenames()
+    {
+        return m_betrayal && self->state == CS_DEAD;
+    }
+
     void rendergame()
     {
         ai::render();
@@ -428,7 +433,7 @@ namespace game
                     else if(d->role == ROLE_JUGGERNAUT) particle_icon_mark(d->abovehead(), 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
                     if(d->haspowerup(PU_INVULNERABILITY)) particle_icon_mark(d->o, 0, 1, PART_GAME_ICONS, 1, 0xF9B303, 4.0f);
                 }
-                else if(d->state == CS_ALIVE) particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
+                else if(d->state == CS_ALIVE && !hidenames()) particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
             }
             booteffect(d);
         }

@@ -487,7 +487,7 @@ struct gameent : dynent, gamestate
     int ownernum, lastnode;
     bool respawnqueued, ghost;
 
-    vec muzzle;
+    vec muzzle, eject;
 
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
@@ -498,7 +498,7 @@ struct gameent : dynent, gamestate
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
                 attackchan(-1), idlechan(-1), powerupchan(-1), gunchan(-1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
-                muzzle(-1, -1, -1)
+                muzzle(-1, -1, -1), eject(-1, -1, -1)
     {
         name[0] = info[0] = 0;
         ghost = false;

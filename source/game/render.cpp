@@ -252,8 +252,12 @@ namespace game
         }
         if(mainpass && !(flags&MDL_ONLYSHADOW))
         {
-            d->muzzle = vec(-1, -1, -1);
-            if(guns[d->gunselect].worldmodel) a[ai++] = modelattach("tag_muzzle", &d->muzzle);
+            d->muzzle = d->eject = vec(-1, -1, -1);
+            if(guns[d->gunselect].worldmodel)
+            {
+                a[ai++] = modelattach("tag_muzzle", &d->muzzle);
+                a[ai++] = modelattach("tag_eject", &d->eject);
+            }
         }
         if(d->state == CS_ALIVE)
         {
@@ -586,9 +590,11 @@ namespace game
         const playermodelinfo &playermodel = getplayermodelinfo(d);
         int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
         defformatstring(gunname, "%s/%s", playermodel.armdirectory, file);
-        modelattach a[2];
-        d->muzzle = vec(-1, -1, -1);
-        a[0] = modelattach("tag_muzzle", &d->muzzle);
+        d->muzzle = d->eject = vec(-1, -1, -1);
+        modelattach a[3];
+        int ai = 0;
+        a[ai++] = modelattach("tag_muzzle", &d->muzzle);
+        a[ai++] = modelattach("tag_eject", &d->eject);
         swaypitch += swaylandpitch;
         float yaw = d->yaw + swayyaw, pitch = d->pitch + swaypitch, roll = d->roll * swayrollfactor;
         if (d->attacking == ACT_SECONDARY && d->gunselect == GUN_PULSE)

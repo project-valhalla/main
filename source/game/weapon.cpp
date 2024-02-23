@@ -1015,15 +1015,12 @@ namespace game
         {
             case ATK_SCATTER1:
             {
-                if(d->muzzle.x >= 0)
+                if(d->muzzle.x >= 0 && muzzleflash)
                 {
-                    if(muzzleflash)
-                    {
-                        particle_flare(d->muzzle, d->muzzle, 70, PART_MUZZLE_FLASH2, 0xEFE598, 2.80f, d);
-                        adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
-                    }
-                    if(d==hudplayer()) spawnbouncer(d->muzzle, d, BNC_CARTRIDGE); // using muzzle vec temporarily
+                    particle_flare(d->muzzle, d->muzzle, 70, PART_MUZZLE_FLASH2, 0xEFE598, 2.80f, d);
+                    adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
+                if(d->eject.x >= 0 && d == followingplayer(self)) spawnbouncer(d->eject, d, BNC_CARTRIDGE);
                 if(!local)
                 {
                     loopi(attacks[atk].rays)
@@ -1045,15 +1042,12 @@ namespace game
             case ATK_SMG1:
             case ATK_SMG2:
             {
-                if(d->muzzle.x >= 0)
+                if(d->muzzle.x >= 0 && muzzleflash)
                 {
-                    if(muzzleflash)
-                    {
-                        particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH2, 0xEFE898, 1.5f, d);
-                        adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
-                    }
-                    if(d==hudplayer()) spawnbouncer(d->muzzle, d, BNC_CARTRIDGE); // using muzzle vec temporarily
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH2, 0xEFE898, 1.5f, d);
+                    adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
+                if(d->eject.x >= 0 && d == followingplayer(self)) spawnbouncer(d->eject, d, BNC_CARTRIDGE);
                 if(atk == ATK_SMG2) particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0xFFC864, 0.95f);
                 if(!local) rayhit(atk, d, from, to, hit);
                 break;
@@ -1100,15 +1094,12 @@ namespace game
             case ATK_RAIL1:
             case ATK_RAIL2:
             {
-                if(d->muzzle.x >= 0)
+                if(d->muzzle.x >= 0 && muzzleflash)
                 {
-                    if(muzzleflash)
-                    {
-                        particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 3.5f, d);
-                        adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.25f, 1.0f, 0.75f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
-                    }
-                    if(d==hudplayer()) spawnbouncer(d->muzzle, d, BNC_CARTRIDGE); // using muzzle vec temporarily
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 3.5f, d);
+                    adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.25f, 1.0f, 0.75f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                 }
+                if(d->eject.x >= 0 && d == followingplayer(self)) spawnbouncer(d->eject, d, BNC_CARTRIDGE);
                 if(atk == ATK_RAIL2) particle_trail(PART_SMOKE, 350, hudgunorigin(gun, from, to, d), to, 0xDEFFDE, 0.3f, 50);
                 particle_flare(hudgunorigin(gun, from, to, d), to, 600, PART_TRAIL, 0x55DD55, 0.50f);
                 if(!local) rayhit(atk, d, from, to, hit);
@@ -1117,12 +1108,9 @@ namespace game
 
             case ATK_GRENADE:
             {
-                if(d->muzzle.x >= 0)
+                if(d->muzzle.x >= 0 && muzzleflash)
                 {
-                    if(muzzleflash)
-                    {
-                        particle_flare(d->muzzle, d->muzzle, 80, PART_ELECTRICITY, 0x74BCF9, 2.8f, d);
-                    }
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_ELECTRICITY, 0x74BCF9, 2.8f, d);
                 }
                 up.z += dist/8;
                 newbouncer(d, from, up, local, id, atk, BNC_GRENADE2, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);

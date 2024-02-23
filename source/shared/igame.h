@@ -93,6 +93,8 @@ namespace game
     extern void dynlighttrack(physent *owner, vec &o, vec &hud);
     extern int maxsoundradius(int n);
     extern bool needminimap();
+
+    extern int mapdeath;
 }
 
 namespace server

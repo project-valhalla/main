@@ -528,9 +528,14 @@ namespace game
         newbouncer(d, from, to, true, 0, -1, type, type == BNC_DEBRIS ? 400 : rnd(1000)+1000, rnd(100)+20, 0.3f + rndscale(0.8f), elasticity);
     }
 
-    void gibeffect(int damage, const vec &vel, gameent *d)
+    void gibeffect(int damage, const vec &vel, gameent *d, bool force)
     {
         if(!gore) return;
+        if(force)
+        {
+            d->health = -50;
+            damage = 100;
+        }
         vec from = d->abovehead();
         if(goreeffect <= 0)
         {
@@ -541,7 +546,7 @@ namespace game
                 particle_splash(PART_BLOOD2, damage, 300, d->o, getbloodcolor(d), 0.89f, 300, 5);
             }
         }
-        msgsound(S_GIB, d);
+        playsound(S_GIB, d);
     }
 
     VARP(monsterdeadpush, 1, 5, 20);

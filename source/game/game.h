@@ -469,7 +469,8 @@ struct gameent : dynent, gamestate
     int lifesequence;                   // sequence id for each respawn, used in damage test
     int respawned, suicided;
     int lastpain, lasthurt;
-    int lastaction, lastattack, deathattack, lasthit;
+    int lastaction, lastattack, lasthit;
+    int deathattack, deathtype;
     int attacking;
     int lasttaunt, lastfootstep, lastland, lastyelp, lastswitch;
     int lastpickup, lastpickupmillis, flagpickup;
@@ -553,6 +554,7 @@ struct gameent : dynent, gamestate
         respawned = suicided = -1;
         lastaction = 0;
         lastattack = deathattack = -1;
+        deathtype = 0;
         attacking = ACT_IDLE;
         lasttaunt = 0;
         lastpickup = -1;
@@ -726,7 +728,7 @@ namespace game
     extern void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int dam, int atk);
     extern void explodeeffects(int atk, gameent *d, bool local, int id = 0);
     extern void damageeffect(int damage, dynent *d, vec p, int atk, int color, bool headshot = false);
-    extern void gibeffect(int damage, const vec &vel, gameent *d);
+    extern void gibeffect(int damage, const vec &vel, gameent *d, bool force = false);
     extern int calcdamage(int damage, gameent *target, gameent *actor, int atk, int flags = HIT_TORSO);
     extern float intersectdist;
     extern bool intersect(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);

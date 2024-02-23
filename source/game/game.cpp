@@ -504,6 +504,7 @@ namespace game
 
     VARP(gore, 0, 1, 1);
     VARP(deathfromabove, 0, 1, 1);
+    VARR(mapdeath, 0, 0, 4);
 
     void deathstate(gameent *d, bool restore)
     {
@@ -512,7 +513,7 @@ namespace game
         stopownersounds(d);
         if(!restore)
         {
-            if(gore && d->gibbed()) gibeffect(max(-d->health, 0), d->vel, d);
+            if(d->deathtype == 1 || (gore && d->gibbed())) gibeffect(max(-d->health, 0), d->vel, d, d->deathtype == 1);
             else if(attacks[d->deathattack].action != ACT_MELEE)
             {
                 playsound(getplayermodelinfo(d).diesound, d); // silent melee kills?
@@ -1069,6 +1070,7 @@ namespace game
                 int seq = (pl->lifesequence<<16)|((lastmillis/1000)&0xFFFF);
                 if(pl->suicided!=seq) { addmsg(N_SUICIDE, "rc", pl); pl->suicided = seq; }
             }
+            ((gameent *)d)->deathtype = mapdeath;
         }
         else if(d->type==ENT_AI) suicidemonster((monster *)d);
     }

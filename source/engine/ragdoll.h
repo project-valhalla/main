@@ -470,14 +470,13 @@ void ragdolldata::move(dynent *pl, float ts)
           airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
     collisions = 0;
     gameent *d = (gameent *)pl;
-    bool pistolcombo = d->deathattack == ATK_PISTOL_COMBO;
     loopv(skel->verts)
     {
         vert &v = verts[i];
         vec dpos = vec(v.pos).sub(v.oldpos);
-        if(pistolcombo && lastmillis - d->lastpain <= 6000)
+        if((d->deathattack == ATK_PISTOL_COMBO && lastmillis - d->lastpain <= 6000) || d->deathtype == 3)
         {
-            particle_splash(PART_RING, 1, 120, v.pos, 0x00FFFF, 1.4f, 10, 5);
+            particle_splash(PART_RING, 1, 100, v.pos, 0x00FFFF, 1.4f, 10, 5);
         }
         else dpos.z -= ragdollgravity*ts*ts;
         if(water) dpos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
@@ -541,6 +540,7 @@ void moveragdoll(dynent *d)
         }
     }
 
+    if(((gameent *)d)->deathtype == 2) return;
     vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
     eye.add(d->ragdoll->offset);
     float k = pow(ragdolleyesmooth, float(curtime)/ragdolleyesmoothmillis);

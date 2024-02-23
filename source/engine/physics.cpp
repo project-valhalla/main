@@ -381,7 +381,8 @@ const float FLOORZ = 0.867f;
 const float SLOPEZ = 0.5f;
 const float WALLZ = 0.2f;
 extern const float JUMPVEL = 135.0f;
-extern const float GRAVITY = 195.0f;
+
+FVARR(mapgravity, 0, 195.0f, 250.0f);
 
 bool ellipseboxcollide(physent *d, const vec &dir, const vec &o, const vec &center, float yaw, float xr, float yr, float hi, float lo)
 {
@@ -1512,10 +1513,10 @@ bool bounce(physent *d, float secs, float elasticity, float waterfric, float gra
     bool water = isliquid(mat);
     if(water)
     {
-        d->vel.z -= grav*GRAVITY/16*secs;
+        d->vel.z -= grav*mapgravity/16*secs;
         d->vel.mul(max(1.0f - secs/waterfric, 0.0f));
     }
-    else d->vel.z -= grav*GRAVITY*secs;
+    else d->vel.z -= grav*mapgravity*secs;
     vec old(d->o);
     loopi(2)
     {
@@ -1773,14 +1774,13 @@ void modifygravity(physent *pl, bool water, int curtime)
 {
     float secs = curtime/1000.0f;
     vec g(0, 0, 0);
-    float grav = GRAVITY;
-    if(pl->physstate == PHYS_FALL) g.z -= grav*secs;
+    if(pl->physstate == PHYS_FALL) g.z -= mapgravity*secs;
     else if(pl->floor.z > 0 && pl->floor.z < FLOORZ)
     {
         g.z = -1;
         g.project(pl->floor);
         g.normalize();
-        g.mul(GRAVITY*secs);
+        g.mul(mapgravity*secs);
     }
     if(!water || (!pl->move && !pl->strafe)) pl->falling.add(g);
 

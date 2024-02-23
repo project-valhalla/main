@@ -396,10 +396,10 @@ namespace game
     void booteffect(gameent *d)
     {
         if(d == followingplayer(self) && !isthirdperson()) return;
-        if(!d->doublejumping && !d->haspowerup(PU_AGILITY) && !(d->timeinair && d->role && d->role < ROLE_TRAITOR)) return;
+        if(d->timeinair < 500 && (!d->haspowerup(PU_AGILITY) || !(d->role >= ROLE_JUGGERNAUT && d->role <= ROLE_ZOMBIE))) return;
 
-        particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.5f);
-        particle_flare(d->lastfootleft, d->lfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.5f);
+        if(d->lastfootright.z >= 0) particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.5f);
+        if(d->lastfootleft.z >= 0) particle_flare(d->lastfootleft, d->lfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.5f);
         d->lastfootright = d->rfoot;
         d->lastfootleft = d->lfoot;
     }

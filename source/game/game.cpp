@@ -906,6 +906,7 @@ namespace game
     void triggerphysicsevent(physent *pl, int event, int material)
     {
         if(pl->state > CS_DEAD) return;
+        gameent *e = (gameent *)pl;
         switch(event)
         {
             case PHYSEVENT_JUMP:
@@ -927,6 +928,7 @@ namespace game
                     sound = footstepsound(surface, lookupmaterial(pl->feetpos()));
                 if(event == PHYSEVENT_FOOTSTEP) footstep(pl, sound);
                 else msgsound(sound, pl);
+                e->lastfootleft = e->lastfootright = vec(-1, -1, -1);
                 break;
             }
 
@@ -934,7 +936,8 @@ namespace game
             {
                 if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
                 msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, pl);
-                ((gameent *)pl)->lastland = lastmillis;
+                e->lastland = lastmillis;
+                e->lastfootleft = e->lastfootright = vec(-1, -1, -1);
                 break;
             }
 

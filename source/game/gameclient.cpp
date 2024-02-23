@@ -702,6 +702,7 @@ namespace game
         if(*formatted) result(tempformatstring("%d:%02d", val/60, val%60));
         else intret(val);
     });
+    ICOMMAND(isgamewaiting, "", (), intret(server::gamewaiting ? 1 : 0));
     ICOMMAND(intermission, "", (), intret(intermission ? 1 : 0));
     ICOMMAND(getscorelimit, "", (), intret(server::gamescorelimit));
 
@@ -2183,6 +2184,7 @@ namespace game
                     writeobituary(d, actor, ATK_ZOMBIE);
                     d->infect();
                     d->stoppowerupsound();
+                    stopownersounds(d);
                     playsound(S_INFECTED, d);
                     particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
                     d->lastswitch = lastmillis;

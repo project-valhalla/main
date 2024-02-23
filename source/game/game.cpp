@@ -560,26 +560,35 @@ namespace game
         const char *act = "killed";
         if(flags & KILL_TRAITOR)
         {
-            act = "was assassinated";
-            conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
-            if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
+            act = "assassinated";
+            conoutf(contype, "%s \fs\f2was %s\fr", teamcolorname(d), act);
+            if(d == actor)
+            {
+                if(d == h) formatstring(hudkillinfo, "\f2You were %s", act);
+                playsound(S_TRAITOR_KILL);
+            }
+            else if(actor == h) formatstring(hudkillinfo, "\fs\f2You %s\fr %s", act, colorname(d));
             killfeedweaponinfo = -3;
-            playsound(S_TRAITOR_KILL);
         }
-        else if(d == actor && d->role != ROLE_ZOMBIE)
-        {
-            act = "suicided";
-            conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
-            if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
-            killfeedweaponinfo = -2;
-        }
-        else
+        else if(d == actor)
         {
             if(attacks[atk].gun == GUN_ZOMBIE)
             {
-                if(d==actor) act = "got infected";
-                else act = "infected";
+                act = "got infected";
+                killfeedweaponinfo = GUN_ZOMBIE;
             }
+            else
+            {
+                act = "suicided";
+                killfeedweaponinfo = -2;
+            }
+            conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
+            if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
+
+        }
+        else
+        {
+            if(attacks[atk].gun == GUN_ZOMBIE) act = "infected";
             if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
             else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
             if(d == h || actor == h) formatstring(hudkillinfo, "\fs\f2You %s%s%s \fr%s", d == h ? "got " : "", act, d == h ? " by" : "", d == h ? colorname(actor) : colorname(d));
@@ -590,11 +599,21 @@ namespace game
         {
             killfeedweaponinfo = -4;
         }
-        // kill feed
+        // hooks
         killfeedactorcn = actor->clientnum;
         killfeedtargetcn = d->clientnum;
         killfeedheadshot = flags & KILL_HEADSHOT;
         execident("on_killfeed");
+        if(d == self)
+        {
+            execident("on_death");
+            if(d == actor) execident("on_suicide");
+        }
+        else if(actor == self)
+        {
+            if(isally(actor, d)) execident("on_teamkill");
+            else execident("on_kill");
+        }
     }
     ICOMMAND(getkillfeedactor, "", (), intret(killfeedactorcn));
     ICOMMAND(getkillfeedtarget, "", (), intret(killfeedtargetcn));
@@ -609,7 +628,7 @@ namespace game
         if(flags & KILL_FIRST)
         {
             playsound(S_ANNOUNCER_FIRST_BLOOD, NULL, NULL, NULL, SND_ANNOUNCER);
-            conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor));
+            if(!(flags & KILL_TRAITOR)) conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor));
         }
         if(flags & KILL_SPREE)
         {
@@ -631,6 +650,7 @@ namespace game
             playsound(S_ANNOUNCER_LEGENDARY, NULL, NULL, NULL, SND_ANNOUNCER);
             spree = "\f5legendary";
         }
+        if(flags & KILL_TRAITOR) return;
         if(spree[0] != '\0') conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
     }
 
@@ -661,17 +681,6 @@ namespace game
         d->deathattack = atk;
         deathstate(d);
         ai::kill(d, actor);
-        // events
-        if(d == self)
-        {
-            execident("on_death");
-            if(d == actor) execident("on_suicide");
-        }
-        else if(actor == self)
-        {
-            execident("on_kill");
-            if(isally(actor, d)) execident("on_teamkill");
-        }
     }
 
     void timeupdate(int secs)

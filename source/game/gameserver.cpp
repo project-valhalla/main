@@ -427,6 +427,14 @@ namespace server
             ev.millis = gamemillis + future;
             ev.action = action;
         }
+        void del(void (*action)())
+        {
+            loopv(events)
+            {
+                serverevent &ev = events[i];
+                if(ev.action == action) events.remove(i--);
+            }
+        }
         void process()
         {
             loopv(events)
@@ -901,7 +909,6 @@ namespace server
         virtual void cleanup() {}
         virtual void setup() {}
         virtual void newmap() {}
-        virtual void endround() {}
         virtual void intermission() {}
         virtual bool hidefrags() { return false; }
         virtual int getteamscore(int team) { return 0; }
@@ -1340,10 +1347,7 @@ namespace server
         }
         if(gamemillis > prevmillis)
         {
-            if(!interm)
-            {
-                sendf(-1, 1, "ri2", N_TIMEUP, !m_round ? max((gamelimit - gamemillis)/1000, 1) : max((roundgamelimit - gamemillis)/1000, 1));
-            }
+            if(!interm) sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
 #ifndef STANDALONE
             clearscreeneffects();
 #endif
@@ -1937,7 +1941,7 @@ namespace server
     bool hasmap(clientinfo *ci)
     {
         return (m_edit && (clients.length() > 0 || ci->local)) ||
-               (smapname[0] && (timelimit<=0 || !m_timed || (m_round && !interm) || (gamemillis < gamelimit) || (ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || numclients(ci->clientnum, true, true, true)));
+               (smapname[0] && (!gamelimit || !m_timed || (m_round && !interm) || (gamemillis < gamelimit) || (ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || numclients(ci->clientnum, true, true, true)));
     }
 
     int welcomepacket(packetbuf &p, clientinfo *ci)
@@ -1948,11 +1952,10 @@ namespace server
         putint(p, gamemode);
         putint(p, mutators);
         putint(p, notgotitems ? 1 : 0);
-        if(!ci || (timelimit>0 && m_timed && smapname[0]))
+        if(!ci || (gamelimit && m_timed && smapname[0]))
         {
             putint(p, N_TIMEUP);
-            int timeupdate = !m_round ? max((gamelimit - gamemillis)/1000, 1) : max((roundgamelimit - gamemillis)/1000, 1);
-            putint(p, gamemillis < gamelimit && !interm ? timeupdate : 0);
+            putint(p, gamewaiting || (gamemillis < gamelimit && !interm) ? max((gamelimit - gamemillis)/1000, 1) : 0);
         }
         if(!notgotitems)
         {
@@ -2115,6 +2118,14 @@ namespace server
      * when to start overtime or when to reset a timer
      */
     VAR(overtime, 0, 1, 1);
+    VAR(overtimeminutes, 1, 2, 10);
+
+    void updatetimelimit(int add, bool reset = false)
+    {
+        if(reset) gamelimit = min(gamelimit, gamemillis);
+        gamelimit = max(gamemillis, gamelimit) + add*60000;
+        sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
+    }
 
     bool checkovertime()
     {
@@ -2154,8 +2165,7 @@ namespace server
         }
         if(!tied) return false;
         sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, "\f2Overtime: scores are tied");
-        gamelimit = max(gamemillis, gamelimit) + 2*60000;
-        sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
+        updatetimelimit(overtimeminutes);
         return true;
     }
 
@@ -2163,23 +2173,24 @@ namespace server
     {
         sendf(-1, 1, "ri2", N_TIMEUP, 0);
         if(smode) smode->intermission();
-        changegamespeed(100);
         serverevents::invalidate();
+        changegamespeed(100);
         interm = gamemillis + 45000;
     }
 
-    void checkintermission()
+    void checkintermission(bool force = false)
     {
-        if(gamemillis >= gamelimit && !checkovertime() && !interm)
+        if(gamemillis >= gamelimit && !interm && (force || !checkovertime()))
         {
-            gameover();
+            if(!force && m_round) checkplayers(true);
+            else gameover();
         }
     }
 
     void startintermission()
     {
         gamelimit = min(gamelimit, gamemillis);
-        checkintermission();
+        checkintermission(true);
     }
 
     /* score system:
@@ -2242,10 +2253,19 @@ namespace server
     // function to choose a random client used in certain game modes
     clientinfo *random(clientinfo *exclude = NULL)
     {
-        if(clients.length() <= (exclude? 1: 0)) return NULL;
+        if(clients.length() <= (exclude ? 1 : 0)) return NULL;
         clientinfo *client = NULL;
-        do client = clients[rnd(clients.length())];
-        while(client == exclude || (client->state.state != CS_ALIVE && client->state.state != CS_LAGGED));
+        int attempts = 0;
+        while(attempts < clients.length())
+        {
+            attempts++;
+            client = clients[rnd(clients.length())];
+            if(client == exclude) continue;
+            if(client->state.state == CS_ALIVE || client->state.state == CS_LAGGED || client->state.state == CS_SPAWNING)
+            {
+                return client;
+            }
+        }
         return client;
     }
 
@@ -2278,12 +2298,16 @@ namespace server
         if(!hunterchosen) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_INFECTION, "\fs\f2Infection has begun\fr");
     }
 
-    void choosezombie()
+    void chooserandomclient()
     {
-        clientinfo *zombie = random();
-        if(zombie != NULL) infect(zombie, zombie);
-        hunterchosen = true;
-        betweenrounds = false;
+        clientinfo *hunter = random();
+        if(hunter != NULL)
+        {
+            if(m_infection) infect(hunter, hunter);
+            else if(m_betrayal) hunter->state.role = ROLE_TRAITOR;
+            if(numclients(-1, true, false) <= 1) gamewaiting = true;
+        }
+        else if(numclients(-1, true, false) <= 1) gamewaiting = true;
     }
 
     static void startzombieround()
@@ -2293,18 +2317,16 @@ namespace server
         if(numplayers > 0)
         {
             int np = max(numplayers/4, 1);
-            loopi(np) choosezombie();
+            loopi(np) chooserandomclient();
+            hunterchosen = true;
+            betweenrounds = false;
         }
     }
 
     static void startbetrayalround()
     {
         if(hunterchosen || interm) return;
-        clientinfo *traitor = random();
-        if(traitor != NULL)
-        {
-            traitor->state.role = ROLE_TRAITOR;
-        }
+        chooserandomclient();
         hunterchosen = true; betweenrounds = false;
         loopv(clients)
         {
@@ -2322,15 +2344,6 @@ namespace server
     /* functions used to manage rounds and check players
      * in round-based modes only
      */
-    void resetroundtimer()
-    {
-        roundgamelimit = gamemillis + roundtimelimit*60000;
-        if(timelimit>0 && m_timed && smapname[0])
-        {
-            sendf(-1, 1, "ri2", N_TIMEUP, max((roundgamelimit - gamemillis)/1000, 1));
-        }
-    }
-
     void roundrespawn()
     {
         loopv(clients)
@@ -2357,16 +2370,7 @@ namespace server
     void newround()
     {
         if(interm) return;
-        if(gameroundlimit)
-        {
-            rounds++;
-            if(rounds >= gameroundlimit)
-            {
-                startintermission();
-                sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, "\f2Maximum number of rounds has been reached");
-            }
-        }
-        resetroundtimer();
+        updatetimelimit(roundtimelimit, true);
         roundrespawn();
         if(m_infection || m_betrayal)
         {
@@ -2374,13 +2378,27 @@ namespace server
             serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
         }
         else betweenrounds = false;
+        if(numclients(-1, true, false) > 1) gamewaiting = false;
+    }
+
+    bool countround()
+    {
+        if(!gameroundlimit || gamewaiting) return false;
+        rounds++;
+        if(rounds >= gameroundlimit)
+        {
+            startintermission();
+            sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, "\f2Maximum number of rounds has been reached");
+            return true;
+        }
+        return false;
     }
 
     void endround()
     {
         if(betweenrounds || interm) return;
         betweenrounds = true;
-        serverevents::add(&newround, 5000);
+        if(!countround()) serverevents::add(&newround, 5000);
     }
 
     void shouldcheckround()
@@ -2389,9 +2407,16 @@ namespace server
         checkround = true;
     }
 
+    bool gamewaiting = false;
+
     void checkplayers(bool timeisup)
     {
-        if(betweenrounds || numclients(-1, true, false) <= 1) return;
+        if(betweenrounds) return;
+        if(numclients(-1, true, false) <= 1)
+        {
+            gamewaiting = true;
+            return;
+        }
         int survivors = 0, hunters = 0;
         loopv(clients)
         {
@@ -2406,7 +2431,7 @@ namespace server
         {
             if((survivors <= 0 && hunters <= 0) || (timeisup && survivors <= 0 && hunters > 0))
             {
-                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_SURVIVORS, timeisup? "\f2Time is up": "\f2Nobody survived");
+                sendf(-1, 1, "ri2s", N_ANNOUNCE, timeisup ? S_WIN_SURVIVORS : S_WIN_ZOMBIES, timeisup? "\f2Time is up": "\f2Nobody survived");
                 endround();
             }
             else if(hunters <= 0 || (timeisup && survivors > 0))
@@ -2426,9 +2451,9 @@ namespace server
         }
         else if(m_lms)
         {
-            if(survivors <= 0 || timeisup)
+            if(survivors <= 0)
             {
-                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, timeisup ? "\f2Time is up" : "\f2Nobody survived");
+                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ROUND, "\f2Nobody survived");
                 endround();
             }
             else if(survivors < 2)
@@ -2439,19 +2464,25 @@ namespace server
                 endround();
             }
         }
+        if(timeisup && !betweenrounds)
+        {
+            sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ROUND, "\f2Time is up");
+            endround(); // make sure to start a new round if we ran out of time in any round-based mode
+        }
+        if(gamewaiting) return;
         if(rewardsurvivors || rewardhunters) loopv(clients)
         {
             clientinfo *ci = clients[i];
             if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED)
             {
-                if(m_lms && ci->state.aitype == AI_NONE) sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, "\f2Round completed");
+                if(m_lms && ci->state.aitype == AI_NONE) sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_ROUND, "\f2Round completed");
                 continue;
             }
             if((rewardsurvivors && ci->state.role >= ROLE_ZOMBIE) || (rewardhunters && ci->state.role < ROLE_ZOMBIE)) continue;
             addscore(ci, score);
             if(m_lms && ci->state.aitype == AI_NONE)
             {
-                sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND_WIN, "\f2You win the round");
+                sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_ROUND_WIN, "\f2You win the round");
             }
         }
     }
@@ -2493,21 +2524,20 @@ namespace server
         gamemillis = 0;
         if(m_round)
         {
-            roundgamelimit = gamemillis + roundtimelimit*60000;
-            int roundtime = roundtimelimit * roundlimit;
-            gamelimit = roundtime*60000;
+            rounds = 0;
+            gamelimit = roundtimelimit*60000;
             gameroundlimit = roundlimit;
         }
         else gamelimit = timelimit*60000;
         if(scorelimit < 0) // automatically determine a suitable score limit for each mode
         {
             if(m_ctf || m_elimination) gamescorelimit = 10;
-            else if(m_lms) gamescorelimit = 6;
+            else if(m_lms) gamescorelimit = 8;
             else if(m_dm && m_teammode) gamescorelimit = 60; // TDM
             else gamescorelimit = 30;
         }
         else gamescorelimit = scorelimit;
-        interm = rounds = nextexceeded = 0;
+        interm = nextexceeded = 0;
         copystring(smapname, s);
         loaditems();
         scores.shrink(0);
@@ -2528,6 +2558,7 @@ namespace server
             serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
         }
         else betweenrounds = false;
+        gamewaiting = false;
 
         if(m_voosh(mutators))
         {
@@ -2546,10 +2577,9 @@ namespace server
         else if(m_elimination) smode = &eliminationmode;
         else smode = NULL;
 
-        if(timelimit>0 && m_timed && smapname[0])
+        if(gamelimit && m_timed && smapname[0])
         {
-            int timeupdate = !m_round ? max((gamelimit - gamemillis)/1000, 1) : max((roundgamelimit- gamemillis)/1000, 1);
-            sendf(-1, 1, "ri2", N_TIMEUP, gamemillis < gamelimit && !interm ? timeupdate : 0);
+            sendf(-1, 1, "ri2", N_TIMEUP, gamewaiting || (gamemillis < gamelimit && !interm) ? max((gamelimit - gamemillis)/1000, 1) : 0);
         }
 
         loopv(clients)
@@ -3088,7 +3118,7 @@ namespace server
             }
 
             if(m_demo) readdemo();
-            else if(timelimit <= 0 || !m_timed || (m_round && !interm) || gamemillis < gamelimit)
+            else if(!gamelimit || !m_timed || (m_round && !interm) || gamemillis < gamelimit)
             {
                 processevents();
                 if(curtime)
@@ -3118,15 +3148,10 @@ namespace server
                         vooshtime = gamemillis + 20000;
                     }
                 }
-                bool timeisup = false;
-                if(gamemillis >= roundgamelimit)
-                {
-                    checkround = timeisup = true;
-                }
                 if(checkround)
                 {
-                    checkplayers(timeisup);
-                    checkround = timeisup = false;
+                    checkround = false;
+                    checkplayers();
                 }
             }
         }
@@ -3134,7 +3159,7 @@ namespace server
         while(bannedips.length() && bannedips[0].expire-totalmillis <= 0) bannedips.remove(0);
         loopv(connects) if(totalmillis-connects[i]->connectmillis>15000) disconnect_client(connects[i]->clientnum, DISC_TIMEOUT);
 
-        if(nextexceeded && gamemillis > nextexceeded && (timelimit <= 0 || !m_timed || (m_round && !interm) || gamemillis < gamelimit))
+        if(nextexceeded && gamemillis > nextexceeded && (!gamelimit || !m_timed || (m_round && !interm) || gamemillis < gamelimit))
         {
             nextexceeded = 0;
             loopvrev(clients)
@@ -3150,7 +3175,7 @@ namespace server
 
         if(shouldstep && !gamepaused)
         {
-            if(timelimit>0 && m_timed && smapname[0] && gamemillis-curtime>0) checkintermission();
+            if(gamelimit && m_timed && smapname[0] && gamemillis-curtime>0) checkintermission();
             if(interm > 0 && gamemillis>interm)
             {
                 if(demorecord) enddemorecord();
@@ -4490,7 +4515,7 @@ namespace server
         putint(p, maxclients);
         putint(p, gamepaused || gamespeed != 100 ? 5 : 3); // number of attrs following
         putint(p, gamemode);
-        putint(p, timelimit>0 && (m_timed || (m_round && !interm)) ? max((gamelimit - gamemillis)/1000, 0) : 0);
+        putint(p, gamelimit && m_timed ? max((gamelimit - gamemillis)/1000, 0) : 0);
         putint(p, serverpass[0] ? MM_PASSWORD : (!m_mp(gamemode) ? MM_PRIVATE : (mastermode || mastermask&MM_AUTOAPPROVE ? mastermode : MM_AUTH)));
         if(gamepaused || gamespeed != 100)
         {

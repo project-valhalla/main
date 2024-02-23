@@ -146,7 +146,7 @@ enum
     S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET, S_FLAGFAIL, S_FLAGLOOP,
     S_JUGGERNAUT, S_JUGGERNAUT_LOOP, S_JUGGERNAUT_ACTION,
     S_INFECTION, S_INFECTED, S_WIN_ZOMBIES, S_WIN_SURVIVORS,
-    S_LMS_ROUND, S_LMS_ROUND_WIN,
+    S_ROUND, S_ROUND_WIN,
     S_VOOSH,
     S_TRAITOR, S_TRAITOR_KILL, S_VICTIM,
 
@@ -657,7 +657,6 @@ namespace game
     // game
     extern int vooshgun;
     extern string clientmap;
-    extern bool intermission;
     extern int maptime, maprealtime, maplimit;
     extern gameent *self;
     extern vector<gameent *> players, clients;
@@ -808,17 +807,18 @@ namespace server
     extern void forcepaused(bool paused);
     extern void forcegamespeed(int speed);
     extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
-    extern void newround();
+    extern void endround();
     extern void checkplayers(bool timeisup = false);
 
     extern bool serveroption(const char *arg);
     extern bool delayspawn(int type);
     extern bool canspawnitem(int type);
     extern bool allowpickup();
-    extern bool betweenrounds;
+    extern bool countround();
+    extern bool gamewaiting, betweenrounds;
 
     extern int msgsizelookup(int msg);
-    extern int gamelimit, gamescorelimit, selfdamage, vooshgun;
+    extern int gamelimit, gamescorelimit, selfdamage, vooshgun, rounds;
 }
 
 #endif

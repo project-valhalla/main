@@ -65,20 +65,17 @@ struct eliminationclientmode : clientmode
         score &sc = makescore(winner);
         sc.total++;
         sendf(-1, 1, "ri3", N_ROUNDSCORE, sc.total, sc.team);
-        betweenrounds = true;
-        sendservmsgf("%s%s \f2team won the round", teamtextcode[winner], teamnames[winner]);
-        sendf(-1, 1, "ri2s", N_ANNOUNCE, S_LMS_ROUND, "");
         if(gamescorelimit && sc.total >= gamescorelimit)
         {
             startintermission();
             defformatstring(win, "%s%s \fs\f2team reached the score limit\fr", teamtextcode[winner], teamnames[winner]);
             sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, win);
         }
-    }
-
-    void endround()
-    {
-        serverevents::add(&newround, 5000);
+        else
+        {
+            defformatstring(win, "%s%s \f2team won the round", teamtextcode[winner], teamnames[winner]);
+            sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ROUND, win);
+        }
     }
 
     struct winstate

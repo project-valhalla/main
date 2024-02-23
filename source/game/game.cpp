@@ -125,7 +125,7 @@ namespace game
     void respawnself()
     {
         if(ispaused()) return;
-        if(queuerespawn && lastmillis - self->lastpain <= RESPAWN_WAIT)
+        if(queuerespawn && lastmillis - self->lastpain <= (cmode ? cmode->respawnwait(self, true) : RESPAWN_WAIT))
         {
             self->respawnqueued = true;
             return;
@@ -290,7 +290,7 @@ namespace game
                     self->move = self->strafe = 0;
                     moveplayer(self, 10, true);
                 }
-                if(lastmillis - self->lastpain > RESPAWN_WAIT)
+                if(lastmillis - self->lastpain > (cmode ? cmode->respawnwait(self, true) : RESPAWN_WAIT))
                 {
                     if(self->respawnqueued)
                     {

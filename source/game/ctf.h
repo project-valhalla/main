@@ -639,8 +639,9 @@ struct ctfclientmode : clientmode
        }
     }
 
-    int respawnwait(gameent *d)
+    int respawnwait(gameent *d, bool seconds)
     {
+        if(seconds) return RESPAWNSECS * 1000;
         return max(0, RESPAWNSECS-(lastmillis-d->lastpain)/1000);
     }
 

@@ -636,7 +636,7 @@ namespace game
         virtual void respawned(gameent *d) {}
         virtual void setup() {}
         virtual void checkitems(gameent *d) {}
-        virtual int respawnwait(gameent *d) { return 0; }
+        virtual int respawnwait(gameent *d, bool seconds = false) { return 0; }
         virtual void pickspawn(gameent *d) { findplayerspawn(d, -1, m_teammode ? d->team : 0); }
         virtual void senditems(packetbuf &p) {}
         virtual void removeplayer(gameent *d) {}

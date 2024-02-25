@@ -903,7 +903,7 @@ namespace game
         d->lastfootstep = lastmillis;
     }
 
-    void triggerphysicsevent(physent *pl, int event, int material)
+    void triggerphysicsevent(physent *pl, int event, int material, vec origin)
     {
         if(pl->state > CS_DEAD) return;
         gameent *e = (gameent *)pl;
@@ -943,20 +943,20 @@ namespace game
 
             case PHYSEVENT_RAGDOLL_COLLIDE:
             {
-                playsound(S_CORPSE, NULL, pl == self ? NULL : &pl->o);
+                playsound(S_CORPSE, NULL, origin.iszero() ? (pl == self ? NULL : &pl->o) : &origin);
                 break;
             }
 
             case PHYSEVENT_LIQUID_IN:
             {
-                playsound(material == MAT_LAVA ? S_LAVA_IN : S_WATER_IN, NULL, pl == self ? NULL : &pl->o);
+                playsound(material == MAT_LAVA ? S_LAVA_IN : S_WATER_IN, NULL, origin.iszero() ? (pl == self ? NULL : &pl->o) : &origin);
                 break;
             }
 
             case PHYSEVENT_LIQUID_OUT:
             {
                 if(material == MAT_LAVA) break;
-                playsound(S_WATER_OUT, NULL, pl == self ? NULL : &pl->o);
+                playsound(S_WATER_OUT, NULL, origin.iszero() ? (pl == self ? NULL : &pl->o) : &origin);
                 break;
             }
 

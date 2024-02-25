@@ -142,7 +142,7 @@ namespace entities
         {
             addscreenfx(80);
         }
-        if(type < I_DDAMAGE || type > I_INVULNERABILITY) return;
+        if(!is.announcersound || type < I_DDAMAGE || type > I_INVULNERABILITY) return;
         if(d == self) conoutf(CON_GAMEINFO, "\f2%s obtained", gentities[type].prettyname);
         else conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
         playsound(d == h ? is.announcersound : S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);

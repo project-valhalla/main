@@ -719,7 +719,7 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
         static int soundsatonce = 0, lastsoundmillis = 0;
         if(totalmillis == lastsoundmillis) soundsatonce++; else soundsatonce = 1;
         lastsoundmillis = totalmillis;
-        if(maxsoundsatonce && soundsatonce > maxsoundsatonce) return -1;
+        if(maxsoundsatonce && soundsatonce > maxsoundsatonce && !(flags & SND_ANNOUNCER)) return -1;
     }
 
     if(channels.inrange(chanid))

@@ -254,6 +254,7 @@ struct ctfclientmode : clientmode
         sendf(-1, 1, "ri9", N_SCOREFLAG, ci->clientnum, relay, relay >= 0 ? ++flags[relay].version : -1, goal, ++flags[goal].version, team, score, ci->state.flags);
         if(gamescorelimit && score >= gamescorelimit)
         {
+            if(checkovertime()) return;
             startintermission();
             defformatstring(win, "%s%s \fs\f2team reached the score limit\fr", teamtextcode[team], teamnames[team]);
             sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, win);

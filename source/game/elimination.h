@@ -67,6 +67,7 @@ struct eliminationclientmode : clientmode
         sendf(-1, 1, "ri3", N_ROUNDSCORE, sc.total, sc.team);
         if(gamescorelimit && sc.total >= gamescorelimit)
         {
+            if(checkovertime()) return;
             startintermission();
             defformatstring(win, "%s%s \fs\f2team reached the score limit\fr", teamtextcode[winner], teamnames[winner]);
             sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, win);

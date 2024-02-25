@@ -2127,9 +2127,9 @@ namespace server
         sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
     }
 
-    bool checkovertime()
+    bool checkovertime(bool timeisup)
     {
-        if(!m_timed || m_round || !overtime) return false;
+        if(!gamelimit || !m_timed || !overtime) return false;
         int topteam = 0;
         int topscore = INT_MIN;
         bool tied = false;
@@ -2164,8 +2164,8 @@ namespace server
             }
         }
         if(!tied) return false;
-        sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, "\f2Overtime: scores are tied");
-        updatetimelimit(overtimeminutes);
+        sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, m_teammode ? "\f2Overtime: teams are tied" : "\f2Overtime: scores are tied");
+        if(!m_round && timeisup) updatetimelimit(overtimeminutes);
         return true;
     }
 
@@ -2180,11 +2180,18 @@ namespace server
 
     void checkintermission(bool force = false)
     {
-        if(gamemillis >= gamelimit && !interm && (force || !checkovertime()))
+        if(gamemillis < gamelimit || interm) return;
+        if(force)
         {
-            if(!force && m_round) checkplayers(true);
-            else gameover();
+            gameover();
+            return;
         }
+        if(m_round)
+        {
+            checkplayers(true);
+            return;
+        }
+        if(!checkovertime(true)) gameover();
     }
 
     void startintermission()
@@ -2218,7 +2225,7 @@ namespace server
 
     void checkscorelimit(clientinfo *ci)
     {
-        if(gamescorelimit == 0) return;
+        if(gamescorelimit == 0 || m_elimination) return;
         teaminfo *team = m_teammode && validteam(ci->team) ? &teaminfos[ci->team-1] : NULL;
         int highscore = m_teammode ? team->frags : ci->state.frags;
         if(!m_dm) highscore = ci->state.points;
@@ -2234,8 +2241,8 @@ namespace server
         }
         if(highscore >= gamescorelimit)
         {
-            if(m_dm) startintermission();
-            else if(m_round && !m_elimination && !interm) startintermission();
+            if(checkovertime()) return;
+            startintermission();
             defformatstring(winner, "%s%s \fs\f2reached the score limit\fr", team ? teamtextcode[ci->team] : "", team ? teamnames[ci->team] : colorname(ci));
             sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, winner);
         }
@@ -2260,11 +2267,8 @@ namespace server
         {
             attempts++;
             client = clients[rnd(clients.length())];
-            if(client == exclude) continue;
-            if(client->state.state == CS_ALIVE || client->state.state == CS_LAGGED || client->state.state == CS_SPAWNING)
-            {
-                return client;
-            }
+            if(client == exclude || client->state.state != CS_ALIVE) continue;
+            return client;
         }
         return client;
     }
@@ -2387,8 +2391,9 @@ namespace server
         rounds++;
         if(rounds >= gameroundlimit)
         {
+            if(checkovertime()) return false;
             startintermission();
-            sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, "\f2Maximum number of rounds has been reached");
+            if(rounds == gameroundlimit) sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, "\f2Maximum number of rounds has been reached");
             return true;
         }
         return false;
@@ -2473,13 +2478,9 @@ namespace server
         if(rewardsurvivors || rewardhunters) loopv(clients)
         {
             clientinfo *ci = clients[i];
-            if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED)
-            {
-                if(m_lms && ci->state.aitype == AI_NONE) sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_ROUND, "\f2Round completed");
-                continue;
-            }
             if((rewardsurvivors && ci->state.role >= ROLE_ZOMBIE) || (rewardhunters && ci->state.role < ROLE_ZOMBIE)) continue;
             addscore(ci, score);
+            if(interm) continue; // win message is redundant if game is over
             if(m_lms && ci->state.aitype == AI_NONE)
             {
                 sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_ROUND_WIN, "\f2You win the round");

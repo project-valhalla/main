@@ -2225,7 +2225,7 @@ namespace server
 
     void checkscorelimit(clientinfo *ci)
     {
-        if(gamescorelimit == 0 || m_elimination) return;
+        if(gamescorelimit == 0 || m_ctf || m_elimination) return;
         teaminfo *team = m_teammode && validteam(ci->team) ? &teaminfos[ci->team-1] : NULL;
         int highscore = m_teammode ? team->frags : ci->state.frags;
         if(!m_dm) highscore = ci->state.points;

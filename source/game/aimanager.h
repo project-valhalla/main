@@ -144,7 +144,8 @@ namespace aimanager
         if(owner) owner->bots.removeobj(ci);
         clients.removeobj(ci);
         DELETEP(bots[cn]);
-        dorefresh = checkround = true;
+        dorefresh = true;
+        shouldcheckround();
     }
 
     bool deleteai()

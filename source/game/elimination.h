@@ -61,7 +61,7 @@ struct eliminationclientmode : clientmode
 #ifdef SERVMODE
     void roundscore(int winner)
     {
-        if(!winner) return;
+        if(!winner || gamewaiting) return;
         score &sc = makescore(winner);
         sc.total++;
         sendf(-1, 1, "ri3", N_ROUNDSCORE, sc.total, sc.team);
@@ -141,6 +141,7 @@ struct eliminationclientmode : clientmode
     {
         if(!checkround) return;
         checkround = false;
+        checkplayers();
         if(betweenrounds) return;
         winstate won = winningteam();
         if(won.over)

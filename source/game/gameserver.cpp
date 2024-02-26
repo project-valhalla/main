@@ -682,7 +682,7 @@ namespace server
     });
     SVAR(servermotd, "");
 
-    bool firstblood    = false;
+    bool firstblood = false;
 
     bool betweenrounds = false, checkround = false;
 
@@ -2308,9 +2308,8 @@ namespace server
         {
             if(m_infection) infect(hunter, hunter);
             else if(m_betrayal) hunter->state.role = ROLE_TRAITOR;
-            if(numclients(-1, true, false) <= 1) gamewaiting = true;
         }
-        else if(numclients(-1, true, false) <= 1) gamewaiting = true;
+        gamewaiting = numclients(-1, true, false) <= 1;
     }
 
     static void startzombieround()
@@ -2381,7 +2380,7 @@ namespace server
             serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
         }
         else betweenrounds = false;
-        if(numclients(-1, true, false) > 1) gamewaiting = false;
+        if(!m_infection && !m_betrayal) gamewaiting = numclients(-1, true, false) <= 1;
     }
 
     bool countround()
@@ -2415,14 +2414,14 @@ namespace server
 
     void checkplayers(bool timeisup)
     {
-        if(betweenrounds) return;
+        if(!m_round || betweenrounds) return;
         if(numclients(-1, true, false) <= 1)
         {
-            gamewaiting = true;
+            if(!gamewaiting) gamewaiting = true;
             return;
         }
         int survivors = 0, hunters = 0;
-        loopv(clients)
+        if(!m_elimination) loopv(clients)
         {
             clientinfo *ci = clients[i];
             if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED) continue;
@@ -2445,7 +2444,7 @@ namespace server
                 score = 5;
                 endround();
             }
-            else if(survivors <= 0 && numclients(-1, true, false) > 1)
+            else if(survivors <= 0)
             {
                 sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_ZOMBIES, m_infection ? "\f2Zombies win the round" : "\f2Traitor wins the round");
                 rewardhunters = true;
@@ -2473,14 +2472,14 @@ namespace server
             sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ROUND, "\f2Time is up");
             endround(); // make sure to start a new round if we ran out of time in any round-based mode
         }
-        if(gamewaiting) return;
-        if(rewardsurvivors || rewardhunters) loopv(clients)
+        if(gamewaiting || m_elimination || (!rewardsurvivors && !rewardhunters)) return;
+        loopv(clients)
         {
             clientinfo *ci = clients[i];
+            if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED) continue;
             if((rewardsurvivors && ci->state.role >= ROLE_ZOMBIE) || (rewardhunters && ci->state.role < ROLE_ZOMBIE)) continue;
             addscore(ci, score);
-            if(interm) continue; // win message is redundant if game is over
-            if(m_lms && ci->state.aitype == AI_NONE)
+            if(!interm && m_lms && ci->state.aitype == AI_NONE)
             {
                 sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_ROUND_WIN, "\f2You win the round");
             }
@@ -2549,15 +2548,28 @@ namespace server
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
         }
 
-        firstblood = gamewaiting = false;
-        if(m_juggernaut) nojuggernaut = true;
-        if(m_infection || m_betrayal)
+        firstblood = false;
+        if(m_round)
         {
-            hunterchosen = false;
-            betweenrounds = true;
-            serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
+            if(m_infection || m_betrayal)
+            {
+                gamewaiting = false;
+                hunterchosen = false;
+                betweenrounds = true;
+                serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
+            }
+            else
+            {
+                betweenrounds = false;
+                gamewaiting = numclients(-1, true, false) <= 1;
+            }
         }
-        else betweenrounds = false;
+        else
+        {
+            gamewaiting = false;
+            if(betweenrounds) betweenrounds = false;
+            if(m_juggernaut) nojuggernaut = true;
+        }
 
         if(m_voosh(mutators))
         {
@@ -3353,7 +3365,7 @@ namespace server
             aimanager::removeai(ci);
             if(!numclients(-1, false, true)) noclients(); // bans clear when server empties
             if(ci->local) checkpausegame();
-            checkround = true;
+            shouldcheckround();
         }
         else connects.removeobj(ci);
     }
@@ -3619,7 +3631,7 @@ namespace server
 
         if(servermotd[0]) sendf(ci->clientnum, 1, "ris", N_SERVMSG, servermotd);
 
-        checkround = true;
+        shouldcheckround();
     }
 
     VAR(spectatorchat, 0, 0, 1);

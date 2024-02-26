@@ -277,7 +277,6 @@ namespace game
     {
         addmsg(N_EDITMODE, "ri", on ? 1 : 0);
         if(self->state==CS_DEAD) deathstate(self, true);
-        else if(self->state==CS_EDITING && self->editstate==CS_DEAD) hidescoreboard();
         disablezoom();
         self->suicided = self->respawned = -2;
         checkfollow();
@@ -1739,7 +1738,6 @@ namespace game
                 s->state = CS_ALIVE;
                 if(cmode) cmode->pickspawn(s);
                 else findplayerspawn(s, -1, m_teammode ? s->team : 0);
-                if(s == self) hidescoreboard();
                 if(cmode) cmode->respawned(s);
                 ai::spawned(s);
                 if(s == self) spawneffect(s);
@@ -2151,7 +2149,6 @@ namespace game
                     if(s==self)
                     {
                         if(editmode) toggleedit();
-                        if(s->state==CS_DEAD) hidescoreboard();
                         disablezoom();
                         extern int deathfromabove;
                         if(deathfromabove) s->pitch = 0; // reset player pitch if it has been lowered on death

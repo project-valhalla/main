@@ -219,11 +219,5 @@ namespace game
             else intret(teaminfos[*team-1].frags);
         }
     });
-
-    void hidescoreboard()
-    {
-        if(UI::uivisible("main")) return;
-        UI::holdui("scoreboard", false);
-    }
 }
 

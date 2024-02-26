@@ -142,7 +142,6 @@ namespace game
         else
         {
             spawnplayer(self);
-            hidescoreboard();
             if(cmode) cmode->respawned(self);
         }
         execident("on_spawn");
@@ -831,7 +830,6 @@ namespace game
 
         syncplayer();
 
-        hidescoreboard();
         disablezoom();
 
         execident("on_mapstart");

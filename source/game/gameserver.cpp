@@ -125,17 +125,17 @@ namespace server
 
     struct servstate : gamestate
     {
-        vec o;
+        vec o, oldpos;
         int state, editstate;
         int lastdeath, deadflush, lastspawn, lifesequence;
         int lastpain, lastdamage, lastregeneration;
-        int lastshot, lastatk;
+        int lastmove, lastshot, lastatk;
         projectilestate<8> projs, bouncers;
         int frags, flags, deaths, points, teamkills, shotdamage, damage, spree;
         int lasttimeplayed, timeplayed;
         float effectiveness;
 
-        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastdamage(0), lastregeneration(0), spree(0) {}
+        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastdamage(0), lastregeneration(0), lastmove(0) {}
 
         bool isalive(int gamemillis)
         {
@@ -157,8 +157,6 @@ namespace server
             timeplayed = 0;
             effectiveness = 0;
             frags = flags = deaths = points = teamkills = shotdamage = damage = 0;
-            role = ROLE_NONE;
-            spree = 0;
 
             lastdeath = 0;
 
@@ -168,10 +166,11 @@ namespace server
         void respawn()
         {
             gamestate::respawn();
-            o = vec(-1e10f, -1e10f, -1e10f);
+            o = oldpos = vec(-1e10f, -1e10f, -1e10f);
             deadflush = 0;
             lastspawn = -1;
             lastshot = 0;
+            role = ROLE_NONE;
             spree = 0;
         }
 
@@ -893,7 +892,6 @@ namespace server
         virtual void entergame(clientinfo *ci) {}
         virtual void leavegame(clientinfo *ci, bool disconnecting = false) {}
 
-        virtual void moved(clientinfo *ci, const vec &oldpos, bool oldclip, const vec &newpos, bool newclip) {}
         virtual bool canspawn(clientinfo *ci, bool connecting = false) { return true; }
         virtual void spawned(clientinfo *ci) {}
         virtual int fragvalue(clientinfo *victim, clientinfo *actor)
@@ -1892,6 +1890,7 @@ namespace server
               gs.health, gs.maxhealth, gs.shield, gs.gunselect,
               NUMGUNS, gs.ammo);
         gs.lastspawn = gamemillis;
+        gs.lastmove = lastmillis;
     }
 
     void sendwelcome(clientinfo *ci)
@@ -2550,7 +2549,7 @@ namespace server
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
         }
 
-        firstblood = false;
+        firstblood = gamewaiting = false;
         if(m_juggernaut) nojuggernaut = true;
         if(m_infection || m_betrayal)
         {
@@ -2559,7 +2558,6 @@ namespace server
             serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
         }
         else betweenrounds = false;
-        gamewaiting = false;
 
         if(m_voosh(mutators))
         {
@@ -2943,6 +2941,7 @@ namespace server
             gs.ammo[gun] -= attacks[atk].use;
         }
         gs.lastshot = millis;
+        gs.lastmove = lastmillis;
         gs.lastatk = atk;
         int gunwait = attacks[atk].attackdelay;
         if(gs.haspowerup(PU_HASTE) || gs.role == ROLE_JUGGERNAUT)
@@ -3022,6 +3021,8 @@ namespace server
         }
     }
 
+    VAR(inactivitytime, 60000, 60000, 300000);
+
     void processevents()
     {
         loopv(clients)
@@ -3039,6 +3040,16 @@ namespace server
             }
             if(ci->state.state == CS_ALIVE)
             {
+                if(!ci->local && !m_edit && lastmillis - ci->state.lastmove >= inactivitytime)
+                { // basic inactivity check
+                    if(ci->state.aitype == AI_NONE)
+                    {
+                        extern void forcespectator(clientinfo *ci);
+                        forcespectator(ci);
+                        sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, NULL, "\f0You entered spectator mode due to inactivity");
+                    }
+                    else if(m_round) suicide(ci);
+                }
                 if(!(ci->state.role == ROLE_JUGGERNAUT || ci->state.role == ROLE_ZOMBIE) // zombies and juggernauts are unaffected by this
                    && ci->state.health > ci->state.maxhealth && lastmillis - ci->state.lastregeneration > 1000)
                 {
@@ -3736,8 +3747,9 @@ namespace server
                         cp->position.setsize(0);
                         while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);
                     }
-                    if(smode && cp->state.state==CS_ALIVE) smode->moved(cp, cp->state.o, cp->damagemat, pos, (flags&0x80)!=0);
+                    cp->state.oldpos = cp->state.o;
                     cp->state.o = pos;
+                    if(cp->state.oldpos != cp->state.o) cp->state.lastmove = lastmillis;
                     cp->damagemat = (flags&0x80)!=0;
                 }
                 break;
@@ -3875,6 +3887,7 @@ namespace server
                 int gunselect = getint(p);
                 if(!cq || cq->state.state!=CS_ALIVE || !validgun(gunselect)) break;
                 cq->state.gunselect = gunselect;
+                cq->state.lastmove = lastmillis;
                 QUEUE_AI;
                 QUEUE_MSG;
                 break;
@@ -3986,13 +3999,14 @@ namespace server
             case N_SAYTEAM:
             {
                 getstring(text, p);
+                int sound = getint(p);
                 if(!ci || !cq || cq->mute || !m_teammode || !validteam(cq->team) || cq->state.state==CS_SPECTATOR || (m_round && cq->state.state==CS_DEAD)) break;
                 filtertext(text, text, false, false, true, true);
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
                     if(t==cq || t->state.aitype != AI_NONE || cq->team != t->team) continue;
-                    sendf(t->clientnum, 1, "riis", N_SAYTEAM, cq->clientnum, text);
+                    sendf(t->clientnum, 1, "riisi", N_SAYTEAM, cq->clientnum, text, sound);
                 }
                 if(isdedicatedserver() && cq) logoutf("%s <%s> %s", colorname(cq), teamnames[cq->team], text);
                 break;

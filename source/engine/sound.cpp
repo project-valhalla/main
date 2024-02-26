@@ -825,6 +825,11 @@ int playsoundname(const char *s, physent *owner, const vec *loc, int vol, int fl
 
 ICOMMAND(uisound, "si", (const char *s, int *vol), playsoundname(s, NULL, NULL, *vol, SND_UI));
 ICOMMAND(playsound, "i", (int *n), playsound(*n));
+ICOMMAND(voicecom, "ssi", (const char *sound, char *text, int *team),
+{
+    int id = gamesounds.findsound(sound, 0);
+    game::voicecom(id, text, *team);
+});
 
 void resetsound()
 {

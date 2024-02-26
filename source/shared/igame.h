@@ -91,6 +91,7 @@ namespace game
     extern void adddynlights();
     extern void particletrack(physent *owner, vec &o, vec &d);
     extern void dynlighttrack(physent *owner, vec &o, vec &hud);
+    extern void voicecom(int sound, char *text, int team);
     extern int maxsoundradius(int n);
     extern bool needminimap();
 

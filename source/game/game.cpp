@@ -974,6 +974,7 @@ namespace game
 
     void msgsound(int n, physent *d)
     {
+        if(d->state == CS_DEAD || d->state == CS_SPECTATOR) return;
         if(!d || d == self)
         {
             addmsg(N_SOUND, "ci", d, n);

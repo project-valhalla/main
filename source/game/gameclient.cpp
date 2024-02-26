@@ -1083,29 +1083,50 @@ namespace game
     }
     COMMANDN(say, toserver, "C");
 
-    void sayteam(char *text)
+    void sayteam(char *text, int sound = -1)
     {
         if(!m_teammode || !validteam(self->team) || (m_round && self->state == CS_DEAD) || self->state == CS_SPECTATOR) return;
         conoutf(CON_TEAMCHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", colorname(self), teamtextcode[self->team], teamtextcode[self->team], text);
-        addmsg(N_SAYTEAM, "rcs", self, text);
+        if(sound >= 0 && self->state != CS_DEAD && self->state != CS_SPECTATOR) playsound(sound);
+        addmsg(N_SAYTEAM, "rcsi", self, text, sound);
     }
     COMMAND(sayteam, "C");
 
-    void whisper(const char *Recipient, const char *text)
+    void whisper(const char *recipient, const char *text)
     {
-        int rcn = parseplayer(Recipient);
-        gameent *recipient = getclient(rcn);
-        if(!recipient || recipient->clientnum < 0 || recipient == self || recipient->aitype == AI_BOT)
+        int rcn = parseplayer(recipient);
+        gameent *rec = getclient(rcn);
+        if(!rec || rec->clientnum < 0 || rec == self || rec->aitype == AI_BOT)
         {
             conoutf(CON_CHAT, "\f5Invalid recipient");
             return;
         }
-        addmsg(N_WHISPER, "rcis", self, recipient->clientnum, text);
-        conoutf(CON_CHAT, "%s \fs\f5(whisper to \fr%s\fs\f5)\fr: \fs\f5%s\fr", colorname(self), colorname(recipient), text);
+        addmsg(N_WHISPER, "rcis", self, rec->clientnum, text);
+        conoutf(CON_CHAT, "%s \fs\f5(whisper to \fr%s\fs\f5)\fr: \fs\f5%s\fr", colorname(self), colorname(rec), text);
     }
     COMMAND(whisper, "ss");
 
     ICOMMAND(servcmd, "C", (char *cmd), addmsg(N_SERVCMD, "rs", cmd));
+
+    int lastvoicecom = 0;
+
+    void voicecom(int sound, char *text, int team)
+    {
+        if(!text || !text[0] || (self->role >= ROLE_JUGGERNAUT && self->role <= ROLE_ZOMBIE)) return;
+        if(!lastvoicecom || lastmillis - lastvoicecom > 2800)
+        {
+            if(!team)
+            {
+                if(sound >= 0) msgsound(sound, self);
+                toserver(text);
+            }
+            else if(m_teammode)
+            {
+                sayteam(text, sound >= 0 ? sound : -1);
+            }
+            lastvoicecom = lastmillis;
+        }
+    }
 
     static void sendposition(gameent *d, packetbuf &q)
     {
@@ -1129,9 +1150,7 @@ namespace game
             if(d->falling.x || d->falling.y || d->falling.z > 0) flags |= 1<<6;
         }
         if(lookupmaterial(d->o) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_LAVA)
-        {
             flags |= 1<<7;
-        }
         if(d->crouching < 0) flags |= 1<<8;
         putuint(q, flags);
         loopk(3)
@@ -1517,7 +1536,7 @@ namespace game
             }
 
             case N_SOUND:
-                if(!d) return;
+                if(!d || d->state == CS_DEAD || d->state == CS_SPECTATOR) return;
                 playsound(getint(p), d);
                 break;
 
@@ -1549,7 +1568,9 @@ namespace game
                 gameent *t = getclient(tcn);
                 getstring(text, p);
                 filtertext(text, text, false, false, true, true);
+                int sound = getint(p);
                 if(!t || isignored(t->clientnum)) break;
+                if(sound >= 0 && (t->state != CS_DEAD || t->state != CS_SPECTATOR)) playsound(sound, t);
                 int team = validteam(t->team) ? t->team : 0;
                 if(t->state!=CS_DEAD)
                     particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8);

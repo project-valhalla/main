@@ -1231,15 +1231,15 @@ namespace game
 
     float intersectdist = 1e16f;
 
-    bool isheadhitbox(dynent *d, const vec &from, const vec &to, float &dist)
+    bool isheadhitbox(dynent *d, const vec &from, const vec &to, float dist)
     {
         vec bottom(d->head), top(d->head);
-        bottom.z -= d->headradius/4.75f;
-        top.z += d->headradius;
+        bottom.z -= d->aboveeye - d->headradius;
+        top.z += d->aboveeye;
         return linecylinderintersect(from, to, bottom, top, d->headradius, dist);
     }
 
-    bool islegshitbox(dynent *d, const vec &from, const vec &to, float &dist)
+    bool islegshitbox(dynent *d, const vec &from, const vec &to, float dist)
     {
         vec bottom(d->o), top(d->o);
         bottom.z -= d->eyeheight;

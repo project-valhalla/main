@@ -14,11 +14,18 @@
 Thumbs.db
 ehthumbs.db
 mingw.res
-.objs/
-.vs/
 bin_unix/
 source/tess_client
 source/tess_server
+source/vcpp/x64/
+source/vcpp/x86/
+.objs/
+.vs/
+.vscode/
+Debug*/
+Release*/
+Profile*/
+
 
 # Created by https://www.gitignore.io/api/c,c++,intellij+all
 # Edit at https://www.gitignore.io/?templates=c,c++,intellij+all

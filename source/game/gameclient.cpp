@@ -1109,17 +1109,17 @@ namespace game
 
     int lastvoicecom = 0;
 
-    void voicecom(int sound, char *text, int team)
+    void voicecom(int sound, char *text, bool isteam)
     {
         if(!text || !text[0] || (self->role >= ROLE_JUGGERNAUT && self->role <= ROLE_ZOMBIE)) return;
-        if(!lastvoicecom || lastmillis - lastvoicecom > 2800)
+        if(!lastvoicecom || lastmillis - lastvoicecom > VOICECOM_DELAY)
         {
-            if(!team)
+            if(!isteam || (isteam && !m_teammode))
             {
                 if(sound >= 0) msgsound(sound, self);
                 toserver(text);
             }
-            else if(m_teammode)
+            else
             {
                 sayteam(text, sound >= 0 ? sound : -1);
             }
@@ -1863,7 +1863,7 @@ namespace game
 
             case N_TAUNT:
             {
-                if(!d) return;
+                if(!d || lastmillis-d->lasttaunt < TAUNT_DELAY) return;
                 d->lasttaunt = lastmillis;
                 playsound(getplayermodelinfo(d).tauntsound, d);
                 break;

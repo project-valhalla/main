@@ -467,6 +467,9 @@ static inline int teamnumber(const char *name) { loopi(MAXTEAMS) if(!strcmp(team
 inline bool validteam(int team) { return team >= 1 && team <= MAXTEAMS; }
 inline const char *teamname(int team) { return teamnames[validteam(team) ? team : 0]; }
 
+const int TAUNT_DELAY = 1000;
+const int VOICECOM_DELAY = 2800;
+
 struct gameent : dynent, gamestate
 {
     int weight;                         // affects the effectiveness of hitpush

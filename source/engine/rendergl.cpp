@@ -2741,7 +2741,7 @@ VARP(wallclocksecs, 0, 0, 1);
 
 static time_t walltime = 0;
 
-VARP(showfps, 0, 1, 1);
+VARP(showfps, 0, 0, 1);
 VARP(showfpsrange, 0, 0, 1);
 VAR(statrate, 1, 200, 1000);
 

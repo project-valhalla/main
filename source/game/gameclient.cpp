@@ -366,6 +366,16 @@ namespace game
         if(d) intret(d->ammo[d->gunselect]);
     });
 
+    ICOMMAND(hasammo, "i", (int *gun, int *excludeselect),
+    {
+        gameent *d = followingplayer(self);
+        if((!*excludeselect || (*excludeselect && d->gunselect != *gun)) && d->ammo[*gun])
+        {
+            intret(1);
+        }
+        else intret(0);
+    });
+
     ICOMMAND(getclientpowerup, "i", (int *cn),
     {
         gameent *d = getclient(*cn);

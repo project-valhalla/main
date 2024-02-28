@@ -183,6 +183,7 @@ namespace game
     });
     ICOMMAND(getteam, "", (), intret((self->clientnum < 0 || m_teammode) && validteam(self->team) ? self->team : 0));
     ICOMMAND(getteamname, "i", (int *num), result(teamname(*num)));
+    ICOMMAND(getteamcolor, "", (), intret(teamtextcolor[self->team]));
 
     struct authkey
     {
@@ -304,10 +305,10 @@ namespace game
 
     int getclientmodel(int cn)
     {
-        gameent *d = getclient(cn);
+        gameent *d = cn < 0 ? self : getclient(cn);
         return d ? d->playermodel : -1;
     }
-    ICOMMAND(getclientmodel, "i", (int *cn), intret(getclientmodel(*cn)));
+    ICOMMAND(getclientmodel, "b", (int *cn), intret(getclientmodel(*cn)));
 
     int getclientcolor(int cn)
     {

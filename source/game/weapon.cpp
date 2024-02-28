@@ -299,6 +299,7 @@ namespace game
             {
                 addstain(STAIN_BLOOD, vec(b->o).sub(vec(surface).mul(b->radius)), surface, 2.96f/b->bounces, (b->owner->role == ROLE_ZOMBIE ? bvec(0xFF, 0x60, 0xFF) : bvec(0x60, 0xFF, 0xFF)), rnd(4));
             }
+            if(type == BNC_ROCKET) particle_splash(PART_SPARK2, 20, 150, b->o, 0xFFC864, 0.3f, 250, 1);
         }
         b->lastbounce = lastmillis;
     }
@@ -730,7 +731,7 @@ namespace game
         vec dir = vec(p.dir).neg();
         float rad = attacks[p.atk].exprad*0.75f;
         addstain(STAIN_PULSE_SCORCH, pos, dir, rad);
-        if(p.atk == ATK_PISTOL2 || p.atk == ATK_PISTOL_COMBO) addstain(STAIN_PULSE_GLOW, pos, dir, rad, 0x00FFFF);
+        if(p.projtype != PROJ_ROCKET) addstain(STAIN_PULSE_GLOW, pos, dir, rad, p.projtype == PROJ_PULSE ? 0xEE88EE : 0x00FFFF);
     }
 
     void projsplash(projectile &p, const vec &v, dynent *safe, int damage)

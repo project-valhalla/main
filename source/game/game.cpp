@@ -130,6 +130,16 @@ namespace game
             self->respawnqueued = true;
             return;
         }
+        if(m_invasion)
+        {
+            if(self->lives <= 0)
+            {
+                // if we have no more lives in Invasion, we try the same map again just like in Sauer
+                changemap(clientmap, gamemode, mutators);
+                return;
+            }
+            if(!m_insta(mutators)) healmonsters(); // give monsters a health bonus each time we die
+        }
         if(m_mp(gamemode))
         {
             int seq = (self->lifesequence<<16)|((lastmillis/1000)&0xFFFF);
@@ -359,16 +369,6 @@ namespace game
             {
                 lastspawnattempt = lastmillis;
                 return;
-            }
-            if(m_invasion)
-            {
-                if(self->lives <= 0)
-                {
-                    // if we have no more lives in Invasion, we try the same map again just like in Sauer
-                    changemap(clientmap, gamemode, mutators);
-                    return;
-                }
-                if(!m_insta(mutators)) healmonsters(); // give monsters a health bonus each time we die
             }
             respawnself();
         }

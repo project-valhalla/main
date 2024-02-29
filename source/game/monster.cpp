@@ -297,9 +297,8 @@ namespace game
     void spawnmonster() // spawn a random monster according to freq distribution in DMSP
     {
         int n = rnd(TOTMFREQ), type;
-        for(int i = 0; ; i++)
+        for(int i = 1; ; i++)
         {
-            if(i == MTYPE_PLAYER) continue;
             if((n -= monstertypes[i].freq)<0)
             {
                 type = i;

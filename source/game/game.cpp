@@ -443,7 +443,7 @@ namespace game
 
     bool allowthirdperson()
     {
-        return self->state==CS_SPECTATOR || m_edit || (m_juggernaut && self->role == ROLE_JUGGERNAUT);
+        return true;
     }
     ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
 

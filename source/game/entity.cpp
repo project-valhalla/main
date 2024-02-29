@@ -427,7 +427,7 @@ namespace entities
             case TARGET:
             {
                 vec dir;
-                vecfromyawpitch(e.attr2+90, 0, 1, 0, dir);
+                vecfromyawpitch(e.attr2, 0, 1, 0, dir);
                 renderentarrow(e, dir, 4);
                 break;
             }

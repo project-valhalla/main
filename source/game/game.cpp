@@ -436,6 +436,11 @@ namespace game
         return target->haspowerup(PU_INVULNERABILITY) && !actor->haspowerup(PU_INVULNERABILITY);
     }
 
+    bool ismonster(gameent *d)
+    {
+        return m_invasion && d->type == ENT_AI;
+    }
+
     bool allowthirdperson()
     {
         return self->state==CS_SPECTATOR || m_edit || (m_juggernaut && self->role == ROLE_JUGGERNAUT);
@@ -591,7 +596,10 @@ namespace game
             if(attacks[atk].gun == GUN_ZOMBIE) act = "infected";
             if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
             else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
-            if(d == h || actor == h) formatstring(hudkillinfo, "\fs\f2You %s%s%s \fr%s", d == h ? "got " : "", act, d == h ? " by" : "", d == h ? colorname(actor) : colorname(d));
+            if(d == h || actor == h)
+            {
+                formatstring(hudkillinfo, "\fs\f2You %s%s%s%s \fr%s", d == h ? "got " : "", act, d == h ? " by" : "", ismonster(actor) ? " a" : "", d == h ? colorname(actor) : colorname(d));
+            }
             killfeedweaponinfo = attacks[atk].action == ACT_MELEE ? -1 : attacks[atk].gun;
         }
         if(d == h || actor == h) setsvar("lasthudkillinfo", hudkillinfo);

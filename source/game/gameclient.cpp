@@ -729,7 +729,7 @@ namespace game
     ICOMMANDS("m_edit", "i", (int *mode), { int gamemode = *mode; intret(m_edit); });
     ICOMMANDS("m_lobby", "i", (int *mode), { int gamemode = *mode; intret(m_lobby); });
     ICOMMANDS("m_timed", "i", (int *mode), { int gamemode = *mode; intret(m_timed); });
-    ICOMMANDS("m_insta", "", (), { intret(m_insta(mutators) ? 1 : 0); });
+    ICOMMANDS("m_insta", "", (), { intret(m_insta(mutators)); });
 
     void changemap(const char *name, int mode, int muts) // request map change, server may ignore
     {

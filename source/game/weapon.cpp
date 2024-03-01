@@ -230,17 +230,12 @@ namespace game
 
         switch(type)
         {
-            case BNC_GRENADE:
-            {
-                bnc.collidetype = COLLIDE_ELLIPSE;
-                break;
-            }
             case BNC_GRENADE2:
-            {
                 bnc.collidetype = COLLIDE_ELLIPSE;
+            case BNC_GRENADE:
                 bnc.bouncesound = S_BOUNCE_GRENADE;
                 break;
-            }
+
             case BNC_ROCKET:
             {
                 bnc.collidetype = COLLIDE_ELLIPSE;
@@ -313,7 +308,6 @@ namespace game
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
             switch(bnc.bouncetype)
             {
-                case BNC_GRENADE:
                 case BNC_ROCKET:
                 {
                     if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SMOKE, 5, 200, pos, 0x555555, 1.60f, 10, 500);
@@ -321,8 +315,9 @@ namespace game
                 }
 
                 case BNC_GRENADE2:
+                case BNC_GRENADE:
                 {
-                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_RING, 1, 200, pos, 0x74BCF9, 1.0f, 1, 500);
+                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_RING, 1, 200, pos, bnc.bouncetype == BNC_GRENADE2 ? 0xF97474 : 0x74BCF9, 1.0f, 1, 500);
                     break;
                 }
 
@@ -357,7 +352,7 @@ namespace game
             else if(weaponbouncer(bnc.bouncetype))
             {
                 destroyed = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity) || (bnc.lifetime -= time)<0 || isdeadly(lookupmaterial(bnc.o)&MAT_LAVA) ||
-                            ((bnc.bouncetype == BNC_GRENADE && bnc.bounces >= 1) || (bnc.bouncetype == BNC_ROCKET && bnc.bounces >= 2));
+                            ((bnc.bouncetype == BNC_GRENADE2 && bnc.bounces >= 1) || (bnc.bouncetype == BNC_ROCKET && bnc.bounces >= 2));
             }
             if(destroyed)
             {
@@ -367,7 +362,8 @@ namespace game
                     hits.setsize(0);
                     explode(bnc.local, bnc.owner, bnc.o, bnc.vel, NULL, damage, bnc.atk);
                     addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
-                    if(bnc.atk == ATK_GRENADE) addstain(STAIN_PULSE_GLOW, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad/2, 0x74BCF9);
+                    if(bnc.atk == ATK_GRENADE1 || bnc.atk == ATK_GRENADE2)
+                        addstain(STAIN_PULSE_GLOW, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad/2, bnc.atk == ATK_GRENADE1 ? 0x74BCF9 : 0xF97474);
                     if(bnc.local)
                         addmsg(N_EXPLODE, "rci3iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime,
                                                     hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
@@ -659,7 +655,6 @@ namespace game
         int fireball = 0x50CFE5;
         switch(atk)
         {
-            case ATK_SCATTER2:
             case ATK_ROCKET1:
             case ATK_ROCKET2:
             {
@@ -677,10 +672,11 @@ namespace game
                 particle_splash(PART_SPARK2, 5+rnd(20), 200, v, 0xEE88EE, 0.08f+rndscale(0.35f), 400, 2);
                 break;
             }
-            case ATK_GRENADE:
+            case ATK_GRENADE1:
+            case ATK_GRENADE2:
             {
-                dynlight = vec(0, 0.25f, 1.0f);
-                fireball = 0x74BCF9;
+                dynlight = atk == ATK_GRENADE1 ? vec(0, 0.25f, 1.0f) : vec(1, 0.25f, 0.25f);
+                fireball = atk == ATK_GRENADE1 ? 0x74BCF9 : 0xF97474;
                 particle_flare(v, v, 120, PART_ELECTRICITY, fireball, 30.0f);
                 break;
             }
@@ -695,7 +691,8 @@ namespace game
             }
             default: break;
         }
-        particle_fireball(v, 1.15f*attacks[atk].exprad, atk == ATK_PULSE1 || atk == ATK_GRENADE? PART_EXPLOSION2: PART_EXPLOSION1, atk == ATK_GRENADE ? 200 : 400, fireball, 0.10f);
+        particle_fireball(v, 1.15f*attacks[atk].exprad, atk == ATK_PULSE1 || atk == ATK_GRENADE1 || atk == ATK_GRENADE2 ? PART_EXPLOSION2: PART_EXPLOSION1,
+                          atk == ATK_GRENADE1 || atk == ATK_GRENADE2 ? 200 : 400, fireball, 0.10f);
         adddynlight(v, 2*attacks[atk].exprad, dynlight, 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
         playsound(attacks[atk].impactsound, NULL, &v);
         if(lookupmaterial(v) & MAT_WATER) playsound(S_IMPACT_WATER_PROJ, NULL, &v);
@@ -745,8 +742,9 @@ namespace game
         if(local) return;
         switch(atk)
         {
-            case ATK_SCATTER2:
             case ATK_ROCKET2:
+            case ATK_GRENADE1:
+            case ATK_GRENADE2:
             {
                 loopv(bouncers)
                 {
@@ -927,6 +925,7 @@ namespace game
         switch(atk)
         {
             case ATK_SCATTER1:
+            case ATK_SCATTER2:
             {
                 adddynlight(vec(to).madd(dir, 4), 6, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if(hit || water || glass) break;
@@ -1020,6 +1019,7 @@ namespace game
         switch(atk)
         {
             case ATK_SCATTER1:
+            case ATK_SCATTER2:
             {
                 if(d->muzzle.x >= 0 && muzzleflash)
                 {
@@ -1036,12 +1036,6 @@ namespace game
                     }
                 }
                 loopi(attacks[atk].rays) particle_flare(hudgunorigin(gun, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.95f);
-                break;
-            }
-            case ATK_SCATTER2:
-            {
-                up.z += dist/16;
-                newbouncer(d, from, up, local, id, atk, BNC_GRENADE, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
                 break;
             }
 
@@ -1112,14 +1106,15 @@ namespace game
                 break;
             }
 
-            case ATK_GRENADE:
+            case ATK_GRENADE1:
+            case ATK_GRENADE2:
             {
                 if(d->muzzle.x >= 0 && muzzleflash)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_ELECTRICITY, 0x74BCF9, 2.8f, d);
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_ELECTRICITY, atk == ATK_GRENADE1 ? 0x74BCF9 : 0xF97474, 2.8f, d);
                 }
-                up.z += dist/8;
-                newbouncer(d, from, up, local, id, atk, BNC_GRENADE2, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
+                up.z += dist/(atk == ATK_GRENADE1 ? 8 : 16);
+                newbouncer(d, from, up, local, id, atk, atk == ATK_GRENADE1 ? BNC_GRENADE : BNC_GRENADE2, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
                 break;
             }
 
@@ -1160,7 +1155,7 @@ namespace game
         switch(sound)
         {
             case S_SG1_A:
-            case S_SG2:
+            case S_SG2_A:
             {
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
                 if(d == hud)
@@ -1518,13 +1513,13 @@ namespace game
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
             switch(bnc.bouncetype)
             {
-                case BNC_GRENADE:
+                case BNC_GRENADE2:
                 {
                     adddynlight(pos, 20, vec(1, 0.25f, 0.25f));
                     break;
                 }
 
-                case BNC_GRENADE2:
+                case BNC_GRENADE:
                 {
                     adddynlight(pos, 8, vec(0.25f, 0.25f, 1));
                     break;
@@ -1575,8 +1570,8 @@ namespace game
             {
                 switch(bnc.bouncetype)
                 {
-                    case BNC_GRENADE: mdl = "projectile/grenade"; break;
-                    case BNC_GRENADE2: mdl = "projectile/grenade/v2"; break;
+                    case BNC_GRENADE2: mdl = "projectile/grenade"; break;
+                    case BNC_GRENADE: mdl = "projectile/grenade/v2"; break;
                     case BNC_ROCKET: mdl = "projectile/rocket"; break;
                     default: mdl = "projectile/grenade"; break;
                 }

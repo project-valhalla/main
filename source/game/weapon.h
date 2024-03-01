@@ -40,7 +40,7 @@ enum
     ATK_PULSE1, ATK_PULSE2,
     ATK_ROCKET1, ATK_ROCKET2,
     ATK_RAIL1, ATK_RAIL2,
-    ATK_GRENADE,
+    ATK_GRENADE1, ATK_GRENADE2,
     ATK_PISTOL1, ATK_PISTOL2, ATK_PISTOL_COMBO,
 
     ATK_INSTA, ATK_ZOMBIE,
@@ -70,8 +70,8 @@ static const struct attackinfo
     // melee: default melee for all weapons
     { NULL,        ACT_MELEE,      650,  60,  0,   0, 2,    0,  0,   14,  1,  30,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_HIT_MELEE,       S_HIT_MELEE   },
     // shotgun
-    { GUN_SCATTER, ACT_PRIMARY,    880,   5,  0, 260, 0,    0, 20, 1000, 20,  50,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SG1_A,         S_IMPACT_SG,       S_HIT_WEAPON  },
-    { GUN_SCATTER, ACT_SECONDARY,  600,  65,  0,   0, 2,  180,  0, 2048,  1,  60, 30, 2000, 5, 1.0f,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SG2,           S_ROCKET_EXPLODE,  S_HIT_WEAPON  },
+    { GUN_SCATTER, ACT_PRIMARY,    880,   5,  1, 260, 0,    0, 20, 1000, 20,  50,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SG1_A,         S_IMPACT_SG,       S_HIT_WEAPON  },
+    { GUN_SCATTER, ACT_SECONDARY,  980,   5,  1, 120, 0,    0, 35, 1000, 10,  60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SG2_A,         S_IMPACT_SG,       S_HIT_WEAPON  },
     // smg
     { GUN_SMG,     ACT_PRIMARY,    110,  30, 30,  84, 0,    0,  7, 1000,  1,  20,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON  },
     { GUN_SMG,     ACT_SECONDARY,  160,  35, 40,  30, 0,    0, 10, 1000,  1,  40,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON  },
@@ -85,7 +85,8 @@ static const struct attackinfo
     { GUN_RAIL,    ACT_PRIMARY,   1200,  70, 40,   0, 0,    0, 30, 5000,  1, 110,  0,    0, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN },
     { GUN_RAIL,    ACT_SECONDARY, 1400, 100, 40,   0, 0,    0, 30, 5000,  1, 110,  0,    0, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN },
     // grenade launcher
-    { GUN_GRENADE, ACT_PRIMARY,    650,  90,  0,   0, 0,  200, 10, 1024,  1, 250, 45, 1500, 1, 0.7f, 0.8f, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_GRENADE,       S_GRENADE_EXPLODE, S_HIT_WEAPON  },
+    { GUN_GRENADE, ACT_PRIMARY,    650,  90,  0,   0, 0,  200, 10, 2024,  1, 250, 45, 1500, 1, 0.7f, 0.8f, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_GRENADE,       S_GRENADE_EXPLODE, S_HIT_WEAPON  },
+    { GUN_GRENADE, ACT_SECONDARY,  750,  90,  0,   0, 0,  190, 10, 2024,  1, 200, 35, 2000, 1, 1.0f,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_GRENADE2,      S_GRENADE_EXPLODE, S_HIT_WEAPON  },
     // pistol
     { GUN_PISTOL,  ACT_PRIMARY,    300,  35,  5,  60, 0,    0, 12, 1000,  1, 200,  0,    0, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_PISTOL1,       S_IMPACT_PULSE,    S_HIT_WEAPON  },
     { GUN_PISTOL,  ACT_SECONDARY,  600,  15,  0,   0, 5,  400, 15, 2048,  1, 500,  8, 2000, 2,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_PISTOL2,       S_IMPACT_PULSE,    S_HIT_WEAPON  },
@@ -108,7 +109,7 @@ static const struct guninfo
     { "pulse",      "pulserifle", "weapon/pulserifle/world", { -1, ATK_MELEE,  ATK_PULSE1,   ATK_PULSE2   }, false },
     { "rocket",     "rocket",     "weapon/rocket/world",     { -1, ATK_MELEE,  ATK_ROCKET1,  ATK_ROCKET2  }, false },
     { "railgun",    "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_RAIL1,    ATK_RAIL2    }, true  },
-    { "grenade",    "grenade",    "weapon/grenade/world",    { -1, ATK_MELEE,  ATK_GRENADE,  ATK_GRENADE  }, true  },
+    { "grenade",    "grenade",    "weapon/grenade/world",    { -1, ATK_MELEE,  ATK_GRENADE1, ATK_GRENADE2 }, false },
     { "pistol",     "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1,  ATK_PISTOL2  }, false },
     { "instagun",   "instagun",   "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,    ATK_INSTA    }, true  },
     { "zombie",     "zombie",     "",                        { -1, ATK_ZOMBIE, ATK_ZOMBIE,   ATK_ZOMBIE   }, true  }

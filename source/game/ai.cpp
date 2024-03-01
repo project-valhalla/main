@@ -127,8 +127,8 @@ namespace ai
                 int aiskew = 1;
                 switch(atk)
                 {
-                    case ATK_SCATTER1: aiskew = 10; break;
-                    case ATK_SCATTER2: aiskew = 3; break;
+                    case ATK_SCATTER1:
+                    case ATK_SCATTER2: aiskew = 10; break;
 
                     case ATK_SMG1: aiskew = 50; break;
                     case ATK_SMG2: aiskew = 30; break;
@@ -143,7 +143,8 @@ namespace ai
                     case ATK_RAIL2:
                     case ATK_INSTA: aiskew = 6; break;
 
-                    case ATK_GRENADE: aiskew = 1; break;
+                    case ATK_GRENADE1: aiskew = 1; break;
+                    case ATK_GRENADE2: aiskew = 3; break;
 
                     case ATK_PISTOL1:
                     case ATK_PISTOL2: aiskew = 100; break;

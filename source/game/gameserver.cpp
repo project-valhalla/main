@@ -2418,7 +2418,7 @@ namespace server
         if(numclients(-1, true, false) <= 1)
         {
             if(!gamewaiting) gamewaiting = true;
-            return;
+            if(!timeisup) return;
         }
         int survivors = 0, hunters = 0;
         if(!m_elimination) loopv(clients)

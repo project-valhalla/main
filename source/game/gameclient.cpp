@@ -433,6 +433,13 @@ namespace game
     }
     ICOMMAND(isspectator, "b", (int *cn), intret(isspectator(*cn) ? 1 : 0));
 
+    bool isghost(int cn)
+    {
+        gameent *d = cn < 0 ? self : getclient(cn);
+        return d && d->state==CS_SPECTATOR && d->ghost;
+    }
+    ICOMMAND(isghost, "b", (int *cn), intret(isghost(*cn) ? 1 : 0));
+
     ICOMMAND(islagged, "i", (int *cn),
     {
         gameent *d = getclient(*cn);

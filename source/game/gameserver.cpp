@@ -845,7 +845,7 @@ namespace server
         resetitems();
     }
 
-    int numclients(int exclude = -1, bool nospec = true, bool noai = true, bool priv = false)
+    int numclients(int exclude = -1, bool excludespec = true, bool excludeai = true, bool priv = false)
     {
         int n = 0;
         loopv(clients)
@@ -853,10 +853,8 @@ namespace server
             clientinfo *ci = clients[i];
             if(ci->clientnum != exclude)
             {
-                if(nospec && ci->state.state == CS_SPECTATOR && !ci->ghost) {
-                    continue;
-                }
-                if(!priv || (priv && (ci->privilege || ci->local)) || !noai || (noai && ci->state.aitype == AI_NONE))
+                if(excludespec && ci->state.state == CS_SPECTATOR && !ci->ghost) continue;
+                if(!priv || (priv && (ci->privilege || ci->local)) || !excludeai || (excludeai && ci->state.aitype == AI_NONE))
                 {
                     n++;
                 }
@@ -2322,6 +2320,7 @@ namespace server
             loopi(np) chooserandomclient();
             hunterchosen = true;
             betweenrounds = false;
+            if(!gamewaiting) checkplayers();
         }
     }
 
@@ -2415,11 +2414,7 @@ namespace server
     void checkplayers(bool timeisup)
     {
         if(!m_round || betweenrounds) return;
-        if(numclients(-1, true, false) <= 1)
-        {
-            if(!gamewaiting) gamewaiting = true;
-            if(!timeisup) return;
-        }
+        if(numclients(-1, true, false) <= 1 && !gamewaiting) gamewaiting = true;
         int survivors = 0, hunters = 0;
         if(!m_elimination) loopv(clients)
         {
@@ -3305,6 +3300,7 @@ namespace server
         sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 0, ci->ghost);
         if(ci->clientmap[0] || ci->mapcrc) checkmaps();
         if(!hasmap(ci)) rotatemap(true);
+        checkplayers();
     }
 
     void sendservinfo(clientinfo *ci)

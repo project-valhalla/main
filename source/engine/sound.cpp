@@ -130,7 +130,7 @@ VARFP(soundvol, 0, 200, 255, if(!soundvol)
 });
 VARFP(announcervol, 0, 220, 255, { if(!announcervol) stopchannels(SND_ANNOUNCER); });
 VARFP(uivol, 0, 200, 255, { if(!announcervol) stopchannels(SND_UI); });
-VARFP(musicvol, 0, 60, 255, setmusicvol(soundvol ? musicvol : 0));
+VARFP(musicvol, 0, 45, 255, setmusicvol(soundvol ? musicvol : 0));
 VARFP(ambientsounds, 0, 1, 1, if(!ambientsounds) { stopmapsounds(); });
 
 char *musicfile = NULL, *musicdonecmd = NULL;

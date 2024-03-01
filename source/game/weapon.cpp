@@ -1310,17 +1310,7 @@ namespace game
     void hitscan(vec &from, vec &to, gameent *d, int atk)
     {
         int maxrays = attacks[atk].rays;
-        if(server::betweenrounds)
-        {
-            if(maxrays > 1) { loopi(maxrays) rayhit(atk, d, from, rays[i]); }
-            else rayhit(atk, d, from, to);
-            return;
-        }
-
-        if(scanprojs(from, to, d, atk))
-        {
-            return;
-        }
+        if(scanprojs(from, to, d, atk)) return;
         dynent *o;
         float dist;
         int margin = attacks[atk].margin, damage = attacks[atk].damage, flags = HIT_TORSO;
@@ -1351,14 +1341,8 @@ namespace game
                 }
                 if(attacks[atk].headshotdam) // if an attack does not have headshot damage, then it does not deal locational damage
                 {
-                    if(hithead)
-                    {
-                        flags |= HIT_HEAD;
-                    }
-                    if(hitlegs)
-                    {
-                        flags |= HIT_LEGS;
-                    }
+                    if(hithead) flags |= HIT_HEAD;
+                    if(hitlegs) flags |= HIT_LEGS;
                 }
                 damage = calcdamage(damage, (gameent *)o, d, atk, flags);
                 calcpush(numhits*damage, o, d, from, to, atk, numhits, flags);
@@ -1375,14 +1359,8 @@ namespace game
                 rayhit(atk, d, from, to, true);
                 if(attacks[atk].headshotdam) // if an attack does not have headshot damage, then it does not deal locational damage
                 {
-                    if(hithead)
-                    {
-                        flags |= HIT_HEAD;
-                    }
-                    else if(hitlegs)
-                    {
-                        flags |= HIT_LEGS;
-                    }
+                    if(hithead) flags = HIT_HEAD;
+                    else if(hitlegs) flags = HIT_LEGS;
                 }
                 damage = calcdamage(damage, (gameent *)o, d, atk, flags);
                 calcpush(damage, o, d, from, to, atk, 1, flags);

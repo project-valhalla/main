@@ -451,8 +451,7 @@ namespace game
 
     bool shoulddrawzoom()
     {
-        return zoom && guns[self->gunselect].haszoom
-               && (self->state == CS_ALIVE || self->state == CS_LAGGED);
+        return zoom && guns[self->gunselect].haszoom && self->state != CS_DEAD && self->state != CS_SPECTATOR && self->state != CS_EDITING;
     }
 
     FVARP(damagerolldiv, 0, 4.0f, 5.0f);

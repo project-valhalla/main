@@ -293,7 +293,7 @@ namespace server
 
         bool checkexceeded()
         {
-            return false; //return state.state==CS_ALIVE && exceeded && gamemillis > exceeded + calcpushrange();
+            return state.state==CS_ALIVE && exceeded && gamemillis > exceeded + calcpushrange();
         }
 
         void mapchange()
@@ -3750,7 +3750,7 @@ namespace server
                 {
                     if((!ci->local || demorecord || hasnonlocalclients()) && (cp->state.state==CS_ALIVE || cp->state.state==CS_EDITING))
                     {
-                        if(!ci->local && !m_edit && max(vel.magnitude2(), (float)fabs(vel.z)) >= 180)
+                        if(!ci->local && !m_edit && max(vel.magnitude2(), (float)fabs(vel.z)) >= 200)
                             cp->setexceeded();
                         cp->position.setsize(0);
                         while(curmsg<p.length()) cp->position.add(p.buf[curmsg++]);

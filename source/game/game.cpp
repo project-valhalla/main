@@ -824,7 +824,7 @@ namespace game
             cmode->setup();
         }
 
-        const char *info = m_valid(gamemode) && !m_tutorial ? gamemodes[gamemode - STARTGAMEMODE].info : NULL;
+        const char *info = !m_tutorial && m_valid(gamemode) ? gamemodes[gamemode - STARTGAMEMODE].info : NULL;
         if(showmodeinfo && info)
         {
             conoutf("%s", info);
@@ -860,7 +860,7 @@ namespace game
 
     const char *getmapinfo()
     {
-        bool hasmodeinfo = showmodeinfo && m_valid(gamemode);
+        bool hasmodeinfo = !m_tutorial && showmodeinfo && m_valid(gamemode);
         static char info[1000];
         info[0] = '\0';
         if(hasmodeinfo) strcat(info, gamemodes[gamemode - STARTGAMEMODE].info);
@@ -869,7 +869,7 @@ namespace game
              if(hasmodeinfo) strcat(info, "\n\n");
              strcat(info, tips[rnd(tips.length())]);
         }
-        return showmodeinfo && m_valid(gamemode) ? info : NULL;
+        return hasmodeinfo ? info : NULL;
     }
 
     const char *getscreenshotinfo()

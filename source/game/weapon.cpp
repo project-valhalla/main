@@ -1230,8 +1230,7 @@ namespace game
     bool isheadhitbox(dynent *d, const vec &from, const vec &to, float dist)
     {
         vec bottom(d->head), top(d->head);
-        bottom.z -= d->aboveeye - d->headradius;
-        top.z += d->aboveeye;
+        top.z += d->headradius;
         return linecylinderintersect(from, to, bottom, top, d->headradius, dist);
     }
 

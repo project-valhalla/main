@@ -1080,7 +1080,6 @@ namespace game
                 if(pl->suicided!=seq) { addmsg(N_SUICIDE, "rc", pl); pl->suicided = seq; }
             }
             pl->deathtype = mapdeath;
-            pl->stoppowerupsound();
         }
         else if(d->type==ENT_AI) suicidemonster((monster *)d);
     }

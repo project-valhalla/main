@@ -81,11 +81,11 @@ namespace game
 
     static const playermodelinfo playermodels[5] =
     {
-        { "player/bones",         "player/bones/arm", { "cosmetic/skull", "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE,         },
-        { "player/bonnie",        "player/bones/arm", { "cosmetic/skull", "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
-        { "player/bones/zombie",  "player/bones/arm", { NULL,             NULL,              NULL,               NULL,              NULL             }, true, 0xFF90FF,  S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
-        { "player/bonnie/zombie", "player/bones/arm", { NULL,             NULL,              NULL,               NULL,              NULL,            }, true, 0xFF90FF,  S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
-        { "player/juggernaut",    NULL,               { NULL,             NULL,              NULL,               NULL,              NULL,            }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
+        { "player/bones",         "player/bones/arm", { "cosmetic/skull",           "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE,         },
+        { "player/bonnie",        "player/bones/arm", { "cosmetic/skull",           "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
+        { "player/bones/zombie",  "player/bones/arm", { NULL,                       NULL,              NULL,               NULL,              NULL             }, true, 0xFF90FF,  S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
+        { "player/bonnie/zombie", "player/bones/arm", { NULL,                       NULL,              NULL,               NULL,              NULL,            }, true, 0xFF90FF,  S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
+        { "player/juggernaut",    NULL,               { "player/juggernaut/helmet", NULL,              NULL,               NULL,              NULL,            }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
     };
 
     extern void changedplayermodel();
@@ -265,10 +265,17 @@ namespace game
             a[ai++] = modelattach("tag_rfoot", &d->rfoot);
             a[ai++] = modelattach("tag_lfoot", &d->lfoot);
         }
-        if(d->state != CS_SPECTATOR && d->powerupmillis && !d->haspowerup(PU_INVULNERABILITY))
+        if(d->state != CS_SPECTATOR)
         {
-            int type = clamp(d->poweruptype, (int)PU_DAMAGE, (int)PU_AGILITY);
-            a[ai++] = modelattach(d->haspowerup(PU_AGILITY) ? "tag_back" : "tag_hat", playermodel.powerup[type-1], ANIM_MAPMODEL|ANIM_LOOP, 0);
+            if(d->role == ROLE_JUGGERNAUT)
+            {
+                a[ai++] = modelattach("tag_hat", playermodel.powerup[0], ANIM_MAPMODEL|ANIM_LOOP, 0);
+            }
+            else if(d->powerupmillis && !d->haspowerup(PU_INVULNERABILITY))
+            {
+                int type = clamp(d->poweruptype, (int)PU_DAMAGE, (int)PU_AGILITY);
+                a[ai++] = modelattach(d->haspowerup(PU_AGILITY) ? "tag_back" : "tag_hat", playermodel.powerup[type-1], ANIM_MAPMODEL|ANIM_LOOP, 0);
+            }
         }
         float yaw = testanims && d==self ? 0 : d->yaw,
               pitch = testpitch && d==self ? testpitch : d->pitch;

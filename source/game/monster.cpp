@@ -287,7 +287,11 @@ namespace game
 
     void preloadmonsters()
     {
-        loopi(NUMMONSTERS) preloadmodel(monstertypes[i].mdlname);
+        loopi(NUMMONSTERS)
+        {
+            preloadmodel(monstertypes[i].mdlname);
+            if(monstertypes[i].worldgunmodel) preloadmodel(monstertypes[i].worldgunmodel);
+        }
     }
 
     vector<monster *> monsters;

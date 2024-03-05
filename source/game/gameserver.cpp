@@ -1948,6 +1948,7 @@ namespace server
         sendstring(smapname, p);
         putint(p, gamemode);
         putint(p, mutators);
+        putint(p, gamescorelimit);
         putint(p, notgotitems ? 1 : 0);
         if(!ci || (gamelimit && m_timed && smapname[0]))
         {
@@ -2574,7 +2575,7 @@ namespace server
 
         if(!m_mp(gamemode)) kicknonlocalclients(DISC_LOCAL);
 
-        sendf(-1, 1, "risi3", N_MAPCHANGE, smapname, gamemode, mutators, 1);
+        sendf(-1, 1, "risi4", N_MAPCHANGE, smapname, gamemode, mutators, gamescorelimit, 1);
 
         clearteaminfo();
         if(m_teammode) autoteam();

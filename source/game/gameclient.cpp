@@ -656,9 +656,10 @@ namespace game
 
     int gamemode = INT_MAX, nextmode = INT_MAX;
     int mutators = 0, nextmutators = 0;
+    int scorelimit = 0;
     string clientmap = "";
 
-    void changemapserv(const char *name, int mode, int mut)        // forced map change from the server
+    void changemapserv(const char *name, int mode, int mut, int _scorelimit) // forced map change from the server
     {
         if(multiplayer(false) && !m_mp(mode))
         {
@@ -669,6 +670,7 @@ namespace game
         gamemode = mode;
         nextmode = mode;
         mutators = nextmutators = mut;
+        scorelimit = _scorelimit;
         if(editmode) toggleedit();
         if(m_demo) { entities::resetspawns(); return; }
         if((m_edit && !name[0]) || !load_world(name))
@@ -720,7 +722,7 @@ namespace game
     });
     ICOMMAND(isgamewaiting, "", (), intret(server::gamewaiting ? 1 : 0));
     ICOMMAND(intermission, "", (), intret(intermission ? 1 : 0));
-    ICOMMAND(getscorelimit, "", (), intret(server::gamescorelimit));
+    ICOMMAND(getscorelimit, "", (), intret(scorelimit));
 
     ICOMMANDS("m_ctf", "i", (int *mode), { int gamemode = *mode; intret(m_ctf); });
     ICOMMANDS("m_teammode", "i", (int *mode), { int gamemode = *mode; intret(m_teammode); });
@@ -1610,8 +1612,8 @@ namespace game
             case N_MAPCHANGE:
             {
                 getstring(text, p);
-                int mode = getint(p), muts = getint(p), items = getint(p);
-                changemapserv(text, mode, muts);
+                int mode = getint(p), muts = getint(p), scorelimit = getint(p), items = getint(p);
+                changemapserv(text, mode, muts, scorelimit);
                 mapchanged = true;
                 if(items) entities::spawnitems();
                 else senditemstoserver = false;

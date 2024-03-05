@@ -63,7 +63,7 @@ void addban(vector<ipmask> &bans, const char *name)
 {
     ipmask ban;
     ban.parse(name);
-    bans.add(ban); 
+    bans.add(ban);
 }
 ICOMMAND(ban, "s", (char *name), addban(bans, name));
 ICOMMAND(servban, "s", (char *name), addban(servbans, name));
@@ -263,7 +263,7 @@ void gengbanlist()
     loopv(gbans)
     {
         ipmask &b = gbans[i];
-        l->buf.put(cmd, cmdlen + b.print(&cmd[cmdlen]));        
+        l->buf.put(cmd, cmdlen + b.print(&cmd[cmdlen]));
         l->buf.add('\n');
     }
     if(gbanlists.length() && gbanlists.last()->equals(*l))
@@ -297,8 +297,8 @@ void addgameserver(client &c)
     loopv(gameservers)
     {
         gameserver &s = *gameservers[i];
-        if(s.address.host != c.address.host) continue; 
-        ++dups; 
+        if(s.address.host != c.address.host) continue;
+        ++dups;
         if(s.port == c.servport)
         {
             s.lastping = 0;
@@ -686,7 +686,7 @@ int main(int argc, char **argv)
     atexit(enet_deinitialize);
 
     const char *dir = "", *ip = NULL;
-    int port = 41999;
+    int port = 21215;
     if(argc>=2) dir = argv[1];
     if(argc>=3) port = atoi(argv[2]);
     if(argc>=4) ip = argv[3];

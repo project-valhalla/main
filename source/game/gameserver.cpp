@@ -4519,7 +4519,7 @@ namespace server
 
     int laninfoport() { return VALHALLA_LANINFO_PORT; }
     int serverport() { return VALHALLA_SERVER_PORT; }
-    const char *defaultmaster() { return "178.62.211.231"; }
+    const char *defaultmaster() { return "193.70.114.252"; }
     int masterport() { return VALHALLA_MASTER_PORT; }
     int numchannels() { return 3; }
 

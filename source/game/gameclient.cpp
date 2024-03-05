@@ -389,12 +389,11 @@ namespace game
         if(d) intret(d->powerupmillis);
     });
 
-    bool isholdingflag(int cn)
+    ICOMMAND(getclientflag, "i", (int *cn),
     {
-        gameent *d = cn < 0 ? self : getclient(cn);
-        return d && d->holdingflag > 0;
-    }
-    ICOMMAND(isholdingflag, "b", (int *cn), intret(isholdingflag(*cn) ? 1 : 0));
+        gameent *d = getclient(*cn);
+        if(d) intret(d->holdingflag);
+    });
 
     ICOMMAND(getclientprivilege, "i", (int *cn),
     {

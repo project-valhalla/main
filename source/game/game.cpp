@@ -276,7 +276,7 @@ namespace game
 
         physicsframe();
         ai::navigate();
-        if(self->state != CS_DEAD && !intermission)
+        if(self->state == CS_ALIVE && !intermission)
         {
             if(self->powerupmillis || self->role == ROLE_BERSERKER)
             {
@@ -1079,7 +1079,8 @@ namespace game
                 int seq = (pl->lifesequence<<16)|((lastmillis/1000)&0xFFFF);
                 if(pl->suicided!=seq) { addmsg(N_SUICIDE, "rc", pl); pl->suicided = seq; }
             }
-            ((gameent *)d)->deathtype = mapdeath;
+            pl->deathtype = mapdeath;
+            pl->stoppowerupsound();
         }
         else if(d->type==ENT_AI) suicidemonster((monster *)d);
     }

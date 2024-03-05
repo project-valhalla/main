@@ -85,7 +85,7 @@ namespace game
         { "player/bonnie",        "player/bones/arm", { "cosmetic/skull",           "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
         { "player/bones/zombie",  "player/bones/arm", { NULL,                       NULL,              NULL,               NULL,              NULL             }, true, 0xFF90FF,  S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
         { "player/bonnie/zombie", "player/bones/arm", { NULL,                       NULL,              NULL,               NULL,              NULL,            }, true, 0xFF90FF,  S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
-        { "player/juggernaut",    NULL,               { "player/juggernaut/helmet", NULL,              NULL,               NULL,              NULL,            }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
+        { "player/berserker",    NULL,                { "player/berserker/helmet",  NULL,              NULL,               NULL,              NULL,            }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
     };
 
     extern void changedplayermodel();
@@ -106,7 +106,7 @@ namespace game
     int getplayermodel(gameent *d)
     {
         int model = d==self || forceplayermodels ? playermodel : d->playermodel;
-        if(d->role == ROLE_JUGGERNAUT) return 4;
+        if(d->role == ROLE_BERSERKER) return 4;
         else if(d->role == ROLE_ZOMBIE) return model == 0 ? 2 : 3;
         else return model;
     }
@@ -267,7 +267,7 @@ namespace game
         }
         if(d->state != CS_SPECTATOR)
         {
-            if(d->role == ROLE_JUGGERNAUT)
+            if(d->role == ROLE_BERSERKER)
             {
                 a[ai++] = modelattach("tag_hat", playermodel.powerup[0], ANIM_MAPMODEL|ANIM_LOOP, 0);
             }
@@ -403,7 +403,7 @@ namespace game
     void booteffect(gameent *d)
     {
         if(d == followingplayer(self) && !isthirdperson()) return;
-        if(d->timeinair > 650 && (d->haspowerup(PU_AGILITY) || d->role == ROLE_JUGGERNAUT || d->role == ROLE_ZOMBIE))
+        if(d->timeinair > 650 && (d->haspowerup(PU_AGILITY) || d->role == ROLE_BERSERKER || d->role == ROLE_ZOMBIE))
         {
             if(d->lastfootright.z >= 0) particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.3f);
             if(d->lastfootleft.z >= 0) particle_flare(d->lastfootleft, d->lfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.3f);
@@ -443,7 +443,7 @@ namespace game
                             particle_icon_mark(d->abovehead(), 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
                         }
                     }
-                    else if(d->role == ROLE_JUGGERNAUT) particle_icon_mark(d->abovehead(), 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
+                    else if(d->role == ROLE_BERSERKER) particle_icon_mark(d->abovehead(), 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
                     if(d->haspowerup(PU_INVULNERABILITY)) particle_icon_mark(d->o, 0, 1, PART_GAME_ICONS, 1, 0xF9B303, 4.0f);
                 }
                 else if(d->state == CS_ALIVE && !hidenames()) particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);

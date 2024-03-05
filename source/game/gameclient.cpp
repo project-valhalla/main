@@ -727,7 +727,7 @@ namespace game
     ICOMMANDS("m_teammode", "i", (int *mode), { int gamemode = *mode; intret(m_teammode); });
     ICOMMANDS("m_elim", "i", (int *mode), { int gamemode = *mode; intret(m_elimination); });
     ICOMMANDS("m_lms", "i", (int *mode), { int gamemode = *mode; intret(m_lms); });
-    ICOMMANDS("m_jugg", "i", (int *mode), { int gamemode = *mode; intret(m_juggernaut); });
+    ICOMMANDS("m_berserk", "i", (int *mode), { int gamemode = *mode; intret(m_berserker); });
     ICOMMANDS("m_infect", "i", (int *mode), { int gamemode = *mode; intret(m_infection); });
     ICOMMANDS("m_invasion", "i", (int *mode), { int gamemode = *mode; intret(m_invasion); });
     ICOMMANDS("m_betrayal", "i", (int *mode), { int gamemode = *mode; intret(m_betrayal); });
@@ -1129,7 +1129,7 @@ namespace game
 
     void voicecom(int sound, char *text, bool isteam)
     {
-        if(!text || !text[0] || (self->role >= ROLE_JUGGERNAUT && self->role <= ROLE_ZOMBIE)) return;
+        if(!text || !text[0] || (self->role >= ROLE_BERSERKER && self->role <= ROLE_ZOMBIE)) return;
         if(!lastvoicecom || lastmillis - lastvoicecom > VOICECOM_DELAY)
         {
             if(!isteam || (isteam && !m_teammode))
@@ -1771,7 +1771,7 @@ namespace game
                 if(!s || !validatk(atk)) break;
                 int gun = attacks[atk].gun;
                 if(gun >= 0) s->gunselect = gun;
-                if(!s->haspowerup(PU_AMMO) && s->role != ROLE_JUGGERNAUT)
+                if(!s->haspowerup(PU_AMMO) && s->role != ROLE_BERSERKER)
                 {
                     s->ammo[gun] -= attacks[atk].use;
                 }
@@ -2204,14 +2204,14 @@ namespace game
                 gameent *d = getclient(tcn),
                         *actor = getclient(acn);
                 if(!d) break;
-                if(role == ROLE_JUGGERNAUT)
+                if(role == ROLE_BERSERKER)
                 {
-                    if(!m_juggernaut) break;
-                    d->makejuggernaut();
+                    if(!m_berserker) break;
+                    d->makeberserker();
                     d->stoppowerupsound();
-                    conoutf(CON_GAMEINFO, "%s \f2is the juggernaut", colorname(d));
+                    conoutf(CON_GAMEINFO, "%s \f2is the berserker!", colorname(d));
                     if(d == self) thirdperson = 1;
-                    playsound(S_JUGGERNAUT, d);
+                    playsound(S_BERSERKER, d);
                     particle_flare(d->o, d->o, 350, PART_COMICS, 0xFFFFFF, 20.0f);
                 }
                 else if(role == ROLE_ZOMBIE)

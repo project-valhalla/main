@@ -10,7 +10,7 @@ enum
     M_LOBBY       = 1<<6,
     M_ELIMINATION = 1<<7,
     M_LASTMAN     = 1<<8,
-    M_JUGGERNAUT  = 1<<9,
+    m_berserker  = 1<<9,
     M_INFECTION   = 1<<10,
     M_INVASION    = 1<<11,
     M_BETRAYAL    = 1<<12,
@@ -24,18 +24,18 @@ static struct gamemodeinfo
     const char *info;
 } gamemodes[] =
 {
-    { "demo", "Demo",             M_DEMO | M_LOCAL,       NULL                                                                                                          },
-    { "edit", "Edit",             M_EDIT,                 "\f2Cooperative Editing\ff: edit maps with multiple players simultaneously"                                   },
-    { "dm", "Deathmatch",         M_LOBBY,                "\f2Deathmatch\ff: kill everyone to score points"                                                             },
-    { "tdm", "Team Deathmatch",   M_TEAM,                 "\f2Team Deathmatch\ff: kill the enemy team to score points for your team"                                    },
-    { "ctf", "Capture The Flag",  M_CTF | M_TEAM,         "\f2Capture The Flag\ff: capture the enemy flag and bring it back to your flag to score points for your team" },
-    { "elim", "Elimination",      M_ELIMINATION | M_TEAM, "\f2Elimination\ff: eliminate the enemy team to win the round and score points for your team"                 },
-    { "lms", "Last Man Standing", M_LASTMAN,              "\f2Last Man Standing\ff: eliminate everyone to win the round and score points"                               },
-    { "jugg", "Juggernaut",       M_JUGGERNAUT,           "\f2Juggernaut\ff: kill the juggernaut to become the juggernaut and score points"                             },
-    { "infect", "Infection",      M_INFECTION,            "\f2Infection\ff: survive the infection or infect survivors to score points"                                  },
-    { "invasion", "Invasion",     M_INVASION | M_LOCAL,   "\f2Invasion\ff: survive waves of monsters to score points"                                                   },
-    { "betrayal", "Betrayal",     M_BETRAYAL,             "\f2Betrayal\ff: survive the traitor as a victim or kill victims as a traitor to score points"                },
-    { "tutorial", "Tutorial",     M_SP | M_LOCAL,         ""                                                                                                            }
+    { "demo",     "Demo",              M_DEMO | M_LOCAL,       NULL                                                                                                          },
+    { "edit",     "Edit",              M_EDIT,                 "\f2Cooperative Editing\ff: edit maps with multiple players simultaneously"                                   },
+    { "dm",       "Deathmatch",        M_LOBBY,                "\f2Deathmatch\ff: kill everyone to score points"                                                             },
+    { "tdm",      "Team Deathmatch",   M_TEAM,                 "\f2Team Deathmatch\ff: kill the enemy team to score points for your team"                                    },
+    { "ctf",      "Capture The Flag",  M_CTF | M_TEAM,         "\f2Capture The Flag\ff: capture the enemy flag and bring it back to your flag to score points for your team" },
+    { "elim",     "Elimination",       M_ELIMINATION | M_TEAM, "\f2Elimination\ff: eliminate the enemy team to win the round and score points for your team"                 },
+    { "lms",      "Last Man Standing", M_LASTMAN,              "\f2Last Man Standing\ff: eliminate everyone to win the round and score points"                               },
+    { "bers",     "Berserker",         m_berserker,           "\f2Berserker\ff: kill to claim the Berserker title, score points and dominate the arena"                     },
+    { "infect",   "Infection",         M_INFECTION,            "\f2Infection\ff: survive the infection or infect survivors to score points"                                  },
+    { "invasion", "Invasion",          M_INVASION | M_LOCAL,   "\f2Invasion\ff: survive waves of monsters to score points"                                                   },
+    { "betrayal", "Betrayal",          M_BETRAYAL,             "\f2Betrayal\ff: survive the traitor as a victim or kill victims as a traitor to score points"                },
+    { "tutorial", "Tutorial",          M_SP | M_LOCAL,         NULL                                                                                                          }
 };
 
 #define STARTGAMEMODE (-1)
@@ -53,7 +53,7 @@ static struct gamemodeinfo
 #define m_round           (m_check(gamemode, M_ELIMINATION|M_LASTMAN|M_INFECTION|M_BETRAYAL))
 #define m_dm              (m_checknot(gamemode, M_EDIT|M_CTF|M_ELIMINATION|M_LASTMAN|M_INFECTION|M_BETRAYAL))
 #define m_lms             (m_check(gamemode, M_LASTMAN))
-#define m_juggernaut      (m_check(gamemode, M_JUGGERNAUT))
+#define m_berserker      (m_check(gamemode, m_berserker))
 #define m_infection       (m_check(gamemode, M_INFECTION))
 #define m_betrayal        (m_check(gamemode, M_BETRAYAL))
 
@@ -120,7 +120,7 @@ inline const int maximumhealth(bool iszombie)
 enum
 {
     ROLE_NONE = 0,
-    ROLE_JUGGERNAUT,
+    ROLE_BERSERKER,
     ROLE_ZOMBIE,
     ROLE_TRAITOR
 };

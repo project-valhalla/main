@@ -235,7 +235,7 @@ namespace game
             else if(!intermission && d->state==CS_ALIVE)
             {
                 if(lastmillis - d->lastaction >= d->gunwait) d->gunwait = 0;
-                if(d->powerupmillis || d->role == ROLE_JUGGERNAUT)
+                if(d->powerupmillis || d->role == ROLE_BERSERKER)
                 {
                     entities::updatepowerups(curtime, d);
                 }
@@ -278,7 +278,7 @@ namespace game
         ai::navigate();
         if(self->state != CS_DEAD && !intermission)
         {
-            if(self->powerupmillis || self->role == ROLE_JUGGERNAUT)
+            if(self->powerupmillis || self->role == ROLE_BERSERKER)
             {
                 entities::updatepowerups(curtime, self);
             }
@@ -443,7 +443,7 @@ namespace game
 
     bool allowthirdperson()
     {
-        return self->state==CS_SPECTATOR || m_edit || (m_juggernaut && self->role == ROLE_JUGGERNAUT);
+        return self->state==CS_SPECTATOR || m_edit || (m_berserker && self->role == ROLE_BERSERKER);
     }
     ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
 
@@ -681,7 +681,7 @@ namespace game
         }
         if(actor == followingplayer(self) && actor != d)
         {
-           if(actor->role == ROLE_JUGGERNAUT) playsound(S_JUGGERNAUT);
+           if(actor->role == ROLE_BERSERKER) playsound(S_BERSERKER);
            else if(killsound) playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
         }
         // update player state and reset ai
@@ -824,7 +824,7 @@ namespace game
             cmode->setup();
         }
 
-        const char *info = m_valid(gamemode) ? gamemodes[gamemode - STARTGAMEMODE].info : NULL;
+        const char *info = m_valid(gamemode) && !m_tutorial ? gamemodes[gamemode - STARTGAMEMODE].info : NULL;
         if(showmodeinfo && info)
         {
             conoutf("%s", info);
@@ -1145,8 +1145,8 @@ namespace game
     {
         switch(n)
         {
-            case S_JUGGERNAUT:
-            case S_JUGGERNAUT_LOOP:
+            case S_BERSERKER:
+            case S_BERSERKER_LOOP:
             case S_ROCKET_EXPLODE:
                 return 600;
 

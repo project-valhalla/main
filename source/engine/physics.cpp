@@ -1696,14 +1696,14 @@ VAR(floatspeed, 1, 100, 10000);
 
 bool canjump(gameent *d)
 {
-    return d->physstate >= PHYS_SLOPE || ((d->haspowerup(PU_AGILITY) || d->role == ROLE_ZOMBIE || d->role == ROLE_JUGGERNAUT) && !d->doublejumping);
+    return d->physstate >= PHYS_SLOPE || ((d->haspowerup(PU_AGILITY) || d->role == ROLE_ZOMBIE || d->role == ROLE_BERSERKER) && !d->doublejumping);
 }
 
 float calcspeed(gameent *d)
 {
     float speed = d->speed;
     if(d->haspowerup(PU_AGILITY)) speed += (d->powerupmillis/1000);
-    else if(d->role == ROLE_ZOMBIE || d->role == ROLE_JUGGERNAUT) speed += 10.0f; // speed bonus
+    else if(d->role == ROLE_ZOMBIE || d->role == ROLE_BERSERKER) speed += 10.0f; // speed bonus
     return speed;
 }
 

@@ -149,7 +149,7 @@ enum
 
     // mode
     S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET, S_FLAGFAIL, S_FLAGLOOP,
-    S_JUGGERNAUT, S_JUGGERNAUT_LOOP, S_JUGGERNAUT_ACTION,
+    S_BERSERKER, S_BERSERKER_LOOP, S_BERSERKER_ACTION,
     S_INFECTION, S_INFECTED, S_WIN_ZOMBIES, S_WIN_SURVIVORS,
     S_ROUND, S_ROUND_WIN,
     S_VOOSH,
@@ -257,7 +257,7 @@ struct gamestate
 
     bool canpickup(int type)
     {
-        if(!validitem(type) || role == ROLE_JUGGERNAUT || role == ROLE_ZOMBIE) return false;
+        if(!validitem(type) || role == ROLE_BERSERKER || role == ROLE_ZOMBIE) return false;
         itemstat &is = itemstats[type-I_AMMO_SG];
         switch(type)
         {
@@ -289,7 +289,7 @@ struct gamestate
 
     void pickup(int type)
     {
-        if(!validitem(type) || role == ROLE_JUGGERNAUT || role == ROLE_ZOMBIE) return;
+        if(!validitem(type) || role == ROLE_BERSERKER || role == ROLE_ZOMBIE) return;
         itemstat &is = itemstats[type-I_AMMO_SG];
         switch(type)
         {
@@ -370,9 +370,9 @@ struct gamestate
         gunselect = GUN_ZOMBIE;
     }
 
-    void makejuggernaut()
+    void makeberserker()
     {
-        role = ROLE_JUGGERNAUT;
+        role = ROLE_BERSERKER;
         maxhealth = health = maxhealth*2;
         loopi(NUMGUNS)
         {

@@ -124,6 +124,6 @@ enum
     KILL_UNSTOPPABLE = 1<<4,
     KILL_LEGENDARY   = 1<<5,
     KILL_HEADSHOT    = 1<<6,
-    KILL_JUGGERNAUT  = 1<<7,
+    KILL_BERSERKER   = 1<<7,
     KILL_TRAITOR     = 1<<8
 };

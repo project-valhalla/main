@@ -608,10 +608,10 @@ namespace game
                 }
                 if (flags & HIT_LEGS) damage /= 2;
             }
-            if (actor->haspowerup(PU_DAMAGE) || actor->role == ROLE_JUGGERNAUT) damage *= 2;
+            if (actor->haspowerup(PU_DAMAGE) || actor->role == ROLE_BERSERKER) damage *= 2;
             if (isally(target, actor) || target == actor) damage /= ALLY_DAMDIV;
         }
-        if (target->haspowerup(PU_ARMOR) || target->role == ROLE_JUGGERNAUT) damage /= 2;
+        if (target->haspowerup(PU_ARMOR) || target->role == ROLE_BERSERKER) damage /= 2;
         if(!damage) damage = 1;
         return damage;
     }
@@ -1188,9 +1188,9 @@ namespace game
         }
         if(lastmillis-prevaction>200 && !looped)
         {
-            if(d->role == ROLE_JUGGERNAUT)
+            if(d->role == ROLE_BERSERKER)
             {
-                playsound(S_JUGGERNAUT_ACTION, d);
+                playsound(S_BERSERKER_ACTION, d);
                 return;
             }
             if(d->haspowerup(PU_DAMAGE) || d->haspowerup(PU_HASTE) || d->haspowerup(PU_AMMO))
@@ -1437,7 +1437,7 @@ namespace game
         }
         if(!attacks[atk].isfullauto) d->attacking = ACT_IDLE;
         int gunwait = attacks[atk].attackdelay;
-        if(d->haspowerup(PU_HASTE) || d->role == ROLE_JUGGERNAUT) gunwait /= 2;
+        if(d->haspowerup(PU_HASTE) || d->role == ROLE_BERSERKER) gunwait /= 2;
         d->gunwait = gunwait;
         if(d->gunselect == GUN_PISTOL && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;

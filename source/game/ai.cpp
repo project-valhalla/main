@@ -765,7 +765,7 @@ namespace ai
                 if(entities::ents.inrange(b.target))
                 {
                     extentity &e = *(extentity *)entities::ents[b.target];
-                    if(!e.spawned() || !validitem(e.type) || d->hasmaxammo(e.type) || d->role == ROLE_JUGGERNAUT || d->role == ROLE_ZOMBIE) return 0;
+                    if(!e.spawned() || !validitem(e.type) || d->hasmaxammo(e.type) || d->role == ROLE_BERSERKER || d->role == ROLE_ZOMBIE) return 0;
                     //if(d->feetpos().squaredist(e.o) <= CLOSEDIST*CLOSEDIST)
                     //{
                     //    b.idle = 1;
@@ -962,7 +962,7 @@ namespace ai
         vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
         bool sequenced = d->ai->blockseq || d->ai->targseq,
              offground = d->timeinair && !d->inwater,
-             doublejump = (d->haspowerup(PU_AGILITY) || d->role == ROLE_JUGGERNAUT || d->role == ROLE_ZOMBIE) && !d->doublejumping,
+             doublejump = (d->haspowerup(PU_AGILITY) || d->role == ROLE_BERSERKER || d->role == ROLE_ZOMBIE) && !d->doublejumping,
              canjump = doublejump || !offground,
              jump = canjump && lastmillis >= d->ai->jumpseed && (sequenced || off.z >= JUMPMIN || lastmillis >= d->ai->jumprand);
         if(jump)
@@ -1317,7 +1317,7 @@ namespace ai
                 if(allowmove && !b.idle) timeouts(d, b);
                 if(d->state==CS_ALIVE && d->role != ROLE_ZOMBIE)
                 {
-                    if(d->powerupmillis || d->role == ROLE_JUGGERNAUT)
+                    if(d->powerupmillis || d->role == ROLE_BERSERKER)
                     {
                         entities::updatepowerups(curtime, d);
                     }

@@ -330,15 +330,15 @@ namespace entities
     void updatepowerups(int time, gameent *d)
     {
         gameent *hud = followingplayer(self);
-        d->powerupsound = d->role == ROLE_JUGGERNAUT ?  S_JUGGERNAUT_LOOP : (S_LOOP_DAMAGE + d->poweruptype-1);
+        d->powerupsound = d->role == ROLE_BERSERKER ?  S_BERSERKER_LOOP : (S_LOOP_DAMAGE + d->poweruptype-1);
         d->powerupchan = playsound(d->powerupsound, NULL, d==hud ? NULL : &d->o, NULL, 0, -1, 200, d->powerupchan);
-        if(m_juggernaut && d->role == ROLE_JUGGERNAUT && !d->powerupmillis) return;
+        if(m_berserker && d->role == ROLE_BERSERKER && !d->powerupmillis) return;
         if((d->powerupmillis -= time)<=0)
         {
             d->powerupmillis = 0;
             playsound(S_TIMEOUT_DAMAGE + d->poweruptype-1, d);
             d->poweruptype = PU_NONE;
-            if(d->role != ROLE_JUGGERNAUT) d->stoppowerupsound();
+            if(d->role != ROLE_BERSERKER) d->stoppowerupsound();
         }
     }
 

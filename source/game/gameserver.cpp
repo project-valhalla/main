@@ -686,7 +686,7 @@ namespace server
 
     bool betweenrounds = false, checkround = false;
 
-    bool nojuggernaut  = true, hunterchosen  = false;
+    bool isberserkerdead  = true, hunterchosen  = false;
 
     struct teamkillkick
     {
@@ -2270,20 +2270,20 @@ namespace server
         return client;
     }
 
-    // function to convert a player to a juggernaut in the same game mode
-    void makejuggernaut(clientinfo *ci)
+    // function to convert a player to a berserker in the same mode
+    void makeberserker(clientinfo *ci)
     {
-        if(!m_juggernaut || !ci || ci->state.state!=CS_ALIVE || !nojuggernaut) return;
-        ci->state.makejuggernaut();
-        sendf(-1, 1, "ri4", N_ASSIGNROLE, ci->clientnum, ci->clientnum, ROLE_JUGGERNAUT);
-        nojuggernaut = false;
+        if(!m_berserker || !ci || ci->state.state!=CS_ALIVE || !isberserkerdead) return;
+        ci->state.makeberserker();
+        sendf(-1, 1, "ri4", N_ASSIGNROLE, ci->clientnum, ci->clientnum, ROLE_BERSERKER);
+        isberserkerdead = false;
     }
 
-    void checkjuggernaut(clientinfo *ci)
+    void checkberserker(clientinfo *ci)
     {
-        if(m_juggernaut && ci->state.role == ROLE_JUGGERNAUT)
+        if(m_berserker && ci->state.role == ROLE_BERSERKER)
         {
-            nojuggernaut = true;
+            isberserkerdead = true;
         }
     }
 
@@ -2563,7 +2563,7 @@ namespace server
         {
             gamewaiting = false;
             if(betweenrounds) betweenrounds = false;
-            if(m_juggernaut) nojuggernaut = true;
+            if(m_berserker) isberserkerdead = true;
         }
 
         if(m_voosh(mutators))
@@ -2731,7 +2731,7 @@ namespace server
         servstate &ts = target->state;
         ts.deaths++;
         ts.spree = 0;
-        int value = (m_juggernaut && target->state.role == ROLE_JUGGERNAUT) ? 5 : 1,
+        int value = (m_berserker && target->state.role == ROLE_BERSERKER) ? 5 : 1,
             fragvalue = smode ? smode->fragvalue(target, actor) : (target==actor || isally(target, actor) ? -1 : value);
         actor->state.frags += fragvalue;
         if(!isally(target, actor))
@@ -2763,15 +2763,15 @@ namespace server
             case 25: actor->state.spree = 5; break; // restarts
         }
         if(flags & HIT_HEAD) kflags |= KILL_HEADSHOT;
-        if(m_juggernaut)
+        if(m_berserker)
         {
-            checkjuggernaut(target);
-            if(target!=actor && (nojuggernaut || target->state.role == ROLE_JUGGERNAUT))
+            checkberserker(target);
+            if(target!=actor && (isberserkerdead || target->state.role == ROLE_BERSERKER))
             {
-                makejuggernaut(actor);
-                kflags |= KILL_JUGGERNAUT;
+                makeberserker(actor);
+                kflags |= KILL_BERSERKER;
             }
-            if(!m_vampire(mutators) && actor->state.role == ROLE_JUGGERNAUT)
+            if(!m_vampire(mutators) && actor->state.role == ROLE_BERSERKER)
             {
                 actor->state.health = min(actor->state.health + 50, maximumhealth(false));
                 sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
@@ -2804,7 +2804,7 @@ namespace server
     {
         servstate &gs = ci->state;
         if(gs.state!=CS_ALIVE) return;
-        checkjuggernaut(ci);
+        checkberserker(ci);
         teaminfo *t = NULL;
         if(!betweenrounds && !hunterchosen && !interm)
         {
@@ -2839,7 +2839,7 @@ namespace server
                 actor->state.damage += damage;
                 if(m_vampire(mutators))
                 {
-                    actor->state.health = min(actor->state.health+damage/(actor->state.role==ROLE_JUGGERNAUT? 2: 1), maximumhealth(actor->state.role == ROLE_ZOMBIE));
+                    actor->state.health = min(actor->state.health+damage/(actor->state.role==ROLE_BERSERKER? 2: 1), maximumhealth(actor->state.role == ROLE_ZOMBIE));
                     sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
                 }
             }
@@ -2898,10 +2898,10 @@ namespace server
                 }
                 if(flags & HIT_LEGS) damage /= 2;
             }
-            if(actor->state.haspowerup(PU_DAMAGE) || actor->state.role == ROLE_JUGGERNAUT) damage *= 2;
+            if(actor->state.haspowerup(PU_DAMAGE) || actor->state.role == ROLE_BERSERKER) damage *= 2;
             if((isally(target, actor) || target == actor) && !m_betrayal) damage /= ALLY_DAMDIV;
         }
-        if (target->state.haspowerup(PU_ARMOR) || target->state.role == ROLE_JUGGERNAUT) damage /= 2;
+        if (target->state.haspowerup(PU_ARMOR) || target->state.role == ROLE_BERSERKER) damage /= 2;
         if(!damage) damage = 1;
         return damage;
     }
@@ -2951,7 +2951,7 @@ namespace server
         gs.lastmove = lastmillis;
         gs.lastatk = atk;
         int gunwait = attacks[atk].attackdelay;
-        if(gs.haspowerup(PU_HASTE) || gs.role == ROLE_JUGGERNAUT)
+        if(gs.haspowerup(PU_HASTE) || gs.role == ROLE_BERSERKER)
         {
             gunwait /= 2;
         }
@@ -3057,18 +3057,18 @@ namespace server
                     }
                     else if(m_round) suicide(ci);
                 }
-                if(!(ci->state.role == ROLE_JUGGERNAUT || ci->state.role == ROLE_ZOMBIE) // zombies and juggernauts are unaffected by this
+                if(!(ci->state.role == ROLE_BERSERKER || ci->state.role == ROLE_ZOMBIE) // zombies and berserker are unaffected by this
                    && ci->state.health > ci->state.maxhealth && lastmillis - ci->state.lastregeneration > 1000)
                 {
                     ci->state.health = max(ci->state.health - 1, ci->state.maxhealth);
                     sendf(-1, 1, "ri3", N_REGENERATE, ci->clientnum, ci->state.health);
                     ci->state.lastregeneration = lastmillis;
                 }
-                if((m_juggernaut && ci->state.role == ROLE_JUGGERNAUT) || m_vampire(mutators))
+                if((m_berserker && ci->state.role == ROLE_BERSERKER) || m_vampire(mutators))
                 {
                     if(lastmillis-ci->state.lastpain > 2800 && lastmillis-ci->state.lastregeneration > 1000)
                     {
-                        int subtract = ci->state.role == ROLE_JUGGERNAUT ? 5 : 1;
+                        int subtract = ci->state.role == ROLE_BERSERKER ? 5 : 1;
                         ci->state.health = max(ci->state.health-subtract, 0);
                         sendf(-1, 1, "ri3", N_REGENERATE, ci->clientnum, ci->state.health);
                         if(ci->state.health<=0) suicide(ci);
@@ -3355,7 +3355,7 @@ namespace server
             if(smode) smode->leavegame(ci, true);
             ci->state.timeplayed += lastmillis - ci->state.lasttimeplayed;
             savescore(ci);
-            checkjuggernaut(ci);
+            checkberserker(ci);
             sendf(-1, 1, "ri2", N_CDIS, n);
             clients.removeobj(ci);
             aimanager::removeai(ci);

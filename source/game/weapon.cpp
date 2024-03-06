@@ -714,7 +714,7 @@ namespace game
                 }
             }
         }
-        if(!local) return;
+        if(betweenrounds || !local) return;
         int numdyn = numdynents();
         loopi(numdyn)
         {

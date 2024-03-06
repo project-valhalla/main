@@ -826,7 +826,6 @@ namespace server
     extern bool gamewaiting, betweenrounds;
 
     extern int msgsizelookup(int msg);
-    extern int gamelimit;
 }
 
 #endif

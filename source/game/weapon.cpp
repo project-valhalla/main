@@ -771,10 +771,7 @@ namespace game
                     projectile &p = projs[i];
                     if(p.owner == d && p.id == id && !p.local)
                     {
-                        if(atk == ATK_PISTOL_COMBO)
-                        {
-                            p.atk = atk;
-                        }
+                        if(atk == ATK_PISTOL_COMBO) p.atk = atk;
                         else if(p.atk != atk) continue;
                         vec pos = vec(p.offset).mul(p.offsetmillis/float(OFFSETMILLIS)).add(p.o);
                         explode(p.local, p.owner, pos, p.dir, NULL, 0, atk);

@@ -489,7 +489,7 @@ struct gameent : dynent, gamestate
     int respawned, suicided;
     int lastpain, lasthurt;
     int lastaction, lastattack, lasthit;
-    int deathattack, deathtype;
+    int deathtype;
     int attacking;
     int lasttaunt, lastfootstep, lastland, lastyelp, lastswitch;
     int lastpickup, lastpickupmillis, flagpickup;
@@ -572,7 +572,7 @@ struct gameent : dynent, gamestate
         gamestate::respawn();
         respawned = suicided = -1;
         lastaction = 0;
-        lastattack = deathattack = -1;
+        lastattack = -1;
         deathtype = 0;
         attacking = ACT_IDLE;
         lasttaunt = 0;

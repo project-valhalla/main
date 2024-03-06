@@ -247,7 +247,7 @@ namespace game
                 lastpain = lastmillis;
                 if(gore && gibbed()) gibeffect(max(-health, 0), vel, this);
                 else playsound(monstertypes[mtype].diesound, this);
-                if(validatk(atk)) deathattack = atk;
+                if(atk == ATK_PISTOL_COMBO) deathtype = DEATH_DISRUPT;
                 monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
             }
             else
@@ -442,6 +442,7 @@ namespace game
 
     void suicidemonster(monster *m)
     {
+        m->deathtype = mapdeath;
         m->monsterpain(400, self, -1, 0);
     }
 

@@ -127,3 +127,12 @@ enum
     KILL_BERSERKER   = 1<<7,
     KILL_TRAITOR     = 1<<8
 };
+
+enum
+{
+    DEATH_FIST = -1,
+    DEATH_DEFAULT = 0,
+    DEATH_GIB,
+    DEATH_FALL,
+    DEATH_DISRUPT
+};

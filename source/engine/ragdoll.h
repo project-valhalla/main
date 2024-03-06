@@ -474,7 +474,7 @@ void ragdolldata::move(dynent *pl, float ts)
     {
         vert &v = verts[i];
         vec dpos = vec(v.pos).sub(v.oldpos);
-        if((d->deathattack == ATK_PISTOL_COMBO && lastmillis - d->lastpain <= 6000) || d->deathtype == 3)
+        if(d->deathtype == DEATH_DISRUPT && lastmillis - d->lastpain <= 6000)
         {
             particle_splash(PART_RING, 1, 100, v.pos, 0x00FFFF, 1.4f, 10, 5);
         }
@@ -540,7 +540,7 @@ void moveragdoll(dynent *d)
         }
     }
 
-    if(((gameent *)d)->deathtype == 2) return;
+    if(((gameent *)d)->deathtype == DEATH_FALL) return;
     vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
     eye.add(d->ragdoll->offset);
     float k = pow(ragdolleyesmooth, float(curtime)/ragdolleyesmoothmillis);

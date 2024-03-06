@@ -517,8 +517,8 @@ namespace game
         stopownersounds(d);
         if(!restore)
         {
-            if(d->deathtype == 1 || (gore && d->gibbed())) gibeffect(max(-d->health, 0), d->vel, d, d->deathtype == 1);
-            else if(attacks[d->deathattack].action != ACT_MELEE)
+            if(d->deathtype == DEATH_GIB || (gore && d->gibbed())) gibeffect(max(-d->health, 0), d->vel, d, d->deathtype == 1);
+            else if(d->deathtype == DEATH_FIST)
             {
                 playsound(getplayermodelinfo(d).diesound, d); // silent melee kills?
             }
@@ -686,7 +686,9 @@ namespace game
            else if(killsound) playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
         }
         // update player state and reset ai
-        d->deathattack = atk;
+        if(attacks[atk].action == ACT_MELEE) d->deathtype = DEATH_FIST;
+        else if(atk == ATK_PISTOL_COMBO) d->deathtype = DEATH_DISRUPT;
+        else if(d == actor && d->deathtype != mapdeath) d->deathtype = mapdeath;
         deathstate(d);
         ai::kill(d, actor);
     }
@@ -1081,7 +1083,7 @@ namespace game
                 int seq = (pl->lifesequence<<16)|((lastmillis/1000)&0xFFFF);
                 if(pl->suicided!=seq) { addmsg(N_SUICIDE, "rc", pl); pl->suicided = seq; }
             }
-            pl->deathtype = mapdeath;
+            if(pl->deathtype != mapdeath) pl->deathtype = mapdeath;
         }
         else if(d->type==ENT_AI) suicidemonster((monster *)d);
     }

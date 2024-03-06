@@ -58,6 +58,11 @@ namespace entities
         return true;
     }
 
+    bool allowpickup()
+    {
+        return !((!m_infection && !m_betrayal && betweenrounds) || (m_hunt && hunterchosen && betweenrounds));
+    }
+
     void preloadentities()
     {
         loopi(MAXENTTYPES)
@@ -254,7 +259,7 @@ namespace entities
         switch(ents[n]->type)
         {
             default:
-                if(d->canpickup(ents[n]->type) && server::allowpickup())
+                if(d->canpickup(ents[n]->type) && allowpickup())
                 {
                     addmsg(N_ITEMPICKUP, "rci", d, n);
                     ents[n]->clearspawned(); // even if someone else gets it first

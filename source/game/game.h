@@ -161,9 +161,20 @@ enum
     S_INTERMISSION, S_INTERMISSION_WIN
 };
 
-// network messages codes, c2s, c2c, s2c
-
+// server privileges
 enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_AUTH};
+
+// round states
+enum
+{
+    ROUND_START  = 1<<0,
+    ROUND_END    = 1<<1,
+    ROUND_RESET  = 1<<2,
+    ROUND_WAIT   = 1<<3,
+    ROUND_UNWAIT = 1<<4
+};
+
+// network messages codes, c2s, c2c, s2c
 
 enum
 {
@@ -182,7 +193,7 @@ enum
     N_LISTDEMOS, N_SENDDEMOLIST, N_GETDEMO, N_SENDDEMO,
     N_DEMOPLAYBACK, N_RECORDDEMO, N_STOPDEMO, N_CLEARDEMOS,
     N_TAKEFLAG, N_RETURNFLAG, N_RESETFLAG, N_TRYDROPFLAG, N_DROPFLAG, N_SCOREFLAG, N_INITFLAGS,
-    N_ROUNDSCORE, N_ASSIGNROLE, N_SCORE, N_VOOSH,
+    N_ROUND, N_ROUNDSCORE, N_ASSIGNROLE, N_SCORE, N_VOOSH,
     N_SAYTEAM, N_WHISPER,
     N_CLIENT,
     N_AUTHTRY, N_AUTHKICK, N_AUTHCHAL, N_AUTHANS, N_REQAUTH,
@@ -212,7 +223,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_LISTDEMOS, 1, N_SENDDEMOLIST, 0, N_GETDEMO, 3, N_SENDDEMO, 0,
     N_DEMOPLAYBACK, 3, N_RECORDDEMO, 2, N_STOPDEMO, 1, N_CLEARDEMOS, 2,
     N_TAKEFLAG, 3, N_RETURNFLAG, 4, N_RESETFLAG, 3, N_TRYDROPFLAG, 1, N_DROPFLAG, 7, N_SCOREFLAG, 9, N_INITFLAGS, 0,
-    N_ROUNDSCORE, 0, N_ASSIGNROLE, 4, N_SCORE, 3, N_VOOSH, 3,
+    N_ROUND, 0, N_ROUNDSCORE, 0, N_ASSIGNROLE, 4, N_SCORE, 3, N_VOOSH, 3,
     N_SAYTEAM, 0, N_WHISPER, 0,
     N_CLIENT, 0,
     N_AUTHTRY, 0, N_AUTHKICK, 0, N_AUTHCHAL, 0, N_AUTHANS, 0, N_REQAUTH, 0,
@@ -676,6 +687,8 @@ namespace game
     extern int gore;
 
     extern bool clientoption(const char *arg);
+    extern bool gamewaiting, betweenrounds, hunterchosen;
+
     extern gameent *getclient(int cn);
     extern gameent *newclient(int cn);
     extern const char *colorname(gameent *d, const char *name = NULL, const char *alt = NULL, const char *color = "");
@@ -816,14 +829,15 @@ namespace server
     extern void forcepaused(bool paused);
     extern void forcegamespeed(int speed);
     extern void hashpassword(int cn, int sessionid, const char *pwd, char *result, int maxlen = MAXSTRLEN);
+    extern void updateroundstate(int state, bool send = true);
+    extern void checkroundwait();
     extern void endround();
     extern void checkplayers(bool timeisup = false);
 
     extern bool serveroption(const char *arg);
     extern bool delayspawn(int type);
     extern bool checkovertime(bool timeisup = false);
-    extern bool allowpickup();
-    extern bool gamewaiting, betweenrounds;
+    extern bool gamewaiting;
 
     extern int msgsizelookup(int msg);
 }

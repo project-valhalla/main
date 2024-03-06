@@ -618,6 +618,7 @@ namespace game
 
     void calcpush(int damage, dynent *d, gameent *at, vec &from, vec &to, int atk, int rays, int flags)
     {
+        if(betweenrounds) return;
         hit(damage, d, at, vec(to).sub(from).safenormalize(), atk, from.dist(to), rays, flags);
     }
 
@@ -636,7 +637,7 @@ namespace game
 
     void radialeffect(dynent *o, const vec &v, const vec &vel, int damage, gameent *at, int atk)
     {
-        if(server::betweenrounds || o->state!=CS_ALIVE) return;
+        if(o->state!=CS_ALIVE) return;
         vec dir;
         float dist = projdist(o, dir, v, vel);
         if(dist<attacks[atk].exprad)
@@ -791,7 +792,7 @@ namespace game
 
     bool projdamage(dynent *o, projectile &p, const vec &v, int damage)
     {
-        if(server::betweenrounds || o->state!=CS_ALIVE) return false;
+        if(betweenrounds || o->state!=CS_ALIVE) return false;
         if(!intersect(o, p.o, v, attacks[p.atk].margin)) return false;
         projsplash(p, v, o, damage);
         vec dir;
@@ -822,7 +823,7 @@ namespace game
             {
                 vec halfdv = vec(dv).mul(0.5f), bo = vec(p.o).add(halfdv);
                 float br = max(fabs(halfdv.x), fabs(halfdv.y)) + 1 + attacks[p.atk].margin;
-                loopj(numdynents())
+                if(!betweenrounds) loopj(numdynents())
                 {
                     dynent *o = iterdynents(j);
                     if(p.owner==o || o->o.reject(bo, o->radius + br)) continue;
@@ -1276,6 +1277,7 @@ namespace game
 
     bool scanprojs(vec &from, vec &to, gameent *d, int atk)
     {
+        if(betweenrounds) return false;
         vec stepv;
         float dist = to.dist(from, stepv);
         int steps = clamp(int(dist * 2), 1, 200);
@@ -1319,7 +1321,7 @@ namespace game
             dynent *hits[MAXRAYS];
             loopi(maxrays)
             {
-                if((hits[i] = intersectclosest(from, rays[i], d, margin, dist)))
+                if(!betweenrounds && (hits[i] = intersectclosest(from, rays[i], d, margin, dist)))
                 {
                     hitlegs = islegshitbox(hits[i], from, rays[i], dist);
                     hithead = isheadhitbox(hits[i], from, rays[i], dist);
@@ -1328,6 +1330,7 @@ namespace game
                 }
                 else rayhit(atk, d, from, rays[i]);
             }
+            if(betweenrounds) return;
             loopi(maxrays) if(hits[i])
             {
                 o = hits[i];
@@ -1350,7 +1353,7 @@ namespace game
         }
         else
         {
-            if((o = intersectclosest(from, to, d, margin, dist)))
+            if(!betweenrounds && (o = intersectclosest(from, to, d, margin, dist)))
             {
                 hitlegs = islegshitbox(o, from, to, dist);
                 hithead = isheadhitbox(o, from, to, dist);

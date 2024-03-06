@@ -4,7 +4,8 @@ extern int zoom;
 
 namespace game
 {
-    bool intermission = false;
+    bool intermission = false, gamewaiting = false;
+    bool betweenrounds = false, hunterchosen = false;
     int maptime = 0, maprealtime = 0, maplimit = -1;
     int lastspawnattempt = 0;
 
@@ -814,7 +815,8 @@ namespace game
 
         setclientmode();
 
-        intermission = false;
+        intermission = betweenrounds = false;
+        if(!m_round || m_hunt) gamewaiting = false;
         maptime = maprealtime = 0;
         maplimit = -1;
 
@@ -1127,14 +1129,17 @@ namespace game
         if(d->state!=CS_ALIVE) return 0;
 
         int crosshair = 1;
-        if(d->lasthit && lastmillis - d->lasthit < hitcrosshair) crosshair = 2;
-        else if(allycrosshair)
+        if(!betweenrounds)
         {
-            dynent *o = intersectclosest(d->o, worldpos, d);
-            if(o && o->type==ENT_PLAYER && isally(((gameent *)o), d))
+            if(d->lasthit && lastmillis - d->lasthit < hitcrosshair) crosshair = 2;
+            else if(allycrosshair)
             {
-                crosshair = 3;
-                if(m_teammode) col = vec::hexcolor(teamtextcolor[d->team]);
+                dynent *o = intersectclosest(d->o, worldpos, d);
+                if(o && o->type==ENT_PLAYER && isally(((gameent *)o), d))
+                {
+                    crosshair = 3;
+                    if(m_teammode) col = vec::hexcolor(teamtextcolor[d->team]);
+                }
             }
         }
         if(d->gunwait) col.mul(0.5f);

@@ -56,6 +56,7 @@ static struct gamemodeinfo
 #define m_berserker       (m_check(gamemode, M_BERSERKER))
 #define m_infection       (m_check(gamemode, M_INFECTION))
 #define m_betrayal        (m_check(gamemode, M_BETRAYAL))
+#define m_hunt            (m_check(gamemode, M_INFECTION|M_BETRAYAL))
 
 #define m_invasion        (m_check(gamemode, M_INVASION))
 #define m_tutorial        (m_check(gamemode, M_SP))

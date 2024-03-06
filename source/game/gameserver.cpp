@@ -686,7 +686,7 @@ namespace server
 
     bool betweenrounds = false, checkround = false;
 
-    bool isberserkerdead  = true, hunterchosen  = false;
+    bool isberserkerdead = true, hunterchosen = false;
 
     struct teamkillkick
     {
@@ -959,7 +959,7 @@ namespace server
 
     bool allowpickup()
     {
-        return !((!m_infection && !m_betrayal && betweenrounds) || ((m_infection || m_betrayal) && hunterchosen && betweenrounds));
+        return !((!m_infection && !m_betrayal && betweenrounds) || (m_hunt && hunterchosen && betweenrounds));
     }
 
     bool pickup(int i, int sender)         // server side item pickup, acknowledge first client that gets it
@@ -1662,7 +1662,15 @@ namespace server
         }
 
         uchar operator[](int msg) const { return msg >= 0 && msg < NUMMSG ? msgmask[msg] : 0; }
-    } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVMSG, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_DIED, 4, N_FORCEDEATH, N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP, N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP, N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_ROUNDSCORE, N_ASSIGNROLE, N_SCORE, N_VOOSH, N_CLIENT, N_AUTHCHAL, N_INITAI, N_DEMOPACKET, -2, N_CALCLIGHT, N_REMIP, N_NEWMAP, N_GETMAP, N_SENDMAP, N_CLIPBOARD, -3, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_EDITVAR, N_EDITVSLOT, N_UNDO, N_REDO, -4, N_POS, NUMMSG),
+    } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVMSG,
+                N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_DIED, 4, N_FORCEDEATH,
+                N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP,
+                N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME,
+                N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP,
+                N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_ROUND, N_ROUNDSCORE, N_ASSIGNROLE, N_SCORE, N_VOOSH,
+                N_CLIENT, N_AUTHCHAL, N_INITAI, N_DEMOPACKET, -2, N_CALCLIGHT, N_REMIP, N_NEWMAP, N_GETMAP, N_SENDMAP,
+                N_CLIPBOARD, -3, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_EDITVAR, N_EDITVSLOT,
+                N_UNDO, N_REDO, -4, N_POS, NUMMSG),
       connectfilter(-1, N_CONNECT, -2, N_AUTHANS, -3, N_PING, NUMMSG);
 
     int checktype(int type, clientinfo *ci)
@@ -2016,7 +2024,7 @@ namespace server
         }
         if(ci && (m_demo || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
         {
-            if((smode && !smode->canspawn(ci, true)) || ((((m_infection || m_betrayal) && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
+            if((smode && !smode->canspawn(ci, true)) || (((m_hunt && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
             {
                 ci->state.state = CS_DEAD;
                 putint(p, N_FORCEDEATH);
@@ -2310,7 +2318,7 @@ namespace server
             if(m_infection) infect(hunter, hunter);
             else if(m_betrayal) hunter->state.role = ROLE_TRAITOR;
         }
-        gamewaiting = numclients(-1, true, false) <= 1;
+        checkroundwait();
     }
 
     static void startzombieround()
@@ -2321,8 +2329,7 @@ namespace server
         {
             int np = max(numplayers/4, 1);
             loopi(np) chooserandomclient();
-            hunterchosen = true;
-            betweenrounds = false;
+            updateroundstate(ROUND_START);
             if(!gamewaiting) checkplayers();
         }
     }
@@ -2331,7 +2338,7 @@ namespace server
     {
         if(hunterchosen || interm) return;
         chooserandomclient();
-        hunterchosen = true; betweenrounds = false;
+        updateroundstate(ROUND_START);
         loopv(clients)
         {
             clientinfo *ci = clients[i];
@@ -2348,6 +2355,43 @@ namespace server
     /* functions used to manage rounds and check players
      * in round-based modes only
      */
+    void updateroundstate(int state, bool send)
+    {
+        if(state & ROUND_END)
+        {
+            betweenrounds = true;
+        }
+        else if(state & ROUND_START)
+        {
+            if(m_hunt && !hunterchosen) hunterchosen = true;
+            betweenrounds = false;
+        }
+        if(state & ROUND_RESET)
+        {
+            if(m_hunt && hunterchosen) hunterchosen = false;
+        }
+        if(state & ROUND_WAIT)
+        {
+            gamewaiting = true;
+        }
+        else if(state & ROUND_UNWAIT)
+        {
+            gamewaiting = false;
+        }
+
+        if(send) sendf(-1, 1, "rii", N_ROUND, state);
+    }
+
+    void checkroundwait()
+    {
+        bool notenoughplayers = numclients(-1, true, false) <= 1;
+        if(gamewaiting != notenoughplayers) // don't do anything if waiting state is on point
+        {
+            if(notenoughplayers) updateroundstate(ROUND_WAIT);
+            else updateroundstate(ROUND_UNWAIT);
+        }
+    }
+
     void roundrespawn()
     {
         loopv(clients)
@@ -2376,13 +2420,13 @@ namespace server
         if(interm) return;
         updatetimelimit(roundtimelimit, true);
         roundrespawn();
-        if(m_infection || m_betrayal)
+        if(m_hunt)
         {
-            hunterchosen = false;
+            updateroundstate(ROUND_RESET);
             serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
         }
-        else betweenrounds = false;
-        if(!m_infection && !m_betrayal) gamewaiting = numclients(-1, true, false) <= 1;
+        else updateroundstate(ROUND_RESET|ROUND_START);
+        if(!m_infection && !m_betrayal) checkroundwait();
     }
 
     bool countround()
@@ -2402,7 +2446,7 @@ namespace server
     void endround()
     {
         if(betweenrounds || interm) return;
-        betweenrounds = true;
+        updateroundstate(ROUND_END);
         if(!countround()) serverevents::add(&newround, 5000);
     }
 
@@ -2417,7 +2461,7 @@ namespace server
     void checkplayers(bool timeisup)
     {
         if(!m_round || betweenrounds) return;
-        if(numclients(-1, true, false) <= 1 && !gamewaiting) gamewaiting = true;
+        if(numclients(-1, true, false) <= 1 && !gamewaiting) updateroundstate(ROUND_WAIT);
         int survivors = 0, hunters = 0;
         if(!m_elimination) loopv(clients)
         {
@@ -2428,7 +2472,7 @@ namespace server
         }
         bool rewardhunters = false, rewardsurvivors = false;
         int score = 0;
-        if(hunterchosen && (m_infection || m_betrayal))
+        if(m_hunt && hunterchosen)
         {
             if((survivors <= 0 && hunters <= 0) || (timeisup && survivors <= 0 && hunters > 0))
             {
@@ -2549,17 +2593,17 @@ namespace server
         firstblood = false;
         if(m_round)
         {
-            if(m_infection || m_betrayal)
+            if(m_hunt)
             {
                 gamewaiting = false;
                 hunterchosen = false;
-                betweenrounds = true;
+                updateroundstate(ROUND_END);
                 serverevents::add(m_infection ? &startzombieround : &startbetrayalround, 10000);
             }
             else
             {
-                betweenrounds = false;
-                gamewaiting = numclients(-1, true, false) <= 1;
+                updateroundstate(ROUND_START, false);
+                checkroundwait();
             }
         }
         else
@@ -2809,7 +2853,7 @@ namespace server
         if(gs.state!=CS_ALIVE) return;
         checkberserker(ci);
         teaminfo *t = NULL;
-        if(!betweenrounds && !hunterchosen && !interm)
+        if(!gamewaiting && !betweenrounds && !hunterchosen && !interm)
         {
             int fragvalue = smode ? smode->fragvalue(ci, ci) : -1;
             ci->state.frags += fragvalue;
@@ -3863,7 +3907,7 @@ namespace server
 
             case N_TRYSPAWN:
                 if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (!m_edit && cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath <= RESPAWN_WAIT)) break;
-                if((smode && !smode->canspawn(cq)) || ((((m_infection || m_betrayal) && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
+                if((smode && !smode->canspawn(cq)) || (((m_hunt && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
                 {
                     if(cq->state.aitype==AI_NONE)
                     {

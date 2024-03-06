@@ -720,7 +720,7 @@ namespace game
         if(*formatted) result(tempformatstring("%d:%02d", val/60, val%60));
         else intret(val);
     });
-    ICOMMAND(isgamewaiting, "", (), intret(server::gamewaiting ? 1 : 0));
+    ICOMMAND(isgamewaiting, "", (), intret(gamewaiting ? 1 : 0));
     ICOMMAND(intermission, "", (), intret(intermission ? 1 : 0));
     ICOMMAND(getscorelimit, "", (), intret(scorelimit));
 
@@ -765,6 +765,33 @@ namespace game
     void newmap(int size)
     {
         addmsg(N_NEWMAP, "ri", size);
+    }
+
+    void updateroundstate(int state)
+    {
+        if(state & ROUND_END)
+        {
+            betweenrounds = true;
+        }
+        else if(state & ROUND_START)
+        {
+            if(m_hunt && !hunterchosen) hunterchosen = true;
+            betweenrounds = false;
+        }
+        if(state & ROUND_RESET)
+        {
+            if(m_hunt && hunterchosen) hunterchosen = false;
+            clearprojectiles();
+            clearbouncers();
+        }
+        if(state & ROUND_WAIT)
+        {
+            gamewaiting = true;
+        }
+        else if(state & ROUND_UNWAIT)
+        {
+            gamewaiting = false;
+        }
     }
 
     int needclipboard = -1;
@@ -2109,6 +2136,12 @@ namespace game
                 break;
             }
 
+            case N_ROUND:
+            {
+                int state = getint(p);
+                updateroundstate(state);
+            }
+
             case N_CURRENTMASTER:
             {
                 int mm = getint(p), mn;
@@ -2218,6 +2251,7 @@ namespace game
                 else if(role == ROLE_ZOMBIE)
                 {
                     if(!m_infection) break;
+                    if(!hunterchosen && d == actor) hunterchosen = true;
                     writeobituary(d, actor, ATK_ZOMBIE);
                     d->infect();
                     d->stoppowerupsound();
@@ -2335,7 +2369,7 @@ namespace game
                 fname[0] = '\0';
                 int tag = getint(p);
                 loopv(demoreqs) if(demoreqs[i].tag == tag)
-                {
+            {
                     copystring(fname, demoreqs[i].name);
                     demoreqs.remove(i);
                     break;

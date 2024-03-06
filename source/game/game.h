@@ -821,14 +821,12 @@ namespace server
 
     extern bool serveroption(const char *arg);
     extern bool delayspawn(int type);
-    extern bool canspawnitem(int type);
     extern bool checkovertime(bool timeisup = false);
     extern bool allowpickup();
-    extern bool countround();
     extern bool gamewaiting, betweenrounds;
 
     extern int msgsizelookup(int msg);
-    extern int gamelimit, gamescorelimit, selfdamage, vooshgun, rounds;
+    extern int gamelimit;
 }
 
 #endif

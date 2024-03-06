@@ -1872,6 +1872,8 @@ namespace server
         loopi(NUMGUNS) putint(p, gs.ammo[i]);
     }
 
+    int vooshgun = -1;
+
     void spawnstate(clientinfo *ci)
     {
         servstate &gs = ci->state;
@@ -2485,7 +2487,7 @@ namespace server
     /* here we manage stuff like that freaking voosh mutator
      * crazy stuff
      */
-    int vooshtime = 0, vooshgun = -1, previousvooshgun = -1;
+    int vooshtime = 0, previousvooshgun = -1;
 
     void sendvoosh(int gun)
     {

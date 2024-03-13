@@ -1,3 +1,3 @@
 [submodule "data"]
 	path = data
-	url = https://github.com/project-valhalla/main.git
+	url = https://github.com/project-valhalla/data.git

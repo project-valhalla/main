@@ -547,6 +547,7 @@ struct gameent : dynent, gamestate
         frags = flags = deaths = points = 0;
         totaldamage = totalshots = 0;
         lives = 3;
+        holdingflag = 0;
         maxhealth = 100;
         shield = 0;
         lifesequence = -1;

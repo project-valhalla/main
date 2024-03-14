@@ -1097,6 +1097,8 @@ int getclockmillis()
 
 VAR(numcpus, 1, 1, 16);
 
+SVARRO(currentversionstring, "v1.0.0 (Ymir Edition)");
+
 int main(int argc, char **argv)
 {
     #ifdef WIN32
@@ -1213,6 +1215,8 @@ int main(int argc, char **argv)
 
     logoutf("init: sound");
     initsound();
+
+    conoutf(CON_INIT, "Current version: %s", currentversionstring);
 
     logoutf("init: cfg");
     initing = INIT_LOAD;

@@ -518,9 +518,9 @@ namespace game
         if(!restore)
         {
             if(d->deathtype == DEATH_GIB || (gore && d->gibbed())) gibeffect(max(-d->health, 0), d->vel, d, d->deathtype == 1);
-            else if(d->deathtype == DEATH_FIST)
+            else if(d->deathtype != DEATH_FIST && d->deathtype != DEATH_DISRUPT)
             {
-                playsound(getplayermodelinfo(d).diesound, d); // silent melee kills?
+                playsound(getplayermodelinfo(d).diesound, d); // silent melee kills
             }
             d->deaths++;
         }

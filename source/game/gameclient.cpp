@@ -2145,12 +2145,21 @@ namespace game
             case N_CURRENTMASTER:
             {
                 int mm = getint(p), mn;
+                int previous = self->privilege;
                 loopv(players) players[i]->privilege = PRIV_NONE;
                 while((mn = getint(p))>=0 && !p.overread())
                 {
                     gameent *m = mn==self->clientnum ? self : newclient(mn);
                     int priv = getint(p);
                     if(m) m->privilege = priv;
+                    if(m == self) {
+                        // we claimed master
+                        execident("on_setmaster");
+                    }
+                }
+                if(previous && !self->privilege) {
+                    // we relinquished master
+                    execident("on_setmaster");
                 }
                 if(mm != mastermode)
                 {

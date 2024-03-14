@@ -508,6 +508,7 @@ namespace game
 
     VARP(gore, 0, 1, 1);
     VARP(deathfromabove, 0, 1, 1);
+    VARP(deathscream, 0, 1, 1);
     VARR(mapdeath, 0, 0, 4);
 
     void deathstate(gameent *d, bool restore)
@@ -518,7 +519,7 @@ namespace game
         if(!restore)
         {
             if(d->deathtype == DEATH_GIB || (gore && d->gibbed())) gibeffect(max(-d->health, 0), d->vel, d, d->deathtype == 1);
-            else if(d->deathtype != DEATH_FIST && d->deathtype != DEATH_DISRUPT)
+            else if(deathscream && d->deathtype != DEATH_FIST && d->deathtype != DEATH_DISRUPT)
             {
                 playsound(getplayermodelinfo(d).diesound, d); // silent melee kills
             }

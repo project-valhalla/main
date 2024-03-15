@@ -729,6 +729,8 @@ namespace game
     ICOMMAND(getaccuracy, "", (), intret((self->totaldamage*100)/max(self->totalshots, 1)));
     ICOMMAND(gettotaldamage, "", (), intret(self->totaldamage));
     ICOMMAND(gettotalshots, "", (), intret(self->totalshots));
+    ICOMMAND(getrespawnwait, "", (), intret(cmode && self->state == CS_DEAD ? cmode->respawnwait(self, false) : 0));
+    ICOMMAND(getlastspawnattempt, "", (), intret(lastspawnattempt));
 
     vector<gameent *> clients;
 

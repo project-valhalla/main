@@ -1123,7 +1123,7 @@ namespace game
 
     void toserver(char *text)
     {
-        conoutf(CON_CHAT, "%s: \fs%s%s\fr", colorname(self), chatcolor(self), text);
+        conoutf(CON_CHAT, "%s: \fs%s%s\fr", teamcolorname(self), chatcolor(self), text);
         addmsg(N_TEXT, "rcs", self, text);
     }
     COMMANDN(say, toserver, "C");
@@ -1131,7 +1131,7 @@ namespace game
     void sayteam(char *text, int sound = -1)
     {
         if(!m_teammode || !validteam(self->team) || (m_round && self->state == CS_DEAD) || self->state == CS_SPECTATOR) return;
-        conoutf(CON_TEAMCHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", colorname(self), teamtextcode[self->team], teamtextcode[self->team], text);
+        conoutf(CON_TEAMCHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", teamcolorname(self), teamtextcode[self->team], teamtextcode[self->team], text);
         if(sound >= 0 && self->state != CS_DEAD && self->state != CS_SPECTATOR) playsound(sound);
         addmsg(N_SAYTEAM, "rcsi", self, text, sound);
     }
@@ -1147,7 +1147,7 @@ namespace game
             return;
         }
         addmsg(N_WHISPER, "rcis", self, rec->clientnum, text);
-        conoutf(CON_CHAT, "%s \fs\f5(whisper to \fr%s\fs\f5)\fr: \fs\f5%s\fr", colorname(self), colorname(rec), text);
+        conoutf(CON_CHAT, "%s \fs\f5(whisper to \fr%s\fs\f5)\fr: \fs\f5%s\fr", teamcolorname(self), colorname(rec), text);
     }
     COMMAND(whisper, "ss");
 
@@ -1602,7 +1602,7 @@ namespace game
                 if(!d || isignored(d->clientnum)) break;
                 if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
                     particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
-                conoutf(CON_CHAT, "%s: \fs%s%s\fr", colorname(d), chatcolor(d), text);
+                conoutf(CON_CHAT, "%s: \fs%s%s\fr", teamcolorname(d), chatcolor(d), text);
                 if(chatsound == 1) playsound(S_CHAT);
                 break;
             }
@@ -1619,7 +1619,7 @@ namespace game
                 int team = validteam(t->team) ? t->team : 0;
                 if(t->state!=CS_DEAD)
                     particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8);
-                conoutf(CON_TEAMCHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", colorname(t), teamtextcode[t->team], teamtextcode[t->team], text);
+                conoutf(CON_TEAMCHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", teamcolorname(t), teamtextcode[t->team], teamtextcode[t->team], text);
                 if(chatsound == 1) playsound(S_CHAT);
                 break;
             }
@@ -1631,7 +1631,7 @@ namespace game
                 getstring(text, p);
                 filtertext(text, text, false, false, true, true);
                 if(!s || isignored(s->clientnum)) break;
-                conoutf(CON_CHAT, "%s \fs\f5(whisper)\fr: \fs\f5%s\fr", colorname(s), text);
+                conoutf(CON_CHAT, "%s \fs\f5(whisper)\fr: \fs\f5%s\fr", teamcolorname(d), text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }

@@ -416,7 +416,6 @@ struct ctfclientmode : clientmode
             float angle;
             vec pos = interpflagpos(f, angle);
             rendermodel(flagname, ANIM_MAPMODEL|ANIM_LOOP, pos, angle, 0, 0, MDL_CULL_VFC | MDL_CULL_OCCLUDED);
-            particle_icon_mark(pos, f.team == 1 ? 1 : 0, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
             vec color;
             if(f.team==1) color = vec(0.25f, 0.25f, 1);
             else if(f.team==2) color = vec(1, 0.25f, 0.25f);
@@ -428,6 +427,12 @@ struct ctfclientmode : clientmode
                 stopsound(S_FLAGLOOP, f.chan);
                 f.chan = -1;
             }
+            if(f.owner)
+            {
+                if(lastmillis%1000 >= 500) continue;
+            }
+            else if(f.droptime && (f.droploc.x < 0 || lastmillis%300 >= 150)) continue;
+            particle_icon_mark(pos, f.team == 1 ? 1 : 0, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
         }
     }
 

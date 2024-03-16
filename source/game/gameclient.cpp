@@ -2270,11 +2270,8 @@ namespace game
                 vooshgun = gun;
                 gameent *d = getclient(cn);
                 if(!d) return;
-                if((d->state == CS_ALIVE || d->state == CS_LAGGED) && d->role != ROLE_ZOMBIE)
-                {
-                    d->voosh(gun);
-                    d->lastswitch = lastmillis;
-                }
+                d->voosh(gun);
+                d->lastswitch = lastmillis;
                 if(d == self) playsound(S_VOOSH);
                 break;
             }

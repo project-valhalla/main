@@ -2539,7 +2539,7 @@ namespace server
         {
             clientinfo *ci = clients[i];
             sendf(-1, 1, "ri3", N_VOOSH, ci->clientnum, gun);
-            if((ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED) || ci->state.role == ROLE_ZOMBIE) continue;
+            if(ci->state.state == CS_DEAD || ci->state.state == CS_SPECTATOR || ci->state.role == ROLE_ZOMBIE) continue;
             ci->state.voosh(gun);
         }
     }

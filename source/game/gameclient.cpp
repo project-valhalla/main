@@ -183,7 +183,7 @@ namespace game
     });
     ICOMMAND(getteam, "", (), intret((self->clientnum < 0 || m_teammode) && validteam(self->team) ? self->team : 0));
     ICOMMAND(getteamname, "i", (int *num), result(teamname(*num)));
-    ICOMMAND(getteamcolor, "", (), intret(teamtextcolor[self->team]));
+    ICOMMAND(getteamcolor, "", (), intret(teamtextcolor[m_teammode ? self->team : 0]));
 
     struct authkey
     {

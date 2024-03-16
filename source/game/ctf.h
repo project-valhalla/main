@@ -427,7 +427,14 @@ struct ctfclientmode : clientmode
                 stopsound(S_FLAGLOOP, f.chan);
                 f.chan = -1;
             }
-            if(f.owner)
+
+            gameent *hud = followingplayer(self);
+            if(hud->holdingflag && f.team == hud->team)
+            {
+                vec base = f.spawnloc;
+                particle_icon_mark(base, 2, 1, PART_GAME_ICONS, 1, teamtextcolor[hud->team], 5.0f);
+            }
+            else if(f.owner)
             {
                 if(lastmillis%1000 >= 500) continue;
             }

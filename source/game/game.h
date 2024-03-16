@@ -553,6 +553,7 @@ struct gameent : dynent, gamestate
         lifesequence = -1;
         respawned = suicided = -2;
         lasthit = 0;
+        ghost = false;
     }
 
     void stopweaponsound()

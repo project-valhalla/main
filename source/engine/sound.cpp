@@ -168,7 +168,7 @@ void stopmusic(int fade = 0)
 bool shouldinitaudio = true;
 SVARF(audiodriver, AUDIODRIVER, { shouldinitaudio = true; initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); });
 VARF(sound, 0, 1, 1, { shouldinitaudio = true; initwarning("sound configuration", INIT_RESET, CHANGE_SOUND); });
-VARF(soundchans, 1, 32, 128, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
+VARF(soundchans, 1, 64, 128, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundfreq, 0, 44100, 48000, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 VARF(soundbufferlen, 128, 1024, 4096, initwarning("sound configuration", INIT_RESET, CHANGE_SOUND));
 
@@ -715,11 +715,13 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
             loopv(channels) if(sounds.playing(channels[i], config) && ++uses >= config.maxuses) return -1;
         }
 
-        // avoid bursts of sounds with heavy packetloss and in sp
-        static int soundsatonce = 0, lastsoundmillis = 0;
-        if(totalmillis == lastsoundmillis) soundsatonce++; else soundsatonce = 1;
-        lastsoundmillis = totalmillis;
-        if(maxsoundsatonce && soundsatonce > maxsoundsatonce && !(flags & SND_ANNOUNCER)) return -1;
+        if(owner || loc) // avoid bursts of sounds with heavy packetloss
+        {
+            static int soundsatonce = 0, lastsoundmillis = 0;
+            if(totalmillis == lastsoundmillis) soundsatonce++; else soundsatonce = 1;
+            lastsoundmillis = totalmillis;
+            if(maxsoundsatonce && soundsatonce > maxsoundsatonce) return -1;
+        }
     }
 
     if(channels.inrange(chanid))

@@ -318,13 +318,15 @@ namespace game
     }
     ICOMMAND(getclientcolor, "i", (int *cn), intret(getclientcolor(*cn)));
 
-    const char *getclientpos(int cn) {
+    const char *getclientpos(int cn)
+    {
         gameent *d = getclient(cn);
         return d && d->state != CS_SPECTATOR ? tempformatstring("%f %f %f", d->o.x, d->o.y, d->o.z) : "0 0 0";
     }
     ICOMMAND(getclientpos, "i", (int *cn), result(getclientpos(*cn)));
 
-    int getclientyaw(int cn) {
+    int getclientyaw(int cn)
+    {
         gameent *d = getclient(cn);
         return d && d->state != CS_SPECTATOR ? d->yaw : 0;
     }

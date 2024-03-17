@@ -18,7 +18,8 @@ namespace UI
         gle::attribf(x,   y+h); gle::attribf(tx,    ty+th);
     }
 
-    static void quads_rotation(float x, float y, float w, float h, float angle, float tx = 0, float ty = 0, float tw = 1, float th = 1) {
+    static void quads_rotation(float x, float y, float w, float h, float angle, float tx = 0, float ty = 0, float tw = 1, float th = 1)
+    {
         vec v(-0.5, -0.5, 0);
         v.rotate_around_z((90+angle)*RAD);
         gle::attribf(x - w*v.x + w/2, y + h*v.y + h/2); gle::attribf(tx,    ty);
@@ -1515,7 +1516,6 @@ namespace UI
 
         void bindtex()
         {
-            //changedraw();
             changedraw(CHANGE_SHADER);
 
             SETSHADER(hudminimap);
@@ -1528,7 +1528,8 @@ namespace UI
             vecfromyawpitch(yaw, 0, 1, 0, dir);
             float scale = game::calcradarscale();
             bindtex();
-            loopi(16) {
+            loopi(16)
+            {
                 vec v = vec(0, -1, 0).rotate_around_z(i/16.0f*2*M_PI);
                 gle::attribf(sx + 0.5f*w*(1.0f + v.x), sy + 0.5f*h*(1.0f + v.y));
                 vec tc = vec(dir).rotate_around_z(i/16.0f*2*M_PI);
@@ -1584,11 +1585,8 @@ namespace UI
             if(tex != notexture)
             {
                 bindtex();
-                if(angle != 0) {
-                    quads_rotation(sx, sy, w, h, angle);
-                } else {
-                    quads(sx, sy, w, h);
-                }
+                if(angle != 0) quads_rotation(sx, sy, w, h, angle);
+                else quads(sx, sy, w, h);
             }
 
             Object::draw(sx, sy);

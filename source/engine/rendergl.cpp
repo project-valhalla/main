@@ -1242,6 +1242,9 @@ ICOMMAND(getcampos, "", (),
     defformatstring(pos, "%s %s %s", floatstr(camera1->o.x), floatstr(camera1->o.y), floatstr(camera1->o.z));
     result(pos);
 });
+ICOMMAND(getcamx, "", (), floatret(camera1->o.x));
+ICOMMAND(getcamy, "", (), floatret(camera1->o.y));
+ICOMMAND(getcamz, "", (), floatret(camera1->o.z));
 
 vec worldpos, camdir, camright, camup;
 

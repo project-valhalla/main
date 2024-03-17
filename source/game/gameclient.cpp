@@ -11,6 +11,7 @@ namespace game
     {
         return clamp(max(minimapradius.x, minimapradius.y)/3, float(minradarscale), float(maxradarscale));
     }
+    ICOMMAND(calcradarscale, "", (), floatret(calcradarscale()));
 
     void drawminimap(gameent *d, float x, float y, float s)
     {
@@ -316,6 +317,18 @@ namespace game
         return d && d->state!=CS_SPECTATOR ? getplayercolor(d, m_teammode && validteam(d->team) ? d->team : 0) : 0xFFFFFF;
     }
     ICOMMAND(getclientcolor, "i", (int *cn), intret(getclientcolor(*cn)));
+
+    const char *getclientpos(int cn) {
+        gameent *d = getclient(cn);
+        return d && d->state != CS_SPECTATOR ? tempformatstring("%f %f %f", d->o.x, d->o.y, d->o.z) : "0 0 0";
+    }
+    ICOMMAND(getclientpos, "i", (int *cn), result(getclientpos(*cn)));
+
+    int getclientyaw(int cn) {
+        gameent *d = getclient(cn);
+        return d && d->state != CS_SPECTATOR ? d->yaw : 0;
+    }
+    ICOMMAND(getclientyaw, "i", (int *cn), intret(getclientyaw(*cn)));
 
     ICOMMAND(getclientfrags, "i", (int *cn),
     {

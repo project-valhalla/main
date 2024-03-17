@@ -96,6 +96,8 @@ namespace game
     extern bool needminimap();
 
     extern int mapdeath;
+
+    extern float calcradarscale();
 }
 
 namespace server

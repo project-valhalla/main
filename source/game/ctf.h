@@ -864,6 +864,13 @@ struct ctfclientmode : clientmode
 
 extern ctfclientmode ctfmode;
 ICOMMAND(dropflag, "", (), { ctfmode.trydropflag(); });
+ICOMMAND(numflags, "", (), { intret(ctfmode.flags.length()); });
+ICOMMAND(flagbase, "i", (int *n), { result(ctfmode.flags.inrange(*n) ? tempformatstring("%f %f %f", ctfmode.flags[*n].spawnloc.x, ctfmode.flags[*n].spawnloc.y, ctfmode.flags[*n].spawnloc.z) : "0 0 0"); });
+ICOMMAND(flagteam, "i", (int *n), { intret(ctfmode.flags.inrange(*n) ? ctfmode.flags[*n].team : 0); });
+// 0 = at base, 1 = stolen, 2 = dropped
+ICOMMAND(flagstate, "i", (int *n), { intret(ctfmode.flags.inrange(*n) ? (ctfmode.flags[*n].owner ? 1 : ctfmode.flags[*n].droptime ? 2 : 0) : 0); });
+ICOMMAND(flagdroploc, "i", (int *n), { result(ctfmode.flags.inrange(*n) ? tempformatstring("%f %f %f", ctfmode.flags[*n].droploc.x, ctfmode.flags[*n].droploc.y, ctfmode.flags[*n].droploc.z) : "0 0 0"); });
+ICOMMAND(flagowner, "i", (int *n), { intret(ctfmode.flags.inrange(*n) ? ctfmode.flags[*n].owner->clientnum : -1); });
 
 #endif
 

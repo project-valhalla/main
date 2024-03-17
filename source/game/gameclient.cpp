@@ -326,9 +326,9 @@ namespace game
     ICOMMAND(getclientscore, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
-        int score = d->points;
-        if(m_ctf) score = d->flags;
-        if(d) intret(score);
+        if(!d) return;
+        if(m_ctf) intret(d->flags);
+        else intret(d->points);
     });
 
     ICOMMAND(getclientdeaths, "i", (int *cn),
@@ -1589,7 +1589,7 @@ namespace game
             {
                 int cn = getint(p), points = getint(p);
                 gameent *d = getclient(cn);
-                d->points = points;
+                if(d) d->points = points;
                 break;
             }
 
@@ -1834,7 +1834,7 @@ namespace game
             {
                 int cn = getint(p), health = getint(p);
                 gameent *d = cn==self->clientnum ? self : getclient(cn);
-                d->health = health;
+                if(d) d->health = health;
                 break;
             }
 
@@ -1842,7 +1842,7 @@ namespace game
             {
                 int cn = getint(p), gun = getint(p), ammo = getint(p);
                 gameent *d = cn==self->clientnum ? self : getclient(cn);
-                d->ammo[gun] = ammo;
+                if(d) d->ammo[gun] = ammo;
                 break;
             }
 
@@ -2237,7 +2237,7 @@ namespace game
                     role = getint(p);
                 gameent *d = getclient(tcn),
                         *actor = getclient(acn);
-                if(!d) break;
+                if(!d || !actor) break;
                 if(role == ROLE_BERSERKER)
                 {
                     if(!m_berserker) break;

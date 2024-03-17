@@ -326,7 +326,11 @@ namespace game
     ICOMMAND(getclientscore, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
-        if(!d) return;
+        if(!d)
+        {
+            intret(0);
+            return;
+        }
         if(m_ctf) intret(d->flags);
         else intret(d->points);
     });

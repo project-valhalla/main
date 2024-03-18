@@ -143,7 +143,7 @@ namespace game
     int sessionid = 0, mastermode = MM_OPEN, gamespeed = 100;
     string servdesc = "", servauth = "", connectpass = "";
 
-    VARP(deadpush, 1, 2, 20);
+    VARP(deadpush, 1, 7, 20);
 
     void switchname(const char *name)
     {

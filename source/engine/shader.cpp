@@ -1130,7 +1130,7 @@ ICOMMAND(forceshader, "s", (const char *name), useshaderbyname(name));
 
 void shader(int *type, char *name, char *vs, char *ps)
 {
-    if(lookupshaderbyname(name)) return;
+//    if(lookupshaderbyname(name)) return;
 
     defformatstring(info, "shader %s", name);
     renderprogress(loadprogress, info);

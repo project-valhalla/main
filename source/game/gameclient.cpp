@@ -5,7 +5,7 @@ namespace game
     VARP(minradarscale, 0, 384, 10000);
     VARP(maxradarscale, 1, 1024, 10000);
     VARP(radarteammates, 0, 1, 1);
-    FVARP(minimapalpha, 0, 1, 1);
+    FVARFP(minimapalpha, 0, 1, 1, { execident("minimapshader"); });
 
     float calcradarscale()
     {

@@ -1483,14 +1483,16 @@ namespace UI
 
     struct Minimap : Filler
     {
-        float yaw, size;
         vec origin;
+        float yaw, size;
+        int sides;
 
-        void setup(vec origin_, float yaw_, float size_)
+        void setup(vec origin_, float yaw_, float size_, int sides_)
         {
             origin = vec(origin_);
             yaw = yaw_;
             size = size_;
+            sides = clamp(sides_, 3, 64);
             Filler::setup(size_, size_);
         }
 
@@ -1528,11 +1530,11 @@ namespace UI
             vecfromyawpitch(yaw, 0, 1, 0, dir);
             float scale = game::calcradarscale();
             bindtex();
-            loopi(16)
+            loopi(sides)
             {
-                vec v = vec(0, -1, 0).rotate_around_z(i/16.0f*2*M_PI);
+                vec v = vec(0, -1, 0).rotate_around_z(i/float(sides)*2*M_PI);
                 gle::attribf(sx + 0.5f*w*(1.0f + v.x), sy + 0.5f*h*(1.0f + v.y));
-                vec tc = vec(dir).rotate_around_z(i/16.0f*2*M_PI);
+                vec tc = vec(dir).rotate_around_z(i/float(sides)*2*M_PI);
                 gle::attribf(1.0f - (pos.x + tc.x*scale*minimapscale.x), pos.y + tc.y*scale*minimapscale.y);
             }
         }
@@ -3509,8 +3511,8 @@ namespace UI
     ICOMMAND(uikeyfield, "riefe", (ident *var, int *length, uint *onchange, float *scale, uint *children),
         BUILD(KeyField, o, o->setup(var, *length, onchange, (*scale <= 0 ? 1 : *scale) * uitextscale), children));
 
-    ICOMMAND(uiminimap, "ffffe", (float *ox, float *oy, float *yaw, float *size, uint *children),
-        BUILD(Minimap, o, o->setup(vec(*ox, *oy, 0), *yaw, *size), children));
+    ICOMMAND(uiminimap, "ffffie", (float *ox, float *oy, float *yaw, float *size, int *sides, uint *children),
+        BUILD(Minimap, o, o->setup(vec(*ox, *oy, 0), *yaw, *size, *sides), children));
 
     ICOMMAND(uiimage, "sffe", (char *texname, float *minw, float *minh, uint *children),
         BUILD(Image, o, o->setup(textureload(texname, 3, true, false), *minw, *minh), children));

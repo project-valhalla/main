@@ -3651,9 +3651,11 @@ void at(tagval *args, int numargs)
     for(int i = 1; i < numargs; i++)
     {
         const char *list = start;
+        const int len = listlen(list);
         int pos = args[i].getint();
-        for(; pos > 0; pos--) if(!parselist(list)) break;
-        if(pos > 0 || !parselist(list, start, end, qstart)) start = end = qstart = "";
+        if (pos < 0) pos += len;
+        for(; pos != 0; --pos) if(!parselist(list)) break;
+        if(pos != 0 || !parselist(list, start, end, qstart)) start = end = qstart = "";
     }
     commandret->setstr(listelem(start, end, qstart));
 }

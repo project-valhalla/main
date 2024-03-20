@@ -1521,6 +1521,7 @@ namespace UI
             changedraw(CHANGE_SHADER);
 
             SETSHADER(hudminimap);
+            LOCALPARAMF(minimapalpha, game::minimapalpha);
             bindminimap();
         }
 

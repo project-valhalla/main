@@ -98,6 +98,7 @@ namespace game
     extern int mapdeath;
 
     extern float calcradarscale();
+    extern float minimapalpha;
 }
 
 namespace server

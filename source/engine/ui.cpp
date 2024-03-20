@@ -18,6 +18,16 @@ namespace UI
         gle::attribf(x,   y+h); gle::attribf(tx,    ty+th);
     }
 
+    static void quads_rotation(float x, float y, float w, float h, float angle, float tx = 0, float ty = 0, float tw = 1, float th = 1)
+    {
+        vec v(-0.5, -0.5, 0);
+        v.rotate_around_z((90+angle)*RAD);
+        gle::attribf(x - w*v.x + w/2, y + h*v.y + h/2); gle::attribf(tx,    ty);
+        gle::attribf(x - w*v.y + w/2, y - h*v.x + h/2); gle::attribf(tx+tw, ty);
+        gle::attribf(x + w*v.x + w/2, y - h*v.y + h/2); gle::attribf(tx+tw, ty+th);
+        gle::attribf(x + w*v.y + w/2, y + h*v.x + h/2); gle::attribf(tx,    ty+th);
+    }
+
 #if 0
     static void quad(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1)
     {
@@ -1471,16 +1481,78 @@ namespace UI
         return false;
     }
 
+    struct Minimap : Filler
+    {
+        vec origin;
+        float yaw, size;
+        int sides;
+
+        void setup(vec origin_, float yaw_, float size_, int sides_)
+        {
+            origin = vec(origin_);
+            yaw = yaw_;
+            size = size_;
+            sides = clamp(sides_, 3, 64);
+            Filler::setup(size_, size_);
+        }
+
+        static const char *typestr() { return "#Minimap"; }
+        const char *gettype() const { return typestr(); }
+
+        bool target(float cx, float cy)
+        {
+            return true;
+        }
+
+        void startdraw()
+        {
+            gle::defvertex(2);
+            gle::deftexcoord0();
+            gle::begin(GL_TRIANGLE_FAN);
+        }
+
+        void enddraw()
+        {
+            gle::end();
+        }
+
+        void bindtex()
+        {
+            changedraw(CHANGE_SHADER);
+
+            SETSHADER(hudminimap);
+            LOCALPARAMF(minimapalpha, game::minimapalpha);
+            bindminimap();
+        }
+
+        void draw(float sx, float sy)
+        {
+            vec pos = vec(origin).sub(minimapcenter).mul(minimapscale).add(0.5f), dir;
+            vecfromyawpitch(yaw, 0, 1, 0, dir);
+            float scale = game::calcradarscale();
+            bindtex();
+            loopi(sides)
+            {
+                vec v = vec(0, -1, 0).rotate_around_z(i/float(sides)*2*M_PI);
+                gle::attribf(sx + 0.5f*w*(1.0f + v.x), sy + 0.5f*h*(1.0f + v.y));
+                vec tc = vec(dir).rotate_around_z(i/float(sides)*2*M_PI);
+                gle::attribf(1.0f - (pos.x + tc.x*scale*minimapscale.x), pos.y + tc.y*scale*minimapscale.y);
+            }
+        }
+    };
+
     struct Image : Filler
     {
         static Texture *lasttex;
 
         Texture *tex;
+        float angle;
 
-        void setup(Texture *tex_, float minw_ = 0, float minh_ = 0)
+        void setup(Texture *tex_, float minw_ = 0, float minh_ = 0, float angle_ = 0)
         {
             Filler::setup(minw_, minh_);
             tex = tex_;
+            angle = angle_;
         }
 
         static const char *typestr() { return "#Image"; }
@@ -1516,7 +1588,8 @@ namespace UI
             if(tex != notexture)
             {
                 bindtex();
-                quads(sx, sy, w, h);
+                if(angle != 0) quads_rotation(sx, sy, w, h, angle);
+                else quads(sx, sy, w, h);
             }
 
             Object::draw(sx, sy);
@@ -3439,8 +3512,14 @@ namespace UI
     ICOMMAND(uikeyfield, "riefe", (ident *var, int *length, uint *onchange, float *scale, uint *children),
         BUILD(KeyField, o, o->setup(var, *length, onchange, (*scale <= 0 ? 1 : *scale) * uitextscale), children));
 
+    ICOMMAND(uiminimap, "ffffie", (float *ox, float *oy, float *yaw, float *size, int *sides, uint *children),
+        BUILD(Minimap, o, o->setup(vec(*ox, *oy, 0), *yaw, *size, *sides), children));
+
     ICOMMAND(uiimage, "sffe", (char *texname, float *minw, float *minh, uint *children),
         BUILD(Image, o, o->setup(textureload(texname, 3, true, false), *minw, *minh), children));
+    
+    ICOMMAND(uirotatedimage, "sfffe", (char *texname, float *angle, float *minw, float *minh, uint *children),
+        BUILD(Image, o, o->setup(textureload(texname, 3, true, false), *minw, *minh, *angle), children));
 
     ICOMMAND(uistretchedimage, "sffe", (char *texname, float *minw, float *minh, uint *children),
         BUILD(StretchedImage, o, o->setup(textureload(texname, 3, true, false), *minw, *minh), children));

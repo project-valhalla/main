@@ -3518,7 +3518,7 @@ namespace UI
     ICOMMAND(uiimage, "sffe", (char *texname, float *minw, float *minh, uint *children),
         BUILD(Image, o, o->setup(textureload(texname, 3, true, false), *minw, *minh), children));
     
-    ICOMMAND(uiimagerotation, "sfffe", (char *texname, float *angle, float *minw, float *minh, uint *children),
+    ICOMMAND(uirotatedimage, "sfffe", (char *texname, float *angle, float *minw, float *minh, uint *children),
         BUILD(Image, o, o->setup(textureload(texname, 3, true, false), *minw, *minh, *angle), children));
 
     ICOMMAND(uistretchedimage, "sffe", (char *texname, float *minw, float *minh, uint *children),

@@ -386,7 +386,7 @@ namespace game
         if(d) intret(d->ammo[d->gunselect]);
     });
 
-    ICOMMAND(hasammo, "i", (int *gun, int *excludeselect),
+    ICOMMAND(hasammo, "ii", (int *gun, int *excludeselect),
     {
         gameent *d = followingplayer(self);
         if((!*excludeselect || (*excludeselect && d->gunselect != *gun)) && d->ammo[*gun])

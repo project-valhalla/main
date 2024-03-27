@@ -1132,6 +1132,7 @@ bool serveroption(char *opt)
 vector<const char *> gameargs;
 
 #ifdef STANDALONE
+#include "version.h"
 int main(int argc, char **argv)
 {
     setlogfile(NULL);

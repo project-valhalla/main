@@ -300,6 +300,7 @@ struct serverinfo : servinfo, pingattempts
         clearpings();
         protocol = -1;
         numplayers = maxplayers = 0;
+        gameversion = 0;
         attr.setsize(0);
     }
 
@@ -544,6 +545,12 @@ void checkpings()
         filtertext(si->map, text, false, false, false);
         getstring(text, p);
         filtertext(si->desc, text, true, false);
+        if(p.remaining()) {
+            si->gameversion = getint(p);
+        } else {
+            // if no game version is reported, the server must be running 1.0.0
+            si->gameversion = 1 << 16;
+        }
     }
 }
 
@@ -597,6 +604,7 @@ ICOMMAND(servinfomap, "i", (int *i), GETSERVERINFO(*i, si, result(si.map)));
 ICOMMAND(servinfoping, "i", (int *i), GETSERVERINFO(*i, si, intret(si.ping)));
 ICOMMAND(servinfonumplayers, "i", (int *i), GETSERVERINFO(*i, si, intret(si.numplayers)));
 ICOMMAND(servinfomaxplayers, "i", (int *i), GETSERVERINFO(*i, si, intret(si.maxplayers)));
+ICOMMAND(servinfogameversion, "i", (int *i), GETSERVERINFO(*i, si, intret(si.gameversion)));
 ICOMMAND(servinfoplayers, "i", (int *i),
     GETSERVERINFO(*i, si,
     {

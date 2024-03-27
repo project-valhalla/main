@@ -1018,7 +1018,7 @@ namespace game
         else if(*numargs < 0) intret(gamespeed);
         else printvar(id, gamespeed);
     });
-    ICOMMAND(prettygamespeed, "i", (), result(tempformatstring("%d.%02dx", gamespeed/100, gamespeed%100)));
+    ICOMMAND(prettygamespeed, "", (), result(tempformatstring("%d.%02dx", gamespeed/100, gamespeed%100)));
 
     int scaletime(int t) { return t*gamespeed; }
 

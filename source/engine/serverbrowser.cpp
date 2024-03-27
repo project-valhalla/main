@@ -545,9 +545,12 @@ void checkpings()
         filtertext(si->map, text, false, false, false);
         getstring(text, p);
         filtertext(si->desc, text, true, false);
-        if(p.remaining()) {
+        if(p.remaining())
+        {
             si->gameversion = getint(p);
-        } else {
+        }
+        else
+        {
             // if no game version is reported, the server must be running 1.0.0
             si->gameversion = 1 << 16;
         }

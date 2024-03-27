@@ -157,6 +157,7 @@
 		<Unit filename="../engine/texture.cpp" />
 		<Unit filename="../engine/texture.h" />
 		<Unit filename="../engine/ui.cpp" />
+		<Unit filename="../engine/version.h" />
 		<Unit filename="../engine/vertmodel.h" />
 		<Unit filename="../engine/water.cpp" />
 		<Unit filename="../engine/world.cpp" />

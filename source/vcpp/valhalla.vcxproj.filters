@@ -294,6 +294,9 @@
     <ClInclude Include="..\game\monster.h">
       <Filter>game</Filter>
     </ClInclude>
+    <ClInclude Include="..\engine\version.h">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="valhalla.rc" />

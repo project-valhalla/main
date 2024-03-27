@@ -1,6 +1,7 @@
 // main.cpp: initialisation & main loop
 
 #include "engine.h"
+#include "version.h"
 
 #ifdef SDL_VIDEO_DRIVER_X11
 #include "SDL_syswm.h"
@@ -1096,8 +1097,6 @@ int getclockmillis()
 }
 
 VAR(numcpus, 1, 1, 16);
-
-SVARRO(currentversionstring, "v1.0.0 (Ymir Edition)");
 
 int main(int argc, char **argv)
 {

@@ -4594,6 +4594,7 @@ namespace server
         }
         sendstring(smapname, p);
         sendstring(servername, p);
+        putint(p, currentversion);
         sendserverinforeply(p);
     }
 

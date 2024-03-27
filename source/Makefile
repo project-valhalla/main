@@ -308,6 +308,7 @@ engine/main.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/main.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 engine/main.o: shared/iengine.h shared/igame.h engine/world.h engine/octa.h
 engine/main.o: engine/light.h engine/texture.h engine/bih.h engine/model.h
+engine/main.o: engine/version.h
 engine/material.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/material.o: shared/ents.h shared/command.h shared/glexts.h
 engine/material.o: shared/glemu.h shared/iengine.h shared/igame.h
@@ -504,6 +505,7 @@ standalone/engine/command.o: shared/iengine.h shared/igame.h engine/world.h
 standalone/engine/server.o: engine/engine.h shared/cube.h shared/tools.h
 standalone/engine/server.o: shared/geom.h shared/ents.h shared/command.h
 standalone/engine/server.o: shared/iengine.h shared/igame.h engine/world.h
+standalone/engine/server.o: engine/version.h
 standalone/engine/worldio.o: engine/engine.h shared/cube.h shared/tools.h
 standalone/engine/worldio.o: shared/geom.h shared/ents.h shared/command.h
 standalone/engine/worldio.o: shared/iengine.h shared/igame.h engine/world.h

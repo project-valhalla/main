@@ -322,7 +322,7 @@ namespace game
     {
         gameent *d = getclient(cn);
         gameent *s = followingplayer(self);
-        if(!d || d->state == CS_SPECTATOR || (d != s && (!m_teammode || d->team != s->team))) return "0 0 0";
+        if(!d || d->state == CS_SPECTATOR || (d != s && !isally(d, s))) return "0 0 0";
         return tempformatstring("%f %f %f", d->o.x, d->o.y, d->o.z);
     }
     ICOMMAND(getclientpos, "i", (int *cn), result(getclientpos(*cn)));

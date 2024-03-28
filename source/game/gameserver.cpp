@@ -2765,12 +2765,9 @@ namespace server
         }
     }
 
-    bool isally(clientinfo *target, clientinfo *actor)
+    bool isally(clientinfo *a, clientinfo *b)
     {
-        return (m_teammode && sameteam(target->team, actor->team))
-               || (m_infection && ((actor->state.role == ROLE_ZOMBIE && target->state.role == ROLE_ZOMBIE)
-               || (actor->state.role != ROLE_ZOMBIE && target->state.role != ROLE_ZOMBIE)))
-               || (m_betrayal && target->state.role != ROLE_TRAITOR && actor->state.role != ROLE_TRAITOR);
+        return (m_teammode && sameteam(a->team, b->team)) || (a->state.role == b->state.role);
     }
 
     void died(clientinfo *target, clientinfo *actor, int atk, int damage, int flags = 0)

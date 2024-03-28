@@ -321,7 +321,9 @@ namespace game
     const char *getclientpos(int cn)
     {
         gameent *d = getclient(cn);
-        return d && d->state != CS_SPECTATOR ? tempformatstring("%f %f %f", d->o.x, d->o.y, d->o.z) : "0 0 0";
+        gameent *s = followingplayer(self);
+        if(!d || d->state == CS_SPECTATOR || (d != s && (!m_teammode || d->team != s->team))) return "0 0 0";
+        return tempformatstring("%f %f %f", d->o.x, d->o.y, d->o.z);
     }
     ICOMMAND(getclientpos, "i", (int *cn), result(getclientpos(*cn)));
 

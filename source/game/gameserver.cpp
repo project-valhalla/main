@@ -2767,7 +2767,7 @@ namespace server
 
     bool isally(clientinfo *target, clientinfo *actor)
     {
-        return sameteam(target->team, actor->team)
+        return (m_teammode && sameteam(target->team, actor->team))
                || (m_infection && ((actor->state.role == ROLE_ZOMBIE && target->state.role == ROLE_ZOMBIE)
                || (actor->state.role != ROLE_ZOMBIE && target->state.role != ROLE_ZOMBIE)))
                || (m_betrayal && target->state.role != ROLE_TRAITOR && actor->state.role != ROLE_TRAITOR);

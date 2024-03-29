@@ -2033,6 +2033,7 @@ vector<int> lightorder;
 hashset<lightbatch> lightbatcher(128);
 vector<lightbatch *> lightbatches;
 vector<shadowmapinfo> shadowmaps;
+vector<lightinfo> gamelights;
 
 void clearshadowcache()
 {
@@ -3581,6 +3582,11 @@ void viewlightscissor()
     }
 }
 
+void addgamelight(vec o, vec color, float radius)
+{
+    gamelights.add(lightinfo(o, color, radius));
+}
+
 void collectlights()
 {
     if(lights.length()) return;
@@ -3601,6 +3607,18 @@ void collectlights()
         lightinfo &l = lights.add(lightinfo(i, *e));
         if(l.validscissor()) lightorder.add(lights.length()-1);
     }
+
+    loopv(gamelights)
+    {
+        if(smviscull)
+        {
+            if(isfoggedsphere(gamelights[i].radius, gamelights[i].o)) continue;
+            if(pvsoccludedsphere(gamelights[i].o, gamelights[i].radius)) continue;
+        }
+        lights.add(gamelights[i]);
+        if(gamelights[i].validscissor()) lightorder.add(lights.length()-1);
+    }
+    gamelights.setsize(0);
 
     int numdynlights = 0;
     if(!drawtex)

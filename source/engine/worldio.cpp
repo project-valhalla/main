@@ -877,7 +877,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     mapcrc = f->getcrc();
     delete f;
 
-    conoutf(CON_DEBUG, "read map %s (%.1f seconds)", ogzname, (SDL_GetTicks()-loadingstart)/1000.0f);
+    if(game::editing()) conoutf(CON_DEBUG, "read map %s (%.1f seconds)", ogzname, (SDL_GetTicks()-loadingstart)/1000.0f);
 
     clearmainmenu();
 

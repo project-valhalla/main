@@ -560,12 +560,11 @@ namespace game
         // console messages
         gameent *h = followingplayer(self);
         if(!h) h = self;
-        int contype = d==h || actor==h ? CON_FRAG_SELF : CON_FRAG_OTHER;
         const char *act = "killed";
         if(flags & KILL_TRAITOR)
         {
             act = "assassinated";
-            conoutf(contype, "%s \fs\f2was %s\fr", teamcolorname(d), act);
+            conoutf(CON_FRAGINFO, "%s \fs\f2was %s\fr", teamcolorname(d), act);
             if(d == actor)
             {
                 if(d == h) formatstring(hudkillinfo, "\f2You were %s", act);
@@ -586,15 +585,15 @@ namespace game
                 act = "suicided";
                 killfeedweaponinfo = -2;
             }
-            conoutf(contype, "%s \fs\f2%s\fr", teamcolorname(d), act);
+            conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr", teamcolorname(d), act);
             if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
 
         }
         else
         {
             if(attacks[atk].gun == GUN_ZOMBIE) act = "infected";
-            if(isally(d, actor)) conoutf(contype, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
-            else conoutf(contype, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
+            if(isally(d, actor)) conoutf(CON_FRAGINFO, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
+            else conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
             if(d == h || actor == h)
             {
                 formatstring(hudkillinfo, "\fs\f2You %s%s%s%s \fr%s", d == h ? "got " : "", act, d == h ? " by" : "", ismonster(actor) ? " a" : "", d == h ? colorname(actor) : colorname(d));

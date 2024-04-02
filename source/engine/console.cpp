@@ -18,7 +18,25 @@ VARFP(maxcon, 10, 200, MAXCONLINES, { while(conlines.length() > maxcon) delete[]
 
 VARP(contags, 0, 3, 3);
 
-void conline(int type, const char *sf)        // add a line to the console buffer
+const char *getprefix(int type)
+{
+    const char *prefix = "UNKNOWN";
+    switch(type)
+    {
+        case CON_INFO:   prefix = "\f0INFO";    break;
+        case CON_WARN:   prefix = "\f5WARNING"; break;
+        case CON_ERROR:  prefix = "\f3ERROR";   break;
+        case CON_DEBUG:  prefix = "\f6DEBUG";   break;
+        case CON_INIT:   prefix = "\f8INIT";    break;
+        case CON_ECHO:   prefix = "\f1ECHO";    break;
+        case CON_NOTICE: prefix = "\f2NOTICE";  break;
+        default:         prefix = "";           break;
+    }
+    if(prefix[0] != '\0') return tempformatstring("[\fs%s\fr] ", prefix);
+    return "";
+}
+
+void conline(int type, const char *sf) // add a line to the console buffer
 {
     char *buf = NULL;
     if(type&CON_TAG_MASK) for(int i = conlines.length()-1; i >= max(conlines.length()-contags, 0); i--)
@@ -35,8 +53,9 @@ void conline(int type, const char *sf)        // add a line to the console buffe
     cline &cl = conlines.add();
     cl.line = buf;
     cl.type = type;
-    cl.outtime = totalmillis;                // for how long to keep line on screen
-    copystring(cl.line, sf, CONSTRLEN);
+    cl.outtime = totalmillis; // for how long to keep line on screen
+    defformatstring(prefixedsf, "%s%s", getprefix(type), sf);
+    copystring(cl.line, prefixedsf, CONSTRLEN);
 }
 
 void conoutfv(int type, const char *fmt, va_list args)

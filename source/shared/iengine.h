@@ -186,12 +186,13 @@ static inline void loopiter(ident *id, identstack &stack, const char *s) { tagva
 
 enum
 {
-    CON_INFO  = 1<<0,
-    CON_WARN  = 1<<1,
-    CON_ERROR = 1<<2,
-    CON_DEBUG = 1<<3,
-    CON_INIT  = 1<<4,
-    CON_ECHO  = 1<<5,
+    CON_INFO   = 1<<0,
+    CON_WARN   = 1<<1,
+    CON_ERROR  = 1<<2,
+    CON_DEBUG  = 1<<3,
+    CON_INIT   = 1<<4,
+    CON_ECHO   = 1<<5,
+    CON_NOTICE = 1<<6,
 
     CON_FLAGS = 0xFFFF,
     CON_TAG_SHIFT = 16,

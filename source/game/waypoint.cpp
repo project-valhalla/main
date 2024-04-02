@@ -684,6 +684,8 @@ namespace ai
         return true;
     }
 
+    VAR(debugwaypoints, 0, 0, 1);
+
     void loadwaypoints(bool force, const char *mname)
     {
         string wptname;
@@ -719,7 +721,7 @@ namespace ai
         }
 
         delete f;
-        conoutf(CON_DEBUG, "loaded %d waypoints from %s", numwp, wptname);
+        if(m_edit || debugwaypoints) conoutf(CON_DEBUG, "loaded %d waypoints from %s", numwp, wptname);
 
         if(!cleanwaypoints()) clearwpcache();
     }
@@ -749,7 +751,7 @@ namespace ai
         }
 
         delete f;
-        conoutf("saved %d waypoints to %s", waypoints.length()-1, wptname);
+        if(m_edit || debugwaypoints) conoutf("saved %d waypoints to %s", waypoints.length()-1, wptname);
     }
 
     ICOMMAND(savewaypoints, "s", (char *mname), savewaypoints(true, mname));

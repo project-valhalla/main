@@ -2265,7 +2265,6 @@ namespace game
                     d->makeberserker();
                     d->stoppowerupsound();
                     conoutf(CON_GAMEINFO, "%s \f2is the berserker!", colorname(d));
-                    if(d == self) thirdperson = 1;
                     playsound(S_BERSERKER, d);
                     particle_flare(d->o, d->o, 350, PART_COMICS, 0xFFFFFF, 20.0f);
                 }

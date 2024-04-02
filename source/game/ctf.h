@@ -420,7 +420,7 @@ struct ctfclientmode : clientmode
             if(f.team==1) color = vec(0.25f, 0.25f, 1);
             else if(f.team==2) color = vec(1, 0.25f, 0.25f);
             else color = vec(0.25f, 0.25f, 0.25f);
-            adddynlight(pos, 32, color, 1, 64);
+            addgamelight(pos, color.mul(255.f * (0.625f - 0.375f * cos(2 * PI * lastmillis / 1000.f))), 32);
             if(self->state!=CS_EDITING) f.chan = playsound(S_FLAGLOOP, NULL, f.owner == self? NULL: &pos, NULL, 0, -1, 500, f.chan, 200);
             else
             {

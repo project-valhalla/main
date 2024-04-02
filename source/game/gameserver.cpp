@@ -2767,7 +2767,7 @@ namespace server
 
     bool isally(clientinfo *a, clientinfo *b)
     {
-        return (m_teammode && sameteam(a->team, b->team)) || (a->state.role == b->state.role);
+        return (m_teammode && sameteam(a->team, b->team)) || (m_role && a->state.role == b->state.role);
     }
 
     void died(clientinfo *target, clientinfo *actor, int atk, int damage, int flags = 0)

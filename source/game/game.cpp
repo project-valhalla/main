@@ -427,7 +427,7 @@ namespace game
     bool isally(gameent *a, gameent *b)
     {
         return (m_teammode && validteam(a->team) && validteam(b->team) && sameteam(a->team, b->team))
-               || (a->role == b->role) || (m_invasion && a->type == ENT_PLAYER && b->type == ENT_PLAYER);
+               || (m_role && a->role == b->role) || (m_invasion && a->type == ENT_PLAYER && b->type == ENT_PLAYER);
     }
 
     bool isinvulnerable(gameent *target, gameent *actor)

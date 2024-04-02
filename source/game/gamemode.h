@@ -67,6 +67,7 @@ static struct gamemodeinfo
 #define m_timed           (m_checknot(gamemode, M_DEMO|M_EDIT|M_LOCAL))
 #define m_botmode         (m_checknot(gamemode, M_DEMO|M_LOCAL))
 #define m_nobot           (m_check(gamemode, M_BETRAYAL|M_INVASION))
+#define m_role            (m_check(gamemode, M_BERSERKER|M_INFECTION|M_BETRAYAL))
 #define m_mp(mode)        (m_checknot(mode, M_LOCAL))
 
 #define sameteam(a,b)     (m_teammode && a==b)

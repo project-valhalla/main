@@ -783,6 +783,12 @@ namespace game
         changemap(name, 0, 0);
     }
 
+    void forceintermission()
+    {
+        if(!remote && !hasnonlocalclients()) server::startintermission();
+        else addmsg(N_FORCEINTERMISSION, "r");
+    }
+
     void newmap(int size)
     {
         addmsg(N_NEWMAP, "ri", size);

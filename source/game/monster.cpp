@@ -365,7 +365,7 @@ namespace game
     {
         conoutf(CON_GAMEINFO, "\f2You have cleared the map!");
         monstertotal = 0;
-        timeupdate(0);
+        forceintermission();
     }
     ICOMMAND(endsp, "", (), endsp(false));
 

@@ -723,13 +723,19 @@ namespace game
 
     // client
     extern bool connected, remote, demoplayback;
+    extern bool isignored(int cn);
+
     extern string servdesc;
+
     extern vector<uchar> messages;
+
     extern const vec teamlightcolor[1+MAXTEAMS];
+
     extern int parseplayer(const char *arg);
+    extern int gamespeed;
+
     extern void ignore(int cn);
     extern void unignore(int cn);
-    extern bool isignored(int cn);
     extern bool addmsg(int type, const char *fmt = NULL, ...);
     extern void switchname(const char *name);
     extern void switchteam(const char *name);
@@ -740,7 +746,7 @@ namespace game
     extern void changemap(const char *name, int mode, int muts);
     extern void c2sinfo(bool force = false);
     extern void sendposition(gameent *d, bool reliable = false);
-    extern int gamespeed;
+    extern void forceintermission();
 
     // weapon
     extern int getweapon(const char *name);

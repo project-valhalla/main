@@ -825,7 +825,7 @@ int playsoundname(const char *s, physent *owner, const vec *loc, int vol, int fl
     return playsound(id, owner, loc, NULL, flags, loops, fade, chanid, radius, expire);
 }
 
-ICOMMAND(uisound, "si", (const char *s, int *vol), playsoundname(s, NULL, NULL, *vol, SND_UI));
+ICOMMAND(uisound, "si", (const char *s, int *vol), if(uivol) playsoundname(s, NULL, NULL, *vol, SND_UI));
 ICOMMAND(playsound, "i", (int *n), playsound(*n));
 ICOMMAND(voicecom, "ssi", (const char *sound, char *text, int *team),
 {

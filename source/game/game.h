@@ -160,7 +160,10 @@ enum
 };
 
 // server privileges
-enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_AUTH};
+enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_AUTH };
+static const int privilegecolors[4]            = {   0xFFFFFF, 0x40FF80,        0xFF8000, 0xFF00FF };
+static const char * const privilegetextcode[4] = {         "",    "\f0",           "\f6",    "\f5" };
+static const char * const privilegenames[4]    = {  "unknown", "master", "administrator",   "auth" };
 
 // round states
 enum
@@ -173,7 +176,6 @@ enum
 };
 
 // network messages codes, c2s, c2c, s2c
-
 enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
@@ -237,8 +239,8 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 #define VALHALLA_SERVER_PORT 21217
 #define VALHALLA_LANINFO_PORT 21216
 #define VALHALLA_MASTER_PORT 21215
-#define PROTOCOL_VERSION 1              // bump when protocol changes
-#define DEMO_VERSION 1                  // bump when demo format changes
+#define PROTOCOL_VERSION 1 // bump when protocol changes
+#define DEMO_VERSION 1  // bump when demo format changes
 #define DEMO_MAGIC "VALHALLA_DEMO\0\0"
 
 struct demoheader

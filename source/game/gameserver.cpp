@@ -807,17 +807,6 @@ namespace server
         return (n>=MM_START && size_t(n-MM_START)<sizeof(mastermodenames)/sizeof(mastermodenames[0])) ? mastermodenames[n-MM_START] : unknown;
     }
 
-    const char *privname(int type)
-    {
-        switch(type)
-        {
-            case PRIV_AUTH: return "\f5auth\ff";
-            case PRIV_ADMIN: return "\f6administrator\ff";
-            case PRIV_MASTER: return "\f0master\ff";
-            default: return "unknown";
-        }
-    }
-
     void sendservmsg(const char *s) { sendf(-1, 1, "ris", N_SERVMSG, s); }
 
     void sendservmsgf(const char *fmt, ...) PRINTFARGS(1, 2);
@@ -1506,13 +1495,13 @@ namespace server
             }
             if(trial) return true;
             ci->privilege = wantpriv;
-            name = privname(ci->privilege);
+            name = privilegenames[ci->privilege];
         }
         else
         {
             if(!ci->privilege) return false;
             if(trial) return true;
-            name = privname(ci->privilege);
+            name = privilegenames[ci->privilege];
             revokemaster(ci);
         }
         bool hasmaster = false;

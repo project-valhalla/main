@@ -137,8 +137,8 @@ namespace game
             int status = d->state!=CS_DEAD && !d->ghost ? 0xFFFFFF : 0x606060;
             if(d->privilege)
             {
-                status = d->privilege>=PRIV_ADMIN ? 0xFF8000 : 0x40FF80;
-                if(d->state==CS_DEAD) status = (status>>1)&0x7F7F7F;
+                status = privilegecolors[d->privilege];
+                if(d->state==CS_DEAD || d->ghost) status = (status>>1)&0x7F7F7F;
             }
             intret(status);
         }

@@ -16,6 +16,7 @@ ehthumbs.db
 mingw.res
 bin_unix/
 source/tess_client
+source/tess_master
 source/tess_server
 source/vcpp/x64/
 source/vcpp/x86/
@@ -25,6 +26,9 @@ source/vcpp/x86/
 Debug*/
 Release*/
 Profile*/
+config/autoexec.cfg
+master.cfg
+master.log
 
 
 # Created by https://www.gitignore.io/api/c,c++,intellij+all

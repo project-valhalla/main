@@ -26,6 +26,7 @@ namespace game
         physent *stacked;
         vec stackpos;
         bool halted, canmove;
+        int lastunblocked;
 
         monster(int _type, int _yaw, int _tag, bool _canmove, int _state, int _trigger, int _move) :
             monsterstate(_state), tag(_tag),
@@ -65,6 +66,7 @@ namespace game
             copystring(name, t.name);
             halted = false;
             canmove = _canmove;
+            lastunblocked = 0;
         }
 
         void normalize_yaw(float angle)
@@ -111,16 +113,21 @@ namespace game
 
             if(blocked) // special case: if we run into scenery
             {
-                blocked = false;
-                if(!rnd(20000/monstertypes[mtype].speed)) // try to jump over obstackle (rare)
+                //blocked = false;
+                if((lastmillis - lastunblocked) > 3000 || !rnd(20000/monstertypes[mtype].speed)) // try to jump over obstackle (rare)
                 {
                     jumping = true;
+                    lastunblocked = lastmillis;
                 }
                 else if(trigger<lastmillis && (monsterstate!=MS_HOME || !rnd(5))) // search for a way around (common)
                 {
                     targetyaw += 90+rnd(180); // patented "random walk" AI path-finding (TM) ;)
                     transition(MS_SEARCH, 1, 100, 1000);
                 }
+            }
+            else
+            {
+                lastunblocked = lastmillis;
             }
 
             float enemyyaw = -atan2(enemy->o.x - o.x, enemy->o.y - o.y)/RAD;

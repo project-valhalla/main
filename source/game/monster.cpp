@@ -45,7 +45,7 @@ namespace game
             aboveeye = 7.0f;
             radius *= t.bscale/10.0f;
             xradius = yradius = radius;
-            eyeheight *= t.bscale/10.0f;
+            eyeheight = max(6.f, eyeheight * t.bscale/10.f);
             aboveeye *= t.bscale/10.0f;
             weight = t.weight;
             if(_state!=MS_SLEEP) spawnplayer(this);

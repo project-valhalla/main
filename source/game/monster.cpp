@@ -146,12 +146,12 @@ namespace game
                     if(editmode || !canmove) break;
                     normalize_yaw(enemyyaw);
                     float angle = (float)fabs(enemyyaw-yaw);
-                    if(dist<32 // the better the angle to the player, the further the monster can see/hear
-                    ||(dist<64 && angle<135)
-                    ||(dist<128 && angle<90)
-                    ||(dist<256 && angle<45)
+                    if(dist<128 // the better the angle to the player, the further the monster can see/hear
+                    ||(dist<256 && angle<135)
+                    ||(dist<512 && angle<90)
+                    ||(dist<1024 && angle<45)
                     || angle<10
-                    || (monsterhurt && o.dist(monsterhurtpos)<128))
+                    || (monsterhurt && o.dist(monsterhurtpos)<512))
                     {
                         vec target;
                         if(raycubelos(o, enemy->o, target))

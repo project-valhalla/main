@@ -134,11 +134,12 @@ namespace game
         gameent *d = getclient(*cn);
         if(d)
         {
-            int status = d->state!=CS_DEAD && !d->ghost ? 0xFFFFFF : 0x606060;
-            if(d->privilege)
+            bool isalive = d->state != CS_DEAD && !d->ghost;
+            int status = !isalive ? 0x606060 : 0xFFFFFF;
+            if(validprivilege(d->privilege))
             {
                 status = privilegecolors[d->privilege];
-                if(d->state==CS_DEAD || d->ghost) status = (status>>1)&0x7F7F7F;
+                if(!isalive) status = (status>>1)&0x7F7F7F;
             }
             intret(status);
         }

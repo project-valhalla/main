@@ -1469,7 +1469,7 @@ namespace server
     bool setmaster(clientinfo *ci, bool val, const char *pass = "", const char *authname = NULL, const char *authdesc = NULL, int authpriv = PRIV_MASTER, bool force = false, bool trial = false)
     {
         if(authname && !val) return false;
-        const char *name = "";
+        const char *name = "[unknown]";
         if(val)
         {
             bool haspass = adminpass[0] && checkpassword(ci, adminpass, pass);
@@ -1495,13 +1495,13 @@ namespace server
             }
             if(trial) return true;
             ci->privilege = wantpriv;
-            name = privilegenames[ci->privilege];
+            if(validprivilege(ci->privilege)) name = privilegenames[ci->privilege];
         }
         else
         {
             if(!ci->privilege) return false;
             if(trial) return true;
-            name = privilegenames[ci->privilege];
+            if(validprivilege(ci->privilege)) name = privilegenames[ci->privilege];
             revokemaster(ci);
         }
         bool hasmaster = false;

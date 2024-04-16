@@ -164,6 +164,7 @@ enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_AUTH };
 static const int privilegecolors[4]            = {   0xFFFFFF, 0x40FF80,        0xFF8000, 0xFF00FF };
 static const char * const privilegetextcode[4] = {         "",    "\f0",           "\f6",    "\f5" };
 static const char * const privilegenames[4]    = {  "unknown", "master", "administrator",   "auth" };
+inline bool validprivilege(int privilege) { return privilege > PRIV_NONE && privilege <= PRIV_AUTH; }
 
 // round states
 enum

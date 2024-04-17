@@ -713,7 +713,7 @@ void updatefrommaster()
                 int port;
                 if(sscanf(args, "%100s %d", ip, &port) == 2) addserver(ip, port);
             }
-            else if(matchstring(line, cmdlen, "echo")) conoutf("\f1%s", args);
+            else if(matchstring(line, cmdlen, "notice")) conoutf(CON_NOTICE, "\f2%s", args);
 
             line = end + 1;
         }

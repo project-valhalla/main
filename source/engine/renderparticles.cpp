@@ -856,10 +856,12 @@ static partrenderer *parts[] =
     new taperenderer("data/texture/particle/trail_projectile.png", PT_TAPE|PT_FEW|PT_BRIGHT),                            // projectile trail
     new taperenderer("data/texture/particle/trail_boot.png", PT_TAPE|PT_BRIGHT),                                         // boot trail
     &lightnings,                                                                                                         // lightning
-    &fireballs,                                                                                                          // explosion fireball
-    &pulsebursts,                                                                                                        // pulse burst
+    &explosions,                                                                                                         // bland explosion
+    &energybursts,                                                                                                       // pulse/plasma/energy burst
+    &fireballs,                                                                                                          // fire ball
     new quadrenderer("data/texture/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                    // sparks
     new trailrenderer("data/texture/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                          // spark trail
+    new quadrenderer("data/texture/particle/explosion.png", PT_PART|PT_FLIP|PT_BRIGHT),                                    // explosion particles
     new quadrenderer("data/texture/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                                      // edit mode entities
     new quadrenderer("data/texture/particle/orb.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),                                 // energy orb
     new quadrenderer("data/texture/particle/ring.png", PT_PART|PT_FLIP|PT_BRIGHT),                                       // energy ring

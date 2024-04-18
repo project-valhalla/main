@@ -26,6 +26,7 @@ namespace game
         physent *stacked;
         vec stackpos;
         bool halted, canmove;
+        int lastunblocked;
 
         monster(int _type, int _yaw, int _tag, bool _canmove, int _state, int _trigger, int _move) :
             monsterstate(_state), tag(_tag),
@@ -45,7 +46,7 @@ namespace game
             aboveeye = 7.0f;
             radius *= t.bscale/10.0f;
             xradius = yradius = radius;
-            eyeheight *= t.bscale/10.0f;
+            eyeheight = max(9.5f, eyeheight * t.bscale/10.f);
             aboveeye *= t.bscale/10.0f;
             weight = t.weight;
             if(_state!=MS_SLEEP) spawnplayer(this);
@@ -65,6 +66,7 @@ namespace game
             copystring(name, t.name);
             halted = false;
             canmove = _canmove;
+            lastunblocked = 0;
         }
 
         void normalize_yaw(float angle)
@@ -111,16 +113,21 @@ namespace game
 
             if(blocked) // special case: if we run into scenery
             {
-                blocked = false;
-                if(!rnd(20000/monstertypes[mtype].speed)) // try to jump over obstackle (rare)
+                //blocked = false;
+                if((lastmillis - lastunblocked) > 3000 || !rnd(20000/monstertypes[mtype].speed)) // try to jump over obstackle (rare)
                 {
                     jumping = true;
+                    lastunblocked = lastmillis;
                 }
                 else if(trigger<lastmillis && (monsterstate!=MS_HOME || !rnd(5))) // search for a way around (common)
                 {
                     targetyaw += 90+rnd(180); // patented "random walk" AI path-finding (TM) ;)
                     transition(MS_SEARCH, 1, 100, 1000);
                 }
+            }
+            else
+            {
+                lastunblocked = lastmillis;
             }
 
             float enemyyaw = -atan2(enemy->o.x - o.x, enemy->o.y - o.y)/RAD;
@@ -146,12 +153,12 @@ namespace game
                     if(editmode || !canmove) break;
                     normalize_yaw(enemyyaw);
                     float angle = (float)fabs(enemyyaw-yaw);
-                    if(dist<32 // the better the angle to the player, the further the monster can see/hear
-                    ||(dist<64 && angle<135)
-                    ||(dist<128 && angle<90)
-                    ||(dist<256 && angle<45)
+                    if(dist<128 // the better the angle to the player, the further the monster can see/hear
+                    ||(dist<256 && angle<135)
+                    ||(dist<512 && angle<90)
+                    ||(dist<1024 && angle<45)
                     || angle<10
-                    || (monsterhurt && o.dist(monsterhurtpos)<128))
+                    || (monsterhurt && o.dist(monsterhurtpos)<512))
                     {
                         vec target;
                         if(raycubelos(o, enemy->o, target))

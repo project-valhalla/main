@@ -243,11 +243,12 @@ namespace game
             state = CS_DEAD;
             lastpain = lastmillis;
             exploding = 0;
-            if(gibbed() || forceexplosion || m_insta(mutators))
+            if(gibbed() || forceexplosion)
             {
                 if(!gibbed()) health = -50;
                 if(gore) gibeffect(max(-health, 0), vel, this);
-                if(monstertypes[mtype].isexplosive) game::explode(true, this, o, vel, NULL, attacks[ATK_ROCKET1].damage, ATK_ROCKET1);
+                int atk = monstertypes[mtype].atk;
+                if(monstertypes[mtype].isexplosive) game::explode(true, this, o, vel, NULL, attacks[atk].damage, atk);
             }
             else playsound(monstertypes[mtype].diesound, this);
         }
@@ -271,26 +272,29 @@ namespace game
                 monsterhurtpos = o;
             }
             health -= damage;
-            if(monstertypes[mtype].isexplosive)
-            {
-                if(health > 0 && health < monstertypes[mtype].health / 2)
-                {
-                    setexplosiontimer();
-                }
-            }
             if(health <= 0 || (m_insta(mutators) && d->type != ENT_AI))
             {
                 if(atk == ATK_PISTOL_COMBO) deathtype = DEATH_DISRUPT;
-                monsterdeath();
+                monsterdeath(m_insta(mutators));
                 monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
             }
-            else if(!exploding) // if the monster is in kamikaze mode, ignore the pain
+            else
             {
-                transition(MS_PAIN, 0, monstertypes[mtype].pain, 200); // in this state monster won't attack
-                if(health > 0 && lastmillis - lastyelp > 600)
+                if(monstertypes[mtype].isexplosive)
                 {
-                    playsound(monstertypes[mtype].painsound, this);
-                    lastyelp = lastmillis;
+                    if(health <= monstertypes[mtype].health / 2)
+                    {
+                        setexplosiontimer();
+                    }
+                }
+                if(!exploding) // if the monster is in kamikaze mode, ignore the pain
+                {
+                    transition(MS_PAIN, 0, monstertypes[mtype].pain, 200); // in this state monster won't attack
+                    if(health > 0 && lastmillis - lastyelp > 600)
+                    {
+                        playsound(monstertypes[mtype].painsound, this);
+                        lastyelp = lastmillis;
+                    }
                 }
             }
         }
@@ -445,7 +449,8 @@ namespace game
                 {
                     regular_particle_flame(PART_FLAME, m->o, 6.5f, 1.5f, 0x903020, 1, 2.0f);
                     regular_particle_flame(PART_SMOKE, m->o, 5.0f, 2.5f, 0x303020, 2, 4.0f, 100.0f);
-                    bool isinproximity = m->enemy->state == CS_ALIVE && m->o.dist(m->enemy->o) < attacks[monstertypes[m->mtype].atk].exprad; // close enough to the enemy
+                    int atk = monstertypes[m->mtype].atk;
+                    bool isinproximity = m->enemy->state == CS_ALIVE && m->o.dist(m->enemy->o) < attacks[atk].exprad; // close enough to the enemy
                     bool istimerover = lastmillis - m->exploding >= MONSTER_EXPLODE_DELAY; // detonation timer has ran out
                     if(isinproximity || istimerover)
                     {

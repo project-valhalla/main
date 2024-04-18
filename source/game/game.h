@@ -598,7 +598,10 @@ struct gameent : dynent, gamestate
         }
     }
 
-    bool gibbed() { return state == CS_DEAD && health<=-50; }
+    bool gibbed()
+    {
+        return (state == CS_DEAD && health <= -50) || deathtype == DEATH_GIB;
+    }
 };
 
 struct teamscore

@@ -26,7 +26,7 @@ namespace game
         physent *stacked;
         vec stackpos;
         bool halted, canmove;
-        int lastunblocked;
+        int lastunblocked, exploding;
 
         monster(int _type, int _yaw, int _tag, bool _canmove, int _state, int _trigger, int _move) :
             monsterstate(_state), tag(_tag),
@@ -66,7 +66,7 @@ namespace game
             copystring(name, t.name);
             halted = false;
             canmove = _canmove;
-            lastunblocked = 0;
+            lastunblocked = exploding = 0;
         }
 
         void normalize_yaw(float angle)
@@ -183,7 +183,7 @@ namespace game
                     break;
 
                 case MS_HOME: // monster has visual contact, heads straight for player and may want to shoot at any time
-                    if(!monstertypes[mtype].neutral) targetyaw = enemyyaw;
+                    if(!monstertypes[mtype].isneutral) targetyaw = enemyyaw;
                     if(trigger<lastmillis)
                     {
                         vec target;
@@ -191,7 +191,7 @@ namespace game
                         {
                             transition(MS_HOME, 1, 800, 500);
                         }
-                        else if(!monstertypes[mtype].neutral)
+                        else if(!monstertypes[mtype].isneutral && !exploding)
                         {
                             bool melee = false, longrange = false;
                             switch(monstertypes[mtype].atk)
@@ -230,6 +230,28 @@ namespace game
             }
         }
 
+        void setexplosiontimer()
+        {
+            if(exploding) return;
+            exploding = lastmillis;
+            speed += monstertypes[mtype].speedbonus; // increase movement to get to the player and explode in their face faster
+            playsound(monstertypes[mtype].haltsound, this);
+        }
+
+        void monsterdeath(bool forceexplosion = false)
+        {
+            state = CS_DEAD;
+            lastpain = lastmillis;
+            exploding = 0;
+            if(gibbed() || forceexplosion || m_insta(mutators))
+            {
+                if(!gibbed()) health = -50;
+                if(gore) gibeffect(max(-health, 0), vel, this);
+                if(monstertypes[mtype].isexplosive) game::explode(true, this, o, vel, NULL, attacks[ATK_ROCKET1].damage, ATK_ROCKET1);
+            }
+            else playsound(monstertypes[mtype].diesound, this);
+        }
+
         void monsterpain(int damage, gameent *d, int atk, int flags)
         {
             if(d->type==ENT_AI) // a monster hit us
@@ -248,16 +270,21 @@ namespace game
                 monsterhurt = true;
                 monsterhurtpos = o;
             }
-            if((health -= damage)<=0 || (m_insta(mutators) && d->type != ENT_AI))
+            health -= damage;
+            if(monstertypes[mtype].isexplosive)
             {
-                state = CS_DEAD;
-                lastpain = lastmillis;
-                if(gore && gibbed()) gibeffect(max(-health, 0), vel, this);
-                else playsound(monstertypes[mtype].diesound, this);
+                if(health > 0 && health < monstertypes[mtype].health / 2)
+                {
+                    setexplosiontimer();
+                }
+            }
+            if(health <= 0 || (m_insta(mutators) && d->type != ENT_AI))
+            {
                 if(atk == ATK_PISTOL_COMBO) deathtype = DEATH_DISRUPT;
+                monsterdeath();
                 monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
             }
-            else
+            else if(!exploding) // if the monster is in kamikaze mode, ignore the pain
             {
                 transition(MS_PAIN, 0, monstertypes[mtype].pain, 200); // in this state monster won't attack
                 if(health > 0 && lastmillis - lastyelp > 600)
@@ -328,6 +355,7 @@ namespace game
                 // heal monsters when player dies
                 monster *m = monsters[i];
                 m->health = min(m->health + monstertypes[m->mtype].healthbonus, monstertypes[m->mtype].health);
+                if(m->exploding) m->exploding = lastmillis; // reset explosion timer
             }
         }
     }
@@ -409,17 +437,32 @@ namespace game
 
         loopv(monsters)
         {
-            if(monsters[i]->state==CS_ALIVE) monsters[i]->monsteraction(curtime);
-            else if(monsters[i]->state==CS_DEAD)
+            monster *m = monsters[i];
+            if(m->state==CS_ALIVE)
             {
-                if(lastmillis-monsters[i]->lastpain<2000)
+                m->monsteraction(curtime);
+                if(m->exploding)
                 {
-                    monsters[i]->move = monsters[i]->strafe = 0;
-                    moveplayer(monsters[i], 1, true);
+                    regular_particle_flame(PART_FLAME, m->o, 6.5f, 1.5f, 0x903020, 1, 2.0f);
+                    regular_particle_flame(PART_SMOKE, m->o, 5.0f, 2.5f, 0x303020, 2, 4.0f, 100.0f);
+                    bool isinproximity = m->enemy->state == CS_ALIVE && m->o.dist(m->enemy->o) < attacks[monstertypes[m->mtype].atk].exprad; // close enough to the enemy
+                    bool istimerover = lastmillis - m->exploding >= MONSTER_EXPLODE_DELAY; // detonation timer has ran out
+                    if(isinproximity || istimerover)
+                    {
+                        monsters[i]->monsterdeath(true); // detonate monster through regular death with forced gore/explosion
+                    }
                 }
-                if(monsters[i]->ragdoll) moveragdoll(monsters[i]);
             }
-            else if(monsters[i]->ragdoll) cleanragdoll(monsters[i]);
+            else if(m->state==CS_DEAD)
+            {
+                if(lastmillis - m->lastpain < 2000)
+                {
+                    m->move = m->strafe = 0;
+                    moveplayer(m, 1, true);
+                }
+                if(m->ragdoll) moveragdoll(m);
+            }
+            else if(m->ragdoll) cleanragdoll(m);
         }
 
         if(monsterwashurt) monsterhurt = false;
@@ -442,7 +485,7 @@ namespace game
                 }
                 float fade = 1;
                 if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);
-                renderai(&m, monstertypes[m.mtype].mdlname, a, 0, m.monsterstate == MS_ATTACKING ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].ragdoll);
+                renderai(&m, monstertypes[m.mtype].mdlname, a, 0, m.monsterstate == MS_ATTACKING ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
             }
         }
     }
@@ -450,7 +493,7 @@ namespace game
     void suicidemonster(monster *m)
     {
         m->deathtype = mapdeath;
-        m->monsterpain(400, self, -1, 0);
+        m->monsterdeath();
     }
 
     void hitmonster(int damage, monster *m, gameent *at, int atk, int flags)

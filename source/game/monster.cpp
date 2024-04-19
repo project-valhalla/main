@@ -26,7 +26,7 @@ namespace game
         physent *stacked;
         vec stackpos;
         bool halted, canmove;
-        int lastunblocked, exploding;
+        int lastunblocked, exploding, detonating;
 
         monster(int _type, int _yaw, int _tag, bool _canmove, int _state, int _trigger, int _move) :
             monsterstate(_state), tag(_tag),
@@ -52,7 +52,8 @@ namespace game
             if(_state!=MS_SLEEP) spawnplayer(this);
             trigger = lastmillis+_trigger;
             targetyaw = yaw = (float)_yaw;
-            move = _move;
+            canmove = _canmove;
+            if(canmove) move = _move;
             enemy = self;
             gunselect = attacks[t.atk].gun;
             speed = (float)t.speed*4;
@@ -65,8 +66,7 @@ namespace game
             anger = 0;
             copystring(name, t.name);
             halted = false;
-            canmove = _canmove;
-            lastunblocked = exploding = 0;
+            lastunblocked = exploding = detonating = 0;
         }
 
         void normalize_yaw(float angle)
@@ -85,7 +85,7 @@ namespace game
         void transition(int _state, int _moving, int n, int r) // n = at skill 0, n/2 = at skill 10, r = added random factor
         {
             monsterstate = _state;
-            move = _moving;
+            if(canmove) move = _moving;
             n = n*130/100;
             trigger = lastmillis+n-skill*(n/16)+rnd(r+1);
         }
@@ -183,7 +183,7 @@ namespace game
                     break;
 
                 case MS_HOME: // monster has visual contact, heads straight for player and may want to shoot at any time
-                    if(!monstertypes[mtype].isneutral) targetyaw = enemyyaw;
+                    if(!monstertypes[mtype].isneutral && !detonating) targetyaw = enemyyaw;
                     if(trigger<lastmillis)
                     {
                         vec target;
@@ -191,7 +191,7 @@ namespace game
                         {
                             transition(MS_HOME, 1, 800, 500);
                         }
-                        else if(!monstertypes[mtype].isneutral && !exploding)
+                        else if(!monstertypes[mtype].isneutral && !exploding && !detonating)
                         {
                             bool melee = false, longrange = false;
                             switch(monstertypes[mtype].atk)
@@ -238,11 +238,20 @@ namespace game
             playsound(monstertypes[mtype].haltsound, this);
         }
 
+        void detonate()
+        {
+            if(detonating) return;
+            detonating = lastmillis;
+            exploding = 0;
+            move = strafe = 0;
+            playsound(S_WEAPON_DETONATE, this);
+        }
+
         void monsterdeath(bool forceexplosion = false)
         {
             state = CS_DEAD;
             lastpain = lastmillis;
-            exploding = 0;
+            exploding = detonating = 0;
             if(gibbed() || forceexplosion)
             {
                 if(!gibbed()) health = -50;
@@ -454,7 +463,14 @@ namespace game
                     bool istimerover = lastmillis - m->exploding >= MONSTER_EXPLODE_DELAY; // detonation timer has ran out
                     if(isinproximity || istimerover)
                     {
-                        monsters[i]->monsterdeath(true); // detonate monster through regular death with forced gore/explosion
+                        m->detonate();
+                    }
+                }
+                if(m->detonating)
+                {
+                    if(lastmillis - m->detonating >= MONSTER_DETONATION_DELAY)
+                    {
+                        monsters[i]->monsterdeath(true);
                     }
                 }
             }

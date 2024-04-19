@@ -23,6 +23,11 @@ enum
 };
 inline bool validmonster(int monster) { return monster >= 0 && monster < NUMMONSTERS; }
 
+static const int MONSTER_EXPLODE_DELAY = 8000;
+static const int MONSTER_DETONATION_DELAY = 350;
+
+static const int TOTMFREQ = 14;
+
 struct monstertype // see docs for how these values modify behaviour
 {
     int type, atk, speed, speedbonus, health, healthbonus, freq, lag, rate, pain, loyalty, bscale, weight, bloodcolor;
@@ -30,9 +35,6 @@ struct monstertype // see docs for how these values modify behaviour
     const char *name, *mdlname, *worldgunmodel;
     bool isexplosive, isneutral, hasragdoll;
 };
-
-static const int TOTMFREQ = 14;
-static const int MONSTER_EXPLODE_DELAY = 8000;
 
 static const monstertype monstertypes[NUMMONSTERS] =
 {

@@ -251,6 +251,7 @@ namespace game
                 if(monstertypes[mtype].isexplosive) game::explode(true, this, o, vel, NULL, attacks[atk].damage, atk);
             }
             else playsound(monstertypes[mtype].diesound, this);
+            monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
         }
 
         void monsterpain(int damage, gameent *d, int atk, int flags)
@@ -276,7 +277,6 @@ namespace game
             {
                 if(atk == ATK_PISTOL_COMBO) deathtype = DEATH_DISRUPT;
                 monsterdeath(m_insta(mutators));
-                monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
             }
             else
             {

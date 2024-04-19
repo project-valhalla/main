@@ -472,7 +472,7 @@ namespace game
                 {
                     if(lastmillis - m->detonating >= MONSTER_DETONATION_DELAY)
                     {
-                        monsters[i]->monsterdeath(true);
+                        monsters[i]->monsterdeath(true); // detonate monster through regular death with forced gore/explosion
                     }
                 }
             }

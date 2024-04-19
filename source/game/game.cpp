@@ -355,9 +355,11 @@ namespace game
             clearscreeneffects();
             addscreenfx(200);
         }
+        int color = 0x00FF5B;
+        if(d->type == ENT_PLAYER) color = getplayercolor(d, d->team);
+        particle_splash(PART_SPARK2, 250, 200, d->o, color, 0.60f, 200, 5);
         stopownersounds(d);
         playsound(S_SPAWN, d);
-        particle_splash(PART_SPARK2, 250, 200, d->o, getplayercolor(d, d->team), 0.60f, 200, 5);
     }
 
     void respawn()

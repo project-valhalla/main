@@ -67,6 +67,8 @@ namespace game
             copystring(name, t.name);
             halted = false;
             lastunblocked = exploding = detonating = 0;
+
+            spawneffect(this);
         }
 
         void normalize_yaw(float angle)

@@ -164,7 +164,7 @@ namespace game
     {
         gameent *owner;
 
-        vec offset;
+        vec offset, lastpos;
 
         bool local;
 
@@ -268,6 +268,8 @@ namespace game
         bnc.offsetmillis = OFFSETMILLIS;
 
         bnc.resetinterp();
+
+        bnc.lastpos = owner->o;
     }
 
     VARP(blood, 0, 1, 1);
@@ -311,13 +313,23 @@ namespace game
                 case BNC_ROCKET:
                 {
                     if(bnc.vel.magnitude() > 20.0f) regular_particle_splash(PART_SMOKE, 5, 200, pos, 0x555555, 1.60f, 10, 500);
+                    if(bnc.lifetime < attacks[bnc.atk].lifetime - 100)
+                    {
+                         particle_flare(bnc.lastpos, pos, 500, PART_TRAIL_STRAIGHT, 0xFFC864, 0.4f);
+                    }
+                    bnc.lastpos = pos;
                     break;
                 }
 
                 case BNC_GRENADE2:
                 case BNC_GRENADE:
                 {
-                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_RING, 1, 200, pos, bnc.bouncetype == BNC_GRENADE2 ? 0xF97474 : 0x74BCF9, 1.0f, 1, 500);
+                    if(bnc.vel.magnitude() > 10.0f) regular_particle_splash(PART_RING, 1, 200, pos, 0x74BCF9, 1.0f, 1, 500);
+                    if(bnc.bouncetype == BNC_GRENADE2)
+                    {
+                        if(bnc.lifetime < attacks[bnc.atk].lifetime - 100) particle_flare(bnc.lastpos, pos, 500, PART_TRAIL_STRAIGHT, 0x74BCF9, 0.4f);
+                    }
+                    bnc.lastpos = pos;
                     break;
                 }
 
@@ -678,8 +690,8 @@ namespace game
             case ATK_GRENADE1:
             case ATK_GRENADE2:
             {
-                dynlight = atk == ATK_GRENADE1 ? vec(0, 0.25f, 1.0f) : vec(1, 0.25f, 0.25f);
-                explosioncolor = atk == ATK_GRENADE1 ? 0x74BCF9 : 0xF97474;
+                dynlight = vec(0, 0.25f, 1.0f);
+                explosioncolor = 0x74BCF9;
                 explosiontype = PART_EXPLOSION2;
                 particle_flare(v, v, 120, PART_ELECTRICITY, explosioncolor, 30.0f);
                 break;

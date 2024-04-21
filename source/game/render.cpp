@@ -405,8 +405,8 @@ namespace game
         if(d == followingplayer(self) && !isthirdperson()) return;
         if(d->timeinair > 650 && (d->haspowerup(PU_AGILITY) || d->role == ROLE_BERSERKER || d->role == ROLE_ZOMBIE))
         {
-            if(d->lastfootright.z >= 0) particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.3f);
-            if(d->lastfootleft.z >= 0) particle_flare(d->lastfootleft, d->lfoot, 220, PART_TRAIL_BOOT, getplayercolor(d, d->team), 0.3f);
+            if(d->lastfootright.z >= 0) particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_STRAIGHT, getplayercolor(d, d->team), 0.3f);
+            if(d->lastfootleft.z >= 0) particle_flare(d->lastfootleft, d->lfoot, 220, PART_TRAIL_STRAIGHT, getplayercolor(d, d->team), 0.3f);
             d->lastfootright = d->rfoot;
             d->lastfootleft = d->lfoot;
         }

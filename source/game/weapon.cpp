@@ -375,7 +375,7 @@ namespace game
                     explode(bnc.local, bnc.owner, bnc.o, bnc.vel, NULL, damage, bnc.atk);
                     addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
                     if(bnc.atk == ATK_GRENADE1 || bnc.atk == ATK_GRENADE2)
-                        addstain(STAIN_PULSE_GLOW, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad/2, bnc.atk == ATK_GRENADE1 ? 0x74BCF9 : 0xF97474);
+                        addstain(STAIN_PULSE_GLOW, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad/2, 0x74BCF9);
                     if(bnc.local)
                         addmsg(N_EXPLODE, "rci3iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime,
                                                     hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
@@ -1117,7 +1117,7 @@ namespace game
             {
                 if(d->muzzle.x >= 0 && muzzleflash)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_ELECTRICITY, atk == ATK_GRENADE1 ? 0x74BCF9 : 0xF97474, 2.8f, d);
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_ELECTRICITY, 0x74BCF9, 2.8f, d);
                 }
                 up.z += dist/(atk == ATK_GRENADE1 ? 8 : 16);
                 newbouncer(d, from, up, local, id, atk, atk == ATK_GRENADE1 ? BNC_GRENADE : BNC_GRENADE2, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
@@ -1498,13 +1498,8 @@ namespace game
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
             switch(bnc.bouncetype)
             {
-                case BNC_GRENADE2:
-                {
-                    adddynlight(pos, 20, vec(1, 0.25f, 0.25f));
-                    break;
-                }
-
                 case BNC_GRENADE:
+                case BNC_GRENADE2:
                 {
                     adddynlight(pos, 8, vec(0.25f, 0.25f, 1));
                     break;
@@ -1513,7 +1508,7 @@ namespace game
         }
     }
 
-    static const char * const projectilenames[4] = { "projectile/grenade", "projectile/grenade/v2", "projectile/rocket", "projectile/eject/cartridge01" };
+    static const char * const projectilenames[4] = { "projectile/grenade", "projectile/grenade", "projectile/rocket", "projectile/eject/cartridge01" };
     static const char * const gibnames[5] = { "projectile/gib/gib01", "projectile/gib/gib02", "projectile/gib/gib03", "projectile/gib/gib04", "projectile/gib/gib05" };
 
     void preloadbouncers()

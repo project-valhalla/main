@@ -1550,7 +1550,6 @@ namespace game
             {
                 switch(bnc.bouncetype)
                 {
-                    case BNC_GRENADE: mdl = "projectile/grenade"; break;
                     case BNC_ROCKET: mdl = "projectile/rocket"; break;
                     default: mdl = "projectile/grenade"; break;
                 }

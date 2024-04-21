@@ -267,16 +267,17 @@ namespace game
 
         void monsterpain(int damage, gameent *d, int atk, int flags)
         {
-            if(d->type==ENT_AI) // a monster hit us
+            if(d->type == ENT_AI) // a monster hit us
             {
-                if(this!=d) // guard for RL guys shooting themselves :)
+                if(this != d) // guard for RL guys shooting themselves :)
                 {
                     anger++; // don't attack straight away, first get angry
                     int _anger = d->type==ENT_AI && mtype==((monster *)d)->mtype ? anger/2 : anger;
                     if(_anger>=monstertypes[mtype].loyalty) enemy = d; // monster infight if very angry
                 }
+                else if(monstertypes[mtype].isexplosive) return;
             }
-            else if(d->type==ENT_PLAYER) // player hit us
+            else if(d->type == ENT_PLAYER) // player hit us
             {
                 anger = 0;
                 enemy = d;

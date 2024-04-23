@@ -852,9 +852,9 @@ static partrenderer *parts[] =
     new quadrenderer("<grey>data/texture/particle/steam.png", PT_PART|PT_FLIP),                                          // steam
     new quadrenderer("<grey>data/texture/particle/flames.png", PT_PART|PT_HFLIP|PT_RND4|PT_BRIGHT),                      // flame
     new quadrenderer("data/texture/particle/snow.png", PT_PART|PT_FLIP|PT_RND4|PT_COLLIDE, STAIN_SNOW),                  // colliding snow
-    new taperenderer("data/texture/particle/trail.png", PT_TAPE|PT_BRIGHT),                                              // bullet trail
+    new taperenderer("data/texture/particle/trail.png", PT_TAPE|PT_FEW|PT_BRIGHT),                                              // bullet trail
     new taperenderer("data/texture/particle/trail_projectile.png", PT_TAPE|PT_FEW|PT_BRIGHT),                            // projectile trail
-    new taperenderer("data/texture/particle/trail_straight.png", PT_TAPE|PT_BRIGHT),                                     // straight, continuous trail
+    new taperenderer("data/texture/particle/trail_straight.png", PT_TAPE|PT_FEW|PT_BRIGHT),                              // straight, continuous trail
     &lightnings,                                                                                                         // lightning
     &explosions,                                                                                                         // bland explosion
     &energybursts,                                                                                                       // pulse/plasma/energy burst
@@ -870,7 +870,7 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // plasma muzzle flash
     new quadrenderer("data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                // electric explosion particles
     new quadrenderer("data/texture/particle/comics.png", PT_PART|PT_LERP|PT_NOLAYER),                                    // BOOM! comics effect
-    new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_ICON|PT_HUD|PT_LERP|PT_NOLAYER),               // game icons
+    new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_FEW|PT_ICON|PT_HUD|PT_LERP|PT_NOLAYER),        // game icons
     new quadrenderer("data/interface/particle/editor_icons.png", PT_PART|PT_ICON|PT_LERP|PT_NOLAYER),                    // editor icons
     &texts,                                                                                                              // text
     &meters,                                                                                                             // meter
@@ -1016,7 +1016,7 @@ static inline particle *newparticle(const vec &o, const vec &d, int fade, int ty
     return parts[type]->addpart(o, d, fade, color, size, gravity);
 }
 
-VARP(maxparticledistance, 256, 1024, 4096);
+VARP(maxparticledistance, 256, 2048, 4096);
 
 static void splash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity)
 {

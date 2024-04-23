@@ -805,7 +805,7 @@ void cleanupstains()
     loopi(sizeof(stains)/sizeof(stains[0])) stains[i].cleanup();
 }
 
-VARP(maxstaindistance, 1, 512, 10000);
+VARP(maxstaindistance, 1, 1024, 10000);
 
 void addstain(int type, const vec &center, const vec &surface, float radius, const bvec &color, int info)
 {

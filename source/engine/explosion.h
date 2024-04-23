@@ -1,5 +1,5 @@
 VARP(softexplosion, 0, 1, 1);
-VARP(softexplosionblend, 1, 16, 64);
+VARP(softexplosionblend, 1, 12, 64);
 
 namespace sphere
 {
@@ -74,7 +74,7 @@ namespace sphere
 
     void enable()
     {
-        if(!vbuf) init(12, 6);
+        if(!vbuf) init(24, 12);
 
         gle::bindvbo(vbuf);
         gle::bindebo(ebuf);
@@ -102,12 +102,12 @@ namespace sphere
     }
 }
 
-static const float WOBBLE = 1.25f;
+FVARP(explosionwobble, 1.0f, 2.0f, 2.0f);
 
 struct fireballrenderer : listrenderer
 {
     fireballrenderer(const char *texname)
-        : listrenderer(texname, 0, PT_FIREBALL|PT_BRIGHT|PT_SHADER)
+        : listrenderer(texname, 0, PT_FIREBALL|PT_SHADER|PT_BRIGHT)
     {}
 
     void startrender()
@@ -131,7 +131,7 @@ struct fireballrenderer : listrenderer
     void seedemitter(particleemitter &pe, const vec &o, const vec &d, int fade, float size, int gravity)
     {
         pe.maxfade = max(pe.maxfade, fade);
-        pe.extendbb(o, (size+1+pe.ent->attr2)*WOBBLE);
+        pe.extendbb(o, (size+1+pe.ent->attr2) * explosionwobble);
     }
 
     void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts)
@@ -140,11 +140,11 @@ struct fireballrenderer : listrenderer
               size = p->fade ? float(ts)/p->fade : 1,
               psize = p->size + pmax * size;
 
-        if(isfoggedsphere(psize*WOBBLE, p->o)) return;
+        if(isfoggedsphere(psize * explosionwobble, p->o)) return;
 
         vec dir = vec(o).sub(camera1->o), s, t;
         float dist = dir.magnitude(), mag2 = dir.magnitude2();
-        bool inside = dist <= psize*WOBBLE;
+        bool inside = dist <= psize * explosionwobble;
         if(inside || mag2 <= 0.0f)
         {
             s = camright;
@@ -170,7 +170,7 @@ struct fireballrenderer : listrenderer
 
         LOCALPARAM(center, o);
         LOCALPARAMF(blendparams, inside ? 0.5f : 4, inside ? 0.25f : 0);
-        if(2*(p->size + pmax)*WOBBLE >= softexplosionblend)
+        if(2*(p->size + pmax) * explosionwobble >= softexplosionblend)
         {
             LOCALPARAMF(softparams, -1.0f/softexplosionblend, 0, inside ? blend/(2*255.0f) : 0);
         }

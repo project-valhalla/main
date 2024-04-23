@@ -1121,7 +1121,7 @@ namespace game
             case 3: return "data/interface/crosshair/ally.png";
             case 2: return "data/interface/crosshair/default_hit.png";
             case 1: return "data/interface/crosshair/default.png";
-            default: return "data/interface/crosshair/edit.png";
+            default: return "data/interface/crosshair/dot.png";
         }
     }
 

@@ -174,13 +174,14 @@ namespace game
                 }
 
                 case MS_AIMING: // this state is the delay between wanting to shoot and actually firing
-                    if(trigger<lastmillis)
+                    if(trigger < lastmillis)
                     {
                         lastaction = 0;
                         int atk = monstertypes[mtype].atk;
                         attacking = attacks[atk].action;
                         shoot(this, attacktarget);
                         transition(MS_ATTACKING, 0, 600, 0);
+                        playsound(monstertypes[mtype].attacksound, this);
                     }
                     break;
 

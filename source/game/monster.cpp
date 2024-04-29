@@ -423,7 +423,7 @@ namespace game
     void monsterkilled(int flags)
     {
         if(flags) checkannouncements(self, flags);
-        if(!m_invasion) return;
+        if(!m_invasion && !m_tutorial) return;
         numkilled++;
         self->frags = numkilled;
         remain = monstertotal-numkilled;

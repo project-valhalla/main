@@ -422,10 +422,10 @@ namespace game
 
     void monsterkilled(int flags)
     {
+        if(flags) checkannouncements(self, flags);
+        if(!m_invasion) return;
         numkilled++;
         self->frags = numkilled;
-        if(flags) checkannouncements(self, flags);
-        if(m_tutorial) return;
         remain = monstertotal-numkilled;
         if(remain>0 && remain<=5) conoutf(CON_GAMEINFO, "\f2%d monster(s) remaining", remain);
         if(remain == 5 || remain == 1)
@@ -447,7 +447,7 @@ namespace game
             spawnmonster();
         }
 
-        if(killsendsp && monstertotal && !spawnremain && numkilled==monstertotal) endsp(true);
+        if(m_invasion && killsendsp && monstertotal && !spawnremain && numkilled==monstertotal) endsp(true);
 
         bool monsterwashurt = monsterhurt;
 

@@ -27,6 +27,7 @@ namespace game
         vec stackpos;
         bool halted, canmove;
         int lastunblocked, exploding, detonating;
+        int bursting, shots;
 
         monster(int _type, int _yaw, int _tag, bool _canmove, int _state, int _trigger, int _move) :
             monsterstate(_state), tag(_tag),
@@ -67,6 +68,7 @@ namespace game
             copystring(name, t.name);
             halted = false;
             lastunblocked = exploding = detonating = 0;
+            bursting = shots = 0;
 
             spawneffect(this);
         }
@@ -147,6 +149,7 @@ namespace game
                         playsound(monstertypes[mtype].haltsound, this);
                         halted = true;
                     }
+                    bursting = shots = 0; // reset burst shots and rage status
                     break;
                 }
 
@@ -174,18 +177,48 @@ namespace game
                 }
 
                 case MS_AIMING: // this state is the delay between wanting to shoot and actually firing
+                {
+                    bool burstfire = monstertypes[mtype].burstshots > 0;
+
+                    if(burstfire)
+                    {
+                        if(gunwait) break;
+                        if(!bursting)
+                        {
+                            bursting = lastmillis;
+                            playsound(monstertypes[mtype].attacksound, this); // battle cry: announcing the attack
+                        }
+                        if(lastmillis - bursting < 1500) break; // delay before starting to burst!
+                    }
+
                     if(trigger < lastmillis)
                     {
-                        lastaction = 0;
-                        int atk = monstertypes[mtype].atk;
-                        attacking = attacks[atk].action;
-                        shoot(this, attacktarget);
-                        transition(MS_ATTACKING, 0, 600, 0);
-                        playsound(monstertypes[mtype].attacksound, this);
+                        if(!burstfire || (burstfire && bursting))
+                        {
+                            lastaction = 0;
+                            int atk = monstertypes[mtype].atk;
+                            attacking = attacks[atk].action;
+                            shoot(this, attacktarget);
+
+                            bool burstcomplete = shots >= monstertypes[mtype].burstshots;
+
+                            if(burstfire) shots++;
+                            if(!burstfire || (burstfire && burstcomplete))
+                            {
+                                transition(MS_ATTACKING, 0, 600, 0);
+                                bursting = shots = 0;
+                            }
+                        }
+                        if(monstertypes[mtype].attacksound && !burstfire)
+                        {
+                            playsound(monstertypes[mtype].attacksound, this);
+                        }
                     }
                     break;
+                }
 
                 case MS_HOME: // monster has visual contact, heads straight for player and may want to shoot at any time
+                {
                     if(!monstertypes[mtype].isneutral && !detonating) targetyaw = enemyyaw;
                     if(trigger<lastmillis)
                     {
@@ -215,6 +248,7 @@ namespace game
                         }
                     }
                     break;
+                }
 
             }
 
@@ -459,6 +493,7 @@ namespace game
             if(m->state==CS_ALIVE)
             {
                 m->monsteraction(curtime);
+                if(lastmillis - m->lastaction >= m->gunwait) m->gunwait = 0;
                 if(m->exploding)
                 {
                     regular_particle_flame(PART_FLAME, m->o, 6.5f, 1.5f, 0x903020, 1, 2.0f);
@@ -475,7 +510,7 @@ namespace game
                 {
                     if(lastmillis - m->detonating >= MONSTER_DETONATION_DELAY)
                     {
-                        monsters[i]->monsterdeath(true); // detonate monster through regular death with forced gore/explosion
+                        m->monsterdeath(true); // detonate monster through regular death with forced gore/explosion
                     }
                 }
             }

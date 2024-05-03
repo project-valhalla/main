@@ -29,7 +29,7 @@ namespace game
         int lastunblocked, exploding, detonating;
         int bursting, shots;
 
-        monster(int _type, int _yaw, int _tag, bool _canmove, int _state, int _trigger, int _move) :
+        monster(int _type, int _yaw, int _tag, int _canmove, int _state, int _trigger, int _move) :
             monsterstate(_state), tag(_tag),
             stacked(NULL),
             stackpos(0, 0, 0)

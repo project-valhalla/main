@@ -287,7 +287,7 @@ namespace game
             playsound(S_WEAPON_DETONATE, this);
         }
 
-        void monsterdeath(bool forceexplosion = false)
+        void monsterdeath(bool forceexplosion = false, int flags = 0)
         {
             state = CS_DEAD;
             lastpain = lastmillis;
@@ -327,7 +327,7 @@ namespace game
             if(health <= 0 || (m_insta(mutators) && d->type != ENT_AI))
             {
                 if(atk == ATK_PISTOL_COMBO) deathtype = DEATH_DISRUPT;
-                monsterdeath(m_insta(mutators));
+                monsterdeath(m_insta(mutators), flags);
             }
             else
             {

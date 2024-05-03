@@ -255,6 +255,7 @@ namespace game
             state = CS_DEAD;
             lastpain = lastmillis;
             exploding = detonating = 0;
+            stopownersounds(this);
             if(gibbed() || forceexplosion)
             {
                 if(!gibbed()) health = -50;

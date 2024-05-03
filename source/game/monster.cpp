@@ -187,6 +187,7 @@ namespace game
                         {
                             bursting = lastmillis;
                             playsound(monstertypes[mtype].attacksound, this); // battle cry: announcing the attack
+                            crouching = -1;
                         }
                         if(lastmillis - bursting < 1500) break; // delay before starting to burst!
                     }
@@ -207,6 +208,7 @@ namespace game
                             {
                                 transition(MS_ATTACKING, 0, 600, 0);
                                 bursting = shots = 0;
+                                crouching = 1;
                             }
                         }
                         if(monstertypes[mtype].attacksound && !burstfire)
@@ -264,6 +266,7 @@ namespace game
 
                 if(physsteps > 0) stacked = NULL;
                 moveplayer(this, 1, true); // use physics to move monster
+                crouchplayer(this, 1, true);
             }
         }
 
@@ -546,7 +549,7 @@ namespace game
                 }
                 float fade = 1;
                 if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);
-                renderai(&m, monstertypes[m.mtype].mdlname, a, 0, m.monsterstate == MS_ATTACKING ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
+                renderai(&m, monstertypes[m.mtype].mdlname, a, 0, m.monsterstate == MS_ATTACKING || m.bursting ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
             }
         }
     }

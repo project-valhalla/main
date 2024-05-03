@@ -150,6 +150,7 @@ namespace game
                         halted = true;
                     }
                     bursting = shots = 0; // reset burst shots and rage status
+                    crouching = 1;
                     break;
                 }
 

@@ -563,7 +563,7 @@ namespace game
     void hit(int damage, dynent *d, gameent *at, const vec &vel, int atk, float info1, int info2 = 1, int flags = HIT_TORSO)
     {
         gameent *f = (gameent *)d;
-        if(!isinvulnerable(f, at)) f->lastpain = lastmillis;
+        if(f->type == ENT_PLAYER && !isinvulnerable(f, at)) f->lastpain = lastmillis;
         if(at->type==ENT_PLAYER && f!=at && !isally(f, at))
         {
             at->totaldamage += damage;

@@ -307,6 +307,7 @@ namespace game
 
         void monsterpain(int damage, gameent *d, int atk, int flags)
         {
+            if(!bursting) lastpain = lastmillis;
             if(d->type == ENT_AI) // a monster hit us
             {
                 if(this != d) // guard for RL guys shooting themselves :)
@@ -341,7 +342,7 @@ namespace game
                 }
                 if(!exploding) // if the monster is in kamikaze mode, ignore the pain
                 {
-                    transition(MS_PAIN, 0, monstertypes[mtype].pain, 200); // in this state monster won't attack
+                    if(!bursting) transition(MS_PAIN, 0, monstertypes[mtype].pain, 200); // in this state monster won't attack
                     if(health > 0 && lastmillis - lastyelp > 600)
                     {
                         playsound(monstertypes[mtype].painsound, this);

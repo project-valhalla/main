@@ -796,6 +796,12 @@ namespace server
         return unknown;
     }
 
+    const char *modedesc(int n, const char *unknown)
+    {
+        if(m_valid(n) && gamemodes[n - STARTGAMEMODE].info) return gamemodes[n - STARTGAMEMODE].info;
+        return unknown;
+    }
+
     const char *modeprettyname(int n, const char *unknown)
     {
         if(m_valid(n)) return gamemodes[n - STARTGAMEMODE].prettyname;

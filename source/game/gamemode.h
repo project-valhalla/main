@@ -105,6 +105,7 @@ static struct mutatorinfo
 };
 
 #define NUMMUTATORS            ((int)(sizeof(mutator)/sizeof(mutator[0])))
+#define m_validmutator(mut)    ((mut) >= 0 && (mut) < NUMMUTATORS)
 #define m_insta(mut)           (mut&MUT_INSTAGIB)
 #define m_effic(mut)           (mut&MUT_EFFIC)
 #define m_tactics(mut)         (mut&MUT_TACTICS)

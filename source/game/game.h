@@ -830,6 +830,7 @@ namespace game
 namespace server
 {
     extern const char *modename(int n, const char *unknown = "unknown");
+    extern const char *modedesc(int n, const char *unknown = "unknown");
     extern const char *modeprettyname(int n, const char *unknown = "unknown");
     extern const char *mastermodename(int n, const char *unknown = "unknown");
     extern const char *getdemofile(const char *file, bool init);

@@ -488,7 +488,7 @@ engine/engine.h.gch: engine/octa.h engine/light.h engine/texture.h
 engine/engine.h.gch: engine/bih.h engine/model.h
 game/game.h.gch: shared/cube.h shared/tools.h shared/geom.h shared/ents.h
 game/game.h.gch: shared/command.h shared/glexts.h shared/glemu.h
-game/game.h.gch: shared/iengine.h shared/igame.h game/ai.h game/monster.h
+game/game.h.gch: shared/iengine.h shared/igame.h game/ai.h game/gamemode.h game/monster.h
 
 standalone/shared/crypto.o: shared/cube.h shared/tools.h shared/geom.h
 standalone/shared/crypto.o: shared/ents.h shared/command.h shared/iengine.h

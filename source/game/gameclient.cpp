@@ -718,6 +718,7 @@ namespace game
     ICOMMAND(getmode, "", (), intret(gamemode));
     ICOMMAND(getnextmode, "", (), intret(m_valid(nextmode) ? nextmode : (remote ? 1 : 0)));
     ICOMMAND(getmodename, "i", (int *mode), result(server::modename(*mode, "")));
+    ICOMMAND(getmodedesc, "i", (int *mode), result(server::modedesc(*mode, "")));
     ICOMMAND(getmodeprettyname, "i", (int *mode), result(server::modeprettyname(*mode, "")));
 
     void setmutator(int mut)
@@ -732,8 +733,8 @@ namespace game
     ICOMMAND(mutator, "i", (int *val), setmutator(*val));
 
     ICOMMAND(getnextmutators, "", (), intret(nextmutators));
-    ICOMMAND(getmutatordesc, "i", (int *mut), result(mutator[*mut].info));
-    ICOMMAND(getmutatorprettyname, "i", (int *mut), result(mutator[*mut].prettyname));
+    ICOMMAND(getmutatordesc, "i", (int *mut), result(m_validmutator(*mut) ? mutator[*mut].info : ""));
+    ICOMMAND(getmutatorprettyname, "i", (int *mut), result(m_validmutator(*mut) ? mutator[*mut].prettyname : ""));
 
     ICOMMAND(timeremaining, "i", (int *formatted),
     {

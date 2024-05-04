@@ -7,7 +7,7 @@
 </p>
 
 <p align="center">
-<a href="https://valhalla-project.itch.io/valhalla-fps">
+  <a href="https://valhalla-project.itch.io/valhalla-fps">
     <img src="https://img.shields.io/badge/Itch.io-white?style=for-the-badge&logo=itch.io&logoColor=black" alt="YouTube link"/>
   </a>
   <a href="https://discord.gg/qFMAde5WQP">

@@ -327,6 +327,7 @@ namespace entities
                 if(dist < e.attr3) trypickup(i, d);
                 continue;
             }
+            if(d->state == CS_SPECTATOR && e.type != TELEPORT) continue;
             if(!e.spawned() && e.type!=TELEPORT && e.type!=JUMPPAD) continue;
             if(dist<(e.type==TELEPORT ? 16 : 12)) trypickup(i, d);
         }

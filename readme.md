@@ -7,10 +7,13 @@
 </p>
 
 <p align="center">
+<a href="https://valhalla-project.itch.io/valhalla-fps">
+    <img src="https://img.shields.io/badge/Itch.io-white?style=for-the-badge&logo=itch.io&logoColor=black" alt="YouTube link"/>
+  </a>
   <a href="https://discord.gg/qFMAde5WQP">
     <img src="https://img.shields.io/badge/Discord-blue?style=for-the-badge&logo=discord&logoColor=white" alt="Discord link"/>
   </a>
-  <a href="https://www.youtube.com/channel/UCjAPRHO03EqzBtTbcHXEbBw">
+  <a href="https://www.youtube.com/@valhallaprojectFPS/">
     <img src="https://img.shields.io/badge/YouTube-red?style=for-the-badge&logo=youtube&logoColor=white" alt="YouTube link"/>
   </a>
 </p>

@@ -751,7 +751,7 @@ stainrenderer stains[] =
     stainrenderer("<grey>data/texture/particle/hole_wall.png",    SF_ROTATE|SF_OVERBRIGHT),
     stainrenderer("<grey>data/texture/particle/glow_pulse.png",   SF_ROTATE|SF_GLOW|SF_SATURATE, 250, 1500, 250),
     stainrenderer("<grey>data/texture/particle/glow_railgun.png", SF_ROTATE|SF_GLOW|SF_SATURATE, 100, 1100, 100),
-    stainrenderer("<grey>data/texture/particle/hole_glass.png",   SF_ROTATE|SF_OVERBRIGHT),
+    stainrenderer("<grey>data/texture/particle/hole_glass.png",   SF_ROTATE|SF_RND4|SF_OVERBRIGHT),
     stainrenderer("<grey>data/texture/particle/snow.png",         SF_ROTATE|SF_RND4)
 };
 

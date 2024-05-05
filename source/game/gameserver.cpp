@@ -846,14 +846,11 @@ namespace server
         loopv(clients)
         {
             clientinfo *ci = clients[i];
-            if(ci->clientnum != exclude)
-            {
-                if(excludespec && ci->state.state == CS_SPECTATOR && !ci->ghost) continue;
-                if(!priv || (priv && (ci->privilege || ci->local)) || !excludeai || (excludeai && ci->state.aitype == AI_NONE))
-                {
-                    n++;
-                }
-            }
+            if(
+                ci->clientnum != exclude
+                && (!excludespec || (ci->state.state != CS_SPECTATOR || ci->ghost) || ( priv && (ci->privilege || ci->local) ))
+                && (!excludeai || ci->state.aitype == AI_NONE)
+            ) n++;
         }
         return n;
     }

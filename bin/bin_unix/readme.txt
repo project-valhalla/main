@@ -20,7 +20,7 @@ Clients will need the following dynamic link libraries present:
 
 If native binaries for your platform are not included, then try the following:
 1) Ensure you have the development version of the above libraries installed.
-2) Type "make -C src install".
+2) Type "make -C source install".
 3) Re-run the "valhalla_unix" script if it succeeded.
 
 The servers (bin_unix/linux_server or bin_unix/native_server) should need no libraries

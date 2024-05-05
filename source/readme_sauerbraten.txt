@@ -1,5 +1,5 @@
 Note that this is the license only for original Sauerbraten code, and does
-not cover new code provided as part of the Tesseract engine. For the 
+not cover new code provided as part of the Tesseract engine. For the
 license governing those changes, please see the included "readme_tesseract.txt".
 
 Sauerbraten source code license, usage, and documentation.
@@ -35,10 +35,10 @@ freely, subject to the following restrictions:
 
 LICENSE NOTES
 =============
-The license covers the source code found in the "src" directory of this
-archive as well as the .cfg files under the "data" directory. The included 
-ENet network library which Sauerbraten uses is covered by an MIT-style 
-license, which is however compatible with the above license for all 
+The license covers the source code found in the "source" directory of this
+archive as well as the .cfg files under the "data" directory. The included
+ENet network library which Sauerbraten uses is covered by an MIT-style
+license, which is however compatible with the above license for all
 practical purposes.
 
 Game media included in the game (maps, textures, sounds, models etc.)
@@ -54,9 +54,9 @@ Unix users need to make sure to have the development version of all libs
 installed (OpenGL, SDL, SDL_mixer, SDL_image, zlib). The included
 Makefile can be used to build.
 
-Windows users can use the included Visual Studio project files in the vcpp 
-directory,  which references the lib/include directories for the external 
-libraries and should thus be self contained. Release mode builds will place 
+Windows users can use the included Visual Studio project files in the vcpp
+directory,  which references the lib/include directories for the external
+libraries and should thus be self contained. Release mode builds will place
 executables in the bin dir ready for testing and distribution.
 
 An alternative to Visual Studio for Windows is MinGW/MSYS, which can be compiled
@@ -72,7 +72,7 @@ tricky sections.
 When reading the source code and trying to understand Sauerbaten's internal design,
 keep in mind the goal of Cube: minimalism. I wanted to create a very complete
 game / game engine with absolutely minimal means, and made a sport out of it
-keeping the implementation small and simple. Sauerbraten is not a commercial 
+keeping the implementation small and simple. Sauerbraten is not a commercial
 product, it is merely the author's idea of a fun little programming project.
 
 
@@ -81,7 +81,7 @@ AUTHORS
 Wouter "Aardappel" van Oortmerssen
 http://strlen.com
 
-Lee "eihrul" Salzman 
+Lee "eihrul" Salzman
 http://sauerbraten.org/lee/
 
 Mike "Gilt" Dysart

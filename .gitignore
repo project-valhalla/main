@@ -5,6 +5,7 @@
 *.layout
 *.lnk
 *.save-failed
+*.tmp
 *.user
 *~
 .DS_Store

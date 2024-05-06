@@ -4034,7 +4034,7 @@ namespace server
                     sendf(c->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
                 }
                 bool ghost = cq->state.state==CS_SPECTATOR || (m_round && (cq->ghost || cq->state.state==CS_DEAD));
-                if(isdedicatedserver() && cq) logoutf("%s %s %s", colorname(cq), ghost ? "<spectator>:" : ":", text);
+                if(isdedicatedserver() && cq) logoutf("%s%s %s", colorname(cq), ghost ? " <spectator>:" : ":", text);
                 break;
             }
 
@@ -4050,7 +4050,7 @@ namespace server
                     if(t==cq || t->state.aitype != AI_NONE || cq->team != t->team) continue;
                     sendf(t->clientnum, 1, "riisi", N_SAYTEAM, cq->clientnum, text, sound);
                 }
-                if(isdedicatedserver() && cq) logoutf("%s <%s> %s", colorname(cq), teamnames[cq->team], text);
+                if(isdedicatedserver() && cq) logoutf("%s <%s>: %s", colorname(cq), teamnames[cq->team], text);
                 break;
             }
 

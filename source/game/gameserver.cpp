@@ -846,14 +846,9 @@ namespace server
         loopv(clients)
         {
             clientinfo *ci = clients[i];
-            if(ci->clientnum != exclude)
-            {
-                if(excludespec && ci->state.state == CS_SPECTATOR && !ci->ghost) continue;
-                if(!priv || (priv && (ci->privilege || ci->local)) || !excludeai || (excludeai && ci->state.aitype == AI_NONE))
-                {
-                    n++;
-                }
-            }
+            if(ci->clientnum != exclude
+               && (!excludespec || (ci->ghost || ci->state.state != CS_SPECTATOR) || (priv && (ci->privilege || ci->local))) && (!excludeai || ci->state.aitype == AI_NONE)
+            ) n++;
         }
         return n;
     }
@@ -4573,7 +4568,7 @@ namespace server
         }
 
         putint(p, PROTOCOL_VERSION);
-        putint(p, numclients(-1, false, true));
+        putint(p, numclients(-1, false, false));
         putint(p, maxclients);
         putint(p, gamepaused || gamespeed != 100 ? 5 : 3); // number of attrs following
         putint(p, gamemode);

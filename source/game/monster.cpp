@@ -551,7 +551,13 @@ namespace game
                 }
                 float fade = 1;
                 if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);
-                renderai(&m, monstertypes[m.mtype].mdlname, a, 0, m.monsterstate == MS_ATTACKING || m.bursting ? -ANIM_SHOOT : 0, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
+                int attackanimation = 0;
+                if(m.monsterstate == MS_ATTACKING || m.bursting)
+                {
+                    if(m.attacking > ACT_MELEE) attackanimation = ANIM_SHOOT;
+                    else attackanimation = ANIM_MELEE;
+                }
+                renderai(&m, monstertypes[m.mtype].mdlname, a, 0, -attackanimation, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
             }
         }
     }

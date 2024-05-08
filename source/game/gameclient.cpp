@@ -1659,7 +1659,7 @@ namespace game
                 getstring(text, p);
                 filtertext(text, text, false, false, true, true);
                 if(!s || isignored(s->clientnum)) break;
-                conoutf(CON_CHAT, "%s \fs\f5(whisper)\fr: \fs\f5%s\fr", teamcolorname(d), text);
+                conoutf(CON_CHAT, "%s \fs\f5(whisper)\fr: \fs\f5%s\fr", teamcolorname(s), text);
                 if(chatsound) playsound(S_CHAT);
                 break;
             }

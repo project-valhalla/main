@@ -4047,7 +4047,7 @@ namespace server
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
-                    if(t==cq || t->state.aitype != AI_NONE || cq->team != t->team) continue;
+                    if(t == cq || t->state.aitype != AI_NONE || cq->team != t->team) continue;
                     sendf(t->clientnum, 1, "riisi", N_SAYTEAM, cq->clientnum, text, sound);
                 }
                 if(isdedicatedserver() && cq) logoutf("%s <%s>: %s", colorname(cq), teamnames[cq->team], text);
@@ -4056,24 +4056,24 @@ namespace server
 
             case N_WHISPER:
             {
-                int recipient = getint(p);
+                int rcn = getint(p);
                 getstring(text, p);
                 if(!cq || cq->mute) break;
                 filtertext(text, text, false, false);
-                clientinfo *rec = NULL;
+                clientinfo *recipient = NULL;
                 loopv(clients)
                 {
                     clientinfo *r = clients[i];
-                    if(r==cq || r->state.aitype != AI_NONE || r->clientnum != recipient) continue;
-                    rec = r;
+                    if(r == cq || r->state.aitype != AI_NONE || r->clientnum != rcn) continue;
+                    recipient = r;
                     break;
                 }
-                sendf(rec->clientnum, 1, "riis", N_WHISPER, cq->clientnum, text);
-                if(isdedicatedserver() && cq) logoutf("%s <whisper to %s> %s", colorname(cq), colorname(rec), text);
+                if(!recipient) break;
+                sendf(recipient->clientnum, 1, "riis", N_WHISPER, cq->clientnum, text);
+                if(isdedicatedserver() && cq) logoutf("%s <whisper to %s>: %s", colorname(cq), colorname(recipient), text);
                 break;
             }
 
-                break;
             case N_SWITCHNAME:
             {
                 QUEUE_MSG;

@@ -301,6 +301,22 @@ namespace game
         b->lastbounce = lastmillis;
     }
 
+    void projstain(vec dir, const vec &pos, int atk)
+    {
+        vec negdir = vec(dir).neg();
+        float radius = attacks[atk].exprad * 0.75f;
+        addstain(STAIN_PULSE_SCORCH, pos, negdir, radius);
+        if(lookupmaterial(pos) & MAT_WATER) return; // no glow in water
+        int gun = attacks[atk].gun;
+        if(gun != GUN_ROCKET)
+        {
+            int color = 0x00FFFF;
+            if(gun == GUN_PULSE) color = 0xEE88EE;
+            else if(gun == GUN_GRENADE) color = 0x74BCF9;
+            addstain(STAIN_PULSE_GLOW, pos, negdir, radius / (gun == GUN_GRENADE ? 2 : 1), color);
+        }
+    }
+
     void updatebouncers(int time)
     {
        loopv(bouncers)
@@ -373,9 +389,7 @@ namespace game
                     int damage = attacks[bnc.atk].damage;
                     hits.setsize(0);
                     explode(bnc.local, bnc.owner, bnc.o, bnc.vel, NULL, damage, bnc.atk);
-                    addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
-                    if(bnc.atk == ATK_GRENADE1 || bnc.atk == ATK_GRENADE2)
-                        addstain(STAIN_PULSE_GLOW, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad/2, 0x74BCF9);
+                    projstain(bnc.vel, bnc.offsetpos(), bnc.atk);
                     if(bnc.local)
                         addmsg(N_EXPLODE, "rci3iv", bnc.owner, lastmillis-maptime, bnc.atk, bnc.id-maptime,
                                                     hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
@@ -740,18 +754,10 @@ namespace game
         }
     }
 
-    void stain(const projectile &p, const vec &pos)
-    {
-        vec dir = vec(p.dir).neg();
-        float rad = attacks[p.atk].exprad*0.75f;
-        addstain(STAIN_PULSE_SCORCH, pos, dir, rad);
-        if(p.projtype != PROJ_ROCKET) addstain(STAIN_PULSE_GLOW, pos, dir, rad, p.projtype == PROJ_PULSE ? 0xEE88EE : 0x00FFFF);
-    }
-
     void projsplash(projectile &p, const vec &v, dynent *safe, int damage)
     {
         explode(p.local, p.owner, v, p.dir, safe, damage, p.atk);
-        stain(p, v);
+        projstain(p.dir, v, p.atk);
     }
 
     void explodeeffects(int atk, gameent *d, bool local, int id)
@@ -770,7 +776,7 @@ namespace game
                     if(bnc.owner == d && bnc.id == id && !bnc.local)
                     {
                         explode(bnc.local, bnc.owner, bnc.offsetpos(), bnc.vel, NULL, 0, atk);
-                        addstain(STAIN_PULSE_SCORCH, bnc.offsetpos(), vec(bnc.vel).neg(), attacks[bnc.atk].exprad*0.75f);
+                        projstain(bnc.vel, bnc.offsetpos(), bnc.atk);
                         delete bouncers.remove(i);
                         break;
                     }
@@ -791,7 +797,7 @@ namespace game
                         else if(p.atk != atk) continue;
                         vec pos = vec(p.offset).mul(p.offsetmillis/float(OFFSETMILLIS)).add(p.o);
                         explode(p.local, p.owner, pos, p.dir, NULL, 0, atk);
-                        stain(p, pos);
+                        projstain(p.dir, pos, p.atk);
                         stopsound(p.projsound, p.projchan);
                         projs.remove(i);
                         break;

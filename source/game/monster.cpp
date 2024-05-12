@@ -222,7 +222,7 @@ namespace game
 
                 case MS_HOME: // monster has visual contact, heads straight for player and may want to shoot at any time
                 {
-                    if(!monstertypes[mtype].isneutral && !detonating) targetyaw = enemyyaw;
+                    if(!detonating) targetyaw = enemyyaw;
                     if(trigger<lastmillis)
                     {
                         vec target;
@@ -230,7 +230,7 @@ namespace game
                         {
                             transition(MS_HOME, 1, 800, 500);
                         }
-                        else if(!monstertypes[mtype].isneutral && !exploding && !detonating)
+                        else if(!exploding && !detonating)
                         {
                             bool melee = false, longrange = false;
                             switch(monstertypes[mtype].atk)
@@ -307,14 +307,19 @@ namespace game
 
         void monsterpain(int damage, gameent *d, int atk, int flags)
         {
-            if(!bursting) lastpain = lastmillis;
+            monster *m = (monster *)d;
             if(d->type == ENT_AI) // a monster hit us
             {
+                if(monstertypes[mtype].isefficient && mtype == m->mtype) return; // efficient monsters don't hurt themselves
                 if(this != d) // guard for RL guys shooting themselves :)
                 {
                     anger++; // don't attack straight away, first get angry
-                    int _anger = d->type==ENT_AI && mtype==((monster *)d)->mtype ? anger/2 : anger;
-                    if(_anger>=monstertypes[mtype].loyalty) enemy = d; // monster infight if very angry
+                    int _anger = d->type == ENT_AI && mtype == m->mtype ? anger / 2 : anger;
+                    if(_anger>=monstertypes[mtype].loyalty)
+                    {
+                        enemy = d; // monster infight if very angry
+                        checkefficientenemy(this, enemy);
+                    }
                 }
                 else if(monstertypes[mtype].isexplosive) return;
             }
@@ -350,6 +355,7 @@ namespace game
                     }
                 }
             }
+            if(!bursting) lastpain = lastmillis;
         }
     };
 
@@ -472,6 +478,23 @@ namespace game
         if(remain == 5 || remain == 1)
         {
             playsound(remain == 5 ? S_ANNOUNCER_5_KILLS : S_ANNOUNCER_1_KILL, NULL, NULL, NULL, SND_ANNOUNCER);
+        }
+    }
+
+    void checkefficientenemy(gameent *that, gameent *enemy)
+    {
+        monster *m = (monster *)that;
+        bool issameenemy = false;
+        if(monstertypes[m->mtype].isefficient) issameenemy = true;
+        loopv(monsters)
+        {
+            if(!monstertypes[monsters[i]->mtype].isefficient) continue;
+            if(issameenemy)
+            {
+                monsters[i]->enemy = enemy;
+                continue;
+            }
+            m->enemy = that;
         }
     }
 

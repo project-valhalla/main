@@ -246,7 +246,8 @@ namespace game
                             // the closer the monster is the more likely he wants to shoot,
                             if((!melee || dist<20) && !rnd(longrange ? (int)dist/12+1 : min((int)dist/12+1,6)) && enemy->state==CS_ALIVE)  // get ready to fire
                             {
-                                attacktarget = target;
+                                target = headpos();
+                                ai::findorientation(target, yaw, pitch, attacktarget);
                                 transition(MS_AIMING, 0, monstertypes[mtype].lag, 10);
                             }
                             else // track player some more

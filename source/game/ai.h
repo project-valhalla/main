@@ -314,6 +314,7 @@ namespace ai
     extern void spawned(gameent *d);
     extern void damaged(gameent *d, gameent *e);
     extern void kill(gameent *d, gameent *e);
+    extern void findorientation(vec &o, float yaw, float pitch, vec &pos);
     extern void itemspawned(int ent);
 
     extern void render();

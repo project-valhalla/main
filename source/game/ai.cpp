@@ -1182,13 +1182,13 @@ namespace ai
             const struct aimdir { int move, strafe, offset; } aimdirs[8] =
             {
                 {  1,  0,   0 },
-                {  1,  -1,  45 },
-                {  0,  -1,  90 },
-                { -1,  -1, 135 },
+                {  1, -1,  45 },
+                {  0, -1,  90 },
+                { -1, -1, 135 },
                 { -1,  0, 180 },
-                { -1, 1, 225 },
-                {  0, 1, 270 },
-                {  1, 1, 315 }
+                { -1,  1, 225 },
+                {  0,  1, 270 },
+                {  1,  1, 315 }
             };
             float yaw = d->ai->targyaw-d->yaw;
             if(yaw < 0.0f) yaw = 360.0f - fmodf(-yaw, 360.0f);

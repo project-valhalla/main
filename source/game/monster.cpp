@@ -229,6 +229,11 @@ namespace game
                         if(!raycubelos(o, enemy->o, target)) // no visual contact anymore, let monster gets as close as possible then search for the player
                         {
                             transition(MS_HOME, 1, 800, 500);
+                            if(halted)
+                            {
+                                playsound(monstertypes[mtype].unhaltsound, this);
+                                halted = false;
+                            }
                         }
                         else if(!exploding && !detonating)
                         {

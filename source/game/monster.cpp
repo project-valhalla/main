@@ -132,7 +132,7 @@ namespace game
             if(blocked) // special case: if we run into scenery
             {
                 //blocked = false;
-                if((lastmillis - lastunblocked) > 3000 || !rnd(20000/monstertypes[mtype].speed)) // try to jump over obstackle (rare)
+                if((lastmillis - lastunblocked) > 3000 || !rnd(20000/monstertypes[mtype].speed)) // try to jump over obstacle (rare)
                 {
                     jumping = true;
                     lastunblocked = lastmillis;

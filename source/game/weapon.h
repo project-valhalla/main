@@ -1,9 +1,9 @@
 // hit flags
 enum
 {
-    HIT_TORSO = 1<<0,
-    HIT_LEGS = 1<<1,
-    HIT_HEAD = 1<<2,
+    HIT_TORSO    = 1<<0,
+    HIT_LEGS     = 1<<1,
+    HIT_HEAD     = 1<<2,
     HIT_MATERIAL = 1<<3
 };
 
@@ -33,7 +33,7 @@ inline bool validgun(int gun) { return gun >= 0 && gun < NUMGUNS; }
 // weapon attacks
 enum
 {
-    ATK_MELEE = 0,
+    ATK_MELEE = 0, ATK_MELEE2,
 
     ATK_SCATTER1, ATK_SCATTER2,
     ATK_SMG1, ATK_SMG2,
@@ -69,6 +69,7 @@ static const struct attackinfo
 {
     // melee: default melee for all weapons
     { NULL,        ACT_MELEE,      650,  60,  0,   0, 2,    0,  0,   14,  1,  50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_HIT_MELEE,       S_HIT_MELEE   },
+    { NULL,        ACT_MELEE,      420,  25,  0,   0, 1,    0,  0,   16,  1,  50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_HIT_MELEE,       S_HIT_MELEE   },
     // shotgun
     { GUN_SCATTER, ACT_PRIMARY,    880,   5,  5, 260, 0,    0, 20, 1000, 20,  60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SG1_A,         S_IMPACT_SG,       S_HIT_WEAPON  },
     { GUN_SCATTER, ACT_SECONDARY,  980,   6,  5, 120, 0,    0, 25, 1000, 10,  60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SG2_A,         S_IMPACT_SG,       S_HIT_WEAPON  },

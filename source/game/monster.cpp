@@ -94,6 +94,20 @@ namespace game
             trigger = lastmillis+n-skill*(n/16)+rnd(r+1);
         }
 
+        void burst(bool on)
+        {
+            if(on)
+            {
+                bursting = lastmillis;
+                crouching = -1;
+            }
+            else
+            {
+                bursting = shots = 0;
+                crouching = 1;
+            }
+        }
+
         void monsteraction(int curtime) // main AI thinking routine, called every frame for every monster
         {
             if(enemy->state==CS_DEAD)
@@ -136,6 +150,9 @@ namespace game
 
             float enemyyaw = -atan2(enemy->o.x - o.x, enemy->o.y - o.y)/RAD;
 
+            int meleeatk = monstertypes[mtype].meleeatk;
+            bool meleerange = dist <= attacks[meleeatk].range;
+
             switch(monsterstate)
             {
                 case MS_PAIN:
@@ -149,8 +166,7 @@ namespace game
                         playsound(monstertypes[mtype].haltsound, this);
                         halted = true;
                     }
-                    bursting = shots = 0; // reset burst shots and rage status
-                    crouching = 1;
+                    burst(false); // reset burst shots and rage status
                     break;
                 }
 
@@ -186,9 +202,8 @@ namespace game
                         if(gunwait) break;
                         if(!bursting)
                         {
-                            bursting = lastmillis;
+                            burst(true);
                             playsound(monstertypes[mtype].attacksound, this); // battle cry: announcing the attack
-                            crouching = -1;
                         }
                         if(lastmillis - bursting < 1500) break; // delay before starting to burst!
                     }
@@ -199,6 +214,7 @@ namespace game
                         {
                             lastaction = 0;
                             int atk = monstertypes[mtype].atk;
+                            if(meleerange) atk = meleeatk;
                             attacking = attacks[atk].action;
                             shoot(this, attacktarget);
 
@@ -208,8 +224,7 @@ namespace game
                             if(!burstfire || (burstfire && burstcomplete))
                             {
                                 transition(MS_ATTACKING, 0, 600, 0);
-                                bursting = shots = 0;
-                                crouching = 1;
+                                burst(false);
                             }
                         }
                         if(monstertypes[mtype].attacksound && !burstfire)
@@ -240,10 +255,11 @@ namespace game
                             bool melee = false, longrange = false;
                             switch(monstertypes[mtype].atk)
                             {
-                                case ATK_MELEE: melee = true; break;
+                                case ATK_MELEE: case ATK_MELEE2: melee = true; break;
                                 case ATK_RAIL1: longrange = true; break;
                             }
-                            // the closer the monster is the more likely he wants to shoot,
+                            if(meleerange) melee = true;
+                            // the closer the monster is the more likely he wants to shoot
                             if((!melee || dist<20) && !rnd(longrange ? (int)dist/12+1 : min((int)dist/12+1,6)) && enemy->state==CS_ALIVE)  // get ready to fire
                             {
                                 target = headpos();

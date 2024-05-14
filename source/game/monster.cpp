@@ -195,7 +195,7 @@ namespace game
 
                 case MS_AIMING: // this state is the delay between wanting to shoot and actually firing
                 {
-                    bool burstfire = monstertypes[mtype].burstshots > 0;
+                    bool burstfire = monstertypes[mtype].burstshots > 0 && !meleerange;
 
                     if(burstfire)
                     {
@@ -210,11 +210,11 @@ namespace game
 
                     if(trigger < lastmillis)
                     {
+                        int atk = monstertypes[mtype].atk;
                         if(!burstfire || (burstfire && bursting))
                         {
                             lastaction = 0;
-                            int atk = monstertypes[mtype].atk;
-                            if(meleerange) atk = meleeatk;
+                            if(meleerange && attacks[atk].action != ACT_MELEE) atk = meleeatk;
                             attacking = attacks[atk].action;
                             shoot(this, attacktarget);
 
@@ -227,7 +227,7 @@ namespace game
                                 burst(false);
                             }
                         }
-                        if(monstertypes[mtype].attacksound && !burstfire)
+                        if(monstertypes[mtype].attacksound && !burstfire && atk != meleeatkt)
                         {
                             playsound(monstertypes[mtype].attacksound, this);
                         }

@@ -227,7 +227,7 @@ namespace game
                                 burst(false);
                             }
                         }
-                        if(monstertypes[mtype].attacksound && !burstfire && atk != meleeatkt)
+                        if(monstertypes[mtype].attacksound && !burstfire && atk != meleeatk)
                         {
                             playsound(monstertypes[mtype].attacksound, this);
                         }

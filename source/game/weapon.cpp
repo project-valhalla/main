@@ -1384,6 +1384,10 @@ namespace game
                 damage = calcdamage(damage, (gameent *)o, d, atk, flags);
                 calcpush(damage, o, d, from, to, atk, 1, flags);
                 damageeffect(damage, o, to, atk, getbloodcolor(o), hithead);
+                if(d == followingplayer(self) && attacks[atk].action == ACT_MELEE)
+                {
+                    addroll(d, damage / 2.0f);
+                }
             }
             else
             {

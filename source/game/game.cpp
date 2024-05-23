@@ -455,6 +455,11 @@ namespace game
         return zoom && guns[self->gunselect].haszoom && self->state != CS_DEAD && self->state != CS_SPECTATOR && self->state != CS_EDITING;
     }
 
+    void addroll(gameent *d, float amount)
+    {
+        d->roll += d->roll > 0 ? amount : (d->roll < 0 ? -amount : (rnd(2) ? amount : -amount));
+    }
+
     FVARP(damagerolldiv, 0, 4.0f, 5.0f);
 
     void damagehud(int damage, gameent *d, gameent *actor)
@@ -462,8 +467,8 @@ namespace game
         damageblend(damage);
         if(d != actor) damagecompass(damage, actor->o);
         if(!damagerolldiv) return;
-        float damroll = damage/damagerolldiv;
-        d->roll += d->roll > 0 ? damroll : (d->roll < 0 ? -damroll : (rnd(2) ? damroll : -damroll));
+        float damroll = damage / damagerolldiv;
+        addroll(d, damroll);
     }
 
     VARP(hitsound, 0, 0, 1);

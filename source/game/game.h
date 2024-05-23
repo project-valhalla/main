@@ -723,6 +723,7 @@ namespace game
     extern void timeupdate(int timeremain);
     extern void msgsound(int n, physent *d = NULL);
     extern void doaction(int act);
+    extern void addroll(gameent *d, float amount);
     const char *mastermodecolor(int n, const char *unknown);
     const char *mastermodeicon(int n, const char *unknown);
 
@@ -757,7 +758,7 @@ namespace game
     extern int getweapon(const char *name);
     extern void shoot(gameent *d, const vec &targ);
     extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
-    extern void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int dam, int atk);
+    extern void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int damage, int atk);
     extern void explodeeffects(int atk, gameent *d, bool local, int id = 0);
     extern void damageeffect(int damage, dynent *d, vec p, int atk, int color, bool headshot = false);
     extern void gibeffect(int damage, const vec &vel, gameent *d, bool force = false);

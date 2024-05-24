@@ -1343,8 +1343,8 @@ void pushhudtranslate(float tx, float ty, float sx, float sy)
 int vieww = -1, viewh = -1;
 float curfov, curavatarfov, fovy, aspect;
 int farplane;
-VARP(zoominvel, 0, 60, 500);
-VARP(zoomoutvel, 0, 50, 500);
+VARP(zoominvel, 0, 90, 500);
+VARP(zoomoutvel, 0, 80, 500);
 VARP(zoomfov, 10, 42, 90);
 VARP(fov, 10, 100, 150);
 VAR(avatarzoomfov, 1, 1, 1);
@@ -1363,8 +1363,17 @@ void disablezoom()
 
 void computezoom()
 {
-    if(!zoom) { zoomprogress = 0; curfov = fov; curavatarfov = avatarfov; return; }
-    if(zoom > 0) zoomprogress = zoominvel ? min(zoomprogress + float(elapsedtime) / zoominvel, 1.0f) : 1;
+    if(!zoom)
+    {
+        zoomprogress = 0;
+        curfov = fov;
+        curavatarfov = avatarfov;
+        return;
+    }
+    if(zoom > 0)
+    {
+        zoomprogress = zoominvel ? min(zoomprogress + float(elapsedtime) / zoominvel, 1.0f) : 1;
+    }
     else
     {
         zoomprogress = zoomoutvel ? max(zoomprogress - float(elapsedtime) / zoomoutvel, 0.0f) : 0;
@@ -2637,13 +2646,62 @@ void clearscreeneffects()
     loopi(8) damagedirs[i] = 0;
 }
 
+void drawblend(int x, int y, int w, int h, float r, float g, float b)
+{
+    glBlendFunc(GL_ZERO, GL_SRC_COLOR);
+    gle::colorf(r, g, b);
+    gle::defvertex(2);
+    gle::begin(GL_TRIANGLE_STRIP);
+    gle::attribf(x, y);
+    gle::attribf(x + w, y);
+    gle::attribf(x, y + h);
+    gle::attribf(x + w, y + h);
+    gle::end();
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+}
+
+bool zoomedin()
+{
+    return zoomprogress >= 1 && zoom > 0;
+}
+
 void drawzoom(int w, int h)
 {
-    if(mainmenu || minimized || !game::shoulddrawzoom()) return;
+    if(minimized || !zoomedin()) return;
+
+    int zoomtype = game::checkzoom();
+    if(!zoomtype) return;
+
     hudshader->set();
-    static Texture* zoomtex = textureload("data/interface/shadow.png", 3);
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glBindTexture(GL_TEXTURE_2D, zoomtex->id);
+    static Texture *scopetex = NULL;
+    if(zoomtype == ZOOM_SCOPE) scopetex = textureload("data/interface/hud/scope.png", 3);
+    else if(zoomtype == ZOOM_SHADOW) scopetex = textureload("data/interface/shadow.png", 3);
+    if(!scopetex) return;
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBindTexture(GL_TEXTURE_2D, scopetex->id);
+    if(zoomtype == ZOOM_SCOPE)
+    {
+        float x = 0, y = 0, dimension = 0, pcoverage = 1, blendf = 1.f - pcoverage;
+        if (w > h)
+        {
+            dimension = h;
+            x += (w - h) / 2;
+            drawblend(0, 0, x, dimension, blendf, blendf, blendf);
+            drawblend(x + dimension, 0, x + 1, dimension, blendf, blendf, blendf);
+        }
+        else if (h > w)
+        {
+            dimension = w;
+            y += (h - w) / 2;
+            drawblend(0, 0, dimension, y, blendf, blendf, blendf);
+            drawblend(0, y + dimension, dimension, y, blendf, blendf, blendf);
+        }
+        else dimension = h;
+        gle::colorf(1, 1, 1, pcoverage);
+        drawquad(x, y, dimension, dimension, 0, 0, 1, 1, false, false);
+        return;
+    }
     gle::colorf(1, 1, 1, 1);
     hudquad(0, 0, w, h);
 }
@@ -2715,6 +2773,7 @@ void drawcrosshair(int w, int h)
     }
     else
     {
+        if(zoomedin() && game::checkzoom() == ZOOM_SCOPE) return;
         int index = game::selectcrosshair(color);
         if(index < 0) return;
         if(!crosshairfx) index = 0;

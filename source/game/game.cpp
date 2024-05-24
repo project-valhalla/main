@@ -382,7 +382,7 @@ namespace game
 
     inline bool checkaction(int &act, const int gun)
     {
-        if(guns[gun].haszoom)
+        if(guns[gun].zoom)
         {
             if(act == ACT_SECONDARY)
             {
@@ -450,9 +450,11 @@ namespace game
 
     bool editing() { return m_edit; }
 
-    bool shoulddrawzoom()
+    int checkzoom()
     {
-        return zoom && guns[self->gunselect].haszoom && self->state != CS_DEAD && self->state != CS_SPECTATOR && self->state != CS_EDITING;
+        gameent *hud = followingplayer(self);
+        if(hud->state != CS_ALIVE && hud->state != CS_LAGGED) return 0;
+        return guns[hud->gunselect].zoom;
     }
 
     void addroll(gameent *d, float amount)

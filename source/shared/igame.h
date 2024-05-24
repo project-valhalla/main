@@ -1,56 +1,55 @@
 // the interface the engine uses to run the gameplay module
 
+// entities
 namespace entities
 {
     extern void editent(int i, bool local);
-    extern const char *entnameinfo(entity &e);
-    extern const char *entname(int type);
-    extern int extraentinfosize();
     extern void writeent(entity &e, char *buf);
     extern void readent(entity &e, char *buf, int ver);
-    extern float dropheight(entity &e);
     extern void fixentity(extentity &e);
     extern void entradius(extentity &e, bool color);
+    extern void deleteentity(extentity *e);
+    extern void clearents();
+    extern void animatemapmodel(const extentity &e, int &anim, int &basetime);
+
     extern bool mayattach(extentity &e);
     extern bool attachent(extentity &e, extentity &a);
     extern bool printent(extentity &e, char *buf, int len);
-    extern extentity *newentity();
-    extern void deleteentity(extentity *e);
-    extern void clearents();
-    extern vector<extentity *> &getents();
+
+    extern const char *entnameinfo(entity &e);
+    extern const char *entname(int type);
     extern const char *entmodel(const entity &e);
-    extern void animatemapmodel(const extentity &e, int &anim, int &basetime);
+
+    extern int extraentinfosize();
+
+    extern float dropheight(entity &e);
+
+    extern extentity *newentity();
+    extern vector<extentity *> &getents();
 }
+
+// game
+enum
+{
+    ZOOM_NONE = 0,
+    ZOOM_SHADOW,
+    ZOOM_SCOPE
+};
 
 namespace game
 {
     extern void parseoptions(vector<const char *> &args);
-
     extern void gamedisconnect(bool cleanup);
     extern void parsepacketclient(int chan, packetbuf &p);
     extern void connectattempt(const char *name, const char *password, const ENetAddress &address);
     extern void connectfail();
     extern void gameconnect(bool _remote);
-    extern bool allowedittoggle();
-    extern bool editing();
     extern void edittoggled(bool on);
     extern void writeclientinfo(stream *f);
     extern void toserver(char *text);
     extern void changemap(const char *name);
     extern void forceedit(const char *name);
-    extern bool ispaused();
-    extern int scaletime(int t);
-    extern bool allowmouselook();
-    extern bool intermission;
-
-    extern const char *gameident();
-    extern const char *gameconfig();
-    extern const char *savedconfig();
-    extern const char *defaultconfig();
-    extern const char *autoexec();
-    extern const char *savedservers();
     extern void loadconfigs();
-
     extern void updateworld();
     extern void dynentcollide(physent *d, physent *o, const vec &dir);
     extern void initclient();
@@ -58,76 +57,94 @@ namespace game
     extern void bounced(physent *d, const vec &surface);
     extern void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0, const VSlot *vs = NULL);
     extern void vartrigger(ident *id);
-    extern const char *getclientmap();
-    extern const char *getmapinfo();
-    extern const char *getscreenshotinfo();
     extern void resetgamestate();
     extern void hurt(physent *d);
     extern void suicide(physent *d);
     extern void newmap(int size);
     extern void startmap(const char *name);
     extern void preload();
-    extern float abovegameplayhud(int w, int h);
-    extern bool canjump();
-    extern bool cancrouch();
-    extern bool allowmove(physent *d);
-    extern bool shoulddrawzoom();
-    extern dynent *iterdynents(int i);
-    extern int numdynents();
+    extern void setupcamera();
     extern void rendergame();
     extern void renderavatar();
     extern void renderplayerpreview(int model, int color, int team, int weap);
-    extern int numanims();
     extern void findanims(const char *pattern, vector<int> &anims);
     extern void writegamedata(vector<char> &extras);
     extern void readgamedata(vector<char> &extras);
-    extern float clipconsole(float w, float h);
-    extern const char *defaultcrosshair(int index);
-    extern int selectcrosshair(vec &col);
-    extern void setupcamera();
-    extern bool allowthirdperson();
-    extern bool detachcamera();
-    extern bool collidecamera();
-    extern void adddynlights();
     extern void particletrack(physent *owner, vec &o, vec &d);
     extern void dynlighttrack(physent *owner, vec &o, vec &hud);
     extern void voicecom(int sound, char *text, bool isteam);
-    extern int maxsoundradius(int n);
+    extern void adddynlights();
+
+    extern bool allowedittoggle();
+    extern bool editing();
+    extern bool ispaused();
+    extern bool allowmouselook();
+    extern bool intermission;
+    extern bool canjump();
+    extern bool cancrouch();
+    extern bool allowmove(physent *d);
     extern bool needminimap();
+    extern bool allowthirdperson();
+    extern bool detachcamera();
+    extern bool collidecamera();
 
+    extern const char *gameident();
+    extern const char *gameconfig();
+    extern const char *savedconfig();
+    extern const char *defaultconfig();
+    extern const char *autoexec();
+    extern const char *savedservers();
+    extern const char *getclientmap();
+    extern const char *getmapinfo();
+    extern const char *getscreenshotinfo();
+    extern const char *defaultcrosshair(int index);
+
+    extern int numdynents();
+    extern int scaletime(int t);
+    extern int numanims();
+    extern int selectcrosshair(vec &col);
+    extern int maxsoundradius(int n);
     extern int mapdeath;
+    extern int checkzoom();
 
+    extern float abovegameplayhud(int w, int h);
+    extern float clipconsole(float w, float h);
     extern float calcradarscale();
     extern float minimapalpha;
+
+    extern dynent *iterdynents(int i);
 }
 
+// server
 namespace server
 {
     extern void *newclientinfo();
     extern void deleteclientinfo(void *ci);
     extern void serverinit();
-    extern int reserveclients();
-    extern int numchannels();
     extern void clientdisconnect(int n);
-    extern int clientconnect(int n, uint ip);
     extern void localdisconnect(int n);
     extern void localconnect(int n);
-    extern bool allowbroadcast(int n);
     extern void recordpacket(int chan, void *data, int len);
     extern void parsepacket(int sender, int chan, packetbuf &p);
     extern void sendservmsg(const char *s);
-    extern bool sendpackets(bool force = false);
     extern void serverinforeply(ucharbuf &req, ucharbuf &p);
     extern void serverupdate();
-    extern int protocolversion();
-    extern int laninfoport();
-    extern int serverport();
-    extern const char *defaultmaster();
-    extern int masterport();
     extern void processmasterinput(const char *cmd, int cmdlen, const char *args);
     extern void masterconnected();
     extern void masterdisconnected();
+
+    extern bool allowbroadcast(int n);
+    extern bool sendpackets(bool force = false);
     extern bool ispaused();
+
+    extern const char *defaultmaster();
+
+    extern int reserveclients();
+    extern int numchannels();
+    extern int clientconnect(int n, uint ip);
+    extern int protocolversion();
+    extern int laninfoport();
+    extern int serverport();
+    extern int masterport();
     extern int scaletime(int t);
 }
-

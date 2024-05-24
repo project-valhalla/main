@@ -141,7 +141,7 @@ Texture *backgroundmapshot = NULL;
 string backgroundmapname = "";
 char *backgroundmapinfo = NULL;
 
-void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1, bool flipx = 0, bool flipy = 0)
+void drawquad(float x, float y, float w, float h, float tx1, float ty1, float tx2, float ty2, bool flipx, bool flipy)
 {
     if(flipx) swap(tx1, tx2);
     if(flipy) swap(ty1, ty2);

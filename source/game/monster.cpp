@@ -328,7 +328,7 @@ namespace game
                 int atk = monstertypes[mtype].atk;
                 if(monstertypes[mtype].isexplosive) game::explode(true, this, o, vel, NULL, attacks[atk].damage, atk);
             }
-            else playsound(monstertypes[mtype].diesound, this);
+            else if(!(flags & HIT_HEAD)) playsound(monstertypes[mtype].diesound, this);
             monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
         }
 

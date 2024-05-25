@@ -108,6 +108,12 @@ namespace game
             }
         }
 
+        void orient()
+        {
+            vec target = headpos();
+            ai::findorientation(target, yaw, pitch, attacktarget);
+        }
+
         void monsteraction(int curtime) // main AI thinking routine, called every frame for every monster
         {
             if(enemy->state==CS_DEAD)
@@ -199,6 +205,7 @@ namespace game
 
                     if(burstfire)
                     {
+                        targetyaw = enemyyaw;
                         if(gunwait) break;
                         if(!bursting)
                         {
@@ -213,6 +220,8 @@ namespace game
                         int atk = monstertypes[mtype].atk;
                         if(!burstfire || (burstfire && bursting))
                         {
+                            orient();
+                            if(attacktarget.dist(o) <= attacks[atk].exprad) goto stopburst;
                             lastaction = 0;
                             if(meleerange && attacks[atk].action != ACT_MELEE) atk = meleeatk;
                             attacking = attacks[atk].action;
@@ -221,16 +230,13 @@ namespace game
                             bool burstcomplete = shots >= monstertypes[mtype].burstshots;
 
                             if(burstfire) shots++;
-                            if(!burstfire || (burstfire && burstcomplete))
-                            {
-                                transition(MS_ATTACKING, 0, 600, 0);
-                                burst(false);
-                            }
+                            if(!burstfire || (burstfire && burstcomplete)) goto stopburst;
                         }
                         if(monstertypes[mtype].attacksound && !burstfire && atk != meleeatk)
                         {
                             playsound(monstertypes[mtype].attacksound, this);
                         }
+                        break; stopburst: transition(MS_ATTACKING, 0, 600, 0); burst(false);
                     }
                     break;
                 }
@@ -262,8 +268,7 @@ namespace game
                             // the closer the monster is the more likely he wants to shoot
                             if((!melee || dist<20) && !rnd(longrange ? (int)dist/12+1 : min((int)dist/12+1,6)) && enemy->state==CS_ALIVE)  // get ready to fire
                             {
-                                target = headpos();
-                                ai::findorientation(target, yaw, pitch, attacktarget);
+                                orient();
                                 transition(MS_AIMING, 0, monstertypes[mtype].lag, 10);
                             }
                             else // track player some more

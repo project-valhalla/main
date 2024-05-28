@@ -21,10 +21,10 @@ namespace game
         gameent *enemy; // monster wants to kill this entity
         float targetyaw; // monster wants to look in this direction
         int trigger; // millis at which transition to another monsterstate takes place
-        vec attacktarget; // delayed attacks
+        vec attacktarget;
         int anger; // how many times already hit by fellow monster
         physent *stacked;
-        vec stackpos;
+        vec stackpos, orient;
         bool halted, canmove;
         int lastunblocked, exploding, detonating;
         int bursting, shots;
@@ -65,6 +65,7 @@ namespace game
             roll = 0;
             state = CS_ALIVE;
             anger = 0;
+            orient = headpos();
             copystring(name, t.name);
             halted = false;
             lastunblocked = exploding = detonating = 0;
@@ -106,12 +107,6 @@ namespace game
                 bursting = shots = 0;
                 crouching = 1;
             }
-        }
-
-        void orient()
-        {
-            vec target = headpos();
-            ai::findorientation(target, yaw, pitch, attacktarget);
         }
 
         void monsteraction(int curtime) // main AI thinking routine, called every frame for every monster
@@ -159,6 +154,8 @@ namespace game
             int meleeatk = monstertypes[mtype].meleeatk;
             bool meleerange = dist <= attacks[meleeatk].range;
 
+            vec target = vec(0, 0, 0);
+
             switch(monsterstate)
             {
                 case MS_PAIN:
@@ -166,7 +163,6 @@ namespace game
                 case MS_SEARCH:
                 {
                     if(trigger<lastmillis && canmove) transition(MS_HOME, 1, 100, 200);
-                    vec target;
                     if(!halted && monsterstate == MS_SEARCH && raycubelos(o, enemy->o, target))
                     {
                         playsound(monstertypes[mtype].haltsound, this);
@@ -188,7 +184,6 @@ namespace game
                     || angle<10
                     || (monsterhurt && o.dist(monsterhurtpos)<512))
                     {
-                        vec target;
                         if(raycubelos(o, enemy->o, target))
                         {
                             transition(MS_HOME, 1, 500, 200);
@@ -205,7 +200,7 @@ namespace game
 
                     if(burstfire)
                     {
-                        targetyaw = enemyyaw;
+                        if(raycubelos(o, enemy->o, target)) targetyaw = enemyyaw;
                         if(gunwait) break;
                         if(!bursting)
                         {
@@ -220,7 +215,7 @@ namespace game
                         int atk = monstertypes[mtype].atk;
                         if(!burstfire || (burstfire && bursting))
                         {
-                            orient();
+                            ai::findorientation(orient, yaw, pitch, attacktarget);
                             if(attacktarget.dist(o) <= attacks[atk].exprad) goto stopburst;
                             lastaction = 0;
                             if(meleerange && attacks[atk].action != ACT_MELEE) atk = meleeatk;
@@ -246,7 +241,6 @@ namespace game
                     if(!detonating) targetyaw = enemyyaw;
                     if(trigger<lastmillis)
                     {
-                        vec target;
                         if(!raycubelos(o, enemy->o, target)) // no visual contact anymore, let monster gets as close as possible then search for the player
                         {
                             transition(MS_HOME, 1, 800, 500);
@@ -268,7 +262,7 @@ namespace game
                             // the closer the monster is the more likely he wants to shoot
                             if((!melee || dist<20) && !rnd(longrange ? (int)dist/12+1 : min((int)dist/12+1,6)) && enemy->state==CS_ALIVE)  // get ready to fire
                             {
-                                orient();
+                                ai::findorientation(orient, yaw, pitch, attacktarget);
                                 transition(MS_AIMING, 0, monstertypes[mtype].lag, 10);
                             }
                             else // track player some more

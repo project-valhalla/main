@@ -25,8 +25,8 @@ namespace game
         int anger; // how many times already hit by fellow monster
         physent *stacked;
         vec stackpos, orient;
-        bool halted, canmove;
-        int lastunblocked, exploding, detonating;
+        bool halted, canmove, exploding;
+        int lastunblocked, detonating;
         int bursting, shots;
 
         monster(int _type, int _yaw, int _tag, int _canmove, int _state, int _trigger, int _move) :
@@ -67,8 +67,8 @@ namespace game
             anger = 0;
             orient = headpos();
             copystring(name, t.name);
-            halted = false;
-            lastunblocked = exploding = detonating = 0;
+            halted = exploding = false;
+            lastunblocked = detonating = 0;
             bursting = shots = 0;
 
             spawneffect(this);
@@ -249,6 +249,13 @@ namespace game
                                 playsound(monstertypes[mtype].unhaltsound, this);
                                 halted = false;
                             }
+                            if(monstertypes[mtype].isexplosive)
+                            {
+                                if(health <= monstertypes[mtype].health / 2)
+                                {
+                                    preparedetonation();
+                                }
+                            }
                         }
                         else if(!exploding && !detonating)
                         {
@@ -292,10 +299,10 @@ namespace game
             }
         }
 
-        void setexplosiontimer()
+        void preparedetonation()
         {
             if(exploding) return;
-            exploding = lastmillis;
+            exploding = true;
             speed += monstertypes[mtype].speedbonus; // increase movement to get to the player and explode in their face faster
             playsound(monstertypes[mtype].haltsound, this);
         }
@@ -304,7 +311,7 @@ namespace game
         {
             if(detonating) return;
             detonating = lastmillis;
-            exploding = 0;
+            exploding = false;
             move = strafe = 0;
             playsound(S_WEAPON_DETONATE, this);
         }
@@ -313,7 +320,8 @@ namespace game
         {
             state = CS_DEAD;
             lastpain = lastmillis;
-            exploding = detonating = 0;
+            exploding = false;
+            detonating = 0;
             stopownersounds(this);
             if(gibbed() || forceexplosion)
             {
@@ -359,13 +367,6 @@ namespace game
             }
             else
             {
-                if(monstertypes[mtype].isexplosive)
-                {
-                    if(health <= monstertypes[mtype].health / 2)
-                    {
-                        setexplosiontimer();
-                    }
-                }
                 if(!exploding) // if the monster is in kamikaze mode, ignore the pain
                 {
                     if(!bursting) transition(MS_PAIN, 0, monstertypes[mtype].pain, 200); // in this state monster won't attack
@@ -439,7 +440,7 @@ namespace game
                 // heal monsters when player dies
                 monster *m = monsters[i];
                 m->health = min(m->health + monstertypes[m->mtype].healthbonus, monstertypes[m->mtype].health);
-                if(m->exploding) m->exploding = lastmillis; // reset explosion timer
+                if(m->detonating) m->detonating = 0; // reset explosion timer
             }
         }
     }
@@ -548,9 +549,7 @@ namespace game
                     regular_particle_flame(PART_FLAME, m->o, 6.5f, 1.5f, 0x903020, 1, 2.0f);
                     regular_particle_flame(PART_SMOKE, m->o, 5.0f, 2.5f, 0x303020, 2, 4.0f, 100.0f);
                     int atk = monstertypes[m->mtype].atk;
-                    bool isinproximity = m->enemy->state == CS_ALIVE && m->o.dist(m->enemy->o) < attacks[atk].exprad; // close enough to the enemy
-                    bool istimerover = lastmillis - m->exploding >= MONSTER_EXPLODE_DELAY; // detonation timer has ran out
-                    if(isinproximity || istimerover)
+                    if(m->enemy->state == CS_ALIVE && m->o.dist(m->enemy->o) <= attacks[atk].exprad)  // close enough to the enemy
                     {
                         m->detonate();
                     }

@@ -586,12 +586,13 @@ namespace game
             if(m.gibbed()) continue;
             if(m.state != CS_DEAD || lastmillis-m.lastpain<10000)
             {
-                modelattach a[3];
+                modelattach a[4];
                 int ai = 0;
                 a[ai++] = modelattach("tag_weapon", monstertypes[m.mtype].worldgunmodel, ANIM_VWEP_IDLE|ANIM_LOOP, 0);
                 if(m.state == CS_ALIVE)
                 {
                     a[ai++] = modelattach("tag_head", &m.head);
+                    a[ai++] = modelattach("tag_muzzle", &m.muzzle);
                 }
                 float fade = 1;
                 if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);

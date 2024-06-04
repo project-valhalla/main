@@ -155,6 +155,7 @@ namespace game
             bool meleerange = dist <= attacks[meleeatk].range;
 
             vec target = vec(0, 0, 0);
+            orient = headpos();
 
             switch(monsterstate)
             {

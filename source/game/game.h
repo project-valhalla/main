@@ -599,7 +599,7 @@ struct gameent : dynent, gamestate
 
     bool gibbed()
     {
-        return (state == CS_DEAD && health <= -50) || deathtype == DEATH_GIB;
+        return (state == CS_DEAD && health <= HEALTH_GIB) || deathtype == DEATH_GIB;
     }
 };
 

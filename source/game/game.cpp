@@ -126,7 +126,7 @@ namespace game
     void respawnself()
     {
         if(ispaused()) return;
-        if(queuerespawn && lastmillis - self->lastpain <= (cmode ? cmode->respawnwait(self, true) : RESPAWN_WAIT))
+        if(queuerespawn && lastmillis - self->lastpain <= (cmode ? cmode->respawnwait(self, true) : DELAY_RESPAWN))
         {
             self->respawnqueued = true;
             return;
@@ -300,7 +300,7 @@ namespace game
                     self->move = self->strafe = 0;
                     moveplayer(self, 10, true);
                 }
-                if(lastmillis - self->lastpain > (cmode ? cmode->respawnwait(self, true) : RESPAWN_WAIT))
+                if(lastmillis - self->lastpain > (cmode ? cmode->respawnwait(self, true) : DELAY_RESPAWN))
                 {
                     if(self->respawnqueued)
                     {
@@ -1074,8 +1074,8 @@ namespace game
         {
             if(d->state!=CS_ALIVE) return;
             gameent *pl = (gameent *)d;
-            if((pl->lasthurt && lastmillis - pl->lasthurt < ENV_DAM_DELAY) || pl->haspowerup(PU_INVULNERABILITY)) return;
-            damaged(ENV_DAM, pl->o, pl, pl, -1, HIT_MATERIAL, true);
+            if((pl->lasthurt && lastmillis - pl->lasthurt < DELAY_ENVDAM) || pl->haspowerup(PU_INVULNERABILITY)) return;
+            damaged(DAM_ENV, pl->o, pl, pl, -1, HIT_MATERIAL, true);
             pl->lasthurt = lastmillis;
         }
     }

@@ -4,7 +4,7 @@
 namespace game
 {
     static const int OFFSETMILLIS = 500;
-    vec rays[MAXRAYS];
+    vec rays[GUN_MAXRAYS];
 
     struct hitmsg
     {
@@ -556,8 +556,8 @@ namespace game
         if(!gore) return;
         if(force)
         {
-            d->health = -50;
-            damage = 100;
+            d->health = HEALTH_GIB;
+            damage = d->maxhealth;
         }
         vec from = d->abovehead();
         if(goreeffect <= 0)
@@ -635,7 +635,7 @@ namespace game
                 if (flags & HIT_LEGS) damage /= 2;
             }
             if (actor->haspowerup(PU_DAMAGE) || actor->role == ROLE_BERSERKER) damage *= 2;
-            if (isally(target, actor) || target == actor) damage /= ALLY_DAMDIV;
+            if (isally(target, actor) || target == actor) damage /= DAM_ALLYDIV;
         }
         if (target->haspowerup(PU_ARMOR) || target->role == ROLE_BERSERKER) damage /= 2;
         if(!damage) damage = 1;
@@ -1335,7 +1335,7 @@ namespace game
         bool hitlegs = false, hithead = false;
         if(attacks[atk].rays > 1)
         {
-            dynent *hits[MAXRAYS];
+            dynent *hits[GUN_MAXRAYS];
             loopi(maxrays)
             {
                 if(!betweenrounds && (hits[i] = intersectclosest(from, rays[i], d, margin, dist)))

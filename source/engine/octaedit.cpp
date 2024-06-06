@@ -2388,15 +2388,15 @@ void vmaterial(int *n)
 COMMAND(vmaterial, "i");
 ICOMMAND(getvmaterial, "i", (int *tex), intret(lookupvslot(*tex, false).texturematerial));
 
-void vhue(float *_h, float *_s, float *_v)
+void vhue(float *_h, float *_s, float *_v, int *numargs)
 {
     if(noedit()) return;
     VSlot ds;
     ds.changed = 1<<VSLOT_HSV;
-    ds.hsv = vec(fmod(*_h, 360.0f), *_s, *_v);
+    ds.hsv = vec(fmod(*_h, 360.0f), (*numargs >= 2) ? *_s : 1, (*numargs >= 3) ? *_v : 1);
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
-COMMAND(vhue, "fff");
+COMMAND(vhue, "fffN");
 ICOMMAND(getvhue, "i", (int *tex),
 {
     VSlot &vslot = lookupvslot(*tex, false);

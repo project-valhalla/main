@@ -2388,6 +2388,22 @@ void vmaterial(int *n)
 COMMAND(vmaterial, "i");
 ICOMMAND(getvmaterial, "i", (int *tex), intret(lookupvslot(*tex, false).texturematerial));
 
+void vhue(float *_h, float *_s, float *_v)
+{
+    if(noedit()) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_HSV;
+    ds.hsv = vec(fmod(*_h, 360.0f), *_s, *_v);
+    mpeditvslot(usevdelta, ds, allfaces, sel, true);
+}
+COMMAND(vhue, "fff");
+ICOMMAND(getvhue, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    defformatstring(str, "%s %s %s", floatstr(vslot.hsv.r), floatstr(vslot.hsv.g), floatstr(vslot.hsv.b));
+    result(str);
+});
+
 void vreset()
 {
     if(noedit()) return;

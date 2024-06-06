@@ -1150,7 +1150,7 @@ struct renderstate
     bool shadowing;
     GLuint vbuf;
     bool vattribs, vquery;
-    vec colorscale;
+    vec colorscale, hsv;
     float alphascale;
     float refractscale;
     vec refractcolor;
@@ -1163,7 +1163,7 @@ struct renderstate
     vec2 texgenscroll;
     int texgenorient, texgenmillis;
 
-    renderstate() : colormask(true), depthmask(true), alphaing(0), vbuf(0), vattribs(false), vquery(false), colorscale(1, 1, 1), alphascale(0), refractscale(0), refractcolor(1, 1, 1), blend(false), blendx(-1), blendy(-1), globals(-1), tmu(-1), slot(NULL), texgenslot(NULL), vslot(NULL), texgenvslot(NULL), texgenscroll(0, 0), texgenorient(-1), texgenmillis(lastmillis)
+    renderstate() : colormask(true), depthmask(true), alphaing(0), vbuf(0), vattribs(false), vquery(false), colorscale(1, 1, 1), hsv(0, 1, 1), alphascale(0), refractscale(0), refractcolor(1, 1, 1), blend(false), blendx(-1), blendy(-1), globals(-1), tmu(-1), slot(NULL), texgenslot(NULL), vslot(NULL), texgenvslot(NULL), texgenscroll(0, 0), texgenorient(-1), texgenmillis(lastmillis)
     {
         loopk(7) textures[k] = 0;
     }
@@ -1477,6 +1477,12 @@ static void changeslottmus(renderstate &cur, int pass, Slot &slot, VSlot &vslot)
         GLOBALPARAMF(colorparams, vslot.colorscale.x, vslot.colorscale.y, vslot.colorscale.z, 1);
     }
 
+    if(cur.hsv != vslot.hsv)
+    {
+        cur.hsv = vslot.hsv;
+        GLOBALPARAMF(hsv, vslot.hsv.x, vslot.hsv.y, vslot.hsv.z, 1);
+    }
+
     loopvj(slot.sts)
     {
         Slot::Tex &t = slot.sts[j];
@@ -1759,6 +1765,7 @@ void setupgeom(renderstate &cur)
 {
     glActiveTexture_(GL_TEXTURE0);
     GLOBALPARAMF(colorparams, 1, 1, 1, 1);
+    GLOBALPARAMF(hsv, 0, 1, 1);
     GLOBALPARAMF(blendlayer, 1.0f);
 }
 

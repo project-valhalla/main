@@ -485,6 +485,10 @@ void savevslot(stream *f, VSlot &vs, int prev)
     {
         loopk(3) f->putlil<float>(vs.hsv[k]);
     }
+    if(vs.changed & (1<<VSLOT_MATRIX))
+    {
+        loopk(4) f->putlil<float>(vs.transform[k]);
+    }
 }
 
 void savevslots(stream *f, int numvslots)
@@ -565,6 +569,10 @@ void loadvslot(stream *f, VSlot &vs, int changed)
     if(vs.changed & (1<<VSLOT_HSV))
     {
         loopk(3) vs.hsv[k] = f->getlil<float>();
+    }
+    if(vs.changed & (1<<VSLOT_MATRIX))
+    {
+        loopk(4) vs.transform[k] = f->getlil<float>();
     }
 }
 

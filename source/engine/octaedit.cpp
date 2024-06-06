@@ -2404,6 +2404,22 @@ ICOMMAND(getvhue, "i", (int *tex),
     result(str);
 });
 
+void vrawmatrix(float *x, float *y, float *z, float *w)
+{
+    if(noedit()) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_MATRIX;
+    ds.transform = vec4(*x, *y, *z, *w);
+    mpeditvslot(usevdelta, ds, allfaces, sel, true);
+}
+COMMAND(vrawmatrix, "ffff");
+ICOMMAND(getvrawmatrix, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    defformatstring(str, "%s %s %s %s", floatstr(vslot.transform.x), floatstr(vslot.transform.y), floatstr(vslot.transform.z), floatstr(vslot.transform.w));
+    result(str);
+});
+
 void vreset()
 {
     if(noedit()) return;

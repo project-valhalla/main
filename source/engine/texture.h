@@ -614,6 +614,7 @@ enum
     VSLOT_DETAIL,
     VSLOT_MATERIAL,
     VSLOT_HSV,
+    VSLOT_MATRIX,
     VSLOT_NUM
 };
 
@@ -636,6 +637,7 @@ struct VSlot
     vec refractcolor;
     int texturematerial;
     vec hsv;
+    vec4 transform;
 
     VSlot(Slot *slot = NULL, int index = -1) : slot(slot), next(NULL), index(index), changed(0)
     {
@@ -662,6 +664,7 @@ struct VSlot
         refractcolor = vec(1, 1, 1);
         texturematerial = 0;
         hsv = vec(0, 1, 1);
+        transform = vec4(1, 0, 0, 1);
     }
 
     void cleanup()

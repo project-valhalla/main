@@ -513,29 +513,6 @@ void texmad(ImageData &s, const vec &mul, const vec &add)
     );
 }
 
-static inline void colorhsv(uchar **dst, const vec &hsv)
-{
-    vec yiq;
-    yiq.r = 0.30 * float((*dst)[0]) / 255.f + 0.59 * float((*dst)[1]) / 255.f + 0.11 * float((*dst)[2]) / 255.f;
-    yiq.g = -0.27 * (float((*dst)[2]) - yiq.r) + 0.74 * (float((*dst)[0]) - yiq.r);
-    yiq.b = 0.41 * (float((*dst)[2]) - yiq.r) + 0.48 * (float((*dst)[0]) - yiq.r);
-
-    float hue = atan2(yiq.b, yiq.g) - hsv.r * PI / 180.f;
-    float chroma = sqrt(yiq.b*yiq.b+yiq.g*yiq.g) * hsv.g;
-    vec yiq_final(yiq.r * hsv.b, chroma * cos(hue), chroma * sin(hue));
-
-    (*dst)[0] = uchar(clamp(round(255 * (yiq_final.r + 0.9469 * yiq_final.g + 0.6236 * yiq_final.b)), 0.0f, 255.0f));
-    (*dst)[1] = uchar(clamp(round(255 * (yiq_final.r - 0.2748 * yiq_final.g - 0.6357 * yiq_final.b)), 0.0f, 255.0f));
-    (*dst)[2] = uchar(clamp(round(255 * (yiq_final.r - 1.1    * yiq_final.g + 1.7    * yiq_final.b)), 0.0f, 255.0f));
-}
-void texhsv(ImageData &s, const vec &hsv)
-{
-    if(s.bpp < 3) swizzleimage(s);
-    writetex(s,
-        loopk(min(s.bpp, 3)) colorhsv(&dst, hsv);
-    );
-}
-
 void texintmul(ImageData &s, const uint32_t &color)
 {
     vec mul;
@@ -724,6 +701,26 @@ void texblend(ImageData &d, ImageData &s, ImageData &m)
             dst[2] = uchar((dst[2]*dstblend + src[2]*srcblend)/255);
         );
     }
+}
+
+inline float determinant2x2(vec4 m)
+{
+    return m.x * m.w - m.z * m.y;
+}
+vec4 invert2x2(vec4 m)
+{
+    const float det = determinant2x2(m);
+    if(!det) return vec4(1, 0, 0, 1);
+    return vec4(m.w, -m.y, -m.z, m.x).mul(1.0f / det);
+}
+vec4 multiply2x2(vec4 l, vec4 r)
+{
+    return vec4(
+        l.x * r.x + l.z * r.y,
+        l.y * r.x + l.w * r.y,
+        l.x * r.z + l.z * r.w,
+        l.y * r.z + l.w * r.w
+    );
 }
 
 VAR(hwtexsize, 1, 0, 0);
@@ -1686,7 +1683,6 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
         PARSETEXCOMMANDS(cmds);
         if(d.compressed) goto compressed;
         if(matchstring(cmd, len, "mad")) texmad(d, parsevec(arg[0]), parsevec(arg[1]));
-        if(matchstring(cmd, len, "hsv")) texhsv(d, parsevec(arg[0]));
         else if(matchstring(cmd, len, "intmul")) texintmul(d, atoi(arg[0]));
         else if(matchstring(cmd, len, "colorify")) texcolorify(d, parsevec(arg[0]), parsevec(arg[1]));
         else if(matchstring(cmd, len, "colormask")) texcolormask(d, parsevec(arg[0]), *arg[1] ? parsevec(arg[1]) : vec(1, 1, 1));
@@ -2062,6 +2058,7 @@ static void propagatevslot(VSlot &dst, const VSlot &src, int diff, bool edit = f
     if(diff & (1<<VSLOT_DETAIL)) dst.detail = src.detail;
     if(diff & (1<<VSLOT_MATERIAL)) dst.texturematerial = src.texturematerial;
     if(diff & (1<<VSLOT_HSV)) dst.hsv = src.hsv;
+    if(diff & (1<<VSLOT_MATRIX)) dst.transform = src.transform;
 }
 
 static void propagatevslot(VSlot *root, int changed)
@@ -2124,6 +2121,11 @@ static void mergevslot(VSlot &dst, const VSlot &src, int diff, Slot *slot = NULL
         dst.hsv.g *= src.hsv.g;
         dst.hsv.b *= src.hsv.b;
     }
+    if(diff & (1<<VSLOT_MATRIX))
+    {
+        vec4 invd = invert2x2(dst.transform), invs = invert2x2(src.transform);
+        dst.transform = invert2x2(multiply2x2(invs, invd));
+    }
 }
 
 void mergevslot(VSlot &dst, const VSlot &src, const VSlot &delta)
@@ -2181,6 +2183,7 @@ static bool comparevslot(const VSlot &dst, const VSlot &src, int diff)
     if(diff & (1<<VSLOT_DETAIL) && dst.detail != src.detail) return false;
     if(diff & (1<<VSLOT_MATERIAL) && dst.texturematerial != src.texturematerial) return false;
     if(diff & (1<<VSLOT_HSV) && dst.hsv != src.hsv) return false;
+    if(diff & (1<<VSLOT_MATRIX) && dst.transform != src.transform) return false;
     return true;
 }
 
@@ -2260,6 +2263,14 @@ void packvslot(vector<uchar> &buf, const VSlot &src)
         putfloat(buf, src.hsv.r);
         putfloat(buf, src.hsv.g);
         putfloat(buf, src.hsv.b);
+    }
+    if(src.changed & (1<<VSLOT_MATRIX))
+    {
+        buf.put(VSLOT_MATRIX);
+        putfloat(buf, src.transform.x);
+        putfloat(buf, src.transform.y);
+        putfloat(buf, src.transform.z);
+        putfloat(buf, src.transform.w);
     }
     buf.put(0xFF);
 }
@@ -2349,6 +2360,14 @@ bool unpackvslot(ucharbuf &buf, VSlot &dst, bool delta)
                 dst.hsv.r = fmod(getfloat(buf), 360.f);
                 dst.hsv.g = getfloat(buf);
                 dst.hsv.b = getfloat(buf);
+                break;
+            }
+            case VSLOT_MATRIX:
+            {
+                dst.transform.x = getfloat(buf);
+                dst.transform.y = getfloat(buf);
+                dst.transform.z = getfloat(buf);
+                dst.transform.w = getfloat(buf);
                 break;
             }
             default:
@@ -2613,6 +2632,15 @@ void texhue(float *_h, float *_s, float *_v)
     propagatevslot(s.variants, 1<<VSLOT_HSV);
 }
 COMMAND(texhue, "fff");
+
+void texrawmatrix(float *x, float *y, float *z, float *w)
+{
+    if(!defslot) return;
+    Slot &s = *defslot;
+    s.variants->transform = vec4(*x, *y, *z, *w);
+    propagatevslot(s.variants, 1<<VSLOT_MATRIX);
+}
+COMMAND(texrawmatrix, "ffff");
 
 void decaldepth(float *depth, float *fade)
 {
@@ -2903,12 +2931,12 @@ Texture *Slot::loadthumbnail()
     linkslotshader(*this, false);
     linkvslotshader(vslot, false);
     vector<char> name;
-    if(vslot.colorscale == vec(1, 1, 1) && vslot.hsv == vec(0, 1, 1)) {
+    if(vslot.colorscale == vec(1, 1, 1)) {
         addname(name, *this, sts[0], false, "<thumbnail>");
     }
     else
     {
-        defformatstring(prefix, "<thumbnail:%.2f/%.2f/%.2f/%.2f/%.2f/%.2f>", vslot.colorscale.x, vslot.colorscale.y, vslot.colorscale.z, vslot.hsv.x, vslot.hsv.y, vslot.hsv.z);
+        defformatstring(prefix, "<thumbnail:%.2f/%.2f/%.2f>", vslot.colorscale.x, vslot.colorscale.y, vslot.colorscale.z);
         addname(name, *this, sts[0], false, prefix);
     }
     int glow = -1;
@@ -2924,10 +2952,10 @@ Texture *Slot::loadthumbnail()
     VSlot *layer = vslot.layer ? &lookupvslot(vslot.layer, false) : NULL;
     if(layer)
     {
-        if(layer->colorscale == vec(1, 1, 1) && layer->hsv == vec(0, 1, 1)) addname(name, *layer->slot, layer->slot->sts[0], true, "<layer>");
+        if(layer->colorscale == vec(1, 1, 1)) addname(name, *layer->slot, layer->slot->sts[0], true, "<layer>");
         else
         {
-            defformatstring(prefix, "<layer:%.2f/%.2f/%.2f/%.2f/%.2f/%.2f>", layer->colorscale.x, layer->colorscale.y, layer->colorscale.z, layer->hsv.x, layer->hsv.y, layer->hsv.z);
+            defformatstring(prefix, "<layer:%.2f/%.2f/%.2f>", layer->colorscale.x, layer->colorscale.y, layer->colorscale.z);
             addname(name, *layer->slot, layer->slot->sts[0], true, prefix);
         }
     }
@@ -2947,7 +2975,6 @@ Texture *Slot::loadthumbnail()
         else
         {
             if(vslot.colorscale != vec(1, 1, 1)) texmad(s, vslot.colorscale, vec(0, 0, 0));
-            if(vslot.hsv != vec(0, 1, 1)) texhsv(s, vslot.hsv);
             int xs = s.w, ys = s.h;
             if(s.w > 128 || s.h > 128) scaleimage(s, min(s.w, 128), min(s.h, 128));
             if(g.data)
@@ -2958,14 +2985,12 @@ Texture *Slot::loadthumbnail()
             if(l.data)
             {
                 if(layer->colorscale != vec(1, 1, 1)) texmad(l, layer->colorscale, vec(0, 0, 0));
-                if(layer->hsv != vec(0, 1, 1)) texhsv(l, layer->hsv);
                 if(l.w != s.w/2 || l.h != s.h/2) scaleimage(l, s.w/2, s.h/2);
                 blitthumbnail(s, l, s.w-l.w, s.h-l.h);
             }
             if(d.data)
             {
                 if(vslot.colorscale != vec(1, 1, 1)) texmad(d, vslot.colorscale, vec(0, 0, 0));
-                if(vslot.hsv != vec(0, 1, 1)) texhsv(d, vslot.hsv);
                 if(d.w != s.w/2 || d.h != s.h/2) scaleimage(d, s.w/2, s.h/2);
                 blitthumbnail(s, d, 0, 0);
             }

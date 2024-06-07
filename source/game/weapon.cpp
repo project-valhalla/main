@@ -155,7 +155,7 @@ namespace game
         BNC_ROCKET,
         BNC_GIB,
         BNC_DEBRIS,
-        BNC_CARTRIDGE,
+        BNC_EJECT,
     };
 
     inline bool weaponbouncer(int type) { return type >= BNC_GRENADE && type <= BNC_ROCKET; }
@@ -205,7 +205,7 @@ namespace game
         void setradius(int type)
         {
             float typeradius = 1.4f;
-            if(type == BNC_CARTRIDGE) typeradius = 0.3f;
+            if(type == BNC_EJECT) typeradius = 0.3f;
             radius = xradius = yradius = typeradius;
             eyeheight = aboveeye = radius;
         }
@@ -243,7 +243,7 @@ namespace game
                 break;
             }
             case BNC_GIB: bnc.variant = rnd(5); break;
-            case BNC_CARTRIDGE:
+            case BNC_EJECT:
             {
                 int gun = bnc.owner->gunselect;
                 bnc.bouncesound = gun == GUN_SCATTER? S_BOUNCE_CARTRIDGE_SG: (gun == GUN_SMG? S_BOUNCE_CARTRIDGE_SMG: S_BOUNCE_CARTRIDGE_RAILGUN);
@@ -281,7 +281,7 @@ namespace game
         bouncer *b = (bouncer *)d;
         b->bounces++;
         int type = b->bouncetype;
-        if((type == BNC_CARTRIDGE && b->bounces > 1) // prevent bounce sound spam
+        if((type == BNC_EJECT && b->bounces > 1) // prevent bounce sound spam
            || lastmillis - b->lastbounce < 100)
         {
             return;
@@ -367,7 +367,7 @@ namespace game
             if(bnc.bouncerloopsound >= 0) bnc.bouncerloopchan = playsound(bnc.bouncerloopsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerloopchan);
             vec old(bnc.o);
             bool destroyed = false;
-            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_CARTRIDGE)
+            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_EJECT)
             {
                 // cheaper variable rate physics for debris, gibs, etc.
                 for(int rtime = time; rtime > 0;)
@@ -540,7 +540,7 @@ namespace game
     {
         vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
         float elasticity = 0.6f;
-        if(type == BNC_CARTRIDGE)
+        if(type == BNC_EJECT)
         {
             to = vec(-50, 1, rnd(30)-15);
             to.rotate_around_z(d->yaw*RAD);
@@ -1052,7 +1052,7 @@ namespace game
                     particle_flare(d->muzzle, d->muzzle, 70, PART_MUZZLE_FLASH, 0xEFE598, 2.4f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                if(shouldeject) spawnbouncer(d->eject, d, BNC_CARTRIDGE);
+                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT);
                 if(!local)
                 {
                     loopi(attacks[atk].rays)
@@ -1073,7 +1073,7 @@ namespace game
                     particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH3, 0xEFE898, 1.5f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                if(shouldeject) spawnbouncer(d->eject, d, BNC_CARTRIDGE);
+                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT);
                 if(atk == ATK_SMG2) particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0xFFC864, 0.95f);
                 if(!local) impacteffects(atk, d, from, to, hit);
                 break;
@@ -1125,7 +1125,7 @@ namespace game
                     particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 2.75f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.25f, 1.0f, 0.75f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                 }
-                if(shouldeject) spawnbouncer(d->eject, d, BNC_CARTRIDGE);
+                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT);
                 if(atk == ATK_RAIL2) particle_trail(PART_SMOKE, 350, hudgunorigin(gun, from, to, d), to, 0xDEFFDE, 0.3f, 50);
                 particle_flare(hudgunorigin(gun, from, to, d), to, 600, PART_TRAIL, 0x55DD55, 0.50f);
                 if(!local) impacteffects(atk, d, from, to, hit);
@@ -1532,7 +1532,7 @@ namespace game
         }
     }
 
-    static const char * const projectilenames[4] = { "projectile/grenade", "projectile/grenade", "projectile/rocket", "projectile/eject/cartridge01" };
+    static const char * const projectilenames[4] = { "projectile/grenade", "projectile/grenade", "projectile/rocket", "projectile/eject" };
     static const char * const gibnames[5] = { "projectile/gib/gib01", "projectile/gib/gib02", "projectile/gib/gib03", "projectile/gib/gib04", "projectile/gib/gib05" };
 
     void preloadbouncers()
@@ -1558,14 +1558,14 @@ namespace game
             }
             const char *mdl = NULL;
             int cull = MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_CARTRIDGE)
+            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_EJECT)
             {
                 float fade = 1;
                 if(bnc.lifetime < 400) fade = bnc.lifetime/400.0f;
                 switch(bnc.bouncetype)
                 {
                     case BNC_GIB: mdl = gibnames[bnc.variant]; break;
-                    case BNC_CARTRIDGE: mdl = "projectile/eject/cartridge01"; break;
+                    case BNC_EJECT: mdl = "projectile/eject"; break;
                     default: continue;
                 }
                 rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0, cull, NULL, NULL, 0, 0, fade);

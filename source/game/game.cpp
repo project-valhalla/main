@@ -358,6 +358,8 @@ namespace game
         int color = 0x00FF5B;
         if(d->type == ENT_PLAYER) color = getplayercolor(d, d->team);
         particle_splash(PART_SPARK2, 250, 200, d->o, color, 0.60f, 200, 5);
+        vec lightcolor = vec::hexcolor(color);
+        adddynlight(d->o, 35, lightcolor, 900, 100);
         stopownersounds(d);
         playsound(S_SPAWN, d);
     }

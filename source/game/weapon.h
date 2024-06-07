@@ -53,14 +53,14 @@ const int HEALTH_GIB = -50; // if health equals or falls below this threshold, t
 
 const int GUN_MAXRAYS = 20; // maximum rays a player can shoot, we can't change that
 
-const float EXP_SELFPUSH  = 2.5f; // how much our player is going to be pushed from our own projectiles
-const float EXP_DISTSCALE = 1.5f; // explosion damage is going to be scaled by distance
+const int DELAY_ENVDAM = 500; // environmental damage is dealt again after a specific number of milliseconds
+const int DELAY_RESPAWN = 1500; // spawn is possible after a specific number of milliseconds has elapsed
 
 const int DAM_ALLYDIV = 2;  // divide damage dealt to self or allies
 const int DAM_ENV = 5;  // environmental damage like lava, damage material and fall damage
 
-const int DELAY_ENVDAM = 500; // environmental damage is dealt again after a specific number of milliseconds
-const int DELAY_RESPAWN = 1500; // spawn is possible after a specific number of milliseconds has elapsed
+const float EXP_SELFPUSH = 2.5f; // how much our player is going to be pushed from our own projectiles
+const float EXP_DISTSCALE = 1.5f; // explosion damage is going to be scaled by distance
 
 static const struct attackinfo
 {

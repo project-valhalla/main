@@ -469,14 +469,15 @@ struct gamestate
 const int MAXNAMELEN = 15;
 
 const int MAXTEAMS = 2;
+inline bool validteam(int team) { return team >= 1 && team <= MAXTEAMS; }
 static const char * const teamnames[1+MAXTEAMS] = { "", "Aesir", "Vanir" };
 static const char * const teamtextcode[1+MAXTEAMS] = { "\ff", "\f1", "\f3" };
+static const char * const teamblipcolor[1+MAXTEAMS] = { "_neutral", "_blue", "_red" };
+inline const char *teamname(int team) { return teamnames[validteam(team) ? team : 0]; }
+static inline int teamnumber(const char *name) { loopi(MAXTEAMS) if(!strcmp(teamnames[1+i], name)) return 1+i; return 0; }
 static const int teamtextcolor[1+MAXTEAMS] = { 0xFFFFFF, 0x6496FF, 0xFF4B19 };
 static const int teamscoreboardcolor[1+MAXTEAMS] = { 0, 0x3030C0, 0xC03030 };
-static const char * const teamblipcolor[1+MAXTEAMS] = { "_neutral", "_blue", "_red" };
-static inline int teamnumber(const char *name) { loopi(MAXTEAMS) if(!strcmp(teamnames[1+i], name)) return 1+i; return 0; }
-inline bool validteam(int team) { return team >= 1 && team <= MAXTEAMS; }
-inline const char *teamname(int team) { return teamnames[validteam(team) ? team : 0]; }
+static const int teameffectcolor[1+MAXTEAMS] = { 0xFFFFFF, 0x2020FF, 0xFF2020 };
 
 const int TAUNT_DELAY = 1000;
 const int VOICECOM_DELAY = 2800;
@@ -734,8 +735,6 @@ namespace game
     extern string servdesc;
 
     extern vector<uchar> messages;
-
-    extern const vec teamlightcolor[1+MAXTEAMS];
 
     extern int parseplayer(const char *arg);
     extern int gamespeed;

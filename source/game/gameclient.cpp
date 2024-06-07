@@ -416,6 +416,11 @@ namespace game
         if(d) intret(d->holdingflag);
     });
 
+    ICOMMAND(getclientlives, "", (),
+    {
+        intret(self->lives);
+    });
+
     ICOMMAND(getclientprivilege, "i", (int *cn),
     {
         gameent *d = getclient(*cn);

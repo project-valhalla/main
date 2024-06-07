@@ -307,7 +307,7 @@ namespace game
                         respawnself();
                         self->respawnqueued = false;
                     }
-                    setsvar("lasthudkillinfo", m_round ? "Spectate now" : "Respawn now");
+                    setsvar("lasthudkillinfo", tempformatstring("%s now", m_round ? "Spectate" : (m_invasion && self->lives <= 0 ? "Retry" : "Respawn")));
                 }
             }
             else if(!intermission)
@@ -541,11 +541,7 @@ namespace game
                 d->pitch = -90; // lower your pitch to see your death from above
             }
             d->roll = 0;
-            if(m_invasion)
-            {
-                self->lives--;
-                if(self->lives > 0) conoutf(CON_GAMEINFO, "\f2Lives remaining: %d", self->lives);
-            }
+            if(m_invasion) self->lives--;
             if(thirdperson) thirdperson = 0;
         }
         else

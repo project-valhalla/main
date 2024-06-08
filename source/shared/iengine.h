@@ -307,6 +307,7 @@ extern physent *camera1;
 extern vec worldpos, camdir, camright, camup;
 extern float curfov, fovy, aspect;
 
+extern bool zoomedin();
 extern void disablezoom();
 
 extern vec calcavatarpos(const vec &pos, float dist);

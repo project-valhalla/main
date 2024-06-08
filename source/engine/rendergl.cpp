@@ -2715,7 +2715,7 @@ VARP(cursorsize, 0, 18, 40);
 VARP(crosshairfx, 0, 1, 1);
 VARP(crosshaircolors, 0, 1, 1);
 
-#define MAXCROSSHAIRS 4
+#define MAXCROSSHAIRS 6
 static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL };
 
 void loadcrosshair(const char *name, int i)
@@ -2773,7 +2773,7 @@ void drawcrosshair(int w, int h)
     }
     else
     {
-        if(zoomedin() && game::checkzoom() == ZOOM_SCOPE) return;
+        //if(zoomedin() && game::checkzoom() == ZOOM_SCOPE) return;
         int index = game::selectcrosshair(color);
         if(index < 0) return;
         if(!crosshairfx) index = 0;

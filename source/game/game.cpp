@@ -1116,37 +1116,49 @@ namespace game
         return 0;
     }
 
-    VARP(allycrosshair, 0, 1, 1);
-    VARP(hitcrosshair, 0, 400, 1000);
-
     const char *defaultcrosshair(int index)
     {
         switch(index)
         {
-            case 3: return "data/interface/crosshair/ally.png";
+            case 5: return "data/interface/crosshair/ally.png";
+            case 4: return "data/interface/crosshair/dot_hit.png";
+            case 3: return "data/interface/crosshair/dot.png";
             case 2: return "data/interface/crosshair/default_hit.png";
             case 1: return "data/interface/crosshair/default.png";
             default: return "data/interface/crosshair/dot.png";
         }
     }
 
+    VARP(allycrosshair, 0, 1, 1);
+    VARP(hitcrosshair, 0, 400, 1000);
+
     int selectcrosshair(vec &col)
     {
         gameent *d = hudplayer();
-        if(d->state==CS_SPECTATOR || d->state==CS_DEAD || UI::uivisible("scoreboard") || intermission) return -1;
+        if(d->state == CS_SPECTATOR || d->state == CS_DEAD || intermission) return -1;
 
-        if(d->state!=CS_ALIVE) return 0;
+        if(d->state != CS_ALIVE) return 0;
 
         int crosshair = 1;
+        bool scoped = zoomedin() && checkzoom() == ZOOM_SCOPE;
+        if(scoped)
+        {
+            crosshair = 3;
+            col = vec(1, 0, 0);
+        }
         if(!betweenrounds)
         {
-            if(d->lasthit && lastmillis - d->lasthit < hitcrosshair) crosshair = 2;
+            if(d->lasthit && lastmillis - d->lasthit < hitcrosshair)
+            {
+                if(scoped) crosshair = 4;
+                else crosshair = 2;
+            }
             else if(allycrosshair)
             {
                 dynent *o = intersectclosest(d->o, worldpos, d);
-                if(o && o->type==ENT_PLAYER && isally(((gameent *)o), d))
+                if(o && o->type == ENT_PLAYER && isally(((gameent *)o), d))
                 {
-                    crosshair = 3;
+                    crosshair = 5;
                     if(m_teammode) col = vec::hexcolor(teamtextcolor[d->team]);
                 }
             }

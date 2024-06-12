@@ -170,7 +170,7 @@ namespace game
 
         float lastyaw, roll, gravity, elasticity, offsetheight;
 
-        int id, atk, bouncetype, lifetime;
+        int id, atk, gun, bouncetype, lifetime;
         int variant, bounces, offsetmillis;
         int lastbounce, bouncesound, bouncerloopchan, bouncerloopsound;
 
@@ -213,7 +213,7 @@ namespace game
 
     vector<bouncer *> bouncers;
 
-    void newbouncer(gameent *owner, const vec &from, const vec &to, bool local, int id, int atk, int type, int lifetime, int speed, float gravity, float elasticity)
+    void newbouncer(gameent *owner, const vec &from, const vec &to, bool local, int id, int atk, int type, int lifetime, int speed, float gravity, float elasticity, int gun = -1)
     {
         bouncer &bnc = *bouncers.add(new bouncer);
         bnc.owner = owner;
@@ -227,6 +227,7 @@ namespace game
         bnc.speed = speed;
         bnc.gravity = gravity;
         bnc.elasticity = elasticity;
+        if(validgun(gun)) bnc.gun = gun;
 
         switch(type)
         {
@@ -536,7 +537,7 @@ namespace game
         if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOUR, NULL, &f->o);
     }
 
-    void spawnbouncer(const vec &from, gameent *d, int type)
+    void spawnbouncer(const vec &from, gameent *d, int type, int gun = -1)
     {
         vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
         float elasticity = 0.6f;
@@ -549,7 +550,7 @@ namespace game
         if(to.iszero()) to.z += 1;
         to.normalize();
         to.add(from);
-        newbouncer(d, from, to, true, 0, -1, type, type == BNC_DEBRIS ? 400 : rnd(1000)+1000, rnd(100)+20, 0.3f + rndscale(0.8f), elasticity);
+        newbouncer(d, from, to, true, 0, -1, type, type == BNC_DEBRIS ? 400 : rnd(1000)+1000, rnd(100)+20, 0.3f + rndscale(0.8f), elasticity, gun);
     }
 
     void gibeffect(int damage, const vec &vel, gameent *d, bool force)
@@ -1052,7 +1053,7 @@ namespace game
                     particle_flare(d->muzzle, d->muzzle, 70, PART_MUZZLE_FLASH, 0xEFE598, 2.4f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT);
+                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT, gun);
                 if(!local)
                 {
                     loopi(attacks[atk].rays)
@@ -1073,7 +1074,7 @@ namespace game
                     particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH3, 0xEFE898, 1.5f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT);
+                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT, gun);
                 if(atk == ATK_SMG2) particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0xFFC864, 0.95f);
                 if(!local) impacteffects(atk, d, from, to, hit);
                 break;
@@ -1125,7 +1126,7 @@ namespace game
                     particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 2.75f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.25f, 1.0f, 0.75f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                 }
-                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT);
+                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT, gun);
                 if(atk == ATK_RAIL2) particle_trail(PART_SMOKE, 350, hudgunorigin(gun, from, to, d), to, 0xDEFFDE, 0.3f, 50);
                 particle_flare(hudgunorigin(gun, from, to, d), to, 600, PART_TRAIL, 0x55DD55, 0.50f);
                 if(!local) impacteffects(atk, d, from, to, hit);
@@ -1532,7 +1533,7 @@ namespace game
         }
     }
 
-    static const char * const projectilenames[4] = { "projectile/grenade", "projectile/grenade", "projectile/rocket", "projectile/eject" };
+    static const char * const projectilenames[6] = { "projectile/grenade", "projectile/grenade", "projectile/rocket", "projectile/eject/01", "projectile/eject/02", "projectile/eject/03" };
     static const char * const gibnames[5] = { "projectile/gib/gib01", "projectile/gib/gib02", "projectile/gib/gib03", "projectile/gib/gib04", "projectile/gib/gib05" };
 
     void preloadbouncers()
@@ -1565,7 +1566,13 @@ namespace game
                 switch(bnc.bouncetype)
                 {
                     case BNC_GIB: mdl = gibnames[bnc.variant]; break;
-                    case BNC_EJECT: mdl = "projectile/eject"; break;
+                    case BNC_EJECT:
+                    {
+                        if(bnc.gun == GUN_SCATTER) mdl = "projectile/eject/03";
+                        else if(bnc.gun == GUN_RAIL) mdl = "projectile/eject/02";
+                        else mdl = "projectile/eject/01";
+                        break;
+                    }
                     default: continue;
                 }
                 rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0, cull, NULL, NULL, 0, 0, fade);

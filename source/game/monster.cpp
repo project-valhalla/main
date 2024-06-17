@@ -220,7 +220,7 @@ namespace game
                         if(!burstfire || (burstfire && bursting))
                         {
                             ai::findorientation(orient, yaw, pitch, attacktarget);
-                            if(attacktarget.dist(o) <= attacks[atk].exprad) goto stopburst;
+                            if(attacktarget.dist(o) <= attacks[atk].exprad) goto stopfiring;
                             lastaction = 0;
                             if(meleerange && attacks[atk].action != ACT_MELEE) atk = meleeatk;
                             attacking = attacks[atk].action;
@@ -237,10 +237,10 @@ namespace game
                                         playsound(monstertypes[mtype].attacksound, this);
                                     }
                                 }
-                                goto stopburst;
+                                goto stopfiring;
                             }
                         }
-                        break; stopburst: transition(MS_ATTACKING, 0, 600, 0); burst(false);
+                        break; stopfiring: transition(MS_ATTACKING, 0, 600, 0); burst(false);
                     }
                     break;
                 }

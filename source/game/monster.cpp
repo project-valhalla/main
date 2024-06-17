@@ -206,7 +206,10 @@ namespace game
                         if(!bursting)
                         {
                             burst(true);
-                            playsound(monstertypes[mtype].attacksound, this); // battle cry: announcing the attack
+                            if(monstertypes[mtype].attacksound >= 0)
+                            {
+                                playsound(monstertypes[mtype].attacksound, this); // battle cry: announcing the attack
+                            }
                         }
                         if(lastmillis - bursting < 1500) break; // delay before starting to burst!
                     }
@@ -223,14 +226,19 @@ namespace game
                             attacking = attacks[atk].action;
                             shoot(this, attacktarget);
 
-                            bool burstcomplete = shots >= monstertypes[mtype].burstshots;
-
                             if(burstfire) shots++;
-                            if(!burstfire || (burstfire && burstcomplete)) goto stopburst;
-                        }
-                        if(monstertypes[mtype].attacksound && !burstfire && atk != meleeatk)
-                        {
-                            playsound(monstertypes[mtype].attacksound, this);
+                            bool burstcomplete = shots >= monstertypes[mtype].burstshots;
+                            if(!burstfire || (burstfire && burstcomplete))
+                            {
+                                if(!burstfire)
+                                {
+                                    if(atk != meleeatk && monstertypes[mtype].attacksound >= 0)
+                                    {
+                                        playsound(monstertypes[mtype].attacksound, this);
+                                    }
+                                }
+                                goto stopburst;
+                            }
                         }
                         break; stopburst: transition(MS_ATTACKING, 0, 600, 0); burst(false);
                     }
@@ -247,7 +255,10 @@ namespace game
                             transition(MS_HOME, 1, 800, 500);
                             if(halted)
                             {
-                                playsound(monstertypes[mtype].unhaltsound, this);
+                                if(monstertypes[mtype].unhaltsound >= 0)
+                                {
+                                    playsound(monstertypes[mtype].unhaltsound, this);
+                                }
                                 halted = false;
                             }
                             if(monstertypes[mtype].isexplosive)

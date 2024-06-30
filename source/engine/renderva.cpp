@@ -508,15 +508,15 @@ VAR(oqmm, 0, 4, 8);
 static inline void rendermapmodel(extentity &e)
 {
     int anim = ANIM_MAPMODEL|ANIM_LOOP, basetime = 0;
-    if(e.flags&EF_ANIM) entities::animatemapmodel(e, anim, basetime);
-    rendermapmodel(e.attr1, anim, e.o, e.attr2, e.attr3, e.attr4, MDL_CULL_VFC | MDL_CULL_DIST, basetime, e.attr5 > 0 ? e.attr5/100.0f : 1.0f);
+    if(e.flags & EF_ANIM) entities::animatemapmodel(e, anim, basetime);
+    rendermapmodel(e.attr1, anim, e.o, e.attr2, e.attr3, e.attr4, MDL_CULL_VFC | MDL_CULL_DIST, basetime, e.attr5 > 0 ? e.attr5 / 100.0f : 1.0f);
 }
 
-VAR(hidemapmodels, 0, 0, 1);
+VAR(showmapmodels, 0, 1, 1);
 
 void rendermapmodels()
 {
-    if(hidemapmodels && editmode) return;
+    if(!showmapmodels && editmode) return;
     static int skipoq = 0;
     bool doquery = !drawtex && oqfrags && oqmm;
     const vector<extentity *> &ents = entities::getents();

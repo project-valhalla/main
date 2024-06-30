@@ -2933,7 +2933,7 @@ namespace server
                 if(flags & HIT_LEGS) damage /= 2;
             }
             if(actor->state.haspowerup(PU_DAMAGE) || actor->state.role == ROLE_BERSERKER) damage *= 2;
-            if((isally(target, actor) || target == actor) && !m_betrayal) damage /= ALLY_DAMDIV;
+            if((isally(target, actor) || target == actor) && !m_betrayal) damage /= DAM_ALLYDIV;
         }
         if (target->state.haspowerup(PU_ARMOR) || target->state.role == ROLE_BERSERKER) damage /= 2;
         if(!damage) damage = 1;
@@ -3111,9 +3111,9 @@ namespace server
                 }
                 if(ci->damagemat)
                 {
-                    if(lastmillis-ci->state.lastdamage >= ENV_DAM_DELAY && !ci->state.haspowerup(PU_INVULNERABILITY))
+                    if(lastmillis-ci->state.lastdamage >= DELAY_ENVDAM && !ci->state.haspowerup(PU_INVULNERABILITY))
                     {
-                        dodamage(ci, ci, calcdamage(ENV_DAM, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
+                        dodamage(ci, ci, calcdamage(DAM_ENV, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
                         ci->state.lastdamage = lastmillis;
                     }
                 }
@@ -3893,7 +3893,7 @@ namespace server
                 break;
 
             case N_TRYSPAWN:
-                if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (!m_edit && cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath <= RESPAWN_WAIT)) break;
+                if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (!m_edit && cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath <= DELAY_RESPAWN)) break;
                 if((smode && !smode->canspawn(cq)) || (((m_hunt && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
                 {
                     if(cq->state.aitype==AI_NONE)

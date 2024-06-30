@@ -155,6 +155,17 @@ namespace entities
 
     // these functions are called when the client touches the item
 
+    void playentitysound(gameent *d, int sound, int attribute, vec o)
+    {
+        int snd = sound, flags = 0;
+        if(attribute > 0)
+        {
+            snd = attribute;
+            flags = SND_MAP;
+        }
+        playsound(snd, NULL, d == followingplayer(self) ? NULL : &o, NULL, flags);
+    }
+
     void teleportparticleeffects(gameent *d, vec p)
     {
         if(d==followingplayer(self)) particle_splash(PART_SPARK2, 250, 500, p, getplayercolor(d, d->team), 0.50f, 800, -5);
@@ -170,12 +181,10 @@ namespace entities
             extentity &e = *ents[tp];
             if(e.attr4 >= 0)
             {
-                int snd = S_TELEPORT, flags = 0;
-                if(e.attr4 > 0) { snd = e.attr4; flags = SND_MAP; }
-                playsound(snd, NULL, d==followingplayer(self)? NULL : &e.o, NULL, NULL, flags);
+                playentitysound(d, S_TELEPORT, e.attr4, e.o);
                 if(ents.inrange(td) && ents[td]->type == TELEDEST)
                 {
-                    if(d!=followingplayer(self)) playsound(S_TELEDEST, NULL, &ents[td]->o, NULL, flags);
+                    if(d!=followingplayer(self)) playsound(S_TELEDEST, NULL, &ents[td]->o);
                     else addscreenfx(150);
                     teleportparticleeffects(d, ents[td]->o);
                 }
@@ -203,10 +212,7 @@ namespace entities
             extentity &e = *ents[jp];
             if(e.attr4 >= 0)
             {
-                int snd = S_JUMPPAD, flags = 0;
-                if(e.attr4 > 0) { snd = e.attr4; flags = SND_MAP; }
-                if(d == self) playsound(snd, NULL, NULL, NULL, flags);
-                else playsound(snd, NULL, &e.o, NULL, flags);
+                 playentitysound(d, S_JUMPPAD, e.attr4, e.o);
             }
         }
         if(local && d->clientnum >= 0)
@@ -302,11 +308,12 @@ namespace entities
             case TRIGGER:
             {
                 if(d->lastpickup == ents[n]->type && lastmillis-d->lastpickupmillis < 500) break;
-                if(ents[n]->attr4 && lastmillis - ents[n]->lastplayed <= ents[n]->attr4) break;
+                if(ents[n]->attr5 && lastmillis - ents[n]->lastplayed <= ents[n]->attr5) break;
                 d->lastpickup = ents[n]->type;
                 d->lastpickupmillis = lastmillis;
                 defformatstring(identname, "trigger_%d", ents[n]->attr1);
                 execident(identname);
+                if(ents[n]->attr4 >= 0) playentitysound(d, S_TRIGGER, ents[n]->attr4, ents[n]->o);
                 if(ents[n]->attr4) ents[n]->lastplayed = lastmillis;
                 break;
             }

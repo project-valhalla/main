@@ -651,7 +651,7 @@ namespace game
 
     vec hudgunorigin(int gun, const vec &from, const vec &to, gameent *d)
     {
-        if(zoom && d == self) return d->feetpos(2);
+        if(zoom && d == self) return d->feetpos(4);
         else if(d->muzzle.x >= 0) return d->muzzle;
         vec offset(from);
         if(d!=hudplayer() || isthirdperson())

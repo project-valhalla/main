@@ -155,6 +155,7 @@ namespace game
             bool meleerange = dist <= attacks[meleeatk].range;
 
             vec target = vec(0, 0, 0);
+            orient = headpos();
 
             switch(monsterstate)
             {
@@ -205,7 +206,10 @@ namespace game
                         if(!bursting)
                         {
                             burst(true);
-                            playsound(monstertypes[mtype].attacksound, this); // battle cry: announcing the attack
+                            if(monstertypes[mtype].attacksound >= 0)
+                            {
+                                playsound(monstertypes[mtype].attacksound, this); // battle cry: announcing the attack
+                            }
                         }
                         if(lastmillis - bursting < 1500) break; // delay before starting to burst!
                     }
@@ -216,22 +220,27 @@ namespace game
                         if(!burstfire || (burstfire && bursting))
                         {
                             ai::findorientation(orient, yaw, pitch, attacktarget);
-                            if(attacktarget.dist(o) <= attacks[atk].exprad) goto stopburst;
+                            if(attacktarget.dist(o) <= attacks[atk].exprad) goto stopfiring;
                             lastaction = 0;
                             if(meleerange && attacks[atk].action != ACT_MELEE) atk = meleeatk;
                             attacking = attacks[atk].action;
                             shoot(this, attacktarget);
 
-                            bool burstcomplete = shots >= monstertypes[mtype].burstshots;
-
                             if(burstfire) shots++;
-                            if(!burstfire || (burstfire && burstcomplete)) goto stopburst;
+                            bool burstcomplete = shots >= monstertypes[mtype].burstshots;
+                            if(!burstfire || (burstfire && burstcomplete))
+                            {
+                                if(!burstfire)
+                                {
+                                    if(atk != meleeatk && monstertypes[mtype].attacksound >= 0)
+                                    {
+                                        playsound(monstertypes[mtype].attacksound, this);
+                                    }
+                                }
+                                goto stopfiring;
+                            }
                         }
-                        if(monstertypes[mtype].attacksound && !burstfire && atk != meleeatk)
-                        {
-                            playsound(monstertypes[mtype].attacksound, this);
-                        }
-                        break; stopburst: transition(MS_ATTACKING, 0, 600, 0); burst(false);
+                        break; stopfiring: transition(MS_ATTACKING, 0, 600, 0); burst(false);
                     }
                     break;
                 }
@@ -246,7 +255,10 @@ namespace game
                             transition(MS_HOME, 1, 800, 500);
                             if(halted)
                             {
-                                playsound(monstertypes[mtype].unhaltsound, this);
+                                if(monstertypes[mtype].unhaltsound >= 0)
+                                {
+                                    playsound(monstertypes[mtype].unhaltsound, this);
+                                }
                                 halted = false;
                             }
                             if(monstertypes[mtype].isexplosive)
@@ -585,12 +597,13 @@ namespace game
             if(m.gibbed()) continue;
             if(m.state != CS_DEAD || lastmillis-m.lastpain<10000)
             {
-                modelattach a[3];
+                modelattach a[4];
                 int ai = 0;
                 a[ai++] = modelattach("tag_weapon", monstertypes[m.mtype].worldgunmodel, ANIM_VWEP_IDLE|ANIM_LOOP, 0);
                 if(m.state == CS_ALIVE)
                 {
                     a[ai++] = modelattach("tag_head", &m.head);
+                    a[ai++] = modelattach("tag_muzzle", &m.muzzle);
                 }
                 float fade = 1;
                 if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);

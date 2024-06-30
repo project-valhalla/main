@@ -4,7 +4,7 @@
 namespace game
 {
     static const int OFFSETMILLIS = 500;
-    vec rays[MAXRAYS];
+    vec rays[GUN_MAXRAYS];
 
     struct hitmsg
     {
@@ -155,7 +155,7 @@ namespace game
         BNC_ROCKET,
         BNC_GIB,
         BNC_DEBRIS,
-        BNC_CARTRIDGE,
+        BNC_EJECT,
     };
 
     inline bool weaponbouncer(int type) { return type >= BNC_GRENADE && type <= BNC_ROCKET; }
@@ -170,7 +170,7 @@ namespace game
 
         float lastyaw, roll, gravity, elasticity, offsetheight;
 
-        int id, atk, bouncetype, lifetime;
+        int id, atk, gun, bouncetype, lifetime;
         int variant, bounces, offsetmillis;
         int lastbounce, bouncesound, bouncerloopchan, bouncerloopsound;
 
@@ -205,7 +205,7 @@ namespace game
         void setradius(int type)
         {
             float typeradius = 1.4f;
-            if(type == BNC_CARTRIDGE) typeradius = 0.3f;
+            if(type == BNC_EJECT) typeradius = 0.3f;
             radius = xradius = yradius = typeradius;
             eyeheight = aboveeye = radius;
         }
@@ -213,7 +213,7 @@ namespace game
 
     vector<bouncer *> bouncers;
 
-    void newbouncer(gameent *owner, const vec &from, const vec &to, bool local, int id, int atk, int type, int lifetime, int speed, float gravity, float elasticity)
+    void newbouncer(gameent *owner, const vec &from, const vec &to, bool local, int id, int atk, int type, int lifetime, int speed, float gravity, float elasticity, int gun = -1)
     {
         bouncer &bnc = *bouncers.add(new bouncer);
         bnc.owner = owner;
@@ -227,6 +227,7 @@ namespace game
         bnc.speed = speed;
         bnc.gravity = gravity;
         bnc.elasticity = elasticity;
+        if(validgun(gun)) bnc.gun = gun;
 
         switch(type)
         {
@@ -243,7 +244,7 @@ namespace game
                 break;
             }
             case BNC_GIB: bnc.variant = rnd(5); break;
-            case BNC_CARTRIDGE:
+            case BNC_EJECT:
             {
                 int gun = bnc.owner->gunselect;
                 bnc.bouncesound = gun == GUN_SCATTER? S_BOUNCE_CARTRIDGE_SG: (gun == GUN_SMG? S_BOUNCE_CARTRIDGE_SMG: S_BOUNCE_CARTRIDGE_RAILGUN);
@@ -281,7 +282,7 @@ namespace game
         bouncer *b = (bouncer *)d;
         b->bounces++;
         int type = b->bouncetype;
-        if((type == BNC_CARTRIDGE && b->bounces > 1) // prevent bounce sound spam
+        if((type == BNC_EJECT && b->bounces > 1) // prevent bounce sound spam
            || lastmillis - b->lastbounce < 100)
         {
             return;
@@ -367,7 +368,7 @@ namespace game
             if(bnc.bouncerloopsound >= 0) bnc.bouncerloopchan = playsound(bnc.bouncerloopsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerloopchan);
             vec old(bnc.o);
             bool destroyed = false;
-            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_CARTRIDGE)
+            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_EJECT)
             {
                 // cheaper variable rate physics for debris, gibs, etc.
                 for(int rtime = time; rtime > 0;)
@@ -511,7 +512,8 @@ namespace game
         }
         else
         {
-            particle_splash(PART_SPARK2, damage/10, 500, p, 0xFFFF66, 0.9f, 300);
+            particle_flare(p, p, 100, PART_MUZZLE_FLASH3, 0xFFFF66, 3.5f);
+            particle_splash(PART_SPARK2, damage/5, 500, p, 0xFFFF66, 0.5f, 300);
         }
         if(f->health > 0 && lastmillis-f->lastyelp > 600)
         {
@@ -535,11 +537,11 @@ namespace game
         if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOUR, NULL, &f->o);
     }
 
-    void spawnbouncer(const vec &from, gameent *d, int type)
+    void spawnbouncer(const vec &from, gameent *d, int type, int gun = -1)
     {
         vec to(rnd(100)-50, rnd(100)-50, rnd(100)-50);
         float elasticity = 0.6f;
-        if(type == BNC_CARTRIDGE)
+        if(type == BNC_EJECT)
         {
             to = vec(-50, 1, rnd(30)-15);
             to.rotate_around_z(d->yaw*RAD);
@@ -548,7 +550,7 @@ namespace game
         if(to.iszero()) to.z += 1;
         to.normalize();
         to.add(from);
-        newbouncer(d, from, to, true, 0, -1, type, type == BNC_DEBRIS ? 400 : rnd(1000)+1000, rnd(100)+20, 0.3f + rndscale(0.8f), elasticity);
+        newbouncer(d, from, to, true, 0, -1, type, type == BNC_DEBRIS ? 400 : rnd(1000)+1000, rnd(100)+20, 0.3f + rndscale(0.8f), elasticity, gun);
     }
 
     void gibeffect(int damage, const vec &vel, gameent *d, bool force)
@@ -556,8 +558,8 @@ namespace game
         if(!gore) return;
         if(force)
         {
-            d->health = -50;
-            damage = 100;
+            d->health = HEALTH_GIB;
+            damage = d->maxhealth;
         }
         vec from = d->abovehead();
         if(goreeffect <= 0)
@@ -635,7 +637,7 @@ namespace game
                 if (flags & HIT_LEGS) damage /= 2;
             }
             if (actor->haspowerup(PU_DAMAGE) || actor->role == ROLE_BERSERKER) damage *= 2;
-            if (isally(target, actor) || target == actor) damage /= ALLY_DAMDIV;
+            if (isally(target, actor) || target == actor) damage /= DAM_ALLYDIV;
         }
         if (target->haspowerup(PU_ARMOR) || target->role == ROLE_BERSERKER) damage /= 2;
         if(!damage) damage = 1;
@@ -930,7 +932,7 @@ namespace game
         }
     }
 
-    void rayhit(int atk, gameent *d, const vec &from, const vec &to, bool hit = false)
+    void impacteffects(int atk, gameent *d, const vec &from, const vec &to, bool hit = false)
     {
         if(!validatk(atk) || from.dist(to) > attacks[atk].range) return;
         vec dir = vec(from).sub(to).safenormalize();
@@ -966,11 +968,12 @@ namespace game
             case ATK_PULSE2:
             {
                 adddynlight(vec(to).madd(dir, 4), 80, vec(1.0f, 0.50f, 1.0f), 20);
-                if(hit || water)
+                if(hit)
                 {
-                    if(!water) particle_flare(to, to, 120, PART_ELECTRICITY, 0xEE88EE, 5.0f);
+                    particle_flare(to, to, 120, PART_ELECTRICITY, 0xEE88EE, 5.0f);
                     break;
                 }
+                if(water) break;
                 if(from.dist(to) <= attacks[atk].range-1)
                 {
                     particle_splash(PART_SPARK2, 1+rnd(5), 300, to, 0xEE88EE, 0.01f+rndscale(0.10f), 350, 2);
@@ -986,13 +989,18 @@ namespace game
             case ATK_INSTA:
             {
                 bool insta = attacks[atk].gun == GUN_INSTA;
-                adddynlight(vec(to).madd(dir, 4), 60, !insta? vec(0.25f, 1.0f, 0.75f):  vec(0.25f, 0.75f, 1.0f), 180, 75, DL_EXPAND);
-                if(hit || water || glass) break;
-                particle_splash(PART_EXPLODE, 80, 80, to, !insta? 0x77DD77: 0x50CFE5, 1.25f, 100, 80);
-                particle_splash(PART_SPARK2, 5+rnd(20), 200+rnd(380), to, !insta? 0x77DD77: 0x50CFE5, 0.1f+rndscale(0.3f), 200, 3);
+                adddynlight(vec(to).madd(dir, 4), 60, !insta ? vec(0.25f, 1.0f, 0.75f) :  vec(0.25f, 0.75f, 1.0f), 180, 75, DL_EXPAND);
+                if(hit)
+                {
+                    if(insta) particle_flare(to, to, 200, PART_ELECTRICITY, 0x50CFE5, 6.0f);
+                    break;
+                }
+                if(water || glass) break;
+                particle_splash(PART_EXPLODE, 80, 80, to, !insta ? 0x77DD77 : 0x50CFE5, 1.25f, 100, 80);
+                particle_splash(PART_SPARK2, 5 + rnd(20), 200 + rnd(380), to, !insta ? 0x77DD77 : 0x50CFE5, 0.1f + rndscale(0.3f), 200, 3);
                 particle_splash(PART_SMOKE, 20, 180, to, 0x808080, 2.0f, 60, 80);
                 addstain(STAIN_RAIL_HOLE, to, dir, 3.5f);
-                addstain(STAIN_RAIL_GLOW, to, dir, 3.0f, !insta? 0x77DD77: 0x50CFE5);
+                addstain(STAIN_RAIL_GLOW, to, dir, 3.0f, !insta ? 0x77DD77 : 0x50CFE5);
                 break;
             }
 
@@ -1032,6 +1040,7 @@ namespace game
     {
         int gun = attacks[atk].gun, sound = attacks[atk].sound;
         float dist = from.dist(to);
+        bool shouldeject = d->eject.x >= 0 && d == followingplayer(self);
         vec up = to;
         gameent *hud = followingplayer(self);
         switch(atk)
@@ -1044,13 +1053,13 @@ namespace game
                     particle_flare(d->muzzle, d->muzzle, 70, PART_MUZZLE_FLASH, 0xEFE598, 2.4f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                if(d->eject.x >= 0 && d == followingplayer(self)) spawnbouncer(d->eject, d, BNC_CARTRIDGE);
+                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT, gun);
                 if(!local)
                 {
                     loopi(attacks[atk].rays)
                     {
                         offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i], d);
-                        rayhit(atk, d, from, rays[i], hit);
+                        impacteffects(atk, d, from, rays[i], hit);
                     }
                 }
                 loopi(attacks[atk].rays) particle_flare(hudgunorigin(gun, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.95f);
@@ -1065,9 +1074,9 @@ namespace game
                     particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH3, 0xEFE898, 1.5f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.5f, 0.375f, 0.25f), atk==ATK_SMG1 ? 70 : 110, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                if(d->eject.x >= 0 && d == followingplayer(self)) spawnbouncer(d->eject, d, BNC_CARTRIDGE);
+                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT, gun);
                 if(atk == ATK_SMG2) particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0xFFC864, 0.95f);
-                if(!local) rayhit(atk, d, from, to, hit);
+                if(!local) impacteffects(atk, d, from, to, hit);
                 break;
             }
 
@@ -1089,7 +1098,7 @@ namespace game
                 }
                 particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_LIGHTNING, 0xEE88EE, 1.0f, d);
                 particle_fireball(to, 1.0f, PART_EXPLOSION2, 100, 0xDD88DD, 3.0f);
-                if(!local) rayhit(atk, d, from, to, hit);
+                if(!local) impacteffects(atk, d, from, to, hit);
                 break;
             }
 
@@ -1117,10 +1126,10 @@ namespace game
                     particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 2.75f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 60, vec(0.25f, 1.0f, 0.75f), 150, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                 }
-                if(d->eject.x >= 0 && d == followingplayer(self)) spawnbouncer(d->eject, d, BNC_CARTRIDGE);
+                if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT, gun);
                 if(atk == ATK_RAIL2) particle_trail(PART_SMOKE, 350, hudgunorigin(gun, from, to, d), to, 0xDEFFDE, 0.3f, 50);
                 particle_flare(hudgunorigin(gun, from, to, d), to, 600, PART_TRAIL, 0x55DD55, 0.50f);
-                if(!local) rayhit(atk, d, from, to, hit);
+                if(!local) impacteffects(atk, d, from, to, hit);
                 break;
             }
 
@@ -1150,7 +1159,7 @@ namespace game
                     break;
                 }
                 particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
-                if(!local) rayhit(atk, d, from, to, hit);
+                if(!local) impacteffects(atk, d, from, to, hit);
                 break;
             }
 
@@ -1335,7 +1344,7 @@ namespace game
         bool hitlegs = false, hithead = false;
         if(attacks[atk].rays > 1)
         {
-            dynent *hits[MAXRAYS];
+            dynent *hits[GUN_MAXRAYS];
             loopi(maxrays)
             {
                 if(!betweenrounds && (hits[i] = intersectclosest(from, rays[i], d, margin, dist)))
@@ -1343,9 +1352,9 @@ namespace game
                     hitlegs = islegshitbox(hits[i], from, rays[i], dist);
                     hithead = isheadhitbox(hits[i], from, rays[i], dist);
                     shorten(from, rays[i], dist);
-                    rayhit(atk, d, from, rays[i], true);
+                    impacteffects(atk, d, from, rays[i], true);
                 }
-                else rayhit(atk, d, from, rays[i]);
+                else impacteffects(atk, d, from, rays[i]);
             }
             if(betweenrounds) return;
             loopi(maxrays) if(hits[i])
@@ -1375,7 +1384,7 @@ namespace game
                 hitlegs = islegshitbox(o, from, to, dist);
                 hithead = isheadhitbox(o, from, to, dist);
                 shorten(from, to, dist);
-                rayhit(atk, d, from, to, true);
+                impacteffects(atk, d, from, to, true);
                 if(attacks[atk].headshotdam) // if an attack does not have headshot damage, then it does not deal locational damage
                 {
                     if(hithead) flags = HIT_HEAD;
@@ -1391,7 +1400,7 @@ namespace game
             }
             else
             {
-                rayhit(atk, d, from, to);
+                impacteffects(atk, d, from, to);
             }
         }
     }
@@ -1524,7 +1533,7 @@ namespace game
         }
     }
 
-    static const char * const projectilenames[4] = { "projectile/grenade", "projectile/grenade", "projectile/rocket", "projectile/eject/cartridge01" };
+    static const char * const projectilenames[6] = { "projectile/grenade", "projectile/grenade", "projectile/rocket", "projectile/eject/01", "projectile/eject/02", "projectile/eject/03" };
     static const char * const gibnames[5] = { "projectile/gib/gib01", "projectile/gib/gib02", "projectile/gib/gib03", "projectile/gib/gib04", "projectile/gib/gib05" };
 
     void preloadbouncers()
@@ -1550,14 +1559,20 @@ namespace game
             }
             const char *mdl = NULL;
             int cull = MDL_CULL_VFC|MDL_CULL_DIST|MDL_CULL_OCCLUDED;
-            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_CARTRIDGE)
+            if(bnc.bouncetype >= BNC_GIB && bnc.bouncetype <= BNC_EJECT)
             {
                 float fade = 1;
                 if(bnc.lifetime < 400) fade = bnc.lifetime/400.0f;
                 switch(bnc.bouncetype)
                 {
                     case BNC_GIB: mdl = gibnames[bnc.variant]; break;
-                    case BNC_CARTRIDGE: mdl = "projectile/eject/cartridge01"; break;
+                    case BNC_EJECT:
+                    {
+                        if(bnc.gun == GUN_SCATTER) mdl = "projectile/eject/03";
+                        else if(bnc.gun == GUN_RAIL) mdl = "projectile/eject/02";
+                        else mdl = "projectile/eject/01";
+                        break;
+                    }
                     default: continue;
                 }
                 rendermodel(mdl, ANIM_MAPMODEL|ANIM_LOOP, pos, yaw, pitch, 0, cull, NULL, NULL, 0, 0, fade);

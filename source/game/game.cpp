@@ -126,7 +126,7 @@ namespace game
     void respawnself()
     {
         if(ispaused()) return;
-        if(queuerespawn && lastmillis - self->lastpain <= (cmode ? cmode->respawnwait(self, true) : RESPAWN_WAIT))
+        if(queuerespawn && lastmillis - self->lastpain <= (cmode ? cmode->respawnwait(self, true) : DELAY_RESPAWN))
         {
             self->respawnqueued = true;
             return;
@@ -300,14 +300,14 @@ namespace game
                     self->move = self->strafe = 0;
                     moveplayer(self, 10, true);
                 }
-                if(lastmillis - self->lastpain > (cmode ? cmode->respawnwait(self, true) : RESPAWN_WAIT))
+                if(lastmillis - self->lastpain > (cmode ? cmode->respawnwait(self, true) : DELAY_RESPAWN))
                 {
                     if(self->respawnqueued)
                     {
                         respawnself();
                         self->respawnqueued = false;
                     }
-                    setsvar("lasthudkillinfo", m_round ? "Spectate now" : "Respawn now");
+                    setsvar("lasthudkillinfo", tempformatstring("%s now", m_round ? "Spectate" : (m_invasion && self->lives <= 0 ? "Retry" : "Respawn")));
                 }
             }
             else if(!intermission)
@@ -358,6 +358,8 @@ namespace game
         int color = 0x00FF5B;
         if(d->type == ENT_PLAYER) color = getplayercolor(d, d->team);
         particle_splash(PART_SPARK2, 250, 200, d->o, color, 0.60f, 200, 5);
+        vec lightcolor = vec::hexcolor(color);
+        adddynlight(d->o, 35, lightcolor, 900, 100);
         stopownersounds(d);
         playsound(S_SPAWN, d);
     }
@@ -541,11 +543,7 @@ namespace game
                 d->pitch = -90; // lower your pitch to see your death from above
             }
             d->roll = 0;
-            if(m_invasion)
-            {
-                self->lives--;
-                if(self->lives > 0) conoutf(CON_GAMEINFO, "\f2Lives remaining: %d", self->lives);
-            }
+            if(m_invasion) self->lives--;
             if(thirdperson) thirdperson = 0;
         }
         else
@@ -1074,8 +1072,8 @@ namespace game
         {
             if(d->state!=CS_ALIVE) return;
             gameent *pl = (gameent *)d;
-            if((pl->lasthurt && lastmillis - pl->lasthurt < ENV_DAM_DELAY) || pl->haspowerup(PU_INVULNERABILITY)) return;
-            damaged(ENV_DAM, pl->o, pl, pl, -1, HIT_MATERIAL, true);
+            if((pl->lasthurt && lastmillis - pl->lasthurt < DELAY_ENVDAM) || pl->haspowerup(PU_INVULNERABILITY)) return;
+            damaged(DAM_ENV, pl->o, pl, pl, -1, HIT_MATERIAL, true);
             pl->lasthurt = lastmillis;
         }
     }
@@ -1118,37 +1116,49 @@ namespace game
         return 0;
     }
 
-    VARP(allycrosshair, 0, 1, 1);
-    VARP(hitcrosshair, 0, 400, 1000);
-
     const char *defaultcrosshair(int index)
     {
         switch(index)
         {
-            case 3: return "data/interface/crosshair/ally.png";
+            case 5: return "data/interface/crosshair/ally.png";
+            case 4: return "data/interface/crosshair/dot_hit.png";
+            case 3: return "data/interface/crosshair/dot.png";
             case 2: return "data/interface/crosshair/default_hit.png";
             case 1: return "data/interface/crosshair/default.png";
             default: return "data/interface/crosshair/dot.png";
         }
     }
 
+    VARP(allycrosshair, 0, 1, 1);
+    VARP(hitcrosshair, 0, 400, 1000);
+
     int selectcrosshair(vec &col)
     {
         gameent *d = hudplayer();
-        if(d->state==CS_SPECTATOR || d->state==CS_DEAD || UI::uivisible("scoreboard") || intermission) return -1;
+        if(d->state == CS_SPECTATOR || d->state == CS_DEAD || intermission) return -1;
 
-        if(d->state!=CS_ALIVE) return 0;
+        if(d->state != CS_ALIVE) return 0;
 
         int crosshair = 1;
+        bool scoped = zoomedin() && checkzoom() == ZOOM_SCOPE;
+        if(scoped)
+        {
+            crosshair = 3;
+            col = vec(1, 0, 0);
+        }
         if(!betweenrounds)
         {
-            if(d->lasthit && lastmillis - d->lasthit < hitcrosshair) crosshair = 2;
+            if(d->lasthit && lastmillis - d->lasthit < hitcrosshair)
+            {
+                if(scoped) crosshair = 4;
+                else crosshair = 2;
+            }
             else if(allycrosshair)
             {
                 dynent *o = intersectclosest(d->o, worldpos, d);
-                if(o && o->type==ENT_PLAYER && isally(((gameent *)o), d))
+                if(o && o->type == ENT_PLAYER && isally(((gameent *)o), d))
                 {
-                    crosshair = 3;
+                    crosshair = 5;
                     if(m_teammode) col = vec::hexcolor(teamtextcolor[d->team]);
                 }
             }

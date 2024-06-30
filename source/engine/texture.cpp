@@ -735,7 +735,7 @@ VARFP(texcompress, 0, 4096, 1<<13, initwarning("texture quality", INIT_LOAD));
 VARFP(texcompressquality, -1, -1, 1, setuptexcompress());
 VARF(trilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
 VARF(bilinear, 0, 1, 1, initwarning("texture filtering", INIT_LOAD));
-VARFP(aniso, 0, 0, 16, initwarning("texture filtering", INIT_LOAD));
+VARFP(aniso, 0, 2, 16, initwarning("texture filtering", INIT_LOAD));
 
 extern int usetexcompress;
 

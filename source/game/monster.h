@@ -1,5 +1,5 @@
-
-enum // monster states
+// monster states
+enum
 {
     MS_NONE = 0,
     MS_SEARCH,
@@ -10,6 +10,7 @@ enum // monster states
     MS_AIMING
 };
 
+// monster types
 enum
 {
     MTYPE_PLAYER = 0,
@@ -21,11 +22,6 @@ enum
     NUMMONSTERS
 };
 inline bool validmonster(int monster) { return monster >= 0 && monster < NUMMONSTERS; }
-
-static const int MONSTER_EXPLODE_DELAY = 8000;
-static const int MONSTER_DETONATION_DELAY = 350;
-
-static const int TOTMFREQ = 14;
 
 struct monstertype // see docs for how these values modify behaviour
 {
@@ -44,3 +40,7 @@ static const monstertype monstertypes[NUMMONSTERS] =
     { MTYPE_MECH,   ATK_ROCKET1,  ATK_MELEE,  12, 14, 500, 80, 0, 1,   0, 200, 200, 6, 22, 220,       -1, S_BAUUL_PAIN,   S_BAUUL_DEATH,   S_BAUUL_HALT,   NULL,           NULL,            "mech",        "monster/mech",   NULL,                      true,  false, true  },
     { MTYPE_SPIDER, ATK_MELEE2,   NULL,       19,  0,  30, 30, 0, 1,   0, 200, 400, 1,  7,  20, 0xFF90FF, S_SPIDER_PAIN,  S_SPIDER_DEATH,  S_SPIDER_HALT,  NULL,           S_SPIDER_ATTACK, "generantula", "monster/spider", NULL,                      false, false, false }
 };
+
+static const int TOTMFREQ = 14;
+
+static const int MONSTER_DETONATION_DELAY = 350;

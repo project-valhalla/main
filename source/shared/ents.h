@@ -64,8 +64,7 @@ enum { ENT_PLAYER = 0, ENT_AI, ENT_CAMERA, ENT_BOUNCE };
 
 enum { COLLIDE_NONE = 0, COLLIDE_ELLIPSE, COLLIDE_OBB, COLLIDE_TRI };
 
-#define CROUCHTIME 200
-#define CROUCHHEIGHT 0.75f
+const float CROUCH_HEIGHT = 0.75f;
 
 struct physent // base entity type, can be affected by physics
 {
@@ -82,7 +81,7 @@ struct physent // base entity type, can be affected by physics
     vec floor; // the normal of floor the dynent is on
 
     int inwater;
-    bool jumping, doublejumping;
+    bool jumping, doublejumping, climbing;
     char move, strafe, crouching;
 
     uchar physstate;                            // one of PHYS_* above
@@ -112,7 +111,7 @@ struct physent // base entity type, can be affected by physics
         inwater = 0;
         timeinair = 0;
         eyeheight = maxheight;
-        jumping = doublejumping = false;
+        jumping = doublejumping = climbing = false;
         strafe = move = crouching = 0;
         physstate = PHYS_FALL;
         vel = falling = vec(0, 0, 0);
@@ -122,7 +121,7 @@ struct physent // base entity type, can be affected by physics
     vec feetpos(float offset = 0) const { return vec(o).addz(offset - eyeheight); }
     vec headpos(float offset = 0) const { return vec(o).addz(offset); }
 
-    bool crouched() const { return fabs(eyeheight - maxheight*CROUCHHEIGHT) < 1e-4f; }
+    bool crouched() const { return fabs(eyeheight - maxheight* CROUCH_HEIGHT) < 1e-4f; }
     bool maymove() const { return timeinair || physstate < PHYS_FLOOR || vel.squaredlen() > 1e-4f || deltapos.squaredlen() > 1e-4f; }
 };
 

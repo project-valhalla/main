@@ -905,15 +905,15 @@ namespace game
 
     void footstep(physent *pl, int sound)
     {
-        if(!footstepssound || pl->physstate < PHYS_SLOPE
-           || (pl->crouching && pl->crouched()) || pl->blocked)
+        bool onfloor = pl->physstate >= PHYS_SLOPE || pl->climbing;
+        if(!footstepssound || !onfloor || pl->crouching || pl->blocked)
         {
             return;
         }
         gameent *d = (gameent *)pl;
         if(d->move || d->strafe)
         {
-            if(lastmillis - d->lastfootstep < (footstepdelay / d->vel.magnitude())) return;
+            if(lastmillis - d->lastfootstep < (footstepdelay / fmax(d->vel.magnitude(), 1))) return;
             else playsound(sound, d);
         }
         d->lastfootstep = lastmillis;

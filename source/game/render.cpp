@@ -542,39 +542,38 @@ namespace game
     void swayhudgun(int curtime)
     {
         gameent *d = hudplayer();
-        if(d->state != CS_SPECTATOR)
-        {
-            if(d->physstate >= PHYS_SLOPE)
-            {
-                swayspeed = min(sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y), d->speed);
-                swaydist += swayspeed*curtime/1000.0f;
-                swaydist = fmod(swaydist, 2*swaystep);
-                swayfade = 1;
-            }
-            else if(swayfade > 0)
-            {
-                swaydist += swayspeed*swayfade*curtime/1000.0f;
-                swaydist = fmod(swaydist, 2*swaystep);
-                swayfade -= 0.5f*(curtime*d->speed)/(swaystep*1000.0f);
-            }
-            if (lastmillis - d->lastland <= 350)
-            {
-                float progress = clamp((lastmillis - d->lastland) / (float)350, 0.0f, 1.0f);
-                swaylandpitch = -10 * sinf(progress * PI);
-            }
-            else if (d->lastswitch > 0 && lastmillis - d->lastswitch <= 500)
-            {
-                float progress = clamp((lastmillis - d->lastswitch) / (float)500, 0.0f, 1.0f);
-                swaylandpitch = -15 * sinf(progress * PI);
-            }
-            else swaylandpitch = 0;
+        if(d->state == CS_SPECTATOR || d->state == CS_EDITING) return;
 
-            float k = pow(0.7f, curtime/10.0f);
-            swaydir.mul(k);
-            vec vel(d->vel);
-            vel.add(d->falling);
-            swaydir.add(vec(vel).mul((1-k)/(8*max(vel.magnitude(), d->speed))));
+        if(d->physstate >= PHYS_SLOPE)
+        {
+            swayspeed = min(sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y), d->speed);
+            swaydist += swayspeed*curtime/1000.0f;
+            swaydist = fmod(swaydist, 2*swaystep);
+            swayfade = 1;
         }
+        else if(swayfade > 0)
+        {
+            swaydist += swayspeed*swayfade*curtime/1000.0f;
+            swaydist = fmod(swaydist, 2*swaystep);
+            swayfade -= 0.5f*(curtime*d->speed)/(swaystep*1000.0f);
+        }
+        if(lastmillis - d->lastland <= 350)
+        {
+            float progress = clamp((lastmillis - d->lastland) / (float)350, 0.0f, 1.0f);
+            swaylandpitch = -10 * sinf(progress * PI);
+        }
+        else if(d->lastswitch > 0 && lastmillis - d->lastswitch <= 500)
+        {
+            float progress = clamp((lastmillis - d->lastswitch) / (float)500, 0.0f, 1.0f);
+            swaylandpitch = -15 * sinf(progress * PI);
+        }
+        else swaylandpitch = 0;
+
+        float k = pow(0.7f, curtime/10.0f);
+        swaydir.mul(k);
+        vec vel(d->vel);
+        vel.add(d->falling);
+        swaydir.add(vec(vel).mul((1-k)/(8*max(vel.magnitude(), d->speed))));
     }
 
     struct hudent : dynent

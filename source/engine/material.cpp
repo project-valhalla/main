@@ -112,7 +112,8 @@ const struct material
     {"death", MAT_DEATH},
     {"nogi", MAT_NOGI},
     {"alpha", MAT_ALPHA},
-    {"damage", MAT_DAMAGE}
+    {"damage", MAT_DAMAGE},
+    {"climb", MAT_CLIMB}
 };
 
 int findmaterial(const char *name)
@@ -132,7 +133,7 @@ const char *findmaterialname(int mat)
 
 const char *getmaterialdesc(int mat, const char *prefix)
 {
-    static const ushort matmasks[] = { MATF_VOLUME|MATF_INDEX, MATF_CLIP, MAT_DEATH, MAT_NOGI, MAT_ALPHA, MAT_DAMAGE };
+    static const ushort matmasks[] = { MATF_VOLUME|MATF_INDEX, MATF_CLIP, MAT_DEATH, MAT_NOGI, MAT_ALPHA, MAT_DAMAGE, MAT_CLIMB };
     static string desc;
     desc[0] = '\0';
     loopi(sizeof(matmasks)/sizeof(matmasks[0])) if(mat&matmasks[i])
@@ -178,7 +179,7 @@ void genmatsurfs(const cube &c, const ivec &co, int size, vector<materialsurface
 {
     loopi(6)
     {
-        static const ushort matmasks[] = { MATF_VOLUME|MATF_INDEX, MATF_CLIP, MAT_DEATH, MAT_NOGI, MAT_ALPHA, MAT_DAMAGE };
+        static const ushort matmasks[] = { MATF_VOLUME|MATF_INDEX, MATF_CLIP, MAT_DEATH, MAT_NOGI, MAT_ALPHA, MAT_DAMAGE, MAT_CLIMB };
         loopj(sizeof(matmasks)/sizeof(matmasks[0]))
         {
             ushort matmask = matmasks[j];
@@ -481,29 +482,10 @@ void rendermatgrid()
 {
     enablepolygonoffset(GL_POLYGON_OFFSET_LINE, editmatoffset ? 1.0f : 2.0f);
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    int lastmat = -1;
-    bvec4 color(0, 0, 0, 0);
     loopvrev(editsurfs)
     {
         materialsurface &m = editsurfs[i];
-        if(m.material != lastmat)
-        {
-            switch(m.material&~MATF_INDEX)
-            {
-                case MAT_WATER:    color = bvec4( 0,  0, 85, 255); break; // blue
-                case MAT_CLIP:     color = bvec4(85,  0,  0, 255); break; // red
-                case MAT_GLASS:    color = bvec4( 0, 85, 85, 255); break; // cyan
-                case MAT_NOCLIP:   color = bvec4( 0, 85,  0, 255); break; // green
-                case MAT_LAVA:     color = bvec4(85, 40,  0, 255); break; // orange
-                case MAT_GAMECLIP: color = bvec4(85, 85,  0, 255); break; // yellow
-                case MAT_DEATH:    color = bvec4(40, 40, 40, 255); break; // black
-                case MAT_NOGI:     color = bvec4(40, 30,  0, 255); break; // brown
-                case MAT_ALPHA:    color = bvec4(85,  0, 85, 255); break; // pink
-                case MAT_DAMAGE:   color = bvec4(60, 40, 40, 255); break; // grey
-                default: continue;
-            }
-            lastmat = m.material;
-        }
+        bvec4 color(255, 255, 255, 255);
         drawmaterial(m, editmatoffset ? -0.1f : 0.0f, color);
     }
     xtraverts += gle::end();
@@ -765,6 +747,7 @@ void rendereditmaterials()
                 case MAT_NOGI:     color = bvec4(128, 160, 255, 255); break; // brown
                 case MAT_ALPHA:    color = bvec4(  0, 255,   0, 255); break; // pink
                 case MAT_DAMAGE:   color = bvec4(128, 128, 128, 255); break; // grey
+                case MAT_CLIMB:    color = bvec4(128, 255,   0, 255); break; // purple
                 default: continue;
             }
             lastmat = m.material;

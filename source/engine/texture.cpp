@@ -703,6 +703,26 @@ void texblend(ImageData &d, ImageData &s, ImageData &m)
     }
 }
 
+inline float determinant2x2(vec4 m)
+{
+    return m.x * m.w - m.z * m.y;
+}
+vec4 invert2x2(vec4 m)
+{
+    const float det = determinant2x2(m);
+    if(!det) return vec4(1, 0, 0, 1);
+    return vec4(m.w, -m.y, -m.z, m.x).mul(1.0f / det);
+}
+vec4 multiply2x2(vec4 l, vec4 r)
+{
+    return vec4(
+        l.x * r.x + l.z * r.y,
+        l.y * r.x + l.w * r.y,
+        l.x * r.z + l.z * r.w,
+        l.y * r.z + l.w * r.w
+    );
+}
+
 VAR(hwtexsize, 1, 0, 0);
 VAR(hwcubetexsize, 1, 0, 0);
 VAR(hwmaxaniso, 1, 0, 0);
@@ -2037,6 +2057,8 @@ static void propagatevslot(VSlot &dst, const VSlot &src, int diff, bool edit = f
     }
     if(diff & (1<<VSLOT_DETAIL)) dst.detail = src.detail;
     if(diff & (1<<VSLOT_MATERIAL)) dst.texturematerial = src.texturematerial;
+    if(diff & (1<<VSLOT_HSV)) dst.hsv = src.hsv;
+    if(diff & (1<<VSLOT_MATRIX)) dst.transform = src.transform;
 }
 
 static void propagatevslot(VSlot *root, int changed)
@@ -2094,6 +2116,16 @@ static void mergevslot(VSlot &dst, const VSlot &src, int diff, Slot *slot = NULL
     }
     if(diff & (1<<VSLOT_DETAIL)) dst.detail = src.detail;
     if(diff & (1<<VSLOT_MATERIAL)) dst.texturematerial = src.texturematerial;
+    if(diff & (1<<VSLOT_HSV)) {
+        dst.hsv.r = fmod(dst.hsv.r + src.hsv.r, 360.f);
+        dst.hsv.g *= src.hsv.g;
+        dst.hsv.b *= src.hsv.b;
+    }
+    if(diff & (1<<VSLOT_MATRIX))
+    {
+        vec4 invd = invert2x2(dst.transform), invs = invert2x2(src.transform);
+        dst.transform = invert2x2(multiply2x2(invs, invd));
+    }
 }
 
 void mergevslot(VSlot &dst, const VSlot &src, const VSlot &delta)
@@ -2150,6 +2182,8 @@ static bool comparevslot(const VSlot &dst, const VSlot &src, int diff)
     if(diff & (1<<VSLOT_REFRACT) && (dst.refractscale != src.refractscale || dst.refractcolor != src.refractcolor)) return false;
     if(diff & (1<<VSLOT_DETAIL) && dst.detail != src.detail) return false;
     if(diff & (1<<VSLOT_MATERIAL) && dst.texturematerial != src.texturematerial) return false;
+    if(diff & (1<<VSLOT_HSV) && dst.hsv != src.hsv) return false;
+    if(diff & (1<<VSLOT_MATRIX) && dst.transform != src.transform) return false;
     return true;
 }
 
@@ -2222,6 +2256,21 @@ void packvslot(vector<uchar> &buf, const VSlot &src)
     {
         buf.put(VSLOT_MATERIAL);
         putuint(buf, vslots.inrange(src.texturematerial) && !vslots[src.texturematerial]->changed ? src.texturematerial : 0);
+    }
+    if(src.changed & (1<<VSLOT_HSV))
+    {
+        buf.put(VSLOT_HSV);
+        putfloat(buf, src.hsv.r);
+        putfloat(buf, src.hsv.g);
+        putfloat(buf, src.hsv.b);
+    }
+    if(src.changed & (1<<VSLOT_MATRIX))
+    {
+        buf.put(VSLOT_MATRIX);
+        putfloat(buf, src.transform.x);
+        putfloat(buf, src.transform.y);
+        putfloat(buf, src.transform.z);
+        putfloat(buf, src.transform.w);
     }
     buf.put(0xFF);
 }
@@ -2304,6 +2353,21 @@ bool unpackvslot(ucharbuf &buf, VSlot &dst, bool delta)
             {
                 int tex = getuint(buf);
                 dst.texturematerial = vslots.inrange(tex) ? tex : 0;
+                break;
+            }
+            case VSLOT_HSV:
+            {
+                dst.hsv.r = fmod(getfloat(buf), 360.f);
+                dst.hsv.g = getfloat(buf);
+                dst.hsv.b = getfloat(buf);
+                break;
+            }
+            case VSLOT_MATRIX:
+            {
+                dst.transform.x = getfloat(buf);
+                dst.transform.y = getfloat(buf);
+                dst.transform.z = getfloat(buf);
+                dst.transform.w = getfloat(buf);
                 break;
             }
             default:
@@ -2559,6 +2623,24 @@ void texmaterial(int *material)
     propagatevslot(s.variants, 1<<VSLOT_MATERIAL);
 }
 COMMAND(texmaterial, "i");
+
+void texhue(float *_h, float *_s, float *_v)
+{
+    if(!defslot) return;
+    Slot &s = *defslot;
+    s.variants->hsv = vec(fmod(*_h, 360.0f), *_s, *_v);
+    propagatevslot(s.variants, 1<<VSLOT_HSV);
+}
+COMMAND(texhue, "fff");
+
+void texrawmatrix(float *x, float *y, float *z, float *w)
+{
+    if(!defslot) return;
+    Slot &s = *defslot;
+    s.variants->transform = vec4(*x, *y, *z, *w);
+    propagatevslot(s.variants, 1<<VSLOT_MATRIX);
+}
+COMMAND(texrawmatrix, "ffff");
 
 void decaldepth(float *depth, float *fade)
 {
@@ -2849,7 +2931,9 @@ Texture *Slot::loadthumbnail()
     linkslotshader(*this, false);
     linkvslotshader(vslot, false);
     vector<char> name;
-    if(vslot.colorscale == vec(1, 1, 1)) addname(name, *this, sts[0], false, "<thumbnail>");
+    if(vslot.colorscale == vec(1, 1, 1)) {
+        addname(name, *this, sts[0], false, "<thumbnail>");
+    }
     else
     {
         defformatstring(prefix, "<thumbnail:%.2f/%.2f/%.2f>", vslot.colorscale.x, vslot.colorscale.y, vslot.colorscale.z);

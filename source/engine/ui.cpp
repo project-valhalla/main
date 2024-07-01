@@ -3118,6 +3118,8 @@ namespace UI
             changedraw(CHANGE_SHADER | CHANGE_COLOR);
 
             SETSHADER(hudrgb);
+            LOCALPARAMF(previewhsv, vslot.hsv.x, vslot.hsv.y, vslot.hsv.z);
+            LOCALPARAMF(previewtransform, vslot.transform.x, vslot.transform.y, vslot.transform.z, vslot.transform.w);
             vec2 tc[4] = { vec2(0, 0), vec2(1, 0), vec2(1, 1), vec2(0, 1) };
             int xoff = vslot.offset.x, yoff = vslot.offset.y;
             if(vslot.rotation)
@@ -3149,6 +3151,8 @@ namespace UI
             if(layertex)
             {
                 glBindTexture(GL_TEXTURE_2D, layertex->id);
+                LOCALPARAMF(previewhsv, layer->hsv.x, layer->hsv.y, layer->hsv.z);
+                LOCALPARAMF(previewtransform, layer->transform.x, layer->transform.y, layer->transform.z, layer->transform.w);
                 gle::color(layer->colorscale);
                 quad(x, y, w/2, h/2, tc);
             }

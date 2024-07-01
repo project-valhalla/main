@@ -2388,6 +2388,38 @@ void vmaterial(int *n)
 COMMAND(vmaterial, "i");
 ICOMMAND(getvmaterial, "i", (int *tex), intret(lookupvslot(*tex, false).texturematerial));
 
+void vhue(float *_h, float *_s, float *_v, int *numargs)
+{
+    if(noedit()) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_HSV;
+    ds.hsv = vec(fmod(*_h, 360.0f), (*numargs >= 2) ? *_s : 1, (*numargs >= 3) ? *_v : 1);
+    mpeditvslot(usevdelta, ds, allfaces, sel, true);
+}
+COMMAND(vhue, "fffN");
+ICOMMAND(getvhue, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    defformatstring(str, "%s %s %s", floatstr(vslot.hsv.r), floatstr(vslot.hsv.g), floatstr(vslot.hsv.b));
+    result(str);
+});
+
+void vrawmatrix(float *x, float *y, float *z, float *w)
+{
+    if(noedit()) return;
+    VSlot ds;
+    ds.changed = 1<<VSLOT_MATRIX;
+    ds.transform = vec4(*x, *y, *z, *w);
+    mpeditvslot(usevdelta, ds, allfaces, sel, true);
+}
+COMMAND(vrawmatrix, "ffff");
+ICOMMAND(getvrawmatrix, "i", (int *tex),
+{
+    VSlot &vslot = lookupvslot(*tex, false);
+    defformatstring(str, "%s %s %s %s", floatstr(vslot.transform.x), floatstr(vslot.transform.y), floatstr(vslot.transform.z), floatstr(vslot.transform.w));
+    result(str);
+});
+
 void vreset()
 {
     if(noedit()) return;

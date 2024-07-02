@@ -2116,7 +2116,8 @@ static void mergevslot(VSlot &dst, const VSlot &src, int diff, Slot *slot = NULL
     }
     if(diff & (1<<VSLOT_DETAIL)) dst.detail = src.detail;
     if(diff & (1<<VSLOT_MATERIAL)) dst.texturematerial = src.texturematerial;
-    if(diff & (1<<VSLOT_HSV)) {
+    if(diff & (1<<VSLOT_HSV))
+    {
         dst.hsv.r = fmod(dst.hsv.r + src.hsv.r, 360.f);
         dst.hsv.g *= src.hsv.g;
         dst.hsv.b *= src.hsv.b;

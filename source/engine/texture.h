@@ -555,9 +555,19 @@ struct ImageData
     }
 };
 
-// management of texture slots
-// each texture slot can have multiple texture frames, of which currently only the first is used
-// additional frames can be used for various shaders
+/* management of texture slots
+ * each texture slot can have multiple texture frames
+ * additional frames can be used for various shaders
+ */
+
+struct TextureAnim
+{
+    int delay, x, y, w, h, skip, count;
+    bool throb;
+    TextureAnim() : delay(0), x(0), y(0), skip(0), count(0), throb(false) {}
+};
+
+extern int texturepause;
 
 struct Texture
 {
@@ -576,12 +586,57 @@ struct Texture
     };
 
     char *name;
-    int type, w, h, xs, ys, bpp, clamp;
-    bool mipmap, canreduce;
+    int type, w, h, xs, ys, bpp, clamp, frame, delay, used, last;
+    bool mipmap, canreduce, throb;
     GLuint id;
     uchar *alphamask;
+    vector<GLuint> frames;
 
-    Texture() : alphamask(NULL) {}
+    Texture() : frame(0), delay(0), last(0), throb(false), alphamask(NULL)
+    {
+        frames.shrink(0);
+    }
+    ~Texture()
+    {
+        cleanup();
+    }
+
+    void cleanup()
+    {
+        DELETEA(alphamask);
+
+        if(frames.empty() && id) glDeleteTextures(1, &id);
+        else loopvk(frames) if(frames[k])
+        {
+            if(frames[k])
+            {
+                if(frames[k] == id) id = 0; // using a frame directly
+                glDeleteTextures(1, &frames[k]);
+                frames[k] = 0;
+            }
+        }
+        frames.shrink(0);
+        id = 0;
+        delay = last = 0;
+    }
+
+    bool paused(int id)
+    {
+        return used < last && texturepause && totalmillis - used >= texturepause;
+    }
+
+    int update(int &d, int mindelay = -1)
+    {
+        if(delay <= 0 || paused(id)) return -1;
+
+        int elapsed = totalmillis - last, wait = delay;
+        if(mindelay >= 0 && wait < mindelay) wait = mindelay;
+
+        if(elapsed < wait) return -1;
+
+        d = wait;
+        return elapsed;
+    }
 };
 
 enum
@@ -856,6 +911,8 @@ extern void savepng(const char *filename, ImageData &image, bool flip = false);
 extern void savetga(const char *filename, ImageData &image, bool flip = false);
 extern bool loaddds(const char *filename, ImageData &image, int force = 0);
 extern bool loadimage(const char *filename, ImageData &image);
+
+extern void updatetextures();
 
 extern MatSlot &lookupmaterialslot(int slot, bool load = true);
 extern Slot &lookupslot(int slot, bool load = true);

@@ -662,7 +662,7 @@ void renderglass()
         GLOBALPARAMF(glasstexgen, xscale, yscale);
 
         glActiveTexture_(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, tex->id);
+        setusedtexture(tex);
         glActiveTexture_(GL_TEXTURE0);
 
         float refractscale = (0.5f/255)/ldrscale;

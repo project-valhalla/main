@@ -1402,6 +1402,7 @@ extern string homedir;
 extern char *makerelpath(const char *dir, const char *file, const char *prefix = NULL, const char *cmd = NULL);
 extern char *path(char *s);
 extern char *path(const char *s, bool copy);
+extern char *copypath(const char *s, bool simple = false);
 extern const char *parentdir(const char *directory);
 extern bool fileexists(const char *path, const char *mode);
 extern bool createdir(const char *path);

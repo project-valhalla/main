@@ -2604,7 +2604,7 @@ void drawdamagescreen(int w, int h)
     if(!damagetex) damagetex = textureload("data/interface/hud/damage.png", 3);
 
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glBindTexture(GL_TEXTURE_2D, damagetex->id);
+    setusedtexture(damagetex);
     float fade = damagescreenalpha/100.0f;
     if(damageblendmillis - lastmillis < damagescreenfade)
         fade *= float(damageblendmillis - lastmillis)/damagescreenfade;
@@ -2679,7 +2679,7 @@ void drawzoom(int w, int h)
     if(!scopetex) return;
 
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBindTexture(GL_TEXTURE_2D, scopetex->id);
+    setusedtexture(scopetex);
     if(zoomtype == ZOOM_SCOPE)
     {
         float x = 0, y = 0, dimension = 0, pcoverage = 1, blendf = 1.f - pcoverage;
@@ -2792,7 +2792,7 @@ void drawcrosshair(int w, int h)
     gle::color(color);
     float x = cx*w - (windowhit ? 0 : chsize/2.0f);
     float y = cy*h - (windowhit ? 0 : chsize/2.0f);
-    glBindTexture(GL_TEXTURE_2D, crosshair->id);
+    setusedtexture(crosshair);
 
     hudquad(x, y, chsize, chsize);
 }

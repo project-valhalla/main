@@ -209,7 +209,7 @@ static float draw_char(Texture *&tex, int c, float x, float y, float scale)
     {
         xtraverts += gle::end();
         tex = curfont->texs[info.tex];
-        glBindTexture(GL_TEXTURE_2D, tex->id);
+        setusedtexture(tex);
     }
 
     x *= textscale;
@@ -404,7 +404,7 @@ void draw_text(const char *str, float left, float top, int r, int g, int b, int 
     (textshader ? textshader : hudtextshader)->set();
     LOCALPARAMF(textparams, curfont->bordermin, curfont->bordermax, curfont->outlinemin, curfont->outlinemax);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glBindTexture(GL_TEXTURE_2D, tex->id);
+    setusedtexture(tex);
     gle::color(color, a);
     gle::defvertex(textmatrix ? 3 : 2);
     gle::deftexcoord0();
@@ -429,8 +429,6 @@ void draw_text(const char *str, float left, float top, int r, int g, int b, int 
 
 void reloadfonts()
 {
-    enumerate(fonts, font, f,
-        loopv(f.texs) if(!reloadtexture(*f.texs[i])) fatal("Failed to reload font texture");
-    );
+    enumerate(fonts, font, f, loopv(f.texs) { if(!reloadtexture(f.texs[i])) { fatal("Failed to reload font texture"); }});
 }
 

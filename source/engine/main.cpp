@@ -171,7 +171,7 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     resethudshader();
 
     Texture *t = textureload("data/interface/background.png", 0, true, false);
-    glBindTexture(GL_TEXTURE_2D, t->id);
+    setusedtexture(t);
     float offsetx = 0, offsety = 0;
     float hudratio = h / (float)w, bgratio = t->h / (float)t->w;
 
@@ -234,7 +234,7 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
         {
             x -= 0.5f*sz;
             resethudshader();
-            glBindTexture(GL_TEXTURE_2D, mapshot->id);
+            setusedtexture(mapshot);
             drawquad(x, y, sz, sz);
         }
         if(mapname)
@@ -667,7 +667,7 @@ void resetgl()
     gl_init();
 
     inbetweenframes = false;
-    if(!reloadtexture(*notexture) ||
+    if(!reloadtexture(notexture) ||
        !reloadtexture("<mad:0/0/0>data/interface/logo.png") ||
        !reloadtexture("data/interface/logo.png") ||
        !reloadtexture("data/interface/background.png") ||
@@ -1310,6 +1310,7 @@ int main(int argc, char **argv)
         recomputecamera();
         updateparticles();
         updatesounds();
+        updatetextures();
 
         if(minimized) continue;
 

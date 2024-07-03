@@ -1337,7 +1337,7 @@ namespace UI
         {
             changedraw(CHANGE_SHADER | CHANGE_COLOR | CHANGE_BLEND);
             if(type==MODULATE) modblend(); else resetblend();
-                
+
             color.init();
             gle::begin(GL_TRIANGLE_STRIP);
             gle::attribf(sx+w, sy);
@@ -1580,7 +1580,12 @@ namespace UI
         void bindtex()
         {
             changedraw();
-            if(lasttex != tex) { if(lasttex) gle::end(); lasttex = tex; glBindTexture(GL_TEXTURE_2D, tex->id); }
+            if(lasttex != tex)
+            {
+                if(lasttex) gle::end();
+                lasttex = tex;
+                setusedtexture(tex);
+            }
         }
 
         void draw(float sx, float sy)
@@ -3131,26 +3136,26 @@ namespace UI
             }
             float xt = min(1.0f, t->xs/float(t->ys)), yt = min(1.0f, t->ys/float(t->xs));
             loopk(4) { tc[k].x = tc[k].x/xt - float(xoff)/t->xs; tc[k].y = tc[k].y/yt - float(yoff)/t->ys; }
-            glBindTexture(GL_TEXTURE_2D, t->id);
+            setusedtexture(t);
             if(slot.loaded) gle::color(vslot.colorscale);
             else gle::colorf(1, 1, 1);
             quad(x, y, w, h, tc);
             if(detailtex)
             {
-                glBindTexture(GL_TEXTURE_2D, detailtex->id);
+                setusedtexture(detailtex);
                 quad(x + w/2, y + h/2, w/2, h/2, tc);
             }
             if(glowtex)
             {
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-                glBindTexture(GL_TEXTURE_2D, glowtex->id);
+                setusedtexture(glowtex);
                 gle::color(vslot.glowcolor);
                 quad(x, y, w, h, tc);
                 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             }
             if(layertex)
             {
-                glBindTexture(GL_TEXTURE_2D, layertex->id);
+                setusedtexture(layertex);
                 LOCALPARAMF(previewhsv, layer->hsv.x, layer->hsv.y, layer->hsv.z);
                 LOCALPARAMF(previewtransform, layer->transform.x, layer->transform.y, layer->transform.z, layer->transform.w);
                 gle::color(layer->colorscale);
@@ -3521,7 +3526,7 @@ namespace UI
 
     ICOMMAND(uiimage, "sffe", (char *texname, float *minw, float *minh, uint *children),
         BUILD(Image, o, o->setup(textureload(texname, 3, true, false), *minw, *minh), children));
-    
+
     ICOMMAND(uirotatedimage, "sfffe", (char *texname, float *angle, float *minw, float *minh, uint *children),
         BUILD(Image, o, o->setup(textureload(texname, 3, true, false), *minw, *minh, *angle), children));
 
@@ -3695,7 +3700,7 @@ namespace UI
         if(world->childstate&STATE_HOLD) world->setstate(STATE_HOLD, cursorx, cursory, STATE_HOLD, false);
         if(world->childstate&STATE_ALT_HOLD) world->setstate(STATE_ALT_HOLD, cursorx, cursory, STATE_ALT_HOLD, false);
         if(world->childstate&STATE_ESC_HOLD) world->setstate(STATE_ESC_HOLD, cursorx, cursory, STATE_ESC_HOLD, false);
-        
+
         calctextscale();
 
         world->build();

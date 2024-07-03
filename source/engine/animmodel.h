@@ -248,9 +248,9 @@ struct animmodel : model
             {
                 if(alphatested() && owner->model->alphashadow)
                 {
-                    if(tex!=lasttex)
+                    if(tex != lasttex)
                     {
-                        glBindTexture(GL_TEXTURE_2D, tex->id);
+                        setusedtexture(tex);
                         lasttex = tex;
                     }
                     SETMODELSHADER(b, alphashadowmodel);
@@ -263,30 +263,30 @@ struct animmodel : model
                 return;
             }
             int activetmu = 0;
-            if(tex!=lasttex)
+            if(tex != lasttex)
             {
-                glBindTexture(GL_TEXTURE_2D, tex->id);
+                setusedtexture(tex);
                 lasttex = tex;
             }
             if(bumpmapped() && normalmap!=lastnormalmap)
             {
                 glActiveTexture_(GL_TEXTURE3);
                 activetmu = 3;
-                glBindTexture(GL_TEXTURE_2D, normalmap->id);
+                setusedtexture(normalmap);
                 lastnormalmap = normalmap;
             }
             if(decaled() && decal!=lastdecal)
             {
                 glActiveTexture_(GL_TEXTURE4);
                 activetmu = 4;
-                glBindTexture(GL_TEXTURE_2D, decal->id);
+                setusedtexture(decal);
                 lastdecal = decal;
             }
             if(masked() && masks!=lastmasks)
             {
                 glActiveTexture_(GL_TEXTURE1);
                 activetmu = 1;
-                glBindTexture(GL_TEXTURE_2D, masks->id);
+                setusedtexture(masks);
                 lastmasks = masks;
             }
             if(envmapped())

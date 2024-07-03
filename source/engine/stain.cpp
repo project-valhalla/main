@@ -399,7 +399,7 @@ struct stainrenderer
         }
         LOCALPARAMF(colorscale, colorscale, colorscale, colorscale, alphascale);
 
-        glBindTexture(GL_TEXTURE_2D, tex->id);
+        setusedtexture(tex);
 
         verts[sbuf].render();
     }

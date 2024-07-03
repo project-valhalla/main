@@ -2922,13 +2922,13 @@ void rendertexturepanel(int w, int h)
                     if(r.flipy) { yoff *= -1; loopk(4) tc[k].y *= -1; }
                 }
                 loopk(4) { tc[k].x = tc[k].x/sx - xoff/tex->xs; tc[k].y = tc[k].y/sy - yoff/tex->ys; }
-                glBindTexture(GL_TEXTURE_2D, tex->id);
+                setusedtexture(tex);
                 loopj(glowtex ? 3 : 2)
                 {
                     if(j < 2) gle::color(vec(vslot.colorscale).mul(j), texpaneltimer/1000.0f);
                     else
                     {
-                        glBindTexture(GL_TEXTURE_2D, glowtex->id);
+                        setusedtexture(glowtex);
                         glBlendFunc(GL_SRC_ALPHA, GL_ONE);
                         gle::color(vslot.glowcolor, texpaneltimer/1000.0f);
                     }
@@ -2940,7 +2940,7 @@ void rendertexturepanel(int w, int h)
                     xtraverts += gle::end();
                     if(j==1 && detailtex)
                     {
-                        glBindTexture(GL_TEXTURE_2D, detailtex->id);
+                        setusedtexture(detailtex);
                         gle::begin(GL_TRIANGLE_STRIP);
                         gle::attribf(x,     y);     gle::attrib(tc[0]);
                         gle::attribf(x+r/2, y);     gle::attrib(tc[1]);
@@ -2951,7 +2951,7 @@ void rendertexturepanel(int w, int h)
                     if(j==1 && layertex)
                     {
                         gle::color(layer->colorscale, texpaneltimer/1000.0f);
-                        glBindTexture(GL_TEXTURE_2D, layertex->id);
+                        setusedtexture(layertex);
                         gle::begin(GL_TRIANGLE_STRIP);
                         gle::attribf(x+r/2, y+r/2); gle::attrib(tc[0]);
                         gle::attribf(x+r,   y+r/2); gle::attrib(tc[1]);

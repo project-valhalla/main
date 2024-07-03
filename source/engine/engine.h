@@ -91,7 +91,7 @@ extern ushort closestenvmap(const vec &o);
 extern ushort closestenvmap(int orient, const ivec &o, int size);
 extern GLuint lookupenvmap(ushort emid);
 extern GLuint lookupenvmap(Slot &slot);
-extern bool reloadtexture(Texture &tex);
+extern bool reloadtexture(Texture *tex);
 extern bool reloadtexture(const char *name);
 extern void setuptexcompress();
 extern void clearslots();

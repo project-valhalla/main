@@ -373,6 +373,14 @@ char *path(const char *s, bool copy)
     return tmp;
 }
 
+char *copypath(const char *s, bool simple)
+{
+    static string tmp;
+    copystring(tmp, s);
+    path(tmp, simple);
+    return tmp;
+}
+
 const char *parentdir(const char *directory)
 {
     const char *p = directory + strlen(directory);

@@ -235,7 +235,7 @@ struct partrenderer
                 else blend = 0;
             }
         }
-        if (type&PT_HUD)
+        if(type & PT_HUD)
         {
             p->size = p->size / 100.0f * sqrt(o.dist(camera1->o));
         }
@@ -374,7 +374,7 @@ struct listrenderer : partrenderer
     void render()
     {
         startrender();
-        if(tex) glBindTexture(GL_TEXTURE_2D, tex->id);
+        if(tex) setusedtexture(tex);
         if(canstep) for(listparticle **prev = &list, *p = list; p; p = *prev)
         {
             if(renderpart(p)) prev = &p->next;
@@ -805,7 +805,7 @@ struct varenderer : partrenderer
     {
         genvbo();
 
-        glBindTexture(GL_TEXTURE_2D, tex->id);
+        setusedtexture(tex);
 
         gle::bindvbo(vbo);
         const partvert *ptr = 0;
@@ -951,7 +951,7 @@ void renderparticles(int layer)
             rendered = true;
             glDepthMask(GL_FALSE);
             glEnable(GL_BLEND);
-            if (p->type&PT_HUD) glDisable(GL_DEPTH_TEST);
+            if(p->type & PT_HUD) glDisable(GL_DEPTH_TEST);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
             glActiveTexture_(GL_TEXTURE2);
@@ -996,9 +996,9 @@ void renderparticles(int layer)
 
     if(rendered)
     {
-        if (lastflags&PT_HUD) glEnable(GL_DEPTH_TEST);
-        if(lastflags&(PT_LERP|PT_MOD)) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-        if(!(lastflags&PT_LERP)) resetfogcolor();
+        if(lastflags & PT_HUD) glEnable(GL_DEPTH_TEST);
+        if(lastflags & (PT_LERP|PT_MOD)) glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+        if(!(lastflags & PT_LERP)) resetfogcolor();
         glDisable(GL_BLEND);
         glDepthMask(GL_TRUE);
     }

@@ -85,7 +85,7 @@ void drawenvboxface(float s0, float t0, int x0, int y0, int z0,
                     float s3, float t3, int x3, int y3, int z3,
                     Texture *tex)
 {
-    glBindTexture(GL_TEXTURE_2D, (tex ? tex : notexture)->id);
+    setusedtexture(tex);
     gle::begin(GL_TRIANGLE_STRIP);
     gle::attribf(x3, y3, z3); gle::attribf(s3, t3);
     gle::attribf(x2, y2, z2); gle::attribf(s2, t2);
@@ -145,7 +145,7 @@ void drawenvoverlay(Texture *overlay = NULL, float tx = 0, float ty = 0)
 {
     int w = farplane/2;
     float z = w*cloudheight, tsz = 0.5f*(1-cloudfade)/cloudscale, psz = w*(1-cloudfade);
-    glBindTexture(GL_TEXTURE_2D, (overlay ? overlay : notexture)->id);
+    setusedtexture(overlay);
     vec color = cloudcolour.tocolor();
     gle::color(color, cloudalpha);
     gle::defvertex();

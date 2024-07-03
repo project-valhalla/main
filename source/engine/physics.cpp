@@ -1865,11 +1865,12 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
             game::triggerphysicsevent(pl, PHYSEVENT_FOOTSTEP, material);
         }
     }
+
     // automatically apply smooth roll when strafing
     if(pl->strafe && maxroll && !floating) pl->roll = clamp(pl->roll - pow(clamp(1.0f + pl->strafe*pl->roll/maxroll, 0.0f, 1.0f), 0.33f)*pl->strafe*curtime*straferoll, -maxroll, maxroll);
     else pl->roll *= curtime == PHYSFRAMETIME ? faderoll : pow(faderoll, curtime/float(PHYSFRAMETIME));
 
-    if(pl->state==CS_ALIVE) updatedynentcache(pl);
+    if(pl->state == CS_ALIVE) updatedynentcache(pl);
 
     // play sounds on water transitions
 
@@ -1900,6 +1901,7 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
                 {
                     pl->climbing = true;
                     pl->falling = pl->vel = vec(0, 0, 0);
+                    game::triggerphysicsevent(pl, PHYSEVENT_LAND_SHORT, material);
                 }
             }
             else if(pl->climbing) pl->climbing = false;

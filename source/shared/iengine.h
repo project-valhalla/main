@@ -31,11 +31,11 @@ enum // cube empty-space materials
     MAT_CLIP     = 2 << MATF_CLIP_SHIFT,   // collisions always treat cube as solid
     MAT_GAMECLIP = 3 << MATF_CLIP_SHIFT,   // game specific clip material
 
-    MAT_DEATH    = 1  << MATF_FLAG_SHIFT,   // force player suicide
-    MAT_NOGI     = 2  << MATF_FLAG_SHIFT,   // disable global illumination
-    MAT_ALPHA    = 4  << MATF_FLAG_SHIFT,   // alpha blended
-    MAT_DAMAGE   = 8  << MATF_FLAG_SHIFT,   // damage player
-    MAT_CLIMB    = 16 << MATF_FLAG_SHIFT    // climb material
+    MAT_DEATH    = 1  << MATF_FLAG_SHIFT,  // force player suicide
+    MAT_NOGI     = 2  << MATF_FLAG_SHIFT,  // disable global illumination
+    MAT_ALPHA    = 4  << MATF_FLAG_SHIFT,  // alpha blended
+    MAT_DAMAGE   = 8  << MATF_FLAG_SHIFT,  // damage player
+    MAT_CLIMB    = 16 << MATF_FLAG_SHIFT   // ladder-like behaviour
 };
 
 inline bool isliquid(int mat)  { return mat == MAT_WATER || mat == MAT_LAVA;  }

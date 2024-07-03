@@ -200,7 +200,7 @@ void flushclient()
 
 void neterr(const char *s, bool disc)
 {
-    conoutf(CON_ERROR, "\f3illegal network message (%s)", s);
+    conoutf(CON_ERROR, "illegal network message: %s", s);
     if(disc) disconnect();
 }
 

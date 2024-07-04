@@ -1672,7 +1672,7 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
         file = strrchr(tname, '>');
         if(!file)
         {
-            if(msg) conoutf(CON_ERROR, "could not load texture %s", tname);
+            if(msg) conoutf(CON_ERROR, "could not load texture: %s", tname);
             return false;
         }
         file++;

@@ -552,7 +552,7 @@ extern servinfo *getservinfo(int i);
 // client
 extern void sendclientpacket(ENetPacket *packet, int chan);
 extern void flushclient();
-extern void disconnect(bool async = false, bool cleanup = true);
+extern void disconnect(bool async = false, bool cleanup = true, bool force = false);
 extern bool isconnected(bool attempt = false, bool local = true);
 extern const ENetAddress *connectedpeer();
 extern bool multiplayer(bool msg = true);

@@ -136,7 +136,7 @@ void reconnect(const char *serverpassword)
     connectserv(connectname, connectport, serverpassword);
 }
 
-void disconnect(bool async, bool cleanup)
+void disconnect(bool async, bool cleanup, bool force)
 {
     if(curpeer)
     {
@@ -154,7 +154,7 @@ void disconnect(bool async, bool cleanup)
         curpeer = NULL;
         discmillis = 0;
         conoutf("disconnected");
-        game::gamedisconnect(cleanup);
+        game::gamedisconnect(cleanup, force);
         mainmenu = 1;
     }
     if(!connpeer && clienthost)
@@ -272,9 +272,8 @@ void gets2c()           // get updates from the server
                         conoutf(CON_ERROR, "disconnecting... (server network error)");
                         setsvar("lastdisconnectreason", "server network error");
                     }
-                    execident("on_forcedisconnect");
                 }
-                disconnect();
+                disconnect(false, true, true);
             }
             return;
 

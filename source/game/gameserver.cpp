@@ -943,7 +943,7 @@ namespace server
 
     bool delayspawn(int type)
     {
-        return !m_tutorial && type >= I_YELLOWSHIELD && type <= I_INVULNERABILITY;
+        return !m_story && type >= I_YELLOWSHIELD && type <= I_INVULNERABILITY;
         return false;
     }
 

@@ -764,6 +764,7 @@ namespace game
     ICOMMANDS("m_edit", "i", (int *mode), { int gamemode = *mode; intret(m_edit); });
     ICOMMANDS("m_lobby", "i", (int *mode), { int gamemode = *mode; intret(m_lobby); });
     ICOMMANDS("m_timed", "i", (int *mode), { int gamemode = *mode; intret(m_timed); });
+    ICOMMANDS("m_story", "i", (int *mode), { int gamemode = *mode; intret(m_story); });
     ICOMMANDS("m_insta", "", (), { intret(m_insta(mutators)); });
 
     void changemap(const char *name, int mode, int muts) // request map change, server may ignore
@@ -1018,7 +1019,10 @@ namespace game
 
     bool ispaused() { return gamepaused; }
 
-    bool allowmouselook() { return !gamepaused || !remote || m_edit; }
+    bool allowmouselook()
+    {
+        return (!gamepaused || !remote) && !(self->state == CS_DEAD && isfirstpersondeath());
+    }
 
     void changegamespeed(int val)
     {
@@ -2242,11 +2246,13 @@ namespace game
                     else if(!waiting) conoutf("%s \fs\f0has entered spectator mode\fr", colorname(s));
                     saveragdoll(s);
                     s->state = CS_SPECTATOR;
+                    execident("on_spectate");
                 }
-                else if(s->state==CS_SPECTATOR)
+                else if(s->state == CS_SPECTATOR)
                 {
                     deathstate(s, true);
                     conoutf("%s \fs\f0has left spectator mode\fr", colorname(s));
+                    execident("on_unspectate");
                 }
                 s->ghost = waiting;
                 checkfollow();

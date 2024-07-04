@@ -474,7 +474,7 @@ namespace game
             nextmonster = mtimestart = lastmillis+10000;
             monstertotal = spawnremain = skill*10;
         }
-        else if(m_tutorial || m_edit)
+        else if(m_story || m_edit)
         {
             mtimestart = lastmillis;
             loopv(entities::ents)
@@ -504,7 +504,7 @@ namespace game
     void monsterkilled(int flags)
     {
         if(flags) checkannouncements(self, flags);
-        if(!m_invasion && !m_tutorial) return;
+        if(!m_invasion && !m_story) return;
         numkilled++;
         self->frags = numkilled;
         remain = monstertotal-numkilled;

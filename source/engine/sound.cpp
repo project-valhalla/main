@@ -785,7 +785,7 @@ void stopsounds(int exclude)
 {
     loopv(channels) if(channels[i].inuse)
     {
-        if(exclude && channels[i].flags&exclude) continue;
+        if(channels[i].flags & exclude) continue;
         Mix_HaltChannel(i);
         freechannel(i);
     }

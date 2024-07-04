@@ -99,7 +99,7 @@ namespace entities
             {
                 case TELEPORT:
                 case TRIGGER:
-                    if(e.attr2 < 0 || (e.type == TRIGGER && !m_tutorial)) continue;
+                    if(e.attr2 < 0 || (e.type == TRIGGER && !m_story)) continue;
                     break;
                 default:
                     if((!editmode && !e.spawned()) || !validitem(e.type)) continue;
@@ -311,8 +311,8 @@ namespace entities
                 if(ents[n]->attr5 && lastmillis - ents[n]->lastplayed <= ents[n]->attr5) break;
                 d->lastpickup = ents[n]->type;
                 d->lastpickupmillis = lastmillis;
-                defformatstring(identname, "trigger_%d", ents[n]->attr1);
-                execident(identname);
+                defformatstring(hookname, "trigger_%d", ents[n]->attr1);
+                execident(hookname);
                 if(ents[n]->attr4 >= 0) playentitysound(d, S_TRIGGER, ents[n]->attr4, ents[n]->o);
                 if(ents[n]->attr4) ents[n]->lastplayed = lastmillis;
                 break;
@@ -329,7 +329,7 @@ namespace entities
             extentity &e = *ents[i];
             if(e.type==NOTUSED) continue;
             float dist = e.o.dist(o);
-            if(e.type == TRIGGER && m_tutorial)
+            if(e.type == TRIGGER && m_story)
             {
                 if(dist < e.attr3) trypickup(i, d);
                 continue;

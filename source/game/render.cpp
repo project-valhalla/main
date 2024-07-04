@@ -616,7 +616,7 @@ namespace game
     void drawhudgun()
     {
         gameent *d = hudplayer();
-        if(d->state==CS_SPECTATOR || d->state==CS_EDITING || !hudgun || editmode)
+        if(d->state == CS_DEAD || d->state==CS_SPECTATOR || d->state==CS_EDITING || !hudgun || editmode)
         {
             d->muzzle = self->muzzle = vec(-1, -1, -1);
             return;

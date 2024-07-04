@@ -84,6 +84,7 @@ namespace game
     extern bool cancrouch();
     extern bool allowmove(physent *d);
     extern bool needminimap();
+    extern bool isfirstpersondeath();
     extern bool allowthirdperson();
     extern bool detachcamera();
     extern bool collidecamera();

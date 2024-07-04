@@ -80,7 +80,7 @@ enum
     S_PAIN_ZOMBIE_MALE, S_DIE_ZOMBIE_MALE, S_TAUNT_ZOMBIE_MALE,
     S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE,
 
-    S_CORPSE, S_GIB,
+    S_CORPSE, S_GIB, S_DEATH,
 
     S_VC_ATTACK, S_VC_BASE, S_VC_DEFEND, S_VC_COVER, S_VC_DROPFLAG, S_VC_GOODJOB,
     S_VC_HELLO, S_VC_HELP, S_VC_LOWHEALTH, S_VC_NICESHOT, S_VC_NO, S_VC_SORRY, S_VC_SUCK,
@@ -437,7 +437,7 @@ struct gamestate
         {
             gunselect = GUN_PISTOL;
             ammo[GUN_PISTOL] = 100;
-            if(!m_tutorial) ammo[GUN_GRENADE] = 1;
+            if(!m_story) ammo[GUN_GRENADE] = 1;
         }
     }
 
@@ -696,6 +696,8 @@ namespace game
 
     extern bool clientoption(const char *arg);
     extern bool gamewaiting, betweenrounds, hunterchosen;
+    extern bool isally(gameent *a, gameent *b);
+    extern bool isinvulnerable(gameent *target, gameent *actor);
 
     extern gameent *getclient(int cn);
     extern gameent *newclient(int cn);
@@ -715,8 +717,6 @@ namespace game
     extern void startgame();
     extern void spawnplayer(gameent *d);
     extern void spawneffect(gameent *d);
-    extern bool isally(gameent *a, gameent *b);
-    extern bool isinvulnerable(gameent *target, gameent *actor);
     extern void deathstate(gameent *d, bool restore = false);
     extern void damagehud(int damage, gameent *d, gameent *actor);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);

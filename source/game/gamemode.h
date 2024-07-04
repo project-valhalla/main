@@ -14,7 +14,7 @@ enum
     M_INFECTION   = 1<<10,
     M_INVASION    = 1<<11,
     M_BETRAYAL    = 1<<12,
-    M_SP          = 1<<13
+    M_STORY       = 1<<13
 };
 
 static struct gamemodeinfo
@@ -24,7 +24,7 @@ static struct gamemodeinfo
     const char *info;
 } gamemodes[] =
 {
-    { "tutorial", "Tutorial",          M_SP | M_LOCAL,         NULL                                                                                                          },
+    { "tutorial", "Tutorial",          M_STORY | M_LOCAL,      NULL                                                                                                          },
     { "demo",     "Demo",              M_DEMO | M_LOCAL,       NULL                                                                                                          },
     { "edit",     "Edit",              M_EDIT,                 "\f2Cooperative Editing\ff: edit maps with multiple players simultaneously"                                   },
     { "dm",       "Deathmatch",        M_LOBBY,                "\f2Deathmatch\ff: kill everyone to score points"                                                             },
@@ -59,7 +59,7 @@ static struct gamemodeinfo
 #define m_hunt            (m_check(gamemode, M_INFECTION|M_BETRAYAL))
 
 #define m_invasion        (m_check(gamemode, M_INVASION))
-#define m_tutorial        (m_check(gamemode, M_SP))
+#define m_story           (m_check(gamemode, M_STORY))
 
 #define m_demo            (m_check(gamemode, M_DEMO))
 #define m_edit            (m_check(gamemode, M_EDIT))

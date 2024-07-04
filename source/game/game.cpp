@@ -186,7 +186,7 @@ namespace game
     {
         gameent *d = followingplayer();
         if(d) return specmode > 1 || d->state == CS_DEAD;
-        return (intermission && self->state != CS_SPECTATOR) || self->state == CS_DEAD;
+        return (intermission && self->state != CS_SPECTATOR) || (!isfirstpersondeath() && self->state == CS_DEAD);
     }
 
     bool collidecamera()
@@ -452,6 +452,13 @@ namespace game
 
     bool editing() { return m_edit; }
 
+    VARP(firstpersondeath, 0, 0, 1);
+
+    bool isfirstpersondeath()
+    {
+        return firstpersondeath || m_story;
+    }
+
     int checkzoom()
     {
         gameent *hud = followingplayer(self);
@@ -527,22 +534,32 @@ namespace game
         stopownersounds(d);
         if(!restore)
         {
+            bool firstpersondeath = d == self && isfirstpersondeath(),
+                 isnoisy =  d->deathtype != DEATH_FIST && d->deathtype != DEATH_DISRUPT;
             if(gore && d->gibbed()) gibeffect(max(-d->health, 0), d->vel, d, d->deathtype == 1);
-            else if(deathscream && d->deathtype != DEATH_FIST && d->deathtype != DEATH_DISRUPT)
+            else if(!firstpersondeath && deathscream && isnoisy)
             {
                 playsound(getplayermodelinfo(d).diesound, d); // silent melee kills
             }
             d->deaths++;
         }
-        if(d==self)
+        if(d == self)
         {
             disablezoom();
             d->attacking = ACT_IDLE;
-            if(!restore && deathfromabove)
+            if(!isfirstpersondeath())
             {
-                d->pitch = -90; // lower your pitch to see your death from above
+                if(!restore && deathfromabove)
+                {
+                    d->pitch = -90; // lower your pitch to see your death from above
+                }
+                d->roll = 0;
             }
-            d->roll = 0;
+            else
+            {
+                stopsounds(SND_MAP | SND_UI);
+                playsound(S_DEATH);
+            }
             if(m_invasion) self->lives--;
             if(thirdperson) thirdperson = 0;
         }
@@ -835,7 +852,7 @@ namespace game
             cmode->setup();
         }
 
-        const char *info = !m_tutorial && m_valid(gamemode) ? gamemodes[gamemode - STARTGAMEMODE].info : NULL;
+        const char *info = !m_story && m_valid(gamemode) ? gamemodes[gamemode - STARTGAMEMODE].info : NULL;
         if(showmodeinfo && info)
         {
             conoutf("%s", info);
@@ -871,7 +888,7 @@ namespace game
 
     const char *getmapinfo()
     {
-        bool hasmodeinfo = !m_tutorial && showmodeinfo && m_valid(gamemode);
+        bool hasmodeinfo = !m_story && showmodeinfo && m_valid(gamemode);
         static char info[1000];
         info[0] = '\0';
         if(hasmodeinfo) strcat(info, gamemodes[gamemode - STARTGAMEMODE].info);

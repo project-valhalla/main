@@ -541,15 +541,18 @@ void moveragdoll(dynent *d)
     }
 
     if(!game::isfirstpersondeath() && ((gameent *)d)->deathtype == DEATH_FALL) return;
-    vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
-    if(game::isfirstpersondeath())
+    else
     {
-        camera1->o = eye;
-        return;
+        vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
+        if(game::isfirstpersondeath() && d == game::self)
+        {
+            camera1->o = eye;
+            return;
+        }
+        eye.add(d->ragdoll->offset);
+        float k = pow(ragdolleyesmooth, float(curtime)/ragdolleyesmoothmillis);
+        d->o.lerp(eye, 1-k);
     }
-    eye.add(d->ragdoll->offset);
-    float k = pow(ragdolleyesmooth, float(curtime)/ragdolleyesmoothmillis);
-    d->o.lerp(eye, 1-k);
 }
 
 void cleanragdoll(dynent *d)

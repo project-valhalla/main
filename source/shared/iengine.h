@@ -55,8 +55,6 @@ extern bool  raycubelos(const vec &o, const vec &dest, vec &hitpos);
 extern int thirdperson;
 extern bool isthirdperson();
 
-struct Texture;
-extern bool setusedtexture(Texture *t = NULL, GLenum target = GL_TEXTURE_2D);
 extern bool settexture(const char *name, int clamp = 0);
 
 // octaedit

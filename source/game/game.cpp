@@ -557,7 +557,7 @@ namespace game
             }
             else
             {
-                stopsounds(SND_MAP | SND_UI);
+                stopsounds(SND_UI | SND_ANNOUNCER);
                 playsound(S_DEATH);
             }
             if(m_invasion) self->lives--;

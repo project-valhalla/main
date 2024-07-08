@@ -142,7 +142,7 @@
     <ClCompile Include="..\engine\ui.cpp">
       <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\engine\water.cpp">
+    <ClCompile Include="..\engine\liquid.cpp">
       <Filter>engine</Filter>
     </ClCompile>
     <ClCompile Include="..\game\waypoint.cpp">

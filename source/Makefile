@@ -108,7 +108,7 @@ CLIENT_OBJS= \
 	engine/stain.o \
 	engine/texture.o \
 	engine/ui.o \
-	engine/water.o \
+	engine/liquid.o \
 	engine/world.o \
 	engine/worldio.o \
 	game/ai.o \
@@ -429,10 +429,10 @@ engine/ui.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 engine/ui.o: shared/iengine.h shared/igame.h engine/world.h engine/octa.h
 engine/ui.o: engine/light.h engine/texture.h engine/bih.h engine/model.h
 engine/ui.o: engine/textedit.h
-engine/water.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
-engine/water.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
-engine/water.o: shared/iengine.h shared/igame.h engine/world.h engine/octa.h
-engine/water.o: engine/light.h engine/texture.h engine/bih.h engine/model.h
+engine/liquid.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
+engine/liquid.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
+engine/liquid.o: shared/iengine.h shared/igame.h engine/world.h engine/octa.h
+engine/liquid.o: engine/light.h engine/texture.h engine/bih.h engine/model.h
 engine/world.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/world.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 engine/world.o: shared/iengine.h shared/igame.h engine/world.h engine/octa.h

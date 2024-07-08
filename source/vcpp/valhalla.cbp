@@ -159,7 +159,7 @@
 		<Unit filename="../engine/ui.cpp" />
 		<Unit filename="../engine/version.h" />
 		<Unit filename="../engine/vertmodel.h" />
-		<Unit filename="../engine/water.cpp" />
+		<Unit filename="../engine/liquid.cpp" />
 		<Unit filename="../engine/world.cpp" />
 		<Unit filename="../engine/world.h" />
 		<Unit filename="../engine/worldio.cpp" />

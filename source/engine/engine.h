@@ -479,7 +479,7 @@ extern uint matliquidtiles[LIGHTTILE_MAXH], matsolidtiles[LIGHTTILE_MAXH];
 extern vector<materialsurface> editsurfs, glasssurfs[4], watersurfs[4], waterfallsurfs[4], lavasurfs[4], lavafallsurfs[4];
 extern const bvec4 matnormals[6];
 
-extern int showmat;
+extern int showmaterials;
 
 extern int findmaterial(const char *name);
 extern const char *findmaterialname(int mat);

@@ -433,7 +433,7 @@ void setupmaterials(int start, int len)
     }
 }
 
-VARP(showmat, 0, 1, 1);
+VARP(showmaterials, 0, 1, 1);
 VARP(editmatoffset, 0, 1, 1);
 
 static int sortdim[3];
@@ -553,7 +553,7 @@ int findmaterials()
     for(vtxarray *va = visibleva; va; va = va->next)
     {
         if(!va->matsurfs || va->occluded >= OCCLUDE_BB || va->curvfc >= VFC_FOGGED) continue;
-        if(editmode && showmat && !drawtex)
+        if(editmode && showmaterials && !drawtex)
         {
             loopi(va->matsurfs) editsurfs.add(va->matbuf[i]);
             continue;

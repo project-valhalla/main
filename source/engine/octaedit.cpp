@@ -395,7 +395,7 @@ void rendereditcursor()
         int entorient = 0, ent = -1;
 
         wdist = rayent(player->o, camdir, 1e16f,
-                       (editmode && showmat ? RAY_EDITMAT : 0)   // select cubes first
+                       (editmode && showmaterials ? RAY_EDITMAT : 0)   // select cubes first
                        | (!dragging && entediting && (!passthrough || !passthroughent) ? RAY_ENTS : 0)
                        | RAY_SKIPFIRST
                        | (passthroughcube || passthrough ? RAY_PASS : 0), gridsize, entorient, ent);

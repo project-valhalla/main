@@ -8,7 +8,7 @@ namespace game
     VARP(ragdollmillis, 0, 10000, 300000);
     VARP(ragdollfade, 0, 400, 5000);
     VARP(forceplayermodels, 0, 0, 1);
-    VARP(hidedead, 0, 0, 1);
+    VARP(showdeadplayers, 0, 1, 1);
 
     extern int playermodel;
 
@@ -426,7 +426,7 @@ namespace game
         loopv(players)
         {
             gameent *d = players[i];
-            if(d == self || d->state==CS_SPECTATOR || d->state==CS_SPAWNING || d->lifesequence < 0 || d == exclude || (d->state==CS_DEAD && hidedead)) continue;
+            if(d == self || d->state==CS_SPECTATOR || d->state==CS_SPAWNING || d->lifesequence < 0 || d == exclude || (d->state==CS_DEAD && !showdeadplayers)) continue;
             renderplayer(d);
             copystring(d->info, colorname(d));
             if(d->state == CS_ALIVE || d->state == CS_DEAD)
@@ -460,7 +460,7 @@ namespace game
         }
         if(exclude)
             renderplayer(exclude, 1, MDL_ONLYSHADOW);
-        else if(!f && (self->state==CS_ALIVE || (self->state==CS_EDITING && third) || (self->state==CS_DEAD && !hidedead)))
+        else if(!f && (self->state==CS_ALIVE || (self->state==CS_EDITING && third) || (self->state == CS_DEAD && showdeadplayers)))
             renderplayer(self, 1, third ? 0 : MDL_ONLYSHADOW);
         booteffect(self);
         entities::renderentities();

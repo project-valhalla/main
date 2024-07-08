@@ -2706,7 +2706,7 @@ void drawzoom(int w, int h)
     hudquad(0, 0, w, h);
 }
 
-VAR(hidestats, 0, 0, 1);
+VAR(showstats, 0, 1, 1);
 VAR(showhud, 0, 1, 1);
 VAR(editcursor, 0, 1, 1);
 
@@ -2838,7 +2838,7 @@ void gl_drawhud()
     float conw = w/conscale, conh = h/conscale, abovehud = conh - FONTH;
     if(showhud && !mainmenu)
     {
-        if(!hidestats)
+        if(showstats)
         {
             pushhudscale(conscale);
 

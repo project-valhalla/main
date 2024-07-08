@@ -2,8 +2,8 @@
 namespace aimanager
 {
     bool dorefresh = false, botbalance = true;
-    VARN(serverbotlimit, botlimit, 0, 8, MAXBOTS);
-    VAR(serverbotbalance, 0, 1, 1);
+    VARN(botlimitserver, botlimit, 0, 8, MAXBOTS);
+    VAR(botbalanceserver, 0, 1, 1);
     SVAR(botnames, "");
 
     void calcteams(vector<teamscore> &teams)
@@ -279,7 +279,7 @@ namespace aimanager
     {
         dorefresh = true;
         loopv(clients) if(clients[i]->local || clients[i]->privilege) return;
-        if(botbalance != (serverbotbalance != 0)) setbotbalance(NULL, serverbotbalance != 0);
+        if(botbalance != (botbalanceserver != 0)) setbotbalance(NULL, botbalanceserver != 0);
     }
 
     void addclient(clientinfo *ci)

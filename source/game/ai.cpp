@@ -10,8 +10,8 @@ namespace ai
     int updatemillis = 0, iteration = 0, itermillis = 0, forcegun = -1;
     vec aitarget(0, 0, 0);
 
-    VAR(aidebug, 0, 0, 6);
-    VAR(aiforcegun, -1, -1, NUMGUNS-1);
+    VAR(debugbots, 0, 0, 6);
+    VAR(botforcegun, -1, -1, NUMGUNS-1);
 
     ICOMMAND(botadd, "s", (char *s), addmsg(N_ADDBOT, "ri", *s ? clamp(parseint(s), 1, 101) : -1));
     ICOMMAND(botdel, "", (), addmsg(N_DELBOT, "r"));
@@ -184,7 +184,7 @@ namespace ai
         bool resetthisguy = false;
         if(!d->name[0])
         {
-            if(aidebug) conoutf(CON_DEBUG, "%s assigned to %s at skill: %d", colorname(d, name), o ? colorname(o) : "?", sk);
+            if(debugbots) conoutf(CON_DEBUG, "%s assigned to %s at skill: %d", colorname(d, name), o ? colorname(o) : "?", sk);
             else conoutf(CON_GAMEINFO, "\fs\f2Bot added: \fr%s", colorname(d, name));
             resetthisguy = true;
         }
@@ -192,10 +192,10 @@ namespace ai
         {
             if(d->ownernum != ocn)
             {
-                if(aidebug) conoutf(CON_DEBUG, "%s reassigned to %s", colorname(d, name), o ? colorname(o) : "?");
+                if(debugbots) conoutf(CON_DEBUG, "%s reassigned to %s", colorname(d, name), o ? colorname(o) : "?");
                 resetthisguy = true;
             }
-            if(d->skill != sk && aidebug) conoutf(CON_DEBUG, "%s changed skill to: %d", colorname(d, name), sk);
+            if(d->skill != sk && debugbots) conoutf(CON_DEBUG, "%s changed skill to: %d", colorname(d, name), sk);
         }
 
         copystring(d->name, name, MAXNAMELEN+1);
@@ -236,7 +236,7 @@ namespace ai
             if(totalmillis-updatemillis > 1000)
             {
                 avoid();
-                forcegun = multiplayer(false) ? -1 : aiforcegun;
+                forcegun = multiplayer(false) ? -1 : botforcegun;
                 updatemillis = totalmillis;
             }
             if(!iteration && totalmillis-itermillis > 1000)
@@ -1426,7 +1426,7 @@ namespace ai
             }
             last = i;
         }
-        if(aidebug >= 5)
+        if(debugbots >= 5)
         {
             vec pos = d->feetpos();
             if(d->ai->spot != vec(0, 0, 0)) particle_flare(pos, d->ai->spot, 1, PART_LIGHTNING, 0x0000FF);
@@ -1452,7 +1452,7 @@ namespace ai
     };
     void render()
     {
-        if(aidebug > 1)
+        if(debugbots > 1)
         {
             int total = 0, alive = 0;
             loopv(players) if(players[i]->ai) total++;
@@ -1462,8 +1462,8 @@ namespace ai
                 vec pos = d->abovehead();
                 pos.z += 3;
                 alive++;
-                if(aidebug >= 4) drawroute(d, 4.f*(float(alive)/float(total)));
-                if(aidebug >= 3)
+                if(debugbots >= 4) drawroute(d, 4.f*(float(alive)/float(total)));
+                if(debugbots >= 3)
                 {
                     defformatstring(q, "node: %d route: %d (%d)",
                         d->lastnode,
@@ -1487,11 +1487,11 @@ namespace ai
                     pos.z += 2;
                     if(top)
                     {
-                        if(aidebug >= 3) top = false;
+                        if(debugbots >= 3) top = false;
                         else break;
                     }
                 }
-                if(aidebug >= 3)
+                if(debugbots >= 3)
                 {
                     if(validgun(d->ai->weappref))
                     {
@@ -1506,7 +1506,7 @@ namespace ai
                     }
                 }
             }
-            if(aidebug >= 4)
+            if(debugbots >= 4)
             {
                 int cur = 0;
                 loopv(obstacles.obstacles)
@@ -1523,7 +1523,7 @@ namespace ai
                 }
             }
         }
-        if(showwaypoints || aidebug >= 6)
+        if(showwaypoints || debugbots >= 6)
         {
             vector<int> close;
             int len = waypoints.length();

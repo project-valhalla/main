@@ -622,14 +622,14 @@ struct Texture
 
     bool paused(int id)
     {
-        return used < last && texturepause && totalmillis - used >= texturepause;
+        return used < last && texturepause && lastmillis - used >= texturepause;
     }
 
     int update(int &d, int mindelay = -1)
     {
         if(delay <= 0 || paused(id)) return -1;
 
-        int elapsed = totalmillis - last, wait = delay;
+        int elapsed = lastmillis - last, wait = delay;
         if(mindelay >= 0 && wait < mindelay) wait = mindelay;
 
         if(elapsed < wait) return -1;

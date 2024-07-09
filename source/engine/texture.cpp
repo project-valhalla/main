@@ -1227,6 +1227,7 @@ VARP(texturepause, 0, 5000, INT_MAX);
 
 void updatetextures()
 {
+
     enumerate(textures, Texture, t,
     {
         if(t.frames.length() <= 1) continue;
@@ -1240,7 +1241,7 @@ void updatetextures()
         t.frame %= animlen;
         int frame = t.throb && t.frame >= t.frames.length() ? animlen - t.frame : t.frame;
         t.id = t.frames.inrange(frame) ? t.frames[frame] : 0;
-        t.last = delay > 1 ? totalmillis - (elapsed % delay) : totalmillis;
+        t.last = delay > 1 ? lastmillis - (elapsed % delay) : lastmillis;
     });
 }
 
@@ -1399,7 +1400,7 @@ static Texture *newtexture(Texture *t, const char *rname, ImageData &s, int clam
         }
     }
     t->id = t->frames.length() ? t->frames[0] : 0;
-    t->used = t->last = totalmillis;
+    t->used = t->last = lastmillis;
     return t;
 }
 
@@ -1915,7 +1916,7 @@ Texture *textureload(const char *name, int clamp, bool mipit, bool msg)
 bool setusedtexture(Texture *t, GLenum target)
 {
     if(!t) t = notexture;
-    if(t->used != totalmillis) t->used = totalmillis;
+    if(t->used != lastmillis) t->used = lastmillis;
     glBindTexture(target, t->id);
     return t != notexture;
 }

@@ -138,7 +138,7 @@ extern int drawtex;
 extern const matrix4 viewmatrix, invviewmatrix;
 extern matrix4 cammatrix, projmatrix, camprojmatrix, invcammatrix, invcamprojmatrix, invprojmatrix;
 extern int fog;
-extern bvec fogcolour;
+extern bvec fogcolor;
 extern vec curfogcolor;
 extern int wireframe;
 
@@ -512,12 +512,12 @@ extern float watersx1, watersy1, watersx2, watersy2;
         } \
     }
 
-extern const bvec &getwatercolour(int mat);
-extern const bvec &getwaterdeepcolour(int mat);
+extern const bvec &getwatercolor(int mat);
+extern const bvec &getwaterdeepcolor(int mat);
 extern const bvec &getwaterdeepfade(int mat);
-extern const bvec &getwaterrefractcolour(int mat);
-extern const bvec &getwaterfallcolour(int mat);
-extern const bvec &getwaterfallrefractcolour(int mat);
+extern const bvec &getwaterrefractcolor(int mat);
+extern const bvec &getwaterfallcolor(int mat);
+extern const bvec &getwaterfallrefractcolor(int mat);
 extern int getwaterfog(int mat);
 extern int getwaterdeep(int mat);
 extern int getwaterspec(int mat);
@@ -525,13 +525,13 @@ extern float getwaterrefract(int mat);
 extern int getwaterfallspec(int mat);
 extern float getwaterfallrefract(int mat);
 
-extern const bvec &getlavacolour(int mat);
+extern const bvec &getlavacolor(int mat);
 extern int getlavafog(int mat);
 extern float getlavaglowmin(int mat);
 extern float getlavaglowmax(int mat);
 extern int getlavaspec(int mat);
 
-extern const bvec &getglasscolour(int mat);
+extern const bvec &getglasscolor(int mat);
 extern float getglassrefract(int mat);
 extern int getglassspec(int mat);
 

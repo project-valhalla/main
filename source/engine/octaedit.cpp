@@ -1440,7 +1440,7 @@ void genprefabmesh(prefab &p)
     useshaderbyname("prefab");
 }
 
-extern bvec outlinecolour;
+extern bvec outlinecolor;
 
 static void renderprefab(prefab &p, const vec &o, float yaw, float pitch, float roll, float size, const vec &color)
 {
@@ -1484,7 +1484,7 @@ static void renderprefab(prefab &p, const vec &o, float yaw, float pitch, float 
     pm.mul(camprojmatrix, m);
     GLOBALPARAM(prefabmatrix, pm);
     SETSHADER(prefab);
-    gle::color((outlinecolour).tocolor().mul(ldrscale));
+    gle::color((outlinecolor).tocolor().mul(ldrscale));
     glDrawRangeElements_(GL_TRIANGLES, 0, p.numverts-1, p.numtris*3, GL_UNSIGNED_SHORT, (ushort *)0);
 
     disablepolygonoffset(GL_POLYGON_OFFSET_LINE);

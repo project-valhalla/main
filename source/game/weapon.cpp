@@ -534,7 +534,7 @@ namespace game
             }
         }
         else playsound(S_PLAYER_DAMAGE, NULL, &f->o);
-        if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOUR, NULL, &f->o);
+        if(f->haspowerup(PU_ARMOR)) playsound(S_ACTION_ARMOR, NULL, &f->o);
     }
 
     void spawnbouncer(const vec &from, gameent *d, int type, int gun = -1)

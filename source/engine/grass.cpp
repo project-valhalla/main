@@ -71,7 +71,7 @@ static void animategrass()
 }
 
 VARR(grassscale, 1, 2, 64);
-CVAR0R(grasscolour, 0xFFFFFF);
+CVAR0R(grasscolor, 0xFFFFFF);
 FVARR(grasstest, 0, 0.6f, 1);
 
 static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstri &g, Texture *tex)
@@ -180,7 +180,7 @@ static void gengrassquads(grassgroup *&group, const grasswedge &w, const grasstr
               tc1 = tc.dot(p1) + tcoffset, tc2 = tc.dot(p2) + tcoffset,
               fade = dist - t > taperdist ? (grassdist - (dist - t))*taperscale : 1,
               height = grassheight * fade;
-        bvec4 color(grasscolour, 255);
+        bvec4 color(grasscolor, 255);
 
         #define GRASSVERT(n, tcv, modify) { \
             grassvert &gv = grassverts.add(); \

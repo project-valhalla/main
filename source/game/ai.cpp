@@ -470,7 +470,7 @@ namespace ai
                 else score = 1e1f;
                 break;
 
-            case I_DDAMAGE: case I_HASTE: case I_ARMOUR: case I_UAMMO:
+            case I_DDAMAGE: case I_HASTE: case I_ARMOR: case I_UAMMO:
             case I_AGILITY: case I_INVULNERABILITY:
                 score = 1e4f;
                 break;
@@ -669,7 +669,7 @@ namespace ai
                     case I_YELLOWSHIELD: case I_REDSHIELD:
                         break;
 
-                    case I_DDAMAGE: case I_HASTE: case I_ARMOUR: case I_UAMMO:
+                    case I_DDAMAGE: case I_HASTE: case I_ARMOR: case I_UAMMO:
                     case I_AGILITY: case I_INVULNERABILITY:
                         wantsitem = hasgoodammo(d);
                         break;

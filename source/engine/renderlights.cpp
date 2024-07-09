@@ -2600,7 +2600,7 @@ VARFP(volsteps, 1, 12, 64, cleanupvolumetric());
 FVAR(volminstep, 0, 0.0625f, 1e3f);
 FVAR(volprefilter, 0, 4, 1e3f);
 FVAR(voldistclamp, 0, 0.99f, 2);
-CVAR1R(volcolour, 0x808080);
+CVAR1R(volcolor, 0x808080);
 FVARR(volscale, 0, 1, 16);
 VAR(volderiv, -1, 1, 1);
 
@@ -3402,7 +3402,7 @@ void rendervolumetric()
         else volumetricshader->set();
 
         LOCALPARAM(lightpos, vec4(l.o, 1).div(l.radius));
-        vec color = vec(l.color).mul(ldrscaleb).mul(volcolour.tocolor().mul(volscale));
+        vec color = vec(l.color).mul(ldrscaleb).mul(volcolor.tocolor().mul(volscale));
         LOCALPARAM(lightcolor, color);
 
         if(l.shadowmap >= 0)

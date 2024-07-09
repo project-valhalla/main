@@ -1728,7 +1728,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
         {
             pl->vel.z = max(pl->vel.z, JUMP_VEL);
         }
-        else if(pl->crouching < 0)
+        if(pl->crouching < 0)
         {
             pl->vel.z = min(pl->vel.z, -JUMP_VEL);
         }
@@ -1843,6 +1843,14 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 
     pl->blocked = false;
 
+    if(!floating || ((gameent *)pl)->ghost)
+    {
+        const float f = 1.0f/moveres;
+        int collisions = 0;
+        d.mul(f);
+        loopi(moveres) if(!move(pl, d) && ++collisions<5) i--; // discrete steps collision detection & sliding
+
+    }
     if(floating)                // just apply velocity
     {
         if(pl->physstate != PHYS_FLOAT)
@@ -1855,12 +1863,7 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
     }
     else                        // apply velocity with collision
     {
-        const float f = 1.0f/moveres;
         const int timeinair = pl->timeinair;
-        int collisions = 0;
-
-        d.mul(f);
-        loopi(moveres) if(!move(pl, d) && ++collisions<5) i--; // discrete steps collision detection & sliding
         if(!pl->timeinair && !water) // if we land after long time must have been a high jump, make thud sound
         {
             pl->doublejumping = false; // now that we landed, double jump resets
@@ -2035,15 +2038,30 @@ dir(forward,  move,    1, k_up,    k_down);
 dir(left,     strafe,  1, k_left,  k_right);
 dir(right,    strafe, -1, k_right, k_left);
 
+void dojump(int down)
+{
+    if(!down || game::canjump())
+    {
+        if(player->physstate > PHYS_FLOAT && player->crouched()) player->crouching = 0;
+        else player->jumping = down != 0;
+    }
+}
 ICOMMAND(jump,   "D", (int *down),
 {
-    if(!*down || game::canjump())
-    {
-        if(player->crouched()) player->crouching = 0;
-        else player->jumping = *down!=0;
-    }
+    dojump(*down);
 });
-ICOMMAND(crouch, "D", (int *down), { if(!*down) player->crouching = abs(player->crouching); else if(game::cancrouch()) player->crouching = -1; });
+
+void docrouch(int down)
+{
+    if(!down) player->crouching = abs(player->crouching);
+    else if(game::cancrouch()) player->crouching = -1;
+}
+ICOMMAND(crouch, "D", (int *down),
+{
+    docrouch(*down);
+});
+
+ICOMMAND(getcrouch, "", (), intret(player->crouching == 0 ? 0 : (player->crouching < 0 ? -1 : 1)));
 
 bool entinmap(dynent *d, bool avoidplayers) // brute force but effective way to find a free spawn spot in the map
 {

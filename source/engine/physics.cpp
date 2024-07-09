@@ -1728,6 +1728,10 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
         {
             pl->vel.z = max(pl->vel.z, JUMP_VEL);
         }
+        else if(pl->crouching < 0)
+        {
+            pl->vel.z = min(pl->vel.z, -JUMP_VEL);
+        }
     }
     else if(canjump(d) || water)
     {
@@ -2041,11 +2045,11 @@ ICOMMAND(jump,   "D", (int *down),
 });
 ICOMMAND(crouch, "D", (int *down), { if(!*down) player->crouching = abs(player->crouching); else if(game::cancrouch()) player->crouching = -1; });
 
-bool entinmap(dynent *d, bool avoidplayers)        // brute force but effective way to find a free spawn spot in the map
+bool entinmap(dynent *d, bool avoidplayers) // brute force but effective way to find a free spawn spot in the map
 {
     d->o.z += d->eyeheight; // pos specified is at feet
     vec orig = d->o;
-    loopi(100)              // try max 100 times
+    loopi(100) // attempt up to 100 times
     {
         if(i)
         {

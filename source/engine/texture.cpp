@@ -1820,7 +1820,7 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
         {
             if(compress) *compress = -1;
         }
-        else if(matchstring(cmd, len, "anim"))
+        else if(matchstring(cmd, len, "animation"))
         {
             if(anim)
             {

@@ -1826,7 +1826,7 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
             {
                 anim->delay = *arg[0] ? atoi(arg[0]) : 50;
                 anim->x = max(1, *arg[1] ? atoi(arg[1]) : 1);
-                anim->y = max(1, *arg[2] ? atoi(arg[2]) : 2);
+                anim->y = max(1, *arg[2] ? atoi(arg[2]) : 0);
                 anim->w = d.w / anim->x;
                 anim->h = d.h / anim->y;
                 anim->throb = *arg[3] && atoi(arg[3]) > 0;

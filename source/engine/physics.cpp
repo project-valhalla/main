@@ -1,19 +1,21 @@
-// physics.cpp: no physics books were hurt nor consulted in the construction of this code.
-// All physics computations and constants were invented on the fly and simply tweaked until
-// they "felt right", and have no basis in reality. Collision detection is simplistic but
-// very robust (uses discrete steps at fixed fps).
+/*
+ * physics.cpp: no physics books were hurt nor consulted in the construction of this code.
+ * All physics computations and constants were invented on the fly and simply tweaked until
+ * they "felt right", and have no basis in reality. Collision detection is simplistic but
+ * very robust (uses discrete steps at fixed fps).
+ */
 
 #include "engine.h"
 #include "mpr.h"
 
-const int MAXCLIPOFFSET = 4;
-const int MAXCLIPPLANES = 1024;
-static clipplanes clipcache[MAXCLIPPLANES];
-static int clipcacheversion = -MAXCLIPOFFSET;
+const int MAX_CLIPOFFSET = 4;
+const int MAX_CLIPPLANES = 1024;
+static clipplanes clipcache[MAX_CLIPPLANES];
+static int clipcacheversion = -MAX_CLIPOFFSET;
 
 static inline clipplanes &getclipbounds(const cube &c, const ivec &o, int size, int offset)
 {
-    clipplanes &p = clipcache[int(&c - worldroot)&(MAXCLIPPLANES-1)];
+    clipplanes &p = clipcache[int(&c - worldroot)&(MAX_CLIPPLANES-1)];
     if(p.owner != &c || p.version != clipcacheversion+offset)
     {
         p.owner = &c;
@@ -25,16 +27,20 @@ static inline clipplanes &getclipbounds(const cube &c, const ivec &o, int size, 
 
 static inline clipplanes &getclipbounds(const cube &c, const ivec &o, int size, physent *d)
 {
-    int offset = !(c.visible&0x80) || d->type==ENT_PLAYER ? 0 : 1;
+    int offset = !(c.visible & 0x80) || d->type == ENT_PLAYER ? 0 : 1;
     return getclipbounds(c, o, size, offset);
 }
 
 static inline int forceclipplanes(const cube &c, const ivec &o, int size, clipplanes &p)
 {
-    if(p.visible&0x80)
+    if(p.visible & 0x80)
     {
         bool collide = true, noclip = false;
-        if(p.version&1) { collide = false; noclip = true; }
+        if(p.version & 1)
+        {
+            collide = false;
+            noclip = true;
+        }
         genclipplanes(c, o, size, p, collide, noclip);
     }
     return p.visible;
@@ -42,18 +48,18 @@ static inline int forceclipplanes(const cube &c, const ivec &o, int size, clippl
 
 static inline clipplanes &getclipplanes(const cube &c, const ivec &o, int size)
 {
-    clipplanes &p = getclipbounds(c, o, size, c.visible&0x80 ? 2 : 0);
-    if(p.visible&0x80) genclipplanes(c, o, size, p, false, false);
+    clipplanes &p = getclipbounds(c, o, size, c.visible & 0x80 ? 2 : 0);
+    if(p.visible & 0x80) genclipplanes(c, o, size, p, false, false);
     return p;
 }
 
 void resetclipplanes()
 {
-    clipcacheversion += MAXCLIPOFFSET;
+    clipcacheversion += MAX_CLIPOFFSET;
     if(!clipcacheversion)
     {
         memclear(clipcache);
-        clipcacheversion = MAXCLIPOFFSET;
+        clipcacheversion = MAX_CLIPOFFSET;
     }
 }
 
@@ -115,10 +121,14 @@ static inline bool raycubeintersect(const clipplanes &p, const cube &c, const ve
     INTERSECTPLANES(entry = i, return false);
     INTERSECTBOX(bbentry = i, return false);
     if(exitdist < 0) return false;
-    dist = max(enterdist+0.1f, 0.0f);
+    dist = max(enterdist + 0.1f, 0.0f);
     if(dist < maxdist)
     {
-        if(bbentry>=0) { hitsurface = vec(0, 0, 0); hitsurface[bbentry] = ray[bbentry]>0 ? -1 : 1; }
+        if(bbentry>=0)
+        {
+            hitsurface = vec(0, 0, 0);
+            hitsurface[bbentry] = ray[bbentry]>0 ? -1 : 1;
+        }
         else hitsurface = p.p[entry];
     }
     return true;
@@ -160,7 +170,7 @@ static float disttoent(octaentities *oc, const vec &o, const vec &ray, float rad
         if(!rayboxintersect(eo, es, o, ray, f, orient)) continue; \
     })
 
-    if((mode&RAY_ENTS) == RAY_ENTS)
+    if((mode & RAY_ENTS) == RAY_ENTS)
     {
         entselintersect(other);
         entselintersect(mapmodels);
@@ -179,10 +189,10 @@ static float disttooutsideent(const vec &o, const vec &ray, float radius, int mo
     loopv(outsideents)
     {
         extentity &e = *ents[outsideents[i]];
-        if(!(e.flags&EF_OCTA) || &e == t) continue;
+        if(!(e.flags & EF_OCTA) || &e == t) continue;
         entselectionbox(e, eo, es);
         if(!rayboxintersect(eo, es, o, ray, f, orient)) continue;
-        if(f<dist && f>0)
+        if(f < dist && f > 0)
         {
             hitentdist = dist = f;
             hitent = outsideents[i];
@@ -1825,12 +1835,12 @@ void modifygravity(physent *pl, bool water, int curtime)
 
 void collisiondetection(physent *pl, int moveres, vec &d)
 {
-    const float f = 1.0f/moveres;
+    const float f = 1.0f / moveres;
     int collisions = 0;
     d.mul(f);
     loopi(moveres)
     {
-        if(!move(pl, d) && ++collisions<5)
+        if(!move(pl, d) && ++collisions < 5)
         {
             i--; // discrete steps collision detection & sliding
         }

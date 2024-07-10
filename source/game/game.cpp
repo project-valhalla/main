@@ -927,10 +927,10 @@ namespace game
     VARP(footstepssound, 0, 1, 1);
     VARP(footstepdelay, 1, 44000, 50000);
 
-    void footstep(physent *pl, int sound)
+    void footstep(physent *pl, int sound, bool silentcrouch = true)
     {
         bool onfloor = pl->physstate >= PHYS_SLOPE || pl->climbing;
-        if(!footstepssound || !onfloor || pl->crouching || pl->blocked)
+        if(!footstepssound || !onfloor || (silentcrouch && pl->crouching) || pl->blocked)
         {
             return;
         }
@@ -966,7 +966,7 @@ namespace game
                 if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
                 int surface = lookuptextureeffect(pl->feetpos(-1)),
                     sound = footstepsound(surface, lookupmaterial(pl->feetpos()));
-                if(event == PHYSEVENT_FOOTSTEP) footstep(pl, sound);
+                if(event == PHYSEVENT_FOOTSTEP) footstep(pl, sound, surface != 4 && surface != 9);
                 else msgsound(sound, pl);
                 e->lastfootleft = e->lastfootright = vec(-1, -1, -1);
                 break;

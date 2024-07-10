@@ -2372,21 +2372,20 @@ ICOMMAND(getvrefract, "i", (int *tex),
     result(str);
 });
 
-void vmaterial(int *n)
+void veffect(char *name)
 {
     if(noedit()) return;
     VSlot ds;
-    ds.changed = 1<<VSLOT_MATERIAL;
-    if(vslots.inrange(*n))
-    {
-        ds.texturematerial = *n;
-        if(vslots[ds.texturematerial]->changed && nompedit && multiplayer()) return;
-    }
-    editingvslot(ds.texturematerial);
+    int effect = findtexeffect(name);
+    if(ds.effect == effect) return;
+    ds.changed = 1 << VSLOT_EFFECT;
+    ds.effect = effect;
+    if(vslots[ds.effect]->changed && nompedit && multiplayer()) return;
+    editingvslot(ds.effect);
     mpeditvslot(usevdelta, ds, allfaces, sel, true);
 }
-COMMAND(vmaterial, "i");
-ICOMMAND(getvmaterial, "i", (int *tex), intret(lookupvslot(*tex, false).texturematerial));
+COMMAND(veffect, "s");
+ICOMMAND(getveffect, "i", (int *tex), intret(lookupvslot(*tex, false).effect));
 
 void vhue(float *_h, float *_s, float *_v, int *numargs)
 {

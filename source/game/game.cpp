@@ -908,11 +908,18 @@ namespace game
     int footstepsound(int surface, int material)
     {
         if(material & MAT_WATER) return S_FOOTSTEP_WATER;
+        else if(material & MAT_GLASS) return S_FOOTSTEP_GLASS;
         else switch(surface)
         {
-            case 1: return S_FOOTSTEP_SOFT; break;
+            case 1: return S_FOOTSTEP_DIRT; break;
             case 2: return S_FOOTSTEP_METAL; break;
             case 3: return S_FOOTSTEP_WOOD; break;
+            case 4: return S_FOOTSTEP_DUCT; break;
+            case 5: return S_FOOTSTEP_SILKY; break;
+            case 6: return S_FOOTSTEP_SNOW; break;
+            case 7: return S_FOOTSTEP_ORGANIC; break;
+            case 8: return S_FOOTSTEP_GLASS; break;
+            case 9: return S_FOOTSTEP_WATER; break;
             default: return S_FOOTSTEP; break;
         }
     }
@@ -957,7 +964,7 @@ namespace game
             case PHYSEVENT_FOOTSTEP:
             {
                 if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
-                int surface = lookuptexturematerial(pl->feetpos(-1)),
+                int surface = lookuptextureeffect(pl->feetpos(-1)),
                     sound = footstepsound(surface, lookupmaterial(pl->feetpos()));
                 if(event == PHYSEVENT_FOOTSTEP) footstep(pl, sound);
                 else msgsound(sound, pl);
@@ -1202,9 +1209,14 @@ namespace game
                 return 350;
 
             case S_FOOTSTEP:
-            case S_FOOTSTEP_SOFT:
+            case S_FOOTSTEP_DIRT:
             case S_FOOTSTEP_METAL:
             case S_FOOTSTEP_WOOD:
+            case S_FOOTSTEP_DUCT:
+            case S_FOOTSTEP_SILKY:
+            case S_FOOTSTEP_SNOW:
+            case S_FOOTSTEP_ORGANIC:
+            case S_FOOTSTEP_GLASS:
             case S_FOOTSTEP_WATER:
                 return 300;
 

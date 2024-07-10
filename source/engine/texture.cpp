@@ -2154,35 +2154,35 @@ static void clampvslotoffset(VSlot &dst, Slot *slot = NULL)
 
 static void propagatevslot(VSlot &dst, const VSlot &src, int diff, bool edit = false)
 {
-    if(diff & (1<<VSLOT_SHPARAM)) loopv(src.params) dst.params.add(src.params[i]);
-    if(diff & (1<<VSLOT_SCALE)) dst.scale = src.scale;
-    if(diff & (1<<VSLOT_ROTATION))
+    if(diff & (1 << VSLOT_SHPARAM)) loopv(src.params) dst.params.add(src.params[i]);
+    if(diff & (1 << VSLOT_SCALE)) dst.scale = src.scale;
+    if(diff & (1 << VSLOT_ROTATION))
     {
         dst.rotation = src.rotation;
         if(edit && !dst.offset.iszero()) clampvslotoffset(dst);
     }
-    if(diff & (1<<VSLOT_OFFSET))
+    if(diff & (1 << VSLOT_OFFSET))
     {
         dst.offset = src.offset;
         if(edit) clampvslotoffset(dst);
     }
-    if(diff & (1<<VSLOT_SCROLL)) dst.scroll = src.scroll;
-    if(diff & (1<<VSLOT_LAYER)) dst.layer = src.layer;
-    if(diff & (1<<VSLOT_ALPHA))
+    if(diff & (1 << VSLOT_SCROLL)) dst.scroll = src.scroll;
+    if(diff & (1 << VSLOT_LAYER)) dst.layer = src.layer;
+    if(diff & (1 << VSLOT_ALPHA))
     {
         dst.alphafront = src.alphafront;
         dst.alphaback = src.alphaback;
     }
-    if(diff & (1<<VSLOT_COLOR)) dst.colorscale = src.colorscale;
-    if(diff & (1<<VSLOT_REFRACT))
+    if(diff & (1 << VSLOT_COLOR)) dst.colorscale = src.colorscale;
+    if(diff & (1 << VSLOT_REFRACT))
     {
         dst.refractscale = src.refractscale;
         dst.refractcolor = src.refractcolor;
     }
-    if(diff & (1<<VSLOT_DETAIL)) dst.detail = src.detail;
-    if(diff & (1<<VSLOT_MATERIAL)) dst.texturematerial = src.texturematerial;
-    if(diff & (1<<VSLOT_HSV)) dst.hsv = src.hsv;
-    if(diff & (1<<VSLOT_MATRIX)) dst.transform = src.transform;
+    if(diff & (1 << VSLOT_DETAIL)) dst.detail = src.detail;
+    if(diff & (1 << VSLOT_EFFECT)) dst.effect = src.effect;
+    if(diff & (1 << VSLOT_HSV)) dst.hsv = src.hsv;
+    if(diff & (1 << VSLOT_MATRIX)) dst.transform = src.transform;
 }
 
 static void propagatevslot(VSlot *root, int changed)
@@ -2196,7 +2196,7 @@ static void propagatevslot(VSlot *root, int changed)
 
 static void mergevslot(VSlot &dst, const VSlot &src, int diff, Slot *slot = NULL)
 {
-    if(diff & (1<<VSLOT_SHPARAM)) loopv(src.params)
+    if(diff & (1 << VSLOT_SHPARAM)) loopv(src.params)
     {
         const SlotShaderParam &sp = src.params[i];
         loopvj(dst.params)
@@ -2211,42 +2211,42 @@ static void mergevslot(VSlot &dst, const VSlot &src, int diff, Slot *slot = NULL
         dst.params.add(sp);
     nextparam:;
     }
-    if(diff & (1<<VSLOT_SCALE))
+    if(diff & (1 << VSLOT_SCALE))
     {
         dst.scale = clamp(dst.scale*src.scale, 1/8.0f, 8.0f);
     }
-    if(diff & (1<<VSLOT_ROTATION))
+    if(diff & (1 << VSLOT_ROTATION))
     {
         dst.rotation = clamp(dst.rotation + src.rotation, 0, 7);
         if(!dst.offset.iszero()) clampvslotoffset(dst, slot);
     }
-    if(diff & (1<<VSLOT_OFFSET))
+    if(diff & (1 << VSLOT_OFFSET))
     {
         dst.offset.add(src.offset);
         clampvslotoffset(dst, slot);
     }
-    if(diff & (1<<VSLOT_SCROLL)) dst.scroll.add(src.scroll);
-    if(diff & (1<<VSLOT_LAYER)) dst.layer = src.layer;
-    if(diff & (1<<VSLOT_ALPHA))
+    if(diff & (1 << VSLOT_SCROLL)) dst.scroll.add(src.scroll);
+    if(diff & (1 << VSLOT_LAYER)) dst.layer = src.layer;
+    if(diff & (1 << VSLOT_ALPHA))
     {
         dst.alphafront = src.alphafront;
         dst.alphaback = src.alphaback;
     }
-    if(diff & (1<<VSLOT_COLOR)) dst.colorscale.mul(src.colorscale);
-    if(diff & (1<<VSLOT_REFRACT))
+    if(diff & (1 << VSLOT_COLOR)) dst.colorscale.mul(src.colorscale);
+    if(diff & (1 << VSLOT_REFRACT))
     {
         dst.refractscale *= src.refractscale;
         dst.refractcolor.mul(src.refractcolor);
     }
-    if(diff & (1<<VSLOT_DETAIL)) dst.detail = src.detail;
-    if(diff & (1<<VSLOT_MATERIAL)) dst.texturematerial = src.texturematerial;
-    if(diff & (1<<VSLOT_HSV))
+    if(diff & (1 << VSLOT_DETAIL)) dst.detail = src.detail;
+    if(diff & (1 << VSLOT_EFFECT)) dst.effect = src.effect;
+    if(diff & (1 << VSLOT_HSV))
     {
         dst.hsv.r = fmod(dst.hsv.r + src.hsv.r, 360.f);
         dst.hsv.g *= src.hsv.g;
         dst.hsv.b *= src.hsv.b;
     }
-    if(diff & (1<<VSLOT_MATRIX))
+    if(diff & (1 << VSLOT_MATRIX))
     {
         vec4 invd = invert2x2(dst.transform), invs = invert2x2(src.transform);
         dst.transform = invert2x2(multiply2x2(invs, invd));
@@ -2256,7 +2256,7 @@ static void mergevslot(VSlot &dst, const VSlot &src, int diff, Slot *slot = NULL
 void mergevslot(VSlot &dst, const VSlot &src, const VSlot &delta)
 {
     dst.changed = src.changed | delta.changed;
-    propagatevslot(dst, src, (1<<VSLOT_NUM)-1);
+    propagatevslot(dst, src, (1 << VSLOT_NUM)-1);
     mergevslot(dst, delta, delta.changed, src.slot);
 }
 
@@ -2288,7 +2288,7 @@ VSlot &Slot::emptyvslot()
 
 static bool comparevslot(const VSlot &dst, const VSlot &src, int diff)
 {
-    if(diff & (1<<VSLOT_SHPARAM))
+    if(diff & (1 << VSLOT_SHPARAM))
     {
         if(src.params.length() != dst.params.length()) return false;
         loopv(src.params)
@@ -2297,24 +2297,24 @@ static bool comparevslot(const VSlot &dst, const VSlot &src, int diff)
             if(sp.name != dp.name || memcmp(sp.val, dp.val, sizeof(sp.val))) return false;
         }
     }
-    if(diff & (1<<VSLOT_SCALE) && dst.scale != src.scale) return false;
-    if(diff & (1<<VSLOT_ROTATION) && dst.rotation != src.rotation) return false;
-    if(diff & (1<<VSLOT_OFFSET) && dst.offset != src.offset) return false;
-    if(diff & (1<<VSLOT_SCROLL) && dst.scroll != src.scroll) return false;
-    if(diff & (1<<VSLOT_LAYER) && dst.layer != src.layer) return false;
-    if(diff & (1<<VSLOT_ALPHA) && (dst.alphafront != src.alphafront || dst.alphaback != src.alphaback)) return false;
-    if(diff & (1<<VSLOT_COLOR) && dst.colorscale != src.colorscale) return false;
-    if(diff & (1<<VSLOT_REFRACT) && (dst.refractscale != src.refractscale || dst.refractcolor != src.refractcolor)) return false;
-    if(diff & (1<<VSLOT_DETAIL) && dst.detail != src.detail) return false;
-    if(diff & (1<<VSLOT_MATERIAL) && dst.texturematerial != src.texturematerial) return false;
-    if(diff & (1<<VSLOT_HSV) && dst.hsv != src.hsv) return false;
-    if(diff & (1<<VSLOT_MATRIX) && dst.transform != src.transform) return false;
+    if(diff & (1 << VSLOT_SCALE) && dst.scale != src.scale) return false;
+    if(diff & (1 << VSLOT_ROTATION) && dst.rotation != src.rotation) return false;
+    if(diff & (1 << VSLOT_OFFSET) && dst.offset != src.offset) return false;
+    if(diff & (1 << VSLOT_SCROLL) && dst.scroll != src.scroll) return false;
+    if(diff & (1 << VSLOT_LAYER) && dst.layer != src.layer) return false;
+    if(diff & (1 << VSLOT_ALPHA) && (dst.alphafront != src.alphafront || dst.alphaback != src.alphaback)) return false;
+    if(diff & (1 << VSLOT_COLOR) && dst.colorscale != src.colorscale) return false;
+    if(diff & (1 << VSLOT_REFRACT) && (dst.refractscale != src.refractscale || dst.refractcolor != src.refractcolor)) return false;
+    if(diff & (1 << VSLOT_DETAIL) && dst.detail != src.detail) return false;
+    if(diff & (1 << VSLOT_EFFECT) && dst.effect != src.effect) return false;
+    if(diff & (1 << VSLOT_HSV) && dst.hsv != src.hsv) return false;
+    if(diff & (1 << VSLOT_MATRIX) && dst.transform != src.transform) return false;
     return true;
 }
 
 void packvslot(vector<uchar> &buf, const VSlot &src)
 {
-    if(src.changed & (1<<VSLOT_SHPARAM))
+    if(src.changed & (1 << VSLOT_SHPARAM))
     {
         loopv(src.params)
         {
@@ -2324,47 +2324,47 @@ void packvslot(vector<uchar> &buf, const VSlot &src)
             loopj(4) putfloat(buf, p.val[j]);
         }
     }
-    if(src.changed & (1<<VSLOT_SCALE))
+    if(src.changed & (1 << VSLOT_SCALE))
     {
         buf.put(VSLOT_SCALE);
         putfloat(buf, src.scale);
     }
-    if(src.changed & (1<<VSLOT_ROTATION))
+    if(src.changed & (1 << VSLOT_ROTATION))
     {
         buf.put(VSLOT_ROTATION);
         putint(buf, src.rotation);
     }
-    if(src.changed & (1<<VSLOT_OFFSET))
+    if(src.changed & (1 << VSLOT_OFFSET))
     {
         buf.put(VSLOT_OFFSET);
         putint(buf, src.offset.x);
         putint(buf, src.offset.y);
     }
-    if(src.changed & (1<<VSLOT_SCROLL))
+    if(src.changed & (1 << VSLOT_SCROLL))
     {
         buf.put(VSLOT_SCROLL);
         putfloat(buf, src.scroll.x);
         putfloat(buf, src.scroll.y);
     }
-    if(src.changed & (1<<VSLOT_LAYER))
+    if(src.changed & (1 << VSLOT_LAYER))
     {
         buf.put(VSLOT_LAYER);
         putuint(buf, vslots.inrange(src.layer) && !vslots[src.layer]->changed ? src.layer : 0);
     }
-    if(src.changed & (1<<VSLOT_ALPHA))
+    if(src.changed & (1 << VSLOT_ALPHA))
     {
         buf.put(VSLOT_ALPHA);
         putfloat(buf, src.alphafront);
         putfloat(buf, src.alphaback);
     }
-    if(src.changed & (1<<VSLOT_COLOR))
+    if(src.changed & (1 << VSLOT_COLOR))
     {
         buf.put(VSLOT_COLOR);
         putfloat(buf, src.colorscale.r);
         putfloat(buf, src.colorscale.g);
         putfloat(buf, src.colorscale.b);
     }
-    if(src.changed & (1<<VSLOT_REFRACT))
+    if(src.changed & (1 << VSLOT_REFRACT))
     {
         buf.put(VSLOT_REFRACT);
         putfloat(buf, src.refractscale);
@@ -2372,24 +2372,24 @@ void packvslot(vector<uchar> &buf, const VSlot &src)
         putfloat(buf, src.refractcolor.g);
         putfloat(buf, src.refractcolor.b);
     }
-    if(src.changed & (1<<VSLOT_DETAIL))
+    if(src.changed & (1 << VSLOT_DETAIL))
     {
         buf.put(VSLOT_DETAIL);
         putuint(buf, vslots.inrange(src.detail) && !vslots[src.detail]->changed ? src.detail : 0);
     }
-    if(src.changed & (1<<VSLOT_MATERIAL))
+    if(src.changed & (1 << VSLOT_EFFECT))
     {
-        buf.put(VSLOT_MATERIAL);
-        putuint(buf, vslots.inrange(src.texturematerial) && !vslots[src.texturematerial]->changed ? src.texturematerial : 0);
+        buf.put(VSLOT_EFFECT);
+        putuint(buf, vslots.inrange(src.effect) && !vslots[src.effect]->changed ? src.effect : 0);
     }
-    if(src.changed & (1<<VSLOT_HSV))
+    if(src.changed & (1 << VSLOT_HSV))
     {
         buf.put(VSLOT_HSV);
         putfloat(buf, src.hsv.r);
         putfloat(buf, src.hsv.g);
         putfloat(buf, src.hsv.b);
     }
-    if(src.changed & (1<<VSLOT_MATRIX))
+    if(src.changed & (1 << VSLOT_MATRIX))
     {
         buf.put(VSLOT_MATRIX);
         putfloat(buf, src.transform.x);
@@ -2474,10 +2474,10 @@ bool unpackvslot(ucharbuf &buf, VSlot &dst, bool delta)
                 dst.detail = vslots.inrange(tex) ? tex : 0;
                 break;
             }
-            case VSLOT_MATERIAL:
+            case VSLOT_EFFECT:
             {
                 int tex = getuint(buf);
-                dst.texturematerial = vslots.inrange(tex) ? tex : 0;
+                dst.effect = vslots.inrange(tex) ? tex : 0;
                 break;
             }
             case VSLOT_HSV:
@@ -2520,7 +2520,7 @@ static VSlot *clonevslot(const VSlot &src, const VSlot &delta)
 {
     VSlot *dst = vslots.add(new VSlot(src.slot, vslots.length()));
     dst->changed = src.changed | delta.changed;
-    propagatevslot(*dst, src, ((1<<VSLOT_NUM)-1) & ~delta.changed);
+    propagatevslot(*dst, src, ((1 << VSLOT_NUM)-1) & ~delta.changed);
     propagatevslot(*dst, delta, delta.changed, true);
     return dst;
 }
@@ -2629,12 +2629,40 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
         vs.rotation = clamp(*rot, 0, 7);
         vs.offset = ivec2(*xoffset, *yoffset).max(0);
         vs.scale = *scale <= 0 ? 1 : *scale;
-        propagatevslot(&vs, (1<<VSLOT_NUM)-1);
+        propagatevslot(&vs, (1 << VSLOT_NUM)-1);
     }
 }
 
 COMMAND(texture, "ssiiif");
 ICOMMAND(numdecalslots, "", (), { intret(decalslots.length()); });
+
+const struct texeffect
+{
+    const char *name;
+    int id;
+} texeffects[] =
+{
+    {"0",       TEXEFFECT_GENERIC },
+    {"generic", TEXEFFECT_GENERIC },
+    {"dirt",    TEXEFFECT_DIRT    },
+    {"metal",   TEXEFFECT_METAL   },
+    {"wood",    TEXEFFECT_WOOD    },
+    {"duct",    TEXEFFECT_DUCT    },
+    {"silky",   TEXEFFECT_SILKY   },
+    {"snow",    TEXEFFECT_SNOW    },
+    {"organic", TEXEFFECT_ORGANIC },
+    {"glass",   TEXEFFECT_GLASS   },
+    {"water",   TEXEFFECT_WATER   }
+};
+
+int findtexeffect(const char *name)
+{
+    loopi(sizeof(texeffects)/sizeof(texeffect))
+    {
+        if(!strcmp(texeffects[i].name, name)) return texeffects[i].id;
+    }
+    return 0;
+}
 
 void texgrass(char *name)
 {
@@ -2650,7 +2678,7 @@ void texscroll(float *scrollS, float *scrollT)
     if(!defslot) return;
     Slot &s = *defslot;
     s.variants->scroll = vec2(*scrollS/1000.0f, *scrollT/1000.0f);
-    propagatevslot(s.variants, 1<<VSLOT_SCROLL);
+    propagatevslot(s.variants, 1 << VSLOT_SCROLL);
 }
 COMMAND(texscroll, "ff");
 
@@ -2659,7 +2687,7 @@ void texoffset_(int *xoffset, int *yoffset)
     if(!defslot) return;
     Slot &s = *defslot;
     s.variants->offset = ivec2(*xoffset, *yoffset).max(0);
-    propagatevslot(s.variants, 1<<VSLOT_OFFSET);
+    propagatevslot(s.variants, 1 << VSLOT_OFFSET);
 }
 COMMANDN(texoffset, texoffset_, "ii");
 
@@ -2668,7 +2696,7 @@ void texrotate_(int *rot)
     if(!defslot) return;
     Slot &s = *defslot;
     s.variants->rotation = clamp(*rot, 0, 7);
-    propagatevslot(s.variants, 1<<VSLOT_ROTATION);
+    propagatevslot(s.variants, 1 << VSLOT_ROTATION);
 }
 COMMANDN(texrotate, texrotate_, "i");
 
@@ -2677,7 +2705,7 @@ void texscale(float *scale)
     if(!defslot) return;
     Slot &s = *defslot;
     s.variants->scale = *scale <= 0 ? 1 : *scale;
-    propagatevslot(s.variants, 1<<VSLOT_SCALE);
+    propagatevslot(s.variants, 1 << VSLOT_SCALE);
 }
 COMMAND(texscale, "f");
 
@@ -2686,7 +2714,7 @@ void texlayer(int *layer)
     if(!defslot) return;
     Slot &s = *defslot;
     s.variants->layer = *layer < 0 ? max(slots.length()-1+*layer, 0) : *layer;
-    propagatevslot(s.variants, 1<<VSLOT_LAYER);
+    propagatevslot(s.variants, 1 << VSLOT_LAYER);
 }
 COMMAND(texlayer, "i");
 
@@ -2695,7 +2723,7 @@ void texdetail(int *detail)
     if(!defslot) return;
     Slot &s = *defslot;
     s.variants->detail = *detail < 0 ? max(slots.length()-1+*detail, 0) : *detail;
-    propagatevslot(s.variants, 1<<VSLOT_DETAIL);
+    propagatevslot(s.variants, 1 << VSLOT_DETAIL);
 }
 COMMAND(texdetail, "i");
 
@@ -2705,7 +2733,7 @@ void texalpha(float *front, float *back)
     Slot &s = *defslot;
     s.variants->alphafront = clamp(*front, 0.0f, 1.0f);
     s.variants->alphaback = clamp(*back, 0.0f, 1.0f);
-    propagatevslot(s.variants, 1<<VSLOT_ALPHA);
+    propagatevslot(s.variants, 1 << VSLOT_ALPHA);
 }
 COMMAND(texalpha, "ff");
 
@@ -2714,7 +2742,7 @@ void texcolor(float *r, float *g, float *b)
     if(!defslot) return;
     Slot &s = *defslot;
     s.variants->colorscale = vec(clamp(*r, 0.0f, 2.0f), clamp(*g, 0.0f, 2.0f), clamp(*b, 0.0f, 2.0f));
-    propagatevslot(s.variants, 1<<VSLOT_COLOR);
+    propagatevslot(s.variants, 1 << VSLOT_COLOR);
 }
 COMMAND(texcolor, "fff");
 
@@ -2727,7 +2755,7 @@ void texrefract(float *k, float *r, float *g, float *b)
         s.variants->refractcolor = vec(clamp(*r, 0.0f, 1.0f), clamp(*g, 0.0f, 1.0f), clamp(*b, 0.0f, 1.0f));
     else
         s.variants->refractcolor = vec(1, 1, 1);
-    propagatevslot(s.variants, 1<<VSLOT_REFRACT);
+    propagatevslot(s.variants, 1 << VSLOT_REFRACT);
 }
 COMMAND(texrefract, "ffff");
 
@@ -2740,21 +2768,23 @@ void texsmooth(int *id, int *angle)
 COMMAND(texsmooth, "ib");
 ICOMMAND(getvsmooth, "i", (int *tex), intret(lookupvslot(*tex, false).slot->smooth));
 
-void texmaterial(int *material)
+void texeffect(char *name)
 {
     if(!defslot) return;
     Slot &s = *defslot;
-    s.variants->texturematerial = *material;
-    propagatevslot(s.variants, 1<<VSLOT_MATERIAL);
+    int effect = findtexeffect(name);
+    if(s.variants->effect == effect) return;
+    s.variants->effect = effect;
+    propagatevslot(s.variants, 1 << VSLOT_EFFECT);
 }
-COMMAND(texmaterial, "i");
+COMMAND(texeffect, "s");
 
 void texhue(float *_h, float *_s, float *_v)
 {
     if(!defslot) return;
     Slot &s = *defslot;
     s.variants->hsv = vec(fmod(*_h, 360.0f), *_s, *_v);
-    propagatevslot(s.variants, 1<<VSLOT_HSV);
+    propagatevslot(s.variants, 1 << VSLOT_HSV);
 }
 COMMAND(texhue, "fff");
 
@@ -2763,7 +2793,7 @@ void texrawmatrix(float *x, float *y, float *z, float *w)
     if(!defslot) return;
     Slot &s = *defslot;
     s.variants->transform = vec4(*x, *y, *z, *w);
-    propagatevslot(s.variants, 1<<VSLOT_MATRIX);
+    propagatevslot(s.variants, 1 << VSLOT_MATRIX);
 }
 COMMAND(texrawmatrix, "ffff");
 

@@ -641,6 +641,22 @@ struct Texture
 
 enum
 {
+    TEXEFFECT_GENERIC = 0,
+    TEXEFFECT_DIRT,
+    TEXEFFECT_METAL,
+    TEXEFFECT_WOOD,
+    TEXEFFECT_DUCT,
+    TEXEFFECT_SILKY,
+    TEXEFFECT_SNOW,
+    TEXEFFECT_ORGANIC,
+    TEXEFFECT_GLASS,
+    TEXEFFECT_WATER
+};
+
+extern int findtexeffect(const char *name);
+
+enum
+{
     TEX_DIFFUSE = 0,
     TEX_NORMAL,
     TEX_GLOW,
@@ -667,7 +683,7 @@ enum
     VSLOT_RESERVED, // used by RE
     VSLOT_REFRACT,
     VSLOT_DETAIL,
-    VSLOT_MATERIAL,
+    VSLOT_EFFECT,
     VSLOT_HSV,
     VSLOT_MATRIX,
     VSLOT_NUM
@@ -690,7 +706,7 @@ struct VSlot
     vec glowcolor;
     float refractscale;
     vec refractcolor;
-    int texturematerial;
+    int effect;
     vec hsv;
     vec4 transform;
 
@@ -717,7 +733,7 @@ struct VSlot
         glowcolor = vec(1, 1, 1);
         refractscale = 0;
         refractcolor = vec(1, 1, 1);
-        texturematerial = 0;
+        effect = 0;
         hsv = vec(0, 1, 1);
         transform = vec4(1, 0, 0, 1);
     }

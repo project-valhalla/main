@@ -272,10 +272,10 @@ int lookupmaterial(const vec &v)
     return c->material;
 }
 
-int lookuptexturematerial(const vec &v)
+int lookuptextureeffect(const vec &v)
 {
     int top = 5;
-    return lookupvslot(lookupcube(ivec(v)).texture[top], false).texturematerial;
+    return lookupvslot(lookupcube(ivec(v)).texture[top], false).effect;
 }
 
 const cube *neighbourstack[32];

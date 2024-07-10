@@ -357,6 +357,7 @@ VAR(passthroughcube, 0, 1, 1);
 VAR(passthroughent, 0, 1, 1);
 VARF(passthrough, 0, 0, 1, { passthroughsel = passthrough; entcancel(); });
 VARP(selectionoffset, 0, 1, 1);
+FVARP(selectionthickness, 1.0, 2.0, 4.0);
 
 void rendereditcursor()
 {
@@ -520,8 +521,8 @@ void rendereditcursor()
         {
             offset = 2.0f;
         }
-        enablepolygonoffset(GL_POLYGON_OFFSET_LINE, offset);
     }
+    enablepolygonoffset(GL_POLYGON_OFFSET_LINE, offset);
 
     if(!moving && !hovering && !hidecursor)
     {
@@ -536,6 +537,7 @@ void rendereditcursor()
     if(havesel || moving)
     {
         d = dimension(sel.orient);
+        glLineWidth(selectionthickness);
         gle::colorub(50,50,50);   // grid
         boxsgrid(sel.orient, vec(sel.o), vec(sel.s), sel.grid);
         gle::colorub(200,0,0);    // 0 reference
@@ -553,6 +555,7 @@ void rendereditcursor()
         else
             gle::colorub(0,0,120);
         boxs3D(vec(sel.o), vec(sel.s), sel.grid);
+        glLineWidth(1.0f);
     }
 
     disablepolygonoffset(GL_POLYGON_OFFSET_LINE);

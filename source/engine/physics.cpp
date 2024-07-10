@@ -1823,6 +1823,20 @@ void modifygravity(physent *pl, bool water, int curtime)
 // moveres indicated the physics precision (which is lower for monsters and multiplayer prediction)
 // local is false for multiplayer prediction
 
+void collisiondetection(physent *pl, int moveres, vec &d)
+{
+    const float f = 1.0f/moveres;
+    int collisions = 0;
+    d.mul(f);
+    loopi(moveres)
+    {
+        if(!move(pl, d) && ++collisions<5)
+        {
+            i--; // discrete steps collision detection & sliding
+        }
+    }
+}
+
 bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 {
     if(!game::allowmove(pl)) return false;
@@ -1843,16 +1857,12 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
 
     pl->blocked = false;
 
-    if(!floating || ((gameent *)pl)->ghost)
-    {
-        const float f = 1.0f/moveres;
-        int collisions = 0;
-        d.mul(f);
-        loopi(moveres) if(!move(pl, d) && ++collisions<5) i--; // discrete steps collision detection & sliding
-
-    }
     if(floating)                // just apply velocity
     {
+        if(((gameent *)pl)->ghost)
+        {
+            collisiondetection(pl, moveres, d);
+        }
         if(pl->physstate != PHYS_FLOAT)
         {
             pl->physstate = PHYS_FLOAT;
@@ -1864,6 +1874,7 @@ bool moveplayer(physent *pl, int moveres, bool local, int curtime)
     else                        // apply velocity with collision
     {
         const int timeinair = pl->timeinair;
+        collisiondetection(pl, moveres, d);
         if(!pl->timeinair && !water) // if we land after long time must have been a high jump, make thud sound
         {
             pl->doublejumping = false; // now that we landed, double jump resets

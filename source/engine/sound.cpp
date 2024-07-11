@@ -488,9 +488,7 @@ void resetchannels()
     channels.shrink(0);
 }
 
-const int MAX_QUEUE_SOUNDS = 10; // queued sounds up to a maximum of 10
-int soundqueue[MAX_QUEUE_SOUNDS],  // define an array to store the sounds
-    queuedsounds = 0; // define a variable to keep track of the sounds in the queue
+int soundqueue[MAX_QUEUE], queuedsounds = 0; // keep track of the sounds in the queue
 
 void clear_sound()
 {
@@ -616,12 +614,12 @@ void syncchannels()
 void playqueuedsounds()
 {
     if(!queuedsounds) return;
-    playsound(soundqueue[0], NULL, NULL, NULL, SND_ANNOUNCER); // always play the first sound in the queue
-    for(int i = 1; i < queuedsounds; i++) // shift the remaining sounds down in the queue
+    playsound(soundqueue[0], NULL, NULL, NULL, SND_ANNOUNCER);
+    for(int i = 1; i < queuedsounds; i++)
     {
-        soundqueue[i-1] = soundqueue[i];
+        soundqueue[i - 1] = soundqueue[i]; // shift the remaining sounds down in the queue
     }
-    queuedsounds--; // decrement the count of sounds in the queue
+    queuedsounds--;
 }
 
 VARP(minimizedsounds, 0, 0, 1);
@@ -678,7 +676,7 @@ void preloadmapsounds()
 
 void queuesound(int n)
 {
-    if(queuedsounds < MAX_QUEUE_SOUNDS)
+    if(queuedsounds < MAX_QUEUE)
     {
         // add the sound to the queue and increment the count
         soundqueue[queuedsounds] = n;
@@ -788,13 +786,13 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
 
 void stopsounds(int exclude)
 {
+    queuedsounds = 0;
     loopv(channels) if(channels[i].inuse)
     {
         if(channels[i].flags & exclude) continue;
         Mix_HaltChannel(i);
         freechannel(i);
     }
-    queuedsounds = 0;
 }
 
 bool stopsound(int n, int chanid, int fade)
@@ -841,6 +839,7 @@ ICOMMAND(voicecom, "ssi", (const char *sound, char *text, int *team),
 void resetsound()
 {
     clearchanges(CHANGE_SOUND);
+    queuedsounds = 0;
     if(!nosound)
     {
         gamesounds.cleanupsamples();

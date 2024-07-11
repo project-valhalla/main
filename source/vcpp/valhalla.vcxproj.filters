@@ -297,6 +297,9 @@
     <ClInclude Include="..\engine\version.h">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="..\engine\sound.h">
+      <Filter>engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="valhalla.rc" />

@@ -121,6 +121,7 @@
 		<Unit filename="../engine/light.cpp" />
 		<Unit filename="../engine/light.h" />
 		<Unit filename="../engine/lightning.h" />
+		<Unit filename="../engine/liquid.cpp" />
 		<Unit filename="../engine/main.cpp" />
 		<Unit filename="../engine/material.cpp" />
 		<Unit filename="../engine/md2.h" />
@@ -152,6 +153,7 @@
 		<Unit filename="../engine/skelmodel.h" />
 		<Unit filename="../engine/smd.h" />
 		<Unit filename="../engine/sound.cpp" />
+		<Unit filename="../engine/sound.h" />
 		<Unit filename="../engine/stain.cpp" />
 		<Unit filename="../engine/textedit.h" />
 		<Unit filename="../engine/texture.cpp" />
@@ -159,7 +161,6 @@
 		<Unit filename="../engine/ui.cpp" />
 		<Unit filename="../engine/version.h" />
 		<Unit filename="../engine/vertmodel.h" />
-		<Unit filename="../engine/liquid.cpp" />
 		<Unit filename="../engine/world.cpp" />
 		<Unit filename="../engine/world.h" />
 		<Unit filename="../engine/worldio.cpp" />

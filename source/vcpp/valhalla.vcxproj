@@ -407,6 +407,7 @@
     <ClInclude Include="..\engine\light.h" />
     <ClInclude Include="..\engine\mpr.h" />
     <ClInclude Include="..\engine\octa.h" />
+    <ClInclude Include="..\engine\sound.h" />
     <ClInclude Include="..\engine\version.h" />
     <ClInclude Include="..\engine\world.h" />
     <ClInclude Include="..\engine\animmodel.h" />

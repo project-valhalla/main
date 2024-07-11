@@ -62,6 +62,8 @@
 #include "glemu.h"
 #endif
 
+#include "sound.h"
+
 #include "iengine.h"
 #include "igame.h"
 

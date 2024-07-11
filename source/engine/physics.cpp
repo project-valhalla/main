@@ -1797,7 +1797,7 @@ void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curt
         else if(pl->climbing) dir.mul(LADDER_VEL);
         else if(!water) dir.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (pl->physstate < PHYS_SLOPE ? 1.3f : 1.0f));
     }
-    float fric = water && !(pl->climbing && floating) ? 20.0f : (pl->physstate >= PHYS_SLOPE || pl->climbing || floating ? 4.0f : 25.0f);
+    float fric = water && !pl->climbing && !floating ? 20.0f : (pl->physstate >= PHYS_SLOPE || pl->climbing || floating ? 4.0f : 25.0f);
     pl->vel.lerp(dir, pl->vel, pow(1 - 1/fric, curtime/20.0f));
 }
 

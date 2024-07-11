@@ -905,42 +905,65 @@ namespace game
         return server::modename(gamemode, NULL);
     }
 
-    int footstepsound(int surface, int material)
-    {
-        if(material & MAT_WATER) return S_FOOTSTEP_WATER;
-        else if(material & MAT_GLASS) return S_FOOTSTEP_GLASS;
-        else switch(surface)
-        {
-            case 1: return S_FOOTSTEP_DIRT; break;
-            case 2: return S_FOOTSTEP_METAL; break;
-            case 3: return S_FOOTSTEP_WOOD; break;
-            case 4: return S_FOOTSTEP_DUCT; break;
-            case 5: return S_FOOTSTEP_SILKY; break;
-            case 6: return S_FOOTSTEP_SNOW; break;
-            case 7: return S_FOOTSTEP_ORGANIC; break;
-            case 8: return S_FOOTSTEP_GLASS; break;
-            case 9: return S_FOOTSTEP_WATER; break;
-            default: return S_FOOTSTEP; break;
-        }
-    }
-
-    VARP(footstepssound, 0, 1, 1);
+    VARP(footstepssounds, 0, 1, 1);
     VARP(footstepdelay, 1, 44000, 50000);
 
-    void footstep(physent *pl, int sound, bool silentcrouch = true)
+    void playfootstepsounds(gameent *d, int sound, bool hascrouchfootsteps = true)
     {
-        bool onfloor = pl->physstate >= PHYS_SLOPE || pl->climbing;
-        if(!footstepssound || !onfloor || (silentcrouch && pl->crouching) || pl->blocked)
+        bool isonfloor = d->physstate >= PHYS_SLOPE || d->climbing;
+        if(!footstepssounds || !isonfloor || (hascrouchfootsteps && d->crouching) || d->blocked)
         {
             return;
         }
-        gameent *d = (gameent *)pl;
         if(d->move || d->strafe)
         {
             if(lastmillis - d->lastfootstep < (footstepdelay / fmax(d->vel.magnitude(), 1))) return;
-            else playsound(sound, d);
+            playsound(sound, d);
         }
         d->lastfootstep = lastmillis;
+    }
+
+    struct footstepinfo
+    {
+        int sound;
+        bool hascrouchfootsteps;
+    };
+
+    footstepinfo footstepsound(gameent *d)
+    {
+        footstepinfo foot;
+        if(lookupmaterial(d->feetpos(-1)) & MAT_GLASS)
+        {
+            foot.sound = S_FOOTSTEP_GLASS;
+            foot.hascrouchfootsteps = false;
+        }
+        else if(lookupmaterial(d->feetpos()) & MAT_WATER)
+        {
+            foot.sound = S_FOOTSTEP_WATER;
+            foot.hascrouchfootsteps = true;
+        }
+        else
+        {
+            int texture = lookuptextureeffect(d->feetpos(-1));
+            foot.sound = textureeffects[texture].footstepsound;
+            foot.hascrouchfootsteps = textureeffects[texture].hascrouchfootsteps;
+        }
+        return foot;
+    }
+
+    void triggerfootsteps(gameent *d, bool islanding)
+    {
+        footstepinfo foot = footstepsound(d);
+        if(islanding)
+        {
+            // just send the landing sound effect (single footstep)
+            msgsound(foot.sound, d);
+        }
+        else
+        {
+            // manage additional conditions and timing for walking sounds
+            playfootstepsounds(d, foot.sound, foot.hascrouchfootsteps);
+        }
     }
 
     void triggerphysicsevent(physent *pl, int event, int material, vec origin)
@@ -964,10 +987,7 @@ namespace game
             case PHYSEVENT_FOOTSTEP:
             {
                 if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
-                int surface = lookuptextureeffect(pl->feetpos(-1)),
-                    sound = footstepsound(surface, lookupmaterial(pl->feetpos()));
-                if(event == PHYSEVENT_FOOTSTEP) footstep(pl, sound, surface != 4 && surface != 9);
-                else msgsound(sound, pl);
+                triggerfootsteps(e, event != PHYSEVENT_FOOTSTEP);
                 e->lastfootleft = e->lastfootright = vec(-1, -1, -1);
                 break;
             }

@@ -962,7 +962,6 @@ namespace game
                 particle_splash(PART_SMOKE, 30, 180, to, 0x444444, 2.20f, 80, 100);
                 addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
                 break;
-
             }
 
             case ATK_PULSE2:

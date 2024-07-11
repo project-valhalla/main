@@ -36,6 +36,40 @@ enum
     ZOOM_SCOPE
 };
 
+enum
+{
+    TEXEFFECT_GENERIC = 0,
+    TEXEFFECT_DIRT,
+    TEXEFFECT_METAL,
+    TEXEFFECT_WOOD,
+    TEXEFFECT_DUCT,
+    TEXEFFECT_SILKY,
+    TEXEFFECT_SNOW,
+    TEXEFFECT_ORGANIC,
+    TEXEFFECT_GLASS,
+    TEXEFFECT_WATER
+};
+
+static const struct textureeffect
+{
+    const char *name;
+    int id;
+    bool hascrouchfootsteps;
+    int footstepsound;
+} textureeffects[] =
+{
+    {"generic", TEXEFFECT_GENERIC, true,  S_FOOTSTEP         },
+    {"dirt",    TEXEFFECT_DIRT,    true,  S_FOOTSTEP_DIRT    },
+    {"metal",   TEXEFFECT_METAL,   true,  S_FOOTSTEP_METAL   },
+    {"wood",    TEXEFFECT_WOOD,    true,  S_FOOTSTEP_WOOD    },
+    {"duct",    TEXEFFECT_DUCT,    false, S_FOOTSTEP_DUCT    },
+    {"silky",   TEXEFFECT_SILKY,   true,  S_FOOTSTEP_SILKY   },
+    {"snow",    TEXEFFECT_SNOW,    true,  S_FOOTSTEP_SNOW    },
+    {"organic", TEXEFFECT_ORGANIC, true,  S_FOOTSTEP_ORGANIC },
+    {"glass",   TEXEFFECT_GLASS,   true,  S_FOOTSTEP_GLASS   },
+    {"water",   TEXEFFECT_WATER,   false, S_FOOTSTEP_WATER   }
+};
+
 namespace game
 {
     extern void parseoptions(vector<const char *> &args);

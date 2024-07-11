@@ -641,22 +641,6 @@ struct Texture
 
 enum
 {
-    TEXEFFECT_GENERIC = 0,
-    TEXEFFECT_DIRT,
-    TEXEFFECT_METAL,
-    TEXEFFECT_WOOD,
-    TEXEFFECT_DUCT,
-    TEXEFFECT_SILKY,
-    TEXEFFECT_SNOW,
-    TEXEFFECT_ORGANIC,
-    TEXEFFECT_GLASS,
-    TEXEFFECT_WATER
-};
-
-extern int findtexeffect(const char *name);
-
-enum
-{
     TEX_DIFFUSE = 0,
     TEX_NORMAL,
     TEX_GLOW,
@@ -897,6 +881,8 @@ struct cubemapside
     const char *name;
     bool flipx, flipy, swapxy;
 };
+
+extern int findtextureeffect(const char *name);
 
 extern const texrotation texrotations[8];
 extern const cubemapside cubemapsides[6];

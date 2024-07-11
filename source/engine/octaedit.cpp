@@ -2379,7 +2379,7 @@ void veffect(char *name)
 {
     if(noedit()) return;
     VSlot ds;
-    int effect = findtexeffect(name);
+    int effect = findtextureeffect(name);
     if(ds.effect == effect) return;
     ds.changed = 1 << VSLOT_EFFECT;
     ds.effect = effect;

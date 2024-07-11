@@ -2636,34 +2636,6 @@ void texture(char *type, char *name, int *rot, int *xoffset, int *yoffset, float
 COMMAND(texture, "ssiiif");
 ICOMMAND(numdecalslots, "", (), { intret(decalslots.length()); });
 
-const struct texeffect
-{
-    const char *name;
-    int id;
-} texeffects[] =
-{
-    {"0",       TEXEFFECT_GENERIC },
-    {"generic", TEXEFFECT_GENERIC },
-    {"dirt",    TEXEFFECT_DIRT    },
-    {"metal",   TEXEFFECT_METAL   },
-    {"wood",    TEXEFFECT_WOOD    },
-    {"duct",    TEXEFFECT_DUCT    },
-    {"silky",   TEXEFFECT_SILKY   },
-    {"snow",    TEXEFFECT_SNOW    },
-    {"organic", TEXEFFECT_ORGANIC },
-    {"glass",   TEXEFFECT_GLASS   },
-    {"water",   TEXEFFECT_WATER   }
-};
-
-int findtexeffect(const char *name)
-{
-    loopi(sizeof(texeffects)/sizeof(texeffect))
-    {
-        if(!strcmp(texeffects[i].name, name)) return texeffects[i].id;
-    }
-    return 0;
-}
-
 void texgrass(char *name)
 {
     if(!defslot) return;
@@ -2768,11 +2740,19 @@ void texsmooth(int *id, int *angle)
 COMMAND(texsmooth, "ib");
 ICOMMAND(getvsmooth, "i", (int *tex), intret(lookupvslot(*tex, false).slot->smooth));
 
+int findtextureeffect(const char *name)
+{
+    loopi(sizeof(textureeffects)/sizeof(textureeffect))
+    {
+        if(!strcmp(textureeffects[i].name, name)) return textureeffects[i].id;
+    }
+    return 0;
+}
 void texeffect(char *name)
 {
     if(!defslot) return;
     Slot &s = *defslot;
-    int effect = findtexeffect(name);
+    int effect = findtextureeffect(name);
     if(s.variants->effect == effect) return;
     s.variants->effect = effect;
     propagatevslot(s.variants, 1 << VSLOT_EFFECT);

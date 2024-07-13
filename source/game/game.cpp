@@ -209,7 +209,7 @@ namespace game
         d->roll = d->newroll;
         if(move)
         {
-            moveplayer(d, 1, false);
+            physics::moveplayer(d, 1, false);
             d->newpos = d->o;
         }
         float k = 1.0f - float(lastmillis - d->smoothmillis)/smoothmove;
@@ -249,11 +249,11 @@ namespace game
             }
             if(d->state==CS_ALIVE || d->state==CS_EDITING)
             {
-                crouchplayer(d, 10, false);
+                physics::crouchplayer(d, 10, false);
                 if(smoothmove && d->smoothmillis>0) predictplayer(d, true);
-                else moveplayer(d, 1, false);
+                else physics::moveplayer(d, 1, false);
             }
-            else if(d->state==CS_DEAD && !d->ragdoll && lastmillis-d->lastpain<2000) moveplayer(d, 1, true);
+            else if(d->state==CS_DEAD && !d->ragdoll && lastmillis-d->lastpain<2000) physics::moveplayer(d, 1, true);
         }
     }
 
@@ -274,7 +274,7 @@ namespace game
             return;
         }
 
-        physicsframe();
+        physics::physicsframe();
         ai::navigate();
         if(self->state == CS_ALIVE && !intermission)
         {
@@ -297,7 +297,7 @@ namespace game
                 else if(lastmillis-self->lastpain<2000)
                 {
                     self->move = self->strafe = 0;
-                    moveplayer(self, 10, true);
+                    physics::moveplayer(self, 10, true);
                 }
                 if(lastmillis - self->lastpain > (cmode ? cmode->respawnwait(self, true) : DELAY_RESPAWN))
                 {
@@ -312,13 +312,13 @@ namespace game
             else if(!intermission)
             {
                 if(self->ragdoll) cleanragdoll(self);
-                crouchplayer(self, 10, true);
-                moveplayer(self, 10, true);
+                physics::crouchplayer(self, 10, true);
+                physics::moveplayer(self, 10, true);
                 swayhudgun(curtime);
                 entities::checkitems(self);
                 if(cmode) cmode->checkitems(self);
             }
-            else if(self->state == CS_SPECTATOR) moveplayer(self, 10, true);
+            else if(self->state == CS_SPECTATOR) physics::moveplayer(self, 10, true);
         }
         int mat = lookupmaterial(camera1->o);
         if(self->state!=CS_EDITING && mat&MAT_WATER) waterchan = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterchan);
@@ -901,133 +901,6 @@ namespace game
     const char *getscreenshotinfo()
     {
         return server::modename(gamemode, NULL);
-    }
-
-    VARP(footstepssounds, 0, 1, 1);
-    VARP(footstepdelay, 1, 44000, 50000);
-
-    void playfootstepsounds(gameent *d, int sound, bool hascrouchfootsteps = true)
-    {
-        bool isonfloor = d->physstate >= PHYS_SLOPE || d->climbing;
-        if(!footstepssounds || !isonfloor || (hascrouchfootsteps && d->crouching) || d->blocked)
-        {
-            return;
-        }
-        if(d->move || d->strafe)
-        {
-            if(lastmillis - d->lastfootstep < (footstepdelay / fmax(d->vel.magnitude(), 1))) return;
-            playsound(sound, d);
-        }
-        d->lastfootstep = lastmillis;
-    }
-
-    struct footstepinfo
-    {
-        int sound;
-        bool hascrouchfootsteps;
-    };
-
-    footstepinfo footstepsound(gameent *d)
-    {
-        footstepinfo foot;
-        if(lookupmaterial(d->feetpos(-1)) & MAT_GLASS)
-        {
-            foot.sound = S_FOOTSTEP_GLASS;
-            foot.hascrouchfootsteps = false;
-        }
-        else if(lookupmaterial(d->feetpos()) & MAT_WATER)
-        {
-            foot.sound = S_FOOTSTEP_WATER;
-            foot.hascrouchfootsteps = true;
-        }
-        else
-        {
-            int texture = lookuptextureeffect(d->feetpos(-1));
-            foot.sound = textureeffects[texture].footstepsound;
-            foot.hascrouchfootsteps = textureeffects[texture].hascrouchfootsteps;
-        }
-        return foot;
-    }
-
-    void triggerfootsteps(gameent *d, bool islanding)
-    {
-        footstepinfo foot = footstepsound(d);
-        if(islanding)
-        {
-            // just send the landing sound effect (single footstep)
-            msgsound(foot.sound, d);
-        }
-        else
-        {
-            // manage additional conditions and timing for walking sounds
-            playfootstepsounds(d, foot.sound, foot.hascrouchfootsteps);
-        }
-    }
-
-    void triggerphysicsevent(physent *pl, int event, int material, vec origin)
-    {
-        if(pl->state > CS_DEAD) return;
-        gameent *e = (gameent *)pl;
-        switch(event)
-        {
-            case PHYSEVENT_JUMP:
-            {
-                if(material & MAT_WATER || !(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai))
-                {
-                    break;
-                }
-                if(!pl->timeinair) msgsound(S_JUMP1, pl);
-                else msgsound(S_JUMP2, pl);
-                break;
-            }
-
-            case PHYSEVENT_LAND_SHORT:
-            case PHYSEVENT_FOOTSTEP:
-            {
-                if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
-                triggerfootsteps(e, event != PHYSEVENT_FOOTSTEP);
-                e->lastfootleft = e->lastfootright = vec(-1, -1, -1);
-                break;
-            }
-
-            case PHYSEVENT_LAND_MEDIUM:
-            {
-                if(!(pl == self || pl->type != ENT_PLAYER || ((gameent *)pl)->ai)) break;
-                msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, pl);
-                e->lastland = lastmillis;
-                e->lastfootleft = e->lastfootright = vec(-1, -1, -1);
-                break;
-            }
-
-            case PHYSEVENT_RAGDOLL_COLLIDE:
-            {
-                playsound(S_CORPSE, NULL, origin.iszero() ? (pl == self ? NULL : &pl->o) : &origin);
-                break;
-            }
-
-            case PHYSEVENT_LIQUID_IN:
-            {
-                playsound(material == MAT_LAVA ? S_LAVA_IN : S_WATER_IN, NULL, origin.iszero() ? (pl == self ? NULL : &pl->o) : &origin);
-                break;
-            }
-
-            case PHYSEVENT_LIQUID_OUT:
-            {
-                if(material == MAT_LAVA) break;
-                playsound(S_WATER_OUT, NULL, origin.iszero() ? (pl == self ? NULL : &pl->o) : &origin);
-                break;
-            }
-
-            default: break;
-        }
-    }
-
-    void dynentcollide(physent *d, physent *o, const vec &dir)
-    {
-        if(d->type == ENT_AI)
-        {
-            if(dir.z > 0) stackmonster((monster *)d, o);
-        }
     }
 
     void msgsound(int n, physent *d)

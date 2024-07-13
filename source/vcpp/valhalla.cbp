@@ -179,6 +179,7 @@
 		</Unit>
 		<Unit filename="../game/gameclient.cpp" />
 		<Unit filename="../game/gamemode.h" />
+		<Unit filename="../game/gamephysics.cpp" />
 		<Unit filename="../game/gameserver.cpp" />
 		<Unit filename="../game/monster.cpp" />
 		<Unit filename="../game/monster.h" />

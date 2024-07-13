@@ -456,12 +456,12 @@ void ragdolldata::move(dynent *pl, float ts)
 
     int material = lookupmaterial(vec(center.x, center.y, center.z + radius/2));
     bool water = isliquid(material&MATF_VOLUME);
-    if(!pl->inwater && water) game::triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material&MATF_VOLUME, pl->ragdoll->center);
+    if(!pl->inwater && water) physics::triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material&MATF_VOLUME, pl->ragdoll->center);
     else if(pl->inwater && !water)
     {
         material = lookupmaterial(center);
         water = isliquid(material&MATF_VOLUME);
-        if(!water) game::triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater, pl->ragdoll->center);
+        if(!water) physics::triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater, pl->ragdoll->center);
     }
     pl->inwater = water ? material&MATF_VOLUME : MAT_AIR;
 
@@ -510,7 +510,7 @@ void ragdolldata::move(dynent *pl, float ts)
             collidemillis = lastmillis + (water ? ragdollwaterexpireoffset : ragdollexpireoffset);
             if(!water && lastmillis - pl->ragdoll->lastcollision > 500)
             {
-                game::triggerphysicsevent(pl, PHYSEVENT_RAGDOLL_COLLIDE, 0, pl->ragdoll->center);
+                physics::triggerphysicsevent(pl, PHYSEVENT_RAGDOLL_COLLIDE, 0, pl->ragdoll->center);
                 pl->ragdoll->lastcollision = lastmillis;
             }
         }

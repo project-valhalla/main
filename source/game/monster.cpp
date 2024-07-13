@@ -1,7 +1,7 @@
 // monster.h: implements AI for invasion monsters, currently client only
 #include "game.h"
 
-extern int physsteps;
+
 
 namespace game
 {
@@ -305,9 +305,9 @@ namespace game
                     if(dist<16) entities::teleport(teleports[i], this);
                 }
 
-                if(physsteps > 0) stacked = NULL;
-                moveplayer(this, 1, true); // use physics to move monster
-                crouchplayer(this, 1, true);
+                if(physics::physsteps > 0) stacked = NULL;
+                physics::moveplayer(this, 1, true); // use physics to move monster
+                physics::crouchplayer(this, 1, true);
             }
         }
 
@@ -579,7 +579,7 @@ namespace game
                 if(lastmillis - m->lastpain < 2000)
                 {
                     m->move = m->strafe = 0;
-                    moveplayer(m, 1, true);
+                    physics::moveplayer(m, 1, true);
                 }
                 if(m->ragdoll) moveragdoll(m);
             }

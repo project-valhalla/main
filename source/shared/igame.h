@@ -28,6 +28,23 @@ namespace entities
     extern vector<extentity *> &getents();
 }
 
+// physics
+namespace physics
+{
+    extern void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime);
+    extern void moveplayer(physent* pl, int moveres, bool local);
+    extern void crouchplayer(physent* pl, int moveres, bool local);
+    extern void physicsframe();
+    extern void updatephysstate(physent* d);
+    extern void triggerphysicsevent(physent* pl, int event, int material = 0, vec origin = vec(0, 0, 0));
+    extern void dynentcollide(physent* d, physent* o, const vec& dir);
+
+    extern bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float grav);
+    extern bool isbouncing(physent* d, float elasticity, float waterfric, float grav);
+
+    extern int physsteps;
+}
+
 // game
 enum
 {
@@ -85,9 +102,7 @@ namespace game
     extern void forceedit(const char *name);
     extern void loadconfigs();
     extern void updateworld();
-    extern void dynentcollide(physent *d, physent *o, const vec &dir);
     extern void initclient();
-    extern void triggerphysicsevent(physent *pl, int event, int material = 0, vec origin = vec(0, 0, 0));
     extern void bounced(physent *d, const vec &surface);
     extern void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0, const VSlot *vs = NULL);
     extern void vartrigger(ident *id);

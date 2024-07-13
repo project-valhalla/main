@@ -375,7 +375,7 @@ namespace game
                 {
                     int qtime = min(80, rtime);
                     rtime -= qtime;
-                    if((bnc.lifetime -= qtime)<0 || bounce(&bnc, qtime/1000.0f, 0.5f, 0.4f, 0.7f))
+                    if((bnc.lifetime -= qtime)<0 || physics::hasbounced(&bnc, qtime/1000.0f, 0.5f, 0.4f, 0.7f))
                     {
                         destroyed = true;
                         break;
@@ -384,7 +384,7 @@ namespace game
             }
             else if(isweaponbouncer(bnc.bouncetype))
             {
-                destroyed = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity)
+                destroyed = physics::isbouncing(&bnc, bnc.elasticity, 0.5f, bnc.gravity)
                             || (bnc.lifetime -= time) < 0
                             || isdeadly(lookupmaterial(bnc.o) & MAT_LAVA)
                             || ((bnc.bouncetype == BNC_GRENADE2 && bnc.bounces >= 1)

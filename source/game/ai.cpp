@@ -1313,7 +1313,7 @@ namespace ai
             if(!intermission)
             {
                 if(d->ragdoll) cleanragdoll(d);
-                moveplayer(d, 10, true);
+                physics::moveplayer(d, 10, true);
                 if(allowmove && !b.idle) timeouts(d, b);
                 if(d->state==CS_ALIVE && d->role != ROLE_ZOMBIE)
                 {
@@ -1332,7 +1332,7 @@ namespace ai
             else if(lastmillis-d->lastpain<2000)
             {
                 d->move = d->strafe = 0;
-                moveplayer(d, 10, false);
+                physics::moveplayer(d, 10, false);
             }
         }
         d->attacking = ACT_IDLE;

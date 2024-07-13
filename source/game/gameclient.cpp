@@ -1448,7 +1448,7 @@ namespace game
                 d->vel = vel;
                 d->falling = falling;
                 d->physstate = physstate&7;
-                updatephysstate(d);
+                physics::updatephysstate(d);
                 updatepos(d);
                 if(smoothmove && d->smoothmillis>=0 && oldpos.dist(d->o) < smoothdist)
                 {

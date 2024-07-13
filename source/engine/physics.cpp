@@ -595,7 +595,7 @@ bool plcollide(physent *d, const vec &dir, bool insideplayercol)    // collide w
             if(plcollide(d, dir, o))
             {
                 collideplayer = o;
-                physics::dynentcollide(d, o, collidewall);
+                physics::collidewithdynamicentity(d, o, collidewall);
                 return true;
             }
             if(collideinside > lastinside)
@@ -608,7 +608,7 @@ bool plcollide(physent *d, const vec &dir, bool insideplayercol)    // collide w
     if(insideplayer && insideplayercol)
     {
         collideplayer = insideplayer;
-        physics::dynentcollide(d, insideplayer, vec(0, 0, 0));
+        physics::collidewithdynamicentity(d, insideplayer, vec(0, 0, 0));
         return true;
     }
     return false;

@@ -304,7 +304,7 @@ namespace game
                 basetime = lastaction;
             }
 
-            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((game::allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
             else
             {
                 static const int dirs[9] =
@@ -374,9 +374,9 @@ namespace game
                 basetime = lastaction;
             }
 
-            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((game::allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
             else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
-            else if(game::allowmove(d) && (d->move || d->strafe))
+            else if(allowmove(d) && (d->move || d->strafe))
             {
                 if(d->move>0) anim |= (ANIM_RUN_N|ANIM_LOOP)<<ANIM_SECONDARY;
                 else if(d->strafe)

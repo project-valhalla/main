@@ -31,18 +31,8 @@ namespace entities
 // physics
 namespace physics
 {
-    extern void modifyvelocity(physent *pl, bool local, bool water, bool floating, int curtime);
-    extern void moveplayer(physent* pl, int moveres, bool local);
-    extern void crouchplayer(physent* pl, int moveres, bool local);
-    extern void physicsframe();
-    extern void updatephysstate(physent* d);
     extern void triggerphysicsevent(physent* pl, int event, int material = 0, vec origin = vec(0, 0, 0));
-    extern void dynentcollide(physent* d, physent* o, const vec& dir);
-
-    extern bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float grav);
-    extern bool isbouncing(physent* d, float elasticity, float waterfric, float grav);
-
-    extern int physsteps;
+    extern void collidewithdynamicentity(physent* d, physent* o, const vec& dir);
 }
 
 // game
@@ -107,8 +97,6 @@ namespace game
     extern void edittrigger(const selinfo &sel, int op, int arg1 = 0, int arg2 = 0, int arg3 = 0, const VSlot *vs = NULL);
     extern void vartrigger(ident *id);
     extern void resetgamestate();
-    extern void hurt(physent *d);
-    extern void suicide(physent *d);
     extern void newmap(int size);
     extern void startmap(const char *name);
     extern void preload();
@@ -129,9 +117,6 @@ namespace game
     extern bool ispaused();
     extern bool allowmouselook();
     extern bool intermission;
-    extern bool canjump();
-    extern bool cancrouch();
-    extern bool allowmove(physent *d);
     extern bool needminimap();
     extern bool isfirstpersondeath();
     extern bool allowthirdperson();

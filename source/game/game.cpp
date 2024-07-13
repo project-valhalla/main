@@ -408,23 +408,10 @@ namespace game
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
 
-    bool canjump()
+    bool allowmove(physent* d)
     {
-        if(!connected || intermission) return false;
-        respawn();
-        return self->state!=CS_DEAD;
-    }
-
-    bool cancrouch()
-    {
-        if(!connected || intermission) return false;
-        return self->state!=CS_DEAD;
-    }
-
-    bool allowmove(physent *d)
-    {
-        if(d->type!=ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(gore && ((gameent *)d)->gibbed());
+        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
+        return !intermission && !(gore && ((gameent*)d)->gibbed());
     }
 
     bool isally(gameent *a, gameent *b)
@@ -448,6 +435,12 @@ namespace game
         return self->state==CS_SPECTATOR || m_edit || (m_berserker && self->role == ROLE_BERSERKER);
     }
     ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
+
+    bool allowmove(gameent* d)
+    {
+        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
+        return !intermission && !(gore && ((gameent*)d)->gibbed());
+    }
 
     bool editing() { return m_edit; }
 
@@ -980,34 +973,36 @@ namespace game
         else return "\ff";
     }
 
-    void hurt(physent *d)
+    void hurt(gameent *d)
     {
         if(m_mp(gamemode)) return;
-        if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
+        if(d == self || (d->type == ENT_PLAYER && d->ai))
         {
-            if(d->state!=CS_ALIVE) return;
-            gameent *pl = (gameent *)d;
-            if((pl->lasthurt && lastmillis - pl->lasthurt < DELAY_ENVDAM) || pl->haspowerup(PU_INVULNERABILITY)) return;
-            damaged(DAM_ENV, pl->o, pl, pl, -1, HIT_MATERIAL, true);
-            pl->lasthurt = lastmillis;
+            if(d->state != CS_ALIVE) return;
+            if((d->lasthurt && lastmillis - d->lasthurt < DELAY_ENVDAM) || d->haspowerup(PU_INVULNERABILITY)) return;
+            damaged(DAM_ENV, d->o, d, d, -1, HIT_MATERIAL, true);
+            d->lasthurt = lastmillis;
         }
     }
 
-    void suicide(physent *d)
+    void suicide(gameent *d)
     {
         if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
         {
             if(d->state!=CS_ALIVE) return;
-            gameent *pl = (gameent *)d;
-            if(!m_mp(gamemode)) kill(pl, pl, -1);
+            if(!m_mp(gamemode)) kill(d, d, -1);
             else
             {
-                int seq = (pl->lifesequence<<16)|((lastmillis/1000)&0xFFFF);
-                if(pl->suicided!=seq) { addmsg(N_SUICIDE, "rc", pl); pl->suicided = seq; }
+                int seq = (d->lifesequence<<16) | ((lastmillis / 1000) & 0xFFFF);
+                if(d->suicided!=seq)
+                { 
+                    addmsg(N_SUICIDE, "rc", d);
+                    d->suicided = seq;
+                }
             }
-            if(pl->deathtype != mapdeath) pl->deathtype = mapdeath;
+            if(d->deathtype != mapdeath) d->deathtype = mapdeath;
         }
-        else if(d->type==ENT_AI) suicidemonster((monster *)d);
+        else if(d->type == ENT_AI) suicidemonster((monster *)d);
     }
     ICOMMAND(suicide, "", (), suicide(self));
 

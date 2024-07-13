@@ -554,6 +554,19 @@ namespace entities
     extern void jumppadeffects(gameent *d, int jp, bool local = true);
 }
 
+namespace physics
+{
+    extern void moveplayer(gameent* pl, int moveres, bool local);
+    extern void crouchplayer(gameent* pl, int moveres, bool local);
+    extern void physicsframe();
+    extern void updatephysstate(gameent* d);
+
+    extern bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float grav);
+    extern bool isbouncing(physent* d, float elasticity, float waterfric, float grav);
+
+    extern int physsteps;
+}
+
 namespace game
 {
     extern int gamemode, mutators;
@@ -587,7 +600,7 @@ namespace game
     extern clientmode *cmode;
     extern void setclientmode();
 
-    // game
+    // game.cpp
     extern int vooshgun;
     extern string clientmap;
     extern int maptime, maprealtime, maplimit;
@@ -600,6 +613,7 @@ namespace game
 
     extern bool clientoption(const char *arg);
     extern bool gamewaiting, betweenrounds, hunterchosen;
+    extern bool allowmove(physent* d);
     extern bool isally(gameent *a, gameent *b);
     extern bool isinvulnerable(gameent *target, gameent *actor);
 
@@ -621,6 +635,7 @@ namespace game
     extern void startgame();
     extern void spawnplayer(gameent *d);
     extern void spawneffect(gameent *d);
+    extern void respawn();
     extern void deathstate(gameent *d, bool restore = false);
     extern void damagehud(int damage, gameent *d, gameent *actor);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
@@ -631,10 +646,12 @@ namespace game
     extern void msgsound(int n, physent *d = NULL);
     extern void doaction(int act);
     extern void addroll(gameent *d, float amount);
+    extern void hurt(gameent* d);
+    extern void suicide(gameent* d);
     const char *mastermodecolor(int n, const char *unknown);
     const char *mastermodeicon(int n, const char *unknown);
 
-    // client
+    // client.cpp
     extern bool connected, remote, demoplayback;
     extern bool isignored(int cn);
 
@@ -659,7 +676,7 @@ namespace game
     extern void sendposition(gameent *d, bool reliable = false);
     extern void forceintermission();
 
-    // weapon
+    // weapon.cpp
     extern int getweapon(const char *name);
     extern void shoot(gameent *d, const vec &targ);
     extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
@@ -685,7 +702,7 @@ namespace game
     extern void removeprojectiles(gameent* owner = NULL);
     extern void avoidprojectiles(ai::avoidset &obstacles, float radius);
 
-    // monster
+    // monster.cpp
     struct monster;
     extern vector<monster *> monsters;
 
@@ -703,14 +720,14 @@ namespace game
     extern void spsummary(int accuracy);
     extern int getbloodcolor(dynent *d);
 
-    // scoreboard
+    // scoreboard.cpp
     extern void getbestplayers(vector<gameent *> &best);
     extern void getbestteams(vector<int> &best);
     extern void clearteaminfo();
     extern void setteaminfo(int team, int frags);
     extern void removegroupedplayer(gameent *d);
 
-    // render
+    // render.cpp
     struct playermodelinfo
     {
         const char *directory, *armdirectory, *powerup[5];

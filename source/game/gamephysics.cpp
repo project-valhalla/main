@@ -9,7 +9,7 @@ namespace physics
     const float SLOPEZ = 0.5f;
     const float WALLZ = 0.2f;
 
-    void recalcdir(physent* d, const vec& oldvel, vec& dir)
+    void recalculatedirection(gameent* d, const vec& oldvel, vec& dir)
     {
         float speed = oldvel.magnitude();
         if (speed > 1e-6f)
@@ -21,7 +21,7 @@ namespace physics
         }
     }
 
-    void slideagainst(physent* d, vec& dir, const vec& obstacle, bool foundfloor, bool slidecollide)
+    void slideagainst(gameent* d, vec& dir, const vec& obstacle, bool foundfloor, bool slidecollide)
     {
         vec wall(obstacle);
         if (foundfloor ? wall.z > 0 : slidecollide)
@@ -33,10 +33,10 @@ namespace physics
         oldvel.add(d->falling);
         d->vel.project(wall);
         d->falling.project(wall);
-        recalcdir(d, oldvel, dir);
+        recalculatedirection(d, oldvel, dir);
     }
 
-    void switchfloor(physent* d, vec& dir, const vec& floor)
+    void switchfloor(gameent* d, vec& dir, const vec& floor)
     {
         if (floor.z >= FLOORZ) d->falling = vec(0, 0, 0);
 
@@ -49,10 +49,10 @@ namespace physics
         }
         else d->vel.projectxy(floor);
         d->falling.project(floor);
-        recalcdir(d, oldvel, dir);
+        recalculatedirection(d, oldvel, dir);
     }
 
-    bool trystepup(physent* d, vec& dir, const vec& obstacle, float maxstep, const vec& floor)
+    bool trystepup(gameent* d, vec& dir, const vec& obstacle, float maxstep, const vec& floor)
     {
         vec old(d->o), stairdir = (obstacle.z >= 0 && obstacle.z < SLOPEZ ? vec(-obstacle.x, -obstacle.y, 0) : vec(dir.x, dir.y, 0)).rescale(1);
         bool cansmooth = true;
@@ -144,7 +144,7 @@ namespace physics
         return false;
     }
 
-    bool trystepdown(physent* d, vec& dir, float step, float xy, float z, bool init = false)
+    bool retrystepdown(gameent* d, vec& dir, float step, float xy, float z, bool init = false)
     {
         vec stepdir(dir.x, dir.y, 0);
         stepdir.z = -stepdir.magnitude2() * z / xy;
@@ -195,9 +195,9 @@ namespace physics
         return false;
     }
 
-    bool trystepdown(physent* d, vec& dir, bool init = false)
+    bool trystepdown(gameent* d, vec& dir, bool init = false)
     {
-        if ((!d->move && !d->strafe) || !game::allowmove(d)) return false;
+        if ((!d->move && !d->strafe) || !allowmove(d)) return false;
         vec old(d->o);
         d->o.z -= STAIRHEIGHT;
         d->zmargin = -STAIRHEIGHT;
@@ -212,16 +212,16 @@ namespace physics
         float step = dir.magnitude();
 #if 1
         // Weaker check, just enough to avoid hopping up slopes.
-        if (trystepdown(d, dir, step, 4, 1, init)) return true;
+        if (retrystepdown(d, dir, step, 4, 1, init)) return true;
 #else
-        if (trystepdown(d, dir, step, 2, 1, init)) return true;
-        if (trystepdown(d, dir, step, 1, 1, init)) return true;
-        if (trystepdown(d, dir, step, 1, 2, init)) return true;
+        if (retrystepdown(d, dir, step, 2, 1, init)) return true;
+        if (retrystepdown(d, dir, step, 1, 1, init)) return true;
+        if (retrystepdown(d, dir, step, 1, 2, init)) return true;
 #endif
         return false;
     }
 
-    void falling(physent* d, vec& dir, const vec& floor)
+    void fall(gameent* d, vec& dir, const vec& floor)
     {
         if (d->climbing)
         {
@@ -241,7 +241,7 @@ namespace physics
         }
     }
 
-    void landing(physent* d, vec& dir, const vec& floor, bool collided)
+    void land(gameent* d, vec& dir, const vec& floor, bool collided)
     {
 #if 0
         if (d->physstate == PHYS_FALL)
@@ -257,7 +257,7 @@ namespace physics
         d->floor = floor;
     }
 
-    bool findfloor(physent* d, const vec& dir, bool collided, const vec& obstacle, bool& slide, vec& floor)
+    bool findfloor(gameent* d, const vec& dir, bool collided, const vec& obstacle, bool& slide, vec& floor)
     {
         bool found = false;
         vec moved(d->o);
@@ -305,7 +305,7 @@ namespace physics
                 if (floor.z >= SLOPEZ && floor.z < 1.0f) found = true;
             }
         }
-    foundfloor:
+        foundfloor:
         if (collided && (!found || obstacle.z > floor.z))
         {
             floor = obstacle;
@@ -318,48 +318,48 @@ namespace physics
     const int CROUCH_TIME = 200;
     const float CROUCH_SPEED = 0.4f;
 
-    void crouchplayer(physent* pl, int moveres, bool local)
+    void crouchplayer(gameent* d, int moveres, bool local)
     {
         if (!curtime) return;
-        float minheight = pl->maxheight * CROUCH_HEIGHT, speed = (pl->maxheight - minheight) * curtime / float(CROUCH_TIME);
-        if (pl->crouching < 0)
+        float minheight = d->maxheight * CROUCH_HEIGHT, speed = (d->maxheight - minheight) * curtime / float(CROUCH_TIME);
+        if (d->crouching < 0)
         {
-            if (pl->eyeheight > minheight)
+            if (d->eyeheight > minheight)
             {
-                float diff = min(pl->eyeheight - minheight, speed);
-                pl->eyeheight -= diff;
-                if (pl->physstate >= PHYS_FALL)
+                float diff = min(d->eyeheight - minheight, speed);
+                d->eyeheight -= diff;
+                if (d->physstate >= PHYS_FALL)
                 {
-                    pl->o.z -= diff;
-                    pl->newpos.z -= diff;
+                    d->o.z -= diff;
+                    d->newpos.z -= diff;
                 }
             }
         }
-        else if (pl->eyeheight < pl->maxheight)
+        else if (d->eyeheight < d->maxheight)
         {
-            float diff = min(pl->maxheight - pl->eyeheight, speed), step = diff / moveres;
-            pl->eyeheight += diff;
-            if (pl->physstate >= PHYS_FALL)
+            float diff = min(d->maxheight - d->eyeheight, speed), step = diff / moveres;
+            d->eyeheight += diff;
+            if (d->physstate >= PHYS_FALL)
             {
-                pl->o.z += diff;
-                pl->newpos.z += diff;
+                d->o.z += diff;
+                d->newpos.z += diff;
             }
-            pl->crouching = 0;
+            d->crouching = 0;
             loopi(moveres)
             {
-                if (!collide(pl, vec(0, 0, pl->physstate < PHYS_FALL ? -1 : 1), 0, true)) break;
-                pl->crouching = 1;
-                pl->eyeheight -= step;
-                if (pl->physstate >= PHYS_FALL)
+                if (!collide(d, vec(0, 0, d->physstate < PHYS_FALL ? -1 : 1), 0, true)) break;
+                d->crouching = 1;
+                d->eyeheight -= step;
+                if (d->physstate >= PHYS_FALL)
                 {
-                    pl->o.z -= step;
-                    pl->newpos.z -= step;
+                    d->o.z -= step;
+                    d->newpos.z -= step;
                 }
             }
         }
     }
 
-    bool ismoving(physent* d, vec& dir)
+    bool ismoving(gameent* d, vec& dir)
     {
         vec old(d->o);
         bool collided = false, slidecollide = false;
@@ -415,8 +415,8 @@ namespace physics
             slideagainst(d, dir, slide ? obstacle : floor, found, slidecollide);
             d->blocked = true;
         }
-        if (found) landing(d, dir, floor, collided);
-        else falling(d, dir, floor);
+        if (found) land(d, dir, floor, collided);
+        else fall(d, dir, floor);
         return !collided;
     }
 
@@ -439,19 +439,19 @@ namespace physics
 
     VAR(physinterp, 0, 1, 1);
 
-    void interppos(physent* pl)
+    void interpolateposition(physent* d)
     {
-        pl->o = pl->newpos;
+        d->o = d->newpos;
 
         int diff = lastphysframe - lastmillis;
         if (diff <= 0 || !physinterp) return;
 
-        vec deltapos(pl->deltapos);
+        vec deltapos(d->deltapos);
         deltapos.mul(min(diff, physframetime) / float(physframetime));
-        pl->o.add(deltapos);
+        d->o.add(deltapos);
     }
 
-    void updatephysstate(physent* d)
+    void updatephysstate(gameent* d)
     {
         if (d->physstate == PHYS_FALL && !d->climbing) return;
         d->timeinair = 0;
@@ -499,7 +499,7 @@ namespace physics
         d->o = old;
     }
 
-    float calcspeed(gameent* d)
+    float calculatespeed(gameent* d)
     {
         float speed = d->speed;
 
@@ -525,92 +525,92 @@ namespace physics
 
     VAR(floatspeed, 1, 100, 10000);
 
-    void modifyvelocity(physent* pl, bool local, bool isinwater, bool floating, int curtime)
+    void modifyvelocity(gameent* pl, bool local, bool isinwater, bool floating, int curtime)
     {
         gameent* d = (gameent*)pl;
         if (floating)
         {
-            if (pl->jumping)
+            if (d->jumping)
             {
-                pl->vel.z = max(pl->vel.z, JUMP_VEL);
+                d->vel.z = max(d->vel.z, JUMP_VEL);
             }
-            if (pl->crouching < 0)
+            if (d->crouching < 0)
             {
-                pl->vel.z = min(pl->vel.z, -JUMP_VEL);
+                d->vel.z = min(d->vel.z, -JUMP_VEL);
             }
         }
         else if (canjump(d) || isinwater)
         {
-            if (isinwater && !pl->inwater) pl->vel.div(8);
-            if (pl->jumping)
+            if (isinwater && !d->inwater) d->vel.div(8);
+            if (d->jumping)
             {
-                pl->jumping = false;
-                if (pl->timeinair)
+                d->jumping = false;
+                if (d->timeinair)
                 {
-                    pl->doublejumping = true;
-                    pl->lastfootright = pl->rfoot;
-                    pl->lastfootleft = pl->lfoot;
-                    pl->falling.z = 1;
+                    d->doublejumping = true;
+                    d->lastfootright = d->rfoot;
+                    d->lastfootleft = d->lfoot;
+                    d->falling.z = 1;
                 }
-                pl->vel.z = max(pl->vel.z, JUMP_VEL); // Physics impulse upwards.
+                d->vel.z = max(d->vel.z, JUMP_VEL); // Physics impulse upwards.
                 if (isinwater)
                 {
                     // Dampen velocity change even harder, gives a decent water feel.
-                    pl->vel.x /= 8.0f;
-                    pl->vel.y /= 8.0f;
+                    d->vel.x /= 8.0f;
+                    d->vel.y /= 8.0f;
                 }
 
-                triggerphysicsevent(pl, PHYSEVENT_JUMP, pl->inwater);
+                triggerphysicsevent(pl, PHYSEVENT_JUMP, d->inwater);
             }
         }
-        if (!floating && !pl->climbing && pl->physstate == PHYS_FALL) pl->timeinair += curtime;
+        if (!floating && !d->climbing && d->physstate == PHYS_FALL) d->timeinair += curtime;
 
         vec m(0.0f, 0.0f, 0.0f);
-        if ((pl->move || pl->strafe))
+        if ((d->move || d->strafe))
         {
-            bool movepitch = floating || isinwater || pl->climbing || pl->type == ENT_CAMERA;
-            vecfromyawpitch(pl->yaw, movepitch ? pl->pitch : 0, pl->move, pl->strafe, m);
+            bool movepitch = floating || isinwater || d->climbing || d->type == ENT_CAMERA;
+            vecfromyawpitch(d->yaw, movepitch ? d->pitch : 0, d->move, d->strafe, m);
 
-            if (!floating && pl->physstate >= PHYS_SLOPE)
+            if (!floating && d->physstate >= PHYS_SLOPE)
             {
                 /* Move up or down slopes in air,
                  * but only move up slopes in water.
                  */
-                float dz = -(m.x * pl->floor.x + m.y * pl->floor.y) / pl->floor.z;
+                float dz = -(m.x * d->floor.x + m.y * d->floor.y) / d->floor.z;
                 m.z = isinwater ? max(m.z, dz) : dz;
             }
             if (!m.iszero())
             {
-                if (pl->climbing && !pl->crouching) m.addz(m.z >= 0 ? 1 : -1).normalize();
+                if (d->climbing && !d->crouching) m.addz(m.z >= 0 ? 1 : -1).normalize();
                 else m.normalize();
             }
         }
 
         vec dir(m);
-        dir.mul(calcspeed(d));
-        bool isonfloor = pl->physstate >= PHYS_SLOPE || pl->climbing;
-        if (pl->type == ENT_PLAYER)
+        dir.mul(calculatespeed(d));
+        bool isonfloor = d->physstate >= PHYS_SLOPE || d->climbing;
+        if (d->type == ENT_PLAYER)
         {
             if (floating)
             {
                 if (pl == self) dir.mul(floatspeed / 100.0f);
             }
-            else if (pl->crouching)
+            else if (d->crouching)
             {
                 dir.mul(CROUCH_VEL);
             }
-            else if (pl->climbing)
+            else if (d->climbing)
             {
                 dir.mul(LADDER_VEL);
             }
             else if (!isinwater)
             {
-                dir.mul((pl->move && !pl->strafe ? 1.3f : 1.0f) * (!isonfloor ? 1.3f : 1.0f));
+                dir.mul((d->move && !d->strafe ? 1.3f : 1.0f) * (!isonfloor ? 1.3f : 1.0f));
             }
         }
         // Calculate and apply friction.
         float friction = 25.0f;
-        if (isinwater && !pl->climbing && !floating)
+        if (isinwater && !d->climbing && !floating)
         {
             friction = 20.0f;
         }
@@ -618,30 +618,30 @@ namespace physics
         {
             friction = 4.0f;
         }
-        pl->vel.lerp(dir, pl->vel, pow(1 - 1 / friction, curtime / 20.0f));
+        d->vel.lerp(dir, d->vel, pow(1 - 1 / friction, curtime / 20.0f));
     }
 
     FVARR(mapgravity, 0, 195.0f, 250.0f);
 
-    void modifygravity(physent* pl, bool isinwater, int curtime)
+    void modifygravity(gameent* d, bool isinwater, int curtime)
     {
         float secs = curtime / 1000.0f;
         vec g(0, 0, 0);
-        if (pl->physstate == PHYS_FALL) g.z -= mapgravity * secs;
-        else if (pl->floor.z > 0 && pl->floor.z < FLOORZ)
+        if (d->physstate == PHYS_FALL) g.z -= mapgravity * secs;
+        else if (d->floor.z > 0 && d->floor.z < FLOORZ)
         {
             g.z = -1;
-            g.project(pl->floor);
+            g.project(d->floor);
             g.normalize();
             g.mul(mapgravity * secs);
         }
-        if (!isinwater || (!pl->move && !pl->strafe)) pl->falling.add(g);
+        if (!isinwater || (!d->move && !d->strafe)) d->falling.add(g);
 
-        if (isinwater || pl->physstate >= PHYS_SLOPE)
+        if (isinwater || d->physstate >= PHYS_SLOPE)
         {
             float fric = isinwater ? 2.0f : 6.0f;
-            float c = isinwater ? 1.0f : clamp((pl->floor.z - SLOPEZ) / (FLOORZ - SLOPEZ), 0.0f, 1.0f);
-            pl->falling.mul(pow(1 - c / fric, curtime / 20.0f));
+            float c = isinwater ? 1.0f : clamp((d->floor.z - SLOPEZ) / (FLOORZ - SLOPEZ), 0.0f, 1.0f);
+            d->falling.mul(pow(1 - c / fric, curtime / 20.0f));
         }
     }
 
@@ -650,14 +650,14 @@ namespace physics
      * "local" is false for multiplayer prediction.
      */
 
-    void detectcollisions(physent* pl, int moveres, vec& d)
+    void detectcollisions(gameent* d, int moveres, vec& dir)
     {
         const float f = 1.0f / moveres;
         int collisions = 0;
-        d.mul(f);
+        dir.mul(f);
         loopi(moveres)
         {
-            if (!ismoving(pl, d) && ++collisions < 5)
+            if (!ismoving(d, dir) && ++collisions < 5)
             {
                 i--; // Discrete steps collision detection and sliding.
             }
@@ -668,123 +668,121 @@ namespace physics
     FVAR(straferoll, 0, 0.018f, 90);
     FVAR(faderoll, 0, 0.9f, 1);
 
-    bool isplayermoving(physent* pl, int moveres, bool local, int curtime)
+    bool isplayermoving(gameent* d, int moveres, bool local, int curtime)
     {
-        if (!game::allowmove(pl)) return false;
-        int material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (3 * pl->aboveeye - pl->eyeheight) / 4));
+        if (!allowmove(d)) return false;
+        int material = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (3 * d->aboveeye - d->eyeheight) / 4));
         bool isinwater = isliquid(material & MATF_VOLUME);
-        bool floating = pl->type == ENT_PLAYER && (pl->state == CS_EDITING || pl->state == CS_SPECTATOR);
+        bool floating = d->type == ENT_PLAYER && (d->state == CS_EDITING || d->state == CS_SPECTATOR);
         float secs = curtime / 1000.f;
 
-        
-        if (!floating && !pl->climbing) modifygravity(pl, isinwater, curtime); // Apply gravity.
-        physics::modifyvelocity(pl, local, isinwater, floating, curtime); // Apply any player generated changes in velocity.
 
-        vec d(pl->vel);
-        if (!floating && isinwater) d.mul(0.5f);
-        d.add(pl->falling);
-        d.mul(secs);
+        if (!floating && !d->climbing) modifygravity(d, isinwater, curtime); // Apply gravity.
+        modifyvelocity(d, local, isinwater, floating, curtime); // Apply any player generated changes in velocity.
 
-        pl->blocked = false;
+        vec dir(d->vel);
+        if (!floating && isinwater) dir.mul(0.5f);
+        dir.add(d->falling);
+        dir.mul(secs);
 
-        gameent* e = (gameent*)pl;
+        d->blocked = false;
 
         if (floating)
         {
-            if (e->ghost)
+            if (d->ghost)
             {
-                detectcollisions(pl, moveres, d);
+                detectcollisions(d, moveres, dir);
             }
-            if (pl->physstate != PHYS_FLOAT)
+            if (d->physstate != PHYS_FLOAT)
             {
-                pl->physstate = PHYS_FLOAT;
-                pl->timeinair = 0;
-                pl->falling = vec(0, 0, 0);
+                d->physstate = PHYS_FLOAT;
+                d->timeinair = 0;
+                d->falling = vec(0, 0, 0);
             }
-            pl->o.add(d);
+            d->o.add(dir);
         }
         else
         {
-            const int timeinair = pl->timeinair; // Use a constant that represents the maximum amount of time the player has spent in air.
-            detectcollisions(pl, moveres, d);
-            if (!pl->timeinair && !isinwater) // Player is currently not in air nor swimming.
+            const int timeinair = d->timeinair; // Use a constant that represents the maximum amount of time the player has spent in air.
+            detectcollisions(d, moveres, dir);
+            if (!d->timeinair && !isinwater) // Player is currently not in air nor swimming.
             {
-                pl->doublejumping = false; // Now that we landed, we can double jump again.
+                d->doublejumping = false; // Now that we landed, we can double jump again.
                 if (timeinair > 350 && timeinair < 800)
                 {
-                    triggerphysicsevent(pl, PHYSEVENT_LAND_SHORT, material); // Short jump.
+                    triggerphysicsevent(d, PHYSEVENT_LAND_SHORT, material); // Short jump.
                 }
                 else if (timeinair >= 800) // If we land after a long time, it must have been a high jump.
                 {
-                    triggerphysicsevent(pl, PHYSEVENT_LAND_MEDIUM, material); // Make a heavy landing sound.
+                    triggerphysicsevent(d, PHYSEVENT_LAND_MEDIUM, material); // Make a heavy landing sound.
                 }
-                triggerphysicsevent(pl, PHYSEVENT_FOOTSTEP, material);
+                triggerphysicsevent(d, PHYSEVENT_FOOTSTEP, material);
             }
         }
 
         // Automatically apply smooth roll when strafing.
-        if (pl->strafe && maxroll && !floating) pl->roll = clamp(pl->roll - pow(clamp(1.0f + pl->strafe * pl->roll / maxroll, 0.0f, 1.0f), 0.33f) * pl->strafe * curtime * straferoll, -maxroll, maxroll);
-        else pl->roll *= curtime == PHYSFRAMETIME ? faderoll : pow(faderoll, curtime / float(PHYSFRAMETIME));
+        if (d->strafe && maxroll && !floating) d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / maxroll, 0.0f, 1.0f), 0.33f) * d->strafe * curtime * straferoll, -maxroll, maxroll);
+        else d->roll *= curtime == PHYSFRAMETIME ? faderoll : pow(faderoll, curtime / float(PHYSFRAMETIME));
 
-        if (pl->state == CS_ALIVE) updatedynentcache(pl);
+        if (d->state == CS_ALIVE) updatedynentcache(d);
 
         // Play sounds on water transitions.
-        if (pl->inwater && !isinwater)
+        if (d->inwater && !isinwater)
         {
-            material = lookupmaterial(vec(pl->o.x, pl->o.y, pl->o.z + (pl->aboveeye - pl->eyeheight) / 2));
+            material = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->eyeheight) / 2));
             isinwater = isliquid(material & MATF_VOLUME);
         }
-        if (!pl->inwater && isinwater) triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material & MATF_VOLUME);
-        else if (pl->inwater && !isinwater) triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater);
-        pl->inwater = isinwater ? material & MATF_VOLUME : MAT_AIR;
+        if (!d->inwater && isinwater) triggerphysicsevent(d, PHYSEVENT_LIQUID_IN, material & MATF_VOLUME);
+        else if (d->inwater && !isinwater) triggerphysicsevent(d, PHYSEVENT_LIQUID_OUT, d->inwater);
+        d->inwater = isinwater ? material & MATF_VOLUME : MAT_AIR;
 
-        if (pl->state == CS_ALIVE)
+        if (d->state == CS_ALIVE)
         {
-            if (pl->o.z < 0 || material & MAT_DEATH)
+            if (d->o.z < 0 || material & MAT_DEATH)
             {
-                game::suicide(pl); // Kill the player if inside death material or outside of the map (below origin).
+                game::suicide(d); // Kill the player if inside death material or outside of the map (below origin).
             }
             else
             {
-                if (lookupmaterial(pl->feetpos()) & MAT_DAMAGE || lookupmaterial(pl->feetpos()) & MAT_LAVA)
+                if (lookupmaterial(d->feetpos()) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_LAVA)
                 {
-                    game::hurt(pl); // Harm the player if their feet or body are inside harmful materials.
+                    game::hurt(d); // Harm the player if their feet or body are inside harmful materials.
                 }
-                if (lookupmaterial(pl->feetpos()) & MAT_CLIMB)
+                if (lookupmaterial(d->feetpos()) & MAT_CLIMB)
                 {
                     // Enable ladder-like movement.
-                    if (!pl->climbing)
+                    if (!d->climbing)
                     {
-                        pl->climbing = true;
-                        pl->falling = pl->vel = vec(0, 0, 0);
-                        triggerphysicsevent(pl, PHYSEVENT_LAND_SHORT, material);
+                        d->climbing = true;
+                        d->falling = d->vel = vec(0, 0, 0);
+                        triggerphysicsevent(d, PHYSEVENT_LAND_SHORT, material);
                     }
                 }
-                else if (pl->climbing) pl->climbing = false;
+                else if (d->climbing) d->climbing = false;
             }
         }
-        else if (pl->climbing) pl->climbing = false;
+        else if (d->climbing) d->climbing = false;
 
         return true;
     }
 
-    void moveplayer(physent* pl, int moveres, bool local)
+    void moveplayer(gameent *d, int moveres, bool local)
     {
         if (physsteps <= 0)
         {
-            if (local) interppos(pl);
+            if (local) interpolateposition(d);
             return;
         }
 
-        if (local) pl->o = pl->newpos;
-        loopi(physsteps - 1) isplayermoving(pl, moveres, local, physframetime);
-        if (local) pl->deltapos = pl->o;
-        isplayermoving(pl, moveres, local, physframetime);
+        if (local) d->o = d->newpos;
+        loopi(physsteps - 1) isplayermoving(d, moveres, local, physframetime);
+        if (local) d->deltapos = d->o;
+        isplayermoving(d, moveres, local, physframetime);
         if (local)
         {
-            pl->newpos = pl->o;
-            pl->deltapos.sub(pl->newpos);
-            interppos(pl);
+            d->newpos = d->o;
+            d->deltapos.sub(d->newpos);
+            interpolateposition(d);
         }
     }
 
@@ -836,7 +834,7 @@ namespace physics
     {
         if (physsteps <= 0)
         {
-            interppos(d);
+            interpolateposition(d);
             return false;
         }
 
@@ -850,7 +848,7 @@ namespace physics
         if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, grav)) hitplayer = true;
         d->newpos = d->o;
         d->deltapos.sub(d->newpos);
-        interppos(d);
+        interpolateposition(d);
         return !hitplayer;
     }
 
@@ -917,55 +915,55 @@ namespace physics
 
     void triggerphysicsevent(physent* pl, int event, int material, vec origin)
     {
-        if (pl->state > CS_DEAD) return;
-        gameent* e = (gameent*)pl;
+        gameent* d = (gameent*)pl;
+        if (d->state > CS_DEAD) return;
         switch (event)
         {
             case PHYSEVENT_JUMP:
             {
-                if (material & MAT_WATER || !(pl == self || pl->type != ENT_PLAYER || ((gameent*)pl)->ai))
+                if (material & MAT_WATER || !(d == self || d->type != ENT_PLAYER || d->ai))
                 {
                     break;
                 }
-                if (!pl->timeinair) msgsound(S_JUMP1, pl);
-                else msgsound(S_JUMP2, pl);
+                if (!d->timeinair) msgsound(S_JUMP1, d);
+                else msgsound(S_JUMP2, d);
                 break;
             }
 
             case PHYSEVENT_LAND_SHORT:
             case PHYSEVENT_FOOTSTEP:
             {
-                if (!(pl == self || pl->type != ENT_PLAYER || ((gameent*)pl)->ai)) break;
-                triggerfootsteps(e, event != PHYSEVENT_FOOTSTEP);
-                e->lastfootleft = e->lastfootright = vec(-1, -1, -1);
+                if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
+                triggerfootsteps(d, event != PHYSEVENT_FOOTSTEP);
+                d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
                 break;
             }
 
             case PHYSEVENT_LAND_MEDIUM:
             {
-                if (!(pl == self || pl->type != ENT_PLAYER || ((gameent*)pl)->ai)) break;
-                msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, pl);
-                e->lastland = lastmillis;
-                e->lastfootleft = e->lastfootright = vec(-1, -1, -1);
+                if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
+                msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
+                d->lastland = lastmillis;
+                d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
                 break;
             }
 
             case PHYSEVENT_RAGDOLL_COLLIDE:
             {
-                playsound(S_CORPSE, NULL, origin.iszero() ? (pl == self ? NULL : &pl->o) : &origin);
+                playsound(S_CORPSE, NULL, origin.iszero() ? (d == self ? NULL : &d->o) : &origin);
                 break;
             }
 
             case PHYSEVENT_LIQUID_IN:
             {
-                playsound(material == MAT_LAVA ? S_LAVA_IN : S_WATER_IN, NULL, origin.iszero() ? (pl == self ? NULL : &pl->o) : &origin);
+                playsound(material == MAT_LAVA ? S_LAVA_IN : S_WATER_IN, NULL, origin.iszero() ? (d == self ? NULL : &d->o) : &origin);
                 break;
             }
 
             case PHYSEVENT_LIQUID_OUT:
             {
                 if (material == MAT_LAVA) break;
-                playsound(S_WATER_OUT, NULL, origin.iszero() ? (pl == self ? NULL : &pl->o) : &origin);
+                playsound(S_WATER_OUT, NULL, origin.iszero() ? (d == self ? NULL : &d->o) : &origin);
                 break;
             }
 
@@ -973,7 +971,7 @@ namespace physics
         }
     }
 
-    void dynentcollide(physent* d, physent* o, const vec& dir)
+    void collidewithdynamicentity(physent* d, physent* o, const vec& dir)
     {
         if (d->type == ENT_AI)
         {
@@ -988,9 +986,16 @@ namespace physics
     dir(left, strafe, 1, k_left, k_right);
     dir(right, strafe, -1, k_right, k_left);
 
+    bool canjump()
+    {
+        if (!connected || intermission) return false;
+        respawn();
+        return self->state != CS_DEAD;
+    }
+
     void dojump(int down)
     {
-        if (!down || game::canjump())
+        if (!down || canjump())
         {
             if (self->physstate > PHYS_FLOAT && self->crouched()) self->crouching = 0;
             else self->jumping = down != 0;
@@ -1001,10 +1006,16 @@ namespace physics
         dojump(*down);
     });
 
+    bool cancrouch()
+    {
+        if (!connected || intermission) return false;
+        return self->state != CS_DEAD;
+    }
+
     void docrouch(int down)
     {
         if (!down) self->crouching = abs(self->crouching);
-        else if (game::cancrouch()) self->crouching = -1;
+        else if (cancrouch()) self->crouching = -1;
     }
     ICOMMAND(crouch, "D", (int* down),
     {

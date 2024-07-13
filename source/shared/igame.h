@@ -33,6 +33,9 @@ namespace physics
 {
     extern void triggerphysicsevent(physent* pl, int event, int material = 0, vec origin = vec(0, 0, 0));
     extern void collidewithdynamicentity(physent* d, physent* o, const vec& dir);
+    extern void updatevertex(dynent* pl, vec pos, vec& dpos, float gravity, float ts);
+
+    extern bool shouldmoveragdoll(dynent* pl, vec eye);
 }
 
 // game

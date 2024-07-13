@@ -467,20 +467,15 @@ void ragdolldata::move(dynent *pl, float ts)
 
     calcrotfriction();
     float tsfric = timestep ? ts/timestep : 1,
-          airfric = ragdollairfric + min((ragdollbodyfricscale*collisions)/skel->verts.length(), 1.0f)*(ragdollbodyfric - ragdollairfric);
+          airfric = ragdollairfric + min((ragdollbodyfricscale * collisions) / skel->verts.length(), 1.0f) * (ragdollbodyfric - ragdollairfric);
     collisions = 0;
-    gameent *d = (gameent *)pl;
     loopv(skel->verts)
     {
         vert &v = verts[i];
         vec dpos = vec(v.pos).sub(v.oldpos);
-        if(d->deathtype == DEATH_DISRUPT && lastmillis - d->lastpain <= 6000)
-        {
-            particle_splash(PART_RING, 1, 100, v.pos, 0x00FFFF, 1.4f, 10, 5);
-        }
-        else dpos.z -= ragdollgravity*ts*ts;
-        if(water) dpos.z += 0.25f*sinf(detrnd(size_t(this)+i, 360)*RAD + lastmillis/10000.0f*M_PI)*ts;
-        dpos.mul(pow((water ? ragdollwaterfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts*1000.0f/ragdolltimestepmin)*tsfric);
+        physics::updatevertex(pl, v.pos, dpos, ragdollgravity, ts);
+        if(water) dpos.z += 0.25f * sinf(detrnd(size_t(this) + i, 360) * RAD + lastmillis / 10000.0f * M_PI) * ts;
+        dpos.mul(pow((water ? ragdollwaterfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts * 1000.0f / ragdolltimestepmin) * tsfric);
         v.oldpos = v.pos;
         v.pos.add(dpos);
     }
@@ -488,7 +483,12 @@ void ragdolldata::move(dynent *pl, float ts)
     loopv(skel->verts)
     {
         vert &v = verts[i];
-        if(v.pos.z < 0) { v.pos.z = 0; v.oldpos = v.pos; collisions++; }
+        if(v.pos.z < 0)
+        { 
+            v.pos.z = 0;
+            v.oldpos = v.pos;
+            collisions++;
+        }
         vec dir = vec(v.pos).sub(v.oldpos);
         v.collided = collidevert(v.pos, dir, skel->verts[i].radius);
         if(v.collided)
@@ -540,19 +540,11 @@ void moveragdoll(dynent *d)
         }
     }
 
-    if(!game::isfirstpersondeath() && ((gameent *)d)->deathtype == DEATH_FALL) return;
-    else
-    {
-        vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
-        if(game::isfirstpersondeath() && d == game::self)
-        {
-            camera1->o = eye;
-            return;
-        }
-        eye.add(d->ragdoll->offset);
-        float k = pow(ragdolleyesmooth, float(curtime)/ragdolleyesmoothmillis);
-        d->o.lerp(eye, 1-k);
-    }
+    vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
+    if (!physics::shouldmoveragdoll(d, eye)) return;
+    eye.add(d->ragdoll->offset);
+    float k = pow(ragdolleyesmooth, float(curtime)/ragdolleyesmoothmillis);
+    d->o.lerp(eye, 1-k);
 }
 
 void cleanragdoll(dynent *d)

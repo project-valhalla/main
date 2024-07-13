@@ -979,6 +979,32 @@ namespace physics
         }
     }
 
+    void updatevertex(dynent* pl, vec pos, vec& dpos, float gravity, float ts)
+    {
+        gameent* d = (gameent*)pl;
+        float grav = gravity ? gravity : mapgravity;
+        if (d->deathtype == DEATH_DISRUPT && lastmillis - d->lastpain <= 6000)
+        {
+            particle_splash(PART_RING, 1, 100, pos, 0x00FFFF, 1.4f, 10, 5);
+        }
+        else
+        {
+            dpos.z -= grav * ts * ts;
+        }
+    }
+
+    bool shouldmoveragdoll(dynent* pl, vec eye)
+    {
+        gameent* d = (gameent*)pl;
+        if (!isfirstpersondeath() && d->deathtype == DEATH_FALL) return false;
+        if (isfirstpersondeath() && d == self)
+        {
+            camera1->o = eye;
+            return false;
+        }
+        return true;
+    }
+
 #define dir(name,v,d,s,os) ICOMMAND(name, "D", (int *down), { self->s = *down != 0; self->v = self->s ? d : (self->os ? -(d) : 0); });
 
     dir(backward, move, -1, k_down, k_up);

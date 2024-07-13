@@ -375,13 +375,20 @@ namespace game
                 {
                     int qtime = min(80, rtime);
                     rtime -= qtime;
-                    if((bnc.lifetime -= qtime)<0 || bounce(&bnc, qtime/1000.0f, 0.5f, 0.4f, 0.7f)) { destroyed = true; break; }
+                    if((bnc.lifetime -= qtime)<0 || bounce(&bnc, qtime/1000.0f, 0.5f, 0.4f, 0.7f))
+                    {
+                        destroyed = true;
+                        break;
+                    }
                 }
             }
             else if(weaponbouncer(bnc.bouncetype))
             {
-                destroyed = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity) || (bnc.lifetime -= time)<0 || isdeadly(lookupmaterial(bnc.o)&MAT_LAVA) ||
-                            ((bnc.bouncetype == BNC_GRENADE2 && bnc.bounces >= 1) || (bnc.bouncetype == BNC_ROCKET && bnc.bounces >= 2));
+                destroyed = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity)
+                            || (bnc.lifetime -= time) < 0
+                            || isdeadly(lookupmaterial(bnc.o) & MAT_LAVA)
+                            || ((bnc.bouncetype == BNC_GRENADE2 && bnc.bounces >= 1)
+                            || (bnc.bouncetype == BNC_ROCKET && bnc.bounces >= 2));
             }
             if(destroyed)
             {
@@ -701,7 +708,7 @@ namespace game
                 explosioncolor = 0xEE88EE;
                 explosiontype = PART_EXPLOSION2;
                 particle_splash(PART_SPARK2, 5+rnd(20), 200, v, explosioncolor, 0.08f+rndscale(0.35f), 400, 2);
-                particle_splash(PART_EXPLODE, 30, 120, v, explosioncolor, 1.5f+rndscale(2.8f), 80, 40);
+                particle_splash(PART_EXPLODE, 30, 80, v, explosioncolor, 1.5f+rndscale(2.8f), 120, 40);
                 particle_splash(PART_SMOKE, 60, 180, v, 0x222222, 2.5f+rndscale(3.8f), 120, 60);
                 break;
             }
@@ -711,7 +718,7 @@ namespace game
                 dynlight = vec(0, 0.25f, 1.0f);
                 explosioncolor = 0x74BCF9;
                 explosiontype = PART_EXPLOSION2;
-                particle_flare(v, v, 120, PART_ELECTRICITY, explosioncolor, 30.0f);
+                particle_flare(v, v, 280, PART_ELECTRICITY, explosioncolor, 30.0f);
                 break;
             }
             case ATK_PISTOL2:

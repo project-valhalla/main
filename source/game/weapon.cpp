@@ -158,7 +158,7 @@ namespace game
         BNC_EJECT,
     };
 
-    inline bool weaponbouncer(int type) { return type >= BNC_GRENADE && type <= BNC_ROCKET; }
+    inline bool isweaponbouncer(int type) { return type >= BNC_GRENADE && type <= BNC_ROCKET; }
 
     struct bouncer : physent
     {
@@ -197,7 +197,7 @@ namespace game
 
         void limitoffset()
         {
-            if(weaponbouncer(bouncetype) && offsetmillis > 0 && offset.z < 0)
+            if(isweaponbouncer(bouncetype) && offsetmillis > 0 && offset.z < 0)
                 offsetheight = raycube(vec(o.x + offset.x, o.y + offset.y, o.z), vec(0, 0, -1), -offset.z);
             else offsetheight = -1;
         }
@@ -259,7 +259,7 @@ namespace game
 
         avoidcollision(&bnc, dir, owner, 0.1f);
 
-        if(weaponbouncer(bnc.bouncetype))
+        if(isweaponbouncer(bnc.bouncetype))
         {
             bnc.offset = hudgunorigin(attacks[bnc.atk].gun, from, to, owner);
             if(owner==hudplayer() && !isthirdperson()) bnc.offset.sub(owner->o).rescale(16).add(owner->o);
@@ -382,7 +382,7 @@ namespace game
                     }
                 }
             }
-            else if(weaponbouncer(bnc.bouncetype))
+            else if(isweaponbouncer(bnc.bouncetype))
             {
                 destroyed = bounce(&bnc, bnc.elasticity, 0.5f, bnc.gravity)
                             || (bnc.lifetime -= time) < 0
@@ -392,7 +392,7 @@ namespace game
             }
             if(destroyed)
             {
-                if(weaponbouncer(bnc.bouncetype))
+                if(isweaponbouncer(bnc.bouncetype))
                 {
                     int damage = attacks[bnc.atk].damage;
                     hits.setsize(0);
@@ -414,18 +414,8 @@ namespace game
         }
     }
 
-    void removebouncers(gameent *owner)
+    enum
     {
-        loopv(bouncers) if(bouncers[i]->owner==owner) { delete bouncers[i]; bouncers.remove(i--); }
-    }
-
-    void clearbouncers()
-    {
-        bouncers.deletecontents();
-    }
-
-   enum
-   {
        PROJ_PULSE,
        PROJ_PLASMA,
        PROJ_ROCKET
@@ -457,11 +447,6 @@ namespace game
     };
     vector<projectile> projs;
 
-    void clearprojectiles()
-    {
-        projs.shrink(0);
-    }
-
     void newprojectile(gameent *owner, const vec &from, const vec &to, bool local, int id, int atk, int type)
     {
         projectile &p = projs.add();
@@ -480,18 +465,6 @@ namespace game
         p.speed = attacks[atk].projspeed;
         p.lifetime = attacks[atk].lifetime;
         p.offsetmillis = OFFSETMILLIS;
-    }
-
-    void removeprojectiles(gameent *owner)
-    {
-        // can't use loopv here due to strange GCC optimizer bug
-        int len = projs.length();
-        loopi(len) if(projs[i].owner==owner)
-        {
-            stopsound(projs[i].projsound, projs[i].projchan);
-            projs.remove(i--);
-            len--;
-        }
     }
 
     VARP(playheadshotsound, 0, 1, 1);
@@ -781,7 +754,7 @@ namespace game
                 loopv(bouncers)
                 {
                     bouncer &bnc = *bouncers[i];
-                    if(!weaponbouncer(bnc.bouncetype)) break;
+                    if(!isweaponbouncer(bnc.bouncetype)) break;
                     if(bnc.owner == d && bnc.id == id && !bnc.local)
                     {
                         explode(bnc.local, bnc.owner, bnc.offsetpos(), bnc.vel, NULL, 0, atk);
@@ -1524,7 +1497,7 @@ namespace game
         loopv(bouncers)
         {
             bouncer &bnc = *bouncers[i];
-            if(!weaponbouncer(bnc.bouncetype)) continue;
+            if(!isweaponbouncer(bnc.bouncetype)) continue;
             vec pos(bnc.o);
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
             switch(bnc.bouncetype)
@@ -1618,12 +1591,6 @@ namespace game
         }
     }
 
-    void removeweapons(gameent *d)
-    {
-        removebouncers(d);
-        removeprojectiles(d);
-    }
-
     void checkattacksound(gameent *d, bool local)
     {
         int atk = guns[d->gunselect].attacks[d->attacking];
@@ -1688,7 +1655,33 @@ namespace game
         }
     }
 
-    void avoidweapons(ai::avoidset &obstacles, float radius)
+    void removeprojectiles(gameent* owner)
+    {
+        if (!owner)
+        {
+            projs.shrink(0);
+            bouncers.deletecontents();
+        }
+        else
+        {
+            // projectiles
+            int len = projs.length();
+            loopi(len) if (projs[i].owner == owner) // can't use loopv here due to strange GCC optimizer bug
+            {
+                stopsound(projs[i].projsound, projs[i].projchan);
+                projs.remove(i--);
+                len--;
+            }
+            // bouncers
+            loopv(bouncers) if (bouncers[i]->owner == owner)
+            {
+                delete bouncers[i];
+                bouncers.remove(i--);
+            }
+        }
+    }
+
+    void avoidprojectiles(ai::avoidset &obstacles, float radius)
     {
         loopv(projs)
         {
@@ -1698,7 +1691,7 @@ namespace game
         loopv(bouncers)
         {
             bouncer &bnc = *bouncers[i];
-            if(!weaponbouncer(bnc.bouncetype)) continue;
+            if(!isweaponbouncer(bnc.bouncetype)) continue;
             obstacles.avoidnear(NULL, bnc.o.z + attacks[bnc.atk].exprad + 1, bnc.o, radius + attacks[bnc.atk].exprad);
         }
     }

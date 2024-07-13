@@ -674,18 +674,16 @@ namespace game
     extern bool intersecthead(dynent *d, const vec &from, const vec &to, float &dist = intersectdist);
     extern void clearbouncers();
     extern void updatebouncers(int curtime);
-    extern void removebouncers(gameent *owner);
     extern void renderbouncers();
-    extern void clearprojectiles();
     extern void updateprojectiles(int curtime);
     extern void removeprojectiles(gameent *owner);
     extern void renderprojectiles();
     extern void preloadbouncers();
-    extern void removeweapons(gameent *owner);
     extern void updateweapons(int curtime);
     extern void gunselect(int gun, gameent *d);
     extern void weaponswitch(gameent *d);
-    extern void avoidweapons(ai::avoidset &obstacles, float radius);
+    extern void removeprojectiles(gameent* owner = NULL);
+    extern void avoidprojectiles(ai::avoidset &obstacles, float radius);
 
     // monster
     struct monster;

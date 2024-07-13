@@ -815,8 +815,7 @@ namespace game
         if(state & ROUND_RESET)
         {
             if(m_hunt && hunterchosen) hunterchosen = false;
-            clearprojectiles();
-            clearbouncers();
+            removeprojectiles();
         }
         if(state & ROUND_WAIT)
         {

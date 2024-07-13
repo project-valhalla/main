@@ -206,7 +206,7 @@ namespace ai
         d->playermodel = chooserandomplayermodel(pm);
         d->playercolor = col;
 
-        if(resetthisguy) removeweapons(d);
+        if(resetthisguy) removeprojectiles(d);
         if(d->ownernum >= 0 && self->clientnum == d->ownernum)
         {
             create(d);
@@ -1352,7 +1352,7 @@ namespace ai
         }
         extern avoidset wpavoid;
         obstacles.add(wpavoid);
-        avoidweapons(obstacles, guessradius);
+        avoidprojectiles(obstacles, guessradius);
     }
 
     void think(gameent *d, bool run)

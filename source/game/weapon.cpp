@@ -384,7 +384,7 @@ namespace game
             }
             else if(isweaponbouncer(bnc.bouncetype))
             {
-                destroyed = physics::isbouncing(&bnc, bnc.elasticity, 0.5f, bnc.gravity)
+                destroyed = !physics::isbouncing(&bnc, bnc.elasticity, 0.5f, bnc.gravity)
                             || (bnc.lifetime -= time) < 0
                             || isdeadly(lookupmaterial(bnc.o) & MAT_LAVA)
                             || ((bnc.bouncetype == BNC_GRENADE2 && bnc.bounces >= 1)

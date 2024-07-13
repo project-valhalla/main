@@ -448,8 +448,6 @@ FVAR(ragdollgravity, 0, 198.0f, 200);
 VAR(ragdollexpireoffset, 0, 2500, 30000);
 VAR(ragdollwaterexpireoffset, 0, 4000, 30000);
 
-#include "game.h"
-
 void ragdolldata::move(dynent *pl, float ts)
 {
     if(collidemillis && lastmillis > collidemillis) return;

@@ -1895,7 +1895,7 @@ static float findsurface(int fogmat, const vec &v, int &abovemat)
         int mat = c.material&MATF_VOLUME;
         if(mat != fogmat)
         {
-            abovemat = isliquid(mat) ? c.material : MAT_AIR;
+            abovemat = isliquidmaterial(mat) ? c.material : MAT_AIR;
             return o.z;
         }
         o.z = co.z + csize;
@@ -2210,7 +2210,7 @@ void drawcubemap(int size, const vec &o, float yaw, float pitch, const cubemapsi
     float fogmargin = 1 + WATER_AMPLITUDE + nearplane;
     int fogmat = lookupmaterial(vec(camera1->o.x, camera1->o.y, camera1->o.z - fogmargin))&(MATF_VOLUME|MATF_INDEX), abovemat = MAT_AIR;
     float fogbelow = 0;
-    if(isliquid(fogmat&MATF_VOLUME))
+    if(isliquidmaterial(fogmat&MATF_VOLUME))
     {
         float z = findsurface(fogmat, vec(camera1->o.x, camera1->o.y, camera1->o.z - fogmargin), abovemat) - WATER_OFFSET;
         if(camera1->o.z < z + fogmargin)
@@ -2404,7 +2404,7 @@ void gl_drawview()
     float fogmargin = 1 + WATER_AMPLITUDE + nearplane;
     int fogmat = lookupmaterial(vec(camera1->o.x, camera1->o.y, camera1->o.z - fogmargin))&(MATF_VOLUME|MATF_INDEX), abovemat = MAT_AIR;
     float fogbelow = 0;
-    if(isliquid(fogmat&MATF_VOLUME))
+    if(isliquidmaterial(fogmat&MATF_VOLUME))
     {
         float z = findsurface(fogmat, vec(camera1->o.x, camera1->o.y, camera1->o.z - fogmargin), abovemat) - WATER_OFFSET;
         if(camera1->o.z < z + fogmargin)

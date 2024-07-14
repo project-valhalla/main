@@ -20,14 +20,14 @@ namespace ai
         if(!insideworld(vec(pos.x, pos.y, min(pos.z, getworldsize() - 1e-3f)))) return -2;
         float dist = raycube(pos, vec(0, 0, -1), 0, RAY_CLIPMAT);
         int posmat = lookupmaterial(pos), weight = 1;
-        if(isliquid(posmat&MATF_VOLUME)) weight *= 5;
+        if(isliquidmaterial(posmat&MATF_VOLUME)) weight *= 5;
         if(dist >= 0)
         {
             weight = int(dist/ai::JUMPMIN);
             pos.z -= clamp(dist-8.0f, 0.0f, pos.z);
             int trgmat = lookupmaterial(pos);
             if(trgmat & MAT_DEATH || (trgmat & MATF_VOLUME) == MAT_LAVA || trgmat & MAT_DAMAGE) weight *= 10;
-            else if(isliquid(trgmat & MATF_VOLUME)) weight *= 2;
+            else if(isliquidmaterial(trgmat & MATF_VOLUME)) weight *= 2;
         }
         return weight;
     }

@@ -71,8 +71,8 @@ static const struct attackinfo
 } attacks[NUMATKS] =
 {
     // melee: default melee for all weapons
-    { NULL,        ACT_MELEE,      650,  60,  0,   0, 2,    0,  0,   14,  1,  50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_HIT_MELEE,       S_HIT_MELEE   },
-    { NULL,        ACT_MELEE,      420,  25,  0,   0, 1,    0,  0,   16,  1,  50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_HIT_MELEE,       S_HIT_MELEE   },
+    { NULL,        ACT_MELEE,      650,  60,  0,   0, 2,    0,  0,   14,  1,  50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE   },
+    { NULL,        ACT_MELEE,      420,  25,  0,   0, 1,    0,  0,   16,  1,  50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE   },
     // shotgun
     { GUN_SCATTER, ACT_PRIMARY,    880,   5,  5, 260, 0,    0, 20, 1000, 20,  60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SG1_A,         S_IMPACT_SG,       S_HIT_WEAPON  },
     { GUN_SCATTER, ACT_SECONDARY,  980,   6,  5, 120, 0,    0, 25, 1000, 10,  60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SG2_A,         S_IMPACT_SG,       S_HIT_WEAPON  },
@@ -98,7 +98,7 @@ static const struct attackinfo
     // instagib
     { GUN_INSTA,   ACT_PRIMARY,   1200,   1,  0,   0, 0,    0, 36, 4000,  1,   1,  0,    0, 0,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_RAIL_INSTAGIB, S_IMPACT_RAILGUN,  S_HIT_WEAPON  },
     // zombie
-    { GUN_ZOMBIE,  ACT_PRIMARY,    600, 100,  0,   0, 4,    0,  0,   15,  1,  20,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_ZOMBIE,        S_HIT_MELEE,       S_HIT_MELEE   }
+    { GUN_ZOMBIE,  ACT_PRIMARY,    600, 100,  0,   0, 4,    0,  0,   15,  1,  20,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_ZOMBIE,        S_IMPACT_MELEE,    S_HIT_MELEE   }
 };
 
 static const struct guninfo

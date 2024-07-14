@@ -293,7 +293,7 @@ float raycube(const vec &o, const vec &ray, float radius, int mode, int size, ex
 
         cube &c = *lc;
         if((dist>0 || !(mode&RAY_SKIPFIRST)) &&
-           (((mode&RAY_CLIPMAT) && isclipped(c.material&MATF_VOLUME)) ||
+           (((mode&RAY_CLIPMAT) && issolidmaterial(c.material&MATF_VOLUME)) ||
             ((mode&RAY_EDITMAT) && c.material != MAT_AIR) ||
             (!(mode&RAY_PASS) && lsize==size && !isempty(c)) ||
             isentirelysolid(c) ||
@@ -1056,7 +1056,7 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
             switch(c[i].material&MATF_CLIP)
             {
                 case MAT_NOCLIP: continue;
-                case MAT_CLIP: if(isclipped(c[i].material&MATF_VOLUME) || d->type==ENT_PLAYER) solid = true; break;
+                case MAT_CLIP: if(issolidmaterial(c[i].material&MATF_VOLUME) || d->type==ENT_PLAYER) solid = true; break;
                 case MAT_GAMECLIP: if(d->type==ENT_AI) solid = true; break;
             }
             if(!solid && isempty(c[i])) continue;
@@ -1086,7 +1086,7 @@ static inline bool octacollide(physent *d, const vec &dir, float cutoff, const i
     switch(c->material&MATF_CLIP)
     {
         case MAT_NOCLIP: return false;
-        case MAT_CLIP: if(isclipped(c->material&MATF_VOLUME) || d->type==ENT_PLAYER) solid = true; break;
+        case MAT_CLIP: if(issolidmaterial(c->material&MATF_VOLUME) || d->type==ENT_PLAYER) solid = true; break;
         case MAT_GAMECLIP: if(d->type==ENT_AI) solid = true; break;
     }
     if(!solid && isempty(*c)) return false;

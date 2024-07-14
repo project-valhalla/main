@@ -453,12 +453,12 @@ void ragdolldata::move(dynent *pl, float ts)
     if(collidemillis && lastmillis > collidemillis) return;
 
     int material = lookupmaterial(vec(center.x, center.y, center.z + radius/2));
-    bool water = isliquid(material&MATF_VOLUME);
+    bool water = isliquidmaterial(material&MATF_VOLUME);
     if(!pl->inwater && water) physics::triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material&MATF_VOLUME, pl->ragdoll->center);
     else if(pl->inwater && !water)
     {
         material = lookupmaterial(center);
-        water = isliquid(material&MATF_VOLUME);
+        water = isliquidmaterial(material&MATF_VOLUME);
         if(!water) physics::triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater, pl->ragdoll->center);
     }
     pl->inwater = water ? material&MATF_VOLUME : MAT_AIR;

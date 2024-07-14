@@ -590,7 +590,11 @@ struct stainrenderer
         loopi(matsurfs)
         {
             materialsurface &m = matbuf[i];
-            if(!isclipped(m.material&MATF_VOLUME)) { i += m.skip; continue; }
+            if(!issolidmaterial(m.material&MATF_VOLUME))
+            { 
+                i += m.skip;
+                continue;
+            }
             int dim = dimension(m.orient), dc = dimcoord(m.orient);
             if(dc ? stainnormal[dim] <= 0 : stainnormal[dim] >= 0) { i += m.skip; continue; }
             int c = C[dim], r = R[dim];

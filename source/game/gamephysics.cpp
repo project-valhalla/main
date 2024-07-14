@@ -664,6 +664,39 @@ namespace physics
         }
     }
 
+    int liquidtransition(physent* d, int material, bool isinwater)
+    {
+        int transition = LiquidTransition_None;
+        if (!d->inwater && isinwater)
+        {
+            transition = LiquidTransition_In;
+        }
+        else if (d->inwater && !isinwater)
+        {
+            transition = LiquidTransition_Out;
+        }
+        d->inwater = isinwater ? material & MATF_VOLUME : MAT_AIR;
+        return transition;
+    }
+
+    void handleliquidtransitions(gameent* d, int& material, bool& isinwater)
+    {
+        if (d->inwater && !isinwater)
+        {
+            material = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->eyeheight) / 2));
+            isinwater = isliquidmaterial(material & MATF_VOLUME);
+        }
+        int transition = liquidtransition(d, material, isinwater);
+        if (transition == LiquidTransition_In)
+        {
+            triggerphysicsevent(d, PHYSEVENT_LIQUID_IN, material & MATF_VOLUME);
+        }
+        else if (transition == LiquidTransition_Out)
+        {
+            triggerphysicsevent(d, PHYSEVENT_LIQUID_OUT, d->inwater);
+        }
+    }
+
     VARP(maxroll, 0, 1, 20);
     FVAR(straferoll, 0, 0.018f, 90);
     FVAR(faderoll, 0, 0.9f, 1);
@@ -672,7 +705,7 @@ namespace physics
     {
         if (!allowmove(d)) return false;
         int material = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (3 * d->aboveeye - d->eyeheight) / 4));
-        bool isinwater = isliquid(material & MATF_VOLUME);
+        bool isinwater = isliquidmaterial(material & MATF_VOLUME);
         bool floating = d->type == ENT_PLAYER && (d->state == CS_EDITING || d->state == CS_SPECTATOR);
         float secs = curtime / 1000.f;
 
@@ -726,15 +759,8 @@ namespace physics
 
         if (d->state == CS_ALIVE) updatedynentcache(d);
 
-        // Play sounds on water transitions.
-        if (d->inwater && !isinwater)
-        {
-            material = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->eyeheight) / 2));
-            isinwater = isliquid(material & MATF_VOLUME);
-        }
-        if (!d->inwater && isinwater) triggerphysicsevent(d, PHYSEVENT_LIQUID_IN, material & MATF_VOLUME);
-        else if (d->inwater && !isinwater) triggerphysicsevent(d, PHYSEVENT_LIQUID_OUT, d->inwater);
-        d->inwater = isinwater ? material & MATF_VOLUME : MAT_AIR;
+        // Handle transitions for entering and exiting liquid materials.
+        handleliquidtransitions(d, material, isinwater);
 
         if (d->state == CS_ALIVE)
         {
@@ -791,7 +817,7 @@ namespace physics
         // Collision checks.
         if (d->physstate != PHYS_BOUNCE && collide(d, vec(0, 0, 0), 0, false)) return true;
         int mat = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->eyeheight) / 2));
-        bool isinwater = isliquid(mat);
+        bool isinwater = isliquidmaterial(mat);
         if (isinwater)
         {
             d->vel.z -= grav * mapgravity / 16 * secs;

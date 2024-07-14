@@ -58,6 +58,14 @@ struct gameentity : extentity
 {
 };
 
+// physics stuff
+enum
+{
+    LiquidTransition_None = 0,
+    LiquidTransition_In,
+    LiquidTransition_Out
+};
+
 enum { MM_AUTH = -1, MM_OPEN = 0, MM_VETO, MM_LOCKED, MM_PRIVATE, MM_PASSWORD, MM_START = MM_AUTH, MM_INVALID = MM_START - 1 };
 
 static const char * const mastermodenames[] =  { "Default",        "Open",        "Veto",        "Locked",        "Private",        "Password" };
@@ -565,6 +573,7 @@ namespace physics
     extern bool isbouncing(physent* d, float elasticity, float waterfric, float grav);
 
     extern int physsteps;
+    extern int liquidtransition(physent* d, int material, bool isinwater);
 }
 
 namespace game

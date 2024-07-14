@@ -280,7 +280,8 @@ int lookuptextureeffect(const vec &v)
 
 bool isemptycube(vec v)
 {
-    return isempty(lookupcube(ivec(v)));
+    cube &c = lookupcube(ivec(v));
+    return isempty(c) && !issolidmaterial(c.material & MATF_VOLUME);
 }
 
 const cube *neighbourstack[32];
@@ -941,7 +942,7 @@ static inline bool occludesface(const cube &c, int orient, const ivec &o, int si
                 ivec2 nf[8];
                 return clipfacevecs(vf, numv, o[C[dim]], o[R[dim]], size, nf) < 3;
             }
-            if(vmat != MAT_AIR && ((c.material&matmask) == vmat || (isliquid(vmat) && isclipped(c.material&MATF_VOLUME)))) return true;
+            if(vmat != MAT_AIR && ((c.material&matmask) == vmat || (isliquidmaterial(vmat) && issolidmaterial(c.material&MATF_VOLUME)))) return true;
         }
         if(isentirelysolid(c)) return true;
         if(touchingface(c, orient) && faceedges(c, orient) == F_SOLID) return true;
@@ -986,7 +987,7 @@ bool visibleface(const cube &c, int orient, const ivec &co, int size, ushort mat
         if(o.material)
         {
             if(nmat != MAT_AIR && (o.material&matmask) == nmat) return true;
-            if(mat != MAT_AIR && ((o.material&matmask) == mat || (isliquid(mat) && isclipped(o.material&MATF_VOLUME)))) return false;
+            if(mat != MAT_AIR && ((o.material&matmask) == mat || (isliquidmaterial(mat) && issolidmaterial(o.material&MATF_VOLUME)))) return false;
         }
         if(isentirelysolid(o)) return false;
         if(isempty(o) || notouchingface(o, opp)) return true;

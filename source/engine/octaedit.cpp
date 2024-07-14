@@ -2837,14 +2837,14 @@ void mpeditmat(int matid, int filter, selinfo &sel, bool local)
     {
         matid = 0;
         matmask = filtermask;
-        if(isclipped(filtermat&MATF_VOLUME)) matmask &= ~MATF_CLIP;
-        if(isdeadly(filtermat&MATF_VOLUME)) matmask &= ~MAT_DEATH;
+        if(issolidmaterial(filtermat&MATF_VOLUME)) matmask &= ~MATF_CLIP;
+        if(isdeadlymaterial(filtermat&MATF_VOLUME)) matmask &= ~MAT_DEATH;
     }
     else
     {
         matmask = matid&(MATF_VOLUME|MATF_INDEX) ? 0 : (matid&MATF_CLIP ? ~MATF_CLIP : ~matid);
-        if(isclipped(matid&MATF_VOLUME)) matid |= MAT_CLIP;
-        if(isdeadly(matid&MATF_VOLUME)) matid |= MAT_DEATH;
+        if(issolidmaterial(matid&MATF_VOLUME)) matid |= MAT_CLIP;
+        if(isdeadlymaterial(matid&MATF_VOLUME)) matid |= MAT_DEATH;
     }
     loopselxyz(setmat(c, matid, matmask, filtermat, filtermask, filtergeom));
 }

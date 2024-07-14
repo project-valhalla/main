@@ -325,6 +325,17 @@ namespace game
             bouncer &bnc = *bouncers[i];
             vec pos(bnc.o);
             pos.add(vec(bnc.offset).mul(bnc.offsetmillis/float(OFFSETMILLIS)));
+            bool isinwater = ((lookupmaterial(bnc.o) & MATF_VOLUME) == MAT_WATER);
+            int transition = physics::liquidtransition(&bnc, lookupmaterial(bnc.o), isinwater);
+            if (transition > 0)
+            {
+                particle_splash(PART_WATER, 200, 250, bnc.o, 0xFFFFFF, 0.09f, 500, 1);
+                particle_splash(PART_SPLASH, 10, 80, bnc.o, 0xFFFFFF, 7.0f, 250, -1);
+                if (transition == LiquidTransition_In)
+                {
+                    playsound(S_IMPACT_WATER_PROJ, NULL, &bnc.o);
+                }
+            }
             switch(bnc.bouncetype)
             {
                 case BNC_ROCKET:
@@ -386,7 +397,7 @@ namespace game
             {
                 destroyed = !physics::isbouncing(&bnc, bnc.elasticity, 0.5f, bnc.gravity)
                             || (bnc.lifetime -= time) < 0
-                            || isdeadly(lookupmaterial(bnc.o) & MAT_LAVA)
+                            || isdeadlymaterial(lookupmaterial(bnc.o) & MAT_LAVA)
                             || ((bnc.bouncetype == BNC_GRENADE2 && bnc.bounces >= 1)
                             || (bnc.bouncetype == BNC_ROCKET && bnc.bounces >= 2));
             }
@@ -421,7 +432,7 @@ namespace game
        PROJ_ROCKET
     };
 
-    struct projectile
+    struct projectile : physent
     {
         gameent *owner;
 
@@ -662,7 +673,8 @@ namespace game
     {
         vec dynlight = vec(1.0f, 3.0f, 4.0f);
         int explosioncolor = 0x50CFE5, explosiontype = PART_EXPLOSION1;
-        switch(atk)
+        bool water = (lookupmaterial(v) & MATF_VOLUME) == MAT_WATER;
+        if(!water) switch(atk)
         {
             case ATK_ROCKET1:
             case ATK_ROCKET2:
@@ -708,7 +720,11 @@ namespace game
         particle_fireball(v, 1.15f*attacks[atk].exprad, explosiontype, atk == ATK_GRENADE1 || atk == ATK_GRENADE2 ? 200 : 400, explosioncolor, 0.10f);
         adddynlight(v, 2*attacks[atk].exprad, dynlight, 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
         playsound(attacks[atk].impactsound, NULL, &v);
-        if(lookupmaterial(v) & MAT_WATER) playsound(S_IMPACT_WATER_PROJ, NULL, &v);
+        if (water)
+        {
+            particle_splash(PART_WATER, 200, 250, v, 0xFFFFFF, 0.09f, 500, 1);
+            particle_splash(PART_SPLASH, 100, 80, v, 0xFFFFFF, 7.0f, attacks[atk].exprad * 10, -1);
+        }
         else // no debris in water
         {
             int numdebris = rnd(maxdebris - 5) + 5;
@@ -836,6 +852,17 @@ namespace game
             }
             if(!exploded)
             {
+                bool isinwater = ((lookupmaterial(p.o) & MATF_VOLUME) == MAT_WATER);
+                int transition = physics::liquidtransition(&p, lookupmaterial(p.o), isinwater);
+                if (transition > 0)
+                {
+                    particle_splash(PART_WATER, 200, 250, p.o, 0xFFFFFF, 0.09f, 500, 1);
+                    particle_splash(PART_SPLASH, 10, 80, p.o, 0xFFFFFF, 7.0f, 250, -1);
+                    if (transition == LiquidTransition_In)
+                    {
+                        playsound(S_IMPACT_WATER_PROJ, NULL, &p.o);
+                    }
+                }
                 for(int rtime = time; rtime > 0;)
                 {
                     int qtime = min(80, rtime);
@@ -914,19 +941,19 @@ namespace game
 
     void impacteffects(int atk, gameent *d, const vec &from, const vec &to, bool hit = false)
     {
-        if(!validatk(atk) || from.dist(to) > attacks[atk].range) return;
+        if(!validatk(atk) || isemptycube(to) || from.dist(to) > attacks[atk].range) return;
         vec dir = vec(from).sub(to).safenormalize();
-        int mat = lookupmaterial(to);
-        bool water = (mat&MATF_VOLUME) == MAT_WATER, glass = (mat&MATF_VOLUME) == MAT_GLASS;
+        int material = lookupmaterial(to);
+        bool iswater = (material & MATF_VOLUME) == MAT_WATER, isglass = (material & MATF_VOLUME) == MAT_GLASS;
         switch(atk)
         {
             case ATK_SCATTER1:
             case ATK_SCATTER2:
             {
                 adddynlight(vec(to).madd(dir, 4), 6, vec(0.5f, 0.375f, 0.25f), 140, 10);
-                if(hit || water || glass) break;
-                particle_splash(PART_SPARK2, 1+rnd(6), 80+rnd(380), to, 0xFFC864, 0.08f + rndscale(0.3f), 250);
-                particle_splash(PART_SMOKE, 1+rnd(5), 150, to, 0x606060, 1.8f+rndscale(2.2f), 100, 100);
+                if(hit || iswater || isglass) break;
+                particle_splash(PART_SPARK2, 10, 80+rnd(380), to, 0xFFC864, 0.1f, 250);
+                particle_splash(PART_SMOKE, 10, 150, to, 0x606060, 1.8f + rndscale(2.2f), 100, 100);
                 addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
             }
             break;
@@ -935,12 +962,12 @@ namespace game
             case ATK_SMG2:
             {
                 adddynlight(vec(to).madd(dir, 4), 15, vec(0.5f, 0.375f, 0.25f), 140, 10);
-                if(hit || water || glass) break;
+                if(hit || iswater || isglass) break;
                 particle_fireball(to, 0.5f, PART_EXPLOSION1, 120, 0xFFC864, 2.0f);
                 particle_splash(PART_EXPLODE, 50, 40, to, 0xFFC864, 1.0f);
-                particle_splash(PART_SPARK2, 10+rnd(30), 150, to, 0xFFC864, 0.05f+rndscale(0.09f), 250);
+                particle_splash(PART_SPARK2, 30, 150, to, 0xFFC864, 0.05f + rndscale(0.09f), 250);
                 particle_splash(PART_SMOKE, 30, 180, to, 0x444444, 2.20f, 80, 100);
-                addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
+                addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f + rndscale(0.80f));
                 break;
             }
 
@@ -952,13 +979,10 @@ namespace game
                     particle_flare(to, to, 120, PART_ELECTRICITY, 0xEE88EE, 5.0f);
                     break;
                 }
-                if(water) break;
-                if(from.dist(to) <= attacks[atk].range-1)
-                {
-                    particle_splash(PART_SPARK2, 1+rnd(5), 300, to, 0xEE88EE, 0.01f+rndscale(0.10f), 350, 2);
-                    particle_splash(PART_SMOKE, 20, 120, to, 0x777777, 2.0f, 100, 80);
-                }
-                addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 1.0f+rndscale(1.10f));
+                if(iswater) break;
+                particle_splash(PART_SPARK2, 10, 300, to, 0xEE88EE, 0.01f + rndscale(0.10f), 350, 2);
+                particle_splash(PART_SMOKE, 20, 150, to, 0x777777, 2.0f, 100, 50);
+                addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 1.0f + rndscale(1.10f));
                 playsound(attacks[atk].impactsound, NULL, &to);
                 break;
             }
@@ -974,7 +998,7 @@ namespace game
                     if(insta) particle_flare(to, to, 200, PART_ELECTRICITY, 0x50CFE5, 6.0f);
                     break;
                 }
-                if(water || glass) break;
+                if(iswater || isglass) break;
                 particle_splash(PART_EXPLODE, 80, 80, to, !insta ? 0x77DD77 : 0x50CFE5, 1.25f, 100, 80);
                 particle_splash(PART_SPARK2, 5 + rnd(20), 200 + rnd(380), to, !insta ? 0x77DD77 : 0x50CFE5, 0.1f + rndscale(0.3f), 200, 3);
                 particle_splash(PART_SMOKE, 20, 180, to, 0x808080, 2.0f, 60, 80);
@@ -986,7 +1010,7 @@ namespace game
             case ATK_PISTOL1:
             {
                 adddynlight(vec(to).madd(dir, 4), 30, vec(0.25, 1.0f, 1.0f), 200, 10, DL_SHRINK);
-                if(hit || water || glass) break;
+                if(hit || iswater || isglass) break;
                 particle_fireball(to, 2.2f, PART_EXPLOSION1, 140, 0x00FFFF, 0.1f);
                 particle_splash(PART_SPARK2, 50, 180, to, 0x00FFFF, 0.08f+rndscale(0.18f));
                 addstain(STAIN_PULSE_SCORCH, to, vec(from).sub(to).normalize(), 0.80f+rndscale(1.0f));
@@ -996,21 +1020,24 @@ namespace game
 
             default: break;
         }
-        if(attacks[atk].action == ACT_MELEE || atk == ATK_PULSE2 || atk == ATK_ZOMBIE || hit) return;
+        if (hit || atk == ATK_PULSE2) return;
         int impactsnd = attacks[atk].impactsound;
-        if(water)
+        if(iswater)
         {
-            addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(0.80f));
+            addstain(STAIN_RAIL_HOLE, to, vec(from).sub(to).normalize(), 0.30f + rndscale(0.80f));
             impactsnd = S_IMPACT_WATER;
 
         }
-        else if(glass)
+        else if(isglass)
         {
-            particle_splash(PART_GLASS, 20, 200, to, 0xFFFFFF, 0.10+rndscale(0.20f));
-            addstain(STAIN_GLASS_HOLE, to, vec(from).sub(to).normalize(), 0.30f+rndscale(1.0f));
+            particle_splash(PART_GLASS, 20, 200, to, 0xFFFFFF, 0.10 + rndscale(0.20f));
+            addstain(STAIN_GLASS_HOLE, to, vec(from).sub(to).normalize(), 0.30f + rndscale(1.0f));
             impactsnd = S_IMPACT_GLASS;
         }
-        if(!(attacks[atk].rays > 1 && d==hudplayer()) && impactsnd) playsound(impactsnd, NULL, &to);
+        if (!(attacks[atk].rays > 1 && d == hudplayer()) && impactsnd)
+        {
+            playsound(impactsnd, NULL, &to);
+        }
     }
 
     VARP(muzzleflash, 0, 1, 1);
@@ -1041,7 +1068,10 @@ namespace game
                         impacteffects(atk, d, from, rays[i], hit);
                     }
                 }
-                loopi(attacks[atk].rays) particle_flare(hudgunorigin(gun, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.95f);
+                loopi(attacks[atk].rays)
+                {
+                    particle_flare(hudgunorigin(gun, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.95f);
+                }
                 break;
             }
 

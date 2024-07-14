@@ -38,10 +38,9 @@ enum // cube empty-space materials
     MAT_CLIMB    = 16 << MATF_FLAG_SHIFT   // ladder-like behaviour
 };
 
-inline bool isliquid(int mat)  { return mat == MAT_WATER || mat == MAT_LAVA;  }
-inline bool isclipped(int mat) { return mat == MAT_GLASS;                     }
-inline bool isharmful(int mat) { return mat == MAT_LAVA || mat == MAT_DAMAGE; }
-inline bool isdeadly(int mat)  { return mat == MAT_LAVA;                      }
+inline bool isliquidmaterial(int mat)  { return mat == MAT_WATER || mat == MAT_LAVA;  }
+inline bool issolidmaterial(int mat)   { return mat == MAT_GLASS;                     }
+inline bool isdeadlymaterial(int mat)  { return mat == MAT_LAVA;                      }
 
 extern void lightent(extentity &e, float height = 8.0f);
 
@@ -343,6 +342,7 @@ enum
     PART_LIGHTNING,
     PART_EXPLOSION1, PART_EXPLOSION2, PART_EXPLOSION3,
     PART_SPARK, PART_SPARK2, PART_EXPLODE, PART_ELECTRICITY, PART_EDIT, PART_ORB, PART_RING,
+    PART_SPLASH,
     PART_MUZZLE_FLASH, PART_MUZZLE_FLASH2, PART_MUZZLE_FLASH3, PART_MUZZLE_FLASH4, PART_MUZZLE_FLASH5,
     PART_COMICS,
     PART_GAME_ICONS, PART_EDITOR_ICONS,

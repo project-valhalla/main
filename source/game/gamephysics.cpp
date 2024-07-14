@@ -879,7 +879,7 @@ namespace physics
     footstepinfo footstepsound(gameent* d)
     {
         footstepinfo foot;
-        if (lookupmaterial(d->feetpos(-1)) & MAT_GLASS)
+        if ((lookupmaterial(d->feetpos(-1)) & MATF_VOLUME) == MAT_GLASS)
         {
             foot.sound = S_FOOTSTEP_GLASS;
             foot.hascrouchfootsteps = false;

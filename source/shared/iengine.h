@@ -212,6 +212,7 @@ extern void logoutfv(const char *fmt, va_list args);
 extern void logoutf(const char *fmt, ...) PRINTFARGS(1, 2);
 
 // octa
+extern bool isemptycube(vec v);
 extern int lookupmaterial(const vec &v);
 extern int lookuptextureeffect(const vec &v);
 

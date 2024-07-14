@@ -278,6 +278,11 @@ int lookuptextureeffect(const vec &v)
     return lookupvslot(lookupcube(ivec(v)).texture[top], false).effect;
 }
 
+bool isemptycube(vec v)
+{
+    return isempty(lookupcube(ivec(v)));
+}
+
 const cube *neighbourstack[32];
 int neighbourdepth = -1;
 

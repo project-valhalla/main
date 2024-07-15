@@ -95,6 +95,7 @@ enum
     S_CHAT,
     S_INTERMISSION, S_INTERMISSION_WIN
 };
+inline bool validsound(int sound) { return sound >= 0; }
 
 // sound flags.
 enum

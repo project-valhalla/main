@@ -109,6 +109,25 @@ namespace game
             }
         }
 
+        void emitattacksound()
+        {
+            int attacksound = monstertypes[mtype].attacksound;
+            if (validsound(attacksound))
+            {
+                playsound(attacksound, this); // battle cry: announcing the attack
+            }
+        }
+
+        void alert(bool on)
+        {
+            int alertsound = on ? monstertypes[mtype].haltsound : monstertypes[mtype].unhaltsound;
+            if (validsound(alertsound))
+            {
+                playsound(alertsound, this);
+            }
+            halted = on;
+        }
+
         void monsteraction(int curtime) // main AI thinking routine, called every frame for every monster
         {
             if(enemy->state==CS_DEAD)
@@ -152,7 +171,7 @@ namespace game
             float enemyyaw = -atan2(enemy->o.x - o.x, enemy->o.y - o.y)/RAD;
 
             int meleeatk = monstertypes[mtype].meleeatk;
-            bool meleerange = dist <= attacks[meleeatk].range;
+            bool meleerange = validatk(meleeatk) && dist <= attacks[meleeatk].range;
 
             vec target = vec(0, 0, 0);
             orient = headpos();
@@ -166,8 +185,7 @@ namespace game
                     if(trigger<lastmillis && canmove) transition(MS_HOME, 1, 100, 200);
                     if(!halted && monsterstate == MS_SEARCH && raycubelos(o, enemy->o, target))
                     {
-                        playsound(monstertypes[mtype].haltsound, this);
-                        halted = true;
+                        alert(true);
                     }
                     burst(false); // reset burst shots and rage status
                     break;
@@ -188,8 +206,7 @@ namespace game
                         if(raycubelos(o, enemy->o, target))
                         {
                             transition(MS_HOME, 1, 500, 200);
-                            playsound(monstertypes[mtype].haltsound, this);
-                            halted = true;
+                            alert(true);
                         }
                     }
                     break;
@@ -206,10 +223,7 @@ namespace game
                         if(!bursting)
                         {
                             burst(true);
-                            if(monstertypes[mtype].attacksound >= 0)
-                            {
-                                playsound(monstertypes[mtype].attacksound, this); // battle cry: announcing the attack
-                            }
+                            emitattacksound();
                         }
                         if(lastmillis - bursting < 1500) break; // delay before starting to burst!
                     }
@@ -230,17 +244,12 @@ namespace game
                             bool burstcomplete = shots >= monstertypes[mtype].burstshots;
                             if(!burstfire || (burstfire && burstcomplete))
                             {
-                                if(!burstfire)
-                                {
-                                    if(atk != meleeatk && monstertypes[mtype].attacksound >= 0)
-                                    {
-                                        playsound(monstertypes[mtype].attacksound, this);
-                                    }
-                                }
+                                if(!burstfire && atk != meleeatk) emitattacksound();
                                 goto stopfiring;
                             }
                         }
-                        break; stopfiring: transition(MS_ATTACKING, 0, 600, 0); burst(false);
+                        break;
+                        stopfiring: transition(MS_ATTACKING, 0, 600, 0); burst(false);
                     }
                     break;
                 }
@@ -255,11 +264,7 @@ namespace game
                             transition(MS_HOME, 1, 800, 500);
                             if(halted)
                             {
-                                if(monstertypes[mtype].unhaltsound >= 0)
-                                {
-                                    playsound(monstertypes[mtype].unhaltsound, this);
-                                }
-                                halted = false;
+                                alert(false);
                             }
                             if(monstertypes[mtype].isexplosive)
                             {
@@ -316,7 +321,10 @@ namespace game
             if(exploding) return;
             exploding = true;
             speed += monstertypes[mtype].speedbonus; // increase movement to get to the player and explode in their face faster
-            playsound(monstertypes[mtype].haltsound, this);
+            if (validsound(monstertypes[mtype].haltsound))
+            {
+                playsound(monstertypes[mtype].haltsound, this);
+            }
         }
 
         void detonate()
@@ -342,7 +350,14 @@ namespace game
                 int atk = monstertypes[mtype].atk;
                 if(monstertypes[mtype].isexplosive) game::explode(true, this, o, vel, NULL, attacks[atk].damage, atk);
             }
-            else if(!(flags & HIT_HEAD)) playsound(monstertypes[mtype].diesound, this);
+            else if (!(flags & HIT_HEAD))
+            {
+                int diesound = monstertypes[mtype].diesound;
+                if (validsound(diesound))
+                {
+                    playsound(diesound, this);
+                }
+            }
             monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
         }
 
@@ -384,7 +399,11 @@ namespace game
                     if(!bursting) transition(MS_PAIN, 0, monstertypes[mtype].pain, 200); // in this state monster won't attack
                     if(health > 0 && lastmillis - lastyelp > 600)
                     {
-                        playsound(monstertypes[mtype].painsound, this);
+                        int painsound = monstertypes[mtype].painsound;
+                        if (validsound(painsound))
+                        {
+                            playsound(painsound, this);
+                        }
                         lastyelp = lastmillis;
                     }
                 }

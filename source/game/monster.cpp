@@ -1,7 +1,22 @@
-// monster.h: implements AI for invasion monsters, currently client only
+/*
+ * ========================================================================================================================
+ * monster.cpp
+ * Implements AI for monsters and NPCs
+ * ========================================================================================================================
+ *
+ * Monster functionalities:
+ * - Extend the "gameent" entity for managing monster-specific attributes.
+ * - Manage various aspects of NPC behavior, including state transitions, attacks, movement and interactions.
+ * - Handle actions such as targeting, pathfinding and decision-making based on the monster's current state.
+ * - Support behaviors like teleportation, melee attacks, ranged attacks, detonation and death animations.
+ * - Support configuration parameters such as skill level and entity attributes.
+ *
+ * Note: monsters are currently implemented for client-side gameplay only.
+ *
+ * ========================================================================================================================
+ */
+
 #include "game.h"
-
-
 
 namespace game
 {
@@ -321,9 +336,10 @@ namespace game
             if(exploding) return;
             exploding = true;
             speed += monstertypes[mtype].speedbonus; // increase movement to get to the player and explode in their face faster
-            if (validsound(monstertypes[mtype].haltsound))
+            int haltsound = monstertypes[mtype].haltsound;
+            if (validsound(haltsound))
             {
-                playsound(monstertypes[mtype].haltsound, this);
+                playsound(haltsound, this);
             }
         }
 

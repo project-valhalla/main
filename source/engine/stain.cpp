@@ -26,7 +26,7 @@ enum
 };
 
 VARFP(maxstaintris, 1, 2048, 16384, initstains());
-VARMP(stainfade, 1, 15, 60, 1000);
+VARMP(stainfade, 1, 30, 60, 1000);
 VAR(dbgstain, 0, 0, 1);
 
 struct stainbuffer
@@ -750,13 +750,14 @@ struct stainrenderer
 
 stainrenderer stains[] =
 {
-    stainrenderer("<grey>data/texture/particle/blood01.png",      SF_RND4|SF_ROTATE|SF_INVMOD),
-    stainrenderer("<grey>data/texture/particle/scorch.png",       SF_ROTATE, 280),
-    stainrenderer("<grey>data/texture/particle/hole_wall.png",    SF_RND4|SF_ROTATE|SF_OVERBRIGHT),
-    stainrenderer("<grey>data/texture/particle/glow_pulse.png",   SF_ROTATE|SF_GLOW|SF_SATURATE, 250, 1500, 250),
-    stainrenderer("<grey>data/texture/particle/glow_railgun.png", SF_ROTATE|SF_GLOW|SF_SATURATE, 100, 1100, 100),
-    stainrenderer("<grey>data/texture/particle/hole_glass.png",   SF_RND4|SF_ROTATE|SF_OVERBRIGHT),
-    stainrenderer("<grey>data/texture/particle/snow.png",         SF_ROTATE|SF_RND4)
+    stainrenderer("<grey>data/texture/particle/blood01.png",            SF_RND4|SF_ROTATE|SF_INVMOD),
+    stainrenderer("<grey>data/texture/particle/scorch.png",             SF_ROTATE, 280),
+    stainrenderer("<grey>data/texture/particle/hole_wall.png",          SF_RND4|SF_ROTATE|SF_OVERBRIGHT),
+    stainrenderer("<grey>data/texture/particle/glow_pulse.png",         SF_ROTATE|SF_GLOW|SF_SATURATE, 250, 1500, 250),
+    stainrenderer("<grey>data/texture/particle/glow_railgun.png",       SF_ROTATE|SF_GLOW|SF_SATURATE, 100, 1100, 100),
+    stainrenderer("<grey>data/texture/particle/hole_glass.png",         SF_RND4|SF_ROTATE|SF_OVERBRIGHT),
+    stainrenderer("data/texture/particle/snow.png",                     SF_RND4|SF_SATURATE|SF_ROTATE, 0, 500, 5000),
+    stainrenderer("<animation:80,2,2,1>data/texture/particle/rain.png", SF_ROTATE, 200, 200, 300)
 };
 
 void initstains()

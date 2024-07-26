@@ -161,15 +161,16 @@ struct partrenderer
     const char *texname;
     int texclamp;
     uint type;
-    int stain;
+    int stain, stainsize;
+    int part, partsize;
     string info;
 
-    partrenderer(const char *texname, int texclamp, int type, int stain = -1)
-        : tex(NULL), texname(texname), texclamp(texclamp), type(type), stain(stain)
+    partrenderer(const char *texname, int texclamp, int type, int stain = -1, int stainsize = 0, int part = -1, int partsize = 0)
+        : tex(NULL), texname(texname), texclamp(texclamp), type(type), stain(stain), stainsize(stainsize), part(part), partsize(partsize)
     {
     }
-    partrenderer(int type, int stain = -1)
-        : tex(NULL), texname(NULL), texclamp(0), type(type), stain(stain)
+    partrenderer(int type, int stain = -1, int stainsize = 0, int part = -1, int partsize = 0)
+        : tex(NULL), texname(NULL), texclamp(0), type(type), stain(stain), stainsize(stainsize), part(part), partsize(partsize)
     {
     }
     virtual ~partrenderer()
@@ -222,13 +223,18 @@ struct partrenderer
                 if(stain >= 0)
                 {
                     vec surface;
-                    float floorz = rayfloor(vec(o.x, o.y, p->val), surface, RAY_CLIPMAT, COLLIDERADIUS);
+                    float floorz = rayfloor(vec(o.x, o.y, p->val), surface, RAY_CLIPMAT|RAY_LIQUIDMAT, COLLIDERADIUS);
                     float collidez = floorz<0 ? o.z-COLLIDERADIUS : p->val - floorz;
                     if(o.z >= collidez+COLLIDEERROR)
                         p->val = collidez+COLLIDEERROR;
                     else
                     {
-                        addstain(stain, vec(o.x, o.y, collidez), vec(p->o).sub(o).normalize(), 2*p->size, p->color, type&PT_RND4 ? (p->flags>>5)&3 : 0);
+                        vec collidepos = vec(o.x, o.y, collidez);
+                        addstain(stain, collidepos, vec(p->o).sub(o).normalize(), p->size * (stainsize ? stainsize : 1), p->color, type&PT_RND4 ? (p->flags>>5)&3 : 0);
+                        if (part >= 0)
+                        {
+                            particle_splash(part, 3, 150, collidepos, p->color.tohexcolor(), p->size * (partsize ? partsize : 1), 100, 2);
+                        }
                         blend = 0;
                     }
                 }
@@ -272,12 +278,12 @@ struct listrenderer : partrenderer
     static listparticle *parempty;
     listparticle *list;
 
-    listrenderer(const char *texname, int texclamp, int type, int stain = -1)
-        : partrenderer(texname, texclamp, type, stain), list(NULL)
+    listrenderer(const char *texname, int texclamp, int type, int stain = -1, int stainsize = 0, int part = -1, int partsize = 0)
+        : partrenderer(texname, texclamp, type, stain, stainsize, part, partsize), list(NULL)
     {
     }
-    listrenderer(int type, int stain = -1)
-        : partrenderer(type, stain), list(NULL)
+    listrenderer(int type, int stain = -1, int stainsize = 0, int part = -1, int partsize = 0)
+        : partrenderer(type, stain, stainsize, part, partsize), list(NULL)
     {
     }
 
@@ -623,8 +629,8 @@ struct varenderer : partrenderer
     int maxparts, numparts, lastupdate, rndmask;
     GLuint vbo;
 
-    varenderer(const char *texname, int type, int stain = -1)
-        : partrenderer(texname, 3, type, stain),
+    varenderer(const char *texname, int type, int stain = -1, int stainsize = 0, int part = -1, int partsize = 0)
+        : partrenderer(texname, 3, type, stain, stainsize, part, partsize),
           verts(NULL), parts(NULL), maxparts(0), numparts(0), lastupdate(-1), rndmask(0), vbo(0)
     {
         if(type & PT_HFLIP) rndmask |= 0x01;
@@ -846,7 +852,7 @@ static partrenderer *parts[] =
 {
     new quadrenderer("<grey>data/texture/particle/blood01.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4|PT_COLLIDE, STAIN_BLOOD), // blood spats (note: rgb is inverted)
     new quadrenderer("<grey>data/texture/particle/blood02.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4),                         // blood drops
-    new trailrenderer("data/texture/particle/water.png", PT_TRAIL|PT_LERP),                                              // water
+    new trailrenderer("data/texture/particle/water.png", PT_TRAIL|PT_COLLIDE, STAIN_RAIN, 10, PART_SPLASH, 5),           // water
     new quadrenderer("data/texture/particle/glass.png", PT_PART|PT_FLIP|PT_BRIGHT|PT_RND4),                              // glass
     new quadrenderer("<grey>data/texture/particle/smoke.png", PT_PART|PT_RND4|PT_FLIP|PT_LERP),                          // smoke
     new quadrenderer("<grey>data/texture/particle/steam.png", PT_PART|PT_FLIP),                                          // steam
@@ -867,6 +873,7 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/orb.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),                                 // energy orb
     new quadrenderer("data/texture/particle/ring.png", PT_PART|PT_FLIP|PT_BRIGHT),                                       // energy ring
     new quadrenderer("data/texture/particle/splash.png", PT_PART|PT_FLIP),                                               // liquid splash
+    new quadrenderer("data/texture/particle/bubble.png", PT_PART | PT_FLIP),                                             // liquid bubble
     new quadrenderer("data/texture/particle/muzzle01.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // muzzle flash 1
     new quadrenderer("data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // muzzle flash 2
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                   // muzzle flash 3
@@ -1331,7 +1338,7 @@ static void makeparticles(entity &e)
         case 13: //snow
         {
             static const int typemap[]   = { PART_TRAIL, -1, -1, PART_LIGHTNING, -1, PART_STEAM, PART_WATER, -1, -1, PART_SNOW };
-            static const float sizemap[] = { 0.28f, 0.0f, 0.0f, 1.0f, 0.0f, 2.4f, 0.60f, 0.0f, 0.0f, 0.5f };
+            static const float sizemap[] = { 0.28f, 0.0f, 0.0f, 1.0f, 0.0f, 2.4f, 0.1f, 0.0f, 0.0f, 0.5f };
             static const int gravmap[] = { 0, 0, 0, 0, 0, -20, 2, 0, 0, 20 };
             int type = typemap[e.attr1-4];
             float size = sizemap[e.attr1-4];

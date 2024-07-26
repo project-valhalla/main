@@ -812,7 +812,7 @@ namespace physics
         }
     }
 
-    bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float grav)
+    bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float gravity)
     {
         // Collision checks.
         if (d->physstate != PHYS_BOUNCE && collide(d, vec(0, 0, 0), 0, false)) return true;
@@ -820,10 +820,10 @@ namespace physics
         bool isinwater = isliquidmaterial(mat);
         if (isinwater)
         {
-            d->vel.z -= grav * mapgravity / 16 * secs;
+            d->vel.z -= gravity * mapgravity / 16 * secs;
             d->vel.mul(max(1.0f - secs / waterfric, 0.0f));
         }
-        else d->vel.z -= grav * mapgravity * secs;
+        else d->vel.z -= gravity * mapgravity * secs;
         vec old(d->o);
         loopi(2)
         {
@@ -839,9 +839,12 @@ namespace physics
                 }
                 break;
             }
-            else if (collideplayer) break;
+            else if (collideplayer)
+            {
+                break;
+            }
             d->o = old;
-            game::bounced(d, collidewall);
+            game::bounce(d, collidewall);
             float c = collidewall.dot(d->vel),
                 k = 1.0f + (1.0f - elasticity) * c / d->vel.magnitude();
             d->vel.mul(k);
@@ -856,7 +859,7 @@ namespace physics
         return collideplayer != NULL;
     }
 
-    bool isbouncing(physent* d, float elasticity, float waterfric, float grav)
+    bool isbouncing(physent* d, float elasticity, float waterfric, float gravity)
     {
         if (physsteps <= 0)
         {
@@ -868,10 +871,16 @@ namespace physics
         bool hitplayer = false;
         loopi(physsteps - 1)
         {
-            if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, grav)) hitplayer = true;
+            if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
+            {
+                hitplayer = true;
+            }
         }
         d->deltapos = d->o;
-        if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, grav)) hitplayer = true;
+        if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
+        {
+            hitplayer = true;
+        }
         d->newpos = d->o;
         d->deltapos.sub(d->newpos);
         interpolateposition(d);
@@ -939,6 +948,12 @@ namespace physics
         }
     }
 
+    void applyliquideffects(gameent* d)
+    {
+        particle_splash(PART_WATER, 200, 250, d->o, 0xFFFFFF, 0.09f, 800, 1);
+        particle_splash(PART_SPLASH, 10, 100, d->o, 0xFFFFFF, 10.0f, 500, -1);
+    }
+
     void triggerphysicsevent(physent* pl, int event, int material, vec origin)
     {
         gameent* d = (gameent*)pl;
@@ -983,6 +998,7 @@ namespace physics
             case PHYSEVENT_LIQUID_IN:
             {
                 playsound(material == MAT_LAVA ? S_LAVA_IN : S_WATER_IN, NULL, origin.iszero() ? (d == self ? NULL : &d->o) : &origin);
+                applyliquideffects(d);
                 break;
             }
 
@@ -990,6 +1006,7 @@ namespace physics
             {
                 if (material == MAT_LAVA) break;
                 playsound(S_WATER_OUT, NULL, origin.iszero() ? (d == self ? NULL : &d->o) : &origin);
+                applyliquideffects(d);
                 break;
             }
 

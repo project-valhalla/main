@@ -42,9 +42,7 @@ inline bool isliquidmaterial(int mat)  { return mat == MAT_WATER || mat == MAT_L
 inline bool issolidmaterial(int mat)   { return mat == MAT_GLASS;                     }
 inline bool isdeadlymaterial(int mat)  { return mat == MAT_LAVA;                      }
 
-extern void lightent(extentity &e, float height = 8.0f);
-
-enum { RAY_BB = 1, RAY_POLY = 3, RAY_ALPHAPOLY = 7, RAY_ENTS = 9, RAY_CLIPMAT = 16, RAY_SKIPFIRST = 32, RAY_EDITMAT = 64, RAY_PASS = 128 };
+enum { RAY_BB = 1, RAY_POLY = 3, RAY_ALPHAPOLY = 7, RAY_ENTS = 9, RAY_CLIPMAT = 16, RAY_LIQUIDMAT = 32, RAY_SKIPFIRST = 64, RAY_EDITMAT = 128, RAY_PASS = 256 };
 
 extern float raycube   (const vec &o, const vec &ray,     float radius = 0, int mode = RAY_CLIPMAT, int size = 0, extentity *t = 0);
 extern float raycubepos(const vec &o, const vec &ray, vec &hit, float radius = 0, int mode = RAY_CLIPMAT, int size = 0);
@@ -342,7 +340,7 @@ enum
     PART_LIGHTNING,
     PART_EXPLOSION1, PART_EXPLOSION2, PART_EXPLOSION3,
     PART_SPARK, PART_SPARK2, PART_EXPLODE, PART_ELECTRICITY, PART_EDIT, PART_ORB, PART_RING,
-    PART_SPLASH,
+    PART_SPLASH, PART_BUBBLE,
     PART_MUZZLE_FLASH, PART_MUZZLE_FLASH2, PART_MUZZLE_FLASH3, PART_MUZZLE_FLASH4, PART_MUZZLE_FLASH5,
     PART_COMICS,
     PART_GAME_ICONS, PART_EDITOR_ICONS,
@@ -374,7 +372,7 @@ enum
     STAIN_PULSE_GLOW,
     STAIN_RAIL_GLOW,
     STAIN_GLASS_HOLE,
-    STAIN_SNOW
+    STAIN_SNOW, STAIN_RAIN
 };
 
 extern void addstain(int type, const vec &center, const vec &surface, float radius, const bvec &color = bvec(0xFF, 0xFF, 0xFF), int info = 0);

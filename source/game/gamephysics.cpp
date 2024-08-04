@@ -844,7 +844,7 @@ namespace physics
                 break;
             }
             d->o = old;
-            game::bounce(d, collidewall);
+            game::bounced(d, collidewall);
             float c = collidewall.dot(d->vel),
                 k = 1.0f + (1.0f - elasticity) * c / d->vel.magnitude();
             d->vel.mul(k);

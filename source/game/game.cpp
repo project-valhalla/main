@@ -399,7 +399,7 @@ namespace game
                 }
                 else
                 {
-                    zoom = zoom ? -1 : 0;
+                    zoom = zoom ? -1 : 1;
                 }
                 if (self->attacking == ACT_PRIMARY)
                 {

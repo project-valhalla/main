@@ -381,18 +381,42 @@ namespace game
 
     // inputs
 
-    inline bool checkaction(int &act, const int gun)
+    inline bool checkaction(int& act, const int gun)
     {
-        if(guns[gun].zoom)
+        if (self->attacking == ACT_MELEE)
         {
-            if(act == ACT_SECONDARY)
+            disablezoom();
+            return true;
+        }
+
+        if (guns[gun].zoom)
+        {
+            if (act == ACT_SECONDARY)
             {
-                execident("dozoom");
+                if (identexists("dozoom"))
+                {
+                    execident("dozoom");
+                }
+                else
+                {
+                    zoom = zoom ? -1 : 0;
+                }
+                if (self->attacking == ACT_PRIMARY)
+                {
+                    /* When zooming in while firing with the primary mode,
+                     * automatically switch to the secondary, to ensure consistency.
+                     */
+                    return true;
+                }
                 return false;
             }
-            if(act == ACT_PRIMARY)
+
+            if (act == ACT_PRIMARY)
             {
-               if(zoom) act = ACT_SECONDARY;
+                if (zoom)
+                {
+                    act = ACT_SECONDARY;
+                }
             }
         }
         return true;
@@ -400,9 +424,15 @@ namespace game
 
     void doaction(int act)
     {
-        if(!connected || intermission || lastmillis-self->lasttaunt < 1000) return;
-        if(!checkaction(act, self->gunselect)) return;
-        if((self->attacking = act)) respawn();
+        if (!connected || intermission || lastmillis - self->lasttaunt < 1000 || !checkaction(act, self->gunselect))
+        {
+            return;
+        }
+
+        if ((self->attacking = act))
+        {
+            respawn();
+        }
     }
     ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));

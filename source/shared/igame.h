@@ -83,7 +83,7 @@ static const struct textureeffect
 namespace game
 {
     extern void parseoptions(vector<const char *> &args);
-    extern void gamedisconnect(bool cleanup, bool force = false);
+    extern void gamedisconnect(bool cleanup);
     extern void parsepacketclient(int chan, packetbuf &p);
     extern void connectattempt(const char *name, const char *password, const ENetAddress &address);
     extern void connectfail();

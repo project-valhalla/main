@@ -136,7 +136,7 @@ void reconnect(const char *serverpassword)
     connectserv(connectname, connectport, serverpassword);
 }
 
-void disconnect(bool async, bool cleanup, bool force)
+void disconnect(bool async, bool cleanup)
 {
     if(curpeer)
     {
@@ -154,7 +154,7 @@ void disconnect(bool async, bool cleanup, bool force)
         curpeer = NULL;
         discmillis = 0;
         conoutf("disconnected");
-        game::gamedisconnect(cleanup, force);
+        game::gamedisconnect(cleanup);
         mainmenu = 1;
     }
     if(!connpeer && clienthost)
@@ -234,7 +234,7 @@ void gets2c()           // get updates from the server
     switch(event.type)
     {
         case ENET_EVENT_TYPE_CONNECT:
-            disconnect(false, false);
+            disconnect(false);
             localdisconnect(false);
             curpeer = connpeer;
             connpeer = NULL;
@@ -262,18 +262,15 @@ void gets2c()           // get updates from the server
                 if(!discmillis || event.data)
                 {
                     const char *msg = disconnectreason(event.data);
-                    if(msg)
-                    {
-                        conoutf(CON_ERROR, "disconnecting... (%s)", msg);
-                        setsvar("lastdisconnectreason", msg);
-                    }
-                    else
-                    {
-                        conoutf(CON_ERROR, "disconnecting... (server network error)");
-                        setsvar("lastdisconnectreason", "server network error");
-                    }
+                    if (!msg) msg = "server network error";
+                    conoutf(CON_ERROR, "disconnecting... (%s)", msg);
+                    setsvar("lastdisconnectreason", msg);
                 }
-                disconnect(false, true, true);
+                else
+                {
+                    setsvar("lastdisconnectreason", "");
+                }
+                disconnect(false, true);
             }
             return;
 

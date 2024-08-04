@@ -1123,7 +1123,7 @@ namespace game
         execident("on_connect");
     }
 
-    void gamedisconnect(bool cleanup, bool force)
+    void gamedisconnect(bool cleanup)
     {
         if(remote) stopfollowing();
         ignores.setsize(0);
@@ -1153,7 +1153,6 @@ namespace game
             clientmap[0] = '\0';
         }
         execident("on_disconnect");
-        if(force) execident("on_forcedisconnect");
     }
 
     VARP(chatsound, 0, 1, 2); // 0 = no chat sound, 1 = always plays, 2 = only for whispers

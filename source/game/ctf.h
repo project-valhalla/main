@@ -447,14 +447,14 @@ struct ctfclientmode : clientmode
             if(hud->holdingflag && f.team == hud->team)
             {
                 vec base = f.spawnloc;
-                particle_icon_mark(base, 2, 1, PART_GAME_ICONS, 1, teamtextcolor[hud->team], 5.0f);
+                particle_hud_mark(base, 2, 1, PART_GAME_ICONS, 1, teamtextcolor[hud->team], 5.0f);
             }
             else if(f.owner)
             {
                 if(lastmillis%1000 >= 500) continue;
             }
             else if(f.droptime && (f.droploc.x < 0 || lastmillis%300 >= 150)) continue;
-            particle_icon_mark(pos, f.team == 1 ? 1 : 0, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
+            particle_hud_mark(pos, f.team == 1 ? 1 : 0, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
         }
     }
 

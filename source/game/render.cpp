@@ -437,14 +437,14 @@ namespace game
                 {
                     if(isally(hud, d))
                     {
-                        if(d->state == CS_ALIVE) particle_icon_mark(d->abovehead(), 2, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                        if(d->state == CS_ALIVE) particle_hud_mark(d->abovehead(), 2, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
                         else if(d->deaths)
                         {
-                            particle_icon_mark(d->abovehead(), 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                            particle_hud_mark(d->abovehead(), 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
                         }
                     }
-                    else if(d->role == ROLE_BERSERKER) particle_icon_mark(d->abovehead(), 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
-                    if(d->haspowerup(PU_INVULNERABILITY)) particle_icon_mark(d->o, 0, 1, PART_GAME_ICONS, 1, 0xF9B303, 4.0f);
+                    else if(d->role == ROLE_BERSERKER) particle_hud_mark(d->abovehead(), 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
+                    if(d->haspowerup(PU_INVULNERABILITY)) particle_hud_mark(d->o, 0, 1, PART_GAME_ICONS, 1, 0xF9B303, 4.0f);
                 }
                 else if(d->state == CS_ALIVE && !hidenames()) particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
             }
@@ -650,10 +650,17 @@ namespace game
 
     vec hudgunorigin(int gun, const vec &from, const vec &to, gameent *d)
     {
-        if(zoom && d == self) return d->feetpos(4);
-        else if(d->muzzle.x >= 0) return d->muzzle;
+        if (zoom && d == self)
+        {
+            return d->feetpos(4);
+        }
+        else if (d->muzzle.x >= 0)
+        {
+            return d->muzzle;
+        }
+
         vec offset(from);
-        if(d!=hudplayer() || isthirdperson())
+        if(d != hudplayer() || isthirdperson())
         {
             vec front, right;
             vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);

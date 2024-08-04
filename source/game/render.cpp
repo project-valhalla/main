@@ -412,9 +412,78 @@ namespace game
         }
     }
 
+    VARP(statusbars, 0, 1, 1);
+    FVARP(statusbarscale, 0, 1, 2);
+
+    int gethealthcolor(gameent* d)
+    {
+        int maxhealth = d->maxhealth;
+        if (d->health <= maxhealth / 4) return 0xFF0000;
+        if (d->health <= maxhealth / 2) return 0xFF8000;
+        if (d->health <= maxhealth) return 0x00FF80;
+        return 0xD0F0FF;
+    }
+
+    float renderstatusbars(gameent* d)
+    {
+        if (!isally(self, d) || (d->state != CS_ALIVE && d->state != CS_LAGGED)) return 0;
+
+        vec pos = d->abovehead().msub(camdir, 50 / 80.0f).msub(camup, 2.0f);
+        float offset = 0;
+        float size = statusbarscale;
+        if (d->shield > 0)
+        {
+            int shieldlimit = 200;
+            offset += size;
+            float shieldfill = float(d->shield) / shieldlimit;
+            int shieldcolor = 0xFFC040;
+            particle_meter(vec(pos).madd(camup, offset), shieldfill, PART_METER, 1, shieldcolor, 0, size);
+        }
+        offset += size;
+        float healthfill = float(d->health) / d->maxhealth;
+        particle_meter(vec(pos).madd(camup, offset), healthfill, PART_METER, 1, gethealthcolor(d), 0, size);
+
+        return offset;
+    }
+
     inline bool hidenames()
     {
         return m_betrayal && self->state == CS_DEAD;
+    }
+
+    void renderplayereffects(gameent* d)
+    {
+        if (d->state != CS_ALIVE && d->state != CS_DEAD)
+        {
+            return;
+        }
+
+        float offset = renderstatusbars(d);
+
+        vec pos = d->abovehead().madd(camup, offset);
+
+        gameent* hud = followingplayer(self);
+
+        if (hud->o.dist(d->o) > maxparticletextdistance || !raycubelos(d->o, camera1->o, vec(0, 0, 0)))
+        {
+            if (isally(hud, d))
+            {
+                if (d->state == CS_ALIVE) particle_hud_mark(pos, 2, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                else if (d->deaths)
+                {
+                    /* Mark the location of death only if the player died during the game (deaths > 0),
+                     * otherwise it means they are in a "fake death state" immediately after joining the game.
+                     */
+                    particle_hud_mark(pos, 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                }
+            }
+        }
+        else if (d->state == CS_ALIVE && !hidenames())
+        {
+            int team = m_teammode && validteam(d->team) ? d->team : 0;
+            particle_text(pos, d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
+        }
+        booteffect(d);
     }
 
     void rendergame()
@@ -429,26 +498,7 @@ namespace game
             if(d == self || d->state==CS_SPECTATOR || d->state==CS_SPAWNING || d->lifesequence < 0 || d == exclude || (d->state==CS_DEAD && !showdeadplayers)) continue;
             renderplayer(d);
             copystring(d->info, colorname(d));
-            if(d->state == CS_ALIVE || d->state == CS_DEAD)
-            {
-                int team = m_teammode && validteam(d->team) ? d->team : 0;
-                gameent *hud = followingplayer(self);
-                if(hud->o.dist(d->o) > maxparticletextdistance)
-                {
-                    if(isally(hud, d))
-                    {
-                        if(d->state == CS_ALIVE) particle_hud_mark(d->abovehead(), 2, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
-                        else if(d->deaths)
-                        {
-                            particle_hud_mark(d->abovehead(), 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
-                        }
-                    }
-                    else if(d->role == ROLE_BERSERKER) particle_hud_mark(d->abovehead(), 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
-                    if(d->haspowerup(PU_INVULNERABILITY)) particle_hud_mark(d->o, 0, 1, PART_GAME_ICONS, 1, 0xF9B303, 4.0f);
-                }
-                else if(d->state == CS_ALIVE && !hidenames()) particle_text(d->abovehead(), d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
-            }
-            booteffect(d);
+            renderplayereffects(d);
         }
         loopv(ragdolls)
         {

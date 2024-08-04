@@ -488,7 +488,7 @@ struct textrenderer : listrenderer
         textshader = particletextshader;
 
         pushfont();
-        setfont("default.ol");
+        setfont("wide.ol");
     }
 
     void endrender()

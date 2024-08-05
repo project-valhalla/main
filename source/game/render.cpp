@@ -459,12 +459,9 @@ namespace game
         }
 
         float offset = renderstatusbars(d);
-
-        vec pos = d->abovehead().madd(camup, offset);
-
         gameent* hud = followingplayer(self);
-
-        if (hud->o.dist(d->o) > maxparticletextdistance || !raycubelos(d->o, camera1->o, vec(0, 0, 0)))
+        vec pos = d->abovehead().madd(camup, offset), hitpos;
+        if (hud->o.dist(d->o) > maxparticletextdistance || !raycubelos(pos, camera1->o, hitpos))
         {
             if (isally(hud, d))
             {

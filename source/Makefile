@@ -128,11 +128,16 @@ CLIENT_PCH= shared/cube.h.gch engine/engine.h.gch game/game.h.gch
 SERVER_INCLUDES= -DSTANDALONE -Istandalone/shared -Istandalone/engine -Istandalone/game $(INCLUDES)
 ifneq (,$(findstring MINGW,$(PLATFORM)))
 SERVER_INCLUDES+= -Iinclude
-SERVER_LIBS= -mwindows $(STD_LIBS) -L$(WINBIN) -L$(WINLIB) -lzlib1 -lenet -lws2_32 -lwinmm -lmaxminddb
+SERVER_LIBS= -mwindows $(STD_LIBS) -L$(WINBIN) -L$(WINLIB) -lzlib1 -lenet -lws2_32 -lwinmm
 MASTER_LIBS= $(STD_LIBS) -L$(WINBIN) -L$(WINLIB) -lzlib1 -lenet -lws2_32 -lwinmm
 else
-SERVER_LIBS= -Lenet -lenet -lz -lmaxminddb
+SERVER_LIBS= -Lenet -lenet -lz
 MASTER_LIBS= $(SERVER_LIBS)
+MAXMINDDB_SUPPORT:= $(shell ./geoip_check.sh $(CXX) $(CXXFLAGS) $(SERVER_INCLUDES))
+SERVER_INCLUDES+= $(MAXMINDDB_SUPPORT)
+ifneq (,$(findstring HAVE_MAXMINDDB,$(MAXMINDDB_SUPPORT)))
+SERVER_LIBS+= -lmaxminddb
+endif
 endif
 
 SERVER_OBJS= \

@@ -1,4 +1,4 @@
-#ifdef STANDALONE
+#ifdef HAVE_MAXMINDDB
 #include <maxminddb.h>
 
 MMDB_s *mmdb = NULL;
@@ -8,7 +8,7 @@ string _geoip_filename;
 
 void geoip_close_database()
 {
-    #ifdef STANDALONE
+    #ifdef HAVE_MAXMINDDB
     if(!mmdb) return;
     MMDB_close(mmdb);
     free(mmdb);
@@ -18,7 +18,7 @@ void geoip_close_database()
 
 void geoip_open_database(int geoip)
 {
-    #ifdef STANDALONE
+    #ifdef HAVE_MAXMINDDB
     if(mmdb) geoip_close_database();
     if(!geoip || !_geoip_filename[0]) return;
 
@@ -36,7 +36,7 @@ void geoip_open_database(int geoip)
 
 void geoip_lookup_ip(enet_uint32 ip, char *country_code, char *country_name)
 {
-    #ifdef STANDALONE
+    #ifdef HAVE_MAXMINDDB
     if(!mmdb) return;
     int error;
 
@@ -83,7 +83,7 @@ void geoip_lookup_ip(enet_uint32 ip, char *country_code, char *country_name)
 
 VARF(geoip, 0, 0, 1, geoip_open_database(geoip));
 SVARF(geoip_database, "geoip.mmdb", {
-    #ifdef STANDALONE
+    #ifdef HAVE_MAXMINDDB
     copystring(_geoip_filename, geoip_database, MAXSTRLEN);
     #endif
     geoip_open_database(geoip);

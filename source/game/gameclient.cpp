@@ -318,6 +318,20 @@ namespace game
     }
     ICOMMAND(getclientcolor, "i", (int *cn), intret(getclientcolor(*cn)));
 
+    const char *getclientcountrycode(int cn)
+    {
+        gameent *d = getclient(cn);
+        return d && d->aitype == AI_NONE ? d->country_code : "";
+    }
+    ICOMMAND(getclientcountrycode, "i", (int *cn), result(getclientcountrycode(*cn)));
+
+    const char *getclientcountryname(int cn)
+    {
+        gameent *d = getclient(cn);
+        return d && d->aitype == AI_NONE ? d->country_name : "";
+    }
+    ICOMMAND(getclientcountryname, "i", (int *cn), result(getclientcountryname(*cn)));
+
     const char *getclientpos(int cn)
     {
         gameent *d = getclient(cn);
@@ -1544,6 +1558,17 @@ namespace game
         }
     }
 
+    static void validcountrycode(char *dst, const char *src)
+    {
+        if(src) loopi(MAXSTRLEN)
+        {
+            char c = *src++;
+            if(iscubealnum(c) || c == '_' || c == '-') *dst++ = c;
+            else break;
+        }
+        *dst = 0;
+    }
+
     void parsemessages(int cn, gameent *d, ucharbuf &p)
     {
         static char text[MAXTRANS];
@@ -1571,6 +1596,15 @@ namespace game
                 }
                 getstring(servdesc, p, sizeof(servdesc));
                 getstring(servauth, p, sizeof(servauth));
+
+                getstring(text, p, MAXSTRLEN);
+                filtertext(text, text, false, false, true, false, MAXSTRLEN);
+                validcountrycode(self->country_code, text);
+
+                getstring(text, p, MAXSTRLEN);
+                filtertext(text, text, false, false, true, false, MAXSTRLEN);
+                copystring(self->country_name, text, MAXSTRLEN);
+
                 sendintro();
                 break;
             }
@@ -1719,32 +1753,47 @@ namespace game
                     getstring(text, p);
                     getint(p);
                     getint(p);
+                    getstring(text, p);
+                    getstring(text, p);
                     break;
                 }
                 getstring(text, p);
                 filtertext(text, text, false, false, true, false, MAXNAMELEN);
                 if(!text[0]) copystring(text, "player"); // if no text is specified for the name change, change to default name
-                if(d->name[0]) // already connected but the client changed their name
+                bool is_new_client = d->name[0] == 0;
+                if(!is_new_client) // already connected but the client changed their name
                 {
                     if(notify && strcmp(d->name, text) && !isignored(d->clientnum))
                     {
                         conoutf(CON_CHAT, "%s \fs\f0is now known as\fr %s", colorname(d), colorname(d, text));
                     }
                 }
-                else // new client joined
-                {
-                    if(d!=self && notify)
-                    {
-                        conoutf(CON_CHAT, "%s \fs\f0joined the game\fr", colorname(d, text));
-                        if(chatsound == 1) playsound(S_CHAT);
-                    }
-                    if(needclipboard >= 0) needclipboard++;
-                }
                 copystring(d->name, text, MAXNAMELEN+1);
                 d->team = getint(p);
                 if(!validteam(d->team)) d->team = 0;
                 d->playermodel = getint(p);
                 d->playercolor = getint(p);
+
+                getstring(text, p);
+                filtertext(text, text, false, false, true, false, MAXSTRLEN);
+                validcountrycode(d->country_code, text);
+
+                getstring(text, p);
+                filtertext(text, text, false, false, true, false, MAXSTRLEN);
+                copystring(d->country_name, text);
+
+                if(is_new_client) // new client joined
+                {
+                    if(d!=self && notify)
+                    {
+                        if(!d->country_name[0])
+                            conoutf(CON_CHAT, "%s \fs\f0joined the game\fr", colorname(d));
+                        else
+                            conoutf(CON_CHAT, "%s \fs\f0joined the game from\fr %s", colorname(d), d->country_name);
+                        if(chatsound == 1) playsound(S_CHAT);
+                    }
+                    if(needclipboard >= 0) needclipboard++;
+                }
                 break;
             }
 

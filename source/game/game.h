@@ -153,7 +153,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 #define VALHALLA_SERVER_PORT 21217
 #define VALHALLA_LANINFO_PORT 21216
 #define VALHALLA_MASTER_PORT 21215
-#define PROTOCOL_VERSION 1 // bump when protocol changes
+#define PROTOCOL_VERSION 2 // bump when protocol changes
 #define DEMO_VERSION 1  // bump when demo format changes
 #define DEMO_MAGIC "VALHALLA_DEMO\0\0"
 
@@ -421,6 +421,7 @@ struct gameent : dynent, gamestate
     ai::aiinfo *ai;
     int ownernum, lastnode;
     bool respawnqueued, ghost;
+    string country_code, country_name;
 
     vec muzzle, eject;
 
@@ -437,6 +438,7 @@ struct gameent : dynent, gamestate
     {
         name[0] = info[0] = 0;
         ghost = false;
+        country_code[0] = country_name[0] = 0;
         respawn();
     }
     ~gameent()

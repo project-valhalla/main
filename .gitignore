@@ -30,6 +30,7 @@ Profile*/
 config/autoexec.cfg
 master.cfg
 master.log
+*.mmdb
 
 
 # Created by https://www.gitignore.io/api/c,c++,intellij+all

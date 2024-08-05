@@ -1,4 +1,5 @@
 #include "game.h"
+#include "geoip.h"
 
 namespace game
 {
@@ -246,6 +247,7 @@ namespace server
         void *authchallenge;
         int authkickvictim;
         char *authkickreason;
+        string country_code, country_name;
 
         clientinfo() : getdemo(NULL), getmap(NULL), clipboard(NULL), authchallenge(NULL), authkickreason(NULL) { reset(); mute = false; }
         ~clientinfo() { events.deletecontents(); cleanclipboard(); cleanauth(); }
@@ -358,6 +360,8 @@ namespace server
             cleanclipboard();
             cleanauth();
             mapchange();
+            country_code[0] = 0;
+            country_name[0] = 0;
         }
 
         int geteventmillis(int servmillis, int clientmillis)
@@ -1921,6 +1925,8 @@ namespace server
             putint(p, ci->team);
             putint(p, ci->playermodel);
             putint(p, ci->playercolor);
+            sendstring(ci->country_code, p);
+            sendstring(ci->country_name, p);
         }
     }
 
@@ -3339,7 +3345,7 @@ namespace server
 
     void sendservinfo(clientinfo *ci)
     {
-        sendf(ci->clientnum, 1, "ri5ss", N_SERVINFO, ci->clientnum, PROTOCOL_VERSION, ci->sessionid, serverpass[0] ? 1 : 0, servername, serverauth);
+        sendf(ci->clientnum, 1, "ri5ssss", N_SERVINFO, ci->clientnum, PROTOCOL_VERSION, ci->sessionid, serverpass[0] ? 1 : 0, servername, serverauth, ci->country_code, ci->country_name);
     }
 
     void noclients()
@@ -3375,6 +3381,8 @@ namespace server
 
         connects.add(ci);
         if(!m_mp(gamemode)) return DISC_LOCAL;
+        // TODO: use actual IP address
+        geoip_lookup_ip(/*getclientip(n)*/rnd(INT_MAX), ci->country_code, ci->country_name);
         sendservinfo(ci);
         return DISC_NONE;
     }

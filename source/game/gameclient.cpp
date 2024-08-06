@@ -1760,13 +1760,21 @@ namespace game
                 getstring(text, p);
                 filtertext(text, text, false, false, true, false, MAXNAMELEN);
                 if(!text[0]) copystring(text, "player"); // if no text is specified for the name change, change to default name
-                bool is_new_client = d->name[0] == 0;
-                if(!is_new_client) // already connected but the client changed their name
+                if(d->name[0]) // already connected but the client changed their name
                 {
                     if(notify && strcmp(d->name, text) && !isignored(d->clientnum))
                     {
                         conoutf(CON_CHAT, "%s \fs\f0is now known as\fr %s", colorname(d), colorname(d, text));
                     }
+                }
+                else // new client joined
+                {
+                    if(d!=self && notify)
+                    {
+                        conoutf(CON_CHAT, "%s \fs\f0joined the game\fr", colorname(d, text));
+                        if(chatsound == 1) playsound(S_CHAT);
+                    }
+                    if(needclipboard >= 0) needclipboard++;
                 }
                 copystring(d->name, text, MAXNAMELEN+1);
                 d->team = getint(p);
@@ -1782,18 +1790,6 @@ namespace game
                 filtertext(text, text, false, false, true, false, MAXSTRLEN);
                 copystring(d->country_name, text);
 
-                if(is_new_client) // new client joined
-                {
-                    if(d!=self && notify)
-                    {
-                        if(!d->country_name[0])
-                            conoutf(CON_CHAT, "%s \fs\f0joined the game\fr", colorname(d));
-                        else
-                            conoutf(CON_CHAT, "%s \fs\f0joined the game from\fr %s", colorname(d), d->country_name);
-                        if(chatsound == 1) playsound(S_CHAT);
-                    }
-                    if(needclipboard >= 0) needclipboard++;
-                }
                 break;
             }
 

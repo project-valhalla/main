@@ -37,6 +37,7 @@ void geoip_open_database(int geoip)
 void geoip_lookup_ip(enet_uint32 ip, char *country_code, char *country_name)
 {
     #ifdef HAVE_MAXMINDDB
+    static string text;
     if(!mmdb) return;
     int error;
 
@@ -54,7 +55,8 @@ void geoip_lookup_ip(enet_uint32 ip, char *country_code, char *country_name)
         error = MMDB_get_value(&result.entry, &data, "country", "iso_code", NULL);
         if(MMDB_SUCCESS == error && data.has_data && MMDB_DATA_TYPE_UTF8_STRING == data.type && data.data_size >= 2)
         {
-            copystring(country_code, data.utf8_string, data.data_size+1);
+            copystring(text, data.utf8_string, data.data_size+1);
+            filtertext(country_code, text, false, false, false, false, MAXCOUNTRYCODELEN);
         }
 
         // get country name

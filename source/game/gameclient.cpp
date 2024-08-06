@@ -1558,7 +1558,7 @@ namespace game
         }
     }
 
-    static void validcountrycode(char *dst, const char *src)
+    void validcountrycode(char *dst, const char *src)
     {
         if(src) loopi(MAXSTRLEN)
         {
@@ -1597,11 +1597,11 @@ namespace game
                 getstring(servdesc, p, sizeof(servdesc));
                 getstring(servauth, p, sizeof(servauth));
 
-                getstring(text, p, MAXSTRLEN);
-                filtertext(text, text, false, false, true, false, MAXSTRLEN);
+                getstring(text, p);
+                filtertext(text, text, false, false, false, false, MAXCOUNTRYCODELEN);
                 validcountrycode(self->country_code, text);
 
-                getstring(text, p, MAXSTRLEN);
+                getstring(text, p);
                 filtertext(text, text, false, false, true, false, MAXSTRLEN);
                 copystring(self->country_name, text, MAXSTRLEN);
 
@@ -1783,7 +1783,7 @@ namespace game
                 d->playercolor = getint(p);
 
                 getstring(text, p);
-                filtertext(text, text, false, false, true, false, MAXSTRLEN);
+                filtertext(text, text, false, false, false, false, MAXCOUNTRYCODELEN);
                 validcountrycode(d->country_code, text);
 
                 getstring(text, p);

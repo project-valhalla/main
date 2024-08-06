@@ -381,6 +381,7 @@ struct gamestate
 #include "monster.h"
 
 const int MAXNAMELEN = 15;
+const int MAXCOUNTRYCODELEN = 8;
 
 const int MAXTEAMS = 2;
 inline bool validteam(int team) { return team >= 1 && team <= MAXTEAMS; }
@@ -421,7 +422,8 @@ struct gameent : dynent, gamestate
     ai::aiinfo *ai;
     int ownernum, lastnode;
     bool respawnqueued, ghost;
-    string country_code, country_name;
+    char country_code[MAXCOUNTRYCODELEN+1];
+    string country_name;
 
     vec muzzle, eject;
 

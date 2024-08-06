@@ -247,7 +247,8 @@ namespace server
         void *authchallenge;
         int authkickvictim;
         char *authkickreason;
-        string country_code, country_name;
+        char country_code[MAXCOUNTRYCODELEN+1];
+        string country_name;
 
         clientinfo() : getdemo(NULL), getmap(NULL), clipboard(NULL), authchallenge(NULL), authkickreason(NULL) { reset(); mute = false; }
         ~clientinfo() { events.deletecontents(); cleanclipboard(); cleanauth(); }

@@ -406,10 +406,12 @@ namespace game
                 {
                     anger++; // don't attack straight away, first get angry
                     int _anger = d->type == ENT_AI && mtype == m->mtype ? anger / 2 : anger;
-                    if(_anger>=monstertypes[mtype].loyalty)
+                    if(_anger >= monstertypes[mtype].loyalty && enemy != d)
                     {
-                        enemy = d; // monster infight if very angry
-                        checkefficientenemy(this, enemy);
+                        // Monster infight if very angry.
+                        enemy = d;
+                        checkmonsterinfight(this, enemy); 
+                        
                     }
                 }
                 else if(monstertypes[mtype].isexplosive) return;
@@ -564,20 +566,27 @@ namespace game
         }
     }
 
-    void checkefficientenemy(gameent *that, gameent *enemy)
+    void checkmonsterinfight(monster *that, gameent *enemy)
     {
-        monster *m = (monster *)that;
-        bool issameenemy = false;
-        if(monstertypes[m->mtype].isefficient) issameenemy = true;
+        monster* e = (monster*)enemy;
         loopv(monsters)
         {
-            if(!monstertypes[monsters[i]->mtype].isefficient) continue;
-            if(issameenemy)
+            monster* m = monsters[i];
+            if (!monstertypes[m->mtype].isefficient) continue;
+
+            if (monstertypes[that->mtype].isefficient && that->mtype == m->mtype)
             {
-                monsters[i]->enemy = enemy;
+                m->enemy = enemy;
                 continue;
             }
-            m->enemy = that;
+            if (e->type == ENT_AI && monstertypes[e->mtype].isefficient && e->mtype == m->mtype)
+            {
+                m->enemy = that;
+            }
+        }
+        if (validsound(monstertypes[that->mtype].infightsound))
+        {
+            playsound(monstertypes[that->mtype].infightsound, that);
         }
     }
 

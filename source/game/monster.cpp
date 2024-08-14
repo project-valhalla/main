@@ -377,6 +377,25 @@ namespace game
             monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
         }
 
+        void heal()
+        {
+            if (state != CS_ALIVE)
+            {
+                return;
+            }
+
+            health = min(health + monstertypes[mtype].healthbonus, monstertypes[mtype].health); // Add health bonus.
+            // Also reset additional states.
+            if (detonating)
+            {
+                detonating = 0; // Reset explosion timer for explosive monsters.
+            }
+            if (bursting)
+            {
+                burst(false); // Stop burst fire.
+            }
+        }
+
         void monsterpain(int damage, gameent *d, int atk, int flags)
         {
             monster *m = (monster *)d;
@@ -482,13 +501,8 @@ namespace game
     {
         loopv(monsters)
         {
-            if(monsters[i]->state==CS_ALIVE)
-            {
-                // heal monsters when player dies
-                monster *m = monsters[i];
-                m->health = min(m->health + monstertypes[m->mtype].healthbonus, monstertypes[m->mtype].health);
-                if(m->detonating) m->detonating = 0; // reset explosion timer
-            }
+             // heal monsters when player dies
+             monsters[i]->heal();
         }
     }
 

@@ -6,6 +6,21 @@ MMDB_s *mmdb = NULL;
 
 string _geoip_filename;
 
+struct customflag
+{
+    char code[MAXCOUNTRYCODELEN+1];
+    string name;
+};
+vector<customflag> customflags;
+
+ICOMMAND(clearcustomflags, "", (), { customflags.shrink(0); });
+ICOMMAND(customflag, "ss", (char *code, char *name), {
+    customflag f;
+    copystring(f.code, code, MAXCOUNTRYCODELEN);
+    copystring(f.name, name, MAXSTRLEN);
+    customflags.add(f);
+});
+
 void geoip_close_database()
 {
     #ifdef HAVE_MAXMINDDB
@@ -34,8 +49,11 @@ void geoip_open_database(int geoip)
     #endif
 }
 
-void geoip_lookup_ip(enet_uint32 ip, char *country_code, char *country_name)
+void geoip_lookup_ip(enet_uint32 ip, char *dst_country_code, char *dst_country_name)
 {
+    dst_country_code[0] = '\0';
+    dst_country_name[0] = '\0';
+
     #ifdef HAVE_MAXMINDDB
     static string text;
     if(!mmdb) return;
@@ -56,7 +74,7 @@ void geoip_lookup_ip(enet_uint32 ip, char *country_code, char *country_name)
         if(MMDB_SUCCESS == error && data.has_data && MMDB_DATA_TYPE_UTF8_STRING == data.type && data.data_size >= 2)
         {
             copystring(text, data.utf8_string, data.data_size+1);
-            filtertext(country_code, text, false, false, false, false, MAXCOUNTRYCODELEN);
+            filtertext(dst_country_code, text, false, false, false, false, MAXCOUNTRYCODELEN);
         }
 
         // get country name
@@ -67,20 +85,35 @@ void geoip_lookup_ip(enet_uint32 ip, char *country_code, char *country_name)
             size_t len = decodeutf8(buf, sizeof(buf)-1, (const uchar *)data.utf8_string, data.data_size);
             if(len > 0) {
                 buf[len] = 0;
-                copystring(country_name, (const char*)buf, len+1);
+                copystring(dst_country_name, (const char*)buf, len+1);
             }
         }
     }
-    else
-    {
-        country_code[0] = '\0';
-        country_name[0] = '\0';
-    }
-
-    #else
-    country_code[0] = '\0';
-    country_name[0] = '\0';
     #endif
+}
+
+void geoip_set_custom_flag(const char *preferred_flag, const char *src_country_code, const char *src_country_name, char *dst_country_code, char *dst_country_name)
+{
+    dst_country_code[0] = '\0';
+    dst_country_name[0] = '\0';
+
+    if(!strcmp("geo", preferred_flag))
+    {
+        // client wants the flag of its country
+        copystring(dst_country_code, src_country_code, MAXCOUNTRYCODELEN);
+        copystring(dst_country_name, src_country_name, MAXSTRLEN);
+        return;
+    }
+    // check if the client wants a custom flag
+    if(preferred_flag[0]) loopv(customflags)
+    {
+        if(!strcmp(preferred_flag, customflags[i].code))
+        {
+            copystring(dst_country_code, customflags[i].code, MAXCOUNTRYCODELEN);
+            copystring(dst_country_name, customflags[i].name, MAXSTRLEN);
+            return;
+        }
+    }
 }
 
 VARF(geoip, 0, 0, 1, geoip_open_database(geoip));

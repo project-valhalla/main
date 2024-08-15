@@ -164,6 +164,13 @@ namespace game
     });
     ICOMMAND(getname, "", (), result(self->name));
 
+    SVARFP(customflag, "", {
+        packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
+        putint(p, N_COUNTRY);
+        sendstring(customflag, p);
+        sendclientpacket(p.finalize(), 1);
+    });
+
     void switchteam(const char *team)
     {
         int num = isdigit(team[0]) ? parseint(team) : teamnumber(team);
@@ -1362,6 +1369,7 @@ namespace game
         sendstring(self->name, p);
         putint(p, self->playermodel);
         putint(p, self->playercolor);
+        sendstring(customflag, p);
         string hash = "";
         if(connectpass[0])
         {
@@ -1597,14 +1605,6 @@ namespace game
                 getstring(servdesc, p, sizeof(servdesc));
                 getstring(servauth, p, sizeof(servauth));
 
-                getstring(text, p);
-                filtertext(text, text, false, false, false, false, MAXCOUNTRYCODELEN);
-                validcountrycode(self->country_code, text);
-
-                getstring(text, p);
-                filtertext(text, text, false, false, true, false, MAXSTRLEN);
-                copystring(self->country_name, text, MAXSTRLEN);
-
                 sendintro();
                 break;
             }
@@ -1613,6 +1613,25 @@ namespace game
             {
                 connected = true;
                 notifywelcome();
+                break;
+            }
+
+            case N_COUNTRY:
+            {
+                int cn = getint(p);
+                gameent *d = getclient(cn);
+                if(!d)
+                {
+                    getstring(text, p);
+                    getstring(text, p);
+                    break;
+                }
+                getstring(text, p);
+                filtertext(text, text, false, false, false, false, MAXCOUNTRYCODELEN);
+                validcountrycode(d->country_code, text);
+
+                getstring(text, p);
+                filtertext(d->country_name, text, false, false, true, false, MAXSTRLEN);
                 break;
             }
 

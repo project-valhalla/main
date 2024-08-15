@@ -117,6 +117,7 @@ enum
     N_SWITCHNAME, N_SWITCHMODEL, N_SWITCHCOLOR, N_SWITCHTEAM,
     N_SERVCMD,
     N_DEMOPACKET,
+    N_COUNTRY,
     NUMMSG
 };
 
@@ -147,6 +148,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_SWITCHNAME, 0, N_SWITCHMODEL, 2, N_SWITCHCOLOR, 2,  N_SWITCHTEAM, 2,
     N_SERVCMD, 0,
     N_DEMOPACKET, 0,
+    N_COUNTRY, 0,
     -1
 };
 

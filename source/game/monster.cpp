@@ -126,7 +126,7 @@ namespace game
 
         void emitattacksound()
         {
-            int attacksound = monstertypes[mtype].attacksound;
+            int attacksound = enemy->type == ENT_PLAYER ? monstertypes[mtype].attacksound : monstertypes[mtype].infightsound;
             if (validsound(attacksound))
             {
                 playsound(attacksound, this); // battle cry: announcing the attack

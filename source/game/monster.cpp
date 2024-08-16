@@ -485,12 +485,13 @@ namespace game
 
     int nextmonster, spawnremain, numkilled, monstertotal, mtimestart, remain;
 
-    void spawnmonster() // spawn a random monster according to freq distribution in DMSP
+    void spawnmonster() // Spawn a random monster in Invasion according to frequency distribution.
     {
-        int n = rnd(TOTMFREQ), type;
-        for(int i = 1; ; i++)
+        int n = rnd(MONSTER_TOTAL_FREQUENCY), type;
+        for (int i = 0; ; i++)
         {
-            if((n -= monstertypes[i].freq)<0)
+            if (!monstertypes[i].freq) continue;
+            if ((n -= monstertypes[i].freq) < 0)
             {
                 type = i;
                 break;

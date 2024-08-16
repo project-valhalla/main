@@ -38,11 +38,9 @@ static const monstertype monstertypes[NUMMONSTERS] =
     { MTYPE_GRAY,   ATK_SCATTER1, ATK_MELEE2, 14,  0, 120,  50, 0, 1, 100, 400, 400, 4, 15,  60, 0xFFFF90, S_RATA_PAIN,    S_RATA_DEATH,    S_RATA_HALT,    -1,             -1,              -1,               "gray",        "monster/gray",   "weapon/scattergun/world", false, false, false },
     { MTYPE_GUARD,  ATK_PULSE1,   ATK_MELEE2, 15,  0, 200, 100, 5, 1,  60, 100, 100, 4, 13, 140, 0x60FFFF, S_GUARD_PAIN,   S_GUARD_DEATH,   S_GUARD_HALT,   S_GUARD_UNHALT, S_GUARD_ATTACK,  S_GUARD_INFIGHT,  "guard",       "monster/guard",  "weapon/pulserifle/world", false, true,  true  },
     { MTYPE_MECH,   ATK_ROCKET1,  ATK_MELEE,  12, 14, 500, 250, 0, 1,   0, 200, 200, 6, 22, 220,       -1, S_BAUUL_PAIN,   S_BAUUL_DEATH,   S_BAUUL_HALT,   -1,             -1,              -1,               "mech",        "monster/mech",   NULL,                      true,  false, true  },
-    { MTYPE_SPIDER, ATK_MELEE2,   -1,         19,  0, 500,  25, 0, 1,   0, 200, 400, 1,  7,  20, 0xFF90FF, S_SPIDER_PAIN,  S_SPIDER_DEATH,  S_SPIDER_HALT,  -1,             S_SPIDER_ATTACK, S_SPIDER_INFIGHT, "generantula", "monster/spider", NULL,                      false, true,  false }
+    { MTYPE_SPIDER, ATK_MELEE2,   -1,         19,  0,  30,  25, 0, 1,   0, 200, 400, 1,  7,  20, 0xFF90FF, S_SPIDER_PAIN,  S_SPIDER_DEATH,  S_SPIDER_HALT,  -1,             S_SPIDER_ATTACK, S_SPIDER_INFIGHT, "generantula", "monster/spider", NULL,                      false, true,  false }
 };
 
 static const int TOTMFREQ = 14;
 
 static const int MONSTER_DETONATION_DELAY = 350;
-
-static const int MONSTER_CHATTER_DELAY = 1000;

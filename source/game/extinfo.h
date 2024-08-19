@@ -1,6 +1,6 @@
 
 #define EXT_ACK                         -1
-#define EXT_VERSION                     105
+#define EXT_VERSION                     106
 #define EXT_NO_ERROR                    0
 #define EXT_ERROR                       1
 #define EXT_PLAYERSTATS_RESP_IDS        -10
@@ -29,8 +29,6 @@
     B:C:default: 0 command EXT_ACK EXT_VERSION EXT_ERROR
 */
 
-    VAR(extinfoip, 0, 0, 1);
-
     void extinfoplayer(ucharbuf &p, clientinfo *ci)
     {
         ucharbuf q = p;
@@ -49,8 +47,7 @@
         putint(q, ci->state.gunselect);
         putint(q, ci->privilege);
         putint(q, ci->state.state);
-        uint ip = extinfoip ? getclientip(ci->clientnum) : 0;
-        q.put((uchar*)&ip, 3);
+        sendstring(ci->customflag_code, q);
         sendserverinforeply(q);
     }
 

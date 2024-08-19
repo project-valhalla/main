@@ -14,7 +14,7 @@ struct customflag
 vector<customflag> customflags;
 
 ICOMMAND(clearcustomflags, "", (), { customflags.shrink(0); });
-ICOMMAND(customflag, "ss", (char *code, char *name), {
+ICOMMAND(addcustomflag, "ss", (char *code, char *name), {
     customflag f;
     copystring(f.code, code, MAXCOUNTRYCODELEN);
     copystring(f.name, name, MAXSTRLEN);

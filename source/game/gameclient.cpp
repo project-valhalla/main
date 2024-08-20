@@ -1709,14 +1709,14 @@ namespace game
                 break;
             }
 
-            case N_INITCLIENT:            // another client either connected or changed name/team
+            case N_INITCLIENT: // another client either connected or changed name/team
             {
                 int cn = getint(p), notify = getint(p);
                 gameent *d = newclient(cn);
                 if(!d)
                 {
                     getstring(text, p);
-                    getstring(text, p);
+                    getint(p);
                     getint(p);
                     getint(p);
                     break;

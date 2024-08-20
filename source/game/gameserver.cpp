@@ -3666,8 +3666,7 @@ namespace server
 
         ci->team = m_teammode ? chooseworstteam(ci) : 0;
 
-        // TODO: use actual IP address
-        geoip_lookup_ip(/*getclientip(n)*/rnd(INT_MAX), ci->country_code, ci->country_name);
+        geoip_lookup_ip(getclientip(ci->clientnum), ci->country_code, ci->country_name);
         geoip_set_custom_flag(ci->preferred_flag, ci->country_code, ci->country_name, ci->customflag_code, ci->customflag_name);
 
         sendwelcome(ci);

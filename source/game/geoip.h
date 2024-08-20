@@ -56,6 +56,7 @@ void geoip_lookup_ip(enet_uint32 ip, char *dst_country_code, char *dst_country_n
 
     #ifdef HAVE_MAXMINDDB
     static string text;
+    static uchar buf[MAXSTRLEN];
     if(!mmdb) return;
     int error;
 
@@ -81,7 +82,6 @@ void geoip_lookup_ip(enet_uint32 ip, char *dst_country_code, char *dst_country_n
         error = MMDB_get_value(&result.entry, &data, "country", "names", "en", NULL);
         if(MMDB_SUCCESS == error && data.has_data && MMDB_DATA_TYPE_UTF8_STRING == data.type)
         {
-            uchar buf[MAXSTRLEN];
             size_t len = decodeutf8(buf, sizeof(buf)-1, (const uchar *)data.utf8_string, data.data_size);
             if(len > 0) {
                 buf[len] = 0;
@@ -118,8 +118,6 @@ void geoip_set_custom_flag(const char *preferred_flag, const char *src_country_c
 
 VARF(geoip, 0, 0, 1, geoip_open_database(geoip));
 SVARF(geoip_database, "geoip.mmdb", {
-    #ifdef HAVE_MAXMINDDB
     copystring(_geoip_filename, geoip_database, MAXSTRLEN);
-    #endif
     geoip_open_database(geoip);
 });

@@ -730,7 +730,7 @@ namespace game
     extern void healmonsters();
     extern void hitmonster(int damage, monster *m, gameent *at, int atk, int flags = 0);
     extern void monsterkilled(int flags = 0);
-    extern void checkefficientenemy(gameent *that, gameent *enemy);
+    extern void checkmonsterinfight(monster *that, gameent *enemy);
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);
     extern int getbloodcolor(dynent *d);

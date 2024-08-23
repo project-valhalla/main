@@ -126,7 +126,7 @@ namespace game
 
         void emitattacksound()
         {
-            int attacksound = monstertypes[mtype].attacksound;
+            int attacksound = enemy->type == ENT_PLAYER ? monstertypes[mtype].attacksound : monstertypes[mtype].infightsound;
             if (validsound(attacksound))
             {
                 playsound(attacksound, this); // battle cry: announcing the attack
@@ -377,6 +377,25 @@ namespace game
             monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
         }
 
+        void heal()
+        {
+            if (state != CS_ALIVE)
+            {
+                return;
+            }
+
+            health = min(health + monstertypes[mtype].healthbonus, monstertypes[mtype].health); // Add health bonus.
+            // Also reset additional states.
+            if (detonating)
+            {
+                detonating = 0; // Reset explosion timer for explosive monsters.
+            }
+            if (bursting)
+            {
+                burst(false); // Stop burst fire.
+            }
+        }
+
         void monsterpain(int damage, gameent *d, int atk, int flags)
         {
             monster *m = (monster *)d;
@@ -387,10 +406,12 @@ namespace game
                 {
                     anger++; // don't attack straight away, first get angry
                     int _anger = d->type == ENT_AI && mtype == m->mtype ? anger / 2 : anger;
-                    if(_anger>=monstertypes[mtype].loyalty)
+                    if(_anger >= monstertypes[mtype].loyalty && enemy != d)
                     {
-                        enemy = d; // monster infight if very angry
-                        checkefficientenemy(this, enemy);
+                        // Monster infight if very angry.
+                        enemy = d;
+                        checkmonsterinfight(this, enemy); 
+                        
                     }
                 }
                 else if(monstertypes[mtype].isexplosive) return;
@@ -464,12 +485,13 @@ namespace game
 
     int nextmonster, spawnremain, numkilled, monstertotal, mtimestart, remain;
 
-    void spawnmonster() // spawn a random monster according to freq distribution in DMSP
+    void spawnmonster() // Spawn a random monster in Invasion according to frequency distribution.
     {
-        int n = rnd(TOTMFREQ), type;
-        for(int i = 1; ; i++)
+        int n = rnd(MONSTER_TOTAL_FREQUENCY), type;
+        for (int i = 0; ; i++)
         {
-            if((n -= monstertypes[i].freq)<0)
+            if (!monstertypes[i].freq) continue;
+            if ((n -= monstertypes[i].freq) < 0)
             {
                 type = i;
                 break;
@@ -482,13 +504,8 @@ namespace game
     {
         loopv(monsters)
         {
-            if(monsters[i]->state==CS_ALIVE)
-            {
-                // heal monsters when player dies
-                monster *m = monsters[i];
-                m->health = min(m->health + monstertypes[m->mtype].healthbonus, monstertypes[m->mtype].health);
-                if(m->detonating) m->detonating = 0; // reset explosion timer
-            }
+             // heal monsters when player dies
+             monsters[i]->heal();
         }
     }
 
@@ -550,20 +567,27 @@ namespace game
         }
     }
 
-    void checkefficientenemy(gameent *that, gameent *enemy)
+    void checkmonsterinfight(monster *that, gameent *enemy)
     {
-        monster *m = (monster *)that;
-        bool issameenemy = false;
-        if(monstertypes[m->mtype].isefficient) issameenemy = true;
+        monster* e = (monster*)enemy;
         loopv(monsters)
         {
-            if(!monstertypes[monsters[i]->mtype].isefficient) continue;
-            if(issameenemy)
+            monster* m = monsters[i];
+            if (!monstertypes[m->mtype].isefficient) continue;
+
+            if (monstertypes[that->mtype].isefficient && that->mtype == m->mtype)
             {
-                monsters[i]->enemy = enemy;
+                m->enemy = enemy;
                 continue;
             }
-            m->enemy = that;
+            if (e->type == ENT_AI && monstertypes[e->mtype].isefficient && e->mtype == m->mtype)
+            {
+                m->enemy = that;
+            }
+        }
+        if (validsound(monstertypes[that->mtype].infightsound))
+        {
+            playsound(monstertypes[that->mtype].infightsound, that);
         }
     }
 

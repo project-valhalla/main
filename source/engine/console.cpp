@@ -20,7 +20,7 @@ VARP(contags, 0, 3, 3);
 
 const char *getprefix(int type)
 {
-    const char *prefix = "UNKNOWN";
+    const char *prefix = "";
     switch(type)
     {
         case CON_INFO:   prefix = "\f0INFO";    break;
@@ -30,7 +30,7 @@ const char *getprefix(int type)
         case CON_INIT:   prefix = "\f8INIT";    break;
         case CON_ECHO:   prefix = "\f1ECHO";    break;
         case CON_NOTICE: prefix = "\f2NOTICE";  break;
-        default:         prefix = "";           break;
+        default:         prefix = "\f4UNKNOWN"; break;
     }
     if(prefix[0] != '\0') return tempformatstring("[\fs%s\fr] ", prefix);
     return "";

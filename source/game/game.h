@@ -424,7 +424,7 @@ struct gameent : dynent, gamestate
     ai::aiinfo *ai;
     int ownernum, lastnode;
     bool respawnqueued, ghost;
-    char country_code[MAXCOUNTRYCODELEN+1];
+    char country_code[MAXCOUNTRYCODELEN+1], preferred_flag[MAXCOUNTRYCODELEN+1];
     string country_name;
 
     vec muzzle, eject;
@@ -442,7 +442,7 @@ struct gameent : dynent, gamestate
     {
         name[0] = info[0] = 0;
         ghost = false;
-        country_code[0] = country_name[0] = 0;
+        country_code[0] = country_name[0] = preferred_flag[0] = 0;
         respawn();
     }
     ~gameent()

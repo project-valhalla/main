@@ -164,13 +164,6 @@ namespace game
     });
     ICOMMAND(getname, "", (), result(self->name));
 
-    SVARFP(customflag, "", {
-        packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-        putint(p, N_COUNTRY);
-        sendstring(customflag, p);
-        sendclientpacket(p.finalize(), 1);
-    });
-
     void switchteam(const char *team)
     {
         int num = isdigit(team[0]) ? parseint(team) : teamnumber(team);
@@ -1369,7 +1362,7 @@ namespace game
         sendstring(self->name, p);
         putint(p, self->playermodel);
         putint(p, self->playercolor);
-        sendstring(customflag, p);
+        sendstring(self->preferred_flag, p);
         string hash = "";
         if(connectpass[0])
         {

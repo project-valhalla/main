@@ -133,6 +133,11 @@ MASTER_LIBS= $(STD_LIBS) -L$(WINBIN) -L$(WINLIB) -lzlib1 -lenet -lws2_32 -lwinmm
 else
 SERVER_LIBS= -Lenet -lenet -lz
 MASTER_LIBS= $(SERVER_LIBS)
+MAXMINDDB_SUPPORT:= $(shell ./geoip/geoip_check.sh $(CXX) $(CXXFLAGS) $(SERVER_INCLUDES))
+SERVER_INCLUDES+= $(MAXMINDDB_SUPPORT)
+ifneq (,$(findstring HAVE_MAXMINDDB,$(MAXMINDDB_SUPPORT)))
+SERVER_LIBS+= -lmaxminddb
+endif
 endif
 
 SERVER_OBJS= \
@@ -487,8 +492,8 @@ game/gameserver.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/gameserver.o: shared/ents.h shared/command.h shared/glexts.h
 game/gameserver.o: shared/glemu.h engine/sound.h shared/iengine.h
 game/gameserver.o: shared/igame.h game/weapon.h game/ai.h game/gamemode.h
-game/gameserver.o: game/entity.h game/monster.h game/ctf.h game/elimination.h
-game/gameserver.o: game/extinfo.h game/aimanager.h
+game/gameserver.o: game/entity.h game/monster.h game/geoip.h game/ctf.h
+game/gameserver.o: game/elimination.h game/extinfo.h game/aimanager.h
 game/waypoint.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/waypoint.o: shared/ents.h shared/command.h shared/glexts.h
 game/waypoint.o: shared/glemu.h engine/sound.h shared/iengine.h
@@ -551,8 +556,8 @@ standalone/game/gameserver.o: game/game.h shared/cube.h shared/tools.h
 standalone/game/gameserver.o: shared/geom.h shared/ents.h shared/command.h
 standalone/game/gameserver.o: engine/sound.h shared/iengine.h shared/igame.h
 standalone/game/gameserver.o: game/weapon.h game/ai.h game/gamemode.h
-standalone/game/gameserver.o: game/entity.h game/monster.h game/ctf.h
-standalone/game/gameserver.o: game/elimination.h game/extinfo.h
+standalone/game/gameserver.o: game/entity.h game/monster.h game/geoip.h
+standalone/game/gameserver.o: game/ctf.h game/elimination.h game/extinfo.h
 standalone/game/gameserver.o: game/aimanager.h
 standalone/engine/master.o: shared/cube.h shared/tools.h shared/geom.h
 standalone/engine/master.o: shared/ents.h shared/command.h engine/sound.h

@@ -1,4 +1,5 @@
 #include "game.h"
+#include "geoip.h"
 
 namespace game
 {
@@ -246,6 +247,11 @@ namespace server
         void *authchallenge;
         int authkickvictim;
         char *authkickreason;
+        char preferred_flag[MAXCOUNTRYCODELEN+1];
+        char country_code[MAXCOUNTRYCODELEN+1];
+        string country_name;
+        char customflag_code[MAXCOUNTRYCODELEN+1];
+        string customflag_name;
 
         clientinfo() : getdemo(NULL), getmap(NULL), clipboard(NULL), authchallenge(NULL), authkickreason(NULL) { reset(); mute = false; }
         ~clientinfo() { events.deletecontents(); cleanclipboard(); cleanauth(); }
@@ -358,6 +364,7 @@ namespace server
             cleanclipboard();
             cleanauth();
             mapchange();
+            preferred_flag[0] = country_code[0] = country_name[0] = customflag_code[0] = customflag_name[0] = 0;
         }
 
         int geteventmillis(int servmillis, int clientmillis)
@@ -1921,6 +1928,8 @@ namespace server
             putint(p, ci->team);
             putint(p, ci->playermodel);
             putint(p, ci->playercolor);
+            sendstring(ci->customflag_code, p);
+            sendstring(ci->customflag_name, p);
         }
     }
 
@@ -1944,6 +1953,12 @@ namespace server
     int welcomepacket(packetbuf &p, clientinfo *ci)
     {
         putint(p, N_WELCOME);
+
+        putint(p, N_COUNTRY);
+        putint(p, ci->clientnum);
+        sendstring(ci->customflag_code, p);
+        sendstring(ci->customflag_name, p);
+
         putint(p, N_MAPCHANGE);
         sendstring(smapname, p);
         putint(p, gamemode);
@@ -3651,6 +3666,9 @@ namespace server
 
         ci->team = m_teammode ? chooseworstteam(ci) : 0;
 
+        geoip_lookup_ip(getclientip(ci->clientnum), ci->country_code, ci->country_name);
+        geoip_set_custom_flag(ci->preferred_flag, ci->country_code, ci->country_name, ci->customflag_code, ci->customflag_name);
+
         sendwelcome(ci);
         if(restorescore(ci)) sendresume(ci);
         sendinitclient(ci);
@@ -3693,6 +3711,8 @@ namespace server
                     copystring(ci->name, text, MAXNAMELEN+1);
                     ci->playermodel = getint(p);
                     ci->playercolor = getint(p);
+                    getstring(text, p);
+                    filtertext(ci->preferred_flag, text, false, false, false, false, MAXCOUNTRYCODELEN);
 
                     string password, authdesc, authname;
                     getstring(password, p, sizeof(password));
@@ -4523,6 +4543,20 @@ namespace server
             case N_SERVCMD:
                 getstring(text, p);
                 break;
+            
+            case N_COUNTRY:
+            {
+                getstring(text, p);
+                filtertext(ci->preferred_flag, text, false, false, false, false, MAXCOUNTRYCODELEN);
+                geoip_set_custom_flag(ci->preferred_flag, ci->country_code, ci->country_name, ci->customflag_code, ci->customflag_name);
+                packetbuf q(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
+                putint(q, N_COUNTRY);
+                putint(q, ci->clientnum);
+                sendstring(ci->customflag_code, q);
+                sendstring(ci->customflag_name, q);
+                sendpacket(-1, 1, q.finalize());
+                break;
+            }
 
             #define PARSEMESSAGES 1
             #include "ctf.h"

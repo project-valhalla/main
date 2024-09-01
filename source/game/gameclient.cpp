@@ -318,6 +318,20 @@ namespace game
     }
     ICOMMAND(getclientcolor, "i", (int *cn), intret(getclientcolor(*cn)));
 
+    const char *getclientcountrycode(int cn)
+    {
+        gameent *d = getclient(cn);
+        return d && d->aitype == AI_NONE ? d->country_code : "";
+    }
+    ICOMMAND(getclientcountrycode, "i", (int *cn), result(getclientcountrycode(*cn)));
+
+    const char *getclientcountryname(int cn)
+    {
+        gameent *d = getclient(cn);
+        return d && d->aitype == AI_NONE ? d->country_name : "";
+    }
+    ICOMMAND(getclientcountryname, "i", (int *cn), result(getclientcountryname(*cn)));
+
     const char *getclientpos(int cn)
     {
         gameent *d = getclient(cn);
@@ -1348,6 +1362,7 @@ namespace game
         sendstring(self->name, p);
         putint(p, self->playermodel);
         putint(p, self->playercolor);
+        sendstring(self->preferred_flag, p);
         string hash = "";
         if(connectpass[0])
         {
@@ -1544,6 +1559,17 @@ namespace game
         }
     }
 
+    void validcountrycode(char *dst, const char *src)
+    {
+        if(src) loopi(MAXSTRLEN)
+        {
+            char c = *src++;
+            if(iscubealnum(c) || c == '_' || c == '-') *dst++ = c;
+            else break;
+        }
+        *dst = 0;
+    }
+
     void parsemessages(int cn, gameent *d, ucharbuf &p)
     {
         static char text[MAXTRANS];
@@ -1571,6 +1597,7 @@ namespace game
                 }
                 getstring(servdesc, p, sizeof(servdesc));
                 getstring(servauth, p, sizeof(servauth));
+
                 sendintro();
                 break;
             }
@@ -1579,6 +1606,25 @@ namespace game
             {
                 connected = true;
                 notifywelcome();
+                break;
+            }
+
+            case N_COUNTRY:
+            {
+                int cn = getint(p);
+                gameent *d = getclient(cn);
+                if(!d)
+                {
+                    getstring(text, p);
+                    getstring(text, p);
+                    break;
+                }
+                getstring(text, p);
+                filtertext(text, text, false, false, false, false, MAXCOUNTRYCODELEN);
+                validcountrycode(d->country_code, text);
+
+                getstring(text, p);
+                filtertext(d->country_name, text, false, false, true, false, MAXSTRLEN);
                 break;
             }
 
@@ -1719,6 +1765,8 @@ namespace game
                     getint(p);
                     getint(p);
                     getint(p);
+                    getstring(text, p);
+                    getstring(text, p);
                     break;
                 }
                 getstring(text, p);
@@ -1745,6 +1793,15 @@ namespace game
                 if(!validteam(d->team)) d->team = 0;
                 d->playermodel = getint(p);
                 d->playercolor = getint(p);
+
+                getstring(text, p);
+                filtertext(text, text, false, false, false, false, MAXCOUNTRYCODELEN);
+                validcountrycode(d->country_code, text);
+
+                getstring(text, p);
+                filtertext(text, text, false, false, true, false, MAXSTRLEN);
+                copystring(d->country_name, text);
+
                 break;
             }
 

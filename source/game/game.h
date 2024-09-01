@@ -117,6 +117,7 @@ enum
     N_SWITCHNAME, N_SWITCHMODEL, N_SWITCHCOLOR, N_SWITCHTEAM,
     N_SERVCMD,
     N_DEMOPACKET,
+    N_COUNTRY,
     NUMMSG
 };
 
@@ -147,13 +148,14 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_SWITCHNAME, 0, N_SWITCHMODEL, 2, N_SWITCHCOLOR, 2,  N_SWITCHTEAM, 2,
     N_SERVCMD, 0,
     N_DEMOPACKET, 0,
+    N_COUNTRY, 0,
     -1
 };
 
 #define VALHALLA_SERVER_PORT 21217
 #define VALHALLA_LANINFO_PORT 21216
 #define VALHALLA_MASTER_PORT 21215
-#define PROTOCOL_VERSION 1 // bump when protocol changes
+#define PROTOCOL_VERSION 2 // bump when protocol changes
 #define DEMO_VERSION 1  // bump when demo format changes
 #define DEMO_MAGIC "VALHALLA_DEMO\0\0"
 
@@ -381,6 +383,7 @@ struct gamestate
 #include "monster.h"
 
 const int MAXNAMELEN = 15;
+const int MAXCOUNTRYCODELEN = 8;
 
 const int MAXTEAMS = 2;
 inline bool validteam(int team) { return team >= 1 && team <= MAXTEAMS; }
@@ -421,6 +424,8 @@ struct gameent : dynent, gamestate
     ai::aiinfo *ai;
     int ownernum, lastnode;
     bool respawnqueued, ghost;
+    char country_code[MAXCOUNTRYCODELEN+1], preferred_flag[MAXCOUNTRYCODELEN+1];
+    string country_name;
 
     vec muzzle, eject;
 
@@ -437,6 +442,7 @@ struct gameent : dynent, gamestate
     {
         name[0] = info[0] = 0;
         ghost = false;
+        country_code[0] = country_name[0] = preferred_flag[0] = 0;
         respawn();
     }
     ~gameent()

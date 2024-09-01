@@ -78,6 +78,7 @@ namespace game
     VARFP(playercolor, 0, 4, sizeof(playercolors)/sizeof(playercolors[0])-1, changedplayercolor());
     VARFP(playercolorblue, 0, 0, sizeof(playercolorsblue)/sizeof(playercolorsblue[0])-1, changedplayercolor());
     VARFP(playercolorred, 0, 0, sizeof(playercolorsred)/sizeof(playercolorsred[0])-1, changedplayercolor());
+    SVARP(customflag, "");
 
     static const playermodelinfo playermodels[5] =
     {
@@ -189,6 +190,11 @@ namespace game
         {
             self->playercolor = col;
             addmsg(N_SWITCHCOLOR, "ri", self->playercolor);
+        }
+        if(strcmp(self->preferred_flag, customflag) != 0)
+        {
+            filtertext(self->preferred_flag, customflag, false, false, false, false, MAXCOUNTRYCODELEN);
+            addmsg(N_COUNTRY, "rs", self->preferred_flag);
         }
     }
 

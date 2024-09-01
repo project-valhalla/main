@@ -5,7 +5,7 @@
 CXX=$*
 
 # try compiling test file
-$CXX -o /dev/null geoip_test.cpp -lmaxminddb 2>/dev/null
+$CXX -o /dev/null ./geoip/geoip_test.cpp -lmaxminddb 2>/dev/null
 
 # if it succeeded, report maxmind support
 if [ $? -eq 0 ]

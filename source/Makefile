@@ -133,7 +133,7 @@ MASTER_LIBS= $(STD_LIBS) -L$(WINBIN) -L$(WINLIB) -lzlib1 -lenet -lws2_32 -lwinmm
 else
 SERVER_LIBS= -Lenet -lenet -lz
 MASTER_LIBS= $(SERVER_LIBS)
-MAXMINDDB_SUPPORT:= $(shell ./geoip_check.sh $(CXX) $(CXXFLAGS) $(SERVER_INCLUDES))
+MAXMINDDB_SUPPORT:= $(shell ./geoip/geoip_check.sh $(CXX) $(CXXFLAGS) $(SERVER_INCLUDES))
 SERVER_INCLUDES+= $(MAXMINDDB_SUPPORT)
 ifneq (,$(findstring HAVE_MAXMINDDB,$(MAXMINDDB_SUPPORT)))
 SERVER_LIBS+= -lmaxminddb

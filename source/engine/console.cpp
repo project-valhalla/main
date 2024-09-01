@@ -23,14 +23,18 @@ const char *getprefix(int type)
     const char *prefix = "";
     switch(type)
     {
-        case CON_INFO:   prefix = "\f0INFO";    break;
-        case CON_WARN:   prefix = "\f5WARNING"; break;
-        case CON_ERROR:  prefix = "\f3ERROR";   break;
-        case CON_DEBUG:  prefix = "\f6DEBUG";   break;
-        case CON_INIT:   prefix = "\f8INIT";    break;
-        case CON_ECHO:   prefix = "\f1ECHO";    break;
-        case CON_NOTICE: prefix = "\f2NOTICE";  break;
-        default:         prefix = "\f4UNKNOWN"; break;
+        case CON_CHAT:
+        case CON_TEAMCHAT:
+        case CON_GAMEINFO:
+        case CON_FRAGINFO: break;
+        case CON_INFO:     prefix = "\f0INFO";    break;
+        case CON_WARN:     prefix = "\f5WARNING"; break;
+        case CON_ERROR:    prefix = "\f3ERROR";   break;
+        case CON_DEBUG:    prefix = "\f6DEBUG";   break;
+        case CON_INIT:     prefix = "\f8INIT";    break;
+        case CON_ECHO:     prefix = "\f1ECHO";    break;
+        case CON_NOTICE:   prefix = "\f2NOTICE";  break;
+        default:           prefix = "\f4UNKNOWN"; break;
     }
     if(prefix[0] != '\0') return tempformatstring("[\fs%s\fr] ", prefix);
     return "";

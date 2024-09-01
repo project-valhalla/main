@@ -39,16 +39,6 @@ static const char * const animnames[] =
     "vwep idle", "vwep shoot", "vwep melee",
 };
 
-// console message types
-
-enum
-{
-    CON_CHAT     = 1<<8,
-    CON_TEAMCHAT = 1<<9,
-    CON_GAMEINFO = 1<<10,
-    CON_FRAGINFO = 1<<11
-};
-
 // network quantization scale
 const float DMF   = 16.0f;  // for world locations
 const float DNF   = 100.0f; // for normalized vectors

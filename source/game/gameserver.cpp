@@ -687,7 +687,7 @@ namespace server
             case 2: mastermask = MM_COOPSERV; break;
         }
     });
-    SVAR(servermotd, "");
+    SVAR(servermessage, "");
 
     bool firstblood = false;
 
@@ -3677,7 +3677,7 @@ namespace server
 
         if(m_demo) setupdemoplayback();
 
-        if(servermotd[0]) sendf(ci->clientnum, 1, "ris", N_SERVMSG, servermotd);
+        if(servermessage[0]) sendf(ci->clientnum, 1, "ris", N_SERVMSG, servermessage);
 
         shouldcheckround();
     }
@@ -4543,7 +4543,7 @@ namespace server
             case N_SERVCMD:
                 getstring(text, p);
                 break;
-            
+
             case N_COUNTRY:
             {
                 getstring(text, p);

@@ -319,6 +319,12 @@ static void debugcodeline(const char *p, const char *fmt, ...)
 }
 
 ICOMMAND(nodebug, "e", (uint *body), { nodebug++; executeret(body, *commandret); nodebug--; });
+ICOMMAND(nopersist, "e", (uint *body), {
+    int oldflags = identflags;
+    identflags &= ~IDF_PERSIST;
+    executeret(body, *commandret);
+    identflags = oldflags;
+})
 
 void addident(ident *id)
 {

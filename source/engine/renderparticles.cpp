@@ -868,18 +868,18 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                              // sparks
     new trailrenderer("data/texture/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                                    // spark trail
     new quadrenderer("data/texture/particle/explosion.png", PT_PART|PT_FLIP|PT_BRIGHT),                                            // explosion particles
-    new quadrenderer("<animation:100,2,2>data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT),                // electric explosion particles
+    new quadrenderer("<animation:100,2,2>data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),       // electric explosion particles
     new quadrenderer("data/texture/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                                                // edit mode entities
     new quadrenderer("data/texture/particle/orb.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),                                           // energy orb
     new quadrenderer("data/texture/particle/ring.png", PT_PART|PT_FLIP|PT_BRIGHT),                                                 // energy ring
     new quadrenderer("data/texture/particle/splash.png", PT_PART|PT_FLIP),                                                         // liquid splash
     new quadrenderer("data/texture/particle/bubble.png", PT_PART | PT_FLIP),                                                       // liquid bubble
     new quadrenderer("data/texture/particle/muzzle01.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 1
-    new quadrenderer("data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 2
+    new quadrenderer("<animation:50,4,2,1>data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),         // muzzle flash 2
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 3
     new quadrenderer("data/texture/particle/muzzle04.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 4
-    new quadrenderer("data/texture/particle/muzzle05.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 5
-    new quadrenderer("<grey><animation:50,2,2,1>data/texture/particle/muzzle_smoke.png", PT_PART|PT_FEW|PT_FLIP|PT_LERP|PT_TRACK), // muzzle smoke
+    new quadrenderer("<animation:50,4,0,1>data/texture/particle/muzzle05.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),         // muzzle flash 5
+    new quadrenderer("<grey><animation:50,2,3,1>data/texture/particle/muzzle_smoke.png", PT_PART|PT_FEW|PT_FLIP|PT_LERP|PT_TRACK), // muzzle smoke
     new quadrenderer("<animation:50,2,2>data/texture/particle/sparks.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),             // muzzle sparks
     new quadrenderer("data/texture/particle/comics.png", PT_PART|PT_LERP|PT_NOLAYER),                                              // comics effect
     new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_FEW|PT_ICON|PT_HUD|PT_LERP|PT_NOLAYER),                  // game icons

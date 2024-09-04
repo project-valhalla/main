@@ -303,6 +303,9 @@
     <ClInclude Include="..\engine\sound.h">
       <Filter>engine</Filter>
     </ClInclude>
+    <ClInclude Include="..\game\geoip.h">
+      <Filter>game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="valhalla.rc" />

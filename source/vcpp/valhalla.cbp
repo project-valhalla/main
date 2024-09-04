@@ -181,6 +181,7 @@
 		<Unit filename="../game/gamemode.h" />
 		<Unit filename="../game/gamephysics.cpp" />
 		<Unit filename="../game/gameserver.cpp" />
+		<Unit filename="../game/geoip.h" />
 		<Unit filename="../game/monster.cpp" />
 		<Unit filename="../game/monster.h" />
 		<Unit filename="../game/render.cpp" />

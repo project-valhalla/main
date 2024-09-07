@@ -751,11 +751,13 @@ struct stainrenderer
 stainrenderer stains[] =
 {
     stainrenderer("<grey>data/texture/particle/blood01.png",            SF_RND4|SF_ROTATE|SF_INVMOD),
-    stainrenderer("<grey>data/texture/particle/scorch.png",             SF_ROTATE, 280),
-    stainrenderer("<grey>data/texture/particle/hole_wall.png",          SF_RND4|SF_ROTATE|SF_OVERBRIGHT),
-    stainrenderer("<grey>data/texture/particle/glow_pulse.png",         SF_ROTATE|SF_GLOW|SF_SATURATE, 250, 1500, 250),
-    stainrenderer("<grey>data/texture/particle/glow_railgun.png",       SF_ROTATE|SF_GLOW|SF_SATURATE, 100, 1100, 100),
+    stainrenderer("<grey>data/texture/particle/hole_wall_small.png",    SF_RND4|SF_ROTATE|SF_OVERBRIGHT),
+    stainrenderer("<grey>data/texture/particle/hole_wall_big.png",      SF_ROTATE|SF_OVERBRIGHT),
+    stainrenderer("<grey>data/texture/particle/hole_punch.png",         SF_ROTATE|SF_OVERBRIGHT, 300),
     stainrenderer("<grey>data/texture/particle/hole_glass.png",         SF_RND4|SF_ROTATE|SF_OVERBRIGHT),
+    stainrenderer("<grey>data/texture/particle/scorch.png",             SF_ROTATE, 280),
+    stainrenderer("<grey>data/texture/particle/glow01.png",             SF_ROTATE|SF_GLOW|SF_SATURATE, 250, 1500, 250),
+    stainrenderer("<grey>data/texture/particle/glow02.png",             SF_ROTATE|SF_GLOW|SF_SATURATE, 100, 1100, 100),
     stainrenderer("data/texture/particle/snow.png",                     SF_RND4|SF_SATURATE|SF_ROTATE, 0, 500, 5000),
     stainrenderer("<animation:80,2,2,1>data/texture/particle/rain.png", SF_ROTATE, 200, 200, 300)
 };

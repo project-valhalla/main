@@ -86,8 +86,8 @@ struct eliminationclientmode : clientmode
     };
     const winstate winningteam()
     {
-        winstate won = { false, NULL };
-        int aliveteam = NULL;
+        winstate won = { false, 0 };
+        int aliveteam = 0;
         loopv(clients)
         {
             clientinfo *ci = clients[i];

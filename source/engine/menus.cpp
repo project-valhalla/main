@@ -63,15 +63,21 @@ void menuprocess()
     }
 
     // specific UIs
-    if(!UI::uivisible("perm")) UI::showui("perm");
     if(!isconnected(true))
     {
-        if(mainmenu && !UI::hascursor()) UI::showui("main");  // if not connected, force the main menu
+        if (mainmenu && !UI::hascursor())
+        {
+            UI::showui("main");  // if not connected, force the main menu
+        }
     }
     else
     {
-        if(!UI::uivisible("gamehud")) UI::showui("gamehud");  // if connected, force the game HUD
+        if (!UI::uivisible("gamehud"))
+        {
+            UI::showui("gamehud");  // if connected, force the game HUD
+        }
     }
+    if (!UI::uivisible("permanent")) UI::showui("permanent"); // always force the permanent UI elements
 }
 
 VAR(mainmenu, 1, 1, 0);

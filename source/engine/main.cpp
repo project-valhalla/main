@@ -645,7 +645,7 @@ void resetgl()
 {
     clearchanges(CHANGE_GFX|CHANGE_SHADERS);
 
-    renderbackground("resetting OpenGL");
+    renderbackground("Resetting OpenGL...");
 
     recorder::cleanup();
     cleanupva();

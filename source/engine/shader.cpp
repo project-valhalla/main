@@ -1132,7 +1132,7 @@ void shader(int *type, char *name, char *vs, char *ps)
 {
     if(lookupshaderbyname(name)) return;
 
-    defformatstring(info, "shader %s", name);
+    defformatstring(info, "Just looking up a shader: %s...", name);
     renderprogress(loadprogress, info);
     vector<char> vsbuf, psbuf, vsbak, psbak;
 #define GENSHADER(cond, body) \
@@ -1170,7 +1170,7 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps, int *max
     defformatstring(varname, "<variant:%d,%d>%s", s->numvariants(*row), *row, name);
     if(*maxvariants > 0)
     {
-        defformatstring(info, "shader %s", name);
+        defformatstring(info, "Just looking up a shader: %s...", name);
         renderprogress(min(s->variants.length() / float(*maxvariants), 1.0f), info);
     }
     vector<char> vsbuf, psbuf, vsbak, psbak;
@@ -1563,7 +1563,7 @@ void reloadshaders()
     {
         if(!s.standard && s.loaded() && !s.variantshader)
         {
-            defformatstring(info, "shader %s", s.name);
+            defformatstring(info, "Just reloading a shader: %s...", s.name);
             renderprogress(0.0, info);
             if(!s.compile()) s.cleanup(true);
             loopv(s.variants)

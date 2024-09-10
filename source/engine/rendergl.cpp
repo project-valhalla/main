@@ -2078,7 +2078,7 @@ void drawminimap()
     }
 
     GLERROR;
-    renderprogress(0, "generating mini-map...", !renderedframe);
+    renderprogress(0, "Charting the mini-map...", !renderedframe);
 
     drawtex = DRAWTEX_MINIMAP;
 

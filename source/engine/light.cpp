@@ -508,7 +508,7 @@ static Uint32 calclighttimer(Uint32 interval, void *param)
 
 void calclight()
 {
-    renderbackground("computing lighting... (esc to abort)");
+    renderbackground("Computing lighting... (press ESC to abort)");
     remip();
     optimizeblendmap();
     clearsurfaces(worldroot);
@@ -522,7 +522,7 @@ void calclight()
     clearnormals();
     Uint32 end = SDL_GetTicks();
     if(timer) SDL_RemoveTimer(timer);
-    renderbackground("lighting done...");
+    renderbackground("Lighting done!");
     allchanged();
     if(calclight_canceled)
         conoutf("calclight aborted");

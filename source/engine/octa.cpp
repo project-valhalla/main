@@ -496,7 +496,7 @@ bool remip(cube &c, const ivec &co, int size)
         subdividecube(c);
         ch = c.children;
     }
-    else if((remipprogress++&0xFFF)==1) renderprogress(float(remipprogress)/remiptotal, "remipping...");
+    else if((remipprogress++&0xFFF)==1) renderprogress(float(remipprogress)/remiptotal, "Remipping...");
 
     bool perfect = true;
     loopi(8)
@@ -1783,7 +1783,7 @@ static hashtable<cfkey, cfpolys> cpolys;
 
 void genmerges(cube *c = worldroot, const ivec &o = ivec(0, 0, 0), int size = worldsize>>1)
 {
-    if((genmergeprogress++&0xFFF)==0) renderprogress(float(genmergeprogress)/allocnodes, "merging faces...");
+    if((genmergeprogress++&0xFFF)==0) renderprogress(float(genmergeprogress)/allocnodes, "Merging the faces...");
     neighbourstack[++neighbourdepth] = c;
     loopi(8)
     {
@@ -1885,7 +1885,7 @@ void invalidatemerges(cube &c, const ivec &co, int size, bool msg)
 {
     if(msg && invalidatedmerges!=totalmillis)
     {
-        renderprogress(0, "invalidating merged surfaces...");
+        renderprogress(0, "Wiping out the merged surfaces...");
         invalidatedmerges = totalmillis;
     }
     invalidatemerges(c);

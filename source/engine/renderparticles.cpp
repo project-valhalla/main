@@ -1401,7 +1401,7 @@ bool printparticles(extentity &e, char *buf, int len)
 
 void seedparticles()
 {
-    renderprogress(0, "seeding particles");
+    renderprogress(0, "Sprinkling particles...");
     addparticleemitters();
     canemit = true;
     loopv(emitters)

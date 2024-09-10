@@ -3442,7 +3442,7 @@ void initenvmaps()
 void genenvmaps()
 {
     if(envmaps.empty()) return;
-    renderprogress(0, "generating environment maps...");
+    renderprogress(0, "Cooking up some environment maps...");
     int lastprogress = SDL_GetTicks();
     gl_setupframe(true);
     loopv(envmaps)
@@ -3453,7 +3453,7 @@ void genenvmaps()
         int millis = SDL_GetTicks();
         if(millis - lastprogress >= 250)
         {
-            renderprogress(float(i+1)/envmaps.length(), "generating environment maps...", true);
+            renderprogress(float(i+1)/envmaps.length(), "Cooking up some environment maps...", true);
             lastprogress = millis;
         }
     }

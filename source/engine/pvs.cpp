@@ -1104,11 +1104,11 @@ void genpvs(int *viewcellsize)
         return;
     }
 
-    renderbackground("generating PVS (esc to abort)");
+    renderbackground("Generating PVS... (press ESC to abort)");
     genpvs_canceled = false;
     Uint32 start = SDL_GetTicks();
 
-    renderprogress(0, "finding view cells");
+    renderprogress(0, "Looking for some view cells...");
 
     clearpvs();
     calcpvsbounds();
@@ -1139,7 +1139,7 @@ void genpvs(int *viewcellsize)
     }
     else
     {
-        renderprogress(0, "creating threads");
+        renderprogress(0, "Creating threads...");
         if(!pvsmutex) pvsmutex = SDL_CreateMutex();
         if(!viewcellmutex) viewcellmutex = SDL_CreateMutex();
         loopi(numthreads)

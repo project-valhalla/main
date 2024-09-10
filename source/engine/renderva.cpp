@@ -2788,7 +2788,7 @@ void genshadowmeshes()
 
     if(!smmesh) return;
 
-    renderprogress(0, "generating shadow meshes..");
+    renderprogress(0, "Casting some spooky shadow meshes...");
 
     vector<extentity *> &ents = entities::getents();
     loopv(ents)

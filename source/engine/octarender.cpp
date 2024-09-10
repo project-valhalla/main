@@ -367,7 +367,7 @@ struct vacollect : verthash
                    tmax.x <= bbmin.x || tmax.y <= bbmin.y || tmax.z <= bbmin.z)
                     continue;
                 float f0 = t0.norm.tonormal().dot(orient.b), f1 = t1.norm.tonormal().dot(orient.b), f2 = t2.norm.tonormal().dot(orient.b);
-                if(f0 >= 0 && f1 >= 0 && f2 >= 0) continue; 
+                if(f0 >= 0 && f1 >= 0 && f2 >= 0) continue;
                 vec p1[9], p2[9];
                 p1[0] = v0; p1[1] = v1; p1[2] = v2;
                 int nump = polyclip(p1, 3, orient.b, clipoffset.y, clipoffset.y + size.y, p2);
@@ -909,7 +909,7 @@ void addcubeverts(VSlot &vslot, int orient, int size, vec *pos, int convex, usho
         if(vslot.refractscale > 0) loopk(numverts) { vc.refractmin.min(pos[k]); vc.refractmax.max(pos[k]); }
     }
     if(texture == DEFAULT_SKY) loopi(numverts) if(pos[i][orient>>1] != ((orient&1)<<worldscale))
-    {       
+    {
         loopk(numverts) { vc.skymin.min(pos[k]); vc.skymax.max(pos[k]); }
         break;
     }
@@ -1072,7 +1072,7 @@ void gencubeedges(cube &c, const ivec &co, int size)
 
 void gencubeedges(cube *c = worldroot, const ivec &co = ivec(0, 0, 0), int size = worldsize>>1)
 {
-    progress("fixing t-joints...");
+    progress("Fixing t-joints...");
     neighbourstack[++neighbourdepth] = c;
     loopi(8)
     {
@@ -1177,7 +1177,7 @@ vtxarray *newva(const ivec &o, int size)
         va->skymin = ivec(vec(vc.skymin).mul(8)).shr(3);
         va->skymax = ivec(vec(vc.skymax).mul(8)).add(7).shr(3);
     }
-        
+
     va->nogimin = vc.nogimin;
     va->nogimax = vc.nogimax;
 
@@ -1549,7 +1549,7 @@ VARF(vacubesize, 32, 128, 0x1000, allchanged());
 
 int updateva(cube *c, const ivec &co, int size, int csi)
 {
-    progress("recalculating geometry...");
+    progress("Recalculating geometry...");
     int ccount = 0, cmergemax = vamergemax, chasmerges = vahasmerges;
     neighbourstack[++neighbourdepth] = c;
     loopi(8)                                    // counting number of semi-solid/solid children cubes
@@ -1733,7 +1733,7 @@ void allchanged(bool load)
 {
     if(mainmenu && !isconnected()) load = false;
     if(load) initlights();
-    renderprogress(0, "clearing vertex arrays...");
+    renderprogress(0, "Cleaning up the vertex array clutter...");
     clearvas(worldroot);
     resetqueries();
     resetclipplanes();

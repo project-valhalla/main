@@ -85,9 +85,6 @@
     <ClCompile Include="..\engine\pvs.cpp">
       <Filter>engine</Filter>
     </ClCompile>
-    <ClCompile Include="..\game\render.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
     <ClCompile Include="..\engine\rendergl.cpp">
       <Filter>engine</Filter>
     </ClCompile>
@@ -167,6 +164,9 @@
       <Filter>game</Filter>
     </ClCompile>
     <ClCompile Include="..\game\gamephysics.cpp">
+      <Filter>game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game\render.cpp">
       <Filter>game</Filter>
     </ClCompile>
   </ItemGroup>

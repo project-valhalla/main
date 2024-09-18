@@ -1,144 +1,68 @@
 #include "engine.h"
 
+// just a wrapper for `SDL_Surface`, used for the glyph cache
+struct glyph
+{
+    SDL_Surface *surf;
+    glyph() : surf(NULL) {};
+    ~glyph() { if(surf) SDL_FreeSurface(surf); }
+};
+
+// a cache for the bitmaps of characters used in the console
+static hashtable<uint, glyph> glyph_cache;
+void clearglyphcache()
+{
+    glyph_cache.clear();
+}
+
 static hashnameset<font> fonts;
-static font *fontdef = NULL;
-static int fontdeftex = 0;
+static vector<font *> fontstack;
+static int faceid = 0; // used by UI for change detection, unique for each font face
+int lastfontreset = 0;
 
-font *curfont = NULL;
-int curfonttex = 0;
-
-void newfont(char *name, char *tex, int *defaultw, int *defaulth, int *scale)
-{
-    font *f = &fonts[name];
-    if(!f->name) f->name = newstring(name);
-    f->texs.shrink(0);
-    f->texs.add(textureload(tex));
-    f->chars.shrink(0);
-    f->charoffset = '!';
-    f->defaultw = *defaultw;
-    f->defaulth = *defaulth;
-    f->scale = *scale > 0 ? *scale : f->defaulth;
-    f->bordermin = 0.49f;
-    f->bordermax = 0.5f;
-    f->outlinemin = -1;
-    f->outlinemax = 0;
-
-    fontdef = f;
-    fontdeftex = 0;
-}
-
-void fontborder(float *bordermin, float *bordermax)
-{
-    if(!fontdef) return;
-
-    fontdef->bordermin = *bordermin;
-    fontdef->bordermax = max(*bordermax, *bordermin+0.01f);
-}
-
-void fontoutline(float *outlinemin, float *outlinemax)
-{
-    if(!fontdef) return;
-
-    fontdef->outlinemin = min(*outlinemin, *outlinemax-0.01f);
-    fontdef->outlinemax = *outlinemax;
-}
-
-void fontoffset(char *c)
-{
-    if(!fontdef) return;
-
-    fontdef->charoffset = c[0];
-}
-
-void fontscale(int *scale)
-{
-    if(!fontdef) return;
-
-    fontdef->scale = *scale > 0 ? *scale : fontdef->defaulth;
-}
-
-void fonttex(char *s)
-{
-    if(!fontdef) return;
-
-    Texture *t = textureload(s);
-    loopv(fontdef->texs) if(fontdef->texs[i] == t) { fontdeftex = i; return; }
-    fontdeftex = fontdef->texs.length();
-    fontdef->texs.add(t);
-}
-
-void fontchar(float *x, float *y, float *w, float *h, float *offsetx, float *offsety, float *advance)
-{
-    if(!fontdef) return;
-
-    font::charinfo &c = fontdef->chars.add();
-    c.x = *x;
-    c.y = *y;
-    c.w = *w ? *w : fontdef->defaultw;
-    c.h = *h ? *h : fontdef->defaulth;
-    c.offsetx = *offsetx;
-    c.offsety = *offsety;
-    c.advance = *advance ? *advance : c.offsetx + c.w;
-    c.tex = fontdeftex;
-}
-
-void fontskip(int *n)
-{
-    if(!fontdef) return;
-    loopi(max(*n, 1))
-    {
-        font::charinfo &c = fontdef->chars.add();
-        c.x = c.y = c.w = c.h = c.offsetx = c.offsety = c.advance = 0;
-        c.tex = 0;
-    }
-}
-
-COMMANDN(font, newfont, "ssiii");
-COMMAND(fontborder, "ff");
-COMMAND(fontoutline, "ff");
-COMMAND(fontoffset, "s");
-COMMAND(fontscale, "i");
-COMMAND(fonttex, "s");
-COMMAND(fontchar, "fffffff");
-COMMAND(fontskip, "i");
-
-void fontalias(const char *dst, const char *src)
-{
-    font *s = fonts.access(src);
-    if(!s) return;
-    font *d = &fonts[dst];
-    if(!d->name) d->name = newstring(dst);
-    d->texs = s->texs;
-    d->chars = s->chars;
-    d->charoffset = s->charoffset;
-    d->defaultw = s->defaultw;
-    d->defaulth = s->defaulth;
-    d->scale = s->scale;
-    d->bordermin = s->bordermin;
-    d->bordermax = s->bordermax;
-    d->outlinemin = s->outlinemin;
-    d->outlinemax = s->outlinemax;
-
-    fontdef = d;
-    fontdeftex = d->texs.length()-1;
-}
-
-COMMAND(fontalias, "ss");
+font *curfont = NULL, *lastfont = NULL;
+const matrix4x3 *textmatrix = NULL; // used for text particles
+Shader *textshader = NULL;          // used for text particles
 
 font *findfont(const char *name)
 {
     return fonts.access(name);
 }
 
-bool setfont(const char *name)
+// the actual ttf file is loaded by `loadfontface()` right before rendering text
+bool setfont(font *f, const char *script)
 {
-    font *f = fonts.access(name);
     if(!f) return false;
+    // no script specified, use the default face
+    if(!script || !script[0])
+    {
+        if(f->face->id != f->default_face.id)
+        {
+            if(f->face->face) f->openface = f->face;
+            f->face = &f->default_face;
+        }
+    }
+    // script specified: look for a suitable face or fall back to the default one
+    else if(strcmp(f->face->name, script))
+    {
+        f->face = f->faces.access(script);
+        if(f->openface && f->face && f->face != f->openface)
+        {
+            // close the previously opened face
+            TTF_CloseFont(f->openface->face);
+            f->openface->face = NULL;
+            f->openface = f->face;
+        }
+        else if(!f->face) f->face = &f->default_face;
+    }
     curfont = f;
     return true;
 }
-
-static vector<font *> fontstack;
+bool setfont(const char *name, const char *script)
+{
+    font *f = fonts.access(name);
+    return setfont(f, script);
+}
 
 void pushfont()
 {
@@ -150,6 +74,491 @@ bool popfont()
     if(fontstack.empty()) return false;
     curfont = fontstack.pop();
     return true;
+}
+
+bool init_ttf()
+{
+    if(TTF_Init() < 0) return false;
+    const SDL_version *v_ttf = TTF_Linked_Version();
+    int v_ft_M, v_ft_m, v_ft_p, v_hb_M, v_hb_m, v_hb_p;
+    TTF_GetFreeTypeVersion(&v_ft_M, &v_ft_m, &v_ft_p);
+    TTF_GetHarfBuzzVersion(&v_hb_M, &v_hb_m, &v_hb_p);
+    conoutf(CON_INIT, "Font rendering: SDL_ttf %d.%d.%d, FreeType %d.%d.%d, HarfBuzz %d.%d.%d",
+        v_ttf->major, v_ttf->minor, v_ttf->patch,
+        v_ft_M, v_ft_m, v_ft_p,
+        v_hb_M, v_hb_m, v_hb_p
+    );
+    return true;
+}
+
+void newfont(const char *name, const char *default_face_filename)
+{
+    font *f = &fonts[name];
+    if(!f->name) f->name = newstring(name);
+    f->pts = 0; // always call `setfontsize()` before drawing text
+
+    // load the default font face
+    fontface face;
+    copystring(face.name, "Latn", 5);
+    copystring(face.ttf_filename, default_face_filename);
+    face.rtl = false;
+    face.face = TTF_OpenFontDPI(findfile(default_face_filename, "rb"), f->pts, 54, 54);
+    if(!face.face)
+    {
+        conoutf("could not load font: %s", default_face_filename);
+        return;
+    }
+    TTF_SetFontScriptName(face.face, "Latn");
+    TTF_SetFontDirection(face.face, TTF_DIRECTION_LTR);
+    TTF_SetFontWrappedAlign(face.face, TTF_WRAPPED_ALIGN_LEFT);
+    face.id = faceid++;
+
+    f->default_face = face;
+    f->face = &f->default_face;
+    lastfont = f;
+}
+COMMANDN(font, newfont, "ss");
+
+// adds a font face to the last font, to be used for a specific writing script
+void addfontface(const char *script, int *rtl, const char *filename)
+{
+    font *f = lastfont;
+    if(!f) return;
+    fontface *face = &f->faces[script];
+    copystring(face->name, script, 5);
+    copystring(face->ttf_filename, filename);
+    face->rtl = *rtl;
+    face->id = faceid++;
+}
+COMMANDN(fontface, addfontface, "sis");
+
+void closefont(font *f)
+{
+    if(!f) return;
+    TTF_CloseFont(f->default_face.face);
+    enumerate(f->faces, fontface, face, TTF_CloseFont(face.face));
+}
+
+// applies a black shadow to console text to improve visibility, the value controls the intensity of the shadow
+VARP(conshadow, 0, 255, 255);
+
+void setfontsize(int pts)
+{
+    if(curfont->pts == pts) return;
+    curfont->pts = pts;
+    if(curfont->face->face) TTF_SetFontSizeDPI(curfont->face->face, pts, 54, 54);
+}
+
+// loads the chosen font face from disk
+static inline bool loadfontface()
+{
+    if(!curfont->face->face)
+    {
+        curfont->face->face = TTF_OpenFontDPI(findfile(curfont->face->ttf_filename, "rb"), curfont->pts, 54, 54);
+        if(!curfont->face->face)
+        {
+            logoutf("could not load font face: %s", curfont->face->ttf_filename);
+            return false;
+        }
+        TTF_SetFontScriptName(curfont->face->face, curfont->face->name[0] ? curfont->face->name : "Latn");
+        TTF_SetFontDirection(curfont->face->face, curfont->face->rtl ? TTF_DIRECTION_RTL : TTF_DIRECTION_LTR);
+        TTF_SetFontWrappedAlign(curfont->face->face, curfont->face->rtl ? TTF_WRAPPED_ALIGN_RIGHT : TTF_WRAPPED_ALIGN_LEFT);
+    }
+    return true;
+}
+
+static inline bvec get_text_color(char c, bvec def)
+{
+    switch(c)
+    {
+        case '0': return bvec( 64, 255, 128); // green: player talk
+        case '1': return bvec( 96, 160, 255); // blue: "echo" command
+        case '2': return bvec(255, 192,  64); // yellow: gameplay messages
+        case '3': return bvec(255,  64,  64); // red: important errors
+        case '4': return bvec(128, 128, 128); // gray
+        case '5': return bvec(192,  64, 192); // magenta
+        case '6': return bvec(255, 128,   0); // orange
+        case '7': return bvec(255, 255, 255); // white
+        case '8': return bvec(  0, 255, 255); // cyan
+        case '9': return bvec(255, 192, 203); // pink
+    }
+    return def; // provided color: everything else
+}
+//stack[sp] is current color index
+static inline bvec text_color(char c, char *stack, int size, int &sp, bvec color)
+{
+    if(c=='s') // save color
+    {
+        c = stack[sp];
+        if(sp<size-1) stack[++sp] = c;
+    }
+    else
+    {
+        if(c=='r') { if(sp > 0) --sp; c = stack[sp]; } // restore color
+        else stack[sp] = c;
+        return get_text_color(c, color);
+    }
+    return color;
+}
+
+/////
+/// UI
+/////
+
+// renders a string of text to a texture to be cached and drawn later, and measures its dimensions
+void text_prepare(const char *str, textinfo &info, int wrap)
+{
+    if(!loadfontface()) { info = {0, 0, 0}; return; }
+    SDL_Surface* surf;
+    if(wrap > 0) surf = TTF_RenderUTF8_Blended_Wrapped(curfont->face->face, str, {255, 255, 255}, wrap);
+    else         surf = TTF_RenderUTF8_Blended(curfont->face->face, str, {255, 255, 255});
+    if(!surf) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; return; }
+    GLuint tex;
+    glGenTextures(1, &tex);
+    if(!tex) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; return; }
+    glBindTexture(GL_TEXTURE_RECTANGLE, tex);
+    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_COMPRESSED_RGBA, surf->pitch/4, surf->h, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, surf->pixels);
+    info = {tex, surf->w, surf->h};
+    SDL_FreeSurface(surf);
+    return;
+}
+
+// a version of the function above that supports colored spans but doesn't support newlines or line wrapping
+void text_prepare_colored(const char *str, textinfo &info, bvec initial_color, uchar a)
+{
+    if(!loadfontface()) { info = {0, 0, 0}; return; }
+
+    int totalw = 0, totalh = 0;
+    bvec tcolor = initial_color;
+    char colorstack[10];
+    colorstack[0] = 'c';
+    int cpos = 0;
+
+    vector<SDL_Surface *> surfs;
+    char *span_begin = (char*)str;
+    int span_len = 0;
+
+    // split the string into colored spans
+    for(char *p = (char *)str; *p; ++p)
+    {
+        if(*p == '\f')
+        {
+            if(*(p+1))
+            {
+                if(span_len)
+                {
+                    *p = '\0';
+                    SDL_Surface *surf = TTF_RenderUTF8_Blended(curfont->face->face, span_begin, {tcolor.r, tcolor.g, tcolor.b, a});
+                    if(!surf) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; return; }
+                    SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_NONE);
+                    surfs.add(surf);
+                    totalw += surf->w;
+                    totalh = max(totalh, surf->h);
+                    *p = '\f';
+                }
+                tcolor = text_color(*(p+1), colorstack, sizeof(colorstack), cpos, initial_color);
+                span_begin = ++p+1; span_len = 0;
+            }
+            continue;
+        }
+        span_len++;
+    }
+    if(span_len)
+    {
+        SDL_Surface *surf = TTF_RenderUTF8_Blended(curfont->face->face, span_begin, {tcolor.r, tcolor.g, tcolor.b, a});
+        SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_NONE);
+        surfs.add(surf);
+        totalw += surf->w;
+        totalh = max(totalh, surf->h);
+    }
+
+    if(!surfs.length()) { info = {0, 0, 0}; return; }
+
+    // copy all the colored spans onto a single surface
+    SDL_Surface *dest = surfs[0];
+    if(surfs.length() > 1)
+    {
+        dest = SDL_CreateRGBSurfaceWithFormat(0, totalw, totalh, 32, SDL_PIXELFORMAT_ARGB8888);
+        if(!dest) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; return; }
+        int x = 0;
+        loopv(surfs)
+        {
+            SDL_Surface *surf = surfs[i];
+            SDL_Rect r = {curfont->face->rtl ? (totalw - x - surf->w) : x, (totalh-surf->h)/2, 0, 0};
+            SDL_BlitSurface(surf, NULL, dest, &r);
+            x += surf->w;
+            SDL_FreeSurface(surf);
+        }
+    }
+
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    if(!tex) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; return; }
+    glBindTexture(GL_TEXTURE_RECTANGLE, tex);
+    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_COMPRESSED_RGBA, dest->pitch/4, dest->h, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, dest->pixels);
+    info = { tex, dest->w, dest->h };
+    SDL_FreeSurface(dest);
+}
+
+// draws a string of text that has already been rendered to a texture
+void draw_text(textinfo info, float left, float top, int r, int g, int b, int a)
+{
+    const int w = info.w, h = info.h;
+
+    if(textshader) textshader->set(); // text particles
+    else SETSHADER(hudrect);          // UI text
+
+    gle::color(bvec(r, g, b), a);
+    glBindTexture(GL_TEXTURE_RECTANGLE, info.tex);
+    gle::defvertex(textmatrix ? 3 : 2);
+    gle::deftexcoord0();
+
+    // NOTE: `GL_TRIANGLE_STRIP` does not work with `textmatrix` so we have to use `GL_QUADS` instead
+    gle::begin(textmatrix ? GL_QUADS : GL_TRIANGLE_STRIP);
+    if(textmatrix) // text particle inside the world
+    {
+        gle::attrib(textmatrix->transform(vec2(left  , top  ))); gle::attribf(0, 0);
+        gle::attrib(textmatrix->transform(vec2(left+w, top  ))); gle::attribf(w, 0);
+        gle::attrib(textmatrix->transform(vec2(left+w, top+h))); gle::attribf(w, h);
+        gle::attrib(textmatrix->transform(vec2(left  , top+h))); gle::attribf(0, h);
+    }
+    else // UI text
+    {
+        gle::attribf(left+w, top  ); gle::attribf(w, 0);
+        gle::attribf(left  , top  ); gle::attribf(0, 0);
+        gle::attribf(left+w, top+h); gle::attribf(w, h);
+        gle::attribf(left  , top+h); gle::attribf(0, h);
+    }
+    gle::end();
+    // NOTE: you must take care of deleting the texture `info.tex` manually!
+}
+// a version of the function above that can be called directly without preparing the text beforehand
+void draw_text(const char *str, float left, float top, int r, int g, int b, int a)
+{
+    textinfo info;
+    text_prepare(str, info, 0);
+    if(!info.tex) return;
+    draw_text(info, left, top, r, g, b, a);
+    glDeleteTextures(1, &info.tex);
+}
+void draw_textf(const char *fstr, float left, float top, ...)
+{
+    defvformatstring(str, top, fstr);
+    draw_text(str, left, top);
+}
+
+/////
+/// CONSOLE
+/////
+
+// retrieves a glyph bitmap from the glyph cache
+static inline SDL_Surface *fetch_glyph(uint codepoint)
+{
+    // return the cached surface if available
+    glyph *g = &glyph_cache[codepoint];
+    if(g->surf) return g->surf;
+
+    // draw the character in white, or the replacement character (0xFFFD) if the requested glyph is not available
+    SDL_Surface *surf = TTF_RenderGlyph32_Blended(curfont->face->face, codepoint, {255, 255, 255});
+    if(!surf)    surf = TTF_RenderGlyph32_Blended(curfont->face->face, 0xFFFD, {255, 255, 255});
+    if(!surf) return NULL;
+    
+    SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_NONE);
+    g->surf = surf;
+    return g->surf;
+}
+static inline void measure_glyph(uint codepoint, int &width, int &height) {
+    SDL_Surface *surf = fetch_glyph(codepoint);
+    if(!surf)
+    {
+        width = 0;
+        height = FONTH;
+        return;
+    }
+    width = surf->w;
+    height = surf->h;
+}
+
+// computes the dimensions of a line of console text and splits it into colored spans
+void text_prepare_console(const char *str, int &width, int &height, vector<conspan> &spans, int maxwidth, int cursor, int *curx, int *cury)
+{
+    int x = 0, y = FONTH, maxw = 0;
+    bvec color(255, 255, 255), tcolor = color;
+    if(curx) *curx = -1;
+
+    char colorstack[10];
+    colorstack[0] = 'c';
+    int cpos = 0;
+
+    conspan span(str, tcolor);
+
+    for(char *p = (char*)str; *p; ++p)
+    {
+        if(cursor == p - str) // check if the cursor is somewhere in the middle of the string
+        {
+            if(curx) *curx = x;
+            if(cury) *cury = y - FONTH;
+        }
+        if(*p == '\f') // color code
+        {
+            if(*(p+1))
+            {
+                if(span.len) spans.add(span);
+                tcolor = text_color(*(p+1), colorstack, sizeof(colorstack), cpos, color);
+                span = conspan(++p+1, tcolor);
+                span.x = x; span.y = y - FONTH;
+            }
+            continue;
+        }
+        if(*p == '\r' || *p == '\n') // new line
+        {
+            if(span.len) spans.add(span);
+            span = conspan(p+1, tcolor);
+            span.y = y;
+            if(x > maxw) maxw = x;
+            x = 0; y += FONTH;
+            continue;
+        }
+        // check if we are exceeding the maximum width
+        int w, h;
+        measure_glyph(*p, w, h);
+        if(maxwidth > 0 && x + w > maxwidth)
+        {
+            if(span.len) spans.add(span);
+            span = conspan(p, tcolor);
+            span.y = y; span.w = w; span.len = 1;
+            if(x > maxw) maxw = x;
+            x = w; y += FONTH;
+            continue;
+        }
+        // regular character: append to the span
+        x += w;
+        if(x > maxw) maxw = x;
+        span.w += w; span.len++;
+    }
+    if(span.len) spans.add(span);
+    width = maxw; height = y;
+
+    // check if the cursor is at the end of the string
+    if(curx && cursor >= 0 && *curx < 0)
+    {
+        *curx = x;
+        if(cury) *cury = y - FONTH;
+    }
+}
+
+// like the function above, but doesn't deal with spans and cursor position
+void text_bounds_console(const char *str, int &width, int &height, int maxwidth)
+{
+    int x = 0, y = FONTH, maxw = 0;
+
+    for(char *p = (char*)str; *p; ++p)
+    {
+        if(*p == '\f') // color code
+        {
+            if(*(p+1)) { p++; }; continue;
+        }
+        if(*p == '\r' || *p == '\n') // new line
+        {
+            if(x > maxw) maxw = x;
+            x = 0; y += FONTH;
+            continue;
+        }
+        // check if we are exceeding the maximum width
+        int w, h;
+        measure_glyph(*p, w, h);
+        if(maxwidth > 0 && x + w > maxwidth)
+        {
+            if(x > maxw) maxw = x;
+            x = w; y += FONTH;
+            continue;
+        }
+        // regular character
+        x += w;
+        if(x > maxw) maxw = x;
+    }
+    width = maxw; height = y;
+}
+
+// draws a surface that contains text to the screen
+static inline void draw_surface(SDL_Surface *surf, int x, int y, bvec color)
+{
+    const int w = surf->w, h = surf->h;
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    if(!tex)
+    {
+        logoutf("failed to render console text");
+        return;
+    }
+    glBindTexture(GL_TEXTURE_RECTANGLE, tex);
+    glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_RGBA, surf->pitch/4, surf->h, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, surf->pixels);
+    gle::defvertex(2);
+    gle::deftexcoord0();
+    if(conshadow)
+    {
+        const float d = 3.f/4.f * conscale;
+        gle::color(bvec(0, 0, 0), conshadow);
+        gle::begin(GL_TRIANGLE_STRIP);
+            gle::attribf(x+w-d, y+d  ); gle::attribf(w, 0);
+            gle::attribf(x-d  , y+d  ); gle::attribf(0, 0);
+            gle::attribf(x+w-d, y+h+d); gle::attribf(w, h);
+            gle::attribf(x-d  , y+h+d); gle::attribf(0, h);
+        gle::end();
+    }
+    gle::color(color);
+    gle::begin(GL_TRIANGLE_STRIP);
+        gle::attribf(x+w, y  ); gle::attribf(w, 0);
+        gle::attribf(x  , y  ); gle::attribf(0, 0);
+        gle::attribf(x+w, y+h); gle::attribf(w, h);
+        gle::attribf(x  , y+h); gle::attribf(0, h);
+    gle::end();
+    glDeleteTextures(1, &tex);
+}
+
+// copies (blits) a single glyph onto a surface
+static inline void copy_glyph_to_surface(uint codepoint, int x, int y, SDL_Surface *surf)
+{
+    SDL_Surface *g = fetch_glyph(codepoint);
+    if(!g) return;
+
+    SDL_Rect r = {x, y, 0, 0};
+    if(SDL_BlitSurface(g, NULL, surf, &r) != 0)
+    {
+        logoutf("Blit failed: %c", codepoint);
+    }
+}
+
+// draws a single glyph, used for the cursor
+static inline void draw_glyph_console(uint codepoint, int x, int y, bvec color)
+{
+    SDL_Surface *g = fetch_glyph(codepoint);
+    if(g) draw_surface(g, x, y, color);
+}
+
+// draws a line of console text that has already been split into spans
+void draw_text_console(vector<conspan> spans, float left, float top, int curx, int cury)
+{
+    SETSHADER(hudrect);
+    loopv(spans)
+    {
+        float x = left + spans[i].x, y = top + spans[i].y;
+        SDL_Surface *surf = SDL_CreateRGBSurfaceWithFormat(0, spans[i].w, FONTH, 32, SDL_PIXELFORMAT_ABGR8888);
+        if(!surf) return;
+        int sx = 0;
+        loopj(spans[i].len)
+        {
+            uint codepoint = *(spans[i].begin+j);
+            int w, h;
+            measure_glyph(codepoint, w, h);
+            copy_glyph_to_surface(codepoint, sx, 0, surf);
+            sx += w;
+        }
+        draw_surface(surf, x, y, spans[i].color);
+        SDL_FreeSurface(surf);
+    }
+    // cursor
+    if(curx >= 0 && (totalmillis/350)&1) draw_glyph_console('_', left + curx, top + cury, bvec(255, 255, 255));
 }
 
 void gettextres(int &w, int &h)
@@ -169,266 +578,71 @@ void gettextres(int &w, int &h)
     }
 }
 
-float text_widthf(const char *str)
-{
-    float width, height;
-    text_boundsf(str, width, height);
-    return width;
-}
-
-#define FONTTAB (4*FONTW)
-#define TEXTTAB(x) ((int((x)/FONTTAB)+1.0f)*FONTTAB)
-
-void tabify(const char *str, int *numtabs)
-{
-    int tw = max(*numtabs, 0)*FONTTAB-1, tabs = 0;
-    for(float w = text_widthf(str); w <= tw; w = TEXTTAB(w)) ++tabs;
-    int len = strlen(str);
-    char *tstr = newstring(len + tabs);
-    memcpy(tstr, str, len);
-    memset(&tstr[len], '\t', tabs);
-    tstr[len+tabs] = '\0';
-    stringret(tstr);
-}
-
-COMMAND(tabify, "si");
-
-void draw_textf(const char *fstr, float left, float top, ...)
-{
-    defvformatstring(str, top, fstr);
-    draw_text(str, left, top);
-}
-
-const matrix4x3 *textmatrix = NULL;
-float textscale = 1;
-
-static float draw_char(Texture *&tex, int c, float x, float y, float scale)
-{
-    font::charinfo &info = curfont->chars[c-curfont->charoffset];
-    if(tex != curfont->texs[info.tex])
-    {
-        xtraverts += gle::end();
-        tex = curfont->texs[info.tex];
-        setusedtexture(tex);
-    }
-
-    x *= textscale;
-    y *= textscale;
-    scale *= textscale;
-
-    float x1 = x + scale*info.offsetx,
-          y1 = y + scale*info.offsety,
-          x2 = x + scale*(info.offsetx + info.w),
-          y2 = y + scale*(info.offsety + info.h),
-          tx1 = info.x / tex->xs,
-          ty1 = info.y / tex->ys,
-          tx2 = (info.x + info.w) / tex->xs,
-          ty2 = (info.y + info.h) / tex->ys;
-
-    if(textmatrix)
-    {
-        gle::attrib(textmatrix->transform(vec2(x1, y1))); gle::attribf(tx1, ty1);
-        gle::attrib(textmatrix->transform(vec2(x2, y1))); gle::attribf(tx2, ty1);
-        gle::attrib(textmatrix->transform(vec2(x2, y2))); gle::attribf(tx2, ty2);
-        gle::attrib(textmatrix->transform(vec2(x1, y2))); gle::attribf(tx1, ty2);
-    }
-    else
-    {
-        gle::attribf(x1, y1); gle::attribf(tx1, ty1);
-        gle::attribf(x2, y1); gle::attribf(tx2, ty1);
-        gle::attribf(x2, y2); gle::attribf(tx2, ty2);
-        gle::attribf(x1, y2); gle::attribf(tx1, ty2);
-    }
-
-    return scale*info.advance;
-}
-
-VARP(textbright, 0, 85, 100);
-
-//stack[sp] is current color index
-static void text_color(char c, char *stack, int size, int &sp, bvec color, int a)
-{
-    if(c=='s') // save color
-    {
-        c = stack[sp];
-        if(sp<size-1) stack[++sp] = c;
-    }
-    else
-    {
-        xtraverts += gle::end();
-        if(c=='r') { if(sp > 0) --sp; c = stack[sp]; } // restore color
-        else stack[sp] = c;
-        switch(c)
-        {
-            case '0': color = bvec( 64, 255, 128); break;   // green: player talk
-            case '1': color = bvec( 96, 160, 255); break;   // blue: "echo" command
-            case '2': color = bvec(255, 192,  64); break;   // yellow: gameplay messages
-            case '3': color = bvec(255,  64,  64); break;   // red: important errors
-            case '4': color = bvec(128, 128, 128); break;   // gray
-            case '5': color = bvec(192,  64, 192); break;   // magenta
-            case '6': color = bvec(255, 128,   0); break;   // orange
-            case '7': color = bvec(255, 255, 255); break;   // white
-            case '8': color = bvec(  0, 255, 255); break;   // cyan
-            case '9': color = bvec(255, 192, 203); break;   // pink
-            default: gle::color(color, a); return;          // provided color: everything else
-        }
-        if(textbright != 100) color.scale(textbright, 100);
-        gle::color(color, a);
-    }
-}
-
-#define TEXTSKELETON \
-    float y = 0, x = 0, scale = curfont->scale/float(curfont->defaulth);\
-    int i;\
-    for(i = 0; str[i]; i++)\
-    {\
-        TEXTINDEX(i)\
-        int c = uchar(str[i]);\
-        if(c=='\t')      { x = TEXTTAB(x); TEXTWHITE(i) }\
-        else if(c==' ')  { x += scale*curfont->defaultw; TEXTWHITE(i) }\
-        else if(c=='\n') { TEXTLINE(i) x = 0; y += FONTH; }\
-        else if(c=='\f') { if(str[i+1]) { i++; TEXTCOLOR(i) }}\
-        else if(curfont->chars.inrange(c-curfont->charoffset))\
-        {\
-            float cw = scale*curfont->chars[c-curfont->charoffset].advance;\
-            if(cw <= 0) continue;\
-            if(maxwidth >= 0)\
-            {\
-                int j = i;\
-                float w = cw;\
-                for(; str[i+1]; i++)\
-                {\
-                    int c = uchar(str[i+1]);\
-                    if(c=='\f') { if(str[i+2]) i++; continue; }\
-                    if(!curfont->chars.inrange(c-curfont->charoffset)) break;\
-                    float cw = scale*curfont->chars[c-curfont->charoffset].advance;\
-                    if(cw <= 0 || w + cw > maxwidth) break;\
-                    w += cw;\
-                }\
-                if(x + w > maxwidth && x > 0) { (void)j; TEXTLINE(j-1) x = 0; y += FONTH; }\
-                TEXTWORD\
-            }\
-            else { TEXTCHAR(i) }\
-        }\
-    }
-
-//all the chars are guaranteed to be either drawable or color commands
-#define TEXTWORDSKELETON \
-                for(; j <= i; j++)\
-                {\
-                    TEXTINDEX(j)\
-                    int c = uchar(str[j]);\
-                    if(c=='\f') { if(str[j+1]) { j++; TEXTCOLOR(j) }}\
-                    else { float cw = scale*curfont->chars[c-curfont->charoffset].advance; TEXTCHAR(j) }\
-                }
-
-#define TEXTEND(cursor) if(cursor >= i) { do { TEXTINDEX(cursor); } while(0); }
-
+// used by the text editor
 int text_visible(const char *str, float hitx, float hity, int maxwidth)
 {
-    #define TEXTINDEX(idx)
-    #define TEXTWHITE(idx) if(y+FONTH > hity && x >= hitx) return idx;
-    #define TEXTLINE(idx) if(y+FONTH > hity) return idx;
-    #define TEXTCOLOR(idx)
-    #define TEXTCHAR(idx) x += cw; TEXTWHITE(idx)
-    #define TEXTWORD TEXTWORDSKELETON
-    TEXTSKELETON
-    #undef TEXTINDEX
-    #undef TEXTWHITE
-    #undef TEXTLINE
-    #undef TEXTCOLOR
-    #undef TEXTCHAR
-    #undef TEXTWORD
-    return i;
-}
-
-//inverse of text_visible
-void text_posf(const char *str, int cursor, float &cx, float &cy, int maxwidth)
-{
-    #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; break; }
-    #define TEXTWHITE(idx)
-    #define TEXTLINE(idx)
-    #define TEXTCOLOR(idx)
-    #define TEXTCHAR(idx) x += cw;
-    #define TEXTWORD TEXTWORDSKELETON if(i >= cursor) break;
-    cx = cy = 0;
-    TEXTSKELETON
-    TEXTEND(cursor)
-    #undef TEXTINDEX
-    #undef TEXTWHITE
-    #undef TEXTLINE
-    #undef TEXTCOLOR
-    #undef TEXTCHAR
-    #undef TEXTWORD
-}
-
-void text_boundsf(const char *str, float &width, float &height, int maxwidth)
-{
-    #define TEXTINDEX(idx)
-    #define TEXTWHITE(idx)
-    #define TEXTLINE(idx) if(x > width) width = x;
-    #define TEXTCOLOR(idx)
-    #define TEXTCHAR(idx) x += cw;
-    #define TEXTWORD x += w;
-    width = 0;
-    TEXTSKELETON
-    height = y + FONTH;
-    TEXTLINE(_)
-    #undef TEXTINDEX
-    #undef TEXTWHITE
-    #undef TEXTLINE
-    #undef TEXTCOLOR
-    #undef TEXTCHAR
-    #undef TEXTWORD
-}
-
-Shader *textshader = NULL;
-
-void draw_text(const char *str, float left, float top, int r, int g, int b, int a, int cursor, int maxwidth)
-{
-    #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; }
-    #define TEXTWHITE(idx)
-    #define TEXTLINE(idx)
-    #define TEXTCOLOR(idx) if(usecolor) text_color(str[idx], colorstack, sizeof(colorstack), colorpos, color, a);
-    #define TEXTCHAR(idx) draw_char(tex, c, left+x, top+y, scale); x += cw;
-    #define TEXTWORD TEXTWORDSKELETON
-    char colorstack[10];
-    colorstack[0] = '\0'; //indicate user color
-    bvec color(r, g, b);
-    if(textbright != 100) color.scale(textbright, 100);
-    int colorpos = 0;
-    float cx = -FONTW, cy = 0;
-    bool usecolor = true;
-    if(a < 0) { usecolor = false; a = -a; }
-    Texture *tex = curfont->texs[0];
-    (textshader ? textshader : hudtextshader)->set();
-    LOCALPARAMF(textparams, curfont->bordermin, curfont->bordermax, curfont->outlinemin, curfont->outlinemax);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    setusedtexture(tex);
-    gle::color(color, a);
-    gle::defvertex(textmatrix ? 3 : 2);
-    gle::deftexcoord0();
-    gle::begin(GL_QUADS);
-    TEXTSKELETON
-    TEXTEND(cursor)
-    xtraverts += gle::end();
-    if(cursor >= 0 && (totalmillis/350)&1)
+    int x = 0, y = 0;
+    char *p = (char *)str;
+    for(; *p; ++p)
     {
-        gle::color(color, a);
-        if(maxwidth >= 0 && cx >= maxwidth && cx > 0) { cx = 0; cy += FONTH; }
-        draw_char(tex, '_', left+cx, top+cy, scale);
-        xtraverts += gle::end();
+        if(*p == '\f')
+        {
+            if(*(p+1)) ++p;
+            continue;
+        }
+        if(*p == '\r' || *p == '\n')
+        {
+            if(y + FONTH > hity) return (p - str);
+            x = 0; y += FONTH;
+            continue;
+        }
+        int w, h;
+        measure_glyph(*p, w, h);
+        if(maxwidth > 0 && x + w > maxwidth)
+        {
+            x = w; y += FONTH;
+        }
+        else x += w;
+        if(y + FONTH > hity && x >= hitx) return (p - str);
     }
-    #undef TEXTINDEX
-    #undef TEXTWHITE
-    #undef TEXTLINE
-    #undef TEXTCOLOR
-    #undef TEXTCHAR
-    #undef TEXTWORD
+    return (p - str);
 }
 
-void reloadfonts()
+// used by the text editor
+void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth)
 {
-    enumerate(fonts, font, f, loopv(f.texs) { if(!reloadtexture(f.texs[i])) { fatal("Failed to reload font texture"); }});
+    cx = cy = 0;
+    if(cursor <= 0) return;
+    int x = 0, y = 0;
+    for(int i = 0; i < cursor; i++)
+    {
+        if(!str[i]) break;
+        if(str[i] == '\f')
+        {
+            if(str[i+1]) i++;
+            continue;
+        }
+        if(str[i] == '\r' || str[i] == '\n')
+        {
+            x = 0; y += FONTH;
+        }
+        else
+        {
+            int w, h;
+            measure_glyph(str[i], w, h);
+            if(maxwidth > 0 && x + w > maxwidth)
+            {
+                x = w; y += FONTH;
+            }
+            else x += w;
+        }
+        if(cursor == i)
+        {
+            cx = x; cy = y;
+            return;
+        }
+    }
+    cx = x; cy = y;
 }
 
+void reloadfonts() { UI::cleartext(); }

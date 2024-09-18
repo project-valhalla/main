@@ -134,7 +134,11 @@ struct particle
     float size;
     union
     {
-        const char *text;
+        struct
+        {
+            const char *text;
+            const char *font;
+        };
         float val;
         physent *owner;
         struct
@@ -479,6 +483,7 @@ static meterrenderer meters(PT_METER), metervs(PT_METERVS);
 
 struct textrenderer : listrenderer
 {
+
     textrenderer(int type = 0)
         : listrenderer(type|PT_TEXT|PT_LERP|PT_SHADER|PT_NOLAYER)
     {}
@@ -486,26 +491,30 @@ struct textrenderer : listrenderer
     void startrender()
     {
         textshader = particletextshader;
-
-        pushfont();
-        setfont("wide.ol");
     }
 
     void endrender()
     {
         textshader = NULL;
-
-        popfont();
     }
 
     void killpart(listparticle *p)
     {
         if(p->text && p->flags&1) delete[] p->text;
+        if(p->font && p->flags&1) delete[] p->font;
     }
 
+    // NOTE: the texture is not deleted because the same one is recycled every time!
     void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts)
     {
-        float scale = p->size/80.0f, xoff = -text_width(p->text)/2, yoff = 0;
+        pushfont();
+        setfont(p->font);
+        setfontsize(hudh / PARTICLETEXTROWS);
+
+        textinfo info;
+        text_prepare_colored(p->text, info, bvec(255, 255, 255), 255);
+        if(!info.tex) return;
+        float scale = p->size/80.0f, xoff = -info.w/2, yoff = 0;
         if((type&0xFF)==PT_TEXTUP) { xoff += detrnd((size_t)p, 100)-50; yoff -= detrnd((size_t)p, 101); }
 
         matrix4x3 m(camright, vec(camup).neg(), vec(camdir).neg(), o);
@@ -513,7 +522,10 @@ struct textrenderer : listrenderer
         m.translate(xoff, yoff, 50);
 
         textmatrix = &m;
-        draw_text(p->text, 0, 0, p->color.r, p->color.g, p->color.b, blend);
+        draw_text(info, -1, 1, 0, 0, 0, blend); // shadow for better visibility
+        draw_text(info, 0, 0, p->color.r, p->color.g, p->color.b, blend);
+        glDeleteTextures(1, &info.tex);
+        popfont();
         textmatrix = NULL;
     }
 };
@@ -1096,20 +1108,22 @@ void particle_trail(int type, int fade, const vec &s, const vec &e, int color, f
 VARP(particletext, 0, 1, 1);
 VARP(maxparticletextdistance, 0, 64, 10000);
 
-void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
+void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, const char *font)
 {
     if(!canaddparticles()) return;
     if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
     particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
     p->text = t;
+    p->font = font;
 }
 
-void particle_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
+void particle_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, const char *font)
 {
     if(!canaddparticles()) return;
     if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
     particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
     p->text = newstring(t);
+    p->font = newstring(font);
     p->flags = 1;
 }
 

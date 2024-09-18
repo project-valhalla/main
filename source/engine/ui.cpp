@@ -186,6 +186,7 @@ namespace UI
     void modblend() { changeblend(BLEND_MOD, GL_ZERO, GL_SRC_COLOR); }
 
     FVARP(uiscale, 0.5f, 1.0f, 1.5f);
+    VARP(uifps, 0, 60, 1000);
 
     struct Object
     {
@@ -288,6 +289,23 @@ namespace UI
                 o->layout();
                 w = max(w, o->x + o->w);
                 h = max(h, o->y + o->h);
+            });
+        }
+
+        // called when the window is closed
+        virtual void hide()
+        {
+            loopchildren(o,
+            {
+                o->hide();
+            });
+        }
+
+        virtual void cleartext()
+        {
+            loopchildren(o,
+            {
+                o->cleartext();
             });
         }
 
@@ -626,6 +644,10 @@ namespace UI
 
         void hide()
         {
+            loopchildren(o,
+            {
+                o->hide();
+            });
             if(onhide) execute(onhide);
         }
 
@@ -1940,8 +1962,6 @@ namespace UI
         }
     };
 
-    // default size of text in terms of rows per screenful
-    VARP(uitextrows, 1, 24, 200);
     FVAR(uitextscale, 1, 0, 0);
 
     #define SETSTR(dst, src) do { \
@@ -1949,18 +1969,36 @@ namespace UI
         else dst = newstring(src); \
     } while(0)
 
+    // NOTE: `scale` is the text height in screenfuls at `uiscale 1`
     struct Text : Object
     {
         float scale, wrap;
         Color color;
+        textinfo info;
+        int fontid, lastchange;
+        bool changed;
+        uint crc; // string hash used to detect changes
+
+        Text() : info({0, 0, 0}), lastchange(0), crc(0) {}
 
         void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1)
         {
             Object::setup();
+            changed = false;
+            float newscale = scale_ * uiscale;
+            // ensure text height is an integer number of pixels
+            newscale *= int(newscale * hudh) / (newscale * hudh);
 
-            scale = scale_ * uiscale;
+            if((!uifps || (totalmillis - lastchange) >= 1000/uifps) && (newscale != scale || wrap_ != wrap || fontid != curfont->face->id))
+            {
+                changed = true;
+                lastchange = totalmillis;
+            }
+
+            scale = newscale;
             color = color_;
             wrap = wrap_;
+            fontid = curfont->face->id;
         }
 
         static const char *typestr() { return "#Text"; }
@@ -1976,20 +2014,56 @@ namespace UI
 
             changedraw(CHANGE_SHADER | CHANGE_COLOR);
 
-            float oldscale = textscale;
-            textscale = drawscale();
-            draw_text(getstr(), sx/textscale, sy/textscale, color.r, color.g, color.b, color.a, -1, wrap >= 0 ? int(wrap/textscale) : -1);
-            textscale = oldscale;
+            setfontsize(scale * hudh);
+
+            const float textscale = drawscale();
+            pushhudscale(textscale);
+            draw_text(info, round(sx/textscale), round(sy/textscale), color.r, color.g, color.b, color.a);
+            pophudmatrix();
         }
+
+        void hide() { cleartext(); }
+
+        void cleartext()
+        {
+            if(info.tex)
+            {
+                glDeleteTextures(1, &info.tex);
+                info.tex = 0;
+            }
+        }
+
+        ~Text() { cleartext(); }
 
         void layout()
         {
             Object::layout();
 
-            float k = drawscale(), tw, th;
-            text_boundsf(getstr(), tw, th, wrap >= 0 ? int(wrap/k) : -1);
-            w = max(w, tw*k);
-            h = max(h, th*k);
+            setfontsize(scale * hudh);
+
+            float k = drawscale();
+
+            // text changes are detected here
+            const char *text = getstr();
+            if(!uifps || (totalmillis - lastchange >= 1000/uifps))
+            {
+                const uint crc_new = crc32(0, (const Bytef *)text, strlen(text));
+                if(crc_new != crc)
+                {
+                    changed = true;
+                    lastchange = totalmillis;
+                }
+                crc = crc_new;
+            }
+            if(changed && info.tex) cleartext();
+
+            if(!info.tex)
+            {
+                if(wrap >= 0) text_prepare(text, info, int(wrap/k));
+                else text_prepare_colored(text, info, bvec(255, 255, 255), 255);
+            }
+            w = max(w, info.w*k);
+            h = max(h, info.h*k);
         }
     };
 
@@ -2057,19 +2131,23 @@ namespace UI
     {
         ::font *font;
 
+        char script[5];
+
         Font() : font(NULL) {}
 
-        void setup(const char *name)
+        void setup(const char *name, const char *script_)
         {
             Object::setup();
 
             if(!font || !strcmp(font->name, name)) font = findfont(name);
+
+            copystring(script, script_ ? script_ : "Latn", 5);
         }
 
         void layout()
         {
             pushfont();
-            setfont(font);
+            setfont(font, script);
             Object::layout();
             popfont();
         }
@@ -2077,7 +2155,7 @@ namespace UI
         void draw(float sx, float sy)
         {
             pushfont();
-            setfont(font);
+            setfont(font, script);
             Object::draw(sx, sy);
             popfont();
         }
@@ -2085,7 +2163,7 @@ namespace UI
         void buildchildren(uint *contents)
         {
             pushfont();
-            setfont(font);
+            setfont(font, script);
             Object::buildchildren(contents);
             popfont();
         }
@@ -2094,7 +2172,7 @@ namespace UI
             void func##children(float cx, float cy, int mask, bool inside, int setflags) \
             { \
                 pushfont(); \
-                setfont(font); \
+                setfont(font, script); \
                 Object::func##children(cx, cy, mask, inside, setflags); \
                 popfont(); \
             }
@@ -2104,7 +2182,7 @@ namespace UI
         bool rawkey(int code, bool isdown)
         {
             pushfont();
-            setfont(font);
+            setfont(font, script);
             bool result = Object::rawkey(code, isdown);
             popfont();
             return result;
@@ -2113,7 +2191,7 @@ namespace UI
         bool key(int code, bool isdown)
         {
             pushfont();
-            setfont(font);
+            setfont(font, script);
             bool result = Object::key(code, isdown);
             popfont();
             return result;
@@ -2122,7 +2200,7 @@ namespace UI
         bool textinput(const char *str, int len)
         {
             pushfont();
-            setfont(font);
+            setfont(font, script);
             bool result = Object::textinput(str, len);
             popfont();
             return result;
@@ -2150,7 +2228,7 @@ namespace UI
 
             changedraw(CHANGE_SHADER | CHANGE_COLOR);
 
-            float k = drawscale();
+            float k = drawscale() / uiscale;
             pushhudtranslate(sx, sy, k);
             renderfullconsole(w/k, h/k);
             pophudmatrix();
@@ -2713,7 +2791,7 @@ namespace UI
             return true;
         }
 
-        float drawscale() const { return scale / FONTH; }
+        float drawscale() const { setconsolefontsize(); return scale / FONTH; }
 
         void draw(float sx, float sy)
         {
@@ -3507,8 +3585,8 @@ namespace UI
     ICOMMAND(uitexteditor, "siifsie", (char *name, int *length, int *height, float *scale, char *initval, int *mode, uint *children),
         BUILD(TextEditor, o, o->setup(name, *length, *height, (*scale <= 0 ? 1 : *scale) * uitextscale, initval, *mode <= 0 ? EDITORFOREVER : *mode), children));
 
-    ICOMMAND(uifont, "se", (char *name, uint *children),
-        BUILD(Font, o, o->setup(name), children));
+    ICOMMAND(uifont, "ses", (char *name, uint *children, char *script),
+        BUILD(Font, o, o->setup(name, script), children));
 
     ICOMMAND(uiabovehud, "", (), { if(window) window->abovehud = true; });
 
@@ -3678,14 +3756,19 @@ namespace UI
         DELETEP(world);
     }
 
+    void cleartext()
+    {
+        world->cleartext();
+    }
+
     void calctextscale()
     {
-        uitextscale = 1.0f/uitextrows;
+        uitextscale = 1.0f/UITEXTROWS;
 
         int tw = hudw, th = hudh;
         if(forceaspect) tw = int(ceil(th*forceaspect));
         gettextres(tw, th);
-        uicontextscale = conscale/th * uiscale;
+        uicontextscale = 1.f/th * uiscale;
     }
 
     void update()

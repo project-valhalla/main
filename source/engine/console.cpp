@@ -90,10 +90,17 @@ float rendercommand(float x, float y, float w)
     const char *prompt = commandprompt ? commandprompt : ">";
     formatstring(buf, "%s %s", prompt, commandbuf);
 
-    float width, height;
-    text_boundsf(buf, width, height, w);
+    pushfont();
+    setfont("default");
+    int width, height;
+    int curx, cury;
+    vector<conspan> spans;
+    text_prepare_console(buf, width, height, spans, w, commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), &curx, &cury);
     y -= height;
-    draw_text(buf, x, y, 0xFF, 0xFF, 0xFF, 0xFF, commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), w);
+    
+    draw_text_console(spans, x, y, curx, cury);
+    
+    popfont();
     return height;
 }
 
@@ -153,8 +160,8 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         int idx = offset+i < numl ? offset+i : --offset;
         if(!(conlines[idx].type&filter)) continue;
         char *line = conlines[idx].line;
-        float width, height;
-        text_boundsf(line, width, height, conwidth);
+        int width, height;
+        text_bounds_console(line, width, height, conwidth);
         if(totalheight + height > conheight) { numl = i; if(offset == idx) ++offset; break; }
         totalheight += height;
     }
@@ -164,21 +171,32 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         int idx = offset + (dir > 0 ? numl-i-1 : i);
         if(!(conlines[idx].type&filter)) continue;
         char *line = conlines[idx].line;
-        float width, height;
-        text_boundsf(line, width, height, conwidth);
+        int width, height;
+        vector<conspan> spans;
+        text_prepare_console(line, width, height, spans, conwidth);
         if(dir <= 0) y -= height;
-        draw_text(line, conoff, y, 0xFF, 0xFF, 0xFF, 0xFF, -1, conwidth);
+        draw_text_console(spans, conoff, y);
         if(dir > 0) y += height;
     }
     return y+conoff;
 }
 
+// sets the appropriate font size for the console
+void setconsolefontsize()
+{
+    setfontsize(hudh * conscale / CONSOLETEXTROWS);
+}
+
 float renderfullconsole(float w, float h)
 {
+    pushfont();
+    setfont("default");
+    setconsolefontsize();
     float conpad = FONTH/2,
           conheight = h - 2*conpad,
           conwidth = w - 2*conpad;
     drawconlines(conskip, 0, conwidth, conheight, conpad, fullconfilter);
+    popfont();
     return conheight + 2*conpad;
 }
 
@@ -187,9 +205,13 @@ float renderconsole(float w, float h, float abovehud)
     float conpad = FONTH/2,
           conheight = min(float(FONTH*consize), h - 2*conpad),
           conwidth = w - 2*conpad - game::clipconsole(w, h);
+    pushfont();
+    setfont("default");
+    setconsolefontsize();
     float y = drawconlines(conskip, confade, conwidth, conheight, conpad, confilter);
     if(miniconsize && miniconwidth)
         drawconlines(miniconskip, miniconfade, (miniconwidth*(w - 2*conpad))/100, min(float(FONTH*miniconsize), abovehud - y), conpad, miniconfilter, abovehud, -1);
+    popfont();
     return y;
 }
 

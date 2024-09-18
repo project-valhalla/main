@@ -484,7 +484,8 @@ namespace game
         else if (d->state == CS_ALIVE && !hidenames())
         {
             int team = m_teammode && validteam(d->team) ? d->team : 0;
-            particle_text(pos, d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
+            // force the player name to be rendered with the default font, since the name cannot be localized
+            particle_text(pos, d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f, 0, "default");
         }
         booteffect(d);
     }

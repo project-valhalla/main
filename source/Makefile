@@ -56,8 +56,8 @@ CLIENT_LIBS= -F../bin/valhalla.app/Contents/Frameworks/ -framework SDL2 -framewo
 CLIENT_LIBS+= -framework SDL2_mixer -framework CoreAudio -framework AudioToolbox
 CLIENT_LIBS+= -framework AudioUnit -framework OpenGL -framework Cocoa -lz -Lenet -lenet
 else
-CLIENT_INCLUDES= $(INCLUDES) -I/usr/X11R6/include `sdl2-config --cflags`
-CLIENT_LIBS= -Lenet -lenet -L/usr/X11R6/lib -lX11 `sdl2-config --libs` -lSDL2_image -lSDL2_mixer -lz -lGL
+CLIENT_INCLUDES= $(INCLUDES) -I/usr/X11R6/include `sdl2-config --cflags` `pkg-config --cflags pangocairo` `pkg-config --cflags fontconfig`
+CLIENT_LIBS= -Lenet -lenet -L/usr/X11R6/lib -lX11 `sdl2-config --libs` -lSDL2_image -lSDL2_mixer `pkg-config --libs pangocairo` `pkg-config --libs fontconfig` -lz -lGL
 endif
 endif
 ifeq ($(PLATFORM),LINUX)
@@ -220,12 +220,6 @@ server:	libenet $(SERVER_OBJS)
 master: libenet $(MASTER_OBJS)
 	$(CXX) $(CXXFLAGS) -o tess_master $(MASTER_OBJS) $(MASTER_LIBS)  
 
-shared/tessfont.o: shared/tessfont.c
-	$(CXX) $(CXXFLAGS) -c -o $@ $< `freetype-config --cflags`
-
-tessfont: shared/tessfont.o
-	$(CXX) $(CXXFLAGS) -o tessfont shared/tessfont.o `freetype-config --libs` -lz
-
 ifneq (,$(findstring DARWIN,$(PLATFORM)))
 install: client
 	cp tess_client ../bin/valhalla.app/Contents/MacOS/valhalla_universal
@@ -267,6 +261,7 @@ shared/stream.o: engine/sound.h shared/iengine.h shared/igame.h
 shared/tools.o: shared/cube.h shared/tools.h shared/geom.h shared/ents.h
 shared/tools.o: shared/command.h shared/glexts.h shared/glemu.h
 shared/tools.o: engine/sound.h shared/iengine.h shared/igame.h
+shared/tools.o: shared/unicode.h
 shared/zip.o: shared/cube.h shared/tools.h shared/geom.h shared/ents.h
 shared/zip.o: shared/command.h shared/glexts.h shared/glemu.h engine/sound.h
 shared/zip.o: shared/iengine.h shared/igame.h
@@ -290,16 +285,16 @@ engine/client.o: shared/ents.h shared/command.h shared/glexts.h
 engine/client.o: shared/glemu.h engine/sound.h shared/iengine.h
 engine/client.o: shared/igame.h engine/world.h engine/octa.h engine/light.h
 engine/client.o: engine/texture.h engine/bih.h engine/model.h
-engine/command.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
+engine/command.o: shared/unicode.h shared/cube.h shared/tools.h shared/geom.h
 engine/command.o: shared/ents.h shared/command.h shared/glexts.h
 engine/command.o: shared/glemu.h engine/sound.h shared/iengine.h
-engine/command.o: shared/igame.h engine/world.h engine/octa.h engine/light.h
-engine/command.o: engine/texture.h engine/bih.h engine/model.h
-engine/console.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
+engine/command.o: shared/igame.h engine/engine.h engine/world.h engine/octa.h
+engine/command.o: engine/light.h engine/texture.h engine/bih.h engine/model.h
+engine/console.o: shared/unicode.h shared/cube.h shared/tools.h shared/geom.h
 engine/console.o: shared/ents.h shared/command.h shared/glexts.h
 engine/console.o: shared/glemu.h engine/sound.h shared/iengine.h
-engine/console.o: shared/igame.h engine/world.h engine/octa.h engine/light.h
-engine/console.o: engine/texture.h engine/bih.h engine/model.h
+engine/console.o: shared/igame.h engine/engine.h engine/world.h engine/octa.h
+engine/console.o: engine/light.h engine/texture.h engine/bih.h engine/model.h
 engine/dynlight.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/dynlight.o: shared/ents.h shared/command.h shared/glexts.h
 engine/dynlight.o: shared/glemu.h engine/sound.h shared/iengine.h
@@ -400,12 +395,12 @@ engine/rendersky.o: shared/glexts.h shared/glemu.h engine/sound.h
 engine/rendersky.o: shared/iengine.h shared/igame.h engine/world.h
 engine/rendersky.o: engine/octa.h engine/light.h engine/texture.h
 engine/rendersky.o: engine/bih.h engine/model.h
-engine/rendertext.o: engine/engine.h shared/cube.h shared/tools.h
+engine/rendertext.o: shared/unicode.h shared/cube.h shared/tools.h
 engine/rendertext.o: shared/geom.h shared/ents.h shared/command.h
 engine/rendertext.o: shared/glexts.h shared/glemu.h engine/sound.h
-engine/rendertext.o: shared/iengine.h shared/igame.h engine/world.h
-engine/rendertext.o: engine/octa.h engine/light.h engine/texture.h
-engine/rendertext.o: engine/bih.h engine/model.h
+engine/rendertext.o: shared/iengine.h shared/igame.h engine/engine.h
+engine/rendertext.o: engine/world.h engine/octa.h engine/light.h
+engine/rendertext.o: engine/texture.h engine/bih.h engine/model.h
 engine/renderva.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/renderva.o: shared/ents.h shared/command.h shared/glexts.h
 engine/renderva.o: shared/glemu.h engine/sound.h shared/iengine.h
@@ -446,7 +441,7 @@ engine/ui.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/ui.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 engine/ui.o: engine/sound.h shared/iengine.h shared/igame.h engine/world.h
 engine/ui.o: engine/octa.h engine/light.h engine/texture.h engine/bih.h
-engine/ui.o: engine/model.h engine/textedit.h
+engine/ui.o: engine/model.h engine/textedit.h shared/unicode.h
 engine/liquid.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/liquid.o: shared/ents.h shared/command.h shared/glexts.h
 engine/liquid.o: shared/glemu.h engine/sound.h shared/iengine.h
@@ -534,11 +529,11 @@ standalone/shared/stream.o: shared/ents.h shared/command.h engine/sound.h
 standalone/shared/stream.o: shared/iengine.h shared/igame.h
 standalone/shared/tools.o: shared/cube.h shared/tools.h shared/geom.h
 standalone/shared/tools.o: shared/ents.h shared/command.h engine/sound.h
-standalone/shared/tools.o: shared/iengine.h shared/igame.h
-standalone/engine/command.o: engine/engine.h shared/cube.h shared/tools.h
+standalone/shared/tools.o: shared/iengine.h shared/igame.h shared/unicode.h
+standalone/engine/command.o: shared/unicode.h shared/cube.h shared/tools.h
 standalone/engine/command.o: shared/geom.h shared/ents.h shared/command.h
 standalone/engine/command.o: engine/sound.h shared/iengine.h shared/igame.h
-standalone/engine/command.o: engine/world.h
+standalone/engine/command.o: engine/engine.h engine/world.h
 standalone/engine/server.o: engine/engine.h shared/cube.h shared/tools.h
 standalone/engine/server.o: shared/geom.h shared/ents.h shared/command.h
 standalone/engine/server.o: engine/sound.h shared/iengine.h shared/igame.h

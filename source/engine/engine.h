@@ -33,38 +33,37 @@ extern int screenw, screenh, renderw, renderh, hudw, hudh;
 extern vector<int> entgroup;
 
 // rendertext
-struct font
+struct textinfo
 {
-    struct charinfo
-    {
-        float x, y, w, h, offsetx, offsety, advance;
-        int tex;
-    };
-
-    char *name;
-    vector<Texture *> texs;
-    vector<charinfo> chars;
-    int charoffset, defaultw, defaulth, scale;
-    float bordermin, bordermax, outlinemin, outlinemax;
-
-    font() : name(NULL) {}
-    ~font() { DELETEA(name); }
+    GLuint tex;
+    int w, h;
 };
 
-#define FONTH (curfont->scale)
+#define FONTH (fontsize)
 #define FONTW (FONTH/2)
 #define MINRESW 640
 #define MINRESH 480
 
-extern font *curfont;
+// number of text lines to fill the whole screen (higher = smaller text)
+#define CONSOLETEXTROWS 45
+#define LOADSCREENTEXTROWS 45
+#define UITEXTROWS 36
+#define PARTICLETEXTROWS 15 // NOTE: particles use a different scale
+
 extern Shader *textshader;
 extern const matrix4x3 *textmatrix;
 extern float textscale;
 
-extern font *findfont(const char *name);
+extern bool init_pangocairo();
+extern void done_pangocairo();
+extern int  getcurfontid();
+extern void gettextres(int &w, int &h);
+extern void draw_text(textinfo info, float left, float top, int a = 255, bool black = false);
+extern void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_color = bvec(255, 255, 255), int cursor = -1, float outline = 0, bvec outline_color = bvec(0, 0, 0), const char *language = NULL);
+extern void prepare_text_particle(const char *str, textinfo &info, bvec initial_color = bvec(255, 255, 255), float outline = 0, bvec outline_color = bvec(0, 0, 0), const char *language = NULL);
+extern int  text_visible(const char *str, float hitx, float hity, int maxwidth, const char *language = NULL);
+extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth, const char *language = NULL);
 extern void reloadfonts();
-
-static inline void setfont(font *f) { if(f) curfont = f; }
 
 // texture
 extern int hwtexsize, hwcubetexsize, hwmaxaniso, maxtexsize, hwtexunits, hwvtexunits;
@@ -581,6 +580,7 @@ extern void clearsleep(bool clearoverrides = true);
 
 // console
 extern float conscale;
+extern int inputmillis;
 
 extern void processkey(int code, bool isdown, int modstate = 0);
 extern void processtextinput(const char *str, int len);
@@ -596,6 +596,7 @@ extern const char *addreleaseaction(char *s);
 extern tagval *addreleaseaction(ident *id, int numargs);
 extern void writebinds(stream *f);
 extern void writecompletions(stream *f);
+extern void clearconsoletextures();
 
 // main
 enum
@@ -743,6 +744,7 @@ namespace UI
     void update();
     void render();
     void cleanup();
+    void cleartext();
 }
 
 // menus

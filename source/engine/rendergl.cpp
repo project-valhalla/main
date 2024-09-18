@@ -2807,7 +2807,7 @@ VARP(showfps, 0, 0, 1);
 VARP(showfpsrange, 0, 0, 1);
 VAR(statrate, 1, 200, 1000);
 
-FVARP(conscale, 1e-3f, 0.45f, 1e3f);
+FVARP(conscale, 0.5f, 1.f, 2.f);
 
 void resethudshader()
 {
@@ -2827,7 +2827,8 @@ void gl_drawhud()
     resethudshader();
 
     pushfont();
-    setfont("default.ol");
+    setfont("default");
+    setfontsize(hudh * conscale / CONSOLETEXTROWS);
 
     debuglights();
 
@@ -2835,12 +2836,12 @@ void gl_drawhud()
 
     debugparticles();
 
-    float conw = w/conscale, conh = h/conscale, abovehud = conh - FONTH;
+    float conw = w, conh = h, abovehud = conh - FONTH;
     if(showhud && !mainmenu)
     {
         if(showstats)
         {
-            pushhudscale(conscale);
+            setfontsize(hudh * conscale / CONSOLETEXTROWS);
 
             int roffset = 0;
             if(showfps)
@@ -2879,8 +2880,6 @@ void gl_drawhud()
                     roffset += FONTH;
                 }
             }
-
-            pophudmatrix();
         }
 
         rendertexturepanel(w, h);
@@ -2888,13 +2887,12 @@ void gl_drawhud()
 
     abovehud = min(abovehud, conh*UI::abovehud());
 
-    pushhudscale(conscale);
+    setfontsize(hudh * conscale / CONSOLETEXTROWS);
     abovehud -= rendercommand(FONTH/2, abovehud - FONTH/2, conw-FONTH);
     if(showhud && !(UI::uivisible("main") || UI::uivisible("fullconsole")))
     {
         renderconsole(conw, conh, abovehud - FONTH/2);
     }
-    pophudmatrix();
 
     drawcrosshair(w, h);
 

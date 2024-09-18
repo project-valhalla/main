@@ -1,3 +1,4 @@
+#include "unicode.h"
 
 struct editline
 {
@@ -178,6 +179,7 @@ struct editor
 
     void clear(const char *init = "")
     {
+        inputmillis = totalmillis;
         cx = cy = 0;
         mark(false);
         loopv(lines) lines[i].clear();
@@ -193,7 +195,7 @@ struct editor
     void updateheight()
     {
         int width;
-        text_bounds(lines[0].text, width, pixelheight, pixelwidth);
+        measure_text(lines[0].text, pixelwidth, width, pixelheight);
     }
 
     void setfile(const char *fname)
@@ -206,7 +208,7 @@ struct editor
     {
         if(!filename) return;
         clear(NULL);
-        stream *file = openutf8file(filename, "r");
+        stream *file = openfile(filename, "r");
         if(file)
         {
             while(lines.add().read(file, maxx) && (maxy < 0 || lines.length() <= maxy));
@@ -219,7 +221,7 @@ struct editor
     void save()
     {
         if(!filename) return;
-        stream *file = openutf8file(filename, "w");
+        stream *file = openfile(filename, "w");
         if(!file) return;
         loopv(lines) file->putline(lines[i].text);
         delete file;
@@ -348,6 +350,7 @@ struct editor
 
     bool del() // removes the current selection (if any)
     {
+        inputmillis = totalmillis;
         int sx, sy, ex, ey;
         if(!region(sx, sy, ex, ey))
         {
@@ -447,16 +450,19 @@ struct editor
 
     void scrollup()
     {
+        inputmillis = totalmillis;
         cy--;
     }
 
     void scrolldown()
     {
+        inputmillis = totalmillis;
         cy++;
     }
 
     void key(int code)
     {
+        inputmillis = totalmillis;
         switch(code)
         {
             case SDLK_UP:
@@ -475,7 +481,7 @@ struct editor
                     int x, y, width, height;
                     char *str = currentline().text;
                     text_pos(str, cx, x, y, pixelwidth);
-                    text_bounds(str, width, height, pixelwidth);
+                    measure_text(str, pixelwidth, width, height);
                     y += FONTH;
                     if(y < height) { cx = text_visible(str, x, y, pixelwidth); break; }
                 }
@@ -494,16 +500,28 @@ struct editor
                 cx = cy = INT_MAX;
                 break;
             case SDLK_LEFT:
-                cx--;
+            {
+                editline &current = currentline();
+                cx -= uni_prevchar(current.text, cx);
                 break;
+            }
             case SDLK_RIGHT:
-                cx++;
+            {
+                editline &current = currentline();
+                uint _codepoint;
+                cx += uni_getchar(&current.text[cx], _codepoint);
                 break;
+            }
             case SDLK_DELETE:
                 if(!del())
                 {
                     editline &current = currentline();
-                    if(cx < current.len) current.del(cx, 1);
+                    if(cx < current.len)
+                    {
+                        uint _codepoint;
+                        const int s = uni_getchar(&current.text[cx], _codepoint);
+                        current.del(cx, s);
+                    }
                     else if(cy < lines.length()-1)
                     {   //combine with next line
                         current.append(lines[cy+1].text);
@@ -515,7 +533,12 @@ struct editor
                 if(!del())
                 {
                     editline &current = currentline();
-                    if(cx > 0) current.del(--cx, 1);
+                    if(cx > 0)
+                    {
+                        const int s = uni_prevchar(current.text, cx);
+                        cx -= s;
+                        current.del(cx, s);
+                    }
                     else if(cy > 0)
                     {   //combine with previous line
                         cx = lines[cy-1].len;
@@ -543,12 +566,13 @@ struct editor
 
     void hit(int hitx, int hity, bool dragged)
     {
+        inputmillis = totalmillis;
         int maxwidth = linewrap?pixelwidth:-1;
         int h = 0;
         for(int i = scrolly; i < lines.length(); i++)
         {
             int width, height;
-            text_bounds(lines[i].text, width, height, maxwidth);
+            measure_text(lines[i].text, maxwidth, width, height);
             if(h + height > pixelheight) break;
 
             if(hity >= h && hity <= h+height)
@@ -568,7 +592,7 @@ struct editor
         for(int ph = pixelheight; slines > 0 && ph > 0;)
         {
             int width, height;
-            text_bounds(lines[slines-1].text, width, height, maxwidth);
+            measure_text(lines[slines-1].text, maxwidth, width, height);
             if(height > ph) break;
             ph -= height;
             slines--;
@@ -592,7 +616,7 @@ struct editor
             for(int i = cy; i >= scrolly; i--)
             {
                 int width, height;
-                text_bounds(lines[i].text, width, height, maxwidth);
+                measure_text(lines[i].text, maxwidth, width, height);
                 if(h + height > pixelheight) { scrolly = i+1; break; }
                 h += height;
             }
@@ -609,7 +633,7 @@ struct editor
             for(int i = scrolly; i < maxy; i++)
             {
                 int width, height;
-                text_bounds(lines[i].text, width, height, maxwidth);
+                measure_text(lines[i].text, maxwidth, width, height);
                 if(h + height > pixelheight) { maxy = i; break; }
                 if(i == sy) psy += h;
                 if(i == ey) { pey += h; break; }
@@ -658,24 +682,28 @@ struct editor
         int h = 0;
         for(int i = scrolly; i < lines.length(); i++)
         {
-            int width, height;
-            text_bounds(lines[i].text, width, height, maxwidth);
-            if(h + height > pixelheight) break;
+            textinfo info;
+            prepare_text(lines[i].text, info, maxwidth, bvec(255, 255, 255), hit&&(cy==i)?cx:-1);
+            if(h + info.h > pixelheight) break;
 
-            draw_text(lines[i].text, x, y+h, color>>16, (color>>8)&0xFF, color&0xFF, 0xFF, hit&&(cy==i)?cx:-1, maxwidth);
-            if(linewrap && height > FONTH) // line wrap indicator
+            if(info.tex)
+            {
+                draw_text(info, x, y);
+                glDeleteTextures(1, &info.tex);
+            }
+            if(linewrap && info.h > FONTH) // line wrap indicator
             {
                 hudnotextureshader->set();
                 gle::colorub(0x80, 0xA0, 0x80);
                 gle::defvertex(2);
                 gle::begin(GL_TRIANGLE_STRIP);
                 gle::attribf(x,         y+h+FONTH);
-                gle::attribf(x,         y+h+height);
+                gle::attribf(x,         y+h+info.h);
                 gle::attribf(x-FONTW/2, y+h+FONTH);
-                gle::attribf(x-FONTW/2, y+h+height);
+                gle::attribf(x-FONTW/2, y+h+info.h);
                 gle::end();
             }
-            h+=height;
+            h+=info.h;
         }
     }
 };

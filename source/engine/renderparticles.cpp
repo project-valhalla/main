@@ -134,7 +134,12 @@ struct particle
     float size;
     union
     {
-        const char *text;
+        struct
+        {
+            const char *text;
+            const char *font;
+            const char *language;
+        };
         float val;
         physent *owner;
         struct
@@ -479,6 +484,7 @@ static meterrenderer meters(PT_METER), metervs(PT_METERVS);
 
 struct textrenderer : listrenderer
 {
+
     textrenderer(int type = 0)
         : listrenderer(type|PT_TEXT|PT_LERP|PT_SHADER|PT_NOLAYER)
     {}
@@ -486,26 +492,37 @@ struct textrenderer : listrenderer
     void startrender()
     {
         textshader = particletextshader;
-
-        pushfont();
-        setfont("wide.ol");
     }
 
     void endrender()
     {
         textshader = NULL;
-
-        popfont();
     }
 
     void killpart(listparticle *p)
     {
-        if(p->text && p->flags&1) delete[] p->text;
+        if(p->flags&1)
+        {
+            if(p->text) delete[] p->text;
+            if(p->font) delete[] p->font;
+            if(p->language) delete[] p->language;
+        }
     }
 
     void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts)
     {
-        float scale = p->size/80.0f, xoff = -text_width(p->text)/2, yoff = 0;
+        pushfont();
+        setfont(p->font);
+        setfontsize(hudh / PARTICLETEXTROWS);
+
+        textinfo info;
+        prepare_text_particle(p->text, info, p->color, 1, bvec(0, 0, 0), p->language);
+        if(!info.tex)
+        {
+            popfont();
+            return;
+        }
+        float scale = p->size/80.0f, xoff = -info.w/2, yoff = -info.h/2;
         if((type&0xFF)==PT_TEXTUP) { xoff += detrnd((size_t)p, 100)-50; yoff -= detrnd((size_t)p, 101); }
 
         matrix4x3 m(camright, vec(camup).neg(), vec(camdir).neg(), o);
@@ -513,7 +530,8 @@ struct textrenderer : listrenderer
         m.translate(xoff, yoff, 50);
 
         textmatrix = &m;
-        draw_text(p->text, 0, 0, p->color.r, p->color.g, p->color.b, blend);
+        draw_text(info, 0, 0, blend);
+        popfont();
         textmatrix = NULL;
     }
 };
@@ -1096,20 +1114,24 @@ void particle_trail(int type, int fade, const vec &s, const vec &e, int color, f
 VARP(particletext, 0, 1, 1);
 VARP(maxparticletextdistance, 0, 64, 10000);
 
-void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
+void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, const char *font, const char *language)
 {
     if(!canaddparticles()) return;
     if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
     particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
     p->text = t;
+    p->font = font;
+    p->language = language;
 }
 
-void particle_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
+void particle_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, const char *font, const char *language)
 {
     if(!canaddparticles()) return;
     if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
     particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
     p->text = newstring(t);
+    p->font = newstring(font);
+    p->language = newstring(language ? language : "");
     p->flags = 1;
 }
 
@@ -1132,6 +1154,20 @@ void particle_hud_mark(const vec &s, int ix, int iy, int type, int fade, int col
     o.sub(camera).normalize();
     particle *p = newparticle(camera.add(o), vec(0, 0, 1), fade, type, color, size, 0);
     p->flags |= ix | (iy<<2);
+}
+
+void particle_hud_text(const vec &s, const char *t, int type, int fade, int color, float size, const char *font, const char *language)
+{
+    if(!canaddparticles()) return;
+    vec o;
+    if(camera1->o.dist(s) <= hudmarkdist && raycubelos(s, camera1->o, o)) return;
+    o = s;
+    vec camera = camera1->o;
+    o.sub(camera).normalize();
+    particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size * camera1->o.dist(s) / 80, 0);
+    p->text = t;
+    p->font = font;
+    p->language = language;
 }
 
 void particle_meter(const vec &s, float val, int type, int fade, int color, int color2, float size)

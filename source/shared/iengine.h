@@ -251,37 +251,14 @@ extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty
 extern int currentversion;
 
 // rendertext
+extern float fontsize;
 extern bool setfont(const char *name);
+static inline void setfontsize(float size) { fontsize = size; }
 extern void pushfont();
 extern bool popfont();
-extern void gettextres(int &w, int &h);
-extern void draw_text(const char *str, float left, float top, int r = 255, int g = 255, int b = 255, int a = 255, int cursor = -1, int maxwidth = -1);
+extern void draw_text(const char *str, float left, float top, int r = 255, int g = 255, int b = 255, int a = 255, const char *language = NULL);
 extern void draw_textf(const char *fstr, float left, float top, ...) PRINTFARGS(1, 4);
-extern float text_widthf(const char *str);
-extern void text_boundsf(const char *str, float &width, float &height, int maxwidth = -1);
-extern int text_visible(const char *str, float hitx, float hity, int maxwidth);
-extern void text_posf(const char *str, int cursor, float &cx, float &cy, int maxwidth);
-
-static inline int text_width(const char *str)
-{
-    return int(ceil(text_widthf(str)));
-}
-
-static inline void text_bounds(const char *str, int &width, int &height, int maxwidth = -1)
-{
-    float widthf, heightf;
-    text_boundsf(str, widthf, heightf, maxwidth);
-    width = int(ceil(widthf));
-    height = int(ceil(heightf));
-}
-
-static inline void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth)
-{
-    float cxf, cyf;
-    text_posf(str, cursor, cxf, cyf, maxwidth);
-    cx = int(cxf);
-    cy = int(cyf);
-}
+extern void measure_text(const char *str, int maxwidth, int &width, int &height, const char *language = NULL);
 
 // texture
 
@@ -359,10 +336,11 @@ extern void regular_particle_splash(int type, int num, int fade, const vec &p, i
 extern void regular_particle_flame(int type, const vec &p, float radius, float height, int color, int density = 3, float scale = 2.0f, float speed = 200.0f, float fade = 600.0f, int gravity = -15);
 extern void particle_splash(int type, int num, int fade, const vec &p, int color = 0xFFFFFF, float size = 1.0f, int radius = 150, int gravity = 2);
 extern void particle_trail(int type, int fade, const vec &from, const vec &to, int color = 0xFFFFFF, float size = 1.0f, int gravity = 20);
-extern void particle_text(const vec &s, const char *t, int type, int fade = 2000, int color = 0xFFFFFF, float size = 2.0f, int gravity = 0);
-extern void particle_textcopy(const vec &s, const char *t, int type, int fade = 2000, int color = 0xFFFFFF, float size = 2.0f, int gravity = 0);
+extern void particle_text(const vec &s, const char *t, int type, int fade = 2000, int color = 0xFFFFFF, float size = 2.0f, int gravity = 0, const char *font = "wide", const char *language = NULL);
+extern void particle_textcopy(const vec &s, const char *t, int type, int fade = 2000, int color = 0xFFFFFF, float size = 2.0f, int gravity = 0, const char *font = "wide", const char *language = NULL);
 extern void particle_icon(const vec &s, int ix, int iy, int type, int fade = 2000, int color = 0xFFFFFF, float size = 2.0f, int gravity = 0);
 extern void particle_hud_mark(const vec &s, int ix, int iy, int type, int fade, int color, float size);
+extern void particle_hud_text(const vec &s, const char *t, int type, int fade, int color, float size, const char *font, const char *language = NULL);
 extern void particle_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, int color2 = 0xFFFFF, float size = 2.0f);
 extern void particle_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 0.28f, physent *owner = NULL);
 extern void particle_fireball(const vec &dest, float max, int type, int fade = -1, int color = 0xFFFFFF, float size = 4.0f);

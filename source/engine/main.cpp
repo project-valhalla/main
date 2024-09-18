@@ -349,7 +349,7 @@ void renderprogressview(int w, int h, float bar, const char *text)   // also use
     {
         setfontsize(h * 0.8 / LOADSCREENTEXTROWS);
         textinfo i_text;
-        text_prepare(text, i_text, 0);
+        text_prepare_colored(text, i_text, bvec(255, 255, 255));
         int tw = i_text.w;
         float tsz = bh*0.6f/FONTH;
         if(tw*tsz > mw) tsz = mw/tw;

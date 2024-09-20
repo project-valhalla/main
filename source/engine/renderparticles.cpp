@@ -138,6 +138,7 @@ struct particle
         {
             const char *text;
             const char *font;
+            const char *script;
         };
         float val;
         physent *owner;
@@ -500,15 +501,19 @@ struct textrenderer : listrenderer
 
     void killpart(listparticle *p)
     {
-        if(p->text && p->flags&1) delete[] p->text;
-        if(p->font && p->flags&1) delete[] p->font;
+        if(p->flags&1)
+        {
+            if(p->text) delete[] p->text;
+            if(p->font) delete[] p->font;
+            if(p->script) delete[] p->script;
+        }
     }
 
     // NOTE: the texture is not deleted because the same one is recycled every time!
     void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts)
     {
         pushfont();
-        setfont(p->font);
+        setfont(p->font, p->script);
         setfontsize(hudh / PARTICLETEXTROWS);
 
         textinfo info;
@@ -1108,22 +1113,24 @@ void particle_trail(int type, int fade, const vec &s, const vec &e, int color, f
 VARP(particletext, 0, 1, 1);
 VARP(maxparticletextdistance, 0, 64, 10000);
 
-void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, const char *font)
+void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, const char *font, const char *script)
 {
     if(!canaddparticles()) return;
     if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
     particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
     p->text = t;
     p->font = font;
+    p->script = script;
 }
 
-void particle_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, const char *font)
+void particle_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, const char *font, const char *script)
 {
     if(!canaddparticles()) return;
     if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
     particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
     p->text = newstring(t);
     p->font = newstring(font);
+    p->script = newstring(script);
     p->flags = 1;
 }
 

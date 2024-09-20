@@ -46,11 +46,14 @@ bool setfont(font *f, const char *script)
     else if(strcmp(f->face->name, script))
     {
         f->face = f->faces.access(script);
-        if(f->openface && f->face && f->face != f->openface)
+        if(f->face && f->face != f->openface)
         {
-            // close the previously opened face
-            TTF_CloseFont(f->openface->face);
-            f->openface->face = NULL;
+            if(f->openface)
+            {
+                // close the previously opened face
+                TTF_CloseFont(f->openface->face);
+                f->openface->face = NULL;
+            }
             f->openface = f->face;
         }
         else if(!f->face) f->face = &f->default_face;
@@ -83,7 +86,7 @@ bool init_ttf()
     int v_ft_M, v_ft_m, v_ft_p, v_hb_M, v_hb_m, v_hb_p;
     TTF_GetFreeTypeVersion(&v_ft_M, &v_ft_m, &v_ft_p);
     TTF_GetHarfBuzzVersion(&v_hb_M, &v_hb_m, &v_hb_p);
-    conoutf(CON_INIT, "Font rendering: SDL_ttf %d.%d.%d, FreeType %d.%d.%d, HarfBuzz %d.%d.%d",
+    conoutf(CON_INIT, "Text rendering: SDL_ttf %d.%d.%d, FreeType %d.%d.%d, HarfBuzz %d.%d.%d",
         v_ttf->major, v_ttf->minor, v_ttf->patch,
         v_ft_M, v_ft_m, v_ft_p,
         v_hb_M, v_hb_m, v_hb_p

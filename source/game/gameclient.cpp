@@ -1714,7 +1714,7 @@ namespace game
                 filtertext(text, text, false, false, true, true);
                 if(!d || isignored(d->clientnum)) break;
                 if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
-                    particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
+                    particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8, "default");
                 conoutf(CON_CHAT, "%s: \fs%s%s\fr", teamcolorname(d), chatcolor(d), text);
                 if(chatsound == 1) playsound(S_CHAT);
                 break;
@@ -1731,7 +1731,7 @@ namespace game
                 if(sound >= 0 && (t->state != CS_DEAD || t->state != CS_SPECTATOR)) playsound(sound, t);
                 int team = validteam(t->team) ? t->team : 0;
                 if(t->state!=CS_DEAD)
-                    particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8);
+                    particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8, "default");
                 conoutf(CON_TEAMCHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", teamcolorname(t), teamtextcode[t->team], teamtextcode[t->team], text);
                 if(chatsound == 1) playsound(S_CHAT);
                 break;

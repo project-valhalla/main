@@ -1974,13 +1974,13 @@ namespace UI
     {
         float scale, wrap;
         Color color;
-        textinfo info;
+        textinfo info, outlineinfo;
         int fontid, lastchange;
         int fancy; // 0 = none, 1 = shadow, 2 = outline, 3 = shadow+outline
         bool changed;
         uint crc; // string hash used to detect changes
 
-        Text() : info({0, 0, 0}), lastchange(0), fancy(0), crc(0) {}
+        Text() : info({0, 0, 0}), outlineinfo({0, 0, 0}), lastchange(0), fancy(0), crc(0) {}
 
         void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int fancy_ = 0)
         {
@@ -2021,9 +2021,14 @@ namespace UI
             const float textscale = drawscale(),
                 x = round(sx/textscale), y = round(sy/textscale);
             pushhudscale(textscale);
-            if(fancy&1) // shadow
+            if(fancy & 1) // shadow
             {
-                draw_text(info, x-0.001/textscale, y+0.001/textscale, 0, 0, 0, color.a);
+                const float d = fancy >= 3 ? 0.002 : 0.001;
+                draw_text(info, x-d/textscale, y+d/textscale, 0, 0, 0, color.a);
+            }
+            if(fancy >= 2) // outline
+            {
+                draw_text(outlineinfo, x-1, y-1, 0, 0, 0, color.a);
             }
             draw_text(info, x, y, color.r, color.g, color.b, color.a);
             pophudmatrix();
@@ -2037,6 +2042,11 @@ namespace UI
             {
                 glDeleteTextures(1, &info.tex);
                 info.tex = 0;
+            }
+            if(outlineinfo.tex)
+            {
+                glDeleteTextures(1, &outlineinfo.tex);
+                outlineinfo.tex = 0;
             }
         }
 
@@ -2062,15 +2072,20 @@ namespace UI
                 }
                 crc = crc_new;
             }
-            if(changed && info.tex) cleartext();
+            if(changed && (info.tex || outlineinfo.tex)) cleartext();
 
             if(!info.tex)
             {
                 if(wrap >= 0) text_prepare(text, info, int(wrap/k));
                 else text_prepare_colored(text, info, bvec(255, 255, 255), 255);
             }
-            w = max(w, info.w*k);
-            h = max(h, info.h*k);
+            if(fancy >= 2 && !outlineinfo.tex)
+            {
+                if(wrap >=0) text_prepare(text, outlineinfo, int(wrap/k), true);
+                else text_prepare_colored(text, outlineinfo, bvec(0, 0, 0), 255, true);
+            }
+            w = max(w, max(outlineinfo.w, info.w)*k);
+            h = max(h, max(outlineinfo.h, info.h)*k);
         }
     };
 

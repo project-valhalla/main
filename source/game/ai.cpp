@@ -961,7 +961,7 @@ namespace ai
     {
         vec off = vec(pos).sub(d->feetpos()), dir(off.x, off.y, 0);
         bool sequenced = d->ai->blockseq || d->ai->targseq,
-             offground = d->timeinair && !d->inwater,
+             offground = d->timeinair && !d->inwater && !d->climbing,
              doublejump = (d->haspowerup(PU_AGILITY) || d->role == ROLE_BERSERKER || d->role == ROLE_ZOMBIE) && !d->doublejumping,
              canjump = doublejump || !offground,
              jump = canjump && lastmillis >= d->ai->jumpseed && (sequenced || off.z >= JUMPMIN || lastmillis >= d->ai->jumprand);

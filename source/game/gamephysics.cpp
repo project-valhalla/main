@@ -413,7 +413,7 @@ namespace physics
         if (slide || (!collided && floor.z > 0 && floor.z < WALLZ))
         {
             slideagainst(d, dir, slide ? obstacle : floor, found, slidecollide);
-            d->blocked = true;
+            if(!d->climbing) d->blocked = true;
         }
         if (found) land(d, dir, floor, collided);
         else fall(d, dir, floor);
@@ -519,29 +519,45 @@ namespace physics
         return d->physstate >= PHYS_SLOPE || ((d->haspowerup(PU_AGILITY) || d->role == ROLE_ZOMBIE || d->role == ROLE_BERSERKER) && !d->doublejumping);
     }
 
-    const float JUMP_VEL = 135.0f;
-    const float CROUCH_VEL = 0.4f;
-    const float LADDER_VEL = 0.7f;
+    const float VELOCITY_JUMP = 135.0f;
+    const float VELOCITY_CROUCH = 0.4f;
+    const float VELOCITY_LADDER = 0.7f;
+
+    const int DIVIDE_WATER = 8.0f;
 
     VAR(floatspeed, 1, 100, 10000);
 
-    void modifyvelocity(gameent* pl, bool local, bool isinwater, bool floating, int curtime)
+    int materialcheck(gameent* d)
     {
-        gameent* d = (gameent*)pl;
-        if (floating)
+        return lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (3 * d->aboveeye - d->eyeheight) / 4));
+    }
+
+    bool isFloating(gameent* d)
+    {
+        return (d->type == ENT_PLAYER && (d->state == CS_EDITING || d->state == CS_SPECTATOR));
+    }
+
+    bool hascamerapitchmovement(gameent* d)
+    {
+        return isFloating(d) || isliquidmaterial(materialcheck(d) & MATF_VOLUME) || d->climbing || d->type == ENT_CAMERA;
+    }
+
+    void modifyvelocity(gameent* d, bool local, bool isinwater, bool isfloating, int curtime)
+    {
+        if (isfloating)
         {
             if (d->jumping)
             {
-                d->vel.z = max(d->vel.z, JUMP_VEL);
+                d->vel.z = max(d->vel.z, static_cast<float>(floatspeed));
             }
             if (d->crouching < 0)
             {
-                d->vel.z = min(d->vel.z, -JUMP_VEL);
+                d->vel.z = min(d->vel.z, static_cast<float>(-floatspeed));
             }
         }
         else if (canjump(d) || isinwater)
         {
-            if (isinwater && !d->inwater) d->vel.div(8);
+            if (isinwater && !d->inwater) d->vel.div(DIVIDE_WATER);
             if (d->jumping)
             {
                 d->jumping = false;
@@ -552,26 +568,29 @@ namespace physics
                     d->lastfootleft = d->lfoot;
                     d->falling.z = 1;
                 }
-                d->vel.z = max(d->vel.z, JUMP_VEL); // Physics impulse upwards.
+                d->vel.z = max(d->vel.z, VELOCITY_JUMP); // Physics impulse upwards.
                 if (isinwater)
                 {
                     // Dampen velocity change even harder, gives a decent water feel.
-                    d->vel.x /= 8.0f;
-                    d->vel.y /= 8.0f;
+                    d->vel.x /= DIVIDE_WATER;
+                    d->vel.y /= DIVIDE_WATER;
                 }
 
-                triggerphysicsevent(pl, PHYSEVENT_JUMP, d->inwater);
+                triggerphysicsevent(d, PHYSEVENT_JUMP, d->inwater);
+            }
+            else if (d->crouching < 0 && isinwater)
+            {
+                d->vel.z = min(d->vel.z, -VELOCITY_JUMP / DIVIDE_WATER);
             }
         }
-        if (!floating && !d->climbing && d->physstate == PHYS_FALL) d->timeinair += curtime;
+        if (!isfloating && !d->climbing && d->physstate == PHYS_FALL) d->timeinair += curtime;
 
         vec m(0.0f, 0.0f, 0.0f);
         if ((d->move || d->strafe))
         {
-            bool movepitch = floating || isinwater || d->climbing || d->type == ENT_CAMERA;
-            vecfromyawpitch(d->yaw, movepitch ? d->pitch : 0, d->move, d->strafe, m);
+            vecfromyawpitch(d->yaw, hascamerapitchmovement(d) ? d->pitch : 0, d->move, d->strafe, m);
 
-            if (!floating && d->physstate >= PHYS_SLOPE)
+            if (!isfloating && d->physstate >= PHYS_SLOPE)
             {
                 /* Move up or down slopes in air,
                  * but only move up slopes in water.
@@ -591,17 +610,17 @@ namespace physics
         bool isonfloor = d->physstate >= PHYS_SLOPE || d->climbing;
         if (d->type == ENT_PLAYER)
         {
-            if (floating)
+            if (isfloating)
             {
-                if (pl == self) dir.mul(floatspeed / 100.0f);
+                if (d == self) dir.mul(floatspeed / 100.0f);
             }
             else if (d->crouching)
             {
-                dir.mul(CROUCH_VEL);
+                dir.mul(VELOCITY_CROUCH);
             }
             else if (d->climbing)
             {
-                dir.mul(LADDER_VEL);
+                dir.mul(VELOCITY_LADDER);
             }
             else if (!isinwater)
             {
@@ -610,11 +629,11 @@ namespace physics
         }
         // Calculate and apply friction.
         float friction = 25.0f;
-        if (isinwater && !d->climbing && !floating)
+        if (isinwater && !d->climbing && !isfloating)
         {
             friction = 20.0f;
         }
-        else if (isonfloor || floating)
+        else if (isonfloor || isfloating)
         {
             friction = 4.0f;
         }
@@ -701,26 +720,29 @@ namespace physics
     FVAR(straferoll, 0, 0.018f, 90);
     FVAR(faderoll, 0, 0.9f, 1);
 
+    const int SHORT_JUMP_THRESHOLD = 350;
+    const int LONG_JUMP_THRESHOLD = 800;
+
     bool isplayermoving(gameent* d, int moveres, bool local, int curtime)
     {
         if (!allowmove(d)) return false;
-        int material = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (3 * d->aboveeye - d->eyeheight) / 4));
+        int material = materialcheck(d);
         bool isinwater = isliquidmaterial(material & MATF_VOLUME);
-        bool floating = d->type == ENT_PLAYER && (d->state == CS_EDITING || d->state == CS_SPECTATOR);
+        bool isfloating = isFloating(d);
         float secs = curtime / 1000.f;
 
 
-        if (!floating && !d->climbing) modifygravity(d, isinwater, curtime); // Apply gravity.
-        modifyvelocity(d, local, isinwater, floating, curtime); // Apply any player generated changes in velocity.
+        if (!isfloating && !d->climbing) modifygravity(d, isinwater, curtime); // Apply gravity.
+        modifyvelocity(d, local, isinwater, isfloating, curtime); // Apply any player generated changes in velocity.
 
         vec dir(d->vel);
-        if (!floating && isinwater) dir.mul(0.5f);
+        if (!isfloating && isinwater) dir.mul(0.5f);
         dir.add(d->falling);
         dir.mul(secs);
 
         d->blocked = false;
 
-        if (floating)
+        if (isfloating)
         {
             if (d->ghost)
             {
@@ -741,20 +763,20 @@ namespace physics
             if (!d->timeinair && !isinwater) // Player is currently not in air nor swimming.
             {
                 d->doublejumping = false; // Now that we landed, we can double jump again.
-                if (timeinair > 350 && timeinair < 800)
+                if (timeinair > SHORT_JUMP_THRESHOLD && timeinair < LONG_JUMP_THRESHOLD)
                 {
-                    triggerphysicsevent(d, PHYSEVENT_LAND_SHORT, material); // Short jump.
+                    triggerphysicsevent(d, PHYSEVENT_LAND_LIGHT, material); // Short jump.
                 }
-                else if (timeinair >= 800) // If we land after a long time, it must have been a high jump.
+                else if (timeinair >= LONG_JUMP_THRESHOLD) // If we land after a long time, it must have been a high jump.
                 {
-                    triggerphysicsevent(d, PHYSEVENT_LAND_MEDIUM, material); // Make a heavy landing sound.
+                    triggerphysicsevent(d, PHYSEVENT_LAND_HEAVY, material); // Make a heavy landing sound.
                 }
                 triggerphysicsevent(d, PHYSEVENT_FOOTSTEP, material);
             }
         }
 
         // Automatically apply smooth roll when strafing.
-        if (d->strafe && maxroll && !floating) d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / maxroll, 0.0f, 1.0f), 0.33f) * d->strafe * curtime * straferoll, -maxroll, maxroll);
+        if (d->strafe && maxroll && !isfloating) d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / maxroll, 0.0f, 1.0f), 0.33f) * d->strafe * curtime * straferoll, -maxroll, maxroll);
         else d->roll *= curtime == PHYSFRAMETIME ? faderoll : pow(faderoll, curtime / float(PHYSFRAMETIME));
 
         if (d->state == CS_ALIVE) updatedynentcache(d);
@@ -781,7 +803,6 @@ namespace physics
                     {
                         d->climbing = true;
                         d->falling = d->vel = vec(0, 0, 0);
-                        triggerphysicsevent(d, PHYSEVENT_LAND_SHORT, material);
                     }
                 }
                 else if (d->climbing) d->climbing = false;
@@ -971,7 +992,7 @@ namespace physics
                 break;
             }
 
-            case PHYSEVENT_LAND_SHORT:
+            case PHYSEVENT_LAND_LIGHT:
             case PHYSEVENT_FOOTSTEP:
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
@@ -980,7 +1001,7 @@ namespace physics
                 break;
             }
 
-            case PHYSEVENT_LAND_MEDIUM:
+            case PHYSEVENT_LAND_HEAVY:
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
                 msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);

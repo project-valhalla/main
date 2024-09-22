@@ -693,8 +693,8 @@ namespace game
                 explosioncolor = 0xEE88EE;
                 explosiontype = PART_EXPLOSION2;
                 particle_splash(PART_SPARK2, 5+rnd(20), 200, v, explosioncolor, 0.08f+rndscale(0.35f), 400, 2);
-                particle_splash(PART_EXPLODE, 30, 80, v, explosioncolor, 1.5f+rndscale(2.8f), 120, 40);
-                particle_splash(PART_SMOKE, 60, 180, v, 0x222222, 2.5f+rndscale(3.8f), 120, 60);
+                particle_splash(PART_EXPLODE, 10, 80, v, explosioncolor, 1.5f+rndscale(2.8f), 150, 40);
+                particle_splash(PART_SMOKE, 60, 180, v, 0x222222, 2.5f+rndscale(3.8f), 180, 60);
                 break;
             }
             case ATK_GRENADE1:

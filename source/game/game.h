@@ -567,6 +567,7 @@ namespace physics
 
     extern bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float grav);
     extern bool isbouncing(physent* d, float elasticity, float waterfric, float grav);
+    extern bool hascamerapitchmovement(gameent* d);
 
     extern int physsteps;
     extern int liquidtransition(physent* d, int material, bool isinwater);

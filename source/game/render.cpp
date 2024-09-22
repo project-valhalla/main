@@ -597,7 +597,7 @@ namespace game
         gameent *d = hudplayer();
         if(d->state == CS_SPECTATOR || d->state == CS_EDITING) return;
 
-        if(d->physstate >= PHYS_SLOPE)
+        if(d->physstate >= PHYS_SLOPE || d->climbing)
         {
             swayspeed = min(sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y), d->speed);
             swaydist += swayspeed*curtime/1000.0f;

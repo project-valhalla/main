@@ -396,8 +396,8 @@ extern bool loadents(const char *fname, vector<entity> &ents, uint *crc = NULL);
 enum
 {
     PHYSEVENT_JUMP = 0,
-    PHYSEVENT_LAND_SHORT,
-    PHYSEVENT_LAND_MEDIUM,
+    PHYSEVENT_LAND_LIGHT,
+    PHYSEVENT_LAND_HEAVY,
     PHYSEVENT_FOOTSTEP,
     PHYSEVENT_RAGDOLL_COLLIDE,
     PHYSEVENT_LIQUID_IN,

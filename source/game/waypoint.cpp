@@ -382,10 +382,15 @@ namespace ai
                 {
                     for(; cur < next; cur++) if(waypoints[cur] == n)
                     {
-                        if(ob.above < 0) return retry ? n : -1;
+                        if (ob.above < 0)
+                        {
+                            return retry ? n : -1;
+                        }
                         vec above(pos.x, pos.y, ob.above);
-                        if(above.z-d->o.z >= ai::JUMPMAX)
+                        if (!physics::hascamerapitchmovement(d) && above.z - d->o.z >= ai::JUMPMAX)
+                        {
                             return retry ? n : -1; // too much scotty
+                        }
                         int node = closestwaypoint(above, ai::SIGHTMIN, true, d);
                         if(ai::iswaypoint(node) && node != n)
                         { // try to reroute above their head?

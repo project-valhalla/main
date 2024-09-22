@@ -107,7 +107,7 @@ VARFN(screenh, scr_h, SCR_MINH, -1, SCR_MAXH, initwarning("screen resolution"));
 
 void writeinitcfg()
 {
-    stream *f = openutf8file("config/init.cfg", "w");
+    stream *f = openfile("config/init.cfg", "w");
     if(!f) return;
     f->printf("// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
     extern int fullscreen;
@@ -831,9 +831,7 @@ void checkinput()
             case SDL_TEXTINPUT:
                 if(textinputmask && int(event.text.timestamp-textinputtime) >= textinputfilter)
                 {
-                    uchar buf[SDL_TEXTINPUTEVENT_TEXT_SIZE+1];
-                    size_t len = decodeutf8(buf, sizeof(buf)-1, (const uchar *)event.text.text, strlen(event.text.text));
-                    if(len > 0) { buf[len] = '\0'; processtextinput((const char *)buf, len); }
+                    processtextinput(event.text.text, strlen(event.text.text));
                 }
                 break;
 

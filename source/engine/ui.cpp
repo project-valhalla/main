@@ -1989,7 +1989,7 @@ namespace UI
             // ensure text height is an integer number of pixels
             newscale *= int(newscale * hudh) / (newscale * hudh);
 
-            if((!uifps || (totalmillis - lastchange) >= 1000/uifps) && (newscale != scale || wrap_ != wrap || fontid != curfont->face->id))
+            if(newscale != scale || wrap_ != wrap || fontid != curfont->face->id)
             {
                 changed = true;
                 lastchange = totalmillis;

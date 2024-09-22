@@ -1,5 +1,6 @@
 // console.cpp: the console buffer, its display, and command line control
 
+#include "unicode.h"
 #include "engine.h"
 
 #define MAXCONLINES 1000
@@ -536,10 +537,7 @@ void pasteconsole()
     if(!SDL_HasClipboardText()) return;
     char *cb = SDL_GetClipboardText();
     if(!cb) return;
-    string paste;
-    size_t decoded = decodeutf8((uchar *)paste, sizeof(paste)-1, (const uchar *)cb, strlen(cb));
-    paste[decoded] = '\0';
-    consoleinput(paste, decoded);
+    consoleinput(cb, strlen(cb));
     SDL_free(cb);
 }
 
@@ -597,7 +595,9 @@ bool consolekey(int code, bool isdown)
             {
                 int len = (int)strlen(commandbuf);
                 if(commandpos<0) break;
-                int end = commandpos+1;
+                uint _codepoint;
+                const int s = uni_getchar(&commandbuf[commandpos], _codepoint);
+                int end = commandpos+s;
                 if(SDL_GetModState()&SKIP_KEYS) end = skipword(&commandbuf[commandpos]) - commandbuf;
                 memmove(&commandbuf[commandpos], &commandbuf[end], len + 1 - end);
                 resetcomplete();
@@ -609,7 +609,7 @@ bool consolekey(int code, bool isdown)
             {
                 int len = (int)strlen(commandbuf), i = commandpos>=0 ? commandpos : len;
                 if(i<1) break;
-                int start = i-1;
+                int start = i - uni_prevchar(commandbuf, i);
                 if(SDL_GetModState()&SKIP_KEYS) start = skipwordrev(commandbuf, i) - commandbuf;
                 memmove(&commandbuf[start], &commandbuf[i], len - i + 1);
                 resetcomplete();
@@ -620,15 +620,19 @@ bool consolekey(int code, bool isdown)
 
             case SDLK_LEFT:
                 if(SDL_GetModState()&SKIP_KEYS) commandpos = skipwordrev(commandbuf, commandpos) - commandbuf;
-                else if(commandpos>0) commandpos--;
-                else if(commandpos<0) commandpos = (int)strlen(commandbuf)-1;
+                else if(commandpos>0) commandpos -= uni_prevchar(commandbuf, commandpos);
+                else if(commandpos<0) commandpos = (int)strlen(commandbuf) - uni_prevchar(commandbuf, strlen(commandbuf));
                 break;
 
             case SDLK_RIGHT:
                 if(commandpos>=0)
                 {
                     if(SDL_GetModState()&SKIP_KEYS) commandpos = skipword(&commandbuf[commandpos]) - commandbuf;
-                    else ++commandpos;
+                    else
+                    {
+                        uint _codepoint;
+                        commandpos += uni_getchar(&commandbuf[commandpos], _codepoint);
+                    }
                     if(commandpos>=(int)strlen(commandbuf)) commandpos = -1;
                 }
                 break;

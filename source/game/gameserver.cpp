@@ -3530,7 +3530,7 @@ namespace server
         ci->cleanauth();
         if(!nextauthreq) nextauthreq = 1;
         ci->authreq = nextauthreq++;
-        filtertext(ci->authname, user, false, false, false, false, 100);
+        filtertext(ci->authname, user, T_NONE, 100);
         copystring(ci->authdesc, desc);
         if(ci->authdesc[0])
         {
@@ -3733,13 +3733,13 @@ namespace server
                 case N_CONNECT:
                 {
                     getstring(text, p);
-                    filtertext(text, text, false, false, true, false, MAXNAMELEN);
+                    filtertext(text, text, T_WHITESPACE | T_NAME, MAXNAMELEN, MAXNAMEUNILEN);
                     if(!text[0]) copystring(text, "player");
                     copystring(ci->name, text, MAXNAMELEN+1);
                     ci->playermodel = getint(p);
                     ci->playercolor = getint(p);
                     getstring(text, p);
-                    filtertext(ci->preferred_flag, text, false, false, false, false, MAXCOUNTRYCODELEN);
+                    filtertext(ci->preferred_flag, text, T_NONE, MAXCOUNTRYCODELEN);
 
                     string password, authdesc, authname;
                     getstring(password, p, sizeof(password));
@@ -4073,7 +4073,7 @@ namespace server
             {
                 getstring(text, p);
                 if(cq->mute) break;
-                filtertext(text, text, false, false, true, true);
+                filtertext(text, text, T_WHITESPACE | T_FORCESPACE);
                 loopv(clients)
                 {
                     clientinfo *c = clients[i];
@@ -4090,7 +4090,7 @@ namespace server
                 getstring(text, p);
                 int sound = getint(p);
                 if(!ci || !cq || cq->mute || !m_teammode || !validteam(cq->team) || cq->state.state==CS_SPECTATOR || (m_round && cq->state.state==CS_DEAD)) break;
-                filtertext(text, text, false, false, true, true);
+                filtertext(text, text, T_WHITESPACE | T_FORCESPACE);
                 loopv(clients)
                 {
                     clientinfo *t = clients[i];
@@ -4106,7 +4106,7 @@ namespace server
                 int rcn = getint(p);
                 getstring(text, p);
                 if(!cq || cq->mute) break;
-                filtertext(text, text, false, false);
+                filtertext(text, text, T_WHITESPACE);
                 clientinfo *recipient = NULL;
                 loopv(clients)
                 {
@@ -4125,7 +4125,7 @@ namespace server
             {
                 QUEUE_MSG;
                 getstring(text, p);
-                filtertext(ci->name, text, false, false, true, false, MAXNAMELEN);
+                filtertext(ci->name, text, T_WHITESPACE | T_NAME, MAXNAMELEN, MAXNAMEUNILEN);
                 if (!isvalidname(ci->name))
                 {
                     copystring(ci->name, "player");
@@ -4164,7 +4164,7 @@ namespace server
             case N_MAPVOTE:
             {
                 getstring(text, p);
-                filtertext(text, text, false, false, true, false);
+                filtertext(text, text, T_WHITESPACE);
                 fixmapname(text);
                 int reqmode = getint(p), reqmuts = getint(p);
                 vote(text, reqmode, reqmuts, sender);
@@ -4281,7 +4281,7 @@ namespace server
             {
                 int victim = getint(p);
                 getstring(text, p);
-                filtertext(text, text);
+                filtertext(text, text, T_NEWLINES | T_WHITESPACE);
                 trykick(ci, victim, text);
                 break;
             }
@@ -4290,7 +4290,7 @@ namespace server
             {
                 int victim = getint(p), val = getint(p);
                 getstring(text, p);
-                filtertext(text, text);
+                filtertext(text, text, T_NEWLINES | T_WHITESPACE);
                 trymute(ci, victim, val, text);
                 break;
             }
@@ -4459,7 +4459,7 @@ namespace server
                 getstring(name, p, sizeof(name));
                 int victim = getint(p);
                 getstring(text, p);
-                filtertext(text, text);
+                filtertext(text, text, T_NEWLINES | T_WHITESPACE);
                 int authpriv = PRIV_AUTH;
                 if(desc[0])
                 {
@@ -4577,7 +4577,7 @@ namespace server
             case N_COUNTRY:
             {
                 getstring(text, p);
-                filtertext(ci->preferred_flag, text, false, false, false, false, MAXCOUNTRYCODELEN);
+                filtertext(ci->preferred_flag, text, T_NONE, MAXCOUNTRYCODELEN);
                 geoip_set_custom_flag(ci->preferred_flag, ci->country_code, ci->country_name, ci->customflag_code, ci->customflag_name);
                 packetbuf q(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
                 putint(q, N_COUNTRY);

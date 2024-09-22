@@ -193,7 +193,7 @@ namespace game
         }
         if(strcmp(self->preferred_flag, customflag) != 0)
         {
-            filtertext(self->preferred_flag, customflag, false, false, false, false, MAXCOUNTRYCODELEN);
+            filtertext(self->preferred_flag, customflag, T_NONE, MAXCOUNTRYCODELEN);
             addmsg(N_COUNTRY, "rs", self->preferred_flag);
         }
     }

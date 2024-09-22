@@ -843,7 +843,7 @@ namespace game
     void initclient()
     {
         self = spawnstate(new gameent);
-        filtertext(self->name, "player", false, false, true, false, MAXNAMELEN);
+        filtertext(self->name, "player", T_WHITESPACE | T_NAME, MAXNAMELEN, MAXNAMEUNILEN);
         players.add(self);
     }
 

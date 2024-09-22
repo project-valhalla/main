@@ -1,3 +1,4 @@
+#include "unicode.h"
 #include "engine.h"
 
 // just a wrapper for `SDL_Surface`, used for the glyph cache
@@ -269,10 +270,13 @@ void text_prepare_colored(const char *str, textinfo &info, bvec initial_color, u
     if(span_len)
     {
         SDL_Surface *surf = TTF_RenderUTF8_Blended(curfont->face->face, span_begin, {tcolor.r, tcolor.g, tcolor.b, a});
-        SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_NONE);
-        surfs.add(surf);
-        totalw += surf->w;
-        totalh = max(totalh, surf->h);
+        if(surf)
+        {
+            SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_NONE);
+            surfs.add(surf);
+            totalw += surf->w;
+            totalh = max(totalh, surf->h);
+        }
     }
 
     if(!surfs.length()) { info = {0, 0, 0}; return; }
@@ -354,9 +358,17 @@ void draw_textf(const char *fstr, float left, float top, ...)
 /// CONSOLE
 /////
 
+// ensures that only supported characters end up in the console
+static inline uint uni_confilter(uint c)
+{
+    if(iscubeprint(c) || iscubespace(c)) return c;
+    return 0xFFFD;
+}
+
 // retrieves a glyph bitmap from the glyph cache
 static inline SDL_Surface *fetch_glyph(uint codepoint)
 {
+    codepoint = uni_confilter(codepoint);
     // return the cached surface if available
     glyph *g = &glyph_cache[codepoint];
     if(g->surf) return g->surf;
@@ -395,7 +407,9 @@ void text_prepare_console(const char *str, int &width, int &height, vector<consp
 
     conspan span(str, tcolor);
 
-    for(char *p = (char*)str; *p; ++p)
+    uint c;
+    int s = uni_getchar(str, c);
+    for(char *p = (char *)str; c; p += s, s = uni_getchar(p, c))
     {
         if(cursor == p - str) // check if the cursor is somewhere in the middle of the string
         {
@@ -424,12 +438,12 @@ void text_prepare_console(const char *str, int &width, int &height, vector<consp
         }
         // check if we are exceeding the maximum width
         int w, h;
-        measure_glyph(*p, w, h);
+        measure_glyph(c, w, h);
         if(maxwidth > 0 && x + w > maxwidth)
         {
             if(span.len) spans.add(span);
             span = conspan(p, tcolor);
-            span.y = y; span.w = w; span.len = 1;
+            span.y = y; span.w = w; span.len = s;
             if(x > maxw) maxw = x;
             x = w; y += FONTH;
             continue;
@@ -437,7 +451,7 @@ void text_prepare_console(const char *str, int &width, int &height, vector<consp
         // regular character: append to the span
         x += w;
         if(x > maxw) maxw = x;
-        span.w += w; span.len++;
+        span.w += w; span.len += s;
     }
     if(span.len) spans.add(span);
     width = maxw; height = y;
@@ -455,7 +469,9 @@ void text_bounds_console(const char *str, int &width, int &height, int maxwidth)
 {
     int x = 0, y = FONTH, maxw = 0;
 
-    for(char *p = (char*)str; *p; ++p)
+    uint c;
+    int s = uni_getchar(str, c);
+    for(char *p = (char *)str; c; p += s, s = uni_getchar(p, c))
     {
         if(*p == '\f') // color code
         {
@@ -469,7 +485,7 @@ void text_bounds_console(const char *str, int &width, int &height, int maxwidth)
         }
         // check if we are exceeding the maximum width
         int w, h;
-        measure_glyph(*p, w, h);
+        measure_glyph(c, w, h);
         if(maxwidth > 0 && x + w > maxwidth)
         {
             if(x > maxw) maxw = x;
@@ -549,12 +565,13 @@ void draw_text_console(vector<conspan> spans, float left, float top, int curx, i
         SDL_Surface *surf = SDL_CreateRGBSurfaceWithFormat(0, spans[i].w, FONTH, 32, SDL_PIXELFORMAT_ABGR8888);
         if(!surf) return;
         int sx = 0;
-        loopj(spans[i].len)
+        uint c;
+        int s = uni_getchar(spans[i].begin, c);
+        for(char *p = (char *)spans[i].begin; (p - spans[i].begin) < spans[i].len; p += s, s = uni_getchar(p, c))
         {
-            uint codepoint = *(spans[i].begin+j);
             int w, h;
-            measure_glyph(codepoint, w, h);
-            copy_glyph_to_surface(codepoint, sx, 0, surf);
+            measure_glyph(c, w, h);
+            copy_glyph_to_surface(c, sx, 0, surf);
             sx += w;
         }
         draw_surface(surf, x, y, spans[i].color);
@@ -586,7 +603,9 @@ int text_visible(const char *str, float hitx, float hity, int maxwidth)
 {
     int x = 0, y = 0;
     char *p = (char *)str;
-    for(; *p; ++p)
+    uint c;
+    int s = uni_getchar(str, c);
+    for(; c; p += s, s = uni_getchar(p, c))
     {
         if(*p == '\f')
         {
@@ -600,7 +619,7 @@ int text_visible(const char *str, float hitx, float hity, int maxwidth)
             continue;
         }
         int w, h;
-        measure_glyph(*p, w, h);
+        measure_glyph(c, w, h);
         if(maxwidth > 0 && x + w > maxwidth)
         {
             x = w; y += FONTH;
@@ -617,29 +636,31 @@ void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth)
     cx = cy = 0;
     if(cursor <= 0) return;
     int x = 0, y = 0;
-    for(int i = 0; i < cursor; i++)
+    uint c;
+    int s = uni_getchar(str, c);
+    for(char *p = (char *)str; (p - str) < cursor; p += s, s = uni_getchar(p, c))
     {
-        if(!str[i]) break;
-        if(str[i] == '\f')
+        if(!*p) break;
+        if(*p == '\f')
         {
-            if(str[i+1]) i++;
+            if(*(p+1)) p++;
             continue;
         }
-        if(str[i] == '\r' || str[i] == '\n')
+        if(*p == '\r' || *p == '\n')
         {
             x = 0; y += FONTH;
         }
         else
         {
             int w, h;
-            measure_glyph(str[i], w, h);
+            measure_glyph(c, w, h);
             if(maxwidth > 0 && x + w > maxwidth)
             {
                 x = w; y += FONTH;
             }
             else x += w;
         }
-        if(cursor == i)
+        if(cursor == (p - str))
         {
             cx = x; cy = y;
             return;

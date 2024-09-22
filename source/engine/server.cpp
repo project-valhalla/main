@@ -45,17 +45,29 @@ void logoutf(const char *fmt, ...)
     va_end(args);
 }
 
-
-static void writelog(FILE *file, const char *buf)
+static void writelog(FILE *file, const char *buf_)
 {
+    const uchar *buf = (const uchar *)buf_;
     static uchar ubuf[512];
-    size_t len = strlen(buf), carry = 0;
-    while(carry < len)
+    size_t len = strlen(buf_);
+    int j = 0;
+    loopi(min(size_t(512), len))
     {
-        size_t numu = encodeutf8(ubuf, sizeof(ubuf)-1, &((const uchar *)buf)[carry], len - carry, &carry);
-        if(carry >= len) ubuf[numu++] = '\n';
-        fwrite(ubuf, 1, numu, file);
+        // strip colors and control codes
+        if(buf[i] <= 0x09 || buf[i] == 0x0B || buf[i] == 0x0C || (buf[i] >= 0x0E && buf[i] <= 0x1F) || buf[i] == 0x7F)
+        {
+            if(buf[i] == '\f') ++i;
+            continue;
+        }
+        if(buf[i] == 0xC2 && buf[i+1] >= 0x80 && buf[i+1] <= 0x9F) // control codes: U+80 - U+9F
+        {
+            ++i;
+            continue;
+        }
+        ubuf[j++] = buf[i];
     }
+    ubuf[j++] = '\n';
+    fwrite(ubuf, 1, min(512, j), file);
 }
 
 static void writelogv(FILE *file, const char *fmt, va_list args)
@@ -810,14 +822,28 @@ static BOOL WINAPI consolehandler(DWORD dwCtrlType)
 
 static void writeline(logline &line)
 {
-    static uchar ubuf[512];
-    size_t len = strlen(line.buf), carry = 0;
-    while(carry < len)
+    static uchar buf[512];
+    size_t len = strlen(line.buf);
+    int j = 0;
+    loopi(min(size_t(512-1), len))
     {
-        size_t numu = encodeutf8(ubuf, sizeof(ubuf), &((uchar *)line.buf)[carry], len - carry, &carry);
-        DWORD written = 0;
-        WriteConsole(outhandle, ubuf, numu, &written, NULL);
+        // strip colors and control codes
+        if(buf[i] <= 0x09 || buf[i] == 0x0B || buf[i] == 0x0C || (buf[i] >= 0x0E && buf[i] <= 0x1F) || buf[i] == 0x7F)
+        {
+            if(buf[i] == '\f') ++i;
+            continue;
+        }
+        if(buf[i] == 0xC2 && buf[i+1] >= 0x80 && buf[i+1] <= 0x9F) // control codes: U+80 - U+9F
+        {
+            ++i;
+            continue;
+        }
+        ubuf[j++] = buf[i];
     }
+    ubuf[j++] = '\r';
+    ubuf[j++] = '\n';
+    DWORD written = 0;
+    WriteConsole(outhandle, ubuf, j, &written, NULL);
 }
 
 static void setupconsole()

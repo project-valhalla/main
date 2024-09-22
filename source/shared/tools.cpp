@@ -1,6 +1,7 @@
 // implementation of generic tools
 
 #include "cube.h"
+#include "unicode.h"
 
 void *operator new(size_t size)
 {
@@ -192,22 +193,30 @@ void getstring(char *text, ucharbuf &p, size_t len)
     while(*t++);
 }
 
-void filtertext(char *dst, const char *src, bool colors, bool newlines, bool whitespace, bool forcespace, size_t len)
+void filtertext(char *dst, const char *src, uint flags, size_t len, int unilen)
 {
-    for(int c = uchar(*src); c; c = uchar(*++src))
+    uint c;
+    uint s = uni_getchar(src, c);
+    for(char *p = (char *)src; c; p += s, s = uni_getchar(p, c))
     {
-        if((!colors && c == '\f') || (!newlines && c == '\n'))
+        if((!(flags&T_COLORS) && c == '\f') || (!(flags&T_NEWLINES) && c == '\n'))
         {
-            if(!*++src) break;
+            if(!*++p) break;
             continue;
         }
-        if(!iscubeprint(c))
+        if(!(flags&T_NAME ? iscubenamesafe(c) : iscubeprint(c)))
         {
-            if(!iscubespace(c) || !whitespace) continue;
-            if(forcespace) c = ' ';
+            if(!iscubespace(c) || !(flags&T_WHITESPACE)) continue;
+            if(flags&T_FORCESPACE)
+            {
+                *dst++ = ' ';
+                continue;
+            }
         }
-        *dst++ = c;
-        if(!--len) break;
+        loopi(s) *dst++ = p[i];
+        if(s <= len) len -= s; else len = 0;
+        unilen--;
+        if(!len || !unilen) break;
     }
     *dst = '\0';
 }

@@ -1,3 +1,4 @@
+#include "unicode.h"
 
 struct editline
 {
@@ -207,7 +208,7 @@ struct editor
     {
         if(!filename) return;
         clear(NULL);
-        stream *file = openutf8file(filename, "r");
+        stream *file = openfile(filename, "r");
         if(file)
         {
             while(lines.add().read(file, maxx) && (maxy < 0 || lines.length() <= maxy));
@@ -220,7 +221,7 @@ struct editor
     void save()
     {
         if(!filename) return;
-        stream *file = openutf8file(filename, "w");
+        stream *file = openfile(filename, "w");
         if(!file) return;
         loopv(lines) file->putline(lines[i].text);
         delete file;
@@ -496,16 +497,28 @@ struct editor
                 cx = cy = INT_MAX;
                 break;
             case SDLK_LEFT:
-                cx--;
+            {
+                editline &current = currentline();
+                cx -= uni_prevchar(current.text, cx);
                 break;
+            }
             case SDLK_RIGHT:
-                cx++;
+            {
+                editline &current = currentline();
+                uint _codepoint;
+                cx += uni_getchar(&current.text[cx], _codepoint);
                 break;
+            }
             case SDLK_DELETE:
                 if(!del())
                 {
                     editline &current = currentline();
-                    if(cx < current.len) current.del(cx, 1);
+                    if(cx < current.len)
+                    {
+                        uint _codepoint;
+                        const int s = uni_getchar(&current.text[cx], _codepoint);
+                        current.del(cx, s);
+                    }
                     else if(cy < lines.length()-1)
                     {   //combine with next line
                         current.append(lines[cy+1].text);
@@ -517,7 +530,12 @@ struct editor
                 if(!del())
                 {
                     editline &current = currentline();
-                    if(cx > 0) current.del(--cx, 1);
+                    if(cx > 0)
+                    {
+                        const int s = uni_prevchar(current.text, cx);
+                        cx -= s;
+                        current.del(cx, s);
+                    }
                     else if(cy > 0)
                     {   //combine with previous line
                         cx = lines[cy-1].len;

@@ -270,6 +270,7 @@ extern void draw_text(const char *str, float left, float top, int r = 255, int g
 extern void draw_textf(const char *fstr, float left, float top, ...) PRINTFARGS(1, 4);
 extern void text_prepare_colored(const char *str, textinfo &info, bvec initial_color, uchar a = 255, bool outline = false);
 extern void text_prepare(const char *str, textinfo &surf, int maxwidth, bool outline = false);
+extern void text_prepare_particle(const char *str, textinfo &info, bvec initial_color, int a = 255);
 extern int  text_visible(const char *str, float hitx, float hity, int maxwidth);
 extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth);
 

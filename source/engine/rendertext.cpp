@@ -16,6 +16,24 @@ void clearglyphcache()
     glyph_cache.clear();
 }
 
+struct partinfo
+{
+    textinfo ti;
+    partinfo() { ti.tex = 0; }
+};
+// a cache for rendered text particles
+static hashtable<uint, partinfo> particle_cache;
+static vector<uint> particle_queue;
+
+static void clear_text_particles()
+{
+    enumerate(particle_cache, partinfo, info, {
+        if(info.ti.tex) glDeleteTextures(1, &info.ti.tex);
+    })
+    particle_cache.clear();
+    particle_queue.setsize(0);
+}
+
 static hashnameset<font> fonts;
 static vector<font *> fontstack;
 static int faceid = 0; // used by UI for change detection, unique for each font face
@@ -314,6 +332,31 @@ void text_prepare_colored(const char *str, textinfo &info, bvec initial_color, u
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_COMPRESSED_RGBA, dest->pitch/4, dest->h, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, dest->pixels);
     info = { tex, dest->w, dest->h };
     SDL_FreeSurface(dest);
+}
+// same as above but specifically for particle text:
+// it stores the texture in a cache, so that it doesn't have to be regenerated every frame
+// NOTE: there is no need to delete the texture manually
+void text_prepare_particle(const char *str, textinfo &info, bvec initial_color, int a)
+{
+    uint key = crc32(0, (const Bytef *)str, strlen(str)) * curfont->face->pts + curfont->face->id;
+    partinfo *p = &particle_cache[key];
+    if(p->ti.tex)
+    {
+        info = p->ti;
+        return;
+    }
+    text_prepare_colored(str, p->ti, initial_color, a, false);
+    if(!p->ti.tex) {info = {0, 0, 0}; return; }
+    if(particle_queue.length() > 256)
+    {
+        uint oldkey = particle_queue[0];
+        partinfo *oldp = &particle_cache[oldkey];
+        if(oldp->ti.tex) glDeleteTextures(1, &oldp->ti.tex);
+        particle_cache.remove(oldkey);
+        particle_queue.remove(0);
+    }
+    particle_queue.add(key);
+    info = p->ti;
 }
 
 // draws a string of text that has already been rendered to a texture
@@ -678,4 +721,4 @@ void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth)
     cx = x; cy = y;
 }
 
-void reloadfonts() { UI::cleartext(); }
+void reloadfonts() { clear_text_particles(); UI::cleartext(); }

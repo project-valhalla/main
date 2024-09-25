@@ -516,8 +516,12 @@ struct textrenderer : listrenderer
         setfontsize(hudh / PARTICLETEXTROWS);
 
         textinfo info;
-        text_prepare_colored(p->text, info, bvec(255, 255, 255), 255);
-        if(!info.tex) return;
+        text_prepare_particle(p->text, info, bvec(255, 255, 255), 255);
+        if(!info.tex)
+        {
+            popfont();
+            return;
+        }
         float scale = p->size/80.0f, xoff = -info.w/2, yoff = 0;
         if((type&0xFF)==PT_TEXTUP) { xoff += detrnd((size_t)p, 100)-50; yoff -= detrnd((size_t)p, 101); }
 
@@ -528,7 +532,6 @@ struct textrenderer : listrenderer
         textmatrix = &m;
         draw_text(info, -1, 1, 0, 0, 0, blend); // shadow for better visibility
         draw_text(info, 0, 0, p->color.r, p->color.g, p->color.b, blend);
-        glDeleteTextures(1, &info.tex);
         popfont();
         textmatrix = NULL;
     }

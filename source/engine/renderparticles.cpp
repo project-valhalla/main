@@ -509,7 +509,6 @@ struct textrenderer : listrenderer
         }
     }
 
-    // NOTE: the texture is not deleted because the same one is recycled every time!
     void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts)
     {
         pushfont();

@@ -925,22 +925,34 @@ const char *parsestring(const char *p)
 int unescapestring(char *dst, const char *src, const char *end)
 {
     char *start = dst;
-    while(src < end)
+    uint c;
+    uint s = uni_getchar(src, c);
+    for(char *p = (char *)src; src < end; p += s, s = uni_getchar(p, c))
     {
-        int c = *src++;
+        if(iscubecntrl(c) || c == 0xFFFD)
+        {
+            src += s;
+            continue;
+        }
         if(c == '^')
         {
-            if(src >= end) break;
-            int e = *src++;
-            switch(e)
+            if(src+1 >= end) break;
+            switch(*(src+1))
             {
-                case 'n': *dst++ = '\n'; break;
-                case 't': *dst++ = '\t'; break;
-                case 'f': *dst++ = '\f'; break;
-                default: *dst++ = e; break;
+                case 'n': *dst++ = '\n'; ++src; ++p; break;
+                case 'r': *dst++ = '\r'; ++src; ++p; break;
+                case 't': *dst++ = '\t'; ++src; ++p; break;
+                case 'f': *dst++ = '\f'; ++src; ++p; break;
+                case '^': *dst++ = '^' ; ++src; ++p; break;
+                default: break;
             }
+            ++src;
         }
-        else *dst++ = c;
+        else
+        {
+            loopi(s) *dst++ = p[i];
+            src += s;
+        }
     }
     *dst = '\0';
     return dst - start;
@@ -3162,21 +3174,29 @@ bool execfile(const char *cfgfile, bool msg)
 }
 ICOMMAND(exec, "sb", (char *file, int *msg), intret(execfile(file, *msg != 0) ? 1 : 0));
 
-const char *escapestring(const char *s)
+const char *escapestring(const char *str)
 {
     stridx = (stridx + 1)%4;
     vector<char> &buf = strbuf[stridx];
     buf.setsize(0);
     buf.add('"');
-    for(; *s; s++) switch(*s)
+    uint c;
+    uint s = uni_getchar(str, c);
+    for(char *p = (char *)str; c; p += s, s = uni_getchar(p, c)) switch(c)
     {
         case '\n': buf.put("^n", 2); break;
+        case '\r': buf.put("^r", 2); break;
         case '\t': buf.put("^t", 2); break;
         case '\f': buf.put("^f", 2); break;
         case '"': buf.put("^\"", 2); break;
         case '^': buf.put("^^", 2); break;
-        default: buf.add(*s); break;
+        default:
+        {
+            if(iscubecntrl(c) || c == 0xFFFD) break; // filter out control characters
+            buf.put(p, s); break;
+        }
     }
+
     buf.put("\"\0", 2);
     return buf.getbuf();
 }

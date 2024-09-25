@@ -45,29 +45,13 @@ void logoutf(const char *fmt, ...)
     va_end(args);
 }
 
-static void writelog(FILE *file, const char *buf_)
+static void writelog(FILE *file, const char *buf)
 {
-    const uchar *buf = (const uchar *)buf_;
-    static uchar ubuf[512];
-    size_t len = strlen(buf_);
-    int j = 0;
-    loopi(min(size_t(512), len))
-    {
-        // strip colors and control codes
-        if(buf[i] <= 0x09 || buf[i] == 0x0B || buf[i] == 0x0C || (buf[i] >= 0x0E && buf[i] <= 0x1F) || buf[i] == 0x7F)
-        {
-            if(buf[i] == '\f') ++i;
-            continue;
-        }
-        if(buf[i] == 0xC2 && buf[i+1] >= 0x80 && buf[i+1] <= 0x9F) // control codes: U+80 - U+9F
-        {
-            ++i;
-            continue;
-        }
-        ubuf[j++] = buf[i];
-    }
-    ubuf[j++] = '\n';
-    fwrite(ubuf, 1, min(512, j), file);
+    static char ubuf[512];
+    filteruni(ubuf, buf, 511);
+    const size_t len = min((size_t)511, strlen(ubuf));
+    ubuf[len] = '\n';
+    fwrite(ubuf, 1, len+1, file);
 }
 
 static void writelogv(FILE *file, const char *fmt, va_list args)
@@ -822,28 +806,11 @@ static BOOL WINAPI consolehandler(DWORD dwCtrlType)
 
 static void writeline(logline &line)
 {
-    static uchar buf[512];
-    size_t len = strlen(line.buf);
-    int j = 0;
-    loopi(min(size_t(512-1), len))
-    {
-        // strip colors and control codes
-        if(buf[i] <= 0x09 || buf[i] == 0x0B || buf[i] == 0x0C || (buf[i] >= 0x0E && buf[i] <= 0x1F) || buf[i] == 0x7F)
-        {
-            if(buf[i] == '\f') ++i;
-            continue;
-        }
-        if(buf[i] == 0xC2 && buf[i+1] >= 0x80 && buf[i+1] <= 0x9F) // control codes: U+80 - U+9F
-        {
-            ++i;
-            continue;
-        }
-        ubuf[j++] = buf[i];
-    }
-    ubuf[j++] = '\r';
-    ubuf[j++] = '\n';
-    DWORD written = 0;
-    WriteConsole(outhandle, ubuf, j, &written, NULL);
+    static char ubuf[512];
+    filteruni(ubuf, line.buf, 511);
+    const size_t len = min((size_t)511, strlen(ubuf));
+    DWORD written;
+    WriteConsole(outhandle, ubuf, len, &written, NULL);
 }
 
 static void setupconsole()

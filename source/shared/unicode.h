@@ -26,7 +26,7 @@ static inline int uni_getchar(const char *str, uint &codepoint)
     if(p[0] >> 3 == 0x1E && p[1] >> 6 == 0x02 && p[2] >> 6 == 0x02 && p[3] >> 6 == 0x02)
     {
         codepoint = ((p[0] & 0x07) << 18) | ((p[1] & 0x3F) << 12) | ((p[2] & 0x3F) << 6) | (p[3] & 0x3F);
-        if(codepoint < 0x10000) codepoint = 0xFFFD;
+        if(codepoint < 0x10000 || codepoint > 0x10FFFF) codepoint = 0xFFFD;
         return 4;
     }
     codepoint = 0xFFFD;

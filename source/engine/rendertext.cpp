@@ -392,7 +392,7 @@ static inline SDL_Surface *fetch_glyph(uint codepoint)
     if(g->surf) return g->surf;
 
     // draw the character in white, or the replacement character (0xFFFD) if the requested glyph is not available
-    SDL_Surface *surf = TTF_RenderGlyph32_Blended(curfont->face->face, codepoint, {255, 255, 255});
+    SDL_Surface *surf = TTF_RenderGlyph32_Blended(curfont->face->face, codepoint == '\t' ? ' ' : codepoint, {255, 255, 255});
     if(!surf)    surf = TTF_RenderGlyph32_Blended(curfont->face->face, 0xFFFD, {255, 255, 255});
     if(!surf) return NULL;
     

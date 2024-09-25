@@ -1390,11 +1390,12 @@ static inline int iscubeprint(uint c)
         || (c >= 0x20A0 && c <= 0x20C0) // Currency Symbols [33]
     ;
 }
-static inline int iscubespace(uint c) { return (c >= 0x09 && c <= 0x0D) || c == ' ' ? 1 : 0; }
+static inline int iscubespace(uint c) { return c == ' ' || c == '\n' || c == '\r' || c == '\t' ? 1 : 0; }
 static inline int iscubealpha(uint c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ? 1 : 0; }
 static inline int iscubealnum(uint c) { return (c >= '0' && c <= '9') || iscubealpha(c) ? 1 : 0; }
 static inline int iscubelower(uint c) { return (c >= 'a' && c <= 'z') ? 1 : 0; }
 static inline int iscubeupper(uint c) { return (c >= 'A' && c <= 'Z') ? 1 : 0; }
+static inline int iscubecntrl(uint c) { return c <= 0x1F || (c >= 0x7F && c <= 0x9F) ? 1 : 0; }
 static inline int iscubepunct(uint c) { return (c >= '!' && c <= '/') || (c >= ':' && c <= '@') || (c >= '[' && c <= '`') || (c >= '{' && c <= '~') ? 1 : 0; }
 // a subeset of console characters that are allowed in player names
 // the default font should contain glyphs for all of these
@@ -1471,6 +1472,8 @@ extern void getstring(char *t, ucharbuf &p, size_t len);
 template<size_t N> static inline void getstring(char (&t)[N], ucharbuf &p) { getstring(t, p, N); }
 extern void filtertext(char *dst, const char *src, uint flags, size_t len, int unilen = -1);
 template<size_t N> static inline void filtertext(char (&dst)[N], const char *src, uint flags) { filtertext(dst, src, flags, N-1, N-1); }
+extern void filteruni(char *dst, const char *src, size_t len);
+template<size_t N> static inline void filteruni(char (&dst)[N], const char *src) { filteruni(dst, src, N-1); }
 
 struct ipmask
 {

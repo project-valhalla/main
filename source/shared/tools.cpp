@@ -196,27 +196,55 @@ void getstring(char *text, ucharbuf &p, size_t len)
 void filtertext(char *dst, const char *src, uint flags, size_t len, int unilen)
 {
     uint c;
-    uint s = uni_getchar(src, c);
+    size_t s = uni_getchar(src, c);
     for(char *p = (char *)src; c; p += s, s = uni_getchar(p, c))
     {
-        if((!(flags&T_COLORS) && c == '\f') || (!(flags&T_NEWLINES) && c == '\n'))
+        if(!(flags&T_COLORS) && c == '\f')
         {
-            if(!*++p) break;
+            if(!*(++p)) break;
             continue;
         }
-        if(!(flags&T_NAME ? iscubenamesafe(c) : iscubeprint(c)))
+        if(!(flags&T_NEWLINES) && (c == '\n' || c == '\r'))
+        {
+            if(!*(p+1)) break;
+            continue;
+        }
+        if(!((flags&T_NAME) ? iscubenamesafe(c) : iscubeprint(c)) && c != '\f' && c != '\n' && c != '\r')
         {
             if(!iscubespace(c) || !(flags&T_WHITESPACE)) continue;
             if(flags&T_FORCESPACE)
             {
                 *dst++ = ' ';
+                len--;
+                unilen--;
                 continue;
             }
         }
+        s = min(s, len); // prevent overflow
         loopi(s) *dst++ = p[i];
-        if(s <= len) len -= s; else len = 0;
+        len -= s;
         unilen--;
         if(!len || !unilen) break;
+    }
+    *dst = '\0';
+}
+// like `filtertext` but only strips colors and control characters, used for logs
+void filteruni(char *dst, const char *src, size_t len)
+{
+    uint c;
+    size_t s = uni_getchar(src, c);
+    for(char *p = (char *)src; c; p += s, s = uni_getchar(p, c))
+    {
+        if(c == '\f')
+        {
+            if(!*(++p)) break;
+            continue;
+        }
+        if(iscubecntrl(c) || c == 0xFFFD) continue;
+        s = min(s, len); // prevent overflow
+        loopi(s) *dst++ = p[i];
+        len -= s;
+        if(!len) break;
     }
     *dst = '\0';
 }

@@ -30,43 +30,34 @@ font *findfont(const char *name)
     return fonts.access(name);
 }
 
-// the actual ttf file is loaded by `loadfontface()` right before rendering text
-bool setfont(font *f, const char *script)
+// sets the current font
+// note that the actual TTF file is loaded by `loadfontface()` when rendering text
+bool setfont(font *f, const char *script_)
 {
     if(!f) return false;
-    // no script specified, use the default face
-    if(!script || !script[0])
+    const char *script = script_ ? script_ : "Latn";
+    if(f->face && !strcmp(f->face->name, script))
     {
-        if(f->face->id != f->default_face.id)
-        {
-            if(f->face->face)
-            {
-                if(f->openface)
-                {
-                    TTF_CloseFont(f->openface->face);
-                    f->openface->face = NULL;
-                }
-                f->openface = f->face;
-            }
-            f->face = &f->default_face;
-        }
+        curfont = f;
+        return true;
     }
-    // script specified: look for a suitable face or fall back to the default one
-    else if(strcmp(f->face->name, script))
+
+    fontface *face = f->faces.access(script);
+    if(!face) face = &f->default_face;
+
+    if(f->face != &f->default_face)
     {
-        f->face = f->faces.access(script);
-        if(f->face && f->face != f->openface)
+        // cache the previously opened face
+        // NOTE: `TTF_CloseFont()` can be safely called on NULL values
+        if(f->openface && f->openface != f->face)
         {
-            if(f->openface)
-            {
-                // close the previously opened face
-                TTF_CloseFont(f->openface->face);
-                f->openface->face = NULL;
-            }
-            f->openface = f->face;
+            TTF_CloseFont(f->openface->face);
+            f->openface->face = NULL;
         }
-        else if(!f->face) f->face = &f->default_face;
+        f->openface = f->face;
     }
+    
+    f->face = face;
     curfont = f;
     return true;
 }
@@ -107,14 +98,13 @@ void newfont(const char *name, const char *default_face_filename)
 {
     font *f = &fonts[name];
     if(!f->name) f->name = newstring(name);
-    f->pts = 0; // always call `setfontsize()` before drawing text
 
     // load the default font face
     fontface face;
     copystring(face.name, "Latn", 5);
     copystring(face.ttf_filename, default_face_filename);
     face.rtl = false;
-    face.face = TTF_OpenFontDPI(findfile(default_face_filename, "rb"), f->pts, 54, 54);
+    face.face = TTF_OpenFontDPI(findfile(default_face_filename, "rb"), 0, 54, 54);
     if(!face.face)
     {
         conoutf("could not load font: %s", default_face_filename);
@@ -124,6 +114,7 @@ void newfont(const char *name, const char *default_face_filename)
     TTF_SetFontDirection(face.face, TTF_DIRECTION_LTR);
     TTF_SetFontWrappedAlign(face.face, TTF_WRAPPED_ALIGN_LEFT);
     face.id = faceid++;
+    face.pts = 0; // always call `setfontsize()` before drawing text
 
     f->default_face = face;
     f->face = &f->default_face;
@@ -160,8 +151,8 @@ VARP(conshadow, 0, 255, 255);
 
 void setfontsize(int pts)
 {
-    if(curfont->pts == pts) return;
-    curfont->pts = pts;
+    if(curfont->face->pts == pts) return;
+    curfont->face->pts = pts;
     if(curfont->face->face) TTF_SetFontSizeDPI(curfont->face->face, pts, 54, 54);
 }
 
@@ -170,7 +161,7 @@ static inline bool loadfontface()
 {
     if(!curfont->face->face)
     {
-        curfont->face->face = TTF_OpenFontDPI(findfile(curfont->face->ttf_filename, "rb"), curfont->pts, 54, 54);
+        curfont->face->face = TTF_OpenFontDPI(findfile(curfont->face->ttf_filename, "rb"), curfont->face->pts, 54, 54);
         if(!curfont->face->face)
         {
             logoutf("could not load font face: %s", curfont->face->ttf_filename);

@@ -55,14 +55,16 @@ struct fontface
     bool rtl;
     TTF_Font *face;
     int id;              // unique identifier used by UI for change detection
+    int pts;             // point size (equivalent to pixel size at 54 dpi)
 
     fontface() { face = NULL; }
 };
 struct font
 {
     char *name;
-    fontface default_face, *face, *openface;
-    int pts; // point size (equivalent to pixel size at 54 dpi)
+    fontface default_face, // always loaded
+             *face,        // the currently active face
+             *openface;    // the previously loaded face, kept open to improve performance when we need multiple languages
 
     hashnameset<fontface> faces;
 
@@ -70,7 +72,7 @@ struct font
     ~font() { DELETEA(name); closefont(this); }
 };
 
-#define FONTH (curfont->pts)
+#define FONTH (curfont->face->pts)
 #define FONTW (FONTH/2)
 #define MINRESW 640
 #define MINRESH 480

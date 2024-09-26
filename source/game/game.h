@@ -164,13 +164,19 @@ struct demoheader
 struct gamestate
 {
     int health, maxhealth, shield;
-    int gunselect, gunwait, primary;
-    int ammo[NUMGUNS];
+    int gunselect, gunwait;
     int aitype, skill;
     int poweruptype, powerupmillis;
     int role;
+    int ammo[NUMGUNS];
 
-    gamestate() : maxhealth(100), aitype(AI_NONE), skill(0) {}
+    gamestate() : health(100), maxhealth(100), shield(0), gunselect(GUN_PISTOL), gunwait(0), aitype(AI_NONE), skill(0), poweruptype(PU_NONE), powerupmillis(0), role(ROLE_NONE)
+    {
+        loopi(NUMGUNS)
+        {
+            ammo[i] = 0;
+        }
+    }
 
     bool canpickup(int type)
     {
@@ -290,7 +296,7 @@ struct gamestate
     void makeberserker()
     {
         role = ROLE_BERSERKER;
-        maxhealth = health = maxhealth*2;
+        maxhealth = health = maxhealth * 2;
         loopi(NUMGUNS)
         {
             if(!ammo[i] || i == GUN_INSTA || i == GUN_ZOMBIE) continue;
@@ -320,18 +326,23 @@ struct gamestate
         else if(m_effic(mutators))
         {
             maxhealth = health = 200;
-            loopi(NUMGUNS-3) baseammo(i);
+            loopi(NUMGUNS - 3) // Exclude the pistol and special weapons (last three).
+            {
+                baseammo(i);
+            }
             gunselect = GUN_SMG;
         }
         else if(m_tactics(mutators))
         {
             maxhealth = health = 150;
             ammo[GUN_PISTOL] = 100;
-            int spawngun1 = rnd(5)+1, spawngun2;
-            gunselect = spawngun1;
-            baseammo(spawngun1, m_noitems(mutators) ? 5 : 3);
-            do spawngun2 = rnd(5)+1; while(spawngun1==spawngun2);
-            baseammo(spawngun2, m_noitems(mutators) ? 5 : 3);
+            int primaryweapon = rnd(5) + 1, secondaryweapon;
+            gunselect = primaryweapon;
+            int ammomultiplier = m_noitems(mutators) ? 5 : 3;
+            baseammo(primaryweapon, ammomultiplier);
+            do secondaryweapon = rnd(5) + 1;
+            while (primaryweapon == secondaryweapon); // Make sure we do not spawn with an identical secondary and primary weapon.
+            baseammo(secondaryweapon, ammomultiplier);
         }
         else if(m_voosh(mutators))
         {
@@ -345,11 +356,11 @@ struct gamestate
         }
     }
 
-    // subtract damage/shield points and apply damage here
+    // Subtract damage/shield points and apply damage here.
     int dodamage(int damage, bool environment = false)
     {
         if(shield && !environment)
-        { // only if the player has shield points and damage is not caused by the environment
+        { // Only if the player has shield points and damage is not caused by the environment.
             int ad = round(damage / 3.0f * 2.0f);
             if(ad > shield) ad = shield;
             shield -= ad;

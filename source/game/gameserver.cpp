@@ -2240,7 +2240,7 @@ namespace server
     {
         if(gamescorelimit == 0 || m_ctf || m_elimination) return;
         teaminfo *team = m_teammode && validteam(ci->team) ? &teaminfos[ci->team-1] : NULL;
-        int highscore = m_teammode ? team->frags : ci->state.frags;
+        int highscore = team && m_teammode ? team->frags : ci->state.frags;
         if(!m_dm) highscore = ci->state.points;
         else
         {

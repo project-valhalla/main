@@ -196,7 +196,7 @@ struct gamestate
             case I_DDAMAGE:
             case I_HASTE:
             case I_ARMOR:
-            case I_UAMMO:
+            case I_INFINITEAMMO:
             case I_AGILITY:
             case I_INVULNERABILITY:
                 if(powerupmillis < is.info || poweruptype == is.info)
@@ -230,7 +230,7 @@ struct gamestate
             case I_DDAMAGE:
             case I_ARMOR:
             case I_HASTE:
-            case I_UAMMO:
+            case I_INFINITEAMMO:
             case I_AGILITY:
             case I_INVULNERABILITY:
                 poweruptype = is.info;

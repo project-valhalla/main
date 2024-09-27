@@ -1406,8 +1406,9 @@ static inline int iscubenamesafe(uint c)
         || (c >= 0x00A1 && c <= 0x00AC)
         || (c >= 0x00AE && c <= 0x00FF) // Latin-1 Supplement
 
-        || (c >= 0x0100 && c <= 0x0148)
-        || (c >= 0x014A && c <= 0x017F) // Latin Extended-A (0x149 is deprecated)
+        || (c >= 0x0100 && c <= 0x0131)
+        || (c >= 0x0134 && c <= 0x0148)
+        || (c >= 0x014A && c <= 0x017F) // Latin Extended-A (exclude 0x131, 0x132 and 0x149)
 
         || (c >= 0x0218 && c <= 0x021B) // Latin Extended-B: Romanian
 

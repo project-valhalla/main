@@ -48,7 +48,7 @@ namespace entities
             case I_SUPERHEALTH: case I_MEGAHEALTH:
                 if(m_insta(mutators) || m_vampire(mutators)) return false;
                 break;
-            case I_DDAMAGE: case I_ARMOR: case I_UAMMO:
+            case I_DDAMAGE: case I_ARMOR: case I_INFINITEAMMO:
                 if(m_insta(mutators) || m_nopowerups(mutators)) return false;
                 break;
             case I_HASTE: case I_AGILITY: case I_INVULNERABILITY:

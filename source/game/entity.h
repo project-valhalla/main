@@ -16,7 +16,7 @@ enum                            // static entity types
 
     I_AMMO_SG, I_AMMO_SMG, I_AMMO_PULSE, I_AMMO_RL, I_AMMO_RAIL, I_AMMO_GRENADE,
     I_HEALTH, I_YELLOWSHIELD, I_REDSHIELD,
-    I_SUPERHEALTH, I_MEGAHEALTH, I_DDAMAGE, I_HASTE, I_ARMOR, I_UAMMO, I_AGILITY, I_INVULNERABILITY,
+    I_SUPERHEALTH, I_MEGAHEALTH, I_DDAMAGE, I_HASTE, I_ARMOR, I_INFINITEAMMO, I_AGILITY, I_INVULNERABILITY,
 
     TRIGGER, // attr1 = idx, attr2 = model, attr3 = radius, attr4 = delay
     TARGET, // attr1 = idx, attr2 = hostile, att3 = can move
@@ -55,7 +55,7 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "double_damage",   "Double Damage",      "item/doubledamage"    },
     { "haste",           "Haste",              "item/haste"           },
     { "armor",           "Armor",              "item/armor"           },
-    { "unlimited_ammo",  "Unlimited Ammo",     "item/ammo/unlimited"  },
+    { "infinite_ammo",   "Infinite Ammo",      "item/ammo/infinite"   },
     { "agility",         "Agility",            "item/agility"         },
     { "invulnerability", "Invulnerability",    "item/invulnerability" },
     { "trigger",         "Trigger",            "item/trigger"         },
@@ -89,7 +89,7 @@ static struct itemstat { int add, max, spawntime, info, sound, announcersound; }
     { 30000, 60000, 100, PU_DAMAGE,          S_DAMAGE,          NULL, }, // double damage
     { 30000, 60000, 100, PU_HASTE,           S_HASTE,           NULL, }, // haste
     { 30000, 60000, 100, PU_ARMOR,           S_ARMOR,           NULL, }, // armor
-    { 30000, 60000, 100, PU_AMMO,            S_UAMMO,           NULL, }, // unlimited ammo
+    { 30000, 60000, 100, PU_AMMO,            S_INFINITEAMMO,    NULL, }, // infinite ammo
     { 30000, 60000, 100, PU_AGILITY,         S_AGILITY,         NULL, }, // agility
     { 15000, 30000, 100, PU_INVULNERABILITY, S_INVULNERABILITY, NULL, }  // invulnerability
 };

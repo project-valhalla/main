@@ -728,7 +728,9 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     resetmap();
 
     Texture *mapshot = textureload(picname, 3, true, false);
-    renderbackground("Loading", mapshot, mname, game::getmapinfo());
+    static string mapinfo;
+    filtertext(mapinfo, game::getmapinfo(), T_NEWLINES | T_WHITESPACE);
+    renderbackground("Loading", mapshot, mname, mapinfo);
 
     setvar("mapversion", hdr.version, true, false);
 
@@ -911,7 +913,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     attachentities();
     allchanged(true);
 
-    renderbackground("Loading", mapshot, mname, game::getmapinfo());
+    renderbackground("Loading", mapshot, mname, mapinfo);
 
     if(maptitle[0] && strcmp(maptitle, "Untitled Map by Unknown")) conoutf(CON_ECHO, "%s", maptitle);
 

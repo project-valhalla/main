@@ -728,8 +728,10 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     resetmap();
 
     Texture *mapshot = textureload(picname, 3, true, false);
-    static string mapinfo;
-    filtertext(mapinfo, game::getmapinfo(), T_NEWLINES | T_WHITESPACE);
+    static char mapinfo[1000];
+    mapinfo[0] = '\0';
+    const char *s = game::getmapinfo();
+    if(s) filtertext(mapinfo, s, T_NEWLINES | T_WHITESPACE);
     renderbackground("Loading", mapshot, mname, mapinfo);
 
     setvar("mapversion", hdr.version, true, false);

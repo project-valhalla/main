@@ -2161,72 +2161,79 @@ namespace UI
         {
             Object::setup();
 
-            if(!font || !strcmp(font->name, name)) font = findfont(name);
+            if(!font || strcmp(font->name, name)) font = findfont(name);
 
-            copystring(script, script_ ? script_ : "Latn", 5);
+            copystring(script, script_ && script_[0] ? script_ : "Latn", 5);
         }
+
+        #define WITHFONT(body) do { \
+            fontface *face = curfont->face; \
+            pushfont(); \
+            setfont(font, script); \
+            body; \
+            popfont(); \
+            curfont->face = face; \
+        } while(0); \
 
         void layout()
         {
-            pushfont();
-            setfont(font, script);
-            Object::layout();
-            popfont();
+            WITHFONT({
+                Object::layout();
+            });
         }
 
         void draw(float sx, float sy)
         {
-            pushfont();
-            setfont(font, script);
-            Object::draw(sx, sy);
-            popfont();
+            WITHFONT({
+                Object::draw(sx, sy);
+            });
         }
 
         void buildchildren(uint *contents)
         {
-            pushfont();
-            setfont(font, script);
-            Object::buildchildren(contents);
-            popfont();
+            WITHFONT({
+                Object::buildchildren(contents);
+            });
         }
 
         #define DOSTATE(flags, func) \
             void func##children(float cx, float cy, int mask, bool inside, int setflags) \
             { \
-                pushfont(); \
-                setfont(font, script); \
-                Object::func##children(cx, cy, mask, inside, setflags); \
-                popfont(); \
-            }
+                WITHFONT({ \
+                    Object::func##children(cx, cy, mask, inside, setflags); \
+                }); \
+            } \
         DOSTATES
         #undef DOSTATE
 
         bool rawkey(int code, bool isdown)
         {
-            pushfont();
-            setfont(font, script);
-            bool result = Object::rawkey(code, isdown);
-            popfont();
+            bool result;
+            WITHFONT({
+                result = Object::rawkey(code, isdown);
+            });
             return result;
         }
 
         bool key(int code, bool isdown)
         {
-            pushfont();
-            setfont(font, script);
-            bool result = Object::key(code, isdown);
-            popfont();
+            bool result;
+            WITHFONT({
+                result = Object::key(code, isdown);
+            });
             return result;
         }
 
         bool textinput(const char *str, int len)
         {
-            pushfont();
-            setfont(font, script);
-            bool result = Object::textinput(str, len);
-            popfont();
+            bool result;
+            WITHFONT({
+                result = Object::textinput(str, len);
+            });
             return result;
         }
+
+        #undef WITHFONT
     };
 
     float uicontextscale = 0;

@@ -338,7 +338,7 @@ void text_prepare_colored(const char *str, textinfo &info, bvec initial_color, u
 // NOTE: there is no need to delete the texture manually
 void text_prepare_particle(const char *str, textinfo &info, bvec initial_color, int a)
 {
-    uint key = crc32(0, (const Bytef *)str, strlen(str)) * curfont->face->pts + curfont->face->id;
+    uint key = crc32(0, (const Bytef *)str, strlen(str)) + curfont->face->id;
     partinfo *p = &particle_cache[key];
     if(p->ti.tex)
     {

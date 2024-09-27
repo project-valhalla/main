@@ -230,30 +230,41 @@ static inline bvec text_color(char c, char *stack, int size, int &sp, bvec color
 /// UI
 /////
 
+#define TEXT_EARLY_RETURN(str, info, body) do { \
+    body; \
+    logoutf("failed to render text: %s", str); \
+    info = {0, 0, 0}; \
+    return; \
+} while(0);
+
 // renders a string of text to a texture to be cached and drawn later, and measures its dimensions
 void text_prepare(const char *str, textinfo &info, int wrap, bool outline)
 {
-    if(!loadfontface()) { info = {0, 0, 0}; return; }
+    if(!loadfontface()) TEXT_EARLY_RETURN(str, info, {});
     if(outline) TTF_SetFontOutline(curfont->face->face, 1);
     SDL_Surface* surf;
     if(wrap > 0) surf = TTF_RenderUTF8_Blended_Wrapped(curfont->face->face, str, {255, 255, 255}, wrap);
     else         surf = TTF_RenderUTF8_Blended(curfont->face->face, str, {255, 255, 255});
     if(outline) TTF_SetFontOutline(curfont->face->face, 0);
-    if(!surf) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; return; }
+    if(!surf) TEXT_EARLY_RETURN(str, info, {});
     GLuint tex;
     glGenTextures(1, &tex);
-    if(!tex) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; SDL_FreeSurface(surf); return; }
+    if(!tex) TEXT_EARLY_RETURN(str, info,
+    {
+        SDL_FreeSurface(surf);
+    });
     glBindTexture(GL_TEXTURE_RECTANGLE, tex);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_COMPRESSED_RGBA, surf->pitch/4, surf->h, 0, GL_RGBA, GL_UNSIGNED_INT_8_8_8_8_REV, surf->pixels);
     info = {tex, surf->w, surf->h};
     SDL_FreeSurface(surf);
-    return;
 }
 
 // a version of the function above that supports colored spans but doesn't support newlines or line wrapping
 void text_prepare_colored(const char *str, textinfo &info, bvec initial_color, uchar a, bool outline)
 {
-    if(!loadfontface()) { info = {0, 0, 0}; return; }
+    if(!loadfontface()) TEXT_EARLY_RETURN(str, info, {});
+
+    fontface *face = curfont->face;
 
     int totalw = 0, totalh = 0;
     bvec tcolor = initial_color;
@@ -278,13 +289,20 @@ void text_prepare_colored(const char *str, textinfo &info, bvec initial_color, u
                     if(outline) TTF_SetFontOutline(curfont->face->face, 1);
                     SDL_Surface *surf = TTF_RenderUTF8_Blended(curfont->face->face, span_begin, {tcolor.r, tcolor.g, tcolor.b, a});
                     if(outline) TTF_SetFontOutline(curfont->face->face, 0);
-                    if(!surf) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; loopv(surfs) SDL_FreeSurface(surfs[i]); return; }
+                    if(!surf) TEXT_EARLY_RETURN(str, info,
+                    {
+                        loopv(surfs) SDL_FreeSurface(surfs[i]);
+                        curfont->face = face;
+                    })
                     SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_NONE);
                     surfs.add(surf);
-                    totalw += surf->w;
-                    totalh = max(totalh, surf->h);
+                    totalw += surf->w; totalh = max(totalh, surf->h);
                     *p = '\f';
                 }
+                // allow embedding latin text inside of any language by putting it between `\fd` and `\fD`
+                if(*(p+1) == 'd') { curfont->face = &curfont->default_face; setfontsize(face->pts); }
+                else if(*(p+1) == 'D') { curfont->face = face; }
+
                 tcolor = text_color(*(p+1), colorstack, sizeof(colorstack), cpos, initial_color);
                 span_begin = ++p+1; span_len = 0;
             }
@@ -301,19 +319,23 @@ void text_prepare_colored(const char *str, textinfo &info, bvec initial_color, u
         {
             SDL_SetSurfaceBlendMode(surf, SDL_BLENDMODE_NONE);
             surfs.add(surf);
-            totalw += surf->w;
-            totalh = max(totalh, surf->h);
+            totalw += surf->w; totalh = max(totalh, surf->h);
         }
     }
 
-    if(!surfs.length()) { info = {0, 0, 0}; return; }
+    curfont->face = face;
+
+    if(!surfs.length()) TEXT_EARLY_RETURN(str, info, {});
 
     // copy all the colored spans onto a single surface
     SDL_Surface *dest = surfs[0];
     if(surfs.length() > 1)
     {
         dest = SDL_CreateRGBSurfaceWithFormat(0, totalw, totalh, 32, SDL_PIXELFORMAT_ARGB8888);
-        if(!dest) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; loopv(surfs) SDL_FreeSurface(surfs[i]); return; }
+        if(!dest) TEXT_EARLY_RETURN(str, info,
+        {
+            loopv(surfs) SDL_FreeSurface(surfs[i]);
+        });
         int x = 0;
         loopv(surfs)
         {
@@ -327,7 +349,10 @@ void text_prepare_colored(const char *str, textinfo &info, bvec initial_color, u
 
     GLuint tex = 0;
     glGenTextures(1, &tex);
-    if(!tex) { logoutf("failed to render text: %s", str); info = {0, 0, 0}; SDL_FreeSurface(dest); return; }
+    if(!tex) TEXT_EARLY_RETURN(str, info,
+    {
+        SDL_FreeSurface(dest);
+    });
     glBindTexture(GL_TEXTURE_RECTANGLE, tex);
     glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_COMPRESSED_RGBA, dest->pitch/4, dest->h, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, dest->pixels);
     info = { tex, dest->w, dest->h };
@@ -346,7 +371,7 @@ void text_prepare_particle(const char *str, textinfo &info, bvec initial_color, 
         return;
     }
     text_prepare_colored(str, p->ti, initial_color, a, false);
-    if(!p->ti.tex) {info = {0, 0, 0}; return; }
+    if(!p->ti.tex) TEXT_EARLY_RETURN(str, info, {});
     if(particle_queue.length() > 256)
     {
         uint oldkey = particle_queue[0];
@@ -405,6 +430,8 @@ void draw_textf(const char *fstr, float left, float top, ...)
     defvformatstring(str, top, fstr);
     draw_text(str, left, top);
 }
+
+#undef TEXT_EARLY_RETURN
 
 /////
 /// CONSOLE

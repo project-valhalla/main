@@ -461,7 +461,8 @@ static inline SDL_Surface *fetch_glyph(uint codepoint)
     g->surf = surf;
     return g->surf;
 }
-static inline void measure_glyph(uint codepoint, int &width, int &height) {
+static inline void measure_glyph(uint codepoint, int &width, int &height)
+{
     SDL_Surface *surf = fetch_glyph(codepoint);
     if(!surf)
     {
@@ -474,7 +475,7 @@ static inline void measure_glyph(uint codepoint, int &width, int &height) {
 }
 
 // computes the dimensions of a line of console text and splits it into colored spans
-void text_prepare_console(const char *str, int &width, int &height, vector<conspan> &spans, int maxwidth, int cursor, int *curx, int *cury)
+void text_prepare_console(const char *str, int &width, int &height, vector<conspan> *spans, int maxwidth, int cursor, int *curx, int *cury)
 {
     int x = 0, y = FONTH, maxw = 0;
     bvec color(255, 255, 255), tcolor = color;
@@ -484,7 +485,7 @@ void text_prepare_console(const char *str, int &width, int &height, vector<consp
     colorstack[0] = 'c';
     int cpos = 0;
 
-    conspan span(str, tcolor);
+    conspan span(str, tcolor), savedspan(str, tcolor);
 
     uint c;
     int s = uni_getchar(str, c);
@@ -499,18 +500,20 @@ void text_prepare_console(const char *str, int &width, int &height, vector<consp
         {
             if(*(p+1))
             {
-                if(span.len) spans.add(span);
+                if(spans && span.len) spans->add(span);
                 tcolor = text_color(*(p+1), colorstack, sizeof(colorstack), cpos, color);
                 span = conspan(++p+1, tcolor);
                 span.x = x; span.y = y - FONTH;
+                savedspan = span;
             }
             continue;
         }
         if(*p == '\r' || *p == '\n') // new line
         {
-            if(span.len) spans.add(span);
+            if(spans && span.len) spans->add(span);
             span = conspan(p+1, tcolor);
             span.y = y;
+            savedspan = span;
             if(x > maxw) maxw = x;
             x = 0; y += FONTH;
             continue;
@@ -520,19 +523,39 @@ void text_prepare_console(const char *str, int &width, int &height, vector<consp
         measure_glyph(c, w, h);
         if(maxwidth > 0 && x + w > maxwidth)
         {
-            if(span.len) spans.add(span);
-            span = conspan(p, tcolor);
-            span.y = y; span.w = w; span.len = s;
             if(x > maxw) maxw = x;
-            x = w; y += FONTH;
+            if(savedspan.x > 0 || savedspan.hasspace)
+            {
+                if(spans && savedspan.len) spans->add(savedspan);
+                span = conspan(p = (char *)(savedspan.begin + savedspan.len), tcolor);
+                p -= uni_prevchar(str, p - str);
+                x = 0;
+            }
+            else
+            {
+                if(spans && span.len) spans->add(span);
+                span = conspan(p, tcolor);
+                span.w = w; span.len = s;
+                span.hasspace = iscubespace(c);
+                x = w;
+            }
+            span.y = y;
+            y += FONTH;
+            savedspan = span;
             continue;
         }
         // regular character: append to the span
         x += w;
         if(x > maxw) maxw = x;
         span.w += w; span.len += s;
+        const bool space = iscubespace(c);
+        if(space) span.hasspace = true;
+        if(p == str || space)
+        {
+            savedspan = span;
+        }
     }
-    if(span.len) spans.add(span);
+    if(spans && span.len) spans->add(span);
     width = maxw; height = y;
 
     // check if the cursor is at the end of the string
@@ -541,41 +564,6 @@ void text_prepare_console(const char *str, int &width, int &height, vector<consp
         *curx = x;
         if(cury) *cury = y - FONTH;
     }
-}
-
-// like the function above, but doesn't deal with spans and cursor position
-void text_bounds_console(const char *str, int &width, int &height, int maxwidth)
-{
-    int x = 0, y = FONTH, maxw = 0;
-
-    uint c;
-    int s = uni_getchar(str, c);
-    for(char *p = (char *)str; c; p += s, s = uni_getchar(p, c))
-    {
-        if(*p == '\f') // color code
-        {
-            if(*(p+1)) { p++; }; continue;
-        }
-        if(*p == '\r' || *p == '\n') // new line
-        {
-            if(x > maxw) maxw = x;
-            x = 0; y += FONTH;
-            continue;
-        }
-        // check if we are exceeding the maximum width
-        int w, h;
-        measure_glyph(c, w, h);
-        if(maxwidth > 0 && x + w > maxwidth)
-        {
-            if(x > maxw) maxw = x;
-            x = w; y += FONTH;
-            continue;
-        }
-        // regular character
-        x += w;
-        if(x > maxw) maxw = x;
-    }
-    width = maxw; height = y;
 }
 
 // draws a surface that contains text to the screen

@@ -96,7 +96,7 @@ float rendercommand(float x, float y, float w)
     int width, height;
     int curx, cury;
     vector<conspan> spans;
-    text_prepare_console(buf, width, height, spans, w, commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), &curx, &cury);
+    text_prepare_console(buf, width, height, &spans, w, commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), &curx, &cury);
     y -= height;
     
     draw_text_console(spans, x, y, curx, cury);
@@ -162,7 +162,7 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         if(!(conlines[idx].type&filter)) continue;
         char *line = conlines[idx].line;
         int width, height;
-        text_bounds_console(line, width, height, conwidth);
+        text_prepare_console(line, width, height, NULL, conwidth);
         if(totalheight + height > conheight) { numl = i; if(offset == idx) ++offset; break; }
         totalheight += height;
     }
@@ -174,7 +174,7 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         char *line = conlines[idx].line;
         int width, height;
         vector<conspan> spans;
-        text_prepare_console(line, width, height, spans, conwidth);
+        text_prepare_console(line, width, height, &spans, conwidth);
         if(dir <= 0) y -= height;
         draw_text_console(spans, conoff, y);
         if(dir > 0) y += height;

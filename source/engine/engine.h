@@ -45,8 +45,9 @@ struct conspan
     int x, y, w;
     const char *begin;
     int len;
+    bool hasspace;
     bvec color;
-    conspan(const char *begin_, bvec color_) : x(0), y(0), w(0), begin(begin_), len(0), color(color_) {};
+    conspan(const char *begin_, bvec color_) : x(0), y(0), w(0), begin(begin_), len(0), hasspace(false), color(color_) {};
 };
 struct fontface
 {

@@ -195,7 +195,7 @@ struct editor
     {
         setconsolefontsize();
         int width;
-        text_bounds_console(lines[0].text, width, pixelheight, pixelwidth);
+        text_prepare_console(lines[0].text, width, pixelheight, NULL, pixelwidth);
     }
 
     void setfile(const char *fname)
@@ -478,7 +478,7 @@ struct editor
                     int x, y, width, height;
                     char *str = currentline().text;
                     text_pos(str, cx, x, y, pixelwidth);
-                    text_bounds_console(str, width, height, pixelwidth);
+                    text_prepare_console(str, width, height, NULL, pixelwidth);
                     y += FONTH;
                     if(y < height) { cx = text_visible(str, x, y, pixelwidth); break; }
                 }
@@ -569,7 +569,7 @@ struct editor
         for(int i = scrolly; i < lines.length(); i++)
         {
             int width, height;
-            text_bounds_console(lines[i].text, width, height, maxwidth);
+            text_prepare_console(lines[i].text, width, height, NULL, maxwidth);
             if(h + height > pixelheight) break;
 
             if(hity >= h && hity <= h+height)
@@ -590,7 +590,7 @@ struct editor
         for(int ph = pixelheight; slines > 0 && ph > 0;)
         {
             int width, height;
-            text_bounds_console(lines[slines-1].text, width, height, maxwidth);
+            text_prepare_console(lines[slines-1].text, width, height, NULL, maxwidth);
             if(height > ph) break;
             ph -= height;
             slines--;
@@ -615,7 +615,7 @@ struct editor
             for(int i = cy; i >= scrolly; i--)
             {
                 int width, height;
-                text_bounds_console(lines[i].text, width, height, maxwidth);
+                text_prepare_console(lines[i].text, width, height, NULL, maxwidth);
                 if(h + height > pixelheight) { scrolly = i+1; break; }
                 h += height;
             }
@@ -632,7 +632,7 @@ struct editor
             for(int i = scrolly; i < maxy; i++)
             {
                 int width, height;
-                text_bounds_console(lines[i].text, width, height, maxwidth);
+                text_prepare_console(lines[i].text, width, height, NULL, maxwidth);
                 if(h + height > pixelheight) { maxy = i; break; }
                 if(i == sy) psy += h;
                 if(i == ey) { pey += h; break; }
@@ -683,7 +683,7 @@ struct editor
         {
             int width, height, curx, cury;
             vector<conspan> spans;
-            text_prepare_console(lines[i].text, width, height, spans, maxwidth, hit&&(cy==i)?cx:-1, &curx, &cury);
+            text_prepare_console(lines[i].text, width, height, &spans, maxwidth, hit&&(cy==i)?cx:-1, &curx, &cury);
             if(h + height > pixelheight) break;
 
             draw_text_console(spans, x, y+h, hit&&(cy==i) ? curx : -1, cury);

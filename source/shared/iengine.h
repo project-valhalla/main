@@ -275,8 +275,7 @@ extern int  text_visible(const char *str, float hitx, float hity, int maxwidth);
 extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth);
 
 extern void draw_text_console(vector<conspan> spans, float left, float top, int curx = -1, int cury = -1);
-extern void text_bounds_console(const char *str, int &width, int &height, int maxwidth = -1);
-extern void text_prepare_console(const char *str, int &width, int &height, vector<conspan> &spans, int maxwidth = -1, int cursor = -1, int *curx = NULL, int *cury = NULL);
+extern void text_prepare_console(const char *str, int &width, int &height, vector<conspan> *spans, int maxwidth = -1, int cursor = -1, int *curx = NULL, int *cury = NULL);
 
 // texture
 

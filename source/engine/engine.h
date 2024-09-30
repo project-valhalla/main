@@ -6,6 +6,8 @@
 
 #ifndef STANDALONE
 
+#include "SDL_ttf.h"
+
 #include "octa.h"
 #include "light.h"
 #include "texture.h"
@@ -33,28 +35,54 @@ extern int screenw, screenh, renderw, renderh, hudw, hudh;
 extern vector<int> entgroup;
 
 // rendertext
+struct textinfo
+{
+    GLuint tex;
+    int w, h;
+};
+struct conspan
+{
+    int x, y, w;
+    const char *begin;
+    int len;
+    bool hasspace;
+    bvec color;
+    conspan(const char *begin_, bvec color_) : x(0), y(0), w(0), begin(begin_), len(0), hasspace(false), color(color_) {};
+};
+struct fontface
+{
+    char name[5];        // four-letter script name
+    string ttf_filename;
+    bool rtl;
+    TTF_Font *face;
+    int id;              // unique identifier used by UI for change detection
+    int pts;             // point size (equivalent to pixel size at 54 dpi)
+
+    fontface() { face = NULL; }
+};
 struct font
 {
-    struct charinfo
-    {
-        float x, y, w, h, offsetx, offsety, advance;
-        int tex;
-    };
-
     char *name;
-    vector<Texture *> texs;
-    vector<charinfo> chars;
-    int charoffset, defaultw, defaulth, scale;
-    float bordermin, bordermax, outlinemin, outlinemax;
+    fontface default_face, // always loaded
+             *face,        // the currently active face
+             *openface;    // the previously loaded face, kept open to improve performance when we need multiple languages
 
-    font() : name(NULL) {}
-    ~font() { DELETEA(name); }
+    hashnameset<fontface> faces;
+
+    font() : name(NULL), openface(NULL) {}
+    ~font() { DELETEA(name); closefont(this); }
 };
 
-#define FONTH (curfont->scale)
+#define FONTH (curfont->face->pts)
 #define FONTW (FONTH/2)
 #define MINRESW 640
 #define MINRESH 480
+
+// number of text lines to fill the whole screen (higher = smaller text)
+#define CONSOLETEXTROWS 36
+#define LOADSCREENTEXTROWS 36
+#define UITEXTROWS 24
+#define PARTICLETEXTROWS 16 // NOTE: particles use a different scale
 
 extern font *curfont;
 extern Shader *textshader;
@@ -63,8 +91,6 @@ extern float textscale;
 
 extern font *findfont(const char *name);
 extern void reloadfonts();
-
-static inline void setfont(font *f) { if(f) curfont = f; }
 
 // texture
 extern int hwtexsize, hwcubetexsize, hwmaxaniso, maxtexsize, hwtexunits, hwvtexunits;
@@ -743,6 +769,7 @@ namespace UI
     void update();
     void render();
     void cleanup();
+    void cleartext();
 }
 
 // menus

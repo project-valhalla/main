@@ -4,7 +4,7 @@
 
 Shader *Shader::lastshader = NULL;
 
-Shader *nullshader = NULL, *hudshader = NULL, *hudtextshader = NULL, *hudnotextureshader = NULL, *nocolorshader = NULL, *foggedshader = NULL, *foggednotextureshader = NULL, *ldrshader = NULL, *ldrnotextureshader = NULL, *stdworldshader = NULL;
+Shader *nullshader = NULL, *hudshader = NULL, *hudnotextureshader = NULL, *nocolorshader = NULL, *foggedshader = NULL, *foggednotextureshader = NULL, *ldrshader = NULL, *ldrnotextureshader = NULL, *stdworldshader = NULL;
 
 static hashnameset<GlobalShaderParamState> globalparams(256);
 static hashtable<const char *, int> localparams(256);
@@ -30,10 +30,9 @@ void loadshaders()
 
     nullshader = lookupshaderbyname("null");
     hudshader = lookupshaderbyname("hud");
-    hudtextshader = lookupshaderbyname("hudtext");
     hudnotextureshader = lookupshaderbyname("hudnotexture");
     stdworldshader = lookupshaderbyname("stdworld");
-    if(!nullshader || !hudshader || !hudtextshader || !hudnotextureshader || !stdworldshader) fatal("Cannot find shader definitions");
+    if(!nullshader || !hudshader || !hudnotextureshader || !stdworldshader) fatal("Cannot find shader definitions");
 
     dummyslot.shader = stdworldshader;
     dummydecalslot.shader = nullshader;
@@ -1025,28 +1024,6 @@ void setupshaders()
         "    vec4 color = texture2D(tex0, texcoord0);\n"
         "    fragcolor = colorscale * color;\n"
         "}\n");
-    hudtextshader = newshader(0, "<init>hudtext",
-        "attribute vec4 vvertex, vcolor;\n"
-        "attribute vec2 vtexcoord0;\n"
-        "uniform mat4 hudmatrix;\n"
-        "varying vec2 texcoord0;\n"
-        "varying vec4 colorscale;\n"
-        "void main(void) {\n"
-        "    gl_Position = hudmatrix * vvertex;\n"
-        "    texcoord0 = vtexcoord0;\n"
-        "    colorscale = vcolor;\n"
-        "}\n",
-        "uniform sampler2D tex0;\n"
-        "uniform vec4 textparams;\n"
-        "varying vec2 texcoord0;\n"
-        "varying vec4 colorscale;\n"
-        "fragdata(0) vec4 fragcolor;\n"
-        "void main(void) {\n"
-        "    float dist = texture2D(tex0, texcoord0).r;\n"
-        "    float border = smoothstep(textparams.x, textparams.y, dist);\n"
-        "    float outline = smoothstep(textparams.z, textparams.w, dist);\n"
-        "    fragcolor = vec4(colorscale.rgb * outline, colorscale.a * border);\n"
-        "}\n");
     hudnotextureshader = newshader(0, "<init>hudnotexture",
         "attribute vec4 vvertex, vcolor;\n"
         "uniform mat4 hudmatrix;"
@@ -1062,7 +1039,7 @@ void setupshaders()
         "}\n");
     standardshaders = false;
 
-    if(!nullshader || !hudshader || !hudtextshader || !hudnotextureshader) fatal("Failed to setup shaders");
+    if(!nullshader || !hudshader || !hudnotextureshader) fatal("Failed to setup shaders");
 
     dummyslot.shader = nullshader;
 }

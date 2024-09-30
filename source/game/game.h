@@ -383,7 +383,8 @@ struct gamestate
 
 #include "monster.h"
 
-const int MAXNAMELEN = 15;
+const int MAXNAMELEN = 60; // bytes
+const int MAXNAMEUNILEN = 15; // unicode characters
 const int MAXCOUNTRYCODELEN = 8;
 
 const int MAXTEAMS = 2;

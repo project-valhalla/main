@@ -107,7 +107,7 @@ VARFN(screenh, scr_h, SCR_MINH, -1, SCR_MAXH, initwarning("screen resolution"));
 
 void writeinitcfg()
 {
-    stream *f = openutf8file("config/init.cfg", "w");
+    stream *f = openfile("config/init.cfg", "w");
     if(!f) return;
     f->printf("// automatically written on exit, DO NOT MODIFY\n// modify settings in game\n");
     extern int fullscreen;
@@ -207,22 +207,29 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
 
     if(caption)
     {
-        int tw = text_width(caption);
+        setfontsize(h * 1.5 / LOADSCREENTEXTROWS);
+        textinfo i_caption;
+        text_prepare(caption, i_caption, 0);
+        int tw = i_caption.w;
         float tsz = 0.04f*lw/FONTH,
               tx = 0.5f*(w - tw*tsz), ty = h - 0.075f*1.5f*lw - FONTH*tsz;
-        pushhudtranslate(tx, ty, tsz);
-        draw_text(caption, 0, 0);
-        pophudmatrix();
+
+        draw_text(i_caption, tx, ty, 0xFF, 0xFF, 0xFF, 0xFF);
+        glDeleteTextures(1, &i_caption.tex);
     }
     if(mapshot || mapname)
     {
+        setfontsize(h * 1 / LOADSCREENTEXTROWS);
+        textinfo i_info, i_name;
         float infowidth = 14*FONTH, sz = 0.35f*lw,
             msz = (0.85f*lw - sz)/(infowidth + FONTH),
             x = 0.5f*w, ly = 0.5f*lw, y = (0.5f*(h*0.5f - ly) + ly) - sz/15,
-            mx = 0, my = 0, mw = 0, mh = 0;
+            mx = 0, my = 0, mw = 0;//, mh = 0;
         if(mapinfo)
         {
-            text_boundsf(mapinfo, mw, mh, infowidth);
+            text_prepare(mapinfo, i_info, infowidth);
+            mw = i_info.w;
+            //mh = i_info.h;
             x -= 0.5f*mw*msz;
             if(mapshot && mapshot!=notexture)
             {
@@ -239,17 +246,18 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
         }
         if(mapname)
         {
-            float tw = text_widthf(mapname), tsz = sz/(8*FONTH), tx = max(0.5f*(mw*msz - tw*tsz), 0.0f);
-            pushhudtranslate(x+mx+tx, y, tsz);
-            draw_text(mapname, 0, 0);
-            pophudmatrix();
+            setfontsize(h * 1.5 / LOADSCREENTEXTROWS);
+            text_prepare(mapname, i_name, 0);
+            float tw = i_name.w, tsz = sz/(8*FONTH), tx = max(0.5f*(mw*msz - tw*tsz), 0.0f);
+
+            draw_text(i_name, x+mx+tx, y, 0xFF, 0xFF, 0xFF, 0xFF);
+            glDeleteTextures(1, &i_name.tex);
             my = 1.5f*FONTH*tsz;
         }
         if(mapinfo)
         {
-            pushhudtranslate(x+mx, y+my, msz);
-            draw_text(mapinfo, 0, 0, 0xFF, 0xFF, 0xFF, 0xFF, -1, infowidth);
-            pophudmatrix();
+            draw_text(i_info, x+mx, y+my, 0xFF, 0xFF, 0xFF, 0xFF);
+            glDeleteTextures(1, &i_info.tex);
         }
     }
 
@@ -339,13 +347,15 @@ void renderprogressview(int w, int h, float bar, const char *text)   // also use
 
     if(text)
     {
-        int tw = text_width(text);
+        setfontsize(h * 0.8 / LOADSCREENTEXTROWS);
+        textinfo i_text;
+        text_prepare_colored(text, i_text, bvec(255, 255, 255));
+        int tw = i_text.w;
         float tsz = bh*0.6f/FONTH;
         if(tw*tsz > mw) tsz = mw/tw;
 
-        pushhudtranslate(bx+sw, by + (bh - FONTH*tsz)/2, tsz);
-        draw_text(text, 0, 0);
-        pophudmatrix();
+        draw_text(i_text, bx+sw, by+ (bh - FONTH*tsz)/2, 0xFF, 0xFF, 0xFF, 0xFF);
+        glDeleteTextures(1, &i_text.tex);
     }
 
     glDisable(GL_BLEND);
@@ -821,9 +831,7 @@ void checkinput()
             case SDL_TEXTINPUT:
                 if(textinputmask && int(event.text.timestamp-textinputtime) >= textinputfilter)
                 {
-                    uchar buf[SDL_TEXTINPUTEVENT_TEXT_SIZE+1];
-                    size_t len = decodeutf8(buf, sizeof(buf)-1, (const uchar *)event.text.text, strlen(event.text.text));
-                    if(len > 0) { buf[len] = '\0'; processtextinput((const char *)buf, len); }
+                    processtextinput(event.text.text, strlen(event.text.text));
                 }
                 break;
 
@@ -1197,6 +1205,9 @@ int main(int argc, char **argv)
     gl_init();
     notexture = textureload("data/texture/world/base/notexture.png");
     if(!notexture) fatal("Could not find core textures");
+
+    logoutf("init: fonts");
+    if(!init_ttf()) fatal("Could not initialize SDL_TTF");
 
     logoutf("init: console");
     if(!execfile("config/stdlib.cfg", false)) fatal("Cannot find required configuration files (\"/config/stdlib.cfg\")!\nYou might not be running from the main folder.");   // this is the first file we load.

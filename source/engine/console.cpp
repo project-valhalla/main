@@ -1,5 +1,6 @@
 // console.cpp: the console buffer, its display, and command line control
 
+#include "unicode.h"
 #include "engine.h"
 
 #define MAXCONLINES 1000
@@ -90,10 +91,17 @@ float rendercommand(float x, float y, float w)
     const char *prompt = commandprompt ? commandprompt : ">";
     formatstring(buf, "%s %s", prompt, commandbuf);
 
-    float width, height;
-    text_boundsf(buf, width, height, w);
+    pushfont();
+    setfont("default");
+    int width, height;
+    int curx, cury;
+    vector<conspan> spans;
+    text_prepare_console(buf, width, height, &spans, w, commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), &curx, &cury);
     y -= height;
-    draw_text(buf, x, y, 0xFF, 0xFF, 0xFF, 0xFF, commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), w);
+    
+    draw_text_console(spans, x, y, curx, cury);
+    
+    popfont();
     return height;
 }
 
@@ -153,8 +161,8 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         int idx = offset+i < numl ? offset+i : --offset;
         if(!(conlines[idx].type&filter)) continue;
         char *line = conlines[idx].line;
-        float width, height;
-        text_boundsf(line, width, height, conwidth);
+        int width, height;
+        text_prepare_console(line, width, height, NULL, conwidth);
         if(totalheight + height > conheight) { numl = i; if(offset == idx) ++offset; break; }
         totalheight += height;
     }
@@ -164,21 +172,32 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         int idx = offset + (dir > 0 ? numl-i-1 : i);
         if(!(conlines[idx].type&filter)) continue;
         char *line = conlines[idx].line;
-        float width, height;
-        text_boundsf(line, width, height, conwidth);
+        int width, height;
+        vector<conspan> spans;
+        text_prepare_console(line, width, height, &spans, conwidth);
         if(dir <= 0) y -= height;
-        draw_text(line, conoff, y, 0xFF, 0xFF, 0xFF, 0xFF, -1, conwidth);
+        draw_text_console(spans, conoff, y);
         if(dir > 0) y += height;
     }
     return y+conoff;
 }
 
+// sets the appropriate font size for the console
+void setconsolefontsize()
+{
+    setfontsize(hudh * conscale / CONSOLETEXTROWS);
+}
+
 float renderfullconsole(float w, float h)
 {
+    pushfont();
+    setfont("default");
+    setconsolefontsize();
     float conpad = FONTH/2,
           conheight = h - 2*conpad,
           conwidth = w - 2*conpad;
     drawconlines(conskip, 0, conwidth, conheight, conpad, fullconfilter);
+    popfont();
     return conheight + 2*conpad;
 }
 
@@ -187,9 +206,13 @@ float renderconsole(float w, float h, float abovehud)
     float conpad = FONTH/2,
           conheight = min(float(FONTH*consize), h - 2*conpad),
           conwidth = w - 2*conpad - game::clipconsole(w, h);
+    pushfont();
+    setfont("default");
+    setconsolefontsize();
     float y = drawconlines(conskip, confade, conwidth, conheight, conpad, confilter);
     if(miniconsize && miniconwidth)
         drawconlines(miniconskip, miniconfade, (miniconwidth*(w - 2*conpad))/100, min(float(FONTH*miniconsize), abovehud - y), conpad, miniconfilter, abovehud, -1);
+    popfont();
     return y;
 }
 
@@ -514,10 +537,7 @@ void pasteconsole()
     if(!SDL_HasClipboardText()) return;
     char *cb = SDL_GetClipboardText();
     if(!cb) return;
-    string paste;
-    size_t decoded = decodeutf8((uchar *)paste, sizeof(paste)-1, (const uchar *)cb, strlen(cb));
-    paste[decoded] = '\0';
-    consoleinput(paste, decoded);
+    consoleinput(cb, strlen(cb));
     SDL_free(cb);
 }
 
@@ -575,7 +595,9 @@ bool consolekey(int code, bool isdown)
             {
                 int len = (int)strlen(commandbuf);
                 if(commandpos<0) break;
-                int end = commandpos+1;
+                uint _codepoint;
+                const int s = uni_getchar(&commandbuf[commandpos], _codepoint);
+                int end = commandpos+s;
                 if(SDL_GetModState()&SKIP_KEYS) end = skipword(&commandbuf[commandpos]) - commandbuf;
                 memmove(&commandbuf[commandpos], &commandbuf[end], len + 1 - end);
                 resetcomplete();
@@ -587,7 +609,7 @@ bool consolekey(int code, bool isdown)
             {
                 int len = (int)strlen(commandbuf), i = commandpos>=0 ? commandpos : len;
                 if(i<1) break;
-                int start = i-1;
+                int start = i - uni_prevchar(commandbuf, i);
                 if(SDL_GetModState()&SKIP_KEYS) start = skipwordrev(commandbuf, i) - commandbuf;
                 memmove(&commandbuf[start], &commandbuf[i], len - i + 1);
                 resetcomplete();
@@ -598,15 +620,19 @@ bool consolekey(int code, bool isdown)
 
             case SDLK_LEFT:
                 if(SDL_GetModState()&SKIP_KEYS) commandpos = skipwordrev(commandbuf, commandpos) - commandbuf;
-                else if(commandpos>0) commandpos--;
-                else if(commandpos<0) commandpos = (int)strlen(commandbuf)-1;
+                else if(commandpos>0) commandpos -= uni_prevchar(commandbuf, commandpos);
+                else if(commandpos<0) commandpos = (int)strlen(commandbuf) - uni_prevchar(commandbuf, strlen(commandbuf));
                 break;
 
             case SDLK_RIGHT:
                 if(commandpos>=0)
                 {
                     if(SDL_GetModState()&SKIP_KEYS) commandpos = skipword(&commandbuf[commandpos]) - commandbuf;
-                    else ++commandpos;
+                    else
+                    {
+                        uint _codepoint;
+                        commandpos += uni_getchar(&commandbuf[commandpos], _codepoint);
+                    }
                     if(commandpos>=(int)strlen(commandbuf)) commandpos = -1;
                 }
                 break;

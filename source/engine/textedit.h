@@ -1,3 +1,4 @@
+#include "unicode.h"
 
 struct editline
 {
@@ -192,8 +193,9 @@ struct editor
 
     void updateheight()
     {
+        setconsolefontsize();
         int width;
-        text_bounds(lines[0].text, width, pixelheight, pixelwidth);
+        text_prepare_console(lines[0].text, width, pixelheight, NULL, pixelwidth);
     }
 
     void setfile(const char *fname)
@@ -206,7 +208,7 @@ struct editor
     {
         if(!filename) return;
         clear(NULL);
-        stream *file = openutf8file(filename, "r");
+        stream *file = openfile(filename, "r");
         if(file)
         {
             while(lines.add().read(file, maxx) && (maxy < 0 || lines.length() <= maxy));
@@ -219,7 +221,7 @@ struct editor
     void save()
     {
         if(!filename) return;
-        stream *file = openutf8file(filename, "w");
+        stream *file = openfile(filename, "w");
         if(!file) return;
         loopv(lines) file->putline(lines[i].text);
         delete file;
@@ -457,6 +459,7 @@ struct editor
 
     void key(int code)
     {
+        setconsolefontsize();
         switch(code)
         {
             case SDLK_UP:
@@ -475,7 +478,7 @@ struct editor
                     int x, y, width, height;
                     char *str = currentline().text;
                     text_pos(str, cx, x, y, pixelwidth);
-                    text_bounds(str, width, height, pixelwidth);
+                    text_prepare_console(str, width, height, NULL, pixelwidth);
                     y += FONTH;
                     if(y < height) { cx = text_visible(str, x, y, pixelwidth); break; }
                 }
@@ -494,16 +497,28 @@ struct editor
                 cx = cy = INT_MAX;
                 break;
             case SDLK_LEFT:
-                cx--;
+            {
+                editline &current = currentline();
+                cx -= uni_prevchar(current.text, cx);
                 break;
+            }
             case SDLK_RIGHT:
-                cx++;
+            {
+                editline &current = currentline();
+                uint _codepoint;
+                cx += uni_getchar(&current.text[cx], _codepoint);
                 break;
+            }
             case SDLK_DELETE:
                 if(!del())
                 {
                     editline &current = currentline();
-                    if(cx < current.len) current.del(cx, 1);
+                    if(cx < current.len)
+                    {
+                        uint _codepoint;
+                        const int s = uni_getchar(&current.text[cx], _codepoint);
+                        current.del(cx, s);
+                    }
                     else if(cy < lines.length()-1)
                     {   //combine with next line
                         current.append(lines[cy+1].text);
@@ -515,7 +530,12 @@ struct editor
                 if(!del())
                 {
                     editline &current = currentline();
-                    if(cx > 0) current.del(--cx, 1);
+                    if(cx > 0)
+                    {
+                        const int s = uni_prevchar(current.text, cx);
+                        cx -= s;
+                        current.del(cx, s);
+                    }
                     else if(cy > 0)
                     {   //combine with previous line
                         cx = lines[cy-1].len;
@@ -543,12 +563,13 @@ struct editor
 
     void hit(int hitx, int hity, bool dragged)
     {
+        setconsolefontsize();
         int maxwidth = linewrap?pixelwidth:-1;
         int h = 0;
         for(int i = scrolly; i < lines.length(); i++)
         {
             int width, height;
-            text_bounds(lines[i].text, width, height, maxwidth);
+            text_prepare_console(lines[i].text, width, height, NULL, maxwidth);
             if(h + height > pixelheight) break;
 
             if(hity >= h && hity <= h+height)
@@ -563,12 +584,13 @@ struct editor
 
     int limitscrolly()
     {
+        setconsolefontsize();
         int maxwidth = linewrap?pixelwidth:-1;
         int slines = lines.length();
         for(int ph = pixelheight; slines > 0 && ph > 0;)
         {
             int width, height;
-            text_bounds(lines[slines-1].text, width, height, maxwidth);
+            text_prepare_console(lines[slines-1].text, width, height, NULL, maxwidth);
             if(height > ph) break;
             ph -= height;
             slines--;
@@ -578,6 +600,7 @@ struct editor
 
     void draw(int x, int y, int color, bool hit)
     {
+        setconsolefontsize();
         int maxwidth = linewrap?pixelwidth:-1;
 
         int sx, sy, ex, ey;
@@ -592,7 +615,7 @@ struct editor
             for(int i = cy; i >= scrolly; i--)
             {
                 int width, height;
-                text_bounds(lines[i].text, width, height, maxwidth);
+                text_prepare_console(lines[i].text, width, height, NULL, maxwidth);
                 if(h + height > pixelheight) { scrolly = i+1; break; }
                 h += height;
             }
@@ -609,7 +632,7 @@ struct editor
             for(int i = scrolly; i < maxy; i++)
             {
                 int width, height;
-                text_bounds(lines[i].text, width, height, maxwidth);
+                text_prepare_console(lines[i].text, width, height, NULL, maxwidth);
                 if(h + height > pixelheight) { maxy = i; break; }
                 if(i == sy) psy += h;
                 if(i == ey) { pey += h; break; }
@@ -658,11 +681,12 @@ struct editor
         int h = 0;
         for(int i = scrolly; i < lines.length(); i++)
         {
-            int width, height;
-            text_bounds(lines[i].text, width, height, maxwidth);
+            int width, height, curx, cury;
+            vector<conspan> spans;
+            text_prepare_console(lines[i].text, width, height, &spans, maxwidth, hit&&(cy==i)?cx:-1, &curx, &cury);
             if(h + height > pixelheight) break;
 
-            draw_text(lines[i].text, x, y+h, color>>16, (color>>8)&0xFF, color&0xFF, 0xFF, hit&&(cy==i)?cx:-1, maxwidth);
+            draw_text_console(spans, x, y+h, hit&&(cy==i) ? curx : -1, cury);
             if(linewrap && height > FONTH) // line wrap indicator
             {
                 hudnotextureshader->set();

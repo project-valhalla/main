@@ -887,7 +887,7 @@ extern int findtextureeffect(const char *name);
 extern const texrotation texrotations[8];
 extern const cubemapside cubemapsides[6];
 extern Texture *notexture;
-extern Shader *nullshader, *hudshader, *hudtextshader, *hudnotextureshader, *nocolorshader, *foggedshader, *foggednotextureshader, *ldrshader, *ldrnotextureshader, *stdworldshader;
+extern Shader *nullshader, *hudshader, *hudnotextureshader, *nocolorshader, *foggedshader, *foggednotextureshader, *ldrshader, *ldrnotextureshader, *stdworldshader;
 extern int maxvsuniforms, maxfsuniforms;
 
 extern Shader *lookupshaderbyname(const char *name);

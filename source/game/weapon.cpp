@@ -671,6 +671,7 @@ namespace game
 
     void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int damage, int atk)
     {
+        if(!attacks[atk].projspeed) return;
         vec dynlight = vec(1.0f, 3.0f, 4.0f);
         int explosioncolor = 0x50CFE5, explosiontype = PART_EXPLOSION1;
         bool water = (lookupmaterial(v) & MATF_VOLUME) == MAT_WATER;
@@ -1070,7 +1071,7 @@ namespace game
                         particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x202020, 3.0f, d);
                         particle_flare(d->muzzle, d->muzzle, 120, PART_SPARKS, 0xEFE598, 2.50f + rndscale(3.50f), d);
                     }
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0xEFE598, 2.4f, d);
+                    particle_flare(d->muzzle, d->muzzle, 60, PART_MUZZLE_FLASH, 0xEFE598, 2.4f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 100, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
                 if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT, gun);
@@ -1099,7 +1100,7 @@ namespace game
                         particle_flare(d->muzzle, d->muzzle, 300, PART_MUZZLE_SMOKE, 0xFFFFFF, 2.0f, d);
                         particle_flare(d->muzzle, d->muzzle, 160, PART_SPARKS, 0xEFE898, 2.0f, d);
                     }
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH3, 0xEFE898, 1.5f, d);
+                    particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH3, 0xEFE898, 1.8f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 80, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
                 if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT, gun);
@@ -1138,7 +1139,7 @@ namespace game
             {
                 if(muzzleflash && d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH4, 0xEFE898, 3.0f, d);
+                    particle_flare(d->muzzle, d->muzzle, 60, PART_MUZZLE_FLASH4, 0xEFE898, 3.0f, d);
                 }
                 newprojectile(d, from, to, local, id, atk, PROJ_ROCKET);
                 break;
@@ -1155,12 +1156,12 @@ namespace game
             {
                 if(d->muzzle.x >= 0 && muzzleflash)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 1.75f, d);
                     if (d == hud)
                     {
                         particle_flare(d->muzzle, d->muzzle, 120, PART_SPARKS, 0x77DD77, 1.50f + rndscale(3.0f), d);
                         particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x202020, 3.0f, d);
-                    } 
+                    }
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 1.75f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 100, vec(0.25f, 1.0f, 0.75f), 80, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                 }
                 if(shouldeject) spawnbouncer(d->eject, d, BNC_EJECT, gun);
@@ -1175,7 +1176,7 @@ namespace game
             {
                 if(d->muzzle.x >= 0 && muzzleflash)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH5, 0x74BCF9, 2.8f, d);
+                    particle_flare(d->muzzle, d->muzzle, 100, PART_MUZZLE_FLASH5, 0x74BCF9, 2.8f, d);
                 }
                 up.z += dist/(atk == ATK_GRENADE1 ? 8 : 16);
                 newbouncer(d, from, up, local, id, atk, atk == ATK_GRENADE1 ? BNC_GRENADE : BNC_GRENADE2, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
@@ -1212,7 +1213,7 @@ namespace game
 
                 if(muzzleflash && d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 100, PART_MUZZLE_FLASH, 0x50CFE5, 2.75f, d);
+                    particle_flare(d->muzzle, d->muzzle, 60, PART_MUZZLE_FLASH, 0x50CFE5, 1.75f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 80, vec(0.25f, 0.75f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
                 particle_flare(hudgunorigin(gun, from, to, d), to, 100, PART_LIGHTNING, 0x50CFE5, 1.0f);
@@ -1226,13 +1227,12 @@ namespace game
         if(d->idlesound >= 0) d->stopidlesound();
         switch(sound)
         {
-            case S_SG1_A:
-            case S_SG2_A:
+            case S_SG_A:
             {
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
                 if(d == hud)
                 {
-                    d->gunsound = S_SG1_B;
+                    d->gunsound = S_SG_B;
                     d->gunchan = playsound(d->gunsound, d, NULL, NULL, 0, 0, 0, d->gunchan);
                 }
                 break;

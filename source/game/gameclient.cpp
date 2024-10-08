@@ -2372,6 +2372,8 @@ namespace game
                     conoutf(CON_GAMEINFO, "%s \f2is the berserker!", colorname(d));
                     playsound(S_BERSERKER, d);
                     particle_flare(d->o, d->o, 350, PART_COMICS, 0xFFFFFF, 20.0f);
+
+                    thirdperson = 1; // Temporary.
                 }
                 else if(role == ROLE_ZOMBIE)
                 {

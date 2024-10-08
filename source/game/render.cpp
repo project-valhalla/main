@@ -480,6 +480,14 @@ namespace game
                     particle_hud_mark(pos, 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
                 }
             }
+            if (m_berserker && d->role == ROLE_BERSERKER)
+            {
+                particle_hud_mark(pos, 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+            }
+            if (d->haspowerup(PU_INVULNERABILITY))
+            {
+                particle_hud_mark(pos, 0, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+            }
         }
         else if (d->state == CS_ALIVE && !hidenames())
         {

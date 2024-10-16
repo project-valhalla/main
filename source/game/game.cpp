@@ -1070,7 +1070,7 @@ namespace game
     }
 
     VARP(allycrosshair, 0, 1, 1);
-    VARP(hitcrosshair, 0, 400, 1000);
+    VARP(hitcrosshair, 0, 280, 1000);
 
     int selectcrosshair(vec &col)
     {

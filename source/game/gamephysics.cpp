@@ -316,7 +316,6 @@ namespace physics
     }
 
     const int CROUCH_TIME = 200;
-    const float CROUCH_SPEED = 0.4f;
 
     void crouchplayer(gameent* d, int moveres, bool local)
     {
@@ -614,7 +613,7 @@ namespace physics
             {
                 if (d == self) dir.mul(floatspeed / 100.0f);
             }
-            else if (d->crouching)
+            else if (d->crouching && isonfloor)
             {
                 dir.mul(VELOCITY_CROUCH);
             }

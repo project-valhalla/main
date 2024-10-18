@@ -478,8 +478,6 @@ namespace game
         p.offsetmillis = OFFSETMILLIS;
     }
 
-    VARP(playheadshotsound, 0, 1, 1);
-
     void damageeffect(int damage, dynent *d, vec p, int atk, int color, bool headshot)
     {
         gameent *f = (gameent *)d, *hud = followingplayer(self);
@@ -517,10 +515,12 @@ namespace game
         }
         if(validatk(atk))
         {
-            if(headshot && playheadshotsound) {
+            if(headshot)
+            {
                 playsound(S_HIT_WEAPON_HEAD, NULL, &f->o);
             }
-            else if(attacks[atk].hitsound) {
+            else if(attacks[atk].hitsound)
+            {
                 playsound(attacks[atk].hitsound, NULL, &f->o);
             }
         }
@@ -1419,7 +1419,7 @@ namespace game
                 }
                 damage = calcdamage(damage, (gameent *)o, d, atk, flags);
                 calcpush(numhits*damage, o, d, from, to, atk, numhits, flags);
-                damageeffect(damage, o, rays[i], atk, getbloodcolor(o), hithead);
+                damageeffect(damage, o, rays[i], atk, getbloodcolor(o), flags & HIT_HEAD);
             }
         }
         else
@@ -1437,7 +1437,7 @@ namespace game
                 }
                 damage = calcdamage(damage, (gameent *)o, d, atk, flags);
                 calcpush(damage, o, d, from, to, atk, 1, flags);
-                damageeffect(damage, o, to, atk, getbloodcolor(o), hithead);
+                damageeffect(damage, o, to, atk, getbloodcolor(o), flags & HIT_HEAD);
                 if(d == followingplayer(self) && attacks[atk].action == ACT_MELEE)
                 {
                     addroll(d, damage / 2.0f);

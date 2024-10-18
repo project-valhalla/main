@@ -504,7 +504,7 @@ namespace game
         addroll(d, damroll);
     }
 
-    VARP(hitsound, 0, 0, 1);
+    VARP(hitsound, 0, 1, 1);
 
     void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
     {
@@ -724,10 +724,24 @@ namespace game
             if(actor->aitype == AI_BOT) taunt(actor); // bots taunting players when getting extraordinary kills
             if(actor == followingplayer(self)) checkannouncements(actor, flags);
         }
-        if(actor == followingplayer(self) && actor != d)
+        if (actor == followingplayer(self))
         {
-           if(actor->role == ROLE_BERSERKER) playsound(S_BERSERKER);
-           else if(killsound) playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
+            if (actor->role == ROLE_BERSERKER)
+            {
+                playsound(S_BERSERKER);
+            }
+            else if (killsound)
+            {
+                if (actor == d)
+                {
+                    playsound(S_KILL_SELF);
+                }
+                else if (isally(actor, d))
+                {
+                    playsound(S_KILL_ALLY);
+                }
+                else playsound(S_KILL);
+            }
         }
         // update player state and reset ai
         if(attacks[atk].action == ACT_MELEE) d->deathtype = DEATH_FIST;

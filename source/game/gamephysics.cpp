@@ -995,7 +995,15 @@ namespace physics
             case PHYSEVENT_FOOTSTEP:
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
-                triggerfootsteps(d, event != PHYSEVENT_FOOTSTEP);
+                if (event == PHYSEVENT_LAND_LIGHT)
+                {
+                    sway.addevent(d, SwayEvent_Land, 350, -3);
+                    triggerfootsteps(d, true);
+                }
+                else
+                {
+                    triggerfootsteps(d, false);
+                }
                 d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
                 break;
             }
@@ -1004,7 +1012,7 @@ namespace physics
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
                 msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
-                d->lastland = lastmillis;
+                sway.addevent(d, SwayEvent_Land, 380, -8);
                 d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
                 break;
             }

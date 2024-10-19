@@ -410,7 +410,7 @@ struct gameent : dynent, gamestate
     int lastaction, lastattack, lasthit;
     int deathtype;
     int attacking;
-    int lasttaunt, lastfootstep, lastland, lastyelp, lastswitch;
+    int lasttaunt, lastfootstep, lastyelp, lastswitch;
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots, lives, holdingflag;
     editinfo *edit;
@@ -434,7 +434,7 @@ struct gameent : dynent, gamestate
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
                 lastpain(0), lasthurt(0),
-                lastfootstep(0), lastland(0), lastyelp(0), lastswitch(0),
+                lastfootstep(0), lastyelp(0), lastswitch(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
                 attackchan(-1), idlechan(-1), powerupchan(-1), gunchan(-1),
@@ -694,6 +694,48 @@ namespace game
     extern void forceintermission();
 
     // weapon.cpp
+    enum
+    {
+        SwayEvent_Land,
+        SwayEvent_Switch
+    };
+
+    struct swayinfo
+    {
+        float fade, speed, dist;
+        float yaw, pitch, pitchadd, roll;
+        vec o, dir;
+
+        struct hudent : dynent
+        {
+            hudent()
+            {
+                type = ENT_CAMERA;
+            }
+        } guninterp;
+
+        struct swayEvent
+        {
+            int type, millis, duration, factor;
+            float pitch;
+        };
+        vector<swayEvent> swayevents;
+
+        swayinfo() : fade(0), speed(0), dist(0), yaw(0), pitch(0), pitchadd(0), roll(0), o(0, 0, 0), dir(0, 0, 0)
+        {
+        }
+        ~swayinfo()
+        {
+        }
+
+        void updatedirection(gameent* owner);
+        void update(gameent* owner);
+        void addevent(gameent* owner, int type, int duration, int factor);
+        void processevents();
+    };
+
+    extern swayinfo sway;
+
     extern int getweapon(const char *name);
     extern void shoot(gameent *d, const vec &targ);
     extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
@@ -760,7 +802,6 @@ namespace game
     extern int chooserandomplayermodel(int seed);
     extern int getplayermodel(gameent *d);
     extern void syncplayer();
-    extern void swayhudgun(int curtime);
     extern void renderai(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade = 1, bool ragdoll = false);
     extern vec hudgunorigin(int gun, const vec &from, const vec &to, gameent *d);
 }

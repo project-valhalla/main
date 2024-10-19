@@ -1,6 +1,8 @@
 // weapon.cpp: all shooting and effects code, projectile management
 #include "game.h"
 
+extern int zoom;
+
 namespace game
 {
     static const int OFFSETMILLIS = 500;
@@ -25,7 +27,11 @@ namespace game
         d->gunselect = gun;
         d->lastswitch = lastmillis;
         d->lastattack = -1;
-        if(d == self) disablezoom();
+        sway.addevent(d, SwayEvent_Switch, 500, -15);
+        if (d == self)
+        {
+            disablezoom();
+        }
         stopsound(d->gunsound, d->gunchan);
         playsound(S_WEAPON_LOAD, d);
     }
@@ -146,6 +152,44 @@ namespace game
             vec dir = vec(dest).sub(from).normalize();
             raycubepos(from, dir, dest, range, RAY_CLIPMAT|RAY_ALPHAPOLY);
         }
+    }
+
+    VARP(hudgun, 0, 1, 1);
+
+    vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d)
+    {
+        if (zoom && d == self)
+        {
+            return d->feetpos(4);
+        }
+        else if (d->muzzle.x >= 0)
+        {
+            return d->muzzle;
+        }
+
+        vec offset(from);
+        if (d != hudplayer() || isthirdperson())
+        {
+            vec front, right;
+            vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
+            offset.add(front.mul(d->radius));
+            if (d->type != ENT_AI)
+            {
+                offset.z += (d->aboveeye + d->eyeheight) * 0.75f - d->eyeheight;
+                vecfromyawpitch(d->yaw, 0, 0, -1, right);
+                offset.add(right.mul(0.5f * d->radius));
+                offset.add(front);
+            }
+            return offset;
+        }
+        offset.add(vec(to).sub(from).normalize().mul(2));
+        if (hudgun)
+        {
+            offset.sub(vec(camup).mul(1.0f));
+            offset.add(vec(camright).mul(0.8f));
+        }
+        else offset.sub(vec(camup).mul(0.8f));
+        return offset;
     }
 
     enum
@@ -1761,5 +1805,160 @@ namespace game
             obstacles.avoidnear(NULL, bnc.o.z + attacks[bnc.atk].exprad + 1, bnc.o, radius + attacks[bnc.atk].exprad);
         }
     }
-};
 
+    VARP(hudgunsway, 0, 1, 1);
+
+    FVAR(swaystep, 1, 35.8f, 100);
+    FVAR(swayside, 0, 0.02f, 1);
+    FVAR(swayup, -1, 0.03f, 1);
+    FVAR(swayrollfactor, 1, 4.2f, 30);
+    FVAR(swaydecay, 0.1f, 0.996f, 0.9999f);
+    FVAR(swayinertia, 0.0f, 0.04f, 1.0f);
+    FVAR(swaymaxinertia, 0.0f, 15.0f, 1000.0f);
+
+    swayinfo sway;
+
+    void swayinfo::updatedirection(gameent* owner)
+    {
+        float k = pow(0.7f, curtime / 10.0f);
+        dir.mul(k);
+        vec vel(owner->vel);
+        vel.add(owner->falling);
+        dir.add(vec(vel).mul((1 - k) / (8 * max(vel.magnitude(), owner->speed))));
+
+        yaw = owner->yaw;
+        pitch = owner->pitch;
+        roll = owner->roll * swayrollfactor;
+    }
+
+    void swayinfo::update(gameent* owner)
+    {
+        if (owner->physstate >= PHYS_SLOPE || owner->climbing)
+        {
+            speed = min(sqrtf(owner->vel.x * owner->vel.x + owner->vel.y * owner->vel.y), owner->speed);
+            dist += speed * curtime / 1000.0f;
+            dist = fmod(dist, 2 * swaystep);
+            fade = 1;
+        }
+        else if (fade > 0)
+        {
+            dist += speed * fade * curtime / 1000.0f;
+            dist = fmod(dist, 2 * swaystep);
+            fade -= 0.5f * (curtime * owner->speed) / (swaystep * 1000.0f);
+        }
+
+        updatedirection(owner);
+        processevents();
+
+        vecfromyawpitch(owner->yaw, 0, 0, 1, o);
+
+        float steps = dist / swaystep * M_PI;
+
+        o.mul(swayside * sinf(steps));
+
+        vec side = vec((owner->yaw + 90) * RAD, 0.0f), trans = vec(0, 0, 0);
+
+        static float speed = 0.0f;
+        float currentspeed = owner->vel.magnitude();
+        speed += (owner->vel.magnitude() - speed) * curtime * (currentspeed < speed ? 0.01f : 0.001f);
+
+        float speedfactor = clamp(speed / 150.0f, 0.0f, 1.0f);
+
+        // Magic floats to generate the animation cycle.
+        const float magic1 = cosf(steps) + 1;
+        const float magic2 = sinf(steps * 2.0f) + 1;
+        const float magic3 = (magic1 * magic1 * 0.25f) - 0.5f;
+        const float magic4 = (magic2 * magic2 * 0.25f) - 0.5f;
+        const float magic5 = sinf(lastmillis * 0.001f); // Low frequency detail.
+
+        // Walk cycle animation.
+        vec directionforward = vec(owner->yaw * RAD, 0.0f), directionside = vec((owner->yaw + 90) * RAD, 0.0f);
+        float rotationyaw = 0, rotationpitch = 0, rotationroll = 0;
+
+        trans.add(vec(directionforward).mul(swayside * magic4 * 2.0f));
+        trans.add(vec(directionside).mul(swayside * magic5 * 2.0f));
+        trans.add(vec(o).mul(-4.0f));
+        trans.z += swayup * magic2 * 1.5f;
+        trans.z -= speedfactor * 0.2f;
+
+        rotationyaw += swayside * magic3 * 24.0f;
+        rotationpitch += swayup * magic2 * -10.0f;
+
+        // "Look-around" animation.
+        static int lastsway = 0;
+        static vec2 lastcamera = vec2(camera1->yaw, camera1->pitch);
+        static vec2 cameravelocity = vec2(0, 0);
+
+        if (lastmillis != lastsway) // Prevent running the inertia math multiple times in the same frame.
+        {
+            vec2 currentcamera = vec2(camera1->yaw, camera1->pitch);
+            vec2 camerarotation = vec2(lastcamera).sub(currentcamera);
+
+            if (camerarotation.x > 180.0f) camerarotation.x -= 360.0f;
+            else if (camerarotation.x < -180.0f) camerarotation.x += 360.0f;
+
+            cameravelocity.mul(powf(swaydecay, curtime));
+            cameravelocity.add(vec2(camerarotation).mul(swayinertia));
+            cameravelocity.clamp(-swaymaxinertia, swaymaxinertia);
+
+            lastcamera = currentcamera;
+            lastsway = lastmillis;
+        }
+        trans.add(side.mul(cameravelocity.x * 0.06f));
+        trans.z += cameravelocity.y * 0.045f;
+
+        rotationyaw += cameravelocity.x * -0.3f;
+        rotationpitch += cameravelocity.y * -0.3f;
+        rotationroll += cameravelocity.x * -0.5f;
+        o.add(trans);
+
+        yaw += rotationyaw;
+        pitch += rotationpitch;
+        roll += rotationroll;
+
+        o.add(dir).add(owner->o);
+        if (!hudgunsway) o = owner->o;
+    }
+
+    void swayinfo::addevent(gameent* owner, int type, int duration, int factor)
+    {
+        if (owner != followingplayer(self)) // The first-person weapon sway is rendered only for ourselves or the player being spectated.
+        {
+            return;
+        }
+
+        swayEvent& swayevent = swayevents.add();
+        swayevent.type = type;
+        swayevent.millis = lastmillis;
+        swayevent.duration = duration;
+        swayevent.factor = factor;
+        swayevent.pitch = 0;
+    }
+
+    void swayinfo::processevents()
+    {
+        loopv(swayevents)
+        {
+            swayEvent& events = swayevents[i];
+            if (lastmillis - events.millis <= events.duration)
+            {
+                switch (events.type)
+                {
+                    case SwayEvent_Land:
+                    case SwayEvent_Switch:
+                    {
+                        float progress = clamp((lastmillis - events.millis) / (float)events.duration, 0.0f, 1.0f);
+                        events.pitch = events.factor * sinf(progress * PI);
+                        pitch += events.pitch;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                swayevents.remove(i--);
+                continue;
+            }
+        }
+    }
+};

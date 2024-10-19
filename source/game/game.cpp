@@ -314,7 +314,6 @@ namespace game
                 if(self->ragdoll) cleanragdoll(self);
                 physics::crouchplayer(self, 10, true);
                 physics::moveplayer(self, 10, true);
-                swayhudgun(curtime);
                 entities::checkitems(self);
                 if(cmode) cmode->checkitems(self);
             }

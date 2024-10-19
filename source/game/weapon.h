@@ -98,7 +98,7 @@ static const struct attackinfo
     // instagib
     { GUN_INSTA,   ACT_PRIMARY,   1200,   1,  0,   0, 0,    0, 36, 4000,  1,   1,  0,    0, 0,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_RAIL_INSTAGIB, S_IMPACT_RAILGUN,  S_HIT_WEAPON  },
     // zombie
-    { GUN_ZOMBIE,  ACT_PRIMARY,    600, 100,  0,   0, 4,    0,  0,   15,  1,  20,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_ZOMBIE,        S_IMPACT_MELEE,    S_HIT_MELEE   }
+    { GUN_ZOMBIE,  ACT_MELEE,      600, 100,  0,   0, 4,    0,  0,   15,  1,  20,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_ZOMBIE,        S_IMPACT_MELEE,    S_HIT_MELEE   }
 };
 
 static const struct guninfo

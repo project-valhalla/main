@@ -1065,9 +1065,11 @@ namespace game
 
             default: break;
         }
+
         if (hit || atk == ATK_PULSE2) return;
 
-        int impactsnd = attacks[atk].impactsound;
+        int impactsound = attacks[atk].impactsound;
+
         bool ismelee = attacks[atk].action == ACT_MELEE;
         if(iswater)
         {
@@ -1075,22 +1077,28 @@ namespace game
             {
                 addstain(STAIN_BULLETHOLE_SMALL, to, vec(from).sub(to).normalize(), 0.80f);
             }
-            impactsnd = S_IMPACT_WATER;
-
+            if (attacks[atk].rays <= 1) // Temporary measure: avoid sound spam.
+            {
+                impactsound = S_IMPACT_WATER;
+            }
         }
         else if(isglass)
         {
             particle_splash(PART_GLASS, 20, 200, to, 0xFFFFFF, 0.10 + rndscale(0.20f));
             addstain(STAIN_GLASS_HOLE, to, vec(from).sub(to).normalize(), ismelee ? 2.0f : 1.0f + rndscale(2.0f), 0xFFFFFF, rnd(4));
-            impactsnd = S_IMPACT_GLASS;
+            if (attacks[atk].rays <= 1) // Temporary measure: avoid sound spam.
+            {
+                impactsound = S_IMPACT_GLASS;
+            }
         }
         else if (ismelee)
         {
             addstain(STAIN_PUNCH_HOLE, to, vec(from).sub(to).normalize(), 2.0f);
         }
-        if (!(attacks[atk].rays > 1 && d == hudplayer()) && impactsnd)
+
+        if (validsound(impactsound))
         {
-            playsound(impactsnd, NULL, &to);
+            playsound(impactsound, NULL, &to);
         }
     }
 
@@ -1105,6 +1113,16 @@ namespace game
         vec up = to;
         switch(atk)
         {
+            case ATK_MELEE:
+            case ATK_ZOMBIE:
+            {
+                if (!local)
+                {
+                    impacteffects(atk, d, from, to, hit);
+                }
+                break;
+            }
+
             case ATK_SCATTER1:
             case ATK_SCATTER2:
             {

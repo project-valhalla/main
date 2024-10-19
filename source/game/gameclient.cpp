@@ -1922,7 +1922,10 @@ namespace game
                 gameent *s = getclient(scn);
                 if(!s || !validatk(atk)) break;
                 int gun = attacks[atk].gun;
-                if(gun >= 0) s->gunselect = gun;
+                if (validgun(gun))
+                {
+                    s->gunselect = gun;
+                }
                 if(!s->haspowerup(PU_AMMO) && s->role != ROLE_BERSERKER)
                 {
                     s->ammo[gun] -= attacks[atk].use;

@@ -757,6 +757,7 @@ namespace game
     extern void preloadbouncers();
     extern void updateweapons(int curtime);
     extern void gunselect(int gun, gameent *d);
+    extern void doweaponchangeffects(gameent* d);
     extern void weaponswitch(gameent *d);
     extern void removeprojectiles(gameent* owner = NULL);
     extern void avoidprojectiles(ai::avoidset &obstacles, float radius);

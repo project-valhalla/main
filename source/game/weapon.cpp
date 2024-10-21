@@ -25,15 +25,23 @@ namespace game
         }
         addmsg(N_GUNSELECT, "rci", d, gun);
         d->gunselect = gun;
-        d->lastswitch = lastmillis;
         d->lastattack = -1;
+        doweaponchangeffects(d);
+    }
+
+    void doweaponchangeffects(gameent* d)
+    {
+        d->lastswitch = lastmillis;
         sway.addevent(d, SwayEvent_Switch, 500, -15);
+        if (d->gunchan >= 0)
+        {
+            stopsound(d->gunsound, d->gunchan);
+        }
+        playsound(S_WEAPON_LOAD, d);
         if (d == self)
         {
             disablezoom();
         }
-        stopsound(d->gunsound, d->gunchan);
-        playsound(S_WEAPON_LOAD, d);
     }
 
     void nextweapon(int dir, bool force = false)

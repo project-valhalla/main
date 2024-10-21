@@ -381,11 +381,18 @@ namespace game
             int transition = physics::liquidtransition(&bnc, lookupmaterial(bnc.o), isinwater);
             if (transition > 0)
             {
-                particle_splash(PART_WATER, 200, 250, bnc.o, 0xFFFFFF, 0.09f, 500, 1);
-                particle_splash(PART_SPLASH, 10, 80, bnc.o, 0xFFFFFF, 7.0f, 250, -1);
+                if (bnc.radius < 1)
+                {
+                    particle_splash(PART_SPLASH, 3, 150, bnc.o, 0xFFFFFF, 1.5f, 100, 2);
+                }
+                else
+                {
+                    particle_splash(PART_WATER, 200, 250, bnc.o, 0xFFFFFF, 0.09f, 500, 1);
+                    particle_splash(PART_SPLASH, 10, 80, bnc.o, 0xFFFFFF, 7.0f, 250, -1);
+                }
                 if (transition == LiquidTransition_In)
                 {
-                    playsound(S_IMPACT_WATER_PROJ, NULL, &bnc.o);
+                    playsound(bnc.radius < 1.0f ? S_IMPACT_WATER : S_IMPACT_WATER_PROJ, NULL, &bnc.o);
                 }
             }
             switch(bnc.bouncetype)

@@ -3696,33 +3696,6 @@ namespace server
         return true;
     }
 
-    bool isvalidname(const char* name)
-    {
-        if (!name[0]) return false; // Name is empty.
-
-        // Loop through the entire string to check for spaces.
-        bool hasnonspacecharacter = false;
-
-        for (const char* ptr = name; *ptr; ++ptr)
-        {
-            if (!isspace(*ptr))
-            {
-                // Check if there is any non-space character.
-                hasnonspacecharacter = true;
-                break;
-            }
-        }
-
-        // Check if the name is entirely spaces or has leading/trailing spaces.
-        const char* end = name + strlen(name) - 1;
-        if (!hasnonspacecharacter || isspace(name[0]) || isspace(*end))
-        {
-            return false; // Fully composed of spaces or has leading/trailing spaces.
-        }
-
-        return true; // Name is valid.
-    }
-
     void parsepacket(int sender, int chan, packetbuf &p)     // has to parse exactly each byte of the packet
     {
         if(sender<0 || p.packet->flags&ENET_PACKET_FLAG_UNSEQUENCED || chan > 2) return;
@@ -4131,7 +4104,7 @@ namespace server
                 QUEUE_MSG;
                 getstring(text, p);
                 filtertext(ci->name, text, false, false, true, false, MAXNAMELEN);
-                if (!isvalidname(ci->name))
+                if (!ci->name[0])
                 {
                     copystring(ci->name, "player");
                 }

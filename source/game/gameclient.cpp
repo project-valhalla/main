@@ -146,38 +146,11 @@ namespace game
 
     VARP(deadpush, 1, 7, 20);
 
-    bool isvalidname(const char* name)
-    {
-        if (!name[0]) return false; // Name is empty.
-
-        // Loop through the entire string to check for spaces.
-        bool hasnonspacecharacter = false;
-
-        for (const char* ptr = name; *ptr; ++ptr)
-        {
-            if (!isspace(*ptr))
-            {
-                // Check if there is any non-space character.
-                hasnonspacecharacter = true;
-                break;
-            }
-        }
-
-        // Check if the name is entirely spaces or has leading/trailing spaces.
-        const char* end = name + strlen(name) - 1;
-        if (!hasnonspacecharacter || isspace(name[0]) || isspace(*end))
-        {
-            return false; // Fully composed of spaces or has leading/trailing spaces.
-        }
-
-        return true; // Name is valid.
-    }
-
     void switchname(const char* name)
     {
         filtertext(self->name, name, false, false, true, false, MAXNAMELEN);
         if (!self->name[0]) copystring(self->name, "player");
-        if (!isvalidname(self->name))
+        if (!name[0])
         {
             copystring(self->name, "player");
         }

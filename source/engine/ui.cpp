@@ -644,10 +644,7 @@ namespace UI
 
         void hide()
         {
-            loopchildren(o,
-            {
-                o->hide();
-            });
+            Object::hide();
             if(onhide) execute(onhide);
         }
 
@@ -827,7 +824,7 @@ namespace UI
             resetstate();
         }
 
-        void hide() {};
+        void hide() { Object::hide(); };
 
         bool show(Window *w)
         {
@@ -2035,7 +2032,7 @@ namespace UI
             pophudmatrix();
         }
 
-        void hide() { cleartext(); }
+        void hide() { Object::hide(); cleartext(); }
 
         void cleartext()
         {
@@ -2141,82 +2138,78 @@ namespace UI
 
     struct Font : Object
     {
-        string font;
+        char *font;
 
-        Font() { font[0] = '\0'; }
+        Font() : font(NULL) {}
+        ~Font() { delete[] font; }
 
         void setup(const char *name)
         {
             Object::setup();
-            copystring(font, name, MAXSTRLEN);
+            SETSTR(font, name);
         }
-
-        #define WITHFONT(body) do { \
-            pushfont(); \
-            setfont(font); \
-            body; \
-            popfont(); \
-        } while(0); \
 
         void layout()
         {
-            WITHFONT({
-                Object::layout();
-            });
+            pushfont();
+            setfont(font);
+            Object::layout();
+            popfont();
         }
 
         void draw(float sx, float sy)
         {
-            WITHFONT({
-                Object::draw(sx, sy);
-            });
+            pushfont();
+            setfont(font);
+            Object::draw(sx, sy);
+            popfont();
         }
 
         void buildchildren(uint *contents)
         {
-            WITHFONT({
-                Object::buildchildren(contents);
-            });
+            pushfont();
+            setfont(font);
+            Object::buildchildren(contents);
+            popfont();
         }
 
         #define DOSTATE(flags, func) \
             void func##children(float cx, float cy, int mask, bool inside, int setflags) \
             { \
-                WITHFONT({ \
-                    Object::func##children(cx, cy, mask, inside, setflags); \
-                }); \
+                pushfont(); \
+                setfont(font); \
+                Object::func##children(cx, cy, mask, inside, setflags); \
+                popfont(); \
             } \
         DOSTATES
         #undef DOSTATE
 
         bool rawkey(int code, bool isdown)
         {
-            bool result;
-            WITHFONT({
-                result = Object::rawkey(code, isdown);
-            });
+            pushfont();
+            setfont(font);
+            bool result = Object::rawkey(code, isdown);
+            popfont();
             return result;
         }
 
         bool key(int code, bool isdown)
         {
-            bool result;
-            WITHFONT({
-                result = Object::key(code, isdown);
-            });
+            pushfont();
+            setfont(font);
+            bool result = Object::key(code, isdown);
+            popfont();
             return result;
         }
 
         bool textinput(const char *str, int len)
         {
-            bool result;
-            WITHFONT({
-                result = Object::textinput(str, len);
-            });
+            pushfont();
+            setfont(font);
+            bool result = Object::textinput(str, len);
+            popfont();
             return result;
         }
-
-        #undef WITHFONT
     };
 
     float uicontextscale = 0;

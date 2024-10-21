@@ -1034,7 +1034,7 @@ void setupshaders()
         "void main(void)\n"
         "{\n"
         "    gl_Position = hudmatrix * vvertex;\n"
-        "    texcoord0 = vtexcoord0;\n" 
+        "    texcoord0 = vtexcoord0;\n"
         "    colorscale = vcolor;\n"
         "}\n",
         "uniform sampler2DRect tex0;\n"

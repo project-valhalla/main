@@ -1617,6 +1617,7 @@ namespace game
                 if(prot!=PROTOCOL_VERSION)
                 {
                     conoutf(CON_ERROR, "you are using a different game protocol (you: %d, server: %d)", PROTOCOL_VERSION, prot);
+                    setsvar("lastdisconnectreason", "protocol mismatch");
                     disconnect();
                     return;
                 }

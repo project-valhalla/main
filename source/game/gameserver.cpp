@@ -1340,7 +1340,7 @@ namespace server
         }
         if(gamemillis > prevmillis)
         {
-            if(!interm) sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
+            if(!interm) sendf(-1, 1, "ri3", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1), TimeUpdate_Match);
 #ifndef STANDALONE
             clearscreeneffects();
 #endif
@@ -1969,6 +1969,7 @@ namespace server
         {
             putint(p, N_TIMEUP);
             putint(p, gamewaiting || (gamemillis < gamelimit && !interm) ? max((gamelimit - gamemillis)/1000, 1) : 0);
+            putint(p, TimeUpdate_Match);
         }
         if(!notgotitems)
         {
@@ -2130,14 +2131,13 @@ namespace server
      * useful to decide whether to end a game or a round
      * when to start overtime or when to reset a timer
      */
-    VAR(overtime, 0, 1, 1);
-    VAR(overtimeminutes, 1, 2, 10);
+    VAR(overtime, 0, 2, 10);
 
-    void updatetimelimit(int add, bool reset = false)
+    void updatetimelimit(int add, bool reset = false, int type = TimeUpdate_Match)
     {
         if(reset) gamelimit = min(gamelimit, gamemillis);
-        gamelimit = max(gamemillis, gamelimit) + add*60000;
-        sendf(-1, 1, "ri2", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1));
+        gamelimit = max(gamemillis, gamelimit) + add * 60000;
+        sendf(-1, 1, "ri3", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1), type);
     }
 
     bool checkovertime(bool timeisup)
@@ -2178,17 +2178,22 @@ namespace server
         }
         if(!tied) return false;
         sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, m_teammode ? "\f2Overtime: teams are tied" : "\f2Overtime: scores are tied");
-        if(!m_round && timeisup) updatetimelimit(overtimeminutes);
+        if (!m_round && timeisup)
+        {
+            updatetimelimit(overtime, false, TimeUpdate_Overtime);
+        }
         return true;
     }
 
+    VAR(intermissionlimit, 10, 30, 60);
+
     void gameover()
     {
-        sendf(-1, 1, "ri2", N_TIMEUP, 0);
+        sendf(-1, 1, "ri3", N_TIMEUP, intermissionlimit, TimeUpdate_Intermission);
         if(smode) smode->intermission();
         serverevents::invalidate();
         changegamespeed(100);
-        interm = gamemillis + 45000;
+        interm = gamemillis + intermissionlimit * 1000;
     }
 
     void checkintermission(bool force = false)
@@ -2637,7 +2642,7 @@ namespace server
 
         if(gamelimit && m_timed && smapname[0])
         {
-            sendf(-1, 1, "ri2", N_TIMEUP, gamewaiting || (gamemillis < gamelimit && !interm) ? max((gamelimit - gamemillis)/1000, 1) : 0);
+            sendf(-1, 1, "ri3", N_TIMEUP, gamewaiting || (gamemillis < gamelimit && !interm) ? max((gamelimit - gamemillis)/1000, 1) : 0, TimeUpdate_Match);
         }
 
         loopv(clients)

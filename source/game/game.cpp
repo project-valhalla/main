@@ -751,15 +751,13 @@ namespace game
         ai::kill(d, actor);
     }
 
-    void timeupdate(int secs)
+    void updatetimer(int time, int type)
     {
-        if(secs > 0) // set client side timer
+        maplimit = lastmillis + time * 1000;
+        if (type == TimeUpdate_Intermission)
         {
-            maplimit = lastmillis + secs*1000;
-        }
-        else // end the game and start intermission timer
-        {
-            maplimit = lastmillis + 45*1000;
+            // End the game and start the intermission period,
+            // to allow players to vote the next map and catch a breather.
             intermission = true;
             self->attacking = ACT_IDLE;
             self->pitch = self->roll = 0;

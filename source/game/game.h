@@ -79,6 +79,14 @@ enum
     ROUND_UNWAIT = 1<<4
 };
 
+// Time updates.
+enum
+{
+    TimeUpdate_Match = 0,
+    TimeUpdate_Overtime,
+    TimeUpdate_Intermission
+};
+
 // network messages codes, c2s, c2c, s2c
 enum
 {
@@ -121,7 +129,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_ANNOUNCE, 3,
     N_MAPCHANGE, 0, N_MAPVOTE, 0, N_TEAMINFO, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
     N_PING, 2, N_PONG, 2, N_CLIENTPING, 2,
-    N_TIMEUP, 2, N_FORCEINTERMISSION, 1,
+    N_TIMEUP, 3, N_FORCEINTERMISSION, 1,
     N_SERVMSG, 0, N_ITEMLIST, 0, N_RESUME, 0,
     N_EDITMODE, 2, N_EDITENT, 11, N_EDITF, 16, N_EDITT, 16, N_EDITM, 16, N_FLIP, 14, N_COPY, 14, N_PASTE, 14, N_ROTATE, 15, N_REPLACE, 17, N_DELCUBE, 14, N_CALCLIGHT, 1, N_REMIP, 1, N_EDITVSLOT, 16, N_UNDO, 0, N_REDO, 0, N_NEWMAP, 2, N_GETMAP, 1, N_SENDMAP, 0, N_EDITVAR, 0,
     N_MASTERMODE, 2, N_MUTE, 0, N_KICK, 0, N_CLEARBANS, 1, N_CURRENTMASTER, 0, N_SPECTATOR, 4, N_SETMASTER, 0, N_SETTEAM, 0,
@@ -659,7 +667,7 @@ namespace game
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void checkannouncements(gameent *actor, int flags);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = KILL_NONE);
-    extern void timeupdate(int timeremain);
+    extern void updatetimer(int time, int type);
     extern void msgsound(int n, physent *d = NULL);
     extern void doaction(int act);
     extern void addroll(gameent *d, float amount);

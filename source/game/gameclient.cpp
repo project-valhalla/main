@@ -2229,8 +2229,12 @@ namespace game
                 break;
 
             case N_TIMEUP:
-                timeupdate(getint(p));
+            {
+                int time = getint(p);
+                int update = getint(p);
+                updatetimer(time, update);
                 break;
+            }
 
             case N_SERVMSG:
                 getstring(text, p);

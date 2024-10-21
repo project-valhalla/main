@@ -762,6 +762,7 @@ namespace game
             maplimit = lastmillis + 45*1000;
             intermission = true;
             self->attacking = ACT_IDLE;
+            self->pitch = self->roll = 0;
             if(cmode) cmode->gameover();
             conoutf(CON_GAMEINFO, "\f2Intermission: game has ended!");
             bestteams.shrink(0);

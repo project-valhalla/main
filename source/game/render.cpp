@@ -309,8 +309,8 @@ namespace game
                 anim = attack;
                 basetime = lastaction;
             }
-
-            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+            bool canmove = physics::canmove(d);
+            if (d->inwater && d->physstate <= PHYS_FALL) anim |= (((canmove && (d->move || d->strafe)) || d->vel.z + d->falling.z > 0 ? ANIM_SWIM : ANIM_SINK) | ANIM_LOOP) << ANIM_SECONDARY;
             else
             {
                 static const int dirs[9] =
@@ -320,8 +320,8 @@ namespace game
                     ANIM_RUN_NE, ANIM_RUN_N, ANIM_RUN_NW
                 };
                 int dir = dirs[(d->move+1)*3 + (d->strafe+1)];
-                if(d->timeinair>100) anim |= ((dir && game::allowmove(d) ? dir+ANIM_JUMP_N-ANIM_RUN_N : ANIM_JUMP) | ANIM_END) << ANIM_SECONDARY;
-                else if(dir && game::allowmove(d)) anim |= (dir | ANIM_LOOP) << ANIM_SECONDARY;
+                if(d->timeinair>100) anim |= ((dir && canmove ? dir+ANIM_JUMP_N-ANIM_RUN_N : ANIM_JUMP) | ANIM_END) << ANIM_SECONDARY;
+                else if(dir && canmove) anim |= (dir | ANIM_LOOP) << ANIM_SECONDARY;
             }
 
             if(d->crouching) switch((anim>>ANIM_SECONDARY)&ANIM_INDEX)
@@ -379,10 +379,9 @@ namespace game
                 anim = attack < 0 ? -attack : attack;
                 basetime = lastaction;
             }
-
-            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((d->move || d->strafe) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
             else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
-            else if(allowmove(d) && (d->move || d->strafe))
+            else if(d->move || d->strafe)
             {
                 if(d->move>0) anim |= (ANIM_RUN_N|ANIM_LOOP)<<ANIM_SECONDARY;
                 else if(d->strafe)

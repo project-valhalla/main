@@ -584,6 +584,7 @@ namespace physics
     extern void physicsframe();
     extern void updatephysstate(gameent* d);
 
+    extern bool canmove(gameent* d);
     extern bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float grav);
     extern bool isbouncing(physent* d, float elasticity, float waterfric, float grav);
     extern bool hascamerapitchmovement(gameent* d);
@@ -638,7 +639,6 @@ namespace game
 
     extern bool clientoption(const char *arg);
     extern bool gamewaiting, betweenrounds, hunterchosen;
-    extern bool allowmove(physent* d);
     extern bool isally(gameent *a, gameent *b);
     extern bool isinvulnerable(gameent *target, gameent *actor);
 

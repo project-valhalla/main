@@ -195,9 +195,15 @@ namespace physics
         return false;
     }
 
+    bool canmove(gameent* d)
+    {
+        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
+        return !intermission && !(gore && d->gibbed());
+    }
+
     bool trystepdown(gameent* d, vec& dir, bool init = false)
     {
-        if ((!d->move && !d->strafe) || !allowmove(d)) return false;
+        if ((!d->move && !d->strafe) || !canmove(d)) return false;
         vec old(d->o);
         d->o.z -= STAIRHEIGHT;
         d->zmargin = -STAIRHEIGHT;
@@ -724,7 +730,7 @@ namespace physics
 
     bool isplayermoving(gameent* d, int moveres, bool local, int curtime)
     {
-        if (!allowmove(d)) return false;
+        if (!canmove(d)) return false;
         int material = materialcheck(d);
         bool isinwater = isliquidmaterial(material & MATF_VOLUME);
         bool isfloating = isFloating(d);

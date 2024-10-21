@@ -438,12 +438,6 @@ namespace game
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
 
-    bool allowmove(physent* d)
-    {
-        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(gore && ((gameent*)d)->gibbed());
-    }
-
     bool isally(gameent *a, gameent *b)
     {
         return (m_teammode && validteam(a->team) && validteam(b->team) && sameteam(a->team, b->team))
@@ -465,12 +459,6 @@ namespace game
         return self->state==CS_SPECTATOR || m_edit || (m_berserker && self->role == ROLE_BERSERKER);
     }
     ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
-
-    bool allowmove(gameent* d)
-    {
-        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(gore && ((gameent*)d)->gibbed());
-    }
 
     bool editing() { return m_edit; }
 

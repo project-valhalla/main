@@ -391,7 +391,7 @@ static inline void add_text_to_layout(const char *markup, int len, PangoLayout *
 }
 #undef MARKUP_CASE
 
-static inline PangoLayout *measure_text_internal(const char *str, int len, int maxwidth, bvec initial_color, int &width, int &height, int *map_markup_to_text, int *map_text_to_markup, const char *language)
+static inline PangoLayout *measure_text_internal(const char *str, int len, int maxwidth, int align, int justify, bvec initial_color, int &width, int &height, int &offset, int *map_markup_to_text, int *map_text_to_markup, const char *language)
 {
     // create cairo context
     cairo_t *cr = cairo_create(dummy_surface);
@@ -401,7 +401,7 @@ static inline PangoLayout *measure_text_internal(const char *str, int len, int m
     PangoLayout *layout = pango_cairo_create_layout(cr);
     if(!layout)
     {
-        width = height = 0;
+        width = height = offset = 0;
         cairo_destroy(cr);
         return NULL;
     }
@@ -410,34 +410,41 @@ static inline PangoLayout *measure_text_internal(const char *str, int len, int m
     pango_font_description_set_absolute_size(curfont->desc, fontsize * PANGO_SCALE); // pango 1.8
     pango_layout_set_font_description(layout, curfont->desc);
 
-    // set maximum length for line wrapping
+    // line wrapping: set maximum width, alignment and justification
     if(maxwidth > 0)
     {
         pango_layout_set_width(layout, maxwidth * PANGO_SCALE);
         pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
+        pango_layout_set_alignment(layout, align > 0 ? PANGO_ALIGN_RIGHT : align < 0 ? PANGO_ALIGN_LEFT : PANGO_ALIGN_CENTER);
+        pango_layout_set_justify(layout, justify ? TRUE : FALSE);
     }
 
     add_text_to_layout(str, len, layout, initial_color, map_markup_to_text, map_text_to_markup, language);
 
     // get pixel size
-    pango_layout_get_pixel_size(layout, &width, &height);
+    PangoRectangle r;
+    pango_layout_get_extents(layout, NULL, &r);
+    width  = r.width  / PANGO_SCALE;
+    height = r.height / PANGO_SCALE;
+    offset = -r.x     / PANGO_SCALE;
 
     cairo_destroy(cr);
     return layout;
 }
-void measure_text(const char *str, int maxwidth, int &width, int &height, const char *language)
+void measure_text(const char *str, int maxwidth, int &width, int &height, int align, int justify, const char *language)
 {
-    PangoLayout *layout = measure_text_internal(str, strlen(str), maxwidth, bvec(0, 0, 0), width, height, NULL, NULL, language);
+    int _offset;
+    PangoLayout *layout = measure_text_internal(str, strlen(str), maxwidth, align, justify, bvec(0, 0, 0), width, height, _offset, NULL, NULL, language);
     if(layout) g_object_unref(layout);
 }
 
-void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_color, int cursor, float outline, bvec outline_color, const char *language)
+void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_color, int cursor, float outline, bvec outline_color, int align, int justify, const char *language)
 {
     // get dimensions and pango layout
-    int width, height;
+    int width, height, offset;
     const int len = strlen(str);
     int map_markup_to_text[len+1];
-    PangoLayout *layout = measure_text_internal(str, len, maxwidth, initial_color, width, height, cursor >= 0 ? map_markup_to_text : NULL, NULL, language);
+    PangoLayout *layout = measure_text_internal(str, len, maxwidth, align, justify, initial_color, width, height, offset, cursor >= 0 ? map_markup_to_text : NULL, NULL, language);
     if(!layout) { info = {0, 0, 0}; return; }
     if(!width || !height) { g_object_unref(layout); info = {0, 0, 0}; return; }
 
@@ -446,6 +453,7 @@ void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_co
     cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(surface);
     cairo_set_font_options(cr, options);
+    cairo_move_to(cr, offset, 0);
 
     // draw text onto the surface
     if(outline)
@@ -507,7 +515,7 @@ void prepare_text_particle(const char *str, textinfo &info, bvec initial_color, 
         info = p.ti;
         return;
     }
-    prepare_text(str, p.ti, 0, initial_color, -1, outline, outline_color, language);
+    prepare_text(str, p.ti, 0, initial_color, -1, outline, outline_color, -1, 0, language);
     if(!p.ti.tex) { info = {0, 0, 0}; return; }
     if(particle_queue.length() >= 256)
     {
@@ -555,10 +563,10 @@ void draw_text(textinfo info, float left, float top, int a, bool black)
     gle::end();
     // NOTE: `info.tex` is not deleted here!
 }
-void draw_text(const char *str, float left, float top, int r, int g, int b, int a, const char *language)
+void draw_text(const char *str, float left, float top, int r, int g, int b, int a, int maxwidth, int align, int justify, const char *language)
 {
     textinfo info;
-    prepare_text(str, info, 0, bvec(r, g, b), -1, 0, bvec(0, 0, 0), language);
+    prepare_text(str, info, maxwidth, bvec(r, g, b), -1, 0, bvec(0, 0, 0), align, justify, language);
     if(!info.tex) return;
     draw_text(info, left, top, a);
     glDeleteTextures(1, &info.tex);
@@ -587,13 +595,13 @@ void gettextres(int &w, int &h)
 }
 
 // used by the text editor
-int text_visible(const char *str, float hitx, float hity, int maxwidth, const char *language)
+int text_visible(const char *str, float hitx, float hity, int maxwidth, int align, int justify, const char *language)
 {
-    int width, height;
+    int width, height, _offset;
     const int len = strlen(str);
     if(!len) return 0;
     int map_text_to_markup[len+1];
-    PangoLayout *layout = measure_text_internal(str, len, maxwidth, bvec(0, 0, 0), width, height, NULL, map_text_to_markup, language);
+    PangoLayout *layout = measure_text_internal(str, len, maxwidth, align, justify, bvec(0, 0, 0), width, height, _offset, NULL, map_text_to_markup, language);
     if(!layout) return len;
     if(!width || !height) { g_object_unref(layout); return len; }
 
@@ -605,13 +613,13 @@ int text_visible(const char *str, float hitx, float hity, int maxwidth, const ch
 }
 
 // used by the text editor
-void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth, const char *language)
+void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth, int align, int justify, const char *language)
 {
-    int width, height;
+    int width, height, _offset;
     const int len = strlen(str);
     if(!len) { cx = cy = 0; return; }
     int map_markup_to_text[len+1];
-    PangoLayout *layout = measure_text_internal(str, len, maxwidth, bvec(0, 0, 0), width, height, map_markup_to_text, NULL, language);
+    PangoLayout *layout = measure_text_internal(str, len, maxwidth, align, justify, bvec(0, 0, 0), width, height, _offset, map_markup_to_text, NULL, language);
     if(!layout) { cx = cy = 0; return; }
     if(!width || !height) { g_object_unref(layout); cx = cy = 0; return; }
 

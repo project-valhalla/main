@@ -256,9 +256,9 @@ extern bool setfont(const char *name);
 static inline void setfontsize(float size) { fontsize = size; }
 extern void pushfont();
 extern bool popfont();
-extern void draw_text(const char *str, float left, float top, int r = 255, int g = 255, int b = 255, int a = 255, const char *language = NULL);
+extern void draw_text(const char *str, float left, float top, int r = 255, int g = 255, int b = 255, int a = 255, int maxwidth = 0, int align = -1, int justify = 0, const char *language = NULL);
 extern void draw_textf(const char *fstr, float left, float top, ...) PRINTFARGS(1, 4);
-extern void measure_text(const char *str, int maxwidth, int &width, int &height, const char *language = NULL);
+extern void measure_text(const char *str, int maxwidth, int &width, int &height, int align = -1, int justify = 0, const char *language = NULL);
 
 // texture
 

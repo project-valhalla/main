@@ -59,10 +59,10 @@ extern void done_pangocairo();
 extern int  getcurfontid();
 extern void gettextres(int &w, int &h);
 extern void draw_text(textinfo info, float left, float top, int a = 255, bool black = false);
-extern void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_color = bvec(255, 255, 255), int cursor = -1, float outline = 0, bvec outline_color = bvec(0, 0, 0), const char *language = NULL);
+extern void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_color = bvec(255, 255, 255), int cursor = -1, float outline = 0, bvec outline_color = bvec(0, 0, 0), int align = -1, int justify = 0, const char *language = NULL);
 extern void prepare_text_particle(const char *str, textinfo &info, bvec initial_color = bvec(255, 255, 255), float outline = 0, bvec outline_color = bvec(0, 0, 0), const char *language = NULL);
-extern int  text_visible(const char *str, float hitx, float hity, int maxwidth, const char *language = NULL);
-extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth, const char *language = NULL);
+extern int  text_visible(const char *str, float hitx, float hity, int maxwidth, int align = -1, int justify = 0, const char *language = NULL);
+extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth, int align = -1, int justify = 0, const char *language = NULL);
 extern void reloadfonts();
 
 // texture

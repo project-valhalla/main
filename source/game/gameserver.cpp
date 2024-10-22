@@ -3351,7 +3351,7 @@ namespace server
         ci->state.respawn();
         ci->state.lasttimeplayed = lastmillis;
         aimanager::addclient(ci);
-        sendf(-1, 1, "ri3", N_SPECTATOR, ci->clientnum, 0, ci->ghost);
+        sendf(-1, 1, "ri4", N_SPECTATOR, ci->clientnum, 0, ci->ghost);
         if(ci->clientmap[0] || ci->mapcrc) checkmaps();
         if(!hasmap(ci)) rotatemap(true);
         checkplayers();

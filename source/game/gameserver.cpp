@@ -1125,7 +1125,7 @@ namespace server
         writedemo(chan, data, len);
     }
 
-    int welcomepacket(packetbuf &p, clientinfo *ci);
+    int welcomedemopacket(packetbuf& p);
     void sendwelcome(clientinfo *ci);
 
     void setupdemorecord()
@@ -1136,7 +1136,11 @@ namespace server
         if(!demotmp) return;
 
         stream *f = opengzfile(NULL, "wb", demotmp);
-        if(!f) { DELETEP(demotmp); return; }
+        if (!f)
+        { 
+            DELETEP(demotmp);
+            return;
+        }
 
         sendservmsg("recording demo");
 
@@ -1150,7 +1154,7 @@ namespace server
         demorecord->write(&hdr, sizeof(demoheader));
 
         packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-        welcomepacket(p, NULL);
+        welcomedemopacket(p);
         writedemo(1, p.buf, p.len);
     }
 
@@ -1898,11 +1902,16 @@ namespace server
         gs.lastmove = lastmillis;
     }
 
+    int welcomepacket(packetbuf& p, clientinfo* ci);
+
     void sendwelcome(clientinfo *ci)
     {
-        packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
-        int chan = welcomepacket(p, ci);
-        sendpacket(ci->clientnum, chan, p.finalize());
+        if (ci)
+        {
+            packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
+            int chan = welcomepacket(p, ci);
+            sendpacket(ci->clientnum, chan, p.finalize());
+        }
     }
 
     void putinitclient(clientinfo *ci, packetbuf &p, bool notify = false)
@@ -1950,17 +1959,9 @@ namespace server
                (smapname[0] && (!gamelimit || !m_timed || (m_round && !interm) || (gamemillis < gamelimit) || (ci->state.state==CS_SPECTATOR && !ci->privilege && !ci->local) || numclients(ci->clientnum, true, true, true)));
     }
 
-    int welcomepacket(packetbuf &p, clientinfo *ci)
+    int welcomedemopacket(packetbuf& p)
     {
         putint(p, N_WELCOME);
-
-        if (ci)
-        {
-            putint(p, N_COUNTRY);
-            putint(p, ci->clientnum);
-            sendstring(ci->customflag_code, p);
-            sendstring(ci->customflag_name, p);
-        }
 
         putint(p, N_MAPCHANGE);
         sendstring(smapname, p);
@@ -1968,13 +1969,102 @@ namespace server
         putint(p, mutators);
         putint(p, gamescorelimit);
         putint(p, notgotitems ? 1 : 0);
-        if(!ci || (gamelimit && m_timed && smapname[0]))
+        putint(p, N_TIMEUP);
+        putint(p, gamewaiting || (gamemillis < gamelimit && !interm) ? max((gamelimit - gamemillis) / 1000, 1) : 0);
+        putint(p, TimeUpdate_Match);
+        if (!notgotitems)
+        {
+            putint(p, N_ITEMLIST);
+            loopv(sents) if (sents[i].spawned)
+            {
+                putint(p, i);
+                putint(p, sents[i].type);
+            }
+            putint(p, -1);
+        }
+        bool hasmaster = false;
+        if (mastermode != MM_OPEN)
+        {
+            putint(p, N_CURRENTMASTER);
+            putint(p, mastermode);
+            hasmaster = true;
+        }
+        loopv(clients) if (clients[i]->privilege >= PRIV_MASTER)
+        {
+            if (!hasmaster)
+            {
+                putint(p, N_CURRENTMASTER);
+                putint(p, mastermode);
+                hasmaster = true;
+            }
+            putint(p, clients[i]->clientnum);
+            putint(p, clients[i]->privilege);
+        }
+        if (hasmaster) putint(p, -1);
+        if (gamepaused)
+        {
+            putint(p, N_PAUSEGAME);
+            putint(p, 1);
+            putint(p, -1);
+        }
+        if (gamespeed != 100)
+        {
+            putint(p, N_GAMESPEED);
+            putint(p, gamespeed);
+            putint(p, -1);
+        }
+        if (m_teammode)
+        {
+            putint(p, N_TEAMINFO);
+            loopi(MAXTEAMS)
+            {
+                teaminfo& t = teaminfos[i];
+                putint(p, t.frags);
+            }
+        }
+        putint(p, N_RESUME);
+        loopv(clients)
+        {
+            clientinfo* oi = clients[i];
+            putint(p, oi->clientnum);
+            putint(p, oi->state.state);
+            putint(p, oi->state.frags);
+            putint(p, oi->state.flags);
+            putint(p, oi->state.deaths);
+            putint(p, oi->state.points);
+            putint(p, oi->state.poweruptype);
+            putint(p, oi->state.powerupmillis);
+            putint(p, oi->state.role);
+            sendstate(oi->state, p);
+        }
+        putint(p, -1);
+        welcomeinitclient(p, -1);
+        if (smode) smode->initclient(NULL, p, true);
+        return 1;
+    }
+
+    int welcomepacket(packetbuf &p, clientinfo *ci)
+    {
+        putint(p, N_WELCOME);
+
+        putint(p, N_COUNTRY);
+        putint(p, ci->clientnum);
+        sendstring(ci->customflag_code, p);
+        sendstring(ci->customflag_name, p);
+
+        putint(p, N_MAPCHANGE);
+        sendstring(smapname, p);
+        putint(p, gamemode);
+        putint(p, mutators);
+        putint(p, gamescorelimit);
+        putint(p, notgotitems ? 1 : 0);
+        if (gamelimit && m_timed && smapname[0])
         {
             putint(p, N_TIMEUP);
             putint(p, gamewaiting || (gamemillis < gamelimit && !interm) ? max((gamelimit - gamemillis)/1000, 1) : 0);
             putint(p, TimeUpdate_Match);
         }
-        if(!notgotitems)
+        if (!notgotitems)
         {
             putint(p, N_ITEMLIST);
             loopv(sents) if(sents[i].spawned)
@@ -1985,15 +2075,15 @@ namespace server
             putint(p, -1);
         }
         bool hasmaster = false;
-        if(mastermode != MM_OPEN)
+        if (mastermode != MM_OPEN)
         {
             putint(p, N_CURRENTMASTER);
             putint(p, mastermode);
             hasmaster = true;
         }
-        loopv(clients) if(clients[i]->privilege >= PRIV_MASTER)
+        loopv(clients) if (clients[i]->privilege >= PRIV_MASTER)
         {
-            if(!hasmaster)
+            if (!hasmaster)
             {
                 putint(p, N_CURRENTMASTER);
                 putint(p, mastermode);
@@ -2002,20 +2092,20 @@ namespace server
             putint(p, clients[i]->clientnum);
             putint(p, clients[i]->privilege);
         }
-        if(hasmaster) putint(p, -1);
-        if(gamepaused)
+        if (hasmaster) putint(p, -1);
+        if (gamepaused)
         {
             putint(p, N_PAUSEGAME);
             putint(p, 1);
             putint(p, -1);
         }
-        if(gamespeed != 100)
+        if (gamespeed != 100)
         {
             putint(p, N_GAMESPEED);
             putint(p, gamespeed);
             putint(p, -1);
         }
-        if(m_teammode)
+        if (m_teammode)
         {
             putint(p, N_TEAMINFO);
             loopi(MAXTEAMS)
@@ -2024,16 +2114,13 @@ namespace server
                 putint(p, t.frags);
             }
         }
-        if(ci)
+        putint(p, N_SETTEAM);
+        putint(p, ci->clientnum);
+        putint(p, ci->team);
+        putint(p, -1);
+        if ((m_demo || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
         {
-            putint(p, N_SETTEAM);
-            putint(p, ci->clientnum);
-            putint(p, ci->team);
-            putint(p, -1);
-        }
-        if(ci && (m_demo || m_mp(gamemode)) && ci->state.state!=CS_SPECTATOR)
-        {
-            if((smode && !smode->canspawn(ci, true)) || (((m_hunt && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
+            if ((smode && !smode->canspawn(ci, true)) || (((m_hunt && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
             {
                 ci->state.state = CS_DEAD;
                 putint(p, N_FORCEDEATH);
@@ -2050,7 +2137,7 @@ namespace server
                 gs.lastspawn = gamemillis;
             }
         }
-        if(ci && ci->state.state==CS_SPECTATOR)
+        if (ci && ci->state.state==CS_SPECTATOR)
         {
             putint(p, N_SPECTATOR);
             putint(p, ci->clientnum);
@@ -2058,13 +2145,13 @@ namespace server
             putint(p, ci->ghost);
             sendf(-1, 1, "ri4x", N_SPECTATOR, ci->clientnum, 1, ci->ghost, ci->clientnum);
         }
-        if(!ci || clients.length()>1)
+        if (clients.length() > 1)
         {
             putint(p, N_RESUME);
             loopv(clients)
             {
                 clientinfo *oi = clients[i];
-                if(ci && oi->clientnum==ci->clientnum) continue;
+                if(oi->clientnum == ci->clientnum) continue;
                 putint(p, oi->clientnum);
                 putint(p, oi->state.state);
                 putint(p, oi->state.frags);
@@ -2077,9 +2164,15 @@ namespace server
                 sendstate(oi->state, p);
             }
             putint(p, -1);
-            welcomeinitclient(p, ci ? ci->clientnum : -1);
+            if (ci)
+            {
+                welcomeinitclient(p, ci->clientnum);
+            }
         }
-        if(smode) smode->initclient(ci, p, true);
+        if (smode)
+        {
+            smode->initclient(ci, p, true);
+        }
         return 1;
     }
 
@@ -3649,7 +3742,11 @@ namespace server
             clientinfo &e = *clients[i];
             if(e.clientnum != ci->clientnum && e.needclipboard - ci->lastclipboard >= 0)
             {
-                if(!flushed) { flushserver(true); flushed = true; }
+                if (!flushed)
+                { 
+                    flushserver(true);
+                    flushed = true;
+                }
                 sendpacket(e.clientnum, 1, ci->clipboard);
             }
         }

@@ -1954,10 +1954,13 @@ namespace server
     {
         putint(p, N_WELCOME);
 
-        putint(p, N_COUNTRY);
-        putint(p, ci->clientnum);
-        sendstring(ci->customflag_code, p);
-        sendstring(ci->customflag_name, p);
+        if (ci)
+        {
+            putint(p, N_COUNTRY);
+            putint(p, ci->clientnum);
+            sendstring(ci->customflag_code, p);
+            sendstring(ci->customflag_name, p);
+        }
 
         putint(p, N_MAPCHANGE);
         sendstring(smapname, p);

@@ -720,9 +720,12 @@ namespace game
             }
             else if (killsound)
             {
-                if (actor == d && validatk(atk))
+                if (actor == d)
                 {
-                    playsound(S_KILL_SELF);
+                    if (validatk(atk))
+                    {
+                        playsound(S_KILL_SELF);
+                    }
                 }
                 else if (isally(actor, d))
                 {

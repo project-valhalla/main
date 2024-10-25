@@ -195,9 +195,15 @@ namespace physics
         return false;
     }
 
+    bool canmove(gameent* d)
+    {
+        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
+        return !intermission && !(gore && d->gibbed());
+    }
+
     bool trystepdown(gameent* d, vec& dir, bool init = false)
     {
-        if ((!d->move && !d->strafe) || !allowmove(d)) return false;
+        if ((!d->move && !d->strafe) || !canmove(d)) return false;
         vec old(d->o);
         d->o.z -= STAIRHEIGHT;
         d->zmargin = -STAIRHEIGHT;
@@ -316,7 +322,6 @@ namespace physics
     }
 
     const int CROUCH_TIME = 200;
-    const float CROUCH_SPEED = 0.4f;
 
     void crouchplayer(gameent* d, int moveres, bool local)
     {
@@ -614,7 +619,7 @@ namespace physics
             {
                 if (d == self) dir.mul(floatspeed / 100.0f);
             }
-            else if (d->crouching)
+            else if (d->crouching && isonfloor)
             {
                 dir.mul(VELOCITY_CROUCH);
             }
@@ -725,7 +730,7 @@ namespace physics
 
     bool isplayermoving(gameent* d, int moveres, bool local, int curtime)
     {
-        if (!allowmove(d)) return false;
+        if (!canmove(d)) return false;
         int material = materialcheck(d);
         bool isinwater = isliquidmaterial(material & MATF_VOLUME);
         bool isfloating = isFloating(d);
@@ -996,7 +1001,15 @@ namespace physics
             case PHYSEVENT_FOOTSTEP:
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
-                triggerfootsteps(d, event != PHYSEVENT_FOOTSTEP);
+                if (event == PHYSEVENT_LAND_LIGHT)
+                {
+                    sway.addevent(d, SwayEvent_Land, 350, -3);
+                    triggerfootsteps(d, true);
+                }
+                else
+                {
+                    triggerfootsteps(d, false);
+                }
                 d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
                 break;
             }
@@ -1005,7 +1018,7 @@ namespace physics
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
                 msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
-                d->lastland = lastmillis;
+                sway.addevent(d, SwayEvent_Land, 380, -8);
                 d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
                 break;
             }

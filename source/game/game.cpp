@@ -314,7 +314,6 @@ namespace game
                 if(self->ragdoll) cleanragdoll(self);
                 physics::crouchplayer(self, 10, true);
                 physics::moveplayer(self, 10, true);
-                swayhudgun(curtime);
                 entities::checkitems(self);
                 if(cmode) cmode->checkitems(self);
             }
@@ -349,6 +348,7 @@ namespace game
 
     void spawneffect(gameent *d)
     {
+        stopownersounds(d);
         if(d==followingplayer(self))
         {
             clearscreeneffects();
@@ -359,7 +359,7 @@ namespace game
         particle_splash(PART_SPARK2, 250, 200, d->o, color, 0.60f, 200, 5);
         vec lightcolor = vec::hexcolor(color);
         adddynlight(d->o, 35, lightcolor, 900, 100);
-        stopownersounds(d);
+        doweaponchangeffects(d);
         playsound(S_SPAWN, d);
     }
 
@@ -438,12 +438,6 @@ namespace game
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
 
-    bool allowmove(physent* d)
-    {
-        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(gore && ((gameent*)d)->gibbed());
-    }
-
     bool isally(gameent *a, gameent *b)
     {
         return (m_teammode && validteam(a->team) && validteam(b->team) && sameteam(a->team, b->team))
@@ -465,12 +459,6 @@ namespace game
         return self->state==CS_SPECTATOR || m_edit || (m_berserker && self->role == ROLE_BERSERKER);
     }
     ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
-
-    bool allowmove(gameent* d)
-    {
-        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(gore && ((gameent*)d)->gibbed());
-    }
 
     bool editing() { return m_edit; }
 
@@ -504,7 +492,7 @@ namespace game
         addroll(d, damroll);
     }
 
-    VARP(hitsound, 0, 0, 1);
+    VARP(hitsound, 0, 1, 1);
 
     void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
     {
@@ -724,10 +712,27 @@ namespace game
             if(actor->aitype == AI_BOT) taunt(actor); // bots taunting players when getting extraordinary kills
             if(actor == followingplayer(self)) checkannouncements(actor, flags);
         }
-        if(actor == followingplayer(self) && actor != d)
+        if (actor == followingplayer(self))
         {
-           if(actor->role == ROLE_BERSERKER) playsound(S_BERSERKER);
-           else if(killsound) playsound(isally(d, actor) ? S_KILL_ALLY : S_KILL);
+            if (actor->role == ROLE_BERSERKER)
+            {
+                playsound(S_BERSERKER);
+            }
+            else if (killsound)
+            {
+                if (actor == d)
+                {
+                    if (validatk(atk))
+                    {
+                        playsound(S_KILL_SELF);
+                    }
+                }
+                else if (isally(actor, d))
+                {
+                    playsound(S_KILL_ALLY);
+                }
+                else playsound(S_KILL);
+            }
         }
         // update player state and reset ai
         if(attacks[atk].action == ACT_MELEE) d->deathtype = DEATH_FIST;
@@ -737,17 +742,16 @@ namespace game
         ai::kill(d, actor);
     }
 
-    void timeupdate(int secs)
+    void updatetimer(int time, int type)
     {
-        if(secs > 0) // set client side timer
+        maplimit = lastmillis + time * 1000;
+        if (type == TimeUpdate_Intermission)
         {
-            maplimit = lastmillis + secs*1000;
-        }
-        else // end the game and start intermission timer
-        {
-            maplimit = lastmillis + 45*1000;
+            // End the game and start the intermission period,
+            // to allow players to vote the next map and catch a breather.
             intermission = true;
             self->attacking = ACT_IDLE;
+            self->pitch = self->roll = 0;
             if(cmode) cmode->gameover();
             conoutf(CON_GAMEINFO, "\f2Intermission: game has ended!");
             bestteams.shrink(0);
@@ -1070,7 +1074,7 @@ namespace game
     }
 
     VARP(allycrosshair, 0, 1, 1);
-    VARP(hitcrosshair, 0, 400, 1000);
+    VARP(hitcrosshair, 0, 280, 1000);
 
     int selectcrosshair(vec &col)
     {

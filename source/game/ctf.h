@@ -890,7 +890,7 @@ ICOMMAND(flagstate, "i", (int *n),
     intret(ctfmode.flags[*n].owner ? 1 : (ctfmode.flags[*n].droptime ? (ctfmode.flags[*n].droploc.x < 0 ? 3 : 2) : 0));
 });
 ICOMMAND(flagdroploc, "i", (int *n), { result(ctfmode.flags.inrange(*n) ? tempformatstring("%f %f %f", ctfmode.flags[*n].droploc.x, ctfmode.flags[*n].droploc.y, ctfmode.flags[*n].droploc.z) : "0 0 0"); });
-ICOMMAND(flagowner, "i", (int *n), { intret(ctfmode.flags.inrange(*n) ? ctfmode.flags[*n].owner->clientnum : -1); });
+ICOMMAND(flagowner, "i", (int *n), { intret(ctfmode.flags.inrange(*n) ? ctfmode.flags[*n].owner ? ctfmode.flags[*n].owner->clientnum : -1 : -1); });
 
 #endif
 

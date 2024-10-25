@@ -1,6 +1,6 @@
 #include "game.h"
 
-extern int maxparticletextdistance, zoom;
+extern int maxparticletextdistance;
 
 namespace game
 {
@@ -309,8 +309,8 @@ namespace game
                 anim = attack;
                 basetime = lastaction;
             }
-
-            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+            bool canmove = physics::canmove(d);
+            if (d->inwater && d->physstate <= PHYS_FALL) anim |= (((canmove && (d->move || d->strafe)) || d->vel.z + d->falling.z > 0 ? ANIM_SWIM : ANIM_SINK) | ANIM_LOOP) << ANIM_SECONDARY;
             else
             {
                 static const int dirs[9] =
@@ -320,8 +320,8 @@ namespace game
                     ANIM_RUN_NE, ANIM_RUN_N, ANIM_RUN_NW
                 };
                 int dir = dirs[(d->move+1)*3 + (d->strafe+1)];
-                if(d->timeinair>100) anim |= ((dir && game::allowmove(d) ? dir+ANIM_JUMP_N-ANIM_RUN_N : ANIM_JUMP) | ANIM_END) << ANIM_SECONDARY;
-                else if(dir && game::allowmove(d)) anim |= (dir | ANIM_LOOP) << ANIM_SECONDARY;
+                if(d->timeinair>100) anim |= ((dir && canmove ? dir+ANIM_JUMP_N-ANIM_RUN_N : ANIM_JUMP) | ANIM_END) << ANIM_SECONDARY;
+                else if(dir && canmove) anim |= (dir | ANIM_LOOP) << ANIM_SECONDARY;
             }
 
             if(d->crouching) switch((anim>>ANIM_SECONDARY)&ANIM_INDEX)
@@ -379,10 +379,9 @@ namespace game
                 anim = attack < 0 ? -attack : attack;
                 basetime = lastaction;
             }
-
-            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((allowmove(d) && (d->move || d->strafe)) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
+            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((d->move || d->strafe) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
             else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
-            else if(allowmove(d) && (d->move || d->strafe))
+            else if(d->move || d->strafe)
             {
                 if(d->move>0) anim |= (ANIM_RUN_N|ANIM_LOOP)<<ANIM_SECONDARY;
                 else if(d->strafe)
@@ -531,129 +530,12 @@ namespace game
         if(cmode) cmode->rendergame();
     }
 
-    VARP(hudgun, 0, 1, 1);
-    VARP(hudgunsway, 0, 1, 1);
-
-    FVAR(swaystep, 1, 36.8f, 100);
-    FVAR(swayside, 0, 0.03f, 1);
-    FVAR(swayup, -1, 0.02f, 1);
-    FVAR(swayrollfactor, 1, 4.2f, 30);
-    FVAR(swaydecay, 0.1f, 0.996f, 0.9999f);
-    FVAR(swayinertia, 0.0f, 0.04f, 1.0f);
-    FVAR(swaymaxinertia, 0.0f, 15.0f, 1000.0f);
-
-    float swayfade = 0, swayspeed = 0, swaydist = 0, swayyaw = 0, swaypitch = 0, swaylandpitch = 0;
-    vec swaydir(0, 0, 0);
-
-    // FP weapon sway by Q009, ported from RE
-    static void updatesway(gameent* d, vec& sway, int curtime)
-    {
-        vec sidedir = vec((d->yaw + 90)*RAD, 0.0f), trans = vec(0, 0, 0);
-
-        float steplen = swaystep;
-        float steps = swaydist / steplen * M_PI;
-
-        // Magic floats to generate the animation cycle
-        float f1 = cosf(steps) + 1,
-            f2 = sinf(steps * 2.0f) + 1,
-            f3 = (f1 * f1 * 0.25f) - 0.5f,
-            f4 = (f2 * f2 * 0.25f) - 0.5f,
-            f5 = sinf(lastmillis * 0.001f); // Low frequency detail
-
-        vec dirforward = vec(d->yaw*RAD, 0.0f), dirside = vec((d->yaw + 90)*RAD, 0.0f);
-        float rotyaw = 0, rotpitch = 0;
-
-        // Walk cycle animation
-        trans.add(vec(dirforward).mul(swayside * f4 * 2.0f));
-        trans.add(vec(dirside).mul(swayside * f5 * 2.0f));
-        trans.add(vec(sway).mul(-4.0f));
-        trans.z += swayup * f2 * 1.5f;
-        rotyaw += swayside * f3 * 24.0f;
-        rotpitch += swayup * f2 * -10.0f;
-
-        // "Look-around" animation
-        static int lastsway = 0;
-        static vec2 lastcam = vec2(camera1->yaw, camera1->pitch);
-        static vec2 camvel = vec2(0, 0);
-
-        if(lastmillis != lastsway) // Prevent running the inertia math multiple times in the same frame
-        {
-            vec2 curcam = vec2(camera1->yaw, camera1->pitch);
-            vec2 camrot = vec2(lastcam).sub(curcam);
-
-            if (camrot.x > 180.0f) camrot.x -= 360.0f;
-            else if (camrot.x < -180.0f) camrot.x += 360.0f;
-
-            camvel.mul(powf(swaydecay, curtime));
-            camvel.add(vec2(camrot).mul(swayinertia));
-            camvel.clamp(-swaymaxinertia, swaymaxinertia);
-
-            lastcam = curcam;
-            lastsway = lastmillis;
-        }
-        trans.add(sidedir.mul(camvel.x * 0.06f));
-        trans.z += camvel.y * 0.045f;
-        rotyaw += camvel.x * -0.3f;
-        rotpitch += camvel.y * -0.3f;
-        sway.add(trans); // add the trans to the swaydir vector, where the weapon model is at
-        swayyaw = rotyaw;
-        swaypitch = rotpitch;
-    }
-
-    void swayhudgun(int curtime)
-    {
-        gameent *d = hudplayer();
-        if(d->state == CS_SPECTATOR || d->state == CS_EDITING) return;
-
-        if(d->physstate >= PHYS_SLOPE || d->climbing)
-        {
-            swayspeed = min(sqrtf(d->vel.x*d->vel.x + d->vel.y*d->vel.y), d->speed);
-            swaydist += swayspeed*curtime/1000.0f;
-            swaydist = fmod(swaydist, 2*swaystep);
-            swayfade = 1;
-        }
-        else if(swayfade > 0)
-        {
-            swaydist += swayspeed*swayfade*curtime/1000.0f;
-            swaydist = fmod(swaydist, 2*swaystep);
-            swayfade -= 0.5f*(curtime*d->speed)/(swaystep*1000.0f);
-        }
-        if(lastmillis - d->lastland <= 350)
-        {
-            float progress = clamp((lastmillis - d->lastland) / (float)350, 0.0f, 1.0f);
-            swaylandpitch = -10 * sinf(progress * PI);
-        }
-        else if(d->lastswitch > 0 && lastmillis - d->lastswitch <= 500)
-        {
-            float progress = clamp((lastmillis - d->lastswitch) / (float)500, 0.0f, 1.0f);
-            swaylandpitch = -15 * sinf(progress * PI);
-        }
-        else swaylandpitch = 0;
-
-        float k = pow(0.7f, curtime/10.0f);
-        swaydir.mul(k);
-        vec vel(d->vel);
-        vel.add(d->falling);
-        swaydir.add(vec(vel).mul((1-k)/(8*max(vel.magnitude(), d->speed))));
-    }
-
-    struct hudent : dynent
-    {
-        hudent() { type = ENT_CAMERA; }
-    } guninterp;
-
     void drawhudmodel(gameent *d, int anim, int basetime)
     {
         const char *file = guns[d->gunselect].model;
         if(!file) return;
 
-        vec sway;
-        vecfromyawpitch(d->yaw, 0, 0, 1, sway);
-        float steps = swaydist/swaystep*M_PI;
-        sway.mul(swayside*sinf(steps));
-        updatesway(d, sway, curtime);
-        sway.add(swaydir).add(d->o);
-        if(!hudgunsway) sway = d->o;
+        sway.update(d);
 
         const playermodelinfo &playermodel = getplayermodelinfo(d);
         int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
@@ -663,20 +545,20 @@ namespace game
         int ai = 0;
         a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         a[ai++] = modelattach("tag_eject", &d->eject);
-        swaypitch += swaylandpitch;
-        float yaw = d->yaw + swayyaw, pitch = d->pitch + swaypitch, roll = d->roll * swayrollfactor;
         if (d->attacking == ACT_SECONDARY && d->gunselect == GUN_PULSE)
         {
             anim |= ANIM_LOOP;
             basetime = 0;
         }
-        rendermodel(gunname, anim, sway, yaw, pitch, roll, MDL_NOBATCH, &guninterp, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
+        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, MDL_NOBATCH, &sway.guninterp, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
+
         if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
     }
 
     void drawhudgun()
     {
         gameent *d = hudplayer();
+        extern int hudgun;
         if(d->state == CS_DEAD || d->state==CS_SPECTATOR || d->state==CS_EDITING || !hudgun || editmode)
         {
             d->muzzle = self->muzzle = vec(-1, -1, -1);
@@ -707,42 +589,6 @@ namespace game
     void renderavatar()
     {
         drawhudgun();
-    }
-
-    vec hudgunorigin(int gun, const vec &from, const vec &to, gameent *d)
-    {
-        if (zoom && d == self)
-        {
-            return d->feetpos(4);
-        }
-        else if (d->muzzle.x >= 0)
-        {
-            return d->muzzle;
-        }
-
-        vec offset(from);
-        if(d != hudplayer() || isthirdperson())
-        {
-            vec front, right;
-            vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
-            offset.add(front.mul(d->radius));
-            if(d->type != ENT_AI)
-            {
-                offset.z += (d->aboveeye + d->eyeheight)*0.75f - d->eyeheight;
-                vecfromyawpitch(d->yaw, 0, 0, -1, right);
-                offset.add(right.mul(0.5f*d->radius));
-                offset.add(front);
-            }
-            return offset;
-        }
-        offset.add(vec(to).sub(from).normalize().mul(2));
-        if(hudgun)
-        {
-            offset.sub(vec(camup).mul(1.0f));
-            offset.add(vec(camright).mul(0.8f));
-        }
-        else offset.sub(vec(camup).mul(0.8f));
-        return offset;
     }
 
     void renderplayerpreview(int model, int color, int team, int weap)

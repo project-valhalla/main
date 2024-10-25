@@ -1948,3 +1948,26 @@ static inline float sin360(int angle) { return sincos360[angle].y; }
 static inline float tan360(int angle) { const vec2 &sc = sincos360[angle]; return sc.y/sc.x; }
 static inline float cotan360(int angle) { const vec2 &sc = sincos360[angle]; return sc.x/sc.y; }
 
+static inline float lerp360(float angle, float target, float factor)
+{
+    float diff = target - angle;
+
+    if (diff > 180) angle += 360;
+    else if (diff < -180) angle -= 360;
+
+    angle = fmod((angle + ((target - angle) * factor)), 360.0f);
+
+    return angle < 0 ? angle + 360.0f : angle;
+}
+
+template<class T>
+static inline T lerp(T a, T b, float t) { return a + (b - a) * t; }
+
+template<class T>
+static inline T lerpstep(T a, T b, T step)
+{
+    if (a == b) return a;
+    return a > b ?
+        a - min(step, a - b) :
+        a + min(step, b - a);
+}

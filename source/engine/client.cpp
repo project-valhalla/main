@@ -166,6 +166,7 @@ void disconnect(bool async, bool cleanup)
 
 void trydisconnect(bool local)
 {
+    setsvar("lastdisconnectreason", "");
     if(connpeer)
     {
         conoutf("aborting connection attempt");
@@ -201,6 +202,7 @@ void flushclient()
 void neterr(const char *s, bool disc)
 {
     conoutf(CON_ERROR, "illegal network message: %s", s);
+    setsvar("lastdisconnectreason", "illegal network message");
     if(disc) disconnect();
 }
 
@@ -234,6 +236,7 @@ void gets2c()           // get updates from the server
     switch(event.type)
     {
         case ENET_EVENT_TYPE_CONNECT:
+            setsvar("lastdisconnectreason", "");
             disconnect(false);
             localdisconnect(false);
             curpeer = connpeer;

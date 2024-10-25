@@ -63,6 +63,10 @@ void menuprocess()
     }
 
     // specific UIs
+    if (!UI::uivisible("permanent"))
+    {
+        UI::showui("permanent"); // always force the permanent UI elements
+    }
     if(!isconnected(true))
     {
         if (mainmenu && !UI::hascursor())
@@ -77,7 +81,6 @@ void menuprocess()
             UI::showui("gamehud");  // if connected, force the game HUD
         }
     }
-    if (!UI::uivisible("permanent")) UI::showui("permanent"); // always force the permanent UI elements
 }
 
 VAR(mainmenu, 1, 1, 0);

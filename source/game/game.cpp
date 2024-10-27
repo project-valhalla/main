@@ -476,20 +476,28 @@ namespace game
         return guns[hud->gunselect].zoom;
     }
 
-    void addroll(gameent *d, float amount)
-    {
-        d->roll += d->roll > 0 ? amount : (d->roll < 0 ? -amount : (rnd(2) ? amount : -amount));
-    }
+    FVARP(damagerolldiv, 0, 4.0f, 10);
 
-    FVARP(damagerolldiv, 0, 4.0f, 5.0f);
-
-    void damagehud(int damage, gameent *d, gameent *actor)
+    void damagehud(int damage, gameent* d, gameent* actor)
     {
+        if (!d)
+        {
+            return;
+        }
+
+        if (actor)
+        {
+            if (d != actor)
+            {
+                damagecompass(damage, actor->o);
+            }
+        }
+        if (damagerolldiv)
+        {
+            float damageRoll = damage / damagerolldiv;
+            physics::addroll(d, damageRoll);
+        }
         damageblend(damage);
-        if(d != actor) damagecompass(damage, actor->o);
-        if(!damagerolldiv) return;
-        float damroll = damage / damagerolldiv;
-        addroll(d, damroll);
     }
 
     VARP(hitsound, 0, 1, 1);

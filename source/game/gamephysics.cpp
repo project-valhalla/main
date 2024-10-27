@@ -721,9 +721,22 @@ namespace physics
         }
     }
 
-    VARP(maxroll, 0, 1, 20);
-    FVAR(straferoll, 0, 0.018f, 90);
-    FVAR(faderoll, 0, 0.9f, 1);
+    VARP(rollstrafemax, 0, 1, 20);
+    FVAR(rollstrafe, 0, 0.018f, 90);
+    FVAR(rollfade, 0, 0.9f, 1);
+    FVAR(rollonland, 0, 5, 20);
+
+    void addroll(gameent* d, float amount)
+    {
+        if (!d || (d->lastroll && lastmillis - d->lastroll < 500))
+        {
+            return;
+        }
+
+        float strafingRollAmount = rollstrafemax ? amount / 2 : amount;
+        d->roll += d->roll > 0 ? -strafingRollAmount : (d->roll < 0 ? strafingRollAmount : (rnd(2) ? amount : -amount));
+        d->lastroll = lastmillis;
+    }
 
     const int SHORT_JUMP_THRESHOLD = 350;
     const int LONG_JUMP_THRESHOLD = 800;
@@ -781,8 +794,8 @@ namespace physics
         }
 
         // Automatically apply smooth roll when strafing.
-        if (d->strafe && maxroll && !isfloating) d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / maxroll, 0.0f, 1.0f), 0.33f) * d->strafe * curtime * straferoll, -maxroll, maxroll);
-        else d->roll *= curtime == PHYSFRAMETIME ? faderoll : pow(faderoll, curtime / float(PHYSFRAMETIME));
+        if (d->strafe && rollstrafemax && !isfloating) d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / rollstrafemax, 0.0f, 1.0f), 0.33f) * d->strafe * curtime * rollstrafe, -rollstrafemax, rollstrafemax);
+        else d->roll *= curtime == PHYSFRAMETIME ? rollfade : pow(rollfade, curtime / float(PHYSFRAMETIME));
 
         if (d->state == CS_ALIVE) updatedynentcache(d);
 
@@ -1019,6 +1032,7 @@ namespace physics
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
                 msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
                 sway.addevent(d, SwayEvent_Land, 380, -8);
+                addroll(d, rollonland);
                 d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
                 break;
             }

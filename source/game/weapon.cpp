@@ -1537,7 +1537,7 @@ namespace game
                 damageeffect(damage, o, to, atk, getbloodcolor(o), flags & HIT_HEAD);
                 if(d == followingplayer(self) && attacks[atk].action == ACT_MELEE)
                 {
-                    addroll(d, damage / 2.0f);
+                    physics::addroll(d, damage / 2.0f);
                 }
             }
             else

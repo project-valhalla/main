@@ -418,7 +418,7 @@ struct gameent : dynent, gamestate
     int lastaction, lastattack, lasthit;
     int deathtype;
     int attacking;
-    int lasttaunt, lastfootstep, lastyelp, lastswitch;
+    int lasttaunt, lastfootstep, lastyelp, lastswitch, lastroll;
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots, lives, holdingflag;
     editinfo *edit;
@@ -442,7 +442,7 @@ struct gameent : dynent, gamestate
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
                 lastpain(0), lasthurt(0),
-                lastfootstep(0), lastyelp(0), lastswitch(0),
+                lastfootstep(0), lastyelp(0), lastswitch(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
                 attackchan(-1), idlechan(-1), powerupchan(-1), gunchan(-1),
@@ -583,6 +583,7 @@ namespace physics
     extern void crouchplayer(gameent* pl, int moveres, bool local);
     extern void physicsframe();
     extern void updatephysstate(gameent* d);
+    extern void addroll(gameent* d, float amount);
 
     extern bool canmove(gameent* d);
     extern bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float grav);
@@ -670,7 +671,6 @@ namespace game
     extern void updatetimer(int time, int type);
     extern void msgsound(int n, physent *d = NULL);
     extern void doaction(int act);
-    extern void addroll(gameent *d, float amount);
     extern void hurt(gameent* d);
     extern void suicide(gameent* d);
     const char *mastermodecolor(int n, const char *unknown);

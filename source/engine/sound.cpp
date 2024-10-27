@@ -543,10 +543,10 @@ void checkmapsounds()
             if(!(e.flags&EF_SOUND))
             {
                 if(!e.attr4) playsound(e.attr1, NULL, NULL, &e, SND_MAP, -1);
-                else if(totalmillis-e.lastplayed >= e.attr4 * 1000) // delay map sound (attr4)
+                else if(totalmillis-e.lasttrigger >= e.attr4 * 1000) // delay map sound (attr4)
                 {
                     playsound(e.attr1, NULL, NULL, &e, SND_MAP);
-                    e.lastplayed = totalmillis;
+                    e.lasttrigger = totalmillis;
                 }
             }
         }

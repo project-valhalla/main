@@ -2042,9 +2042,6 @@ namespace game
                 if(!entities::ents.inrange(i)) break;
                 entities::setspawn(i, true);
                 ai::itemspawned(i);
-                playsound(S_ITEM_SPAWN, NULL, &entities::ents[i]->o, NULL, 0, 0, 0, -1, 0, 1500);
-                particle_splash(PART_SPARK, 60, 100, entities::ents[i]->o, 0x905030, 5.0f, 200, 60);
-                adddynlight(entities::ents[i]->o, 20, vec(2, 1.2f, 1), 250, 0, DL_SHRINK);
                 break;
             }
 
@@ -2148,7 +2145,8 @@ namespace game
                 conoutf(CON_GAMEINFO, "%s \fs\f2computed lights\fr", colorname(d));
                 mpcalclight(false);
                 break;
-            case N_EDITENT:            // coop edit of ent
+
+            case N_EDITENT: // Edit an entity in (local) multiplayer.
             {
                 if(!d) return;
                 int i = getint(p);

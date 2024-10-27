@@ -67,52 +67,74 @@ namespace entities
     {
         loopi(MAXENTTYPES)
         {
-            if(!canspawnitem(i)) continue;
-            const char *mdl = gentities[i].file;
-            if(!mdl) continue;
+            if (!canspawnitem(i))
+            {
+                continue;
+            }
+            const char* mdl = gentities[i].file;
+            if (!mdl)
+            {
+                continue;
+            }
             preloadmodel(mdl);
         }
         loopv(ents)
         {
-            extentity &e = *ents[i];
-            switch(e.type)
+            extentity& e = *ents[i];
+            switch (e.type)
             {
                 case TELEPORT:
                 case TRIGGER:
-                    if(e.attr2 > 0) preloadmodel(mapmodelname(e.attr2));
+                    if (e.attr2 > 0)
+                        preloadmodel(mapmodelname(e.attr2));
                 case JUMPPAD:
-                    if(e.attr4 > 0) preloadmapsound(e.attr4);
+                    if (e.attr4 > 0)
+                        preloadmapsound(e.attr4);
                     break;
             }
         }
     }
 
-    VARP(itemtrans, 0, 1, 1);
-
     void renderentities()
     {
+        gameent* hud = followingplayer(self);
         loopv(ents)
         {
-            extentity &e = *ents[i];
+            extentity& e = *ents[i];
             int revs = 10;
-            switch(e.type)
+            switch (e.type)
             {
                 case TELEPORT:
                 case TRIGGER:
-                    if(e.attr2 < 0 || (e.type == TRIGGER && !m_story)) continue;
+                {
+                    if (e.attr2 < 0 || (e.type == TRIGGER && !m_story))
+                    {
+                        continue;
+                    }
                     break;
+                }
                 default:
-                    if((!editmode && !e.spawned()) || !validitem(e.type)) continue;
+                {
+                    if ((!editmode && !e.spawned()) || !validitem(e.type))
+                    {
+                        continue;
+                    }
                     break;
+                }
             }
-            const char *mdlname = entmodel(e);
-            if(mdlname)
+            const char* mdlname = entmodel(e);
+            if (mdlname)
             {
                 vec p = e.o;
-                p.z += 1+sinf(lastmillis/100.0+e.o.x+e.o.y)/20;
+                p.z += 1 + sinf(lastmillis / 100.0 + e.o.x + e.o.y) / 20;
                 float trans = 1;
-                if(itemtrans && validitem(e.type) && !e.spawned()) trans = 0.5f;
-                rendermodel(mdlname, ANIM_MAPMODEL|ANIM_LOOP, p, lastmillis/(float)revs, 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, 1, vec4(1, 1, 1, trans));
+                if (validitem(e.type) && (!e.spawned() || !hud->canpickup(e.type)))
+                {
+                    trans = 0.5f;
+                }
+                float progress = min((lastmillis - e.lastspawn) / 1000.0f, 1.0f);
+                float size = easeoutelastic(progress);
+                rendermodel(mdlname, ANIM_MAPMODEL | ANIM_LOOP, p, lastmillis / (float)revs, 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, size, vec4(1, 1, 1, trans));
             }
         }
     }
@@ -308,13 +330,13 @@ namespace entities
             case TRIGGER:
             {
                 if(d->lastpickup == ents[n]->type && lastmillis-d->lastpickupmillis < 500) break;
-                if(ents[n]->attr5 && lastmillis - ents[n]->lastplayed <= ents[n]->attr5) break;
+                if(ents[n]->attr5 && lastmillis - ents[n]->lasttrigger <= ents[n]->attr5) break;
                 d->lastpickup = ents[n]->type;
                 d->lastpickupmillis = lastmillis;
                 defformatstring(hookname, "trigger_%d", ents[n]->attr1);
                 execident(hookname);
                 if(ents[n]->attr4 >= 0) playentitysound(d, S_TRIGGER, ents[n]->attr4, ents[n]->o);
-                if(ents[n]->attr4) ents[n]->lastplayed = lastmillis;
+                if(ents[n]->attr4) ents[n]->lasttrigger = lastmillis;
                 break;
             }
         }
@@ -373,10 +395,29 @@ namespace entities
         loopv(ents) if(validitem(ents[i]->type) && canspawnitem(ents[i]->type))
         {
             ents[i]->setspawned(force || !server::delayspawn(ents[i]->type));
+            ents[i]->lastspawn = lastmillis;
         }
     }
 
-    void setspawn(int i, bool on) { if(ents.inrange(i)) ents[i]->setspawned(on); }
+    static void spawneffect(vec o)
+    {
+        int spawncolor = 0x00E463;
+        particle_splash(PART_SPARK, 20, 100, o, spawncolor, 1.0f, 100, 60);
+        particle_flare(o, o, 200, PART_EXPLODE1, 0x83E550, 16.0f);
+        adddynlight(o, 100, vec::hexcolor(spawncolor), 200, 75, DL_SHRINK|L_NOSHADOW);
+        playsound(S_ITEM_SPAWN, NULL, &o, NULL, 0, 0, 0, -1, 0, 1500);
+    }
+
+    void setspawn(int i, bool on)
+    {
+        if (ents.inrange(i))
+        {
+            extentity* e = ents[i];
+            e->setspawned(on);
+            spawneffect(e->o);
+            e->lastspawn = lastmillis;
+        }
+    }
 
     extentity *newentity() { return new gameentity(); }
     void deleteentity(extentity *e) { delete (gameentity *)e; }
@@ -466,7 +507,14 @@ namespace entities
     {
         extentity &e = *ents[i];
         //e.flags = 0;
-        if(local) addmsg(N_EDITENT, "rii3ii5", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+        if (!e.spawned())
+        {
+            e.lastspawn = lastmillis;
+        }
+        if (local)
+        {
+            addmsg(N_EDITENT, "rii3ii5", i, (int)(e.o.x * DMF), (int)(e.o.y * DMF), (int)(e.o.z * DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+        }
     }
 
     float dropheight(entity &e)

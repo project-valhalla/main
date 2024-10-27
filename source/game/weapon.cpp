@@ -17,27 +17,40 @@ namespace game
 
     ICOMMAND(getweapon, "", (), intret(self->gunselect));
 
-    void gunselect(int gun, gameent *d)
+    void gunselect(int gun, gameent* d)
     {
-        if(gun == d->gunselect || lastmillis - d->lastswitch < 100)
+        if (gun == d->gunselect || lastmillis - d->lastswitch < 100)
         {
             return;
         }
         addmsg(N_GUNSELECT, "rci", d, gun);
         d->gunselect = gun;
         d->lastattack = -1;
-        doweaponchangeffects(d);
+        doweaponchangeffects(d, gun);
     }
 
-    void doweaponchangeffects(gameent* d)
+    void doweaponchangeffects(gameent* d, int gun)
     {
         d->lastswitch = lastmillis;
         sway.addevent(d, SwayEvent_Switch, 500, -15);
         if (d->gunchan >= 0)
         {
-            stopsound(d->gunsound, d->gunchan);
+            stopsound(d->gunsound, d->gunchan, 200);
         }
-        playsound(S_WEAPON_LOAD, d);
+        if (!validgun(gun))
+        {
+            gun = d->gunselect;
+        }
+        int switchsound = guns[gun].switchsound;
+        if (d != followingplayer(self))
+        {
+            switchsound = S_WEAPON_LOAD;
+        }
+        else if (validsound(switchsound))
+        {
+            d->gunsound = switchsound;
+            d->gunchan = playsound(d->gunsound, d, NULL, NULL, 0, 0, 0, d->gunchan);
+        }
         if (d == self)
         {
             disablezoom();

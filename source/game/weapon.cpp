@@ -755,7 +755,7 @@ namespace game
                 dynlight = vec(0.5f, 0.375f, 0.25f);
                 explosioncolor = 0xC8E66B;
                 explosiontype = PART_EXPLOSION3;
-                particle_splash(PART_EXPLODE, 30, 180, v, 0xF3A612, 6.0f + rndscale(9.0f), 180, 50);
+                particle_splash(PART_EXPLODE4, 30, 180, v, 0xF3A612, 6.0f + rndscale(9.0f), 180, 50);
                 particle_splash(PART_SPARK2, 100, 250, v, 0xFFC864, 0.10f+rndscale(0.50f), 600, 1);
                 particle_splash(PART_SMOKE, 50, 280, v, 0x444444, 10.0f, 250, 200);
                 break;
@@ -766,7 +766,7 @@ namespace game
                 explosioncolor = 0xEE88EE;
                 explosiontype = PART_EXPLOSION2;
                 particle_splash(PART_SPARK2, 5+rnd(20), 200, v, explosioncolor, 0.08f+rndscale(0.35f), 400, 2);
-                particle_splash(PART_EXPLODE, 10, 80, v, explosioncolor, 1.5f+rndscale(2.8f), 150, 40);
+                particle_splash(PART_EXPLODE4, 10, 80, v, explosioncolor, 1.5f+rndscale(2.8f), 150, 40);
                 particle_splash(PART_SMOKE, 60, 180, v, 0x222222, 2.5f+rndscale(3.8f), 180, 60);
                 break;
             }
@@ -970,7 +970,7 @@ namespace game
                         {
                             tailc = 0xFFC864; tails = 1.5f;
                             regular_particle_splash(PART_SMOKE, 3, 300, pos, 0x303030, 2.4f, 50, -20);
-                            if(p.lifetime<=attacks[p.atk].lifetime/2) regular_particle_splash(PART_EXPLODE, 4, 180, pos, tailc, tails, 10, 0);
+                            if(p.lifetime<=attacks[p.atk].lifetime/2) regular_particle_splash(PART_EXPLODE4, 4, 180, pos, tailc, tails, 10, 0);
                             particle_flare(pos, pos, 1, PART_MUZZLE_FLASH3, tailc, 1.0f + rndscale(tails * 2));
                             p.projsound = S_ROCKET_LOOP;
                             break;
@@ -1037,7 +1037,7 @@ namespace game
                 adddynlight(vec(to).madd(dir, 4), 15, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if(hit || iswater || isglass) break;
                 particle_fireball(to, 0.5f, PART_EXPLOSION1, 120, 0xFFC864, 2.0f);
-                particle_splash(PART_EXPLODE, 50, 40, to, 0xFFC864, 1.0f);
+                particle_splash(PART_EXPLODE4, 50, 40, to, 0xFFC864, 1.0f);
                 particle_splash(PART_SPARK2, 30, 150, to, 0xFFC864, 0.05f + rndscale(0.09f), 250);
                 particle_splash(PART_SMOKE, 30, 180, to, 0x444444, 2.20f, 80, 100);
                 addstain(STAIN_BULLETHOLE_SMALL, to, vec(from).sub(to).normalize(), 0.50f + rndscale(1.0f), 0xFFFFFF, rnd(4));
@@ -1072,7 +1072,7 @@ namespace game
                     break;
                 }
                 if(iswater || isglass) break;
-                particle_splash(PART_EXPLODE, 80, 80, to, !insta ? 0x77DD77 : 0x50CFE5, 1.25f, 100, 80);
+                particle_splash(PART_EXPLODE4, 80, 80, to, !insta ? 0x77DD77 : 0x50CFE5, 1.25f, 100, 80);
                 particle_splash(PART_SPARK2, 5 + rnd(20), 200 + rnd(380), to, !insta ? 0x77DD77 : 0x50CFE5, 0.1f + rndscale(0.3f), 200, 3);
                 particle_splash(PART_SMOKE, 20, 180, to, 0x808080, 2.0f, 60, 80);
                 addstain(STAIN_BULLETHOLE_BIG, to, dir, 2.5f);

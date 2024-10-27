@@ -443,9 +443,9 @@ namespace game
                 case BNC_DEBRIS:
                 {
                     if (bnc.vel.magnitude() <= 30.0f) break;
-                    regular_particle_splash(PART_SMOKE, 5, 100, pos, 0x555555, 1.80f, 30, 500);
-                    regular_particle_splash(PART_SPARK, 1, 40, pos, 0xF83B09, 1.20f, 10, 500);
-                    particle_flare(bnc.o, bnc.o, 1, PART_EDIT, 0xFFC864, 0.5+rndscale(1.5f));
+                    regular_particle_splash(PART_SMOKE, 5, 100, pos, 0x222222, 1.80f, 30, 500);
+                    regular_particle_splash(PART_SPARK, 1, 40, pos, 0x903020, 1.20f, 10, 500);
+                    particle_flare(bnc.o, bnc.o, 1, PART_EDIT, 0xF69D19, 0.5 + rndscale(2.0f));
                 }
             }
             if(bnc.bouncerloopsound >= 0) bnc.bouncerloopchan = playsound(bnc.bouncerloopsound, NULL, &pos, NULL, 0, -1, 100, bnc.bouncerloopchan);
@@ -744,54 +744,58 @@ namespace game
     void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int damage, int atk)
     {
         if(!attacks[atk].projspeed) return;
-        vec dynlight = vec(1.0f, 3.0f, 4.0f);
         int explosioncolor = 0x50CFE5, explosiontype = PART_EXPLOSION1;
+        int fade = 400;
+        float min = 0.10f, max = attacks[atk].exprad * 1.15f;
         bool water = (lookupmaterial(v) & MATF_VOLUME) == MAT_WATER;
         if(!water) switch(atk)
         {
             case ATK_ROCKET1:
             case ATK_ROCKET2:
             {
-                dynlight = vec(0.5f, 0.375f, 0.25f);
-                explosioncolor = 0xC8E66B;
+                explosioncolor = 0xd47f00;
                 explosiontype = PART_EXPLOSION3;
-                particle_splash(PART_EXPLODE4, 30, 180, v, 0xF3A612, 6.0f + rndscale(9.0f), 180, 50);
-                particle_splash(PART_SPARK2, 100, 250, v, 0xFFC864, 0.10f+rndscale(0.50f), 600, 1);
-                particle_splash(PART_SMOKE, 50, 280, v, 0x444444, 10.0f, 250, 200);
+                particle_flare(v, v, 280, PART_EXPLODE1 + rnd(3), 0xFFC864, 56.0f);
+                particle_splash(PART_SPARK2, 100, 250, v, explosioncolor, 0.10f+rndscale(0.50f), 600, 1);
+                particle_splash(PART_SMOKE, 100, 280, v, 0x222222, 10.0f, 250, 200);
                 break;
             }
             case ATK_PULSE1:
             {
-                dynlight = vec(1.0f, 0.50f, 1.0f);
                 explosioncolor = 0xEE88EE;
                 explosiontype = PART_EXPLOSION2;
                 particle_splash(PART_SPARK2, 5+rnd(20), 200, v, explosioncolor, 0.08f+rndscale(0.35f), 400, 2);
-                particle_splash(PART_EXPLODE4, 10, 80, v, explosioncolor, 1.5f+rndscale(2.8f), 150, 40);
+                particle_flare(v, v, 250, PART_EXPLODE2, 0xf1b4f1, 15.0f);
                 particle_splash(PART_SMOKE, 60, 180, v, 0x222222, 2.5f+rndscale(3.8f), 180, 60);
                 break;
             }
             case ATK_GRENADE1:
             case ATK_GRENADE2:
             {
-                dynlight = vec(0, 0.25f, 1.0f);
                 explosioncolor = 0x74BCF9;
                 explosiontype = PART_EXPLOSION2;
-                particle_flare(v, v, 280, PART_ELECTRICITY, explosioncolor, 30.0f);
+                fade = 200;
+                particle_flare(v, v, 280, PART_ELECTRICITY, 0x49A7F7, 30.0f);
                 break;
             }
             case ATK_PISTOL2:
             case ATK_PISTOL_COMBO:
             {
-                dynlight = vec(0.25f, 1.0f, 1.0f);
                 explosioncolor = 0x00FFFF;
+                min = attacks[atk].exprad * 1.15f;
+                max = 0;
                 particle_fireball(v, 1.0f, PART_EXPLOSION2, atk == ATK_PISTOL2 ? 200 : 500, 0x00FFFF, attacks[atk].exprad);
-                particle_splash(PART_SPARK2, 50, 180, v, 0x00FFFF, 0.18f, 380);
+                particle_splash(PART_SPARK2, 50, 180, v, 0x00FFFF, 0.18f, 500);
+                if (atk == ATK_PISTOL_COMBO)
+                {
+                    particle_flare(v, v, 600, PART_EXPLODE1, explosioncolor, 50.0f);
+                }
                 break;
             }
             default: break;
         }
-        particle_fireball(v, 1.15f*attacks[atk].exprad, explosiontype, atk == ATK_GRENADE1 || atk == ATK_GRENADE2 ? 200 : 400, explosioncolor, 0.10f);
-        adddynlight(v, 2*attacks[atk].exprad, dynlight, 350, 40, 0, attacks[atk].exprad/2, vec(0.5f, 1.5f, 2.0f));
+        particle_fireball(v, max, explosiontype, fade, explosioncolor, min);
+        adddynlight(v, attacks[atk].exprad * 3, vec::hexcolor(explosioncolor), fade, 40);
         playsound(attacks[atk].impactsound, NULL, &v);
         if (water)
         {
@@ -801,8 +805,8 @@ namespace game
         else // no debris in water
         {
             int numdebris = rnd(maxdebris - 5) + 5;
-            vec debrisvel = vec(owner->o).sub(v).safenormalize(),
-                debrisorigin(v);
+            vec debrisvel = vec(owner->o).sub(v).safenormalize();
+            vec debrisorigin(v);
             if (atk == ATK_ROCKET1)
             {
                 debrisorigin.add(vec(debrisvel).mul(8));
@@ -970,7 +974,10 @@ namespace game
                         {
                             tailc = 0xFFC864; tails = 1.5f;
                             regular_particle_splash(PART_SMOKE, 3, 300, pos, 0x303030, 2.4f, 50, -20);
-                            if(p.lifetime<=attacks[p.atk].lifetime/2) regular_particle_splash(PART_EXPLODE4, 4, 180, pos, tailc, tails, 10, 0);
+                            if (p.lifetime <= attacks[p.atk].lifetime / 2)
+                            {
+                                regular_particle_splash(PART_EXPLODE2, 4, 180, pos, tailc, tails, 10, 0);
+                            }
                             particle_flare(pos, pos, 1, PART_MUZZLE_FLASH3, tailc, 1.0f + rndscale(tails * 2));
                             p.projsound = S_ROCKET_LOOP;
                             break;
@@ -1036,7 +1043,7 @@ namespace game
             {
                 adddynlight(vec(to).madd(dir, 4), 15, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if(hit || iswater || isglass) break;
-                particle_fireball(to, 0.5f, PART_EXPLOSION1, 120, 0xFFC864, 2.0f);
+                particle_fireball(to, 0.5f, PART_EXPLOSION2, 120, 0xFFC864, 2.0f);
                 particle_splash(PART_EXPLODE4, 50, 40, to, 0xFFC864, 1.0f);
                 particle_splash(PART_SPARK2, 30, 150, to, 0xFFC864, 0.05f + rndscale(0.09f), 250);
                 particle_splash(PART_SMOKE, 30, 180, to, 0x444444, 2.20f, 80, 100);

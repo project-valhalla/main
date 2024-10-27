@@ -2066,7 +2066,10 @@ namespace UI
         {
             Object::setup();
 
-            if(!font || !strcmp(font->name, name)) font = findfont(name);
+            if(!font || strcmp(font->name, name))
+            {
+                font = findfont(name);
+            }
         }
 
         void layout()

@@ -650,7 +650,7 @@ namespace game
             }
             else
             {
-                act = "suicided";
+                act = "died";
                 killfeedweaponinfo = -2;
             }
             conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr", teamcolorname(d), act);

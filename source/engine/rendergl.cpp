@@ -2587,11 +2587,11 @@ VARP(damagescreenfade, 0, 500, 1000);
 VARP(damagescreenmin, 1, 50, 1000);
 VARP(damagescreenmax, 1, 100, 1000);
 
-void damageblend(int n)
+void damageblend(int n, const int factor)
 {
     if(!damagescreen || minimized) return;
     if(lastmillis > damageblendmillis) damageblendmillis = lastmillis;
-    damageblendmillis += clamp(n, damagescreenmin, damagescreenmax)*damagescreenfactor;
+    damageblendmillis += clamp(n, damagescreenmin, damagescreenmax) * (factor ? factor : damagescreenfactor);
 }
 
 void drawdamagescreen(int w, int h)
@@ -2941,10 +2941,10 @@ void gl_drawframe()
             resethudmatrix();
             resethudshader();
             glEnable(GL_BLEND);
+            drawzoom(hudw, hudh);
+            drawscreenfx(hudw, hudh);
             drawdamagescreen(hudw, hudh);
             drawdamagecompass(hudw, hudh);
-            drawscreenfx(hudw, hudh);
-            drawzoom(hudw, hudh);
             glDisable(GL_BLEND);
         }
     }

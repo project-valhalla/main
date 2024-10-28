@@ -408,6 +408,17 @@ static const int teameffectcolor[1+MAXTEAMS] = { 0xFFFFFF, 0x2020FF, 0xFF2020 };
 const int TAUNT_DELAY = 1000;
 const int VOICECOM_DELAY = 2800;
 
+enum
+{
+    // Reserved sound channels.
+    Chan_Idle = 0,
+    Chan_Attack,
+    Chan_Weapon,
+    Chan_PowerUp,
+    Chan_LowHealth,
+    Chan_Num
+};
+
 struct gameent : dynent, gamestate
 {
     int weight;                         // affects the effectiveness of hitpush
@@ -425,8 +436,7 @@ struct gameent : dynent, gamestate
     float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, pitchrecoil;
     int smoothmillis;
 
-    int attackchan, idlechan, powerupchan, gunchan;
-    int attacksound, idlesound, powerupsound, gunsound;
+    int chan[Chan_Num], chansound[Chan_Num];
 
     string name, info;
     int team, playermodel, playercolor;
@@ -445,10 +455,13 @@ struct gameent : dynent, gamestate
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
-                attackchan(-1), idlechan(-1), powerupchan(-1), gunchan(-1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
                 muzzle(-1, -1, -1), eject(-1, -1, -1)
     {
+        loopi(Chan_Num)
+        {
+            chan[i] = chansound[i] = -1;
+        }
         name[0] = info[0] = 0;
         ghost = false;
         country_code[0] = country_name[0] = preferred_flag[0] = 0;
@@ -458,9 +471,13 @@ struct gameent : dynent, gamestate
     {
         freeeditinfo(edit);
         if(ai) delete ai;
-        if(attackchan >= 0) stopsound(attacksound, attackchan);
-        if(idlechan >= 0) stopsound(idlesound, idlechan);
-        if(powerupchan >= 0) stopsound(powerupsound, powerupchan);
+        loopi(Chan_Num)
+        {
+            if (chan[i] >= 0)
+            {
+                stopsound(chansound[i], chan[i]);
+            }
+        }
     }
 
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
@@ -486,18 +503,6 @@ struct gameent : dynent, gamestate
         ghost = false;
     }
 
-    void stopweaponsound()
-    {
-        if(attackchan >= 0) stopsound(attacksound, attackchan, 300);
-        attacksound = attackchan = -1;
-    }
-
-    void stopidlesound()
-    {
-        if(idlechan >= 0) stopsound(idlesound, idlechan, 400);
-        idlesound = idlechan = -1;
-    }
-
     void respawn()
     {
         dynent::reset();
@@ -513,18 +518,26 @@ struct gameent : dynent, gamestate
         flagpickup = 0;
         lastnode = -1;
         lasthit = 0;
-        stopweaponsound();
-        stoppowerupsound();
         respawnqueued = false;
+        loopi(Chan_Num)
+        {
+            stopchannelsound(i);
+        }
     }
 
-    void stoppowerupsound()
+    void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)
     {
-        if(powerupchan >= 0)
+        chansound[type] = sound;
+        chan[type] = playsound(chansound[type], this, NULL, NULL, 0, isloop ? -1 : 0, fade, chan[type]);
+    }
+
+    void stopchannelsound(int type, int fade = 0)
+    {
+        if (chan[type] >= 0)
         {
-            stopsound(powerupsound, powerupchan, 500);
-            powerupchan = -1;
+            stopsound(chansound[type], chan[type], fade);
         }
+        chansound[type] = chan[type] = -1;
     }
 
     bool gibbed()

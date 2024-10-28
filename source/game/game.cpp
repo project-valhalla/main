@@ -7,7 +7,7 @@ namespace game
     bool intermission = false, gamewaiting = false;
     bool betweenrounds = false, hunterchosen = false;
     int maptime = 0, maprealtime = 0, maplimit = -1;
-    int lastspawnattempt = 0;
+    int lastspawnattempt = 0, lastheartbeat = 0;
 
     gameent *self = NULL; // ourselves (our client)
     vector<gameent *> players; // other clients
@@ -224,11 +224,34 @@ namespace game
         }
     }
 
+    VARP(lowhealthscreen, 0, 1, 1);
+    VARP(lowhealthscreenmillis, 500, 1000, 2000);
+    VARP(lowhealthscreenamount, 50, 200, 1000);
+    VARP(lowhealthscreenfactor, 1, 5, 100);
+
+    void managelowhealthscreen(gameent* d)
+    {
+        bool haslowhealth = d->state == CS_ALIVE && d->health <= d->maxhealth / 4;
+        if (d != followingplayer(self) || intermission || !lowhealthscreen || !haslowhealth)
+        {
+            d->stopchannelsound(Chan_LowHealth, 400);
+            return;
+        }
+        
+        d->playchannelsound(Chan_LowHealth, S_LOW_HEALTH, 200, true);
+        if (!lastheartbeat || lastmillis - lastheartbeat >= lowhealthscreenmillis)
+        {
+            damageblend(lowhealthscreenamount, lowhealthscreenfactor);
+            lastheartbeat = lastmillis;
+        }
+    }
+
     void otherplayers(int curtime)
     {
         loopv(players)
         {
             gameent *d = players[i];
+            managelowhealthscreen(d);
             if(d == self || d->ai) continue;
 
             if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d);
@@ -549,6 +572,11 @@ namespace game
     {
         d->state = CS_DEAD;
         d->lastpain = lastmillis;
+        loopi(Chan_Num)
+        {
+            // Free up sound channels used for player actions.
+            d->stopchannelsound(i);
+        }
         stopownersounds(d);
         if(!restore)
         {
@@ -587,8 +615,6 @@ namespace game
             d->resetinterp();
             d->smoothmillis = 0;
         }
-        d->stopweaponsound();
-        d->stoppowerupsound();
     }
 
     int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;

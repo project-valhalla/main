@@ -2346,7 +2346,7 @@ namespace game
                 {
                     if(!m_berserker) break;
                     d->makeberserker();
-                    d->stoppowerupsound();
+                    d->stopchannelsound(Chan_PowerUp);
                     conoutf(CON_GAMEINFO, "%s \f2is the berserker!", colorname(d));
                     playsound(S_BERSERKER, d);
                     particle_flare(d->o, d->o, 350, PART_COMICS, 0xFFFFFF, 20.0f);
@@ -2359,7 +2359,7 @@ namespace game
                     if(!hunterchosen && d == actor) hunterchosen = true;
                     writeobituary(d, actor, ATK_ZOMBIE);
                     d->infect();
-                    d->stoppowerupsound();
+                    d->stopchannelsound(Chan_PowerUp);
                     stopownersounds(d);
                     playsound(S_INFECTED, d);
                     particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);

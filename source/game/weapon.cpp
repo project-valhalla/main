@@ -33,10 +33,7 @@ namespace game
     {
         d->lastswitch = lastmillis;
         sway.addevent(d, SwayEvent_Switch, 500, -15);
-        if (d->gunchan >= 0)
-        {
-            stopsound(d->gunsound, d->gunchan, 200);
-        }
+        d->stopchannelsound(Chan_Weapon, 200);
         if (!validgun(gun))
         {
             gun = d->gunselect;
@@ -48,8 +45,8 @@ namespace game
         }
         else if (validsound(switchsound))
         {
-            d->gunsound = switchsound;
-            d->gunchan = playsound(d->gunsound, d, NULL, NULL, 0, 0, 0, d->gunchan);
+            d->chansound[Chan_Weapon] = switchsound;
+            d->chan[Chan_Weapon] = playsound(d->chansound[Chan_Weapon], d, NULL, NULL, 0, 0, 0, d->chan[Chan_Weapon]);
         }
         if (d == self)
         {
@@ -1320,8 +1317,14 @@ namespace game
             default: break;
         }
         bool looped = false;
-        if(d->attacksound >= 0 && d->attacksound != sound) d->stopweaponsound();
-        if(d->idlesound >= 0) d->stopidlesound();
+        if (validsound(d->chansound[Chan_Attack]) && d->chansound[Chan_Attack] != sound)
+        {
+            d->stopchannelsound(Chan_Attack, 300);
+        }
+        if (validsound(d->chansound[Chan_Idle]))
+        {
+            d->stopchannelsound(Chan_Idle, 400);
+        }
         switch(sound)
         {
             case S_SG_A:
@@ -1329,17 +1332,21 @@ namespace game
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
                 if(d == hud)
                 {
-                    d->gunsound = S_SG_B;
-                    d->gunchan = playsound(d->gunsound, d, NULL, NULL, 0, 0, 0, d->gunchan);
+                    d->playchannelsound(Chan_Weapon, S_SG_B);
                 }
                 break;
             }
             case S_PULSE2_A:
             {
-                if(d->attacksound >= 0) looped = true;
-                d->attacksound = sound;
-                d->attackchan = playsound(sound, NULL, &d->o, NULL, 0, -1, 100, d->attackchan);
-                if(previousaction > 200 && !looped) playsound(S_PULSE2_B, d);
+                if (validsound(d->chansound[Chan_Attack]))
+                {
+                    looped = true;
+                }
+                d->playchannelsound(Chan_Attack, sound, 100, true);
+                if (previousaction > 200 && !looped)
+                {
+                    d->playchannelsound(Chan_Weapon, S_PULSE2_B);
+                }
                 break;
             }
             case S_RAIL_A:
@@ -1348,8 +1355,7 @@ namespace game
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
                 if(d == hud)
                 {
-                    d->gunsound = S_RAIL_B;
-                    d->gunchan = playsound(d->gunsound, d, NULL, NULL, 0, 0, 0, d->gunchan);
+                    d->playchannelsound(Chan_Weapon, S_RAIL_B);
                 }
                 break;
             }
@@ -1757,28 +1763,32 @@ namespace game
     void checkattacksound(gameent *d, bool local)
     {
         int atk = guns[d->gunselect].attacks[d->attacking];
-        switch(d->attacksound)
+        switch(d->chansound[Chan_Attack])
         {
             case S_PULSE2_A: atk = ATK_PULSE2; break;
             default: return;
         }
-        if(atk >= 0 && atk < NUMATKS &&
-           d->clientnum >= 0 && d->state == CS_ALIVE &&
+        if(atk >= 0 && atk < NUMATKS && d->clientnum >= 0 && d->state == CS_ALIVE &&
            d->lastattack == atk && lastmillis - d->lastaction < attacks[atk].attackdelay + 50)
         {
-            d->attackchan = playsound(d->attacksound, NULL, local ? NULL : &d->o, NULL, 0, -1, -1, d->attackchan);
-            if(d->attackchan < 0) d->attacksound = -1;
+            const int channel = Chan_Attack;
+            d->chan[channel] = playsound(d->chansound[channel], NULL, local ? NULL : &d->o, NULL, 0, -1, -1, d->chan[channel]);
+            if (d->chan[channel] < 0)
+            {
+                d->chansound[channel] = -1;
+            }
         }
         else
         {
-            d->stopweaponsound();
+            d->stopchannelsound(Chan_Idle);
+            d->stopchannelsound(Chan_Attack);
         }
     }
 
     void checkidlesound(gameent *d, bool local)
     {
         int sound = -1;
-        if(d->clientnum >= 0 && d->state == CS_ALIVE && d->attacksound < 0) switch(d->gunselect)
+        if(d->clientnum >= 0 && d->state == CS_ALIVE && !validsound(d->chansound[Chan_Attack])) switch(d->gunselect)
         {
             case GUN_ZOMBIE:
             {
@@ -1786,19 +1796,25 @@ namespace game
                 break;
             }
         }
-        if(d->idlesound != sound)
+        if(d->chansound[Chan_Idle] != sound)
         {
-            if(d->idlesound >= 0) d->stopidlesound();
-            if(sound >= 0)
+            d->stopchannelsound(Chan_Idle);
+            if (validsound(sound))
             {
-                d->idlechan = playsound(sound, NULL, local ? NULL : &d->o, NULL, 0, -1, 1200, d->idlechan, 500);
-                if(d->idlechan >= 0) d->idlesound = sound;
+                d->chan[Chan_Idle] = playsound(sound, NULL, local ? NULL : &d->o, NULL, 0, -1, 1200, d->chan[Chan_Idle], 500);
+                if (d->chan[Chan_Idle] >= 0)
+                {
+                    d->chansound[Chan_Idle] = sound;
+                }
             }
         }
-        else if(sound >= 0)
+        else if (validsound(sound))
         {
-            d->idlechan = playsound(sound, NULL, local ? NULL : &d->o, NULL, 0, -1, 1200, d->idlechan, 500);
-            if(d->idlechan < 0) d->idlesound = -1;
+            d->chan[Chan_Idle] = playsound(sound, NULL, local ? NULL : &d->o, NULL, 0, -1, 1200, d->chan[Chan_Idle], 500);
+            if (d->chan[Chan_Idle] < 0)
+            {
+                d->chansound[Chan_Idle] = -1;
+            }
         }
     }
 

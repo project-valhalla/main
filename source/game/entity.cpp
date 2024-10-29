@@ -177,9 +177,9 @@ namespace entities
         gameent* hud = followingplayer(self);
         itemstat &is = itemstats[type-I_AMMO_SG];
         playsound(is.sound, NULL, d == hud ? NULL : &d->o, NULL, 0, 0, 0, -1, 0, 1800);
-        if(d == hud)
+        if (d == hud)
         {
-            addscreenfx(80);
+            addscreenflash(80);
         }
         if (type >= I_DDAMAGE && type <= I_INVULNERABILITY)
         {
@@ -227,8 +227,14 @@ namespace entities
                 playentitysound(d, S_TELEPORT, e.attr4, e.o);
                 if(ents.inrange(td) && ents[td]->type == TELEDEST)
                 {
-                    if(d!=followingplayer(self)) playsound(S_TELEDEST, NULL, &ents[td]->o);
-                    else addscreenfx(150);
+                    if (d != followingplayer(self))
+                    {
+                        playsound(S_TELEDEST, NULL, &ents[td]->o);
+                    }
+                    else
+                    {
+                        addscreenflash(150);
+                    }
                     teleportparticleeffects(d, ents[td]->o);
                 }
                 teleportparticleeffects(d, d->o);

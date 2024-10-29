@@ -319,7 +319,7 @@ extern vec calcmodelpreviewpos(const vec &radius, float &yaw);
 
 extern void damageblend(int n, const int factor = 0);
 extern void damagecompass(int n, const vec &loc);
-extern void addscreenfx(int n);
+extern void addscreenflash(int n);
 extern void clearscreeneffects();
 
 extern vec minimapcenter, minimapradius, minimapscale;

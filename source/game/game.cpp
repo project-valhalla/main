@@ -372,16 +372,18 @@ namespace game
     void spawneffect(gameent *d)
     {
         stopownersounds(d);
-        if(d==followingplayer(self))
+        if (d == followingplayer(self))
         {
             clearscreeneffects();
-            addscreenfx(200);
+            addscreenflash(200);
         }
         int color = 0x00FF5B;
-        if(d->type == ENT_PLAYER) color = getplayercolor(d, d->team);
+        if (d->type == ENT_PLAYER)
+        {
+            color = getplayercolor(d, d->team);
+        }
         particle_splash(PART_SPARK2, 250, 200, d->o, color, 0.60f, 200, 5);
-        vec lightcolor = vec::hexcolor(color);
-        adddynlight(d->o, 35, lightcolor, 900, 100);
+        adddynlight(d->o, 35, vec::hexcolor(color), 900, 100);
         doweaponchangeffects(d);
         playsound(S_SPAWN, d);
     }

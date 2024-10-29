@@ -2365,7 +2365,10 @@ namespace game
                     particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
                     d->lastswitch = lastmillis;
                 }
-                if(d == followingplayer(self)) addscreenfx(150);
+                if (d == followingplayer(self))
+                {
+                    addscreenflash(150);
+                }
                 break;
             }
 

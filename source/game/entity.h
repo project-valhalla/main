@@ -73,23 +73,23 @@ enum // power-up types
     PU_INVULNERABILITY
 };
 
-static struct itemstat { int add, max, spawntime, info, sound, announcersound; } itemstats[] =
+static struct itemstat { int add, max, spawntime, info, sound; } itemstats[] =
 {
-    { 12,    60,    15,  GUN_SCATTER,        S_AMMO_SG,         NULL, }, // shotgun ammo
-    { 40,    200,   15,  GUN_SMG,            S_AMMO_SMG,        NULL, }, // SMG ammo
-    { 80,    400,   15,  GUN_PULSE,          S_AMMO_PULSE,      NULL, }, // pulse battery
-    { 6,     30,    15,  GUN_ROCKET,         S_AMMO_ROCKET,     NULL, }, // rockets
-    { 8,     40,    15,  GUN_RAIL,           S_AMMO_RAIL,       NULL, }, // railgun ammo
-    { 6,     30,    15,  GUN_GRENADE,        S_AMMO_GRENADE,    NULL, }, // grenades
-    { 25,    100,   25,  NULL,               S_HEALTH,          NULL, }, // regular health
-    { 50,    200,   35,  NULL,               S_SHIELD_LIGHT,    NULL, }, // light shield
-    { 100,   200,   35,  NULL,               S_SHIELD_HEAVY,    NULL, }, // heavy shield
-    { 50,    250,   60,  NULL,               S_SUPERHEALTH,     NULL, }, // super health
-    { 100,   250,   80,  NULL,               S_MEGAHEALTH,      NULL, }, // mega health
-    { 30000, 60000, 100, PU_DAMAGE,          S_DAMAGE,          NULL, }, // double damage
-    { 30000, 60000, 100, PU_HASTE,           S_HASTE,           NULL, }, // haste
-    { 30000, 60000, 100, PU_ARMOR,           S_ARMOR,           NULL, }, // armor
-    { 30000, 60000, 100, PU_AMMO,            S_INFINITEAMMO,    NULL, }, // infinite ammo
-    { 30000, 60000, 100, PU_AGILITY,         S_AGILITY,         NULL, }, // agility
-    { 15000, 30000, 100, PU_INVULNERABILITY, S_INVULNERABILITY, NULL, }  // invulnerability
+    { 12,    60,    15,  GUN_SCATTER,        S_AMMO_SG,         }, // shotgun ammo
+    { 40,    200,   15,  GUN_SMG,            S_AMMO_SMG,        }, // SMG ammo
+    { 80,    400,   15,  GUN_PULSE,          S_AMMO_PULSE,      }, // pulse battery
+    { 6,     30,    15,  GUN_ROCKET,         S_AMMO_ROCKET,     }, // rockets
+    { 8,     40,    15,  GUN_RAIL,           S_AMMO_RAIL,       }, // railgun ammo
+    { 6,     30,    15,  GUN_GRENADE,        S_AMMO_GRENADE,    }, // grenades
+    { 25,    100,   25,  NULL,               S_HEALTH,          }, // regular health
+    { 50,    200,   35,  NULL,               S_SHIELD_LIGHT,    }, // light shield
+    { 100,   200,   35,  NULL,               S_SHIELD_HEAVY,    }, // heavy shield
+    { 50,    250,   60,  NULL,               S_SUPERHEALTH,     }, // super health
+    { 100,   250,   80,  NULL,               S_MEGAHEALTH,      }, // mega health
+    { 30000, 60000, 100, PU_DAMAGE,          S_DAMAGE,          }, // double damage
+    { 30000, 60000, 100, PU_HASTE,           S_HASTE,           }, // haste
+    { 30000, 60000, 100, PU_ARMOR,           S_ARMOR,           }, // armor
+    { 30000, 60000, 100, PU_AMMO,            S_INFINITEAMMO,    }, // infinite ammo
+    { 30000, 60000, 100, PU_AGILITY,         S_AGILITY,         }, // agility
+    { 15000, 30000, 100, PU_INVULNERABILITY, S_INVULNERABILITY, }  // invulnerability
 };

@@ -156,23 +156,44 @@ namespace entities
     */
     void pickupeffects(int n, gameent *d)
     {
-        if(!ents.inrange(n)) return;
+        if (!ents.inrange(n))
+        {
+            return;
+        }
+
         int type = ents[n]->type;
-        if(!validitem(type)) return;
+        if (!validitem(type))
+        {
+            return;
+        }
+
         ents[n]->clearspawned();
-        if(!d) return;
-        gameent *h = followingplayer(self);
-        itemstat &is = itemstats[type-I_AMMO_SG];
-        playsound(is.sound, NULL, d != h ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
+        if (!d)
+        {
+            return;
+        }
+
         d->pickup(type);
-        if(d==followingplayer(self))
+        gameent* hud = followingplayer(self);
+        itemstat &is = itemstats[type-I_AMMO_SG];
+        playsound(is.sound, NULL, d == hud ? NULL : &d->o, NULL, 0, 0, 0, -1, 0, 1800);
+        if(d == hud)
         {
             addscreenfx(80);
         }
-        if(!is.announcersound || type < I_DDAMAGE || type > I_INVULNERABILITY) return;
-        if(d == self) conoutf(CON_GAMEINFO, "\f2%s obtained", gentities[type].prettyname);
-        else conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
-        playsound(d == h ? is.announcersound : S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
+        if (type >= I_DDAMAGE && type <= I_INVULNERABILITY)
+        {
+            if (d == hud)
+            {
+                conoutf(CON_GAMEINFO, "\f2%s power-up obtained", gentities[type].prettyname);
+            }
+            else
+            {
+                conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
+                playsound(S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
+            }
+            
+        }
     }
 
     // these functions are called when the client touches the item
@@ -364,7 +385,6 @@ namespace entities
 
     void updatepowerups(int time, gameent* d)
     {
-        gameent* hud = followingplayer(self);
         const int sound = d->role == ROLE_BERSERKER ? S_BERSERKER_LOOP : (S_LOOP_DAMAGE + d->poweruptype - 1);
         d->playchannelsound(Chan_PowerUp, sound, 200, true);
 
@@ -407,13 +427,19 @@ namespace entities
         }
     }
 
-    static void spawneffect(vec o)
+    static void spawneffect(extentity *e)
     {
         int spawncolor = 0x00E463;
-        particle_splash(PART_SPARK, 20, 100, o, spawncolor, 1.0f, 100, 60);
-        particle_flare(o, o, 200, PART_EXPLODE1, 0x83E550, 16.0f);
-        adddynlight(o, 100, vec::hexcolor(spawncolor), 200, 75, DL_SHRINK|L_NOSHADOW);
-        playsound(S_ITEM_SPAWN, NULL, &o, NULL, 0, 0, 0, -1, 0, 1500);
+        particle_splash(PART_SPARK, 20, 100, e->o, spawncolor, 1.0f, 100, 60);
+        particle_flare(e->o, e->o, 200, PART_EXPLODE1, 0x83E550, 16.0f);
+        adddynlight(e->o, 100, vec::hexcolor(spawncolor), 200, 75, DL_SHRINK|L_NOSHADOW);
+        playsound(S_ITEM_SPAWN, NULL, &e->o, NULL, 0, 0, 0, -1, 0, 1500);
+
+        if (e->type >= I_DDAMAGE && e->type <= I_INVULNERABILITY)
+        {  
+            conoutf(CON_GAMEINFO, "\f2%s power-up available!", gentities[e->type].prettyname);
+            playsound(S_POWERUP_SPAWN);
+        }
     }
 
     void setspawn(int i, bool on)
@@ -422,7 +448,7 @@ namespace entities
         {
             extentity* e = ents[i];
             e->setspawned(on);
-            spawneffect(e->o);
+            spawneffect(e);
             e->lastspawn = lastmillis;
         }
     }

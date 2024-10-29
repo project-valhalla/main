@@ -263,6 +263,7 @@ namespace entities
             {
                  playentitysound(d, S_JUMPPAD, e.attr4, e.o);
             }
+            sway.addevent(d, SwayEvent_Land, 250, -2);
         }
         if(local && d->clientnum >= 0)
         {

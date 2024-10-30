@@ -2342,23 +2342,31 @@ namespace game
                 gameent *d = getclient(tcn),
                         *actor = getclient(acn);
                 if(!d || !actor) break;
+                d->assignrole(role);
                 if(role == ROLE_BERSERKER)
                 {
-                    if(!m_berserker) break;
-                    d->makeberserker();
+                    if (!m_berserker)
+                    {
+                        break;
+                    }
                     d->stopchannelsound(Chan_PowerUp);
                     conoutf(CON_GAMEINFO, "%s \f2is the berserker!", colorname(d));
                     playsound(S_BERSERKER, d);
                     particle_flare(d->o, d->o, 350, PART_COMICS, 0xFFFFFF, 20.0f);
-
-                    thirdperson = 1; // Temporary.
+                    // Temporary:
+                    thirdperson = 1;
                 }
                 else if(role == ROLE_ZOMBIE)
                 {
-                    if(!m_infection) break;
-                    if(!hunterchosen && d == actor) hunterchosen = true;
+                    if (!m_infection)
+                    {
+                        break;
+                    }
+                    if (!hunterchosen && d == actor)
+                    {
+                        hunterchosen = true;
+                    }
                     writeobituary(d, actor, ATK_ZOMBIE);
-                    d->infect();
                     d->stopchannelsound(Chan_PowerUp);
                     stopownersounds(d);
                     playsound(S_INFECTED, d);

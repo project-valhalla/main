@@ -291,25 +291,26 @@ struct gamestate
         role = ROLE_NONE;
     }
 
-    void infect()
+    void assignrole(int newrole)
     {
-        role = ROLE_ZOMBIE;
-        maxhealth = health = 1000;
-        resetitems();
-        resetweapons();
-        ammo[GUN_ZOMBIE] = 1;
-        gunselect = GUN_ZOMBIE;
-    }
-
-    void makeberserker()
-    {
-        role = ROLE_BERSERKER;
-        maxhealth = health = maxhealth * 2;
-        loopi(NUMGUNS)
+        role = newrole;
+        if (role == ROLE_ZOMBIE)
         {
-            if(!ammo[i] || i == GUN_INSTA || i == GUN_ZOMBIE) continue;
-            if(i == GUN_PISTOL) ammo[i] = 100;
-            else ammo[i] = max(itemstats[i-GUN_SCATTER].max, itemstats[i-GUN_SCATTER].add*5);
+            maxhealth = health = 1000;
+            resetitems();
+            resetweapons();
+            ammo[GUN_ZOMBIE] = 1;
+            gunselect = GUN_ZOMBIE;
+        }
+        else if (role == ROLE_BERSERKER)
+        {
+            maxhealth = health = maxhealth * 2;
+            loopi(NUMGUNS)
+            {
+                if (!ammo[i] || i == GUN_INSTA || i == GUN_ZOMBIE) continue;
+                if (i == GUN_PISTOL) ammo[i] = 100;
+                else ammo[i] = max(itemstats[i - GUN_SCATTER].max, itemstats[i - GUN_SCATTER].add * 5);
+            }
         }
     }
 

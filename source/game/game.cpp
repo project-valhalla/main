@@ -418,6 +418,7 @@ namespace game
         {
             if (act == ACT_SECONDARY)
             {
+                msgsound(S_WEAPON_ZOOM, self);
                 if (identexists("dozoom"))
                 {
                     execident("dozoom");

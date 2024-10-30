@@ -1,7 +1,7 @@
 // weapon.cpp: all shooting and effects code, projectile management
 #include "game.h"
 
-extern int zoom;
+extern int zoom, zoomfov;
 
 namespace game
 {
@@ -56,15 +56,25 @@ namespace game
 
     void nextweapon(int dir, bool force = false)
     {
-        if(self->state!=CS_ALIVE) return;
-        dir = (dir < 0 ? NUMGUNS-1 : 1);
-        int gun = self->gunselect;
-        loopi(NUMGUNS)
+        if (self->state != CS_ALIVE)
         {
-            gun = (gun + dir)%NUMGUNS;
-            if(force || self->ammo[gun]) break;
+            return;
         }
-        if(gun != self->gunselect) gunselect(gun, self);
+        if (guns[self->gunselect].zoom && zoom)
+        {
+            zoomfov = clamp(zoomfov - dir, 10, 90);
+        }
+        else
+        {
+            dir = (dir < 0 ? NUMGUNS - 1 : 1);
+            int gun = self->gunselect;
+            loopi(NUMGUNS)
+            {
+                gun = (gun + dir) % NUMGUNS;
+                if (force || self->ammo[gun]) break;
+            }
+            if (gun != self->gunselect) gunselect(gun, self);
+        }
     }
     ICOMMAND(nextweapon, "ii", (int *dir, int *force), nextweapon(*dir, *force!=0));
 

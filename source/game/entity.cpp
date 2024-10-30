@@ -441,7 +441,6 @@ namespace entities
         particle_flare(e->o, e->o, 200, PART_EXPLODE1, 0x83E550, 16.0f);
         adddynlight(e->o, 100, vec::hexcolor(spawncolor), 200, 75, DL_SHRINK|L_NOSHADOW);
         playsound(S_ITEM_SPAWN, NULL, &e->o, NULL, 0, 0, 0, -1, 0, 1500);
-
         if (e->type >= I_DDAMAGE && e->type <= I_INVULNERABILITY)
         {  
             conoutf(CON_GAMEINFO, "\f2%s power-up available!", gentities[e->type].prettyname);
@@ -449,13 +448,16 @@ namespace entities
         }
     }
 
-    void setspawn(int i, bool on)
+    void setspawn(int i, bool shouldspawn, bool isforced)
     {
         if (ents.inrange(i))
         {
             extentity* e = ents[i];
-            e->setspawned(on);
-            spawneffect(e);
+            e->setspawned(shouldspawn);
+            if (!isforced)
+            {
+                spawneffect(e);
+            }
             e->lastspawn = lastmillis;
         }
     }
@@ -548,13 +550,13 @@ namespace entities
     {
         extentity &e = *ents[i];
         //e.flags = 0;
-        if (!e.spawned())
-        {
-            e.lastspawn = lastmillis;
-        }
         if (local)
         {
             addmsg(N_EDITENT, "rii3ii5", i, (int)(e.o.x * DMF), (int)(e.o.y * DMF), (int)(e.o.z * DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+        }
+        if (canspawnitem(e.type) && !e.spawned())
+        {
+            e.lastspawn = lastmillis;
         }
     }
 

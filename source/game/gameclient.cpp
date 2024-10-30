@@ -1754,7 +1754,7 @@ namespace game
                 int n;
                 while((n = getint(p))>=0 && !p.overread())
                 {
-                    if(mapchanged) entities::setspawn(n, true);
+                    if(mapchanged) entities::setspawn(n, true, true);
                     getint(p); // type
                 }
                 break;

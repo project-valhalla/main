@@ -71,7 +71,7 @@ struct physent // base entity type, can be affected by physics
     vec o, vel, falling; // origin, velocity
     vec deltapos, newpos; // movement interpolation
     float yaw, pitch, roll;
-    float speed; // cubes per second, 90 for player
+    float speed; // cubes per second
     int timeinair;
     float radius, eyeheight, maxheight, aboveeye; // bounding box size
     float xradius, yradius, zmargin;

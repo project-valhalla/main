@@ -12,6 +12,7 @@ namespace ai
 
     VAR(debugbots, 0, 0, 6);
     VAR(botforcegun, -1, -1, NUMGUNS-1);
+    VAR(botidle, 0, 0, 1);
 
     ICOMMAND(botadd, "s", (char *s), addmsg(N_ADDBOT, "ri", *s ? clamp(parseint(s), 1, 101) : -1));
     ICOMMAND(botdel, "", (), addmsg(N_DELBOT, "r"));
@@ -35,7 +36,11 @@ namespace ai
 
     bool canmove(gameent *d)
     {
-        return d->state != CS_DEAD && !intermission;
+        if (d->state == CS_DEAD || intermission || (!multiplayer(false) && botidle))
+        {
+            return false;
+        }
+        return true;
     }
 
     float attackmindist(int atk)

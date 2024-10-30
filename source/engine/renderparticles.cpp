@@ -1123,13 +1123,17 @@ void particle_icon(const vec &s, int ix, int iy, int type, int fade, int color, 
     p->flags |= ix | (iy<<2);
 }
 
-VARP(hudmarkdist, 0, 64, 512);
+VARP(hudmarkmindist, 0, 128, 512);
+VARP(hudmarkmaxdist, 0, 1024, 4096);
 
 void particle_hud_mark(const vec &s, int ix, int iy, int type, int fade, int color, float size)
 {
     if(!canaddparticles()) return;
     vec o;
-    if(camera1->o.dist(s) <= hudmarkdist && raycubelos(s, camera1->o, o)) return;
+    if((camera1->o.dist(s) <= hudmarkmindist && raycubelos(s, camera1->o, o)) || camera1->o.dist(s) > hudmarkmaxdist)
+    {
+        return;
+    }
     o = s;
     vec camera = camera1->o;
     o.sub(camera).normalize();

@@ -16,7 +16,7 @@ enum                            // static entity types
 
     I_AMMO_SG, I_AMMO_SMG, I_AMMO_PULSE, I_AMMO_RL, I_AMMO_RAIL, I_AMMO_GRENADE,
     I_HEALTH, I_YELLOWSHIELD, I_REDSHIELD,
-    I_SUPERHEALTH, I_MEGAHEALTH, I_DDAMAGE, I_HASTE, I_ARMOR, I_INFINITEAMMO, I_AGILITY, I_INVULNERABILITY,
+    I_MEGAHEALTH, I_ULTRAHEALTH, I_DDAMAGE, I_HASTE, I_ARMOR, I_INFINITEAMMO, I_AGILITY, I_INVULNERABILITY,
 
     TRIGGER, // attr1 = idx, attr2 = model, attr3 = radius, attr4 = delay
     TARGET, // attr1 = idx, attr2 = hostile, att3 = can move
@@ -50,8 +50,8 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "health",          "Health",             "item/health"          },
     { "light_shield",    "Light Shield",       "item/shield/yellow"   },
     { "heavy_shield",    "Heavy Shield",       "item/shield/red"      },
-    { "superhealth",     "Super Health",       "item/health/super"    },
-    { "megahealth",      "Mega Health",        "item/health/mega"     },
+    { "megahealth",      "Mega Health",        "item/health/super"    },
+    { "ultrahealth",     "Ultra Health",       "item/health/mega"     },
     { "double_damage",   "Double Damage",      "item/doubledamage"    },
     { "haste",           "Haste",              "item/haste"           },
     { "armor",           "Armor",              "item/armor"           },
@@ -84,8 +84,8 @@ static struct itemstat { int add, max, spawntime, info, sound; } itemstats[] =
     { 25,    100,   25,  NULL,               S_HEALTH,          }, // regular health
     { 50,    200,   35,  NULL,               S_SHIELD_LIGHT,    }, // light shield
     { 100,   200,   35,  NULL,               S_SHIELD_HEAVY,    }, // heavy shield
-    { 50,    250,   60,  NULL,               S_SUPERHEALTH,     }, // super health
-    { 100,   250,   80,  NULL,               S_MEGAHEALTH,      }, // mega health
+    { 50,    200,   60,  NULL,               S_SUPERHEALTH,     }, // super health
+    { 100,   200,   80,  NULL,               S_MEGAHEALTH,      }, // mega health
     { 30000, 60000, 100, PU_DAMAGE,          S_DAMAGE,          }, // double damage
     { 30000, 60000, 100, PU_HASTE,           S_HASTE,           }, // haste
     { 30000, 60000, 100, PU_ARMOR,           S_ARMOR,           }, // armor

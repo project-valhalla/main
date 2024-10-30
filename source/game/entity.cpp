@@ -45,7 +45,7 @@ namespace entities
             case I_HEALTH:
                 if(m_insta(mutators) || m_effic(mutators) || m_vampire(mutators)) return false;
                 break;
-            case I_SUPERHEALTH: case I_MEGAHEALTH:
+            case I_MEGAHEALTH: case I_ULTRAHEALTH:
                 if(m_insta(mutators) || m_vampire(mutators)) return false;
                 break;
             case I_DDAMAGE: case I_ARMOR: case I_INFINITEAMMO:

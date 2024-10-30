@@ -466,11 +466,13 @@ namespace ai
                 if(d->health < min(d->skill, 75)) score = 1e3f;
                 break;
 
-            case I_SUPERHEALTH: case I_MEGAHEALTH:
+            case I_MEGAHEALTH:
+            case I_ULTRAHEALTH:
                 score = 1e2f;
                 break;
 
-            case I_YELLOWSHIELD: case I_REDSHIELD:
+            case I_YELLOWSHIELD:
+            case I_REDSHIELD:
                 if(e.type == I_REDSHIELD) score = 1e2f;
                 else score = 1e1f;
                 break;
@@ -667,7 +669,9 @@ namespace ai
                 bool wantsitem = false;
                 switch(e.type)
                 {
-                    case I_HEALTH: case I_SUPERHEALTH: case I_MEGAHEALTH:
+                    case I_HEALTH:
+                    case I_MEGAHEALTH:
+                    case I_ULTRAHEALTH:
                         wantsitem = badhealth(d);
                         break;
 

@@ -193,8 +193,8 @@ struct gamestate
         switch(type)
         {
             case I_HEALTH:
-            case I_SUPERHEALTH:
             case I_MEGAHEALTH:
+            case I_ULTRAHEALTH:
                 return health<is.max;
 
             case I_YELLOWSHIELD:
@@ -225,8 +225,8 @@ struct gamestate
         switch(type)
         {
             case I_HEALTH:
-            case I_SUPERHEALTH:
             case I_MEGAHEALTH:
+            case I_ULTRAHEALTH:
                 health = min(health+is.add, is.max);
                 break;
 

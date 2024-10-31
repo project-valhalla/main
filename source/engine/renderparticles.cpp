@@ -1345,10 +1345,11 @@ static void makeparticles(entity &e)
         case 9:  //steam
         case 10: //water
         case 13: //snow
+        case 14: //spark
         {
-            static const int typemap[]   = { PART_TRAIL, -1, -1, PART_LIGHTNING, -1, PART_STEAM, PART_WATER, -1, -1, PART_SNOW };
-            static const float sizemap[] = { 0.28f, 0.0f, 0.0f, 1.0f, 0.0f, 2.4f, 0.1f, 0.0f, 0.0f, 0.5f };
-            static const int gravmap[] = { 0, 0, 0, 0, 0, -20, 2, 0, 0, 20 };
+            static const int typemap[]   = { PART_TRAIL, -1, -1, PART_LIGHTNING, -1, PART_STEAM, PART_WATER, -1, -1, PART_SNOW,  PART_SPARK };
+            static const float sizemap[] = { 0.28f, 0.0f, 0.0f, 1.0f, 0.0f, 2.4f, 0.1f, 0.0f, 0.0f, 0.5f, 0.4f };
+            static const int gravmap[] = { 0, 0, 0, 0, 0, -20, 2, 0, 0, 20, 20};
             int type = typemap[e.attr1-4];
             float size = sizemap[e.attr1-4];
             int gravity = gravmap[e.attr1-4];

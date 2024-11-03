@@ -395,12 +395,12 @@ engine/rendersky.o: shared/glexts.h shared/glemu.h engine/sound.h
 engine/rendersky.o: shared/iengine.h shared/igame.h engine/world.h
 engine/rendersky.o: engine/octa.h engine/light.h engine/texture.h
 engine/rendersky.o: engine/bih.h engine/model.h
-engine/rendertext.o: shared/unicode.h shared/cube.h shared/tools.h
+engine/rendertext.o: engine/engine.h shared/cube.h shared/tools.h
 engine/rendertext.o: shared/geom.h shared/ents.h shared/command.h
 engine/rendertext.o: shared/glexts.h shared/glemu.h engine/sound.h
-engine/rendertext.o: shared/iengine.h shared/igame.h engine/engine.h
-engine/rendertext.o: engine/world.h engine/octa.h engine/light.h
-engine/rendertext.o: engine/texture.h engine/bih.h engine/model.h
+engine/rendertext.o: shared/iengine.h shared/igame.h engine/world.h
+engine/rendertext.o: engine/octa.h engine/light.h engine/texture.h
+engine/rendertext.o: engine/bih.h engine/model.h
 engine/renderva.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/renderva.o: shared/ents.h shared/command.h shared/glexts.h
 engine/renderva.o: shared/glemu.h engine/sound.h shared/iengine.h

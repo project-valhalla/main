@@ -1,4 +1,3 @@
-#include "unicode.h"
 #include "engine.h"
 
 #include <cairo.h>
@@ -305,8 +304,8 @@ static inline void add_text_to_layout(const char *markup, int len, PangoLayout *
     attr = pango_attr_foreground_new(tcolor.r * 257, tcolor.g * 257, tcolor.b * 257);
     if(attr) attr->start_index = 0;
 
-    int begin_bold = -1, begin_italic = -1, begin_underline = -1, begin_strikethrough = -1, begin_overline = -1;
-    int n_bold = 0, n_italic = 0, n_underline = 0, n_strikethrough = 0, n_overline = 0;
+    int begin_bold = -1, begin_italic = -1, begin_underline = -1, begin_strikethrough = -1;
+    int n_bold = 0, n_italic = 0, n_underline = 0, n_strikethrough = 0;
 
     // parse markup
     int i = 0, j = 0;
@@ -320,7 +319,6 @@ static inline void add_text_to_layout(const char *markup, int len, PangoLayout *
                 MARKUP_CASE('i', 'I', pango_attr_style_new        , PANGO_STYLE_ITALIC    , italic);
                 MARKUP_CASE('u', 'U', pango_attr_underline_new    , PANGO_UNDERLINE_SINGLE, underline);
                 MARKUP_CASE('t', 'T', pango_attr_strikethrough_new, TRUE                  , strikethrough);
-                MARKUP_CASE('o', 'O', pango_attr_overline_new     , PANGO_OVERLINE_SINGLE , overline);      // pango 1.46
                 default:
                 {
                     tcolor = text_color(markup[i+1], colorstack, sizeof(colorstack), cpos, initial_color);
@@ -375,12 +373,6 @@ static inline void add_text_to_layout(const char *markup, int len, PangoLayout *
     {
         m = pango_attr_strikethrough_new(TRUE);
         m->start_index = begin_strikethrough; m->end_index = j;
-        pango_attr_list_insert(list, m);
-    }
-    if(begin_overline >= 0)
-    {
-        m = pango_attr_overline_new(PANGO_OVERLINE_SINGLE);
-        m->start_index = begin_overline; m->end_index = j;
         pango_attr_list_insert(list, m);
     }
 

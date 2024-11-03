@@ -1167,7 +1167,10 @@ void particle_hud_text(const vec &s, const char *t, int type, int fade, int colo
 {
     if(!canaddparticles()) return;
     vec o;
-    if(camera1->o.dist(s) <= hudmarkdist && raycubelos(s, camera1->o, o)) return;
+    if((camera1->o.dist(s) <= hudmarkmindist && raycubelos(s, camera1->o, o)) || camera1->o.dist(s) > hudmarkmaxdist)
+    {
+        return;
+    }
     o = s;
     vec camera = camera1->o;
     o.sub(camera).normalize();

@@ -172,12 +172,10 @@ ICOMMAND(clearconsole, "", (),
 {
     while(conlines.length())
     {
-        logoutf("len=%d", conlines.length());
         cline &cl = conlines.pop();
         delete[] cl.line;
         if(cl.info.tex)
         {
-            logoutf("deleting texture %d", cl.info.tex);
             glDeleteTextures(1, &cl.info.tex);
         }
     }

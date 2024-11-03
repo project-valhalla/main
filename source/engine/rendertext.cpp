@@ -438,7 +438,7 @@ void measure_text(const char *str, int maxwidth, int &width, int &height, int al
     if(layout) g_object_unref(layout);
 }
 
-void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_color, int cursor, float outline, bvec outline_color, int align, int justify, const char *language)
+void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_color, int cursor, float outline, bvec outline_color, int outline_alpha, int align, int justify, const char *language)
 {
     // get dimensions and pango layout
     int width, height, offset;
@@ -461,7 +461,8 @@ void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_co
     // draw text onto the surface
     if(outline)
     {
-        cairo_set_source_rgba(cr, outline_color.r / 255.f, outline_color.g / 255.f, outline_color.b / 255.f, 1.0);
+        cairo_set_source_rgba(cr, outline_color.r / 255.f, outline_color.g / 255.f, outline_color.b / 255.f, outline_alpha / 255.f);
+        cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
         cairo_set_line_width(cr, 2 * outline);
         pango_cairo_layout_path(cr, layout);
         cairo_stroke(cr);
@@ -504,7 +505,7 @@ void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_co
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
 }
-void prepare_text_particle(const char *str, textinfo &info, bvec initial_color, float outline, bvec outline_color, const char *language)
+void prepare_text_particle(const char *str, textinfo &info, bvec initial_color, float outline, bvec outline_color, int outline_alpha, const char *language)
 {
     const int c = initial_color.tohexcolor(), d = outline_color.tohexcolor();
     const char *l = language ? language : "";
@@ -519,7 +520,7 @@ void prepare_text_particle(const char *str, textinfo &info, bvec initial_color, 
         info = p.ti;
         return;
     }
-    prepare_text(str, p.ti, 0, initial_color, -1, outline, outline_color, -1, 0, language);
+    prepare_text(str, p.ti, 0, initial_color, -1, outline, outline_color, outline_alpha, -1, 0, language);
     if(!p.ti.tex) { info = {0, 0, 0}; return; }
     if(particle_queue.length() >= 256)
     {
@@ -570,7 +571,7 @@ void draw_text(textinfo info, float left, float top, int a, bool black)
 void draw_text(const char *str, float left, float top, int r, int g, int b, int a, int maxwidth, int align, int justify, const char *language)
 {
     textinfo info;
-    prepare_text(str, info, maxwidth, bvec(r, g, b), -1, 0, bvec(0, 0, 0), align, justify, language);
+    prepare_text(str, info, maxwidth, bvec(r, g, b), -1, 0, bvec(0, 0, 0), 0, align, justify, language);
     if(!info.tex) return;
     draw_text(info, left, top, a);
     glDeleteTextures(1, &info.tex);

@@ -197,7 +197,7 @@ void filtertext(char *dst, const char *src, uint flags, size_t len, int unilen)
 {
     uint c;
     size_t s = uni_getchar(src, c);
-    for(char *p = (char *)src; c; p += s, s = uni_getchar(p, c))
+    for(const char *p = src; c; p += s, s = uni_getchar(p, c))
     {
         if(!(flags&T_COLORS) && c == '\f')
         {
@@ -233,7 +233,7 @@ void filteruni(char *dst, const char *src, size_t len)
 {
     uint c;
     size_t s = uni_getchar(src, c);
-    for(char *p = (char *)src; c; p += s, s = uni_getchar(p, c))
+    for(const char *p = src; c; p += s, s = uni_getchar(p, c))
     {
         if(c == '\f')
         {

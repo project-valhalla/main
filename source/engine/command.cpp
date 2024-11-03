@@ -927,7 +927,7 @@ int unescapestring(char *dst, const char *src, const char *end)
     char *start = dst;
     uint c;
     uint s = uni_getchar(src, c);
-    for(char *p = (char *)src; src < end; p += s, s = uni_getchar(p, c))
+    for(const char *p = src; src < end; p += s, s = uni_getchar(p, c))
     {
         if(iscubecntrl(c) || c == 0xFFFD)
         {
@@ -3182,7 +3182,7 @@ const char *escapestring(const char *str)
     buf.add('"');
     uint c;
     uint s = uni_getchar(str, c);
-    for(char *p = (char *)str; c; p += s, s = uni_getchar(p, c)) switch(c)
+    for(const char *p = str; c; p += s, s = uni_getchar(p, c)) switch(c)
     {
         case '\n': buf.put("^n", 2); break;
         case '\r': buf.put("^r", 2); break;

@@ -450,10 +450,13 @@ void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_co
 
     // create surface and cairo context
     if(cursor >= 0) width += max(4.f, fontsize); // make space for the cursor
+    int outline_offset = ceil(outline);
+    width += 2 * outline_offset;
+    height += 2 * outline_offset;
     cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
     cairo_t *cr = cairo_create(surface);
     cairo_set_font_options(cr, options);
-    cairo_move_to(cr, offset, 0);
+    cairo_move_to(cr, offset + outline_offset, outline_offset);
 
     // draw text onto the surface
     if(outline)
@@ -464,6 +467,7 @@ void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_co
         cairo_stroke(cr);
     }
     cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+    cairo_move_to(cr, offset + outline_offset, outline_offset);
     pango_cairo_show_layout(cr, layout);
 
     // add the cursor
@@ -475,7 +479,7 @@ void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_co
 
         const float curw = max(1.f, fontsize / 16);
 
-        cairo_rectangle(cr, cursor_rect.x / PANGO_SCALE, cursor_rect.y / PANGO_SCALE, curw, cursor_rect.height / PANGO_SCALE);
+        cairo_rectangle(cr, cursor_rect.x / PANGO_SCALE + outline_offset, cursor_rect.y / PANGO_SCALE + outline_offset, curw, cursor_rect.height / PANGO_SCALE);
         cairo_set_source_rgba(cr, cursorcolor.r / 255.f, cursorcolor.g / 255.f, cursorcolor.b / 255.f, 1.0);
         cairo_fill(cr);
     }

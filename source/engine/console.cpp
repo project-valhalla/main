@@ -103,8 +103,9 @@ ICOMMAND(fullconsole, "iN$", (int *val, int *numargs, ident *id),
 });
 ICOMMAND(toggleconsole, "", (), UI::toggleui("fullconsole"));
 
-// applies a black shadow to console text to improve visibility, the value controls the intensity of the shadow
-VARP(conshadow, 0, 255, 255);
+// apply a black shadow or outline to console text to improve visibility
+VARFP(conshadow, 0, 255, 255, clearconsoletextures());
+VARFP(conoutline, 0, 0, 255, clearconsoletextures());
 
 float rendercommand(float x, float y, float w)
 {
@@ -117,7 +118,7 @@ float rendercommand(float x, float y, float w)
     pushfont();
     setfont("default");
     textinfo info;
-    prepare_text(buf, info, w, bvec(255, 255, 255), commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf));
+    prepare_text(buf, info, w, bvec(255, 255, 255), commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), conoutline ? ceil(FONTH / 32.f) : 0, bvec(0, 0, 0), conoutline);
     y -= info.h;
     
     if(info.tex)
@@ -239,7 +240,7 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         if(conlines[idx].w != conwidth || conlines[idx].fontsize != fontsize || !info.tex)
         {
             if(info.tex) glDeleteTextures(1, &info.tex);
-            prepare_text(line, info, conwidth);
+            prepare_text(line, info, conwidth, bvec(255, 255, 255), -1, conoutline ? ceil(FONTH / 32.f) : 0, bvec(0, 0, 0), conoutline);
             conlines[idx].w = conwidth;
             conlines[idx].fontsize = fontsize;
         }

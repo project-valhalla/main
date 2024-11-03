@@ -2587,11 +2587,11 @@ VARP(damagescreenfade, 0, 500, 1000);
 VARP(damagescreenmin, 1, 50, 1000);
 VARP(damagescreenmax, 1, 100, 1000);
 
-void damageblend(int n)
+void damageblend(int n, const int factor)
 {
     if(!damagescreen || minimized) return;
     if(lastmillis > damageblendmillis) damageblendmillis = lastmillis;
-    damageblendmillis += clamp(n, damagescreenmin, damagescreenmax)*damagescreenfactor;
+    damageblendmillis += clamp(n, damagescreenmin, damagescreenmax) * (factor ? factor : damagescreenfactor);
 }
 
 void drawdamagescreen(int w, int h)
@@ -2613,36 +2613,47 @@ void drawdamagescreen(int w, int h)
     hudquad(0, 0, w, h);
 }
 
-int screenfxmillis = 0;
+int screenflashmillis = 0;
 
-VARFP(screenfx, 0, 1, 1, { if(!screenfx) screenfxmillis = 0; });
-VARP(screenfxfactor, 1, 5, 100);
-VARP(screenfxalpha, 1, 25, 100);
-VARP(screenfxfade, 0, 600, 1000);
-VARP(screenfxmin, 1, 20, 1000);
-VARP(screenfxmax, 1, 200, 1000);
-
-void addscreenfx(int n)
+VARFP(screenflash, 0, 1, 1,
 {
-    if(!screenfx || minimized) return;
-    if(lastmillis > screenfxmillis) screenfxmillis = lastmillis;
-    screenfxmillis += clamp(n, screenfxmin, screenfxmax)*screenfxfactor;
+    if(!screenflash)
+    {
+        screenflashmillis = 0;
+    }
+});
+VARP(screenflashfactor, 1, 5, 100);
+VARP(screenflashalpha, 1, 25, 100);
+VARP(screenflashfade, 0, 600, 1000);
+VARP(screenflashmin, 1, 20, 1000);
+VARP(screenflashmax, 1, 200, 1000);
+
+void addscreenflash(int n)
+{
+    if(!screenflash || minimized) return;
+    if(lastmillis > screenflashmillis) screenflashmillis = lastmillis;
+    screenflashmillis += clamp(n, screenflashmin, screenflashmax) * screenflashfactor;
 }
 
-void drawscreenfx(int w, int h)
+void drawscreenflash(int w, int h)
 {
-    if(lastmillis >= screenfxmillis) return;
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    float fade = screenfxalpha/100.0f;
-    if(screenfxmillis - lastmillis < screenfxfade)
-        fade *= float(screenfxmillis - lastmillis)/screenfxfade;
-    gle::colorf(fade, fade, fade, fade);
+    if(lastmillis >= screenflashmillis) return;
+
+    hudnotextureshader->set();
+
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    float fade = screenflashalpha / 100.0f;
+    if(screenflashmillis - lastmillis < screenflashfade)
+    {
+        fade *= float(screenflashmillis - lastmillis) / screenflashfade;
+    }
+    gle::colorf(1, 1, 1, fade);
     hudquad(0, 0, w, h);
 }
 
 void clearscreeneffects()
 {
-    damageblendmillis = screenfxmillis = 0;
+    damageblendmillis = screenflashmillis = 0;
     loopi(8) damagedirs[i] = 0;
 }
 
@@ -2682,28 +2693,30 @@ void drawzoom(int w, int h)
     setusedtexture(scopetex);
     if(zoomtype == ZOOM_SCOPE)
     {
-        float x = 0, y = 0, dimension = 0, pcoverage = 1, blendf = 1.f - pcoverage;
+        float x = 0, y = 0, dimension = 0, coverage = 1, blend = 1.f - coverage;
         if (w > h)
         {
             dimension = h;
             x += (w - h) / 2;
-            drawblend(0, 0, x, dimension, blendf, blendf, blendf);
-            drawblend(x + dimension, 0, x + 1, dimension, blendf, blendf, blendf);
+            drawblend(0, 0, x, dimension, blend, blend, blend);
+            drawblend(x + dimension, 0, x + 1, dimension, blend, blend, blend);
         }
         else if (h > w)
         {
             dimension = w;
             y += (h - w) / 2;
-            drawblend(0, 0, dimension, y, blendf, blendf, blendf);
-            drawblend(0, y + dimension, dimension, y, blendf, blendf, blendf);
+            drawblend(0, 0, dimension, y, blend, blend, blend);
+            drawblend(0, y + dimension, dimension, y, blend, blend, blend);
         }
         else dimension = h;
-        gle::colorf(1, 1, 1, pcoverage);
+        gle::colorf(1, 1, 1, coverage);
         drawquad(x, y, dimension, dimension, 0, 0, 1, 1, false, false);
-        return;
     }
-    gle::colorf(1, 1, 1, 1);
-    hudquad(0, 0, w, h);
+    else
+    {
+        gle::colorf(1, 1, 1, 1);
+        hudquad(0, 0, w, h);
+    }
 }
 
 VAR(showstats, 0, 1, 1);
@@ -2939,10 +2952,10 @@ void gl_drawframe()
             resethudmatrix();
             resethudshader();
             glEnable(GL_BLEND);
+            drawzoom(hudw, hudh);
+            drawscreenflash(hudw, hudh);
             drawdamagescreen(hudw, hudh);
             drawdamagecompass(hudw, hudh);
-            drawscreenfx(hudw, hudh);
-            drawzoom(hudw, hudh);
             glDisable(GL_BLEND);
         }
     }

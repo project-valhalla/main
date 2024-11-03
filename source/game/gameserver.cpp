@@ -930,7 +930,7 @@ namespace server
             case I_HEALTH:
                 if(m_insta(mutators) || m_effic(mutators) || m_vampire(mutators)) return false;
                 break;
-            case I_SUPERHEALTH: case I_MEGAHEALTH:
+            case I_MEGAHEALTH: case I_ULTRAHEALTH:
                 if(m_insta(mutators) || m_vampire(mutators)) return false;
                 break;
             case I_DDAMAGE: case I_ARMOR: case I_INFINITEAMMO:
@@ -2390,8 +2390,11 @@ namespace server
     // function to convert a player to a berserker in the same mode
     void makeberserker(clientinfo *ci)
     {
-        if(!m_berserker || !ci || ci->state.state!=CS_ALIVE || !isberserkerdead) return;
-        ci->state.makeberserker();
+        if (!m_berserker || !ci || ci->state.state != CS_ALIVE || !isberserkerdead)
+        {
+            return;
+        }
+        ci->state.assignrole(ROLE_BERSERKER);
         sendf(-1, 1, "ri4", N_ASSIGNROLE, ci->clientnum, ci->clientnum, ROLE_BERSERKER);
         isberserkerdead = false;
     }
@@ -2410,8 +2413,11 @@ namespace server
      */
     void infect(clientinfo *ci, clientinfo *actor)
     {
-        if(!m_infection || !ci || ci->state.state!=CS_ALIVE) return;
-        ci->state.infect();
+        if (!m_infection || !ci || ci->state.state != CS_ALIVE)
+        {
+            return;
+        }
+        ci->state.assignrole(ROLE_ZOMBIE);
         sendf(-1, 1, "ri4", N_ASSIGNROLE, ci->clientnum, actor->clientnum, ROLE_ZOMBIE);
         if(!hunterchosen) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_INFECTION, "\fs\f2Infection has begun\fr");
     }
@@ -2921,9 +2927,9 @@ namespace server
                 makeberserker(actor);
                 kflags |= KILL_BERSERKER;
             }
-            if(!m_vampire(mutators) && actor->state.role == ROLE_BERSERKER)
+            if(m_berserker && !m_vampire(mutators) && actor->state.role == ROLE_BERSERKER)
             {
-                actor->state.health = min(actor->state.health + 50, maximumhealth(false));
+                actor->state.health = min(actor->state.health + 50, actor->state.maxhealth);
                 sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
             }
         }
@@ -2989,7 +2995,7 @@ namespace server
                 actor->state.damage += damage;
                 if(m_vampire(mutators))
                 {
-                    actor->state.health = min(actor->state.health+damage/(actor->state.role==ROLE_BERSERKER? 2: 1), maximumhealth(actor->state.role == ROLE_ZOMBIE));
+                    actor->state.health = min(actor->state.health + damage / (actor->state.role == ROLE_BERSERKER ? 2 : 1), actor->state.maxhealth);
                     sendf(-1, 1, "ri3", N_REGENERATE, actor->clientnum, actor->state.health);
                 }
             }

@@ -2143,6 +2143,9 @@ namespace UI
         Font() : font(NULL) {}
         ~Font() { delete[] font; }
 
+        static const char* typestr() { return "#Font"; }
+        const char* gettype() const { return typestr(); }
+
         void setup(const char *name)
         {
             Object::setup();

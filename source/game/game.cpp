@@ -7,7 +7,7 @@ namespace game
     bool intermission = false, gamewaiting = false;
     bool betweenrounds = false, hunterchosen = false;
     int maptime = 0, maprealtime = 0, maplimit = -1;
-    int lastspawnattempt = 0;
+    int lastspawnattempt = 0, lastheartbeat = 0;
 
     gameent *self = NULL; // ourselves (our client)
     vector<gameent *> players; // other clients
@@ -224,11 +224,34 @@ namespace game
         }
     }
 
+    VARP(lowhealthscreen, 0, 1, 1);
+    VARP(lowhealthscreenmillis, 500, 1000, 2000);
+    VARP(lowhealthscreenamount, 50, 200, 1000);
+    VARP(lowhealthscreenfactor, 1, 5, 100);
+
+    void managelowhealthscreen(gameent* d)
+    {
+        bool haslowhealth = d->state == CS_ALIVE && d->health <= d->maxhealth / 4;
+        if (d != followingplayer(self) || intermission || !lowhealthscreen || !haslowhealth)
+        {
+            d->stopchannelsound(Chan_LowHealth, 400);
+            return;
+        }
+        
+        d->playchannelsound(Chan_LowHealth, S_LOW_HEALTH, 200, true);
+        if (!lastheartbeat || lastmillis - lastheartbeat >= lowhealthscreenmillis)
+        {
+            damageblend(lowhealthscreenamount, lowhealthscreenfactor);
+            lastheartbeat = lastmillis;
+        }
+    }
+
     void otherplayers(int curtime)
     {
         loopv(players)
         {
             gameent *d = players[i];
+            managelowhealthscreen(d);
             if(d == self || d->ai) continue;
 
             if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d);
@@ -349,16 +372,18 @@ namespace game
     void spawneffect(gameent *d)
     {
         stopownersounds(d);
-        if(d==followingplayer(self))
+        if (d == followingplayer(self))
         {
             clearscreeneffects();
-            addscreenfx(200);
+            addscreenflash(200);
         }
         int color = 0x00FF5B;
-        if(d->type == ENT_PLAYER) color = getplayercolor(d, d->team);
+        if (d->type == ENT_PLAYER)
+        {
+            color = getplayercolor(d, d->team);
+        }
         particle_splash(PART_SPARK2, 250, 200, d->o, color, 0.60f, 200, 5);
-        vec lightcolor = vec::hexcolor(color);
-        adddynlight(d->o, 35, lightcolor, 900, 100);
+        adddynlight(d->o, 35, vec::hexcolor(color), 900, 100);
         doweaponchangeffects(d);
         playsound(S_SPAWN, d);
     }
@@ -393,6 +418,7 @@ namespace game
         {
             if (act == ACT_SECONDARY)
             {
+                msgsound(S_WEAPON_ZOOM, self);
                 if (identexists("dozoom"))
                 {
                     execident("dozoom");
@@ -476,20 +502,28 @@ namespace game
         return guns[hud->gunselect].zoom;
     }
 
-    void addroll(gameent *d, float amount)
-    {
-        d->roll += d->roll > 0 ? amount : (d->roll < 0 ? -amount : (rnd(2) ? amount : -amount));
-    }
+    FVARP(damagerolldiv, 0, 4.0f, 10);
 
-    FVARP(damagerolldiv, 0, 4.0f, 5.0f);
-
-    void damagehud(int damage, gameent *d, gameent *actor)
+    void damagehud(int damage, gameent* d, gameent* actor)
     {
+        if (!d)
+        {
+            return;
+        }
+
+        if (actor)
+        {
+            if (d != actor)
+            {
+                damagecompass(damage, actor->o);
+            }
+        }
+        if (damagerolldiv)
+        {
+            float damageRoll = damage / damagerolldiv;
+            physics::addroll(d, damageRoll);
+        }
         damageblend(damage);
-        if(d != actor) damagecompass(damage, actor->o);
-        if(!damagerolldiv) return;
-        float damroll = damage / damagerolldiv;
-        addroll(d, damroll);
     }
 
     VARP(hitsound, 0, 1, 1);
@@ -541,6 +575,11 @@ namespace game
     {
         d->state = CS_DEAD;
         d->lastpain = lastmillis;
+        loopi(Chan_Num)
+        {
+            // Free up sound channels used for player actions.
+            d->stopchannelsound(i);
+        }
         stopownersounds(d);
         if(!restore)
         {
@@ -579,8 +618,6 @@ namespace game
             d->resetinterp();
             d->smoothmillis = 0;
         }
-        d->stopweaponsound();
-        d->stoppowerupsound();
     }
 
     int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;
@@ -616,7 +653,7 @@ namespace game
             }
             else
             {
-                act = "suicided";
+                act = "died";
                 killfeedweaponinfo = -2;
             }
             conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr", teamcolorname(d), act);

@@ -294,9 +294,9 @@ extern void disablezoom();
 extern vec calcavatarpos(const vec &pos, float dist);
 extern vec calcmodelpreviewpos(const vec &radius, float &yaw);
 
-extern void damageblend(int n);
+extern void damageblend(int n, const int factor = 0);
 extern void damagecompass(int n, const vec &loc);
-extern void addscreenfx(int n);
+extern void addscreenflash(int n);
 extern void clearscreeneffects();
 
 extern vec minimapcenter, minimapradius, minimapscale;
@@ -321,7 +321,7 @@ enum
     PART_TRAIL, PART_TRAIL_PROJECTILE, PART_TRAIL_STRAIGHT,
     PART_LIGHTNING,
     PART_EXPLOSION1, PART_EXPLOSION2, PART_EXPLOSION3,
-    PART_SPARK, PART_SPARK2, PART_EXPLODE, PART_ELECTRICITY, PART_EDIT, PART_ORB, PART_RING,
+    PART_SPARK, PART_SPARK2, PART_EXPLODE1, PART_EXPLODE2, PART_EXPLODE3, PART_EXPLODE4, PART_ELECTRICITY, PART_EDIT, PART_ORB, PART_RING,
     PART_SPLASH, PART_BUBBLE,
     PART_MUZZLE_FLASH, PART_MUZZLE_FLASH2, PART_MUZZLE_FLASH3, PART_MUZZLE_FLASH4, PART_MUZZLE_FLASH5,
     PART_MUZZLE_SMOKE, PART_SPARKS, PART_COMICS,

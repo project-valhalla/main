@@ -41,10 +41,10 @@ enum
 
 struct extentity : entity                       // part of the entity that doesn't get saved to disk
 {
-    int flags, lastplayed;
+    int flags, lasttrigger, lastspawn;
     extentity *attached;
 
-    extentity() : flags(0), lastplayed(0), attached(NULL) {}
+    extentity() : flags(0), lasttrigger(0), lastspawn(0), attached(NULL) {}
 
     bool spawned() const { return (flags&EF_SPAWNED) != 0; }
     void setspawned(bool val) { if(val) flags |= EF_SPAWNED; else flags &= ~EF_SPAWNED; }
@@ -71,7 +71,7 @@ struct physent // base entity type, can be affected by physics
     vec o, vel, falling; // origin, velocity
     vec deltapos, newpos; // movement interpolation
     float yaw, pitch, roll;
-    float speed; // cubes per second, 90 for player
+    float speed; // cubes per second
     int timeinair;
     float radius, eyeheight, maxheight, aboveeye; // bounding box size
     float xradius, yradius, zmargin;

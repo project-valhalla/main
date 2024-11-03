@@ -144,7 +144,7 @@ namespace game
     int sessionid = 0, mastermode = MM_OPEN, gamespeed = 100;
     string servdesc = "", servauth = "", connectpass = "";
 
-    VARP(deadpush, 1, 7, 20);
+    VARP(deadpush, 1, 5, 20);
 
     void switchname(const char* name)
     {
@@ -1754,7 +1754,7 @@ namespace game
                 int n;
                 while((n = getint(p))>=0 && !p.overread())
                 {
-                    if(mapchanged) entities::setspawn(n, true);
+                    if(mapchanged) entities::setspawn(n, true, true);
                     getint(p); // type
                 }
                 break;
@@ -2003,8 +2003,7 @@ namespace game
                 int gun = getint(p);
                 if(!validgun(gun)) return;
                 d->gunselect = gun;
-                playsound(S_WEAPON_LOAD, d);
-                d->lastswitch = lastmillis;
+                doweaponchangeffects(d, gun);
                 break;
             }
 
@@ -2043,9 +2042,6 @@ namespace game
                 if(!entities::ents.inrange(i)) break;
                 entities::setspawn(i, true);
                 ai::itemspawned(i);
-                playsound(S_ITEM_SPAWN, NULL, &entities::ents[i]->o, NULL, 0, 0, 0, -1, 0, 1500);
-                particle_splash(PART_SPARK, 60, 100, entities::ents[i]->o, 0x905030, 5.0f, 200, 60);
-                adddynlight(entities::ents[i]->o, 20, vec(2, 1.2f, 1), 250, 0, DL_SHRINK);
                 break;
             }
 
@@ -2149,7 +2145,8 @@ namespace game
                 conoutf(CON_GAMEINFO, "%s \fs\f2computed lights\fr", colorname(d));
                 mpcalclight(false);
                 break;
-            case N_EDITENT:            // coop edit of ent
+
+            case N_EDITENT: // Edit an entity in (local) multiplayer.
             {
                 if(!d) return;
                 int i = getint(p);
@@ -2345,30 +2342,41 @@ namespace game
                 gameent *d = getclient(tcn),
                         *actor = getclient(acn);
                 if(!d || !actor) break;
+                d->assignrole(role);
                 if(role == ROLE_BERSERKER)
                 {
-                    if(!m_berserker) break;
-                    d->makeberserker();
-                    d->stoppowerupsound();
+                    if (!m_berserker)
+                    {
+                        break;
+                    }
+                    d->stopchannelsound(Chan_PowerUp);
                     conoutf(CON_GAMEINFO, "%s \f2is the berserker!", colorname(d));
                     playsound(S_BERSERKER, d);
                     particle_flare(d->o, d->o, 350, PART_COMICS, 0xFFFFFF, 20.0f);
-
-                    thirdperson = 1; // Temporary.
+                    // Temporary:
+                    thirdperson = 1;
                 }
                 else if(role == ROLE_ZOMBIE)
                 {
-                    if(!m_infection) break;
-                    if(!hunterchosen && d == actor) hunterchosen = true;
+                    if (!m_infection)
+                    {
+                        break;
+                    }
+                    if (!hunterchosen && d == actor)
+                    {
+                        hunterchosen = true;
+                    }
                     writeobituary(d, actor, ATK_ZOMBIE);
-                    d->infect();
-                    d->stoppowerupsound();
+                    d->stopchannelsound(Chan_PowerUp);
                     stopownersounds(d);
                     playsound(S_INFECTED, d);
                     particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
                     d->lastswitch = lastmillis;
                 }
-                if(d == followingplayer(self)) addscreenfx(150);
+                if (d == followingplayer(self))
+                {
+                    addscreenflash(150);
+                }
                 break;
             }
 

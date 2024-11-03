@@ -193,8 +193,8 @@ struct gamestate
         switch(type)
         {
             case I_HEALTH:
-            case I_SUPERHEALTH:
             case I_MEGAHEALTH:
+            case I_ULTRAHEALTH:
                 return health<is.max;
 
             case I_YELLOWSHIELD:
@@ -225,8 +225,8 @@ struct gamestate
         switch(type)
         {
             case I_HEALTH:
-            case I_SUPERHEALTH:
             case I_MEGAHEALTH:
+            case I_ULTRAHEALTH:
                 health = min(health+is.add, is.max);
                 break;
 
@@ -291,25 +291,26 @@ struct gamestate
         role = ROLE_NONE;
     }
 
-    void infect()
+    void assignrole(int newrole)
     {
-        role = ROLE_ZOMBIE;
-        maxhealth = health = 1000;
-        resetitems();
-        resetweapons();
-        ammo[GUN_ZOMBIE] = 1;
-        gunselect = GUN_ZOMBIE;
-    }
-
-    void makeberserker()
-    {
-        role = ROLE_BERSERKER;
-        maxhealth = health = maxhealth * 2;
-        loopi(NUMGUNS)
+        role = newrole;
+        if (role == ROLE_ZOMBIE)
         {
-            if(!ammo[i] || i == GUN_INSTA || i == GUN_ZOMBIE) continue;
-            if(i == GUN_PISTOL) ammo[i] = 100;
-            else ammo[i] = max(itemstats[i-GUN_SCATTER].max, itemstats[i-GUN_SCATTER].add*5);
+            maxhealth = health = 1000;
+            resetitems();
+            resetweapons();
+            ammo[GUN_ZOMBIE] = 1;
+            gunselect = GUN_ZOMBIE;
+        }
+        else if (role == ROLE_BERSERKER)
+        {
+            maxhealth = health = maxhealth * 2;
+            loopi(NUMGUNS)
+            {
+                if (!ammo[i] || i == GUN_INSTA || i == GUN_ZOMBIE) continue;
+                if (i == GUN_PISTOL) ammo[i] = 100;
+                else ammo[i] = max(itemstats[i - GUN_SCATTER].max, itemstats[i - GUN_SCATTER].add * 5);
+            }
         }
     }
 
@@ -409,6 +410,17 @@ static const int teameffectcolor[1+MAXTEAMS] = { 0xFFFFFF, 0x2020FF, 0xFF2020 };
 const int TAUNT_DELAY = 1000;
 const int VOICECOM_DELAY = 2800;
 
+enum
+{
+    // Reserved sound channels.
+    Chan_Idle = 0,
+    Chan_Attack,
+    Chan_Weapon,
+    Chan_PowerUp,
+    Chan_LowHealth,
+    Chan_Num
+};
+
 struct gameent : dynent, gamestate
 {
     int weight;                         // affects the effectiveness of hitpush
@@ -419,15 +431,14 @@ struct gameent : dynent, gamestate
     int lastaction, lastattack, lasthit;
     int deathtype;
     int attacking;
-    int lasttaunt, lastfootstep, lastyelp, lastswitch;
+    int lasttaunt, lastfootstep, lastyelp, lastswitch, lastroll;
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots, lives, holdingflag;
     editinfo *edit;
     float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, pitchrecoil;
     int smoothmillis;
 
-    int attackchan, idlechan, powerupchan, gunchan;
-    int attacksound, idlesound, powerupsound, gunsound;
+    int chan[Chan_Num], chansound[Chan_Num];
 
     string name, info;
     int team, playermodel, playercolor;
@@ -443,13 +454,16 @@ struct gameent : dynent, gamestate
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
                 lastpain(0), lasthurt(0),
-                lastfootstep(0), lastyelp(0), lastswitch(0),
+                lastfootstep(0), lastyelp(0), lastswitch(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
-                attackchan(-1), idlechan(-1), powerupchan(-1), gunchan(-1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
                 muzzle(-1, -1, -1), eject(-1, -1, -1)
     {
+        loopi(Chan_Num)
+        {
+            chan[i] = chansound[i] = -1;
+        }
         name[0] = info[0] = 0;
         ghost = false;
         country_code[0] = country_name[0] = preferred_flag[0] = 0;
@@ -459,9 +473,13 @@ struct gameent : dynent, gamestate
     {
         freeeditinfo(edit);
         if(ai) delete ai;
-        if(attackchan >= 0) stopsound(attacksound, attackchan);
-        if(idlechan >= 0) stopsound(idlesound, idlechan);
-        if(powerupchan >= 0) stopsound(powerupsound, powerupchan);
+        loopi(Chan_Num)
+        {
+            if (chan[i] >= 0)
+            {
+                stopsound(chansound[i], chan[i]);
+            }
+        }
     }
 
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
@@ -487,18 +505,6 @@ struct gameent : dynent, gamestate
         ghost = false;
     }
 
-    void stopweaponsound()
-    {
-        if(attackchan >= 0) stopsound(attacksound, attackchan, 300);
-        attacksound = attackchan = -1;
-    }
-
-    void stopidlesound()
-    {
-        if(idlechan >= 0) stopsound(idlesound, idlechan, 400);
-        idlesound = idlechan = -1;
-    }
-
     void respawn()
     {
         dynent::reset();
@@ -514,18 +520,26 @@ struct gameent : dynent, gamestate
         flagpickup = 0;
         lastnode = -1;
         lasthit = 0;
-        stopweaponsound();
-        stoppowerupsound();
         respawnqueued = false;
+        loopi(Chan_Num)
+        {
+            stopchannelsound(i);
+        }
     }
 
-    void stoppowerupsound()
+    void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)
     {
-        if(powerupchan >= 0)
+        chansound[type] = sound;
+        chan[type] = playsound(chansound[type], this, NULL, NULL, 0, isloop ? -1 : 0, fade, chan[type]);
+    }
+
+    void stopchannelsound(int type, int fade = 0)
+    {
+        if (chan[type] >= 0)
         {
-            stopsound(powerupsound, powerupchan, 500);
-            powerupchan = -1;
+            stopsound(chansound[type], chan[type], fade);
         }
+        chansound[type] = chan[type] = -1;
     }
 
     bool gibbed()
@@ -571,7 +585,7 @@ namespace entities
     extern void resetspawns();
     extern void spawnitems(bool force = false);
     extern void putitems(packetbuf &p);
-    extern void setspawn(int i, bool on);
+    extern void setspawn(int i, bool shouldspawn, bool isforced = false);
     extern void teleport(int n, gameent *d);
     extern void pickupeffects(int n, gameent *d);
     extern void teleporteffects(gameent *d, int tp, int td, bool local = true);
@@ -584,6 +598,7 @@ namespace physics
     extern void crouchplayer(gameent* pl, int moveres, bool local);
     extern void physicsframe();
     extern void updatephysstate(gameent* d);
+    extern void addroll(gameent* d, float amount);
 
     extern bool canmove(gameent* d);
     extern bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float grav);
@@ -671,7 +686,6 @@ namespace game
     extern void updatetimer(int time, int type);
     extern void msgsound(int n, physent *d = NULL);
     extern void doaction(int act);
-    extern void addroll(gameent *d, float amount);
     extern void hurt(gameent* d);
     extern void suicide(gameent* d);
     const char *mastermodecolor(int n, const char *unknown);
@@ -766,7 +780,7 @@ namespace game
     extern void preloadbouncers();
     extern void updateweapons(int curtime);
     extern void gunselect(int gun, gameent *d);
-    extern void doweaponchangeffects(gameent* d);
+    extern void doweaponchangeffects(gameent* d, int gun = -1);
     extern void weaponswitch(gameent *d);
     extern void removeprojectiles(gameent* owner = NULL);
     extern void avoidprojectiles(ai::avoidset &obstacles, float radius);

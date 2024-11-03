@@ -45,7 +45,7 @@ namespace entities
             case I_HEALTH:
                 if(m_insta(mutators) || m_effic(mutators) || m_vampire(mutators)) return false;
                 break;
-            case I_SUPERHEALTH: case I_MEGAHEALTH:
+            case I_MEGAHEALTH: case I_ULTRAHEALTH:
                 if(m_insta(mutators) || m_vampire(mutators)) return false;
                 break;
             case I_DDAMAGE: case I_ARMOR: case I_INFINITEAMMO:
@@ -67,52 +67,74 @@ namespace entities
     {
         loopi(MAXENTTYPES)
         {
-            if(!canspawnitem(i)) continue;
-            const char *mdl = gentities[i].file;
-            if(!mdl) continue;
+            if (!canspawnitem(i))
+            {
+                continue;
+            }
+            const char* mdl = gentities[i].file;
+            if (!mdl)
+            {
+                continue;
+            }
             preloadmodel(mdl);
         }
         loopv(ents)
         {
-            extentity &e = *ents[i];
-            switch(e.type)
+            extentity& e = *ents[i];
+            switch (e.type)
             {
                 case TELEPORT:
                 case TRIGGER:
-                    if(e.attr2 > 0) preloadmodel(mapmodelname(e.attr2));
+                    if (e.attr2 > 0)
+                        preloadmodel(mapmodelname(e.attr2));
                 case JUMPPAD:
-                    if(e.attr4 > 0) preloadmapsound(e.attr4);
+                    if (e.attr4 > 0)
+                        preloadmapsound(e.attr4);
                     break;
             }
         }
     }
 
-    VARP(itemtrans, 0, 1, 1);
-
     void renderentities()
     {
+        gameent* hud = followingplayer(self);
         loopv(ents)
         {
-            extentity &e = *ents[i];
+            extentity& e = *ents[i];
             int revs = 10;
-            switch(e.type)
+            switch (e.type)
             {
                 case TELEPORT:
                 case TRIGGER:
-                    if(e.attr2 < 0 || (e.type == TRIGGER && !m_story)) continue;
+                {
+                    if (e.attr2 < 0 || (e.type == TRIGGER && !m_story))
+                    {
+                        continue;
+                    }
                     break;
+                }
                 default:
-                    if((!editmode && !e.spawned()) || !validitem(e.type)) continue;
+                {
+                    if ((!editmode && !e.spawned()) || !validitem(e.type))
+                    {
+                        continue;
+                    }
                     break;
+                }
             }
-            const char *mdlname = entmodel(e);
-            if(mdlname)
+            const char* mdlname = entmodel(e);
+            if (mdlname)
             {
                 vec p = e.o;
-                p.z += 1+sinf(lastmillis/100.0+e.o.x+e.o.y)/20;
+                p.z += 1 + sinf(lastmillis / 100.0 + e.o.x + e.o.y) / 20;
                 float trans = 1;
-                if(itemtrans && validitem(e.type) && !e.spawned()) trans = 0.5f;
-                rendermodel(mdlname, ANIM_MAPMODEL|ANIM_LOOP, p, lastmillis/(float)revs, 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, 1, vec4(1, 1, 1, trans));
+                if (validitem(e.type) && (!e.spawned() || !hud->canpickup(e.type)))
+                {
+                    trans = 0.5f;
+                }
+                float progress = min((lastmillis - e.lastspawn) / 1000.0f, 1.0f);
+                float size = easeoutelastic(progress);
+                rendermodel(mdlname, ANIM_MAPMODEL | ANIM_LOOP, p, lastmillis / (float)revs, 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, size, vec4(1, 1, 1, trans));
             }
         }
     }
@@ -134,23 +156,44 @@ namespace entities
     */
     void pickupeffects(int n, gameent *d)
     {
-        if(!ents.inrange(n)) return;
-        int type = ents[n]->type;
-        if(!validitem(type)) return;
-        ents[n]->clearspawned();
-        if(!d) return;
-        gameent *h = followingplayer(self);
-        itemstat &is = itemstats[type-I_AMMO_SG];
-        playsound(is.sound, NULL, d != h ? &d->o : NULL, NULL, 0, 0, 0, -1, 0, 1800);
-        d->pickup(type);
-        if(d==followingplayer(self))
+        if (!ents.inrange(n))
         {
-            addscreenfx(80);
+            return;
         }
-        if(!is.announcersound || type < I_DDAMAGE || type > I_INVULNERABILITY) return;
-        if(d == self) conoutf(CON_GAMEINFO, "\f2%s obtained", gentities[type].prettyname);
-        else conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
-        playsound(d == h ? is.announcersound : S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
+
+        int type = ents[n]->type;
+        if (!validitem(type))
+        {
+            return;
+        }
+
+        ents[n]->clearspawned();
+        if (!d)
+        {
+            return;
+        }
+
+        d->pickup(type);
+        gameent* hud = followingplayer(self);
+        itemstat &is = itemstats[type-I_AMMO_SG];
+        playsound(is.sound, NULL, d == hud ? NULL : &d->o, NULL, 0, 0, 0, -1, 0, 1800);
+        if (d == hud)
+        {
+            addscreenflash(80);
+        }
+        if (type >= I_DDAMAGE && type <= I_INVULNERABILITY)
+        {
+            if (d == hud)
+            {
+                conoutf(CON_GAMEINFO, "\f2%s power-up obtained", gentities[type].prettyname);
+            }
+            else
+            {
+                conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
+                playsound(S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
+            }
+            
+        }
     }
 
     // these functions are called when the client touches the item
@@ -184,8 +227,14 @@ namespace entities
                 playentitysound(d, S_TELEPORT, e.attr4, e.o);
                 if(ents.inrange(td) && ents[td]->type == TELEDEST)
                 {
-                    if(d!=followingplayer(self)) playsound(S_TELEDEST, NULL, &ents[td]->o);
-                    else addscreenfx(150);
+                    if (d != followingplayer(self))
+                    {
+                        playsound(S_TELEDEST, NULL, &ents[td]->o);
+                    }
+                    else
+                    {
+                        addscreenflash(150);
+                    }
                     teleportparticleeffects(d, ents[td]->o);
                 }
                 teleportparticleeffects(d, d->o);
@@ -214,6 +263,7 @@ namespace entities
             {
                  playentitysound(d, S_JUMPPAD, e.attr4, e.o);
             }
+            sway.addevent(d, SwayEvent_Land, 250, -2);
         }
         if(local && d->clientnum >= 0)
         {
@@ -308,13 +358,13 @@ namespace entities
             case TRIGGER:
             {
                 if(d->lastpickup == ents[n]->type && lastmillis-d->lastpickupmillis < 500) break;
-                if(ents[n]->attr5 && lastmillis - ents[n]->lastplayed <= ents[n]->attr5) break;
+                if(ents[n]->attr5 && lastmillis - ents[n]->lasttrigger <= ents[n]->attr5) break;
                 d->lastpickup = ents[n]->type;
                 d->lastpickupmillis = lastmillis;
                 defformatstring(hookname, "trigger_%d", ents[n]->attr1);
                 execident(hookname);
                 if(ents[n]->attr4 >= 0) playentitysound(d, S_TRIGGER, ents[n]->attr4, ents[n]->o);
-                if(ents[n]->attr4) ents[n]->lastplayed = lastmillis;
+                if(ents[n]->attr4) ents[n]->lasttrigger = lastmillis;
                 break;
             }
         }
@@ -340,18 +390,25 @@ namespace entities
         }
     }
 
-    void updatepowerups(int time, gameent *d)
+    void updatepowerups(int time, gameent* d)
     {
-        gameent *hud = followingplayer(self);
-        d->powerupsound = d->role == ROLE_BERSERKER ?  S_BERSERKER_LOOP : (S_LOOP_DAMAGE + d->poweruptype-1);
-        d->powerupchan = playsound(d->powerupsound, NULL, d==hud ? NULL : &d->o, NULL, 0, -1, 200, d->powerupchan);
-        if(m_berserker && d->role == ROLE_BERSERKER && !d->powerupmillis) return;
-        if((d->powerupmillis -= time)<=0)
+        const int sound = d->role == ROLE_BERSERKER ? S_BERSERKER_LOOP : (S_LOOP_DAMAGE + d->poweruptype - 1);
+        d->playchannelsound(Chan_PowerUp, sound, 200, true);
+
+        if (m_berserker && d->role == ROLE_BERSERKER && !d->powerupmillis)
+        {
+            return;
+        }
+
+        if ((d->powerupmillis -= time) <= 0)
         {
             d->powerupmillis = 0;
-            playsound(S_TIMEOUT_DAMAGE + d->poweruptype-1, d);
+            playsound(S_TIMEOUT_DAMAGE + d->poweruptype - 1, d);
             d->poweruptype = PU_NONE;
-            if(d->role != ROLE_BERSERKER) d->stoppowerupsound();
+            if (d->role != ROLE_BERSERKER)
+            {
+                d->stopchannelsound(Chan_PowerUp, 500);
+            }
         }
     }
 
@@ -373,10 +430,37 @@ namespace entities
         loopv(ents) if(validitem(ents[i]->type) && canspawnitem(ents[i]->type))
         {
             ents[i]->setspawned(force || !server::delayspawn(ents[i]->type));
+            ents[i]->lastspawn = lastmillis;
         }
     }
 
-    void setspawn(int i, bool on) { if(ents.inrange(i)) ents[i]->setspawned(on); }
+    static void spawneffect(extentity *e)
+    {
+        int spawncolor = 0x00E463;
+        particle_splash(PART_SPARK, 20, 100, e->o, spawncolor, 1.0f, 100, 60);
+        particle_flare(e->o, e->o, 200, PART_EXPLODE1, 0x83E550, 16.0f);
+        adddynlight(e->o, 100, vec::hexcolor(spawncolor), 200, 75, DL_SHRINK|L_NOSHADOW);
+        playsound(S_ITEM_SPAWN, NULL, &e->o, NULL, 0, 0, 0, -1, 0, 1500);
+        if (e->type >= I_DDAMAGE && e->type <= I_INVULNERABILITY)
+        {  
+            conoutf(CON_GAMEINFO, "\f2%s power-up available!", gentities[e->type].prettyname);
+            playsound(S_POWERUP_SPAWN);
+        }
+    }
+
+    void setspawn(int i, bool shouldspawn, bool isforced)
+    {
+        if (ents.inrange(i))
+        {
+            extentity* e = ents[i];
+            e->setspawned(shouldspawn);
+            if (!isforced)
+            {
+                spawneffect(e);
+            }
+            e->lastspawn = lastmillis;
+        }
+    }
 
     extentity *newentity() { return new gameentity(); }
     void deleteentity(extentity *e) { delete (gameentity *)e; }
@@ -466,7 +550,14 @@ namespace entities
     {
         extentity &e = *ents[i];
         //e.flags = 0;
-        if(local) addmsg(N_EDITENT, "rii3ii5", i, (int)(e.o.x*DMF), (int)(e.o.y*DMF), (int)(e.o.z*DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+        if (local)
+        {
+            addmsg(N_EDITENT, "rii3ii5", i, (int)(e.o.x * DMF), (int)(e.o.y * DMF), (int)(e.o.z * DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+        }
+        if (canspawnitem(e.type) && !e.spawned())
+        {
+            e.lastspawn = lastmillis;
+        }
     }
 
     float dropheight(entity &e)

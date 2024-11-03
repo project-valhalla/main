@@ -885,9 +885,12 @@ static partrenderer *parts[] =
     &fireballs,                                                                                                                    // fire ball
     new quadrenderer("data/texture/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                              // sparks
     new trailrenderer("data/texture/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                                    // spark trail
-    new quadrenderer("data/texture/particle/explosion.png", PT_PART|PT_FLIP|PT_BRIGHT),                                            // explosion particles
-    new quadrenderer("<animation:100,2,2>data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),       // electric explosion particles
-    new quadrenderer("data/texture/particle/base.png",  PT_PART|PT_FLIP|PT_BRIGHT),                                                // edit mode entities
+    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion01.png", PT_PART|PT_FLIP|PT_BRIGHT),                      // explosion sprite
+    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion02.png", PT_PART|PT_FLIP|PT_BRIGHT),                      // explosion sprite
+    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion03.png", PT_PART|PT_FLIP|PT_BRIGHT),                      // explosion sprite
+    new quadrenderer("data/texture/particle/explosion04.png", PT_PART|PT_FLIP|PT_BRIGHT),                                          // explosion
+    new quadrenderer("<animation:100,2,2>data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),       // electric explosion sprite
+    new quadrenderer("data/texture/particle/base.png", PT_PART|PT_FLIP|PT_BRIGHT),                                                 // edit mode entities
     new quadrenderer("data/texture/particle/orb.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),                                           // energy orb
     new quadrenderer("data/texture/particle/ring.png", PT_PART|PT_FLIP|PT_BRIGHT),                                                 // energy ring
     new quadrenderer("data/texture/particle/splash.png", PT_PART|PT_FLIP),                                                         // liquid splash
@@ -898,7 +901,7 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/muzzle04.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 4
     new quadrenderer("<animation:25,4,0,1>data/texture/particle/muzzle05.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),         // muzzle flash 5
     new quadrenderer("<grey><animation:50,2,3,1>data/texture/particle/muzzle_smoke.png", PT_PART|PT_FEW|PT_FLIP|PT_LERP|PT_TRACK), // muzzle smoke
-    new quadrenderer("<animation:50,2,2>data/texture/particle/sparks.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),             // muzzle sparks
+    new quadrenderer("<animation:30,2,2,1>data/texture/particle/sparks.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),             // muzzle sparks
     new quadrenderer("data/texture/particle/comics.png", PT_PART|PT_LERP|PT_NOLAYER),                                              // comics effect
     new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_FEW|PT_ICON|PT_HUD|PT_LERP|PT_NOLAYER),                  // game icons
     new quadrenderer("data/interface/particle/editor_icons.png", PT_PART|PT_ICON|PT_LERP|PT_NOLAYER),                              // editor icons
@@ -1142,13 +1145,17 @@ void particle_icon(const vec &s, int ix, int iy, int type, int fade, int color, 
     p->flags |= ix | (iy<<2);
 }
 
-VARP(hudmarkdist, 0, 64, 512);
+VARP(hudmarkmindist, 0, 128, 512);
+VARP(hudmarkmaxdist, 0, 1024, 4096);
 
 void particle_hud_mark(const vec &s, int ix, int iy, int type, int fade, int color, float size)
 {
     if(!canaddparticles()) return;
     vec o;
-    if(camera1->o.dist(s) <= hudmarkdist && raycubelos(s, camera1->o, o)) return;
+    if((camera1->o.dist(s) <= hudmarkmindist && raycubelos(s, camera1->o, o)) || camera1->o.dist(s) > hudmarkmaxdist)
+    {
+        return;
+    }
     o = s;
     vec camera = camera1->o;
     o.sub(camera).normalize();
@@ -1374,10 +1381,11 @@ static void makeparticles(entity &e)
         case 9:  //steam
         case 10: //water
         case 13: //snow
+        case 14: //spark
         {
-            static const int typemap[]   = { PART_TRAIL, -1, -1, PART_LIGHTNING, -1, PART_STEAM, PART_WATER, -1, -1, PART_SNOW };
-            static const float sizemap[] = { 0.28f, 0.0f, 0.0f, 1.0f, 0.0f, 2.4f, 0.1f, 0.0f, 0.0f, 0.5f };
-            static const int gravmap[] = { 0, 0, 0, 0, 0, -20, 2, 0, 0, 20 };
+            static const int typemap[]   = { PART_TRAIL, -1, -1, PART_LIGHTNING, -1, PART_STEAM, PART_WATER, -1, -1, PART_SNOW,  PART_SPARK };
+            static const float sizemap[] = { 0.28f, 0.0f, 0.0f, 1.0f, 0.0f, 2.4f, 0.1f, 0.0f, 0.0f, 0.5f, 0.4f };
+            static const int gravmap[] = { 0, 0, 0, 0, 0, -20, 2, 0, 0, 20, 20};
             int type = typemap[e.attr1-4];
             float size = sizemap[e.attr1-4];
             int gravity = gravmap[e.attr1-4];

@@ -12,6 +12,7 @@ namespace ai
 
     VAR(debugbots, 0, 0, 6);
     VAR(botforcegun, -1, -1, NUMGUNS-1);
+    VAR(botidle, 0, 0, 1);
 
     ICOMMAND(botadd, "s", (char *s), addmsg(N_ADDBOT, "ri", *s ? clamp(parseint(s), 1, 101) : -1));
     ICOMMAND(botdel, "", (), addmsg(N_DELBOT, "r"));
@@ -35,7 +36,11 @@ namespace ai
 
     bool canmove(gameent *d)
     {
-        return d->state != CS_DEAD && !intermission;
+        if (d->state == CS_DEAD || intermission || (!multiplayer(false) && botidle))
+        {
+            return false;
+        }
+        return true;
     }
 
     float attackmindist(int atk)
@@ -461,11 +466,13 @@ namespace ai
                 if(d->health < min(d->skill, 75)) score = 1e3f;
                 break;
 
-            case I_SUPERHEALTH: case I_MEGAHEALTH:
+            case I_MEGAHEALTH:
+            case I_ULTRAHEALTH:
                 score = 1e2f;
                 break;
 
-            case I_YELLOWSHIELD: case I_REDSHIELD:
+            case I_YELLOWSHIELD:
+            case I_REDSHIELD:
                 if(e.type == I_REDSHIELD) score = 1e2f;
                 else score = 1e1f;
                 break;
@@ -662,7 +669,9 @@ namespace ai
                 bool wantsitem = false;
                 switch(e.type)
                 {
-                    case I_HEALTH: case I_SUPERHEALTH: case I_MEGAHEALTH:
+                    case I_HEALTH:
+                    case I_MEGAHEALTH:
+                    case I_ULTRAHEALTH:
                         wantsitem = badhealth(d);
                         break;
 

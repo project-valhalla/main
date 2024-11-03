@@ -1942,11 +1942,48 @@ static inline int mod360(int angle)
     else if(angle >= 360) angle %= 360;
     return angle;
 }
-static inline const vec2 &sincosmod360(int angle) { return sincos360[mod360(angle)]; }
-static inline float cos360(int angle) { return sincos360[angle].x; }
-static inline float sin360(int angle) { return sincos360[angle].y; }
-static inline float tan360(int angle) { const vec2 &sc = sincos360[angle]; return sc.y/sc.x; }
-static inline float cotan360(int angle) { const vec2 &sc = sincos360[angle]; return sc.x/sc.y; }
+static inline const vec2 &sincosmod360(int angle)
+{ 
+    return sincos360[mod360(angle)];
+}
+
+static inline float cos360(int angle)
+{ 
+    return sincos360[angle].x;
+}
+
+static inline float sin360(int angle)
+{ 
+    return sincos360[angle].y;
+}
+
+static inline float tan360(int angle)
+{ 
+    const vec2 &sc = sincos360[angle];
+    return sc.y / sc.x;
+}
+
+static inline float cotan360(int angle)
+{ 
+    const vec2 &sc = sincos360[angle];
+    return sc.x / sc.y;
+}
+
+static inline float easeoutelastic(float progress)
+{
+    if (progress == 0)
+    {
+        return 0;
+    }
+    else if (progress == 1)
+    {
+        return 1;
+    }
+    else
+    {
+        return pow(2, -10 * progress) * sin((progress * 10 - 0.75) * ((2 * M_PI) / 3)) + 1;
+    }
+}
 
 static inline float lerp360(float angle, float target, float factor)
 {

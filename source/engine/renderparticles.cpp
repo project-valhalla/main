@@ -516,7 +516,7 @@ struct textrenderer : listrenderer
         setfontsize(hudh / PARTICLETEXTROWS);
 
         textinfo info;
-        prepare_text_particle(p->text, info, p->color, 1, bvec(0, 0, 0), p->language);
+        prepare_text_particle(p->text, info, p->color, FONTH / 32.f, bvec(0, 0, 0), 255, p->language);
         if(!info.tex)
         {
             popfont();

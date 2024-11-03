@@ -70,10 +70,9 @@ struct font
     char *name;
     int id;
     string features; // OpenType features
-    float letter_spacing;
     PangoFontDescription *desc;
 
-    font() : name(NULL), letter_spacing(0), desc(NULL) { features[0] = '\0'; };
+    font() : name(NULL), desc(NULL) { features[0] = '\0'; };
     ~font()
     {
         DELETEA(name);
@@ -154,9 +153,6 @@ void fontsmallcaps(int *val)
     pango_font_description_set_variant(lastfont->desc, *val ? PANGO_VARIANT_SMALL_CAPS : PANGO_VARIANT_NORMAL);
 }
 COMMAND(fontsmallcaps, "i");
-
-void fontletterspacing(float *val) { if(lastfont) lastfont->letter_spacing = *val; }
-COMMAND(fontletterspacing, "f");
 
 void fontfeatures(char *features) { if(lastfont) copystring(lastfont->features, features, MAXSTRLEN); }
 COMMAND(fontfeatures, "s");
@@ -283,13 +279,6 @@ static inline void add_text_to_layout(const char *markup, int len, PangoLayout *
     if(curfont->features[0])
     {
         attr = pango_attr_font_features_new(curfont->features); // pango 1.38
-        pango_attr_list_insert(list, attr);
-    }
-
-    // letter spacing
-    if(curfont->letter_spacing != 0)
-    {
-        attr = pango_attr_letter_spacing_new(curfont->letter_spacing * PANGO_SCALE); // pango 1.6
         pango_attr_list_insert(list, attr);
     }
 

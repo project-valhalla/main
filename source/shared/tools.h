@@ -1409,7 +1409,7 @@ static inline int iscubenamesafe(uint c)
 
         || (c >= 0x0100 && c <= 0x0131)
         || (c >= 0x0134 && c <= 0x0148)
-        || (c >= 0x014A && c <= 0x017F) // Latin Extended-A (exclude 0x131, 0x132 and 0x149)
+        || (c >= 0x014A && c <= 0x017E) // Latin Extended-A (exclude 0x131, 0x132, 0x149 and 0x17F)
 
         || (c >= 0x0218 && c <= 0x021B) // Latin Extended-B: Romanian
 
@@ -1449,7 +1449,6 @@ static inline uint homoglyph(uint c)
 		case 0x0415: return 0x0045;
 		case 0x011B: return 0x0115;
 		case 0x011A: return 0x0114;
-		case 0x017F: return 0x0066;
 		case 0x0397: return 0x0048;
 		case 0x041D: return 0x0048;
 		case 0x0131: return 0x0069;

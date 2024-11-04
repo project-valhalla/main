@@ -1425,101 +1425,88 @@ static inline int iscubenamesafe(uint c)
     ;
 }
 // used to detect duplicate names
+// source: https://www.unicode.org/Public/security/latest/confusables.txt
 static inline uint homoglyph(uint c)
 {
-    switch(c)
-    {
-        // latin => latin
-        case 'l'  : return 'I';
-        case 0x138: return 'k';
-        case 0x13A: return 0xED;
-        case 0x15E: return 0x218;
-        case 0x15F: return 0x219;
-        case 0x162: return 0x21A;
-        case 0x163: return 0x21B;
-
-        // greek => latin
-        case 0x391: return 'A';
-        case 0x392: return 'B';
-        case 0x395: return 'E';
-        case 0x396: return 'Z';
-        case 0x397: return 'H';
-        case 0x399: return 'I';
-        case 0x39A: return 'K';
-        case 0x39C: return 'M';
-        case 0x39D: return 'N';
-        case 0x39F: return 'O';
-        case 0x3A1: return 'P';
-        case 0x3A4: return 'T';
-        case 0x3A5: return 'Y';
-        case 0x3A7: return 'X';
-        case 0x3AA: return 0xCF;
-        case 0x3AB: return 0x178;
-        case 0x3AE: return 0x144;
-        case 0x3AF: return 0xED;
-        case 0x3B2: return 0xDF;
-        case 0x3B3: return 'y';
-        case 0x3B7: return 'n';
-        case 0x3B9: return 0x131;
-        case 0x3BA: return 'k';
-        case 0x3BD: return 'v';
-        case 0x3BF: return 'o';
-        case 0x3C1: return 'p';
-        case 0x3C2: return 0xE7;
-        case 0x3C5: return 'u';
-        case 0x3C7: return 'x';
-        case 0x3CA: return 0xEF;
-        case 0x3CB: return 0xFC;
-        case 0x3CC: return 0xF3;
-        case 0x3CD: return 0xFA;
-
-        // cyrillic => latin
-        case 0x400: return 0xC8;
-        case 0x401: return 0xCB;
-        case 0x405: return 'S';
-        case 0x406: return 'I';
-        case 0x407: return 0xCF;
-        case 0x408: return 'J';
-        case 0x410: return 'A';
-        case 0x412: return 'B';
-        case 0x415: return 'E';
-        case 0x417: return '3';
-        case 0x41A: return 'K';
-        case 0x41C: return 'M';
-        case 0x41D: return 'H';
-        case 0x41E: return 'O';
-        case 0x420: return 'P';
-        case 0x421: return 'C';
-        case 0x422: return 'T';
-        case 0x425: return 'X';
-        case 0x430: return 'a';
-        case 0x431: return '6';
-        case 0x435: return 'e';
-        case 0x43A: return 'k';
-        case 0x43E: return 'o';
-        case 0x440: return 'p';
-        case 0x441: return 'c';
-        case 0x443: return 'y';
-        case 0x445: return 'x';
-        case 0x450: return 0xE8;
-        case 0x451: return 0xEB;
-        case 0x455: return 's';
-        case 0x456: return 'i';
-        case 0x457: return 0xEF;
-        case 0x458: return 'j';
-        case 0x45B: return 0x127;
-
-        // cyrillic => greek
-        case 0x413: return 0x393;
-        case 0x41B: return 0x39B;
-        case 0x41F: return 0x3A0;
-        case 0x424: return 0x3A6;
-        case 0x444: return 0x3C6;
-
-        // greek => greek
-        case 0xB5: return 0x3BC;
-    }
-    return c;
+	switch(c)
+	{
+		case 0x00B8: return 0x002C;
+		case 0x0060: return 0x0027;
+		case 0x00B4: return 0x0027;
+		case 0x0417: return 0x0033;
+		case 0x0431: return 0x0036;
+		case 0x03B1: return 0x0061;
+		case 0x0430: return 0x0061;
+		case 0x0391: return 0x0041;
+		case 0x0410: return 0x0041;
+		case 0x042C: return 0x0062;
+		case 0x0392: return 0x0042;
+		case 0x0412: return 0x0042;
+		case 0x0441: return 0x0063;
+		case 0x0421: return 0x0043;
+		case 0x0435: return 0x0065;
+		case 0x0395: return 0x0045;
+		case 0x0415: return 0x0045;
+		case 0x011B: return 0x0115;
+		case 0x011A: return 0x0114;
+		case 0x017F: return 0x0066;
+		case 0x0397: return 0x0048;
+		case 0x041D: return 0x0048;
+		case 0x0131: return 0x0069;
+		case 0x03B9: return 0x0069;
+		case 0x0456: return 0x0069;
+		case 0x0458: return 0x006A;
+		case 0x0408: return 0x004A;
+		case 0x039A: return 0x004B;
+		case 0x041A: return 0x004B;
+		case 0x007C: return 0x006C;
+		case 0x0031: return 0x006C;
+		case 0x0049: return 0x006C;
+		case 0x0399: return 0x006C;
+		case 0x0406: return 0x006C;
+		case 0x039C: return 0x004D;
+		case 0x041C: return 0x004D;
+		case 0x039D: return 0x004E;
+		case 0x03BF: return 0x006F;
+		case 0x03C3: return 0x006F;
+		case 0x043E: return 0x006F;
+		case 0x0030: return 0x004F;
+		case 0x039F: return 0x004F;
+		case 0x041E: return 0x004F;
+		case 0x0150: return 0x00D6;
+		case 0x03C1: return 0x0070;
+		case 0x0440: return 0x0070;
+		case 0x03A1: return 0x0050;
+		case 0x0420: return 0x0050;
+		case 0x03BA: return 0x0138;
+		case 0x043A: return 0x0138;
+		case 0x0433: return 0x0072;
+		case 0x0455: return 0x0073;
+		case 0x0405: return 0x0053;
+		case 0x03B2: return 0x00DF;
+		case 0x03A4: return 0x0054;
+		case 0x0422: return 0x0054;
+		case 0x021A: return 0x0162;
+		case 0x03C5: return 0x0075;
+		case 0x03BD: return 0x0076;
+		case 0x00D7: return 0x0078;
+		case 0x0445: return 0x0078;
+		case 0x03A7: return 0x0058;
+		case 0x0425: return 0x0058;
+		case 0x03B3: return 0x0079;
+		case 0x0443: return 0x0079;
+		case 0x03A5: return 0x0059;
+		case 0x0423: return 0x0059;
+		case 0x0396: return 0x005A;
+		case 0x0413: return 0x0393;
+		case 0x00B5: return 0x03BC;
+		case 0x043F: return 0x03C0;
+		case 0x041F: return 0x03A0;
+		case 0x0424: return 0x03A6;
+		case 0x0419: return 0x040D;
+		case 0x045D: return 0x0439;
+	}
+	return c;
 }
 
 extern int cubecasecmp(const char *s1, const char *s2, int n = INT_MAX);

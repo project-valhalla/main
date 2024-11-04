@@ -86,21 +86,105 @@ namespace entities
                 case TELEPORT:
                 case TRIGGER:
                     if (e.attr2 > 0)
+                    {
                         preloadmodel(mapmodelname(e.attr2));
+                    }      
                 case JUMPPAD:
                     if (e.attr4 > 0)
+                    {
                         preloadmapsound(e.attr4);
+                    }  
                     break;
+            }
+        }
+    }
+
+    extentity* findclosest(int type, const vec position)
+    {
+        extentity* closest = NULL;
+        if (!ents.empty() && canspawnitem(type))
+        {
+            float distance = 1e16f;
+            loopv(ents)
+            {
+                extentity* entity = ents[i];
+                if (!entity->spawned() || (type >= 0 && ents[i]->type != type))
+                {
+                    continue;
+                }
+                float entitydistance = entity->o.dist(position);
+                if (entitydistance < distance)
+                {
+                    distance = entitydistance;
+                    closest = entity;
+                }
+            }
+        }
+        return closest;
+    }
+
+    extentity* closest = NULL;
+    vec lastposition;
+
+    void searchentities()
+    {
+        gameent* hud = followingplayer(self);
+        if (lowhealthscreen && hud->haslowhealth())
+        {
+            /* If the low-health warning feature is enabled,
+             * find the closest health pack to help guide the player.
+             */
+            static const int movethreshold = 128;
+            bool shouldsearch = lastposition.dist(hud->o) >= movethreshold;
+            if (shouldsearch)
+            {
+                lastposition = hud->o;
+                closest = findclosest(I_HEALTH, lastposition);
+            }
+            if (closest)
+            {
+                particle_hud_mark(closest->o, 3, 1, PART_GAME_ICONS, 1, 0x00FF3F, 1.8f);
+            }
+        }
+        else if (closest)
+        {
+            closest = NULL;
+        }
+    }
+
+    void markentity(extentity& entity)
+    {
+        if (m_noitems(mutators) || !validitem(entity.type))
+        {
+            return;
+        }
+
+        if (canspawnitem(entity.type) && entity.spawned())
+        {
+            if (entity.type >= I_DDAMAGE && entity.type <= I_INVULNERABILITY)
+            {
+                particle_hud_mark(entity.o, 0, 2, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+            }
+            else if (entity.type == I_ULTRAHEALTH)
+            {
+                particle_hud_mark(entity.o, 3, 1, PART_GAME_ICONS, 1, 0xFF9796, 2.0f);
             }
         }
     }
 
     void renderentities()
     {
+        if (ents.empty())
+        {
+            return;
+        }
+
+        searchentities();
         gameent* hud = followingplayer(self);
         loopv(ents)
         {
             extentity& e = *ents[i];
+            markentity(e);
             int revs = 10;
             switch (e.type)
             {

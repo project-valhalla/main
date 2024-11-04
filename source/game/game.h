@@ -864,6 +864,7 @@ namespace game
     extern bool allowthirdperson();
 
     extern int thirdperson;
+    extern int lowhealthscreen;
 
     extern float zoomprogress;
 }

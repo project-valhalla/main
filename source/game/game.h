@@ -864,6 +864,8 @@ namespace game
     extern bool allowthirdperson();
 
     extern int thirdperson;
+
+    extern float zoomprogress;
 }
 
 namespace server

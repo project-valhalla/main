@@ -48,7 +48,7 @@ namespace game
     VARP(zoomoutvel, 0, 80, 500);
     VARP(zoomfov, 10, 42, 90);
 
-    static float zoomprogress = 0;
+    float zoomprogress = 0;
 
     void disablezoom()
     {

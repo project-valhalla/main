@@ -518,10 +518,15 @@ namespace game
                 fade -= clamp(float(lastmillis - (d->lastupdate + max(ragdollmillis - ragdollfade, 0)))/min(ragdollmillis, ragdollfade), 0.0f, 1.0f);
             renderplayer(d, fade);
         }
-        if(exclude)
+        if (exclude)
+        {
             renderplayer(exclude, 1, MDL_ONLYSHADOW);
-        else if(!f && (self->state==CS_ALIVE || (self->state==CS_EDITING && third) || (self->state == CS_DEAD && showdeadplayers)))
+        }
+        else if (!f && (self->state == CS_ALIVE || (self->state == CS_EDITING && third) || (self->state == CS_DEAD && showdeadplayers)) && zoomprogress < 1)
+        {
             renderplayer(self, 1, third ? 0 : MDL_ONLYSHADOW);
+        }
+            
         booteffect(self);
         entities::renderentities();
         renderbouncers();
@@ -559,9 +564,9 @@ namespace game
     {
         gameent *d = hudplayer();
         extern int hudgun;
-        if(d->state == CS_DEAD || d->state==CS_SPECTATOR || d->state==CS_EDITING || !hudgun || editmode)
+        if(d->state == CS_DEAD || d->state == CS_SPECTATOR || d->state == CS_EDITING || !hudgun || editmode)
         {
-            d->muzzle = self->muzzle = vec(-1, -1, -1);
+            d->muzzle = self->muzzle = d->eject = self->eject = vec(-1, -1, -1);
             return;
         }
 

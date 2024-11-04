@@ -462,6 +462,11 @@ void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_co
         const float curw = max(1.f, fontsize / 16);
 
         cairo_rectangle(cr, cursor_rect.x / PANGO_SCALE + outline_offset, cursor_rect.y / PANGO_SCALE + outline_offset, curw, cursor_rect.height / PANGO_SCALE);
+        if(outline)
+        {
+            cairo_set_source_rgba(cr, outline_color.r / 255.f, outline_color.g / 255, outline_color.b / 255.f, outline_alpha / 255.f);
+            cairo_stroke_preserve(cr);
+        }
         cairo_set_source_rgba(cr, cursorcolor.r / 255.f, cursorcolor.g / 255.f, cursorcolor.b / 255.f, 1.0);
         cairo_fill(cr);
     }

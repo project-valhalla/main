@@ -860,10 +860,10 @@ namespace server
         return n;
     }
 
-    bool duplicatename(clientinfo *ci, const char *name)
+    inline bool duplicatename(clientinfo *ci, const char *name)
     {
         if(!name) name = ci->name;
-        loopv(clients) if(clients[i]!=ci && !strcmp(name, clients[i]->name)) return true;
+        loopv(clients) if(clients[i]!=ci && duplicatestring(name, clients[i]->name)) return true;
         return false;
     }
 

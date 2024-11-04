@@ -1424,6 +1424,103 @@ static inline int iscubenamesafe(uint c)
         || (c >= 0x1EA0 && c <= 0x1EF9) // Latin Extended Additional: Vietnamese
     ;
 }
+// used to detect duplicate names
+static inline uint homoglyph(uint c)
+{
+    switch(c)
+    {
+        // latin => latin
+        case 'l'  : return 'I';
+        case 0x138: return 'k';
+        case 0x13A: return 0xED;
+        case 0x15E: return 0x218;
+        case 0x15F: return 0x219;
+        case 0x162: return 0x21A;
+        case 0x163: return 0x21B;
+
+        // greek => latin
+        case 0x391: return 'A';
+        case 0x392: return 'B';
+        case 0x395: return 'E';
+        case 0x396: return 'Z';
+        case 0x397: return 'H';
+        case 0x399: return 'I';
+        case 0x39A: return 'K';
+        case 0x39C: return 'M';
+        case 0x39D: return 'N';
+        case 0x39F: return 'O';
+        case 0x3A1: return 'P';
+        case 0x3A4: return 'T';
+        case 0x3A5: return 'Y';
+        case 0x3A7: return 'X';
+        case 0x3AA: return 0xCF;
+        case 0x3AB: return 0x178;
+        case 0x3AE: return 0x144;
+        case 0x3AF: return 0xED;
+        case 0x3B2: return 0xDF;
+        case 0x3B3: return 'y';
+        case 0x3B7: return 'n';
+        case 0x3B9: return 0x131;
+        case 0x3BA: return 'k';
+        case 0x3BD: return 'v';
+        case 0x3BF: return 'o';
+        case 0x3C1: return 'p';
+        case 0x3C2: return 0xE7;
+        case 0x3C5: return 'u';
+        case 0x3C7: return 'x';
+        case 0x3CA: return 0xEF;
+        case 0x3CB: return 0xFC;
+        case 0x3CC: return 0xF3;
+        case 0x3CD: return 0xFA;
+
+        // cyrillic => latin
+        case 0x400: return 0xC8;
+        case 0x401: return 0xCB;
+        case 0x405: return 'S';
+        case 0x406: return 'I';
+        case 0x407: return 0xCF;
+        case 0x408: return 'J';
+        case 0x410: return 'A';
+        case 0x412: return 'B';
+        case 0x415: return 'E';
+        case 0x417: return '3';
+        case 0x41A: return 'K';
+        case 0x41C: return 'M';
+        case 0x41D: return 'H';
+        case 0x41E: return 'O';
+        case 0x420: return 'P';
+        case 0x421: return 'C';
+        case 0x422: return 'T';
+        case 0x425: return 'X';
+        case 0x430: return 'a';
+        case 0x431: return '6';
+        case 0x435: return 'e';
+        case 0x43A: return 'k';
+        case 0x43E: return 'o';
+        case 0x440: return 'p';
+        case 0x441: return 'c';
+        case 0x443: return 'y';
+        case 0x445: return 'x';
+        case 0x450: return 0xE8;
+        case 0x451: return 0xEB;
+        case 0x455: return 's';
+        case 0x456: return 'i';
+        case 0x457: return 0xEF;
+        case 0x458: return 'j';
+        case 0x45B: return 0x127;
+
+        // cyrillic => greek
+        case 0x413: return 0x393;
+        case 0x41B: return 0x39B;
+        case 0x41F: return 0x3A0;
+        case 0x424: return 0x3A6;
+        case 0x444: return 0x3C6;
+
+        // greek => greek
+        case 0xB5: return 0x3BC;
+    }
+    return c;
+}
 
 extern int cubecasecmp(const char *s1, const char *s2, int n = INT_MAX);
 static inline bool cubecaseequal(const char *s1, const char *s2, int n = INT_MAX) { return !cubecasecmp(s1, s2, n); }

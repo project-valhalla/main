@@ -998,11 +998,11 @@ namespace game
         return NULL;
     }
 
-    bool duplicatename(gameent *d, const char *name = NULL, const char *alt = NULL)
+    inline bool duplicatename(gameent *d, const char *name = NULL, const char *alt = NULL)
     {
         if(!name) name = d->name;
-        if(alt && d != self && !strcmp(name, alt)) return true;
-        loopv(players) if(d!=players[i] && !strcmp(name, players[i]->name)) return true;
+        if(alt && d != self && duplicatestring(name, alt)) return true;
+        loopv(players) if(d!=players[i] && duplicatestring(name, players[i]->name)) return true;
         return false;
     }
 

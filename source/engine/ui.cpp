@@ -1970,6 +1970,7 @@ namespace UI
 
     static int curwrapalign = -1, curjustify = 0, curshadow = 0, curfontoutlinealpha = 0;
     float curfontoutline = 0.f;
+    bool curnofallback = false;
     static const char *curlanguage = newstring("");
 
     #define WITHTEXTATTR(name, tmp, val, body) \
@@ -2018,10 +2019,20 @@ namespace UI
 
         float val, tmp;
         int   aval, atmp;
-        void setup(float val_, int aval_) { val = val_; aval = aval_;}
-        void layout() { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, atmp, aval, Object::layout())); }
-        void draw(float sx, float sy) { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, atmp, aval, Object::draw(sx, sy))); }
+        void setup(float val_, int aval_) { val = val_; aval = aval_; }
+        void layout()                      { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, atmp, aval, Object::layout())); }
+        void draw(float sx, float sy)      { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, atmp, aval, Object::draw(sx, sy))); }
         void buildchildren(uint *contents) { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, atmp, aval, Object::buildchildren(contents))); }
+    };
+    struct NoFallback : Object
+    {
+        static const char *typestr() { return "#NoFallback"; }
+        const char *gettype() const { return typestr(); }
+
+        bool tmp;
+        void layout()                      { tmp = curnofallback; curnofallback = true; Object::layout(); curnofallback = tmp; }
+        void draw(float sx, float sy)      { tmp = curnofallback; curnofallback = true; Object::draw(sx, sy); curnofallback = tmp; }
+        void buildchildren(uint *contents) { tmp = curnofallback; curnofallback = true; Object::buildchildren(contents); curnofallback = tmp; }
     };
     struct Language : Object
     {
@@ -2032,8 +2043,8 @@ namespace UI
         Language() : val(NULL), tmp(NULL) {}
         ~Language() { DELETEA(val); DELETEA(tmp); }
         void setup(const char *val_) { SETSTR(val, val_); }
-        void layout() { SETSTR(tmp, curlanguage); SETSTR(curlanguage, val); Object::layout(); SETSTR(curlanguage, tmp); }
-        void draw(float sx, float sy) { SETSTR(tmp, curlanguage); SETSTR(curlanguage, val); Object::draw(sx, sy); SETSTR(curlanguage, tmp); }
+        void layout()                      { SETSTR(tmp, curlanguage); SETSTR(curlanguage, val); Object::layout(); SETSTR(curlanguage, tmp); }
+        void draw(float sx, float sy)      { SETSTR(tmp, curlanguage); SETSTR(curlanguage, val); Object::draw(sx, sy); SETSTR(curlanguage, tmp); }
         void buildchildren(uint *contents) { SETSTR(tmp, curlanguage); SETSTR(curlanguage, val); Object::buildchildren(contents); SETSTR(curlanguage, tmp); }
     };
 
@@ -2048,11 +2059,12 @@ namespace UI
         int fontid, lastchange;
         int align, justify, shadow, outlinealpha;
         float outline;
+        bool nofallback;
         const char *language;
         bool changed;
         uint crc; // string hash used for change detection
 
-        Text() : info({0, 0, 0}), lastchange(0), align(curwrapalign), justify(curjustify), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), language(NULL), crc(0) {}
+        Text() : info({0, 0, 0}), lastchange(0), align(curwrapalign), justify(curjustify), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), nofallback(curnofallback), language(NULL), crc(0) {}
 
         void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1)
         {
@@ -2061,7 +2073,7 @@ namespace UI
             float newscale = scale_ * uiscale;
 
             int curfontid = getcurfontid();
-            if(newscale != scale || wrap_ != wrap || fontid != curfontid || curwrapalign != align || curjustify != justify || curshadow != shadow || curfontoutline != outline || curfontoutlinealpha != outlinealpha || (!language || strcmp(curlanguage, language)) || (color_.r != color.r || color_.g != color.g || color_.b != color.b))
+            if(newscale != scale || wrap_ != wrap || fontid != curfontid || curwrapalign != align || curjustify != justify || curshadow != shadow || curfontoutline != outline || curfontoutlinealpha != outlinealpha || curnofallback != nofallback || (!language || strcmp(curlanguage, language)) || (color_.r != color.r || color_.g != color.g || color_.b != color.b))
             {
                 changed = true;
                 lastchange = totalmillis;
@@ -2075,6 +2087,7 @@ namespace UI
             shadow = curshadow;
             outline = curfontoutline;
             outlinealpha = curfontoutlinealpha;
+            nofallback = curnofallback;
             SETSTR(language, curlanguage);
             fontid = curfontid;
         }
@@ -2142,7 +2155,7 @@ namespace UI
 
             if(!info.tex)
             {
-                prepare_text(text, info, int(wrap/k), bvec(color.r, color.g, color.b), -1, outline * FONTH / 16.f, bvec(0, 0, 0), outlinealpha, align, justify, language);
+                prepare_text(text, info, int(wrap/k), bvec(color.r, color.g, color.b), -1, outline * FONTH / 16.f, bvec(0, 0, 0), outlinealpha, align, justify, language, nofallback);
             }
             w = max(w, info.w*k);
             h = max(h, info.h*k);
@@ -3624,6 +3637,9 @@ namespace UI
     
     ICOMMAND(uifontoutline, "fie", (float *val, int *a, uint *children),
         BUILD(FontOutline, o, o->setup(*val, *a), children));
+    
+    ICOMMAND(uinofallback, "e", (uint *children),
+        BUILD(NoFallback, o, o->setup(), children));
     
     ICOMMAND(uilanguage, "se", (char *val, uint *children),
         BUILD(Language, o, o->setup(val), children));

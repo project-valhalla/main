@@ -9,6 +9,13 @@ float fontsize = 0;                 // pixel height of the current font
 const matrix4x3 *textmatrix = NULL; // used for text particles
 Shader *textshader = NULL;          // used for text particles
 
+// text colors
+static bvec palette[10];
+ICOMMAND(textcolor, "ii", (int *i, int *c),
+{
+    if(*i >= 0 && *i <= 9) palette[*i] = bvec::hexcolor(*c);
+});
+
 static cairo_font_options_t *options = NULL;  // global font options
 static cairo_surface_t *dummy_surface = NULL; // used to measure text
 
@@ -196,6 +203,8 @@ bool init_pangocairo()
     dummy_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0);
     if(!dummy_surface) return false;
 
+    loopi(10) palette[i] = bvec(255, 255, 255);
+
     defformatstring(msg, "Text rendering: Pango %s, Cairo %s", pango_version_string(), cairo_version_string());
     conoutf(CON_INIT, msg);
     return true;
@@ -208,23 +217,6 @@ void done_pangocairo()
     if(dummy_surface) cairo_surface_destroy(dummy_surface);
 }
 
-static inline bvec get_text_color(char c, bvec def)
-{
-    switch(c)
-    {
-        case '0': return bvec( 64, 255, 128); // green: player talk
-        case '1': return bvec( 96, 160, 255); // blue: "echo" command
-        case '2': return bvec(255, 192,  64); // yellow: gameplay messages
-        case '3': return bvec(255,  64,  64); // red: important errors
-        case '4': return bvec(128, 128, 128); // gray
-        case '5': return bvec(192,  64, 192); // magenta
-        case '6': return bvec(255, 128,   0); // orange
-        case '7': return bvec(255, 255, 255); // white
-        case '8': return bvec(  0, 255, 255); // cyan
-        case '9': return bvec(255, 192, 203); // pink
-    }
-    return def; // provided color: everything else
-}
 //stack[sp] is current color index
 static inline bvec text_color(char c, char *stack, int size, int &sp, bvec color)
 {
@@ -237,7 +229,7 @@ static inline bvec text_color(char c, char *stack, int size, int &sp, bvec color
     {
         if(c=='r') { if(sp > 0) --sp; c = stack[sp]; } // restore color
         else stack[sp] = c;
-        return get_text_color(c, color);
+        if(c >= '0' && c <= '9') return palette[c - '0'];
     }
     return color;
 }

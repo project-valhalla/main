@@ -1,8 +1,6 @@
 // weapon.cpp: all shooting and effects code, projectile management
 #include "game.h"
 
-extern int zoom, zoomfov;
-
 namespace game
 {
     static const int OFFSETMILLIS = 500;
@@ -685,7 +683,7 @@ namespace game
             h.flags = flags;
             h.dir = f==at ? ivec(0, 0, 0) : ivec(vec(vel).mul(DNF));
 
-            if(at == self && f == at) damagehud(damage, f, at);
+            if(at == self && f == at) setdamagehud(damage, f, at);
         }
     }
 

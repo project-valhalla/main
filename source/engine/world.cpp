@@ -1378,7 +1378,7 @@ void resetmap()
     clearslots();
     clearparticles();
     clearstains();
-    clearscreeneffects();
+    game::clearscreeneffects();
     clearsleep();
     cancelsel();
     pruneundos();

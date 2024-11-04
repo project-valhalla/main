@@ -69,6 +69,7 @@ static inline void setfont(font *f) { if(f) curfont = f; }
 // texture
 extern int hwtexsize, hwcubetexsize, hwmaxaniso, maxtexsize, hwtexunits, hwvtexunits;
 
+extern Texture* notexture;
 extern Texture *textureload(const char *name, int clamp = 0, bool mipit = true, bool msg = true);
 extern bool setusedtexture(Texture *t = NULL, GLenum target = GL_TEXTURE_2D);
 extern int texalign(const void *data, int w, int bpp);
@@ -128,8 +129,8 @@ extern int maxdrawbufs, maxdualdrawbufs;
 enum { DRAWTEX_NONE = 0, DRAWTEX_ENVMAP, DRAWTEX_MINIMAP, DRAWTEX_MODELPREVIEW };
 
 extern int vieww, viewh;
-extern int fov;
-extern float curfov, fovy, aspect, forceaspect;
+extern int showhud, editcursor;
+extern float curfov, curavatarfov, fovy, aspect, forceaspect;
 extern float nearplane;
 extern int farplane;
 extern bool hdrfloat;
@@ -170,14 +171,12 @@ extern void screenquadoffset(float x, float y, float w, float h);
 extern void screenquadoffset(float x, float y, float w, float h, float x2, float y2, float w2, float h2);
 extern void hudquad(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
 extern void debugquad(float x, float y, float w, float h, float tx = 0, float ty = 0, float tw = 1, float th = 1);
-extern void recomputecamera();
 extern float calcfrustumboundsphere(float nearplane, float farplane,  const vec &pos, const vec &view, vec &center);
 extern void setfogcolor(const vec &v);
 extern void zerofogcolor();
 extern void resetfogcolor();
 extern float calcfogdensity(float dist);
 extern float calcfogcull();
-extern void writecrosshairs(stream *f);
 extern void renderavatar();
 
 namespace modelpreview
@@ -638,7 +637,6 @@ extern void textinput(bool on, int mask = ~0);
 
 // physics
 extern void modifyorient(float yaw, float pitch);
-extern void mousemove(int dx, int dy);
 extern bool overlapsdynent(const vec &o, float radius);
 extern void rotatebb(vec &center, vec &radius, int yaw, int pitch, int roll = 0);
 
@@ -730,29 +728,28 @@ extern void cleanupsky();
 
 namespace UI
 {
-    extern float uiscale;
-    bool hascursor();
-    void getcursorpos(float &x, float &y);
-    void resetcursor();
-    bool movecursor(int dx, int dy, int w, int h);
-    bool keypress(int code, bool isdown);
-    bool textinput(const char *str, int len);
-    float abovehud();
-
     void setup();
     void update();
     void render();
     void cleanup();
+    void resetcursor();
+    void getcursorpos(float& x, float& y);
+
+    bool movecursor(int dx, int dy, int w, int h);
+    bool keypress(int code, bool isdown);
+    bool textinput(const char* str, int len);
+    bool hascursor();
+
+    float abovehud();
+    extern float uiscale;
 }
 
 // menus
-
-extern int mainmenu;
-
 extern void addchange(const char *desc, int type);
 extern void clearchanges(int type);
 extern void menuprocess();
 extern void clearmainmenu();
+extern int mainmenu;
 
 // sound
 extern void clearmapsounds();

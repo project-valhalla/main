@@ -41,13 +41,6 @@ namespace physics
 // game
 enum
 {
-    ZOOM_NONE = 0,
-    ZOOM_SHADOW,
-    ZOOM_SCOPE
-};
-
-enum
-{
     TEXEFFECT_GENERIC = 0,
     TEXEFFECT_DIRT,
     TEXEFFECT_METAL,
@@ -114,17 +107,21 @@ namespace game
     extern void dynlighttrack(physent *owner, vec &o, vec &hud);
     extern void voicecom(int sound, char *text, bool isteam);
     extern void adddynlights();
+    extern void drawhud(int w, int h);
+    extern void drawpointers(int w, int h);
+    extern void computezoom();
+    extern void recomputecamera();
+    extern void mousemove(int dx, int dy);
+    extern void writecrosshairs(stream* f);
+    extern void clearscreeneffects();
 
     extern bool allowedittoggle();
     extern bool editing();
     extern bool ispaused();
-    extern bool allowmouselook();
     extern bool intermission;
-    extern bool needminimap();
+    extern bool hasminimap();
+    extern bool isthirdperson();
     extern bool isfirstpersondeath();
-    extern bool allowthirdperson();
-    extern bool detachcamera();
-    extern bool collidecamera();
 
     extern const char *gameident();
     extern const char *gameconfig();
@@ -135,17 +132,14 @@ namespace game
     extern const char *getclientmap();
     extern const char *getmapinfo();
     extern const char *getscreenshotinfo();
-    extern const char *defaultcrosshair(int index);
 
+    extern int fov, zoom, zoomfov;
     extern int numdynents();
     extern int scaletime(int t);
     extern int numanims();
-    extern int selectcrosshair(vec &col);
     extern int maxsoundradius(int n);
     extern int mapdeath;
-    extern int checkzoom();
 
-    extern float abovegameplayhud(int w, int h);
     extern float clipconsole(float w, float h);
     extern float calcradarscale();
     extern float minimapalpha;

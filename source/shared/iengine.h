@@ -49,11 +49,6 @@ extern float raycubepos(const vec &o, const vec &ray, vec &hit, float radius = 0
 extern float rayfloor  (const vec &o, vec &floor, int mode = 0, float radius = 0);
 extern bool  raycubelos(const vec &o, const vec &dest, vec &hitpos);
 
-extern int thirdperson;
-extern bool isthirdperson();
-
-extern bool settexture(const char *name, int clamp = 0);
-
 // octaedit
 
 enum { EDIT_FACE = 0, EDIT_TEX, EDIT_MAT, EDIT_FLIP, EDIT_COPY, EDIT_PASTE, EDIT_ROTATE, EDIT_REPLACE, EDIT_DELCUBE, EDIT_CALCLIGHT, EDIT_REMIP, EDIT_VSLOT, EDIT_UNDO, EDIT_REDO };
@@ -286,9 +281,9 @@ static inline void text_pos(const char *str, int cursor, int &cx, int &cy, int m
 // texture
 
 struct VSlot;
-
 extern void packvslot(vector<uchar> &buf, int index);
 extern void packvslot(vector<uchar> &buf, const VSlot *vs);
+extern bool settexture(const char* name, int clamp = 0);
 
 // renderlights
 
@@ -309,18 +304,9 @@ extern void removetrackeddynlights(physent *owner = NULL);
 // rendergl
 extern physent *camera1;
 extern vec worldpos, camdir, camright, camup;
-extern float curfov, fovy, aspect;
-
-extern bool zoomedin();
-extern void disablezoom();
 
 extern vec calcavatarpos(const vec &pos, float dist);
 extern vec calcmodelpreviewpos(const vec &radius, float &yaw);
-
-extern void damageblend(int n, const int factor = 0);
-extern void damagecompass(int n, const vec &loc);
-extern void addscreenflash(int n);
-extern void clearscreeneffects();
 
 extern vec minimapcenter, minimapradius, minimapscale;
 extern void bindminimap();
@@ -333,8 +319,6 @@ extern void pophudmatrix(bool flush = true, bool flushparams = true);
 extern void pushhudscale(float sx, float sy = 0);
 extern void pushhudtranslate(float tx, float ty, float sx = 0, float sy = 0);
 extern void resethudshader();
-
-extern void fixcamerarange();
 
 // renderparticles
 enum
@@ -454,10 +438,11 @@ extern bool matchanim(const char *name, const char *pattern);
 
 namespace UI
 {
+    void holdui(const char* name, bool on);
+
     bool showui(const char *name);
     bool hideui(const char *name);
     bool toggleui(const char *name);
-    void holdui(const char *name, bool on);
     bool uivisible(const char *name);
 }
 

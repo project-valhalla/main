@@ -981,6 +981,7 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)engine.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
     <ClCompile Include="..\game\gamephysics.cpp" />
+    <ClCompile Include="..\game\hud.cpp" />
     <ClCompile Include="..\game\monster.cpp" />
     <ClCompile Include="..\shared\crypto.cpp" />
     <ClCompile Include="..\shared\geom.cpp" />

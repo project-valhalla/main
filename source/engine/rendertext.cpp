@@ -14,6 +14,8 @@ static bvec palette[10];
 ICOMMAND(textcolor, "ii", (int *i, int *c),
 {
     if(*i >= 0 && *i <= 9) palette[*i] = bvec::hexcolor(*c);
+    clearconsoletextures();
+    reloadfonts();
 });
 
 static cairo_font_options_t *options = NULL;  // global font options

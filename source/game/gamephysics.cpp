@@ -851,81 +851,6 @@ namespace physics
         }
     }
 
-    bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float gravity)
-    {
-        // Collision checks.
-        if (d->physstate != PHYS_BOUNCE && collide(d, vec(0, 0, 0), 0, false)) return true;
-        int mat = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->eyeheight) / 2));
-        bool isinwater = isliquidmaterial(mat);
-        if (isinwater)
-        {
-            d->vel.z -= gravity * mapgravity / 16 * secs;
-            d->vel.mul(max(1.0f - secs / waterfric, 0.0f));
-        }
-        else d->vel.z -= gravity * mapgravity * secs;
-        vec old(d->o);
-        loopi(2)
-        {
-            vec dir(d->vel);
-            dir.mul(secs);
-            d->o.add(dir);
-            if (!collide(d, dir, 0, true, true))
-            {
-                if (collideinside)
-                {
-                    d->o = old;
-                    d->vel.mul(-elasticity);
-                }
-                break;
-            }
-            else if (collideplayer)
-            {
-                break;
-            }
-            d->o = old;
-            game::bounced(d, collidewall);
-            float c = collidewall.dot(d->vel),
-                k = 1.0f + (1.0f - elasticity) * c / d->vel.magnitude();
-            d->vel.mul(k);
-            d->vel.sub(vec(collidewall).mul(elasticity * 2.0f * c));
-        }
-        if (d->physstate != PHYS_BOUNCE)
-        {
-            // Make sure bouncers don't start inside geometry!
-            if (d->o == old) return !collideplayer;
-            d->physstate = PHYS_BOUNCE;
-        }
-        return collideplayer != NULL;
-    }
-
-    bool isbouncing(physent* d, float elasticity, float waterfric, float gravity)
-    {
-        if (physsteps <= 0)
-        {
-            interpolateposition(d);
-            return false;
-        }
-
-        d->o = d->newpos;
-        bool hitplayer = false;
-        loopi(physsteps - 1)
-        {
-            if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
-            {
-                hitplayer = true;
-            }
-        }
-        d->deltapos = d->o;
-        if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
-        {
-            hitplayer = true;
-        }
-        d->newpos = d->o;
-        d->deltapos.sub(d->newpos);
-        interpolateposition(d);
-        return !hitplayer;
-    }
-
     VARP(footstepssounds, 0, 1, 1);
     VARP(footstepdelay, 1, 44000, 50000);
 
@@ -1096,12 +1021,18 @@ namespace physics
         return true;
     }
 
-#define dir(name,v,d,s,os) ICOMMAND(name, "D", (int *down), { self->s = *down != 0; self->v = self->s ? d : (self->os ? -(d) : 0); });
+#define DIR(name, v, d, s, os) ICOMMAND(name, "D", (int *down), \
+{ \
+    self->s = *down != 0; \
+    self->v = self->s ? d : (self->os ? -(d) : 0); \
+}); \
 
-    dir(backward, move, -1, k_down, k_up);
-    dir(forward, move, 1, k_up, k_down);
-    dir(left, strafe, 1, k_left, k_right);
-    dir(right, strafe, -1, k_right, k_left);
+    DIR(backward, move, -1, k_down, k_up);
+    DIR(forward, move, 1, k_up, k_down);
+    DIR(left, strafe, 1, k_left, k_right);
+    DIR(right, strafe, -1, k_right, k_left);
+
+#undef DIR
 
     bool canjump()
     {
@@ -1138,5 +1069,80 @@ namespace physics
     {
         docrouch(*down);
     });
+
+    bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float gravity)
+    {
+        // Collision checks.
+        if (d->physstate != PHYS_BOUNCE && collide(d, vec(0, 0, 0), 0, false)) return true;
+        int mat = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->eyeheight) / 2));
+        bool isinwater = isliquidmaterial(mat);
+        if (isinwater)
+        {
+            d->vel.z -= gravity * mapgravity / 16 * secs;
+            d->vel.mul(max(1.0f - secs / waterfric, 0.0f));
+        }
+        else d->vel.z -= gravity * mapgravity * secs;
+        vec old(d->o);
+        loopi(2)
+        {
+            vec dir(d->vel);
+            dir.mul(secs);
+            d->o.add(dir);
+            if (!collide(d, dir, 0, true, true))
+            {
+                if (collideinside)
+                {
+                    d->o = old;
+                    d->vel.mul(-elasticity);
+                }
+                break;
+            }
+            else if (collideplayer)
+            {
+                break;
+            }
+            d->o = old;
+            game::bounced(d, collidewall);
+            float c = collidewall.dot(d->vel),
+                k = 1.0f + (1.0f - elasticity) * c / d->vel.magnitude();
+            d->vel.mul(k);
+            d->vel.sub(vec(collidewall).mul(elasticity * 2.0f * c));
+        }
+        if (d->physstate != PHYS_BOUNCE)
+        {
+            // Make sure bouncers don't start inside geometry!
+            if (d->o == old) return !collideplayer;
+            d->physstate = PHYS_BOUNCE;
+        }
+        return collideplayer != NULL;
+    }
+
+    bool isbouncing(physent* d, float elasticity, float waterfric, float gravity)
+    {
+        if (physsteps <= 0)
+        {
+            interpolateposition(d);
+            return false;
+        }
+
+        d->o = d->newpos;
+        bool hitplayer = false;
+        loopi(physsteps - 1)
+        {
+            if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
+            {
+                hitplayer = true;
+            }
+        }
+        d->deltapos = d->o;
+        if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
+        {
+            hitplayer = true;
+        }
+        d->newpos = d->o;
+        d->deltapos.sub(d->newpos);
+        interpolateposition(d);
+        return !hitplayer;
+    }
 }
 

@@ -384,7 +384,7 @@ namespace game
             int color = 0x00FFFF;
             if(gun == GUN_PULSE) color = 0xEE88EE;
             else if(gun == GUN_GRENADE) color = 0x74BCF9;
-            addstain(STAIN_GLOW2, pos, negdir, radius / (gun == GUN_GRENADE ? 2 : 1), color);
+            addstain(STAIN_GLOW2, pos, negdir, radius / 2, color);
         }
     }
 

@@ -1850,7 +1850,6 @@ namespace game
                 vec dir;
                 loopk(3) dir[k] = getint(p)/DNF;
                 if(!target || !validatk(atk)) break;
-                if(target->timeinair) damage *= 2;
                 target->hitpush(damage * (target->health <= 0 ? deadpush : 1), dir, NULL, atk);
                 break;
             }

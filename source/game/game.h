@@ -494,9 +494,23 @@ struct gameent : dynent, gamestate
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
     {
         vec push(dir);
-        if (attacks[atk].projspeed) falling.z = 1; // projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further
-        if (role == ROLE_ZOMBIE) damage *= 3; // zombies are pushed "a bit" more
-        push.mul((actor == this && attacks[atk].exprad ? EXP_SELFPUSH : 1.0f) * attacks[atk].hitpush * damage / weight);
+        bool istrickjump = actor == this && attacks[atk].exprad;
+        if (istrickjump)
+        {
+            // Projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further.
+            falling.z = 1;
+        }
+        if (actor != this && physstate < PHYS_SLOPE)
+        {
+            // While in mid-air, push is stronger.
+            damage *= GUN_AIR_PUSH;
+        }
+        if (role == ROLE_ZOMBIE)
+        {
+            // Zombies are pushed "a bit" more.
+            damage *= GUN_ZOMBIE_PUSH;
+        }
+        push.mul((istrickjump ? EXP_SELFPUSH : 1.0f) * attacks[atk].hitpush * damage / weight);
         vel.add(push);
     }
 

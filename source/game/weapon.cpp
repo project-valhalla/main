@@ -344,7 +344,6 @@ namespace game
     }
 
     VARP(blood, 0, 1, 1);
-    VARP(goreeffect, 0, 0, 2);
 
     void bounced(physent *d, const vec &surface)
     {
@@ -363,9 +362,9 @@ namespace game
             {
                 playsound(b->bouncesound, NULL, &b->o, NULL, 0, 0, 0, -1);
             }
-            if(blood && type == BNC_GIB && b->bounces <= 2 && goreeffect <= 0)
+            if(blood && type == BNC_GIB && b->bounces <= 2)
             {
-                addstain(STAIN_BLOOD, vec(b->o).sub(vec(surface).mul(b->radius)), surface, 2.96f/b->bounces, (b->owner->role == ROLE_ZOMBIE ? bvec(0xFF, 0x60, 0xFF) : bvec(0x60, 0xFF, 0xFF)), rnd(4));
+                addstain(STAIN_BLOOD, vec(b->o).sub(vec(surface).mul(b->radius)), surface, 2.96f/b->bounces, bvec::hexcolor(getbloodcolor(b->owner)), rnd(4));
             }
             if(type == BNC_ROCKET) particle_splash(PART_SPARK2, 20, 150, b->o, 0xFFC864, 0.3f, 250, 1);
         }
@@ -440,8 +439,10 @@ namespace game
 
                 case BNC_GIB:
                 {
-                    if(blood && goreeffect <= 0 && bnc.vel.magnitude() > 30.0f)
-                        regular_particle_splash(PART_BLOOD, 0+rnd(4), 400, pos, getbloodcolor(bnc.owner), 0.80f, 25);
+                    if (blood && bnc.vel.magnitude() > 30.0f)
+                    {
+                        regular_particle_splash(PART_BLOOD, 0 + rnd(4), 400, pos, getbloodcolor(bnc.owner), 0.80f, 25);
+                    }
                     break;
                 }
 
@@ -621,23 +622,19 @@ namespace game
         newbouncer(d, from, to, true, 0, -1, type, type == BNC_DEBRIS ? 400 : rnd(1000)+1000, rnd(100)+20, 0.3f + rndscale(0.8f), elasticity, gun);
     }
 
-    void gibeffect(int damage, const vec &vel, gameent *d, bool force)
+    void gibeffect(int damage, const vec &vel, gameent *d)
     {
         if(!gore) return;
-        if(force)
-        {
-            d->health = HEALTH_GIB;
-            damage = d->maxhealth;
-        }
         vec from = d->abovehead();
-        if(goreeffect <= 0)
+        loopi(min(damage, 8) + 1)
         {
-            loopi(min(damage, 8)+1) spawnbouncer(from, d, BNC_GIB);
-            if(blood)
-            {
-                particle_splash(PART_BLOOD, 3, 180, d->o, getbloodcolor(d), 3.0f+rndscale(5.0f), 150, 0);
-                particle_splash(PART_BLOOD2, damage, 300, d->o, getbloodcolor(d), 0.89f, 300, 5);
-            }
+            spawnbouncer(from, d, BNC_GIB);
+        }
+        if(blood)
+        {
+            particle_splash(PART_BLOOD, 3, 180, d->o, getbloodcolor(d), 3.0f+rndscale(5.0f), 150, 0);
+            particle_splash(PART_BLOOD2, damage, 300, d->o, getbloodcolor(d), 0.89f, 300, 5);
+            addstain(STAIN_BLOOD, d->o, d->vel.neg(), 25, getbloodcolor(d), rnd(4));
         }
         playsound(S_GIB, d);
     }
@@ -667,7 +664,7 @@ namespace game
         if(f->type == ENT_AI)
         {
             hitmonster(damage, (monster *)f, at, atk, flags);
-            f->hitpush(damage * (f->health<=0 ? monsterdeadpush : 1), vel, at, atk);
+            f->hitpush(damage * (f->health <= 0 ? monsterdeadpush : 1), vel, at, atk);
         }
         else if(!m_mp(gamemode))
         {

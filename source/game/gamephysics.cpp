@@ -198,7 +198,7 @@ namespace physics
     bool canmove(gameent* d)
     {
         if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(gore && d->gibbed());
+        return !intermission && !(gore && d->state == CS_DEAD && d->deathstate == Death_Gib);
     }
 
     bool trystepdown(gameent* d, vec& dir, bool init = false)
@@ -995,32 +995,6 @@ namespace physics
         }
     }
 
-    void updatevertex(dynent* pl, vec pos, vec& dpos, float gravity, float ts)
-    {
-        gameent* d = (gameent*)pl;
-        float grav = gravity ? gravity : mapgravity;
-        if (d->deathtype == DEATH_DISRUPT && lastmillis - d->lastpain <= 6000)
-        {
-            particle_splash(PART_RING, 1, 100, pos, 0x00FFFF, 1.4f, 10, 5);
-        }
-        else
-        {
-            dpos.z -= grav * ts * ts;
-        }
-    }
-
-    bool shouldmoveragdoll(dynent* pl, vec eye)
-    {
-        gameent* d = (gameent*)pl;
-        if (!isfirstpersondeath() && d->deathtype == DEATH_FALL) return false;
-        if (isfirstpersondeath() && d == self)
-        {
-            camera1->o = eye;
-            return false;
-        }
-        return true;
-    }
-
 #define DIR(name, v, d, s, os) ICOMMAND(name, "D", (int *down), \
 { \
     self->s = *down != 0; \
@@ -1143,6 +1117,77 @@ namespace physics
         d->deltapos.sub(d->newpos);
         interpolateposition(d);
         return !hitplayer;
+    }
+
+    void updateragdoll(dynent* pl, vec center, float radius, bool& water)
+    {
+        int material = lookupmaterial(vec(center.x, center.y, center.z + radius / 2));
+        water = isliquidmaterial(material & MATF_VOLUME);
+        if (!pl->inwater && water)
+        {
+            triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material & MATF_VOLUME, center);
+        }
+        else if (pl->inwater && !water)
+        {
+            material = lookupmaterial(center);
+            water = isliquidmaterial(material & MATF_VOLUME);
+            if (!water)
+            {
+                triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater, center);
+            }
+        }
+        pl->inwater = water ? material & MATF_VOLUME : MAT_AIR;
+
+        gameent* d = (gameent*)pl;
+        if (d->deathstate == Death_Shock && lastmillis - d->lastpain <= 2000)
+        {
+            float scale = 1.0f + rndscale(12.0f);
+            particle_flare(center, center, 1, PART_ELECTRICITY, 0xEE88EE, scale);
+            addgamelight(center, vec(238.0f, 136.0f, 238.0f), scale * 2);
+        }
+    }
+
+    VAR(ragdolltwitch, 1, 10, 15);
+
+    void updateragdollvertex(dynent* pl, vec pos, vec& dpos, float gravity, float ts)
+    {
+        gameent* d = (gameent*)pl;
+        float currentgravity = gravity ? gravity : mapgravity;
+        if (d->deathstate == Death_Disrupt)
+        {
+            particle_flare(pos, pos, 1, PART_RING, 0x00FFFF, 2.0f * d->transparency);
+        }
+        else
+        {
+            dpos.z -= currentgravity * ts * ts;
+            if (d->deathstate == Death_Shock && lastmillis - d->lastpain <= 2500)
+            {
+                dpos.add(vec(rnd(201) - 100, rnd(201) - 100, rnd(201) - 100).normalize().mul(ragdolltwitch * ts));
+            }
+        }
+    }
+
+    FVAR(ragdolleyesmooth, 0, 0, 1);
+    VAR(ragdolleyesmoothmillis, 1, 1, 10000);
+
+    void updateragdolleye(dynent* pl, vec eye, const vec offset)
+    {
+        gameent* d = (gameent*)pl;
+        bool isfirstperson = isfirstpersondeath();
+        if (!isfirstperson && (d->deathstate == Death_Fall || d->deathstate == Death_Gib))
+        {
+            return;
+        }
+
+        if (d == self && isfirstperson)
+        {
+            camera1->o = eye;
+            return;
+        }
+
+        eye.add(offset);
+        float k = pow(ragdolleyesmooth, float(curtime) / ragdolleyesmoothmillis);
+        d->o.lerp(eye, 1 - k);
     }
 }
 

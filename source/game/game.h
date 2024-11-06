@@ -435,7 +435,7 @@ struct gameent : dynent, gamestate
     int respawned, suicided;
     int lastpain, lasthurt;
     int lastaction, lastattack, lasthit;
-    int deathtype;
+    int deathstate;
     int attacking;
     int lasttaunt, lastfootstep, lastyelp, lastswitch, lastroll;
     int lastpickup, lastpickupmillis, flagpickup;
@@ -445,6 +445,8 @@ struct gameent : dynent, gamestate
     int smoothmillis;
 
     int chan[Chan_Num], chansound[Chan_Num];
+
+    float transparency;
 
     string name, info;
     int team, playermodel, playercolor;
@@ -463,6 +465,7 @@ struct gameent : dynent, gamestate
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
+                transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
                 muzzle(-1, -1, -1), eject(-1, -1, -1)
     {
@@ -491,9 +494,9 @@ struct gameent : dynent, gamestate
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
     {
         vec push(dir);
-        if(attacks[atk].projspeed) falling.z = 1; // projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further
-        if(role == ROLE_ZOMBIE) damage *= 3; // zombies are pushed "a bit" more
-        push.mul((actor==this && attacks[atk].exprad ? EXP_SELFPUSH : 1.0f)*attacks[atk].hitpush*damage/weight);
+        if (attacks[atk].projspeed) falling.z = 1; // projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further
+        if (role == ROLE_ZOMBIE) damage *= 3; // zombies are pushed "a bit" more
+        push.mul((actor == this && attacks[atk].exprad ? EXP_SELFPUSH : 1.0f) * attacks[atk].hitpush * damage / weight);
         vel.add(push);
     }
 
@@ -518,7 +521,7 @@ struct gameent : dynent, gamestate
         respawned = suicided = -1;
         lastaction = 0;
         lastattack = -1;
-        deathtype = 0;
+        deathstate = Death_Default;
         attacking = ACT_IDLE;
         lasttaunt = 0;
         lastpickup = -1;
@@ -553,9 +556,9 @@ struct gameent : dynent, gamestate
         return state == CS_ALIVE && health <= maxhealth / 4;
     }
 
-    bool gibbed()
+    bool shouldgib()
     {
-        return (state == CS_DEAD && health <= HEALTH_GIB) || deathtype == DEATH_GIB;
+        return health <= HEALTH_GIB;
     }
 };
 
@@ -654,13 +657,6 @@ namespace game
     extern void setclientmode();
 
     // game.cpp
-    extern int vooshgun;
-    extern int maptime, maprealtime, maplimit;
-    extern int lastspawnattempt;
-    extern int following, specmode;
-    extern int smoothmove, smoothdist;
-    extern int gore;
-
     extern void taunt(gameent *d);
     extern void stopfollowing();
     extern void checkfollow();
@@ -671,7 +667,7 @@ namespace game
     extern void spawnplayer(gameent *d);
     extern void spawneffect(gameent *d);
     extern void respawn();
-    extern void deathstate(gameent *d, bool restore = false);
+    extern void setdeathstate(gameent *d, bool restore = false);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void checkannouncements(gameent *actor, int flags);
@@ -686,6 +682,14 @@ namespace game
     extern bool gamewaiting, betweenrounds, hunterchosen;
     extern bool isally(gameent* a, gameent* b);
     extern bool isinvulnerable(gameent* target, gameent* actor);
+
+    extern int vooshgun;
+    extern int maptime, maprealtime, maplimit;
+    extern int lastspawnattempt;
+    extern int following, specmode;
+    extern int smoothmove, smoothdist;
+    extern int gore;
+    extern int getdeathstate(gameent* d, int atk, int flags);
 
     extern const char* colorname(gameent* d, const char* name = NULL, const char* alt = NULL, const char* color = "");
     extern const char* teamcolorname(gameent* d, const char* alt = NULL);
@@ -778,7 +782,7 @@ namespace game
     extern void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int damage, int atk);
     extern void explodeeffects(int atk, gameent *d, bool local, int id = 0);
     extern void damageeffect(int damage, dynent *d, vec p, int atk, int color, bool headshot = false);
-    extern void gibeffect(int damage, const vec &vel, gameent *d, bool force = false);
+    extern void gibeffect(int damage, const vec &vel, gameent *d);
     extern void clearbouncers();
     extern void updatebouncers(int curtime);
     extern void renderbouncers();
@@ -836,7 +840,7 @@ namespace game
     {
         const char *directory, *armdirectory, *powerup[5];
         bool ragdoll;
-        int bloodcolor, painsound, diesound, tauntsound;
+        const int bloodcolor, painsound, diesound[Death_Num], tauntsound;
     };
 
     extern void saveragdoll(gameent *d);

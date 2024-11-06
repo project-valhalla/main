@@ -161,7 +161,10 @@ namespace game
     void edittoggled(bool on)
     {
         addmsg(N_EDITMODE, "ri", on ? 1 : 0);
-        if(self->state==CS_DEAD) deathstate(self, true);
+        if (self->state == CS_DEAD)
+        {
+            setdeathstate(self, true);
+        }
         disablezoom();
         self->suicided = self->respawned = -2;
         checkfollow();
@@ -1848,7 +1851,7 @@ namespace game
                 loopk(3) dir[k] = getint(p)/DNF;
                 if(!target || !validatk(atk)) break;
                 if(target->timeinair) damage *= 2;
-                target->hitpush(damage * (target->health<=0 ? deadpush : 1), dir, NULL, atk);
+                target->hitpush(damage * (target->health <= 0 ? deadpush : 1), dir, NULL, atk);
                 break;
             }
 
@@ -2158,7 +2161,10 @@ namespace game
                 else
                 {
                     d->state = d->editstate;
-                    if(d->state==CS_DEAD) deathstate(d, true);
+                    if (d->state == CS_DEAD)
+                    {
+                        setdeathstate(d, true);
+                    }
                 }
                 checkfollow();
                 break;
@@ -2191,7 +2197,7 @@ namespace game
                 }
                 else if(s->state == CS_SPECTATOR)
                 {
-                    deathstate(s, true);
+                    setdeathstate(s, true);
                     conoutf("%s \fs\f0has left spectator mode\fr", colorname(s));
                     execident("on_unspectate");
                 }

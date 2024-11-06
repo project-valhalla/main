@@ -6,7 +6,7 @@ namespace game
 {
     VARP(ragdoll, 0, 1, 1);
     VARP(ragdollmillis, 0, 10000, 300000);
-    VARP(ragdollfade, 0, 400, 5000);
+    VARP(ragdollfade, 0, 380, 5000);
     VARP(forceplayermodels, 0, 0, 1);
     VARP(showdeadplayers, 0, 1, 1);
 
@@ -82,11 +82,26 @@ namespace game
 
     static const playermodelinfo playermodels[5] =
     {
-        { "player/bones",         "player/bones/arm", { "cosmetic/skull",           "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE,         },
-        { "player/bonnie",        "player/bones/arm", { "cosmetic/skull",           "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true, 0x60FFFFF, S_PAIN_FEMALE,        S_DIE_FEMALE,        S_TAUNT_FEMALE        },
-        { "player/bones/zombie",  "player/bones/arm", { NULL,                       NULL,              NULL,               NULL,              NULL             }, true, 0xFF90FF,  S_PAIN_ZOMBIE_MALE,   S_DIE_ZOMBIE_MALE,   S_TAUNT_ZOMBIE_MALE   },
-        { "player/bonnie/zombie", "player/bones/arm", { NULL,                       NULL,              NULL,               NULL,              NULL,            }, true, 0xFF90FF,  S_PAIN_ZOMBIE_FEMALE, S_DIE_ZOMBIE_FEMALE, S_TAUNT_ZOMBIE_FEMALE },
-        { "player/berserker",    NULL,                { "player/berserker/helmet",  NULL,              NULL,               NULL,              NULL,            }, true, 0x60FFFFF, S_PAIN_MALE,          S_DIE_MALE,          S_TAUNT_MALE          }
+        { 
+            "player/bones", "player/bones/arm", { "cosmetic/skull", "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true,
+            0x60FFFFF, S_PAIN_MALE, { S_DIE_MALE1, -1, S_DIE_MALE2, -1, -1, S_DIE_MALE3, -1, S_DIE_MALE4 }, S_TAUNT_MALE
+        },
+        { 
+            "player/bonnie", "player/bones/arm", { "cosmetic/skull", "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true,
+            0x60FFFFF, S_PAIN_FEMALE, { S_DIE_FEMALE1, -1, S_DIE_FEMALE2, -1, -1, S_DIE_FEMALE3, -1, S_DIE_MALE4 }, S_TAUNT_FEMALE
+        },
+        {
+            "player/bones/zombie",  "player/bones/arm", { NULL, NULL, NULL, NULL, NULL }, true,
+            0xFF90FF, S_PAIN_ZOMBIE_MALE, { S_DIE_ZOMBIE_MALE, -1, S_DIE_ZOMBIE_MALE, -1, -1, S_DIE_ZOMBIE_MALE, -1,  S_DIE_ZOMBIE_MALE }, S_TAUNT_ZOMBIE_MALE
+        },
+        { 
+            "player/bonnie/zombie", "player/bones/arm", { NULL, NULL, NULL, NULL, NULL }, true,
+            0xFF90FF, S_PAIN_ZOMBIE_FEMALE, { S_DIE_ZOMBIE_FEMALE, -1, S_DIE_ZOMBIE_FEMALE, -1, -1, S_DIE_ZOMBIE_FEMALE, -1, S_DIE_ZOMBIE_FEMALE }, S_TAUNT_ZOMBIE_FEMALE
+        },
+        { 
+            "player/berserker", NULL, { "player/berserker/helmet",  NULL, NULL, NULL, NULL }, true,
+            0x60FFFFF, S_PAIN_MALE, { S_DIE_MALE1, -1, S_DIE_MALE2, -1, -1, S_DIE_MALE3, -1, S_DIE_MALE4 }, S_TAUNT_MALE
+        }
     };
 
     extern void changedplayermodel();
@@ -216,13 +231,57 @@ namespace game
         loopi(sizeof(animnames)/sizeof(animnames[0])) if(matchanim(animnames[i], pattern)) anims.add(i);
     }
 
+    float updatetransparency(gameent* d, float fade)
+    {
+        float transparency = 1;
+        switch (d->state)
+        {
+            case CS_ALIVE:
+            {
+                if (camera1->o.dist(d->o) <= d->radius)
+                {
+                    transparency = 0.1f;
+                }
+                break;
+            }
+
+            case CS_LAGGED:
+            {
+                transparency = 0.5f;
+                break;
+            }
+        
+            case CS_DEAD:
+            {
+                if (d->deathstate == Death_Disrupt)
+                {
+                    transparency -= clamp(float(lastmillis - d->lastpain) / 2000, 0.0f, 1.0f);
+                    if (transparency <= 0)
+                    {
+                        d->deathstate = Death_Gib;
+                    }
+                }
+                else if (d->deathstate != Death_Fall)
+                {
+                    transparency = fade;
+                }
+                break;
+            }
+        }
+        return transparency;
+    }
+
     VAR(animoverride, -1, 0, NUMANIMS-1);
     VAR(testanims, 0, 0, 1);
     VAR(testpitch, -90, 0, 90);
 
     void renderplayer(gameent *d, const playermodelinfo &playermodel, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
-        if(gore && d->gibbed()) return;
+        if (gore && d->deathstate == Death_Gib)
+        {
+            return;
+        }
+
         int lastaction = d->lastaction, anim = ANIM_IDLE|ANIM_LOOP, attack = ANIM_SHOOT, delay = 0;
         if(d->state==CS_ALIVE)
         {
@@ -346,11 +405,8 @@ namespace game
         if(d->type==ENT_PLAYER) flags |= MDL_FULLBRIGHT;
         else flags |= MDL_CULL_DIST;
         if(!mainpass) flags &= ~(MDL_FULLBRIGHT | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY | MDL_CULL_DIST);
-        float trans = 1;
-        if(d->state == CS_LAGGED) trans = 0.5f;
-        else if(d->state == CS_ALIVE && camera1->o.dist(d->o) < d->radius) trans = 0.1f;
-        else if(d->deathtype == DEATH_DISRUPT) trans = 0.8f;
-        rendermodel(playermodel.directory, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), trans));
+        d->transparency = updatetransparency(d, fade);
+        rendermodel(playermodel.directory, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), d->transparency));
     }
 
     void renderai(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade, bool ragdoll)
@@ -514,8 +570,14 @@ namespace game
         {
             gameent *d = ragdolls[i];
             float fade = 1.0f;
-            if(ragdollmillis && ragdollfade)
-                fade -= clamp(float(lastmillis - (d->lastupdate + max(ragdollmillis - ragdollfade, 0)))/min(ragdollmillis, ragdollfade), 0.0f, 1.0f);
+            if (d->deathstate == Death_Fall)
+            {
+                fade -= clamp(float(lastmillis - d->lastpain) / 1000, 0.0f, 1.0f);
+            }
+            else if (ragdollmillis && ragdollfade)
+            {
+                fade -= clamp(float(lastmillis - (d->lastupdate + max(ragdollmillis - ragdollfade, 0))) / min(ragdollmillis, ragdollfade), 0.0f, 1.0f);
+            }
             renderplayer(d, fade);
         }
         if (exclude)
@@ -524,7 +586,12 @@ namespace game
         }
         else if (!f && (self->state == CS_ALIVE || (self->state == CS_EDITING && third) || (self->state == CS_DEAD && showdeadplayers)) && zoomprogress < 1)
         {
-            renderplayer(self, 1, third ? 0 : MDL_ONLYSHADOW);
+            float fade = 1.0f;
+            if (self->deathstate == Death_Fall)
+            {
+                fade -= clamp(float(lastmillis - self->lastpain) / 1000, 0.0f, 1.0f);
+            }
+            renderplayer(self, fade, third ? 0 : MDL_ONLYSHADOW);
         }
             
         booteffect(self);

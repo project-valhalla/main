@@ -473,11 +473,41 @@ namespace game
     }
 
     VARP(gore, 0, 1, 1);
-    VARP(deathfromabove, 0, 1, 1);
     VARP(deathscream, 0, 1, 1);
-    VARR(mapdeath, 0, 0, 4);
 
-    void deathstate(gameent *d, bool restore)
+    void managedeatheffects(gameent* d)
+    {
+        if (gore && d->deathstate == Death_Gib)
+        {
+            gibeffect(max(-d->health, 0), d->vel, d);
+        }
+        if (deathscream)
+        {
+            bool isfirstperson = d == self && isfirstpersondeath();
+            if (!isfirstperson)
+            {
+                int diesound = getplayermodelinfo(d).diesound[d->deathstate];
+                if (validsound(diesound))
+                {
+                    playsound(diesound, d);
+                }
+            }
+        }
+        // Fiddle around with velocity to produce funny results.
+        if (d->deathstate == Death_Headshot)
+        {
+            d->vel.x = d->vel.y = 0;
+        }
+        else if (d->deathstate == Death_Shock)
+        {
+            d->vel.z = max(d->vel.z, GUN_PULSE_SHOCK_IMPULSE);
+            particle_flare(d->o, d->o, 100, PART_ELECTRICITY, 0xDD88DD, 12.0f);
+        }
+    }
+
+    VARP(deathfromabove, 0, 1, 1);
+
+    void setdeathstate(gameent *d, bool restore)
     {
         d->state = CS_DEAD;
         d->lastpain = lastmillis;
@@ -489,13 +519,7 @@ namespace game
         stopownersounds(d);
         if(!restore)
         {
-            bool firstpersondeath = d == self && isfirstpersondeath(),
-                 isnoisy =  d->deathtype != DEATH_FIST && d->deathtype != DEATH_DISRUPT;
-            if(gore && d->gibbed()) gibeffect(max(-d->health, 0), d->vel, d, d->deathtype == 1);
-            else if(!firstpersondeath && deathscream && isnoisy)
-            {
-                playsound(getplayermodelinfo(d).diesound, d); // silent melee kills
-            }
+            managedeatheffects(d);
             d->deaths++;
         }
         if(d == self)
@@ -637,6 +661,29 @@ namespace game
         if(spree[0] != '\0') conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
     }
 
+    VARR(mapdeath, 0, Death_Default, Death_Num);
+
+    int getdeathstate(gameent* d, int atk, int flags)
+    {
+        if (d->shouldgib())
+        {
+            return Death_Gib;
+        }
+        if (flags)
+        {
+            if (flags & KILL_HEADSHOT)
+            {
+                
+                return Death_Headshot;
+            }
+        }
+        if (validatk(atk))
+        {
+            return attacks[atk].deathstate;
+        }
+        return mapdeath;
+    }
+
     VARP(killsound, 0, 1, 1);
 
     void kill(gameent *d, gameent *actor, int atk, int flags)
@@ -677,11 +724,9 @@ namespace game
                 else playsound(S_KILL);
             }
         }
-        // update player state and reset ai
-        if(attacks[atk].action == ACT_MELEE) d->deathtype = DEATH_FIST;
-        else if(atk == ATK_PISTOL_COMBO) d->deathtype = DEATH_DISRUPT;
-        else if(d == actor && d->deathtype != mapdeath) d->deathtype = mapdeath;
-        deathstate(d);
+        // Update player state and reset AI.
+        d->deathstate = getdeathstate(d, atk, flags);
+        setdeathstate(d);
         ai::kill(d, actor);
     }
 
@@ -967,7 +1012,10 @@ namespace game
         if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
         {
             if(d->state!=CS_ALIVE) return;
-            if(!m_mp(gamemode)) kill(d, d, -1);
+            if (!m_mp(gamemode))
+            {
+                kill(d, d, -1);
+            }
             else
             {
                 int seq = (d->lifesequence<<16) | ((lastmillis / 1000) & 0xFFFF);
@@ -977,7 +1025,6 @@ namespace game
                     d->suicided = seq;
                 }
             }
-            if(d->deathtype != mapdeath) d->deathtype = mapdeath;
         }
         else if(d->type == ENT_AI) suicidemonster((monster *)d);
     }

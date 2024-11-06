@@ -444,7 +444,6 @@ FVAR(ragdollwaterfric, 0, 0.85f, 1);
 FVAR(ragdollgroundfric, 0, 0.8f, 1);
 FVAR(ragdollairfric, 0, 0.996f, 1);
 FVAR(ragdollunstick, 0, 10, 1e3f);
-FVAR(ragdollgravity, 0, 198.0f, 200);
 VAR(ragdollexpireoffset, 0, 2500, 30000);
 VAR(ragdollwaterexpireoffset, 0, 4000, 30000);
 
@@ -463,7 +462,7 @@ void ragdolldata::move(dynent *pl, float ts)
     {
         vert &v = verts[i];
         vec dpos = vec(v.pos).sub(v.oldpos);
-        physics::updateragdollvertex(pl, v.pos, dpos, ragdollgravity, ts);
+        physics::updateragdollvertex(pl, v.pos, dpos, ts);
         if(water) dpos.z += 0.25f * sinf(detrnd(size_t(this) + i, 360) * RAD + lastmillis / 10000.0f * M_PI) * ts;
         dpos.mul(pow((water ? ragdollwaterfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts * 1000.0f / ragdolltimestepmin) * tsfric);
         v.oldpos = v.pos;

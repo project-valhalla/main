@@ -34,7 +34,7 @@ namespace physics
     extern void triggerphysicsevent(physent* pl, int event, int material = 0, vec origin = vec(0, 0, 0));
     extern void collidewithdynamicentity(physent* d, physent* o, const vec& dir);
     extern void updateragdoll(dynent* pl, vec center, float radius, bool& water);
-    extern void updateragdollvertex(dynent* pl, vec pos, vec& dpos, float gravity, float ts);
+    extern void updateragdollvertex(dynent* pl, vec pos, vec& dpos, float ts);
     extern void updateragdolleye(dynent* pl, vec eye, const vec offset);
 
     extern bool shouldmoveragdoll(dynent* pl, vec eye);

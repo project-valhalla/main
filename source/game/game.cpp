@@ -673,7 +673,6 @@ namespace game
         {
             if (flags & KILL_HEADSHOT)
             {
-                
                 return Death_Headshot;
             }
         }

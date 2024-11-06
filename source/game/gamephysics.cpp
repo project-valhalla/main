@@ -1147,19 +1147,20 @@ namespace physics
         }
     }
 
+    FVAR(ragdollgravity, 0, 198.0f, 200);
     VAR(ragdolltwitch, 1, 10, 15);
 
-    void updateragdollvertex(dynent* pl, vec pos, vec& dpos, float gravity, float ts)
+    void updateragdollvertex(dynent* pl, vec pos, vec& dpos, float ts)
     {
         gameent* d = (gameent*)pl;
-        float currentgravity = gravity ? gravity : mapgravity;
+        float gravity = ragdollgravity ? ragdollgravity : mapgravity;
         if (d->deathstate == Death_Disrupt)
         {
             particle_flare(pos, pos, 1, PART_RING, 0x00FFFF, 2.0f * d->transparency);
         }
         else
         {
-            dpos.z -= currentgravity * ts * ts;
+            dpos.z -= gravity * ts * ts;
             if (d->deathstate == Death_Shock && lastmillis - d->lastpain <= 2500)
             {
                 dpos.add(vec(rnd(201) - 100, rnd(201) - 100, rnd(201) - 100).normalize().mul(ragdolltwitch * ts));

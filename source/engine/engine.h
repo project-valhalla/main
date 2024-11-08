@@ -53,17 +53,30 @@ struct textinfo
 extern Shader *textshader;
 extern const matrix4x3 *textmatrix;
 extern float textscale;
+extern float fontsize;
 
 extern bool init_pangocairo();
 extern void done_pangocairo();
 extern int  getcurfontid();
+extern bool setfont(const char *name);
+extern void pushfont();
+extern bool popfont();
+extern void measure_text(const char *str, int maxw, int &w, int &h, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
+extern void prepare_text(const char *str, textinfo &info, int maxw, bvec color = bvec(255, 255, 255), int cursor = -1, float outline = 0, bvec4 ol_color = bvec4(0, 0, 0, 0), int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
+extern void prepare_text_particle(const char *str, textinfo &info, bvec color = bvec(255, 255, 255), float outline = 0, bvec4 ol_color = bvec4(0, 0, 0, 0), const char *lang = NULL, bool no_fallback = false);
+extern void draw_text(const textinfo &info, float left, float top, int a = 255, bool black = false);
+extern void draw_text(const char *str, float left, float top, bvec color = bvec(255, 255, 255), int a = 255, int maxw = 0, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
 extern void gettextres(int &w, int &h);
-extern void draw_text(textinfo info, float left, float top, int a = 255, bool black = false);
-extern void prepare_text(const char *str, textinfo &info, int maxwidth, bvec initial_color = bvec(255, 255, 255), int cursor = -1, float outline = 0, bvec outline_color = bvec(0, 0, 0), int outline_alpha = 255, int align = -1, int justify = 0, const char *language = NULL, bool no_fallback = false);
-extern void prepare_text_particle(const char *str, textinfo &info, bvec initial_color = bvec(255, 255, 255), float outline = 0, bvec outline_color = bvec(0, 0, 0), int outline_alpha = 255, const char *language = NULL, bool no_fallback = false);
-extern int  text_visible(const char *str, float hitx, float hity, int maxwidth, int align = -1, int justify = 0, const char *language = NULL, bool no_fallback = false);
-extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth, int align = -1, int justify = 0, const char *language = NULL, bool no_fallback = false);
+extern int  text_visible(const char *str, float hitx, float hity, int maxw, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
+extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxw, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
 extern void reloadfonts();
+
+static inline void setfontsize(float size) { fontsize = size; }
+static inline void draw_textf(const char *fstr, float left, float top, ...)
+{
+    defvformatstring(str, top, fstr);
+    draw_text(str, left, top);
+}
 
 // texture
 extern int hwtexsize, hwcubetexsize, hwmaxaniso, maxtexsize, hwtexunits, hwvtexunits;

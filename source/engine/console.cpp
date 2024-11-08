@@ -118,7 +118,7 @@ float rendercommand(float x, float y, float w)
     pushfont();
     setfont("default");
     textinfo info;
-    prepare_text(buf, info, w, bvec(255, 255, 255), commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), conoutline ? ceil(FONTH / 32.f) : 0, bvec(0, 0, 0), conoutline);
+    prepare_text(buf, info, w, bvec(255, 255, 255), commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), conoutline ? ceil(FONTH / 32.f) : 0, bvec4(0, 0, 0, conoutline));
     y -= info.h;
     
     if(info.tex)
@@ -238,7 +238,7 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         if(conlines[idx].w != conwidth || conlines[idx].fontsize != fontsize || !info.tex)
         {
             if(info.tex) glDeleteTextures(1, &info.tex);
-            prepare_text(line, info, conwidth, bvec(255, 255, 255), -1, outline ? ceil(FONTH / 32.f) : 0, bvec(0, 0, 0), outline);
+            prepare_text(line, info, conwidth, bvec(255, 255, 255), -1, outline ? ceil(FONTH / 32.f) : 0, bvec4(0, 0, 0, outline));
             conlines[idx].w = conwidth;
             conlines[idx].fontsize = fontsize;
         }

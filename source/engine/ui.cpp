@@ -2175,7 +2175,7 @@ namespace UI
 
             if(!info.tex)
             {
-                prepare_text(text, info, int(wrap/k), bvec(color.r, color.g, color.b), -1, outline * FONTH / 16.f, bvec(0, 0, 0), outlinealpha, align, justify, language, nofallback);
+                prepare_text(text, info, int(wrap/k), bvec(color.r, color.g, color.b), -1, outline * FONTH / 16.f, bvec4(0, 0, 0, outlinealpha), align, justify, language, nofallback);
             }
             w = max(w, info.w*k);
             h = max(h, info.h*k);

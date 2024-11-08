@@ -185,8 +185,10 @@ namespace UI
     void resetblend() { changeblend(BLEND_ALPHA, GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); }
     void modblend() { changeblend(BLEND_MOD, GL_ZERO, GL_SRC_COLOR); }
 
+    static int uimillis = 0;
+
     FVARP(uiscale, 0.5f, 1.0f, 1.5f);
-    VARP(uifps, 0, 60, 1000);
+    VARFP(uifps, 0, 60, 1000, { uimillis = uifps ? (1000/uifps) : 0; });
 
     struct Object
     {
@@ -2072,7 +2074,7 @@ namespace UI
         bool changed;
         uint crc; // string hash used for change detection
 
-        Text() : info({0, 0, 0}), lastchange(0), align(curwrapalign), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), justify(curjustify), nofallback(curnofallback), language(NULL), crc(0) {}
+        Text() : scale(0), wrap(0), color(0), info({0, 0, 0}), lastchange(0), align(curwrapalign), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), justify(curjustify), nofallback(curnofallback), language(NULL), crc(0) {}
 
         void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1)
         {
@@ -2081,35 +2083,38 @@ namespace UI
             const float newscale = scale_ * uiscale;
 
             const int curfontid = getcurfontid();
-            if(!uifps || (totalmillis - lastchange >= 1000/uifps)) if(
-                newscale            != scale                 ||
-                color_              != color                 ||
-                wrap_               != wrap                  ||
-                fontid              != curfontid             ||
-                curwrapalign        != align                 ||
-                curjustify          != justify               ||
-                curshadow           != shadow                ||
-                curfontoutline      != outline               ||
-                curfontoutlinealpha != outlinealpha          ||
-                curnofallback       != nofallback            ||
-                (!language || strcmp(curlanguage, language))
-            )
+            if(!uimillis || (totalmillis - lastchange >= uimillis) || !lastchange)
             {
-                changed = true;
-                lastchange = totalmillis;
-            }
+                if(
+                    newscale            != scale                 ||
+                    color_              != color                 ||
+                    wrap_               != wrap                  ||
+                    fontid              != curfontid             ||
+                    curwrapalign        != align                 ||
+                    curjustify          != justify               ||
+                    curshadow           != shadow                ||
+                    curfontoutline      != outline               ||
+                    curfontoutlinealpha != outlinealpha          ||
+                    curnofallback       != nofallback            ||
+                    (!language || strcmp(curlanguage, language))
+                )
+                {
+                    changed = true;
+                    lastchange = totalmillis;
+                }
 
-            scale        = newscale;
-            color        = color_;
-            wrap         = wrap_;
-            fontid       = curfontid;
-            align        = curwrapalign;
-            justify      = curjustify;
-            shadow       = curshadow;
-            outline      = curfontoutline;
-            outlinealpha = curfontoutlinealpha;
-            nofallback   = curnofallback;
-            SETSTR(language, curlanguage);
+                scale        = newscale;
+                color        = color_;
+                wrap         = wrap_;
+                fontid       = curfontid;
+                align        = curwrapalign;
+                justify      = curjustify;
+                shadow       = curshadow;
+                outline      = curfontoutline;
+                outlinealpha = curfontoutlinealpha;
+                nofallback   = curnofallback;
+                SETSTR(language, curlanguage);
+            }
         }
 
         static const char *typestr() { return "#Text"; }
@@ -2161,15 +2166,15 @@ namespace UI
 
             // text changes are detected here
             const char *text = getstr();
-            if(!uifps || (totalmillis - lastchange >= 1000/uifps))
+            if(!uimillis || (totalmillis - lastchange >= uimillis) || !crc)
             {
                 const uint crc_new = crc32(0, (const Bytef *)text, strlen(text));
                 if(crc_new != crc)
                 {
                     changed = true;
                     lastchange = totalmillis;
+                    crc = crc_new;
                 }
-                crc = crc_new;
             }
             if(changed && info.tex) cleartext();
 

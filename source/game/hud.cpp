@@ -710,12 +710,12 @@ namespace game
     bool isvalidpointer(Texture*& texture, vec& color, int type = Pointer_Crosshair)
     {
         int index = selectcrosshair(color, type);
+        if (index < 0)
+        {
+            return false;
+        }
         if (texture != crosshairs[index])
         {
-            if (index < 0)
-            {
-                return false;
-            }
             texture = crosshairs[index];
             if (!texture)
             {

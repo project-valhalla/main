@@ -1968,9 +1968,9 @@ namespace UI
         else dst = newstring(src); \
     } while(0)
 
-    static int curwrapalign = -1, curjustify = 0, curshadow = 0, curfontoutlinealpha = 0;
+    static int curwrapalign = -1, curshadow = 0, curfontoutlinealpha = 0;
     float curfontoutline = 0.f;
-    bool curnofallback = false;
+    bool curjustify = false, curnofallback = false;
     static const char *curlanguage = newstring("");
 
     #define WITHTEXTATTR(name, tmp, val, body) \
@@ -1995,11 +1995,10 @@ namespace UI
         static const char *typestr() { return "#Justify"; }
         const char *gettype() const { return typestr(); }
 
-        int val, tmp;
-        void setup(int val_) { val = val_; }
-        void layout()                      { WITHTEXTATTR(justify, tmp, val, Object::layout()); }
-        void draw(float sx, float sy)      { WITHTEXTATTR(justify, tmp, val, Object::draw(sx, sy)); }
-        void buildchildren(uint *contents) { WITHTEXTATTR(justify, tmp, val, Object::buildchildren(contents)); }
+        bool tmp;
+        void layout()                      { tmp = curjustify; curjustify = true; Object::layout(); curjustify = tmp; }
+        void draw(float sx, float sy)      { tmp = curjustify; curjustify = true; Object::draw(sx, sy); curjustify = tmp; }
+        void buildchildren(uint *contents) { tmp = curjustify; curjustify = true; Object::buildchildren(contents); curjustify = tmp; }
     };
     struct Shadow : Object
     {
@@ -2057,14 +2056,14 @@ namespace UI
         Color color;
         textinfo info;
         int fontid, lastchange;
-        int align, justify, shadow, outlinealpha;
+        int align, shadow, outlinealpha;
         float outline;
-        bool nofallback;
+        bool justify, nofallback;
         const char *language;
         bool changed;
         uint crc; // string hash used for change detection
 
-        Text() : info({0, 0, 0}), lastchange(0), align(curwrapalign), justify(curjustify), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), nofallback(curnofallback), language(NULL), crc(0) {}
+        Text() : info({0, 0, 0}), lastchange(0), align(curwrapalign), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), justify(curjustify), nofallback(curnofallback), language(NULL), crc(0) {}
 
         void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1)
         {
@@ -3629,8 +3628,8 @@ namespace UI
     ICOMMAND(uiwrapalign, "ie", (int *val, uint *children),
         BUILD(WrapAlign, o, o->setup(*val), children));
     
-    ICOMMAND(uijustify, "ie", (int *val, uint *children),
-        BUILD(Justify, o, o->setup(*val), children));
+    ICOMMAND(uijustify, "e", (uint *children),
+        BUILD(Justify, o, o->setup(), children));
     
     ICOMMAND(uishadow, "ie", (int *val, uint *children),
         BUILD(Shadow, o, o->setup(*val), children));

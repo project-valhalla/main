@@ -1329,6 +1329,15 @@ namespace UI
         void attrib() { gle::attribub(r, g, b, a); }
 
         static void def() { gle::defcolor(4, GL_UNSIGNED_BYTE); }
+
+        bool operator==(const Color &other) const
+        {
+            return r == other.r && g == other.g && b == other.b && a == other.a;
+        }
+        bool operator!=(const Color &other) const
+        {
+            return r != other.r || g != other.g || b != other.b || a != other.a;
+        }
     };
 
     struct FillColor : Target
@@ -2069,26 +2078,38 @@ namespace UI
         {
             Object::setup();
             changed = false;
-            float newscale = scale_ * uiscale;
+            const float newscale = scale_ * uiscale;
 
-            int curfontid = getcurfontid();
-            if(newscale != scale || wrap_ != wrap || fontid != curfontid || curwrapalign != align || curjustify != justify || curshadow != shadow || curfontoutline != outline || curfontoutlinealpha != outlinealpha || curnofallback != nofallback || (!language || strcmp(curlanguage, language)) || (color_.r != color.r || color_.g != color.g || color_.b != color.b))
+            const int curfontid = getcurfontid();
+            if(!uifps || (totalmillis - lastchange >= 1000/uifps)) if(
+                newscale            != scale                 ||
+                color_              != color                 ||
+                wrap_               != wrap                  ||
+                fontid              != curfontid             ||
+                curwrapalign        != align                 ||
+                curjustify          != justify               ||
+                curshadow           != shadow                ||
+                curfontoutline      != outline               ||
+                curfontoutlinealpha != outlinealpha          ||
+                curnofallback       != nofallback            ||
+                (!language || strcmp(curlanguage, language))
+            )
             {
                 changed = true;
                 lastchange = totalmillis;
             }
 
-            scale = newscale;
-            color = color_;
-            wrap = wrap_;
-            align = curwrapalign;
-            justify = curjustify;
-            shadow = curshadow;
-            outline = curfontoutline;
+            scale        = newscale;
+            color        = color_;
+            wrap         = wrap_;
+            fontid       = curfontid;
+            align        = curwrapalign;
+            justify      = curjustify;
+            shadow       = curshadow;
+            outline      = curfontoutline;
             outlinealpha = curfontoutlinealpha;
-            nofallback = curnofallback;
+            nofallback   = curnofallback;
             SETSTR(language, curlanguage);
-            fontid = curfontid;
         }
 
         static const char *typestr() { return "#Text"; }

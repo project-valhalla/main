@@ -527,8 +527,7 @@ namespace physics
     const float VELOCITY_JUMP = 135.0f;
     const float VELOCITY_CROUCH = 0.4f;
     const float VELOCITY_LADDER = 0.7f;
-
-    const int DIVIDE_WATER = 8.0f;
+    const float VELOCITY_WATER_DAMP = 8.0f;
 
     VAR(floatspeed, 1, 100, 10000);
 
@@ -562,7 +561,10 @@ namespace physics
         }
         else if (canjump(d) || isinwater)
         {
-            if (isinwater && !d->inwater) d->vel.div(DIVIDE_WATER);
+            if (isinwater && !d->inwater)
+            {
+                d->vel.div(VELOCITY_WATER_DAMP);
+            }
             if (d->jumping)
             {
                 d->jumping = false;
@@ -577,15 +579,15 @@ namespace physics
                 if (isinwater)
                 {
                     // Dampen velocity change even harder, gives a decent water feel.
-                    d->vel.x /= DIVIDE_WATER;
-                    d->vel.y /= DIVIDE_WATER;
+                    d->vel.x /= VELOCITY_WATER_DAMP;
+                    d->vel.y /= VELOCITY_WATER_DAMP;
                 }
 
                 triggerphysicsevent(d, PHYSEVENT_JUMP, d->inwater);
             }
             else if (d->crouching < 0 && isinwater)
             {
-                d->vel.z = min(d->vel.z, -VELOCITY_JUMP / DIVIDE_WATER);
+                d->vel.z = min(d->vel.z, -VELOCITY_JUMP / VELOCITY_WATER_DAMP);
             }
         }
         if (!isfloating && !d->climbing && d->physstate == PHYS_FALL) d->timeinair += curtime;
@@ -605,8 +607,14 @@ namespace physics
             }
             if (!m.iszero())
             {
-                if (d->climbing && !d->crouching) m.addz(m.z >= 0 ? 1 : -1).normalize();
-                else m.normalize();
+                if (d->climbing && !d->crouching)
+                {
+                    m.addz(m.z >= 0 ? 1 : -1).normalize();
+                }
+                else
+                {
+                    m.normalize();
+                }
             }
         }
 

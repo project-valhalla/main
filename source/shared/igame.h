@@ -33,19 +33,14 @@ namespace physics
 {
     extern void triggerphysicsevent(physent* pl, int event, int material = 0, vec origin = vec(0, 0, 0));
     extern void collidewithdynamicentity(physent* d, physent* o, const vec& dir);
-    extern void updatevertex(dynent* pl, vec pos, vec& dpos, float gravity, float ts);
+    extern void updateragdoll(dynent* pl, vec center, float radius, bool& water);
+    extern void updateragdollvertex(dynent* pl, vec pos, vec& dpos, float ts);
+    extern void updateragdolleye(dynent* pl, vec eye, const vec offset);
 
     extern bool shouldmoveragdoll(dynent* pl, vec eye);
 }
 
 // game
-enum
-{
-    ZOOM_NONE = 0,
-    ZOOM_SHADOW,
-    ZOOM_SCOPE
-};
-
 enum
 {
     TEXEFFECT_GENERIC = 0,
@@ -114,17 +109,21 @@ namespace game
     extern void dynlighttrack(physent *owner, vec &o, vec &hud);
     extern void voicecom(int sound, char *text, bool isteam);
     extern void adddynlights();
+    extern void drawhud(int w, int h);
+    extern void drawpointers(int w, int h);
+    extern void computezoom();
+    extern void recomputecamera();
+    extern void mousemove(int dx, int dy);
+    extern void writecrosshairs(stream* f);
+    extern void clearscreeneffects();
 
     extern bool allowedittoggle();
     extern bool editing();
     extern bool ispaused();
-    extern bool allowmouselook();
     extern bool intermission;
-    extern bool needminimap();
+    extern bool hasminimap();
+    extern bool isthirdperson();
     extern bool isfirstpersondeath();
-    extern bool allowthirdperson();
-    extern bool detachcamera();
-    extern bool collidecamera();
 
     extern const char *gameident();
     extern const char *gameconfig();
@@ -135,17 +134,14 @@ namespace game
     extern const char *getclientmap();
     extern const char *getmapinfo();
     extern const char *getscreenshotinfo();
-    extern const char *defaultcrosshair(int index);
 
+    extern int fov, zoom, zoomfov;
     extern int numdynents();
     extern int scaletime(int t);
     extern int numanims();
-    extern int selectcrosshair(vec &col);
     extern int maxsoundradius(int n);
     extern int mapdeath;
-    extern int checkzoom();
 
-    extern float abovegameplayhud(int w, int h);
     extern float clipconsole(float w, float h);
     extern float calcradarscale();
     extern float minimapalpha;

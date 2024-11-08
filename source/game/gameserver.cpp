@@ -1346,7 +1346,7 @@ namespace server
         {
             if(!interm) sendf(-1, 1, "ri3", N_TIMEUP, max((gamelimit - gamemillis)/1000, 1), TimeUpdate_Match);
 #ifndef STANDALONE
-            clearscreeneffects();
+            game::clearscreeneffects();
 #endif
         }
     }

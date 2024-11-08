@@ -444,7 +444,6 @@ FVAR(ragdollwaterfric, 0, 0.85f, 1);
 FVAR(ragdollgroundfric, 0, 0.8f, 1);
 FVAR(ragdollairfric, 0, 0.996f, 1);
 FVAR(ragdollunstick, 0, 10, 1e3f);
-FVAR(ragdollgravity, 0, 198.0f, 200);
 VAR(ragdollexpireoffset, 0, 2500, 30000);
 VAR(ragdollwaterexpireoffset, 0, 4000, 30000);
 
@@ -452,16 +451,8 @@ void ragdolldata::move(dynent *pl, float ts)
 {
     if(collidemillis && lastmillis > collidemillis) return;
 
-    int material = lookupmaterial(vec(center.x, center.y, center.z + radius/2));
-    bool water = isliquidmaterial(material&MATF_VOLUME);
-    if(!pl->inwater && water) physics::triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material&MATF_VOLUME, pl->ragdoll->center);
-    else if(pl->inwater && !water)
-    {
-        material = lookupmaterial(center);
-        water = isliquidmaterial(material&MATF_VOLUME);
-        if(!water) physics::triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater, pl->ragdoll->center);
-    }
-    pl->inwater = water ? material&MATF_VOLUME : MAT_AIR;
+    bool water;
+    physics::updateragdoll(pl, center, radius, water);
 
     calcrotfriction();
     float tsfric = timestep ? ts/timestep : 1,
@@ -471,7 +462,7 @@ void ragdolldata::move(dynent *pl, float ts)
     {
         vert &v = verts[i];
         vec dpos = vec(v.pos).sub(v.oldpos);
-        physics::updatevertex(pl, v.pos, dpos, ragdollgravity, ts);
+        physics::updateragdollvertex(pl, v.pos, dpos, ts);
         if(water) dpos.z += 0.25f * sinf(detrnd(size_t(this) + i, 360) * RAD + lastmillis / 10000.0f * M_PI) * ts;
         dpos.mul(pow((water ? ragdollwaterfric : 1.0f) * (v.collided ? ragdollgroundfric : airfric), ts * 1000.0f / ragdolltimestepmin) * tsfric);
         v.oldpos = v.pos;
@@ -520,9 +511,6 @@ void ragdolldata::move(dynent *pl, float ts)
     calcboundsphere();
 }
 
-FVAR(ragdolleyesmooth, 0, 0, 1);
-VAR(ragdolleyesmoothmillis, 1, 1, 10000);
-
 void moveragdoll(dynent *d)
 {
     if(!curtime || !d->ragdoll) return;
@@ -539,10 +527,7 @@ void moveragdoll(dynent *d)
     }
 
     vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
-    if (!physics::shouldmoveragdoll(d, eye)) return;
-    eye.add(d->ragdoll->offset);
-    float k = pow(ragdolleyesmooth, float(curtime)/ragdolleyesmoothmillis);
-    d->o.lerp(eye, 1-k);
+    physics::updateragdolleye(d, eye, d->ragdoll->offset);
 }
 
 void cleanragdoll(dynent *d)

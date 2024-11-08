@@ -88,6 +88,13 @@ enum
     TimeUpdate_Intermission
 };
 
+enum
+{
+    Zoom_None = 0,
+    Zoom_Shadow,
+    Zoom_Scope
+};
+
 // network messages codes, c2s, c2c, s2c
 enum
 {
@@ -430,7 +437,7 @@ struct gameent : dynent, gamestate
     int respawned, suicided;
     int lastpain, lasthurt;
     int lastaction, lastattack, lasthit;
-    int deathtype;
+    int deathstate;
     int attacking;
     int lasttaunt, lastfootstep, lastyelp, lastswitch, lastroll;
     int lastpickup, lastpickupmillis, flagpickup;
@@ -440,6 +447,8 @@ struct gameent : dynent, gamestate
     int smoothmillis;
 
     int chan[Chan_Num], chansound[Chan_Num];
+
+    float transparency;
 
     string name, info;
     int team, playermodel, playercolor;
@@ -458,6 +467,7 @@ struct gameent : dynent, gamestate
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
+                transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
                 muzzle(-1, -1, -1), eject(-1, -1, -1)
     {
@@ -486,9 +496,23 @@ struct gameent : dynent, gamestate
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
     {
         vec push(dir);
-        if(attacks[atk].projspeed) falling.z = 1; // projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further
-        if(role == ROLE_ZOMBIE) damage *= 3; // zombies are pushed "a bit" more
-        push.mul((actor==this && attacks[atk].exprad ? EXP_SELFPUSH : 1.0f)*attacks[atk].hitpush*damage/weight);
+        bool istrickjump = actor == this && attacks[atk].exprad;
+        if (istrickjump)
+        {
+            // Projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further.
+            falling.z = 1;
+        }
+        if (actor != this && physstate < PHYS_SLOPE)
+        {
+            // While in mid-air, push is stronger.
+            damage *= GUN_AIR_PUSH;
+        }
+        if (role == ROLE_ZOMBIE)
+        {
+            // Zombies are pushed "a bit" more.
+            damage *= GUN_ZOMBIE_PUSH;
+        }
+        push.mul((istrickjump ? EXP_SELFPUSH : 1.0f) * attacks[atk].hitpush * damage / weight);
         vel.add(push);
     }
 
@@ -513,7 +537,7 @@ struct gameent : dynent, gamestate
         respawned = suicided = -1;
         lastaction = 0;
         lastattack = -1;
-        deathtype = 0;
+        deathstate = Death_Default;
         attacking = ACT_IDLE;
         lasttaunt = 0;
         lastpickup = -1;
@@ -543,9 +567,14 @@ struct gameent : dynent, gamestate
         chansound[type] = chan[type] = -1;
     }
 
-    bool gibbed()
+    bool haslowhealth()
     {
-        return (state == CS_DEAD && health <= HEALTH_GIB) || deathtype == DEATH_GIB;
+        return state == CS_ALIVE && health <= maxhealth / 4;
+    }
+
+    bool shouldgib()
+    {
+        return health <= HEALTH_GIB;
     }
 };
 
@@ -577,8 +606,6 @@ struct teaminfo
 
 namespace entities
 {
-    extern vector<extentity *> ents;
-
     extern void preloadentities();
     extern void renderentities();
     extern void checkitems(gameent *d);
@@ -591,6 +618,8 @@ namespace entities
     extern void pickupeffects(int n, gameent *d);
     extern void teleporteffects(gameent *d, int tp, int td, bool local = true);
     extern void jumppadeffects(gameent *d, int jp, bool local = true);
+
+    extern vector<extentity*> ents;
 }
 
 namespace physics
@@ -633,55 +662,31 @@ namespace game
         virtual ~clientmode() {}
 
         virtual void preload() {}
-        virtual float clipconsole(float w, float h) { return 0; }
         virtual void drawhud(gameent *d, int w, int h) {}
         virtual void rendergame() {}
         virtual void respawned(gameent *d) {}
         virtual void setup() {}
         virtual void checkitems(gameent *d) {}
-        virtual int respawnwait(gameent *d, bool seconds = false) { return 0; }
         virtual void pickspawn(gameent *d) { findplayerspawn(d, -1, m_teammode ? d->team : 0); }
         virtual void senditems(packetbuf &p) {}
         virtual void removeplayer(gameent *d) {}
         virtual void gameover() {}
-        virtual bool hidefrags() { return false; }
-        virtual int getteamscore(int team) { return 0; }
         virtual void getteamscores(vector<teamscore> &scores) {}
-        virtual bool canfollow(gameent *s, gameent *f) { return true; }
         virtual void aifind(gameent *d, ai::aistate &b, vector<ai::interest> &interests) {}
+        virtual bool hidefrags() { return false; }
+        virtual bool canfollow(gameent* s, gameent* f) { return true; }
         virtual bool aicheck(gameent *d, ai::aistate &b) { return false; }
         virtual bool aidefend(gameent *d, ai::aistate &b) { return false; }
         virtual bool aipursue(gameent *d, ai::aistate &b) { return false; }
+        virtual int getteamscore(int team) { return 0; }
+        virtual int respawnwait(gameent* d, bool seconds = false) { return 0; }
+        virtual float clipconsole(float w, float h) { return 0; }
     };
 
     extern clientmode *cmode;
     extern void setclientmode();
 
     // game.cpp
-    extern int vooshgun;
-    extern string clientmap;
-    extern int maptime, maprealtime, maplimit;
-    extern gameent *self;
-    extern vector<gameent *> players, clients;
-    extern int lastspawnattempt;
-    extern int following;
-    extern int smoothmove, smoothdist;
-    extern int gore;
-
-    extern bool clientoption(const char *arg);
-    extern bool gamewaiting, betweenrounds, hunterchosen;
-    extern bool isally(gameent *a, gameent *b);
-    extern bool isinvulnerable(gameent *target, gameent *actor);
-
-    extern gameent *getclient(int cn);
-    extern gameent *newclient(int cn);
-    extern const char *colorname(gameent *d, const char *name = NULL, const char *alt = NULL, const char *color = "");
-    extern const char *teamcolorname(gameent *d, const char *alt = NULL);
-    extern const char *teamcolor(const char *prefix, const char *suffix, int team, const char *alt);
-    extern const char *chatcolor(gameent *d);
-    extern gameent *pointatplayer();
-    extern gameent *hudplayer();
-    extern gameent *followingplayer(gameent *fallback = NULL);
     extern void taunt(gameent *d);
     extern void stopfollowing();
     extern void checkfollow();
@@ -692,8 +697,7 @@ namespace game
     extern void spawnplayer(gameent *d);
     extern void spawneffect(gameent *d);
     extern void respawn();
-    extern void deathstate(gameent *d, bool restore = false);
-    extern void damagehud(int damage, gameent *d, gameent *actor);
+    extern void setdeathstate(gameent *d, bool restore = false);
     extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void checkannouncements(gameent *actor, int flags);
@@ -703,23 +707,41 @@ namespace game
     extern void doaction(int act);
     extern void hurt(gameent* d);
     extern void suicide(gameent* d);
+
+    extern bool clientoption(const char* arg);
+    extern bool gamewaiting, betweenrounds, hunterchosen;
+    extern bool isally(gameent* a, gameent* b);
+    extern bool isinvulnerable(gameent* target, gameent* actor);
+
+    extern int vooshgun;
+    extern int maptime, maprealtime, maplimit;
+    extern int lastspawnattempt;
+    extern int following, specmode;
+    extern int smoothmove, smoothdist;
+    extern int gore;
+    extern int getdeathstate(gameent* d, int atk, int flags);
+
+    extern const char* colorname(gameent* d, const char* name = NULL, const char* alt = NULL, const char* color = "");
+    extern const char* teamcolorname(gameent* d, const char* alt = NULL);
+    extern const char* teamcolor(const char* prefix, const char* suffix, int team, const char* alt);
+    extern const char* chatcolor(gameent* d);
     const char *mastermodecolor(int n, const char *unknown);
     const char *mastermodeicon(int n, const char *unknown);
 
+    extern string clientmap;
+
+    extern gameent* pointatplayer();
+    extern gameent* hudplayer();
+    extern gameent* followingplayer(gameent* fallback = NULL);
+    extern gameent* getclient(int cn);
+    extern gameent* newclient(int cn);
+    extern gameent* self;
+
+    extern vector<gameent*> players, clients;
+
     // client.cpp
-    extern bool connected, remote, demoplayback;
-    extern bool isignored(int cn);
-
-    extern string servdesc;
-
-    extern vector<uchar> messages;
-
-    extern int parseplayer(const char *arg);
-    extern int gamespeed;
-
     extern void ignore(int cn);
     extern void unignore(int cn);
-    extern bool addmsg(int type, const char *fmt = NULL, ...);
     extern void switchname(const char *name);
     extern void switchteam(const char *name);
     extern void switchplayermodel(int playermodel);
@@ -730,6 +752,17 @@ namespace game
     extern void c2sinfo(bool force = false);
     extern void sendposition(gameent *d, bool reliable = false);
     extern void forceintermission();
+
+    extern bool connected, remote, demoplayback;
+    extern bool addmsg(int type, const char* fmt = NULL, ...);
+    extern bool isignored(int cn);
+
+    extern int parseplayer(const char* arg);
+    extern int gamespeed;
+
+    extern string servdesc;
+
+    extern vector<uchar> messages;
 
     // weapon.cpp
     enum
@@ -774,31 +807,37 @@ namespace game
 
     extern swayinfo sway;
 
-    extern int getweapon(const char *name);
     extern void shoot(gameent *d, const vec &targ);
     extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
     extern void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int damage, int atk);
     extern void explodeeffects(int atk, gameent *d, bool local, int id = 0);
     extern void damageeffect(int damage, dynent *d, vec p, int atk, int color, bool headshot = false);
-    extern void gibeffect(int damage, const vec &vel, gameent *d, bool force = false);
-    extern int calcdamage(int damage, gameent *target, gameent *actor, int atk, int flags = HIT_TORSO);
-    extern float intersectdist;
-    extern bool intersect(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);
-    extern dynent *intersectclosest(const vec &from, const vec &to, gameent *at, float margin = 0, float &dist = intersectdist);
-    extern bool intersecthead(dynent *d, const vec &from, const vec &to, float &dist = intersectdist);
+    extern void gibeffect(int damage, const vec &vel, gameent *d);
     extern void clearbouncers();
     extern void updatebouncers(int curtime);
     extern void renderbouncers();
     extern void updateprojectiles(int curtime);
-    extern void removeprojectiles(gameent *owner);
+    extern void removeprojectiles(gameent* owner);
     extern void renderprojectiles();
     extern void preloadbouncers();
     extern void updateweapons(int curtime);
-    extern void gunselect(int gun, gameent *d);
+    extern void gunselect(int gun, gameent* d);
     extern void doweaponchangeffects(gameent* d, int gun = -1);
-    extern void weaponswitch(gameent *d);
+    extern void weaponswitch(gameent* d);
     extern void removeprojectiles(gameent* owner = NULL);
-    extern void avoidprojectiles(ai::avoidset &obstacles, float radius);
+    extern void avoidprojectiles(ai::avoidset& obstacles, float radius);
+
+    extern float intersectdist;
+
+    extern bool intersect(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);
+    extern bool intersecthead(dynent *d, const vec &from, const vec &to, float &dist = intersectdist);
+
+    extern int getweapon(const char* name);
+    extern int calcdamage(int damage, gameent* target, gameent* actor, int atk, int flags = HIT_TORSO);
+
+    extern vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d);
+
+    extern dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin = 0, float& dist = intersectdist);
 
     // monster.cpp
     struct monster;
@@ -816,6 +855,7 @@ namespace game
     extern void checkmonsterinfight(monster *that, gameent *enemy);
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);
+
     extern int getbloodcolor(dynent *d);
 
     // scoreboard.cpp
@@ -830,19 +870,37 @@ namespace game
     {
         const char *directory, *armdirectory, *powerup[5];
         bool ragdoll;
-        int bloodcolor, painsound, diesound, tauntsound;
+        const int bloodcolor, painsound, diesound[Death_Num], tauntsound;
     };
 
     extern void saveragdoll(gameent *d);
     extern void clearragdolls();
     extern void moveragdolls();
-    extern const playermodelinfo &getplayermodelinfo(gameent *d);
-    extern int getplayercolor(gameent *d, int team);
-    extern int chooserandomplayermodel(int seed);
-    extern int getplayermodel(gameent *d);
     extern void syncplayer();
-    extern void renderai(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade = 1, bool ragdoll = false);
-    extern vec hudgunorigin(int gun, const vec &from, const vec &to, gameent *d);
+    extern void renderai(dynent* d, const char* mdlname, modelattach* attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade = 1, bool ragdoll = false);
+
+    extern int getplayercolor(gameent* d, int team);
+    extern int chooserandomplayermodel(int seed);
+    extern int getplayermodel(gameent* d);
+
+    extern const playermodelinfo &getplayermodelinfo(gameent *d);
+
+    // hud.cpp
+    extern void drawradar(float x, float y, float s);
+    extern void setbliptex(int team, const char* type = "");
+    extern void managelowhealthscreen();
+    extern void damageblend(int damage, int factor = 0);
+    extern void setdamagehud(int damage, gameent* d, gameent* actor);
+    extern void addscreenflash(int n);
+    extern void fixcamerarange();
+    extern void disablezoom();
+
+    extern bool allowthirdperson();
+
+    extern int thirdperson;
+    extern int lowhealthscreen;
+
+    extern float zoomprogress;
 }
 
 namespace server

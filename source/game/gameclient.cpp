@@ -2,127 +2,6 @@
 
 namespace game
 {
-    VARP(minradarscale, 0, 384, 10000);
-    VARP(maxradarscale, 1, 1024, 10000);
-    VARP(radarteammates, 0, 1, 1);
-    FVARP(minimapalpha, 0, 1, 1);
-
-    float calcradarscale()
-    {
-        return clamp(max(minimapradius.x, minimapradius.y)/3, float(minradarscale), float(maxradarscale));
-    }
-    ICOMMAND(calcradarscale, "", (), floatret(calcradarscale()));
-
-    void drawminimap(gameent *d, float x, float y, float s)
-    {
-        vec pos = vec(d->o).sub(minimapcenter).mul(minimapscale).add(0.5f), dir;
-        vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
-        float scale = calcradarscale();
-        gle::defvertex(2);
-        gle::deftexcoord0();
-        gle::begin(GL_TRIANGLE_FAN);
-        loopi(16)
-        {
-            vec v = vec(0, -1, 0).rotate_around_z(i/16.0f*2*M_PI);
-            gle::attribf(x + 0.5f*s*(1.0f + v.x), y + 0.5f*s*(1.0f + v.y));
-            vec tc = vec(dir).rotate_around_z(i/16.0f*2*M_PI);
-            gle::attribf(1.0f - (pos.x + tc.x*scale*minimapscale.x), pos.y + tc.y*scale*minimapscale.y);
-        }
-        gle::end();
-    }
-
-    void setradartex()
-    {
-        settexture("data/interface/radar/radar.png", 3);
-    }
-
-    void drawradar(float x, float y, float s)
-    {
-        gle::defvertex(2);
-        gle::deftexcoord0();
-        gle::begin(GL_TRIANGLE_STRIP);
-        gle::attribf(x,   y);   gle::attribf(0, 0);
-        gle::attribf(x+s, y);   gle::attribf(1, 0);
-        gle::attribf(x,   y+s); gle::attribf(0, 1);
-        gle::attribf(x+s, y+s); gle::attribf(1, 1);
-        gle::end();
-    }
-
-    void drawteammate(gameent *d, float x, float y, float s, gameent *o, float scale, float blipsize = 1)
-    {
-        vec dir = d->o;
-        dir.sub(o->o).div(scale);
-        float dist = dir.magnitude2(), maxdist = 1 - 0.05f - 0.05f;
-        if(dist >= maxdist) dir.mul(maxdist/dist);
-        dir.rotate_around_z(-camera1->yaw*RAD);
-        float bs = 0.06f*blipsize*s,
-              bx = x + s*0.5f*(1.0f + dir.x),
-              by = y + s*0.5f*(1.0f + dir.y);
-        vec v(-0.5f, -0.5f, 0);
-        v.rotate_around_z((90+o->yaw-camera1->yaw)*RAD);
-        gle::attribf(bx + bs*v.x, by + bs*v.y); gle::attribf(0, 0);
-        gle::attribf(bx + bs*v.y, by - bs*v.x); gle::attribf(1, 0);
-        gle::attribf(bx - bs*v.x, by - bs*v.y); gle::attribf(1, 1);
-        gle::attribf(bx - bs*v.y, by + bs*v.x); gle::attribf(0, 1);
-    }
-
-    void setbliptex(int team, const char *type = "")
-    {
-        defformatstring(blipname, "data/interface/radar/blip%s%s.png", teamblipcolor[validteam(team) ? team : 0], type);
-        settexture(blipname, 3);
-    }
-
-    void drawplayerblip(gameent *d, float x, float y, float s, float blipsize = 1)
-    {
-        if(d->state != CS_ALIVE && d->state != CS_DEAD) return;
-        float scale = calcradarscale();
-        setbliptex(d->team, d->state == CS_DEAD ? "_dead" : "_alive");
-        gle::defvertex(2);
-        gle::deftexcoord0();
-        gle::begin(GL_QUADS);
-        drawteammate(d, x, y, s, d, scale, blipsize);
-        gle::end();
-    }
-
-    void drawteammates(gameent *d, float x, float y, float s)
-    {
-        if(!radarteammates) return;
-        float scale = calcradarscale();
-        int alive = 0, dead = 0;
-        loopv(players)
-        {
-            gameent *o = players[i];
-            if(o != d && o->state == CS_ALIVE && o->team == d->team)
-            {
-                if(!alive++)
-                {
-                    setbliptex(d->team, "_alive");
-                    gle::defvertex(2);
-                    gle::deftexcoord0();
-                    gle::begin(GL_QUADS);
-                }
-                drawteammate(d, x, y, s, o, scale);
-            }
-        }
-        if(alive) gle::end();
-        loopv(players)
-        {
-            gameent *o = players[i];
-            if(o != d && o->state == CS_DEAD && o->team == d->team)
-            {
-                if(!dead++)
-                {
-                    setbliptex(d->team, "_dead");
-                    gle::defvertex(2);
-                    gle::deftexcoord0();
-                    gle::begin(GL_QUADS);
-                }
-                drawteammate(d, x, y, s, o, scale);
-            }
-        }
-        if(dead) gle::end();
-    }
-
     #include "ctf.h"
     #include "elimination.h"
 
@@ -282,7 +161,10 @@ namespace game
     void edittoggled(bool on)
     {
         addmsg(N_EDITMODE, "ri", on ? 1 : 0);
-        if(self->state==CS_DEAD) deathstate(self, true);
+        if (self->state == CS_DEAD)
+        {
+            setdeathstate(self, true);
+        }
         disablezoom();
         self->suicided = self->respawned = -2;
         checkfollow();
@@ -1034,11 +916,9 @@ namespace game
         else printvar(id, gamepaused ? 1 : 0);
     });
 
-    bool ispaused() { return gamepaused; }
-
-    bool allowmouselook()
-    {
-        return (!gamepaused || !remote) && !(self->state == CS_DEAD && isfirstpersondeath());
+    bool ispaused()
+    { 
+        return gamepaused;
     }
 
     void changegamespeed(int val)
@@ -1970,8 +1850,7 @@ namespace game
                 vec dir;
                 loopk(3) dir[k] = getint(p)/DNF;
                 if(!target || !validatk(atk)) break;
-                if(target->timeinair) damage *= 2;
-                target->hitpush(damage * (target->health<=0 ? deadpush : 1), dir, NULL, atk);
+                target->hitpush(damage * (target->health <= 0 ? deadpush : 1), dir, NULL, atk);
                 break;
             }
 
@@ -2281,7 +2160,10 @@ namespace game
                 else
                 {
                     d->state = d->editstate;
-                    if(d->state==CS_DEAD) deathstate(d, true);
+                    if (d->state == CS_DEAD)
+                    {
+                        setdeathstate(d, true);
+                    }
                 }
                 checkfollow();
                 break;
@@ -2314,7 +2196,7 @@ namespace game
                 }
                 else if(s->state == CS_SPECTATOR)
                 {
-                    deathstate(s, true);
+                    setdeathstate(s, true);
                     conoutf("%s \fs\f0has left spectator mode\fr", colorname(s));
                     execident("on_unspectate");
                 }

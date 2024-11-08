@@ -1,324 +1,613 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <ClCompile Include="..\engine\aa.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
     <ClCompile Include="..\game\ai.cpp">
-      <Filter>game</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\bih.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\blend.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\client.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\game\gameclient.cpp">
-      <Filter>game</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\command.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\console.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\crypto.cpp">
-      <Filter>shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\dynlight.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\game\game.cpp">
-      <Filter>game</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\geom.cpp">
-      <Filter>shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\glemu.cpp">
-      <Filter>shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\grass.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\light.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\main.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\material.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\menus.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\movie.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\normal.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\octa.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\octaedit.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\octarender.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\game\pch.cpp">
-      <Filter>game</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\pch.cpp">
-      <Filter>shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\pch.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\physics.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\pvs.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\rendergl.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\renderlights.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\rendersky.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\rendermodel.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\renderparticles.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\rendertext.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\renderva.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\game\scoreboard.cpp">
-      <Filter>game</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\server.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\game\gameserver.cpp">
-      <Filter>game</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\serverbrowser.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\shader.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\sound.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\stain.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\stream.cpp">
-      <Filter>shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\texture.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\tools.cpp">
-      <Filter>shared</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\ui.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\liquid.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\game\waypoint.cpp">
-      <Filter>game</Filter>
-    </ClCompile>
-    <ClCompile Include="..\game\weapon.cpp">
-      <Filter>game</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\world.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\engine\worldio.cpp">
-      <Filter>engine</Filter>
-    </ClCompile>
-    <ClCompile Include="..\shared\zip.cpp">
-      <Filter>shared</Filter>
+      <Filter>Source\game</Filter>
     </ClCompile>
     <ClCompile Include="..\game\entity.cpp">
-      <Filter>game</Filter>
+      <Filter>Source\game</Filter>
     </ClCompile>
-    <ClCompile Include="..\game\monster.cpp">
-      <Filter>game</Filter>
+    <ClCompile Include="..\game\game.cpp">
+      <Filter>Source\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game\gameclient.cpp">
+      <Filter>Source\game</Filter>
     </ClCompile>
     <ClCompile Include="..\game\gamephysics.cpp">
-      <Filter>game</Filter>
+      <Filter>Source\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game\gameserver.cpp">
+      <Filter>Source\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game\hud.cpp">
+      <Filter>Source\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game\monster.cpp">
+      <Filter>Source\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game\pch.cpp">
+      <Filter>Source\game</Filter>
     </ClCompile>
     <ClCompile Include="..\game\render.cpp">
-      <Filter>game</Filter>
+      <Filter>Source\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game\scoreboard.cpp">
+      <Filter>Source\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game\waypoint.cpp">
+      <Filter>Source\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\game\weapon.cpp">
+      <Filter>Source\game</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\worldio.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\world.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\ui.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\texture.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\stain.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\sound.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\shader.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\serverbrowser.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\server.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\renderva.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\rendertext.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\rendersky.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\renderparticles.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\rendermodel.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\renderlights.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\rendergl.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\pvs.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\physics.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\pch.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\octarender.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\octaedit.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\octa.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\normal.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\movie.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\menus.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\material.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\main.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\liquid.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\light.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\grass.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\dynlight.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\console.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\command.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\client.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\blend.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\bih.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\engine\aa.cpp">
+      <Filter>Source\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\crypto.cpp">
+      <Filter>Source\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\geom.cpp">
+      <Filter>Source\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\glemu.cpp">
+      <Filter>Source\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\stream.cpp">
+      <Filter>Source\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\pch.cpp">
+      <Filter>Source\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\tools.cpp">
+      <Filter>Source\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="..\shared\zip.cpp">
+      <Filter>Source\shared</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\game\ai.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\animmodel.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\bih.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\command.h">
-      <Filter>shared</Filter>
+      <Filter>Header\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\game\ctf.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\cube.h">
-      <Filter>shared</Filter>
+      <Filter>Header\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\engine.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\ents.h">
-      <Filter>shared</Filter>
+      <Filter>Header\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\explosion.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\game\extinfo.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\game\game.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\geom.h">
-      <Filter>shared</Filter>
+      <Filter>Header\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\glemu.h">
-      <Filter>shared</Filter>
+      <Filter>Header\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\glexts.h">
-      <Filter>shared</Filter>
+      <Filter>Header\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\hitzone.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\iengine.h">
-      <Filter>shared</Filter>
+      <Filter>Header\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\igame.h">
-      <Filter>shared</Filter>
+      <Filter>Header\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\iqm.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\lensflare.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\light.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\lightning.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\md2.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\md3.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\md5.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\model.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\mpr.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\obj.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\octa.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\ragdoll.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\smd.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\skelmodel.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\textedit.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\texture.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\shared\tools.h">
-      <Filter>shared</Filter>
+      <Filter>Header\shared</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\vertmodel.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\world.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\game\elimination.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\game\gamemode.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\game\weapon.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\game\entity.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\game\aimanager.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\game\monster.h">
-      <Filter>game</Filter>
+      <Filter>Header\game</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\version.h">
-      <Filter>engine</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
     <ClInclude Include="..\engine\sound.h">
-      <Filter>engine</Filter>
-    </ClInclude>
-    <ClInclude Include="..\game\geoip.h">
-      <Filter>game</Filter>
+      <Filter>Header\engine</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="valhalla.rc" />
-  </ItemGroup>
-  <ItemGroup>
-    <Filter Include="shared">
-      <UniqueIdentifier>{31e3d751-04b0-4c38-94f9-eddd8ef4c42a}</UniqueIdentifier>
+    <Filter Include="Resource">
+      <UniqueIdentifier>{84ea0d0d-287f-4c2d-8c96-355ee009e40d}</UniqueIdentifier>
     </Filter>
-    <Filter Include="engine">
-      <UniqueIdentifier>{37ef9828-d87f-413d-93ee-effc029b6a73}</UniqueIdentifier>
+    <Filter Include="Header">
+      <UniqueIdentifier>{679e76d2-0a89-4ade-a25f-37ad7a438153}</UniqueIdentifier>
     </Filter>
-    <Filter Include="game">
+    <Filter Include="Source">
+      <UniqueIdentifier>{5d211803-4507-46ef-921b-f1b3de6c1143}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header\game">
       <UniqueIdentifier>{9b7a70df-c8ed-4662-8380-4ffe119eb216}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\engine">
+      <UniqueIdentifier>{c1b8fee9-a301-48df-be01-6d9031f90bb6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\game">
+      <UniqueIdentifier>{e65b37c5-d6fd-443a-bcf0-b16072d98382}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header\engine">
+      <UniqueIdentifier>{37ef9828-d87f-413d-93ee-effc029b6a73}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\shared">
+      <UniqueIdentifier>{02669ea0-488c-4984-9931-94b0f41a538d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header\shared">
+      <UniqueIdentifier>{31e3d751-04b0-4c38-94f9-eddd8ef4c42a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration">
+      <UniqueIdentifier>{c3526e93-9433-4a00-9a1e-6bb1487178ea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration\glsl">
+      <UniqueIdentifier>{1394c1b9-2f4d-4e55-8221-805276bb005b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration\server">
+      <UniqueIdentifier>{d3bc9b9f-2477-4aa5-a82d-e7761067c12b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration\sound">
+      <UniqueIdentifier>{1b269789-f028-40eb-80b3-e64e43fc6490}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration\ui">
+      <UniqueIdentifier>{73d2e713-a5ad-420e-8edf-367ccea00334}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration\ui\hud">
+      <UniqueIdentifier>{8b416dd7-8196-4a59-b1a3-2d4cceb620b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Configuration\ui\menus">
+      <UniqueIdentifier>{94719c88-0915-40ce-adeb-c042ccc44e13}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="valhalla.rc">
+      <Filter>Resource</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\config\blendbrush.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\default.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\default_map_settings.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\font.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\game.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\glsl.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\heightmap.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\keymap.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\sound.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\stdedit.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\stdlib.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\tip.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\ui.cfg">
+      <Filter>Configuration</Filter>
+    </None>
+    <None Include="..\..\config\glsl\aa.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\ao.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\blur.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\decal.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\deferred.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\edit.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\fxaa.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\gi.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\grass.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\hud.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\material.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\misc.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\model.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\movie.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\particle.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\postfx.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\scale.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\shared.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\sky.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\smaa.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\smfilter.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\stain.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\tonemap.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\ui.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\volumetric.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\glsl\world.cfg">
+      <Filter>Configuration\glsl</Filter>
+    </None>
+    <None Include="..\..\config\server\bot.cfg">
+      <Filter>Configuration\server</Filter>
+    </None>
+    <None Include="..\..\config\server\geo.cfg">
+      <Filter>Configuration\server</Filter>
+    </None>
+    <None Include="..\..\config\server\init.cfg">
+      <Filter>Configuration\server</Filter>
+    </None>
+    <None Include="..\..\config\server\maprotation.cfg">
+      <Filter>Configuration\server</Filter>
+    </None>
+    <None Include="..\..\config\server\server.cfg">
+      <Filter>Configuration\server</Filter>
+    </None>
+    <None Include="..\..\config\sound\announcer.cfg">
+      <Filter>Configuration\sound</Filter>
+    </None>
+    <None Include="..\..\config\sound\item.cfg">
+      <Filter>Configuration\sound</Filter>
+    </None>
+    <None Include="..\..\config\sound\miscellaneous.cfg">
+      <Filter>Configuration\sound</Filter>
+    </None>
+    <None Include="..\..\config\sound\player.cfg">
+      <Filter>Configuration\sound</Filter>
+    </None>
+    <None Include="..\..\config\sound\weapon.cfg">
+      <Filter>Configuration\sound</Filter>
+    </None>
+    <None Include="..\..\config\ui\colorlib.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\debug.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\firstrun.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\langdb.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\lib.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\libnew.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\permanent.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\shaders.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\style.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\tooltip.cfg">
+      <Filter>Configuration\ui</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\editstats.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\editvars.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\entity.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\fullconsole.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\gamehud.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\geo_prefab.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\mapmodel_browser.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\material.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\postfx.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\taskbar.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\hud\texture_browser.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\controls.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\credits.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\dialogs.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\main.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\map_browser.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\player_setup.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\recorder.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\server_browser.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\server_manager.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\settings.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\stats.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
+    <None Include="..\..\config\ui\menus\voicecom.cfg">
+      <Filter>Configuration\ui\menus</Filter>
+    </None>
   </ItemGroup>
 </Project>

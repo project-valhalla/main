@@ -436,7 +436,10 @@ struct ctfclientmode : clientmode
 
             vec lightcolor = vec::hexcolor(teameffectcolor[f.team]);
             addgamelight(pos, lightcolor.mul(255.f * (0.625f - 0.375f * cos(2 * PI * lastmillis / 1000.f))), 32);
-            if(self->state != CS_EDITING) f.chan = playsound(S_FLAGLOOP, NULL, f.owner == self? NULL: &pos, NULL, 0, -1, 500, f.chan, 200);
+            if (self && self->state != CS_EDITING)
+            {
+                f.chan = playsound(S_FLAGLOOP, NULL, f.owner == self ? NULL : &pos, NULL, 0, -1, 500, f.chan, 200);
+            }
             else
             {
                 stopsound(S_FLAGLOOP, f.chan);
@@ -447,14 +450,14 @@ struct ctfclientmode : clientmode
             if(hud->holdingflag && f.team == hud->team)
             {
                 vec base = f.spawnloc;
-                particle_hud_text(base, "GOAL", PART_TEXT, 1, teamtextcolor[hud->team], 5.0f, "wide");
+                particle_hud_text(base, "GOAL", PART_TEXT, 1, teamtextcolor[hud->team], 4.0f, "wide");
             }
             else if(f.owner)
             {
                 if(lastmillis%1000 >= 500) continue;
             }
             else if(f.droptime && (f.droploc.x < 0 || lastmillis%300 >= 150)) continue;
-            particle_hud_mark(pos, f.team == 1 ? 1 : 0, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 3.0f);
+            particle_hud_mark(pos, f.team == 1 ? 1 : 0, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
         }
     }
 

@@ -352,19 +352,36 @@ namespace game
             playsound(S_WEAPON_DETONATE, this);
         }
 
-        void monsterdeath(bool forceexplosion = false, int flags = 0)
+        void monsterdeath(int forcestate = -1, int atk = -1, int flags = 0)
         {
             state = CS_DEAD;
+            if (validdeathstate(forcestate))
+            {
+                deathstate = forcestate;
+            }
+            else
+            {
+                deathstate = getdeathstate(this, atk, flags);
+            }
             lastpain = lastmillis;
             exploding = false;
             detonating = 0;
             stopownersounds(this);
-            if(gibbed() || forceexplosion)
+            if (monstertypes[mtype].isexplosive && deathstate == Death_Shock)
             {
-                if(!gibbed()) health = -50;
-                if(gore) gibeffect(max(-health, 0), vel, this);
-                int atk = monstertypes[mtype].atk;
-                if(monstertypes[mtype].isexplosive) game::explode(true, this, o, vel, NULL, attacks[atk].damage, atk);
+                deathstate = Death_Gib;
+            }
+            if (deathstate == Death_Gib)
+            {
+                if (gore)
+                {
+                    gibeffect(max(-health, 0), vel, this);
+                }
+                int matk = monstertypes[mtype].atk;
+                if (monstertypes[mtype].isexplosive)
+                {
+                    game::explode(true, this, o, vel, NULL, attacks[matk].damage, matk);
+                }
             }
             else if (!(flags & HIT_HEAD))
             {
@@ -426,8 +443,7 @@ namespace game
             health -= damage;
             if(health <= 0 || (m_insta(mutators) && d->type != ENT_AI))
             {
-                if(atk == ATK_PISTOL_COMBO) deathtype = DEATH_DISRUPT;
-                monsterdeath(m_insta(mutators), flags);
+                monsterdeath(m_insta(mutators) ? Death_Gib : -1, atk, flags);
             }
             else
             {
@@ -629,7 +645,7 @@ namespace game
                 {
                     if(lastmillis - m->detonating >= MONSTER_DETONATION_DELAY)
                     {
-                        m->monsterdeath(true); // detonate monster through regular death with forced gore/explosion
+                        m->monsterdeath(Death_Gib); // detonate monster through regular death with forced gore/explosion
                     }
                 }
             }
@@ -653,7 +669,7 @@ namespace game
         loopv(monsters)
         {
             monster &m = *monsters[i];
-            if(m.gibbed()) continue;
+            if(m.deathstate == Death_Gib) continue;
             if(m.state != CS_DEAD || lastmillis-m.lastpain<10000)
             {
                 modelattach a[4];
@@ -679,7 +695,6 @@ namespace game
 
     void suicidemonster(monster *m)
     {
-        m->deathtype = mapdeath;
         m->monsterdeath();
     }
 

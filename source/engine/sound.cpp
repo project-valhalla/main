@@ -633,8 +633,8 @@ void updatesounds()
     {
         reclaimchannels();
         int mat = lookupmaterial(camera1->o);
-        bool inwater = player->state != CS_EDITING && mat & MAT_WATER,
-             firstpersondeath = player->state == CS_DEAD && game::isfirstpersondeath();
+        bool inwater = player->state != CS_EDITING && mat & MAT_WATER;
+        bool firstpersondeath = player->state == CS_DEAD && game::isfirstpersondeath();
         if(mainmenu || inwater || firstpersondeath)
         {
             stopmapsounds();

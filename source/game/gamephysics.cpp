@@ -198,7 +198,7 @@ namespace physics
     bool canmove(gameent* d)
     {
         if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(gore && d->gibbed());
+        return !intermission && !(gore && d->state == CS_DEAD && d->deathstate == Death_Gib);
     }
 
     bool trystepdown(gameent* d, vec& dir, bool init = false)
@@ -527,8 +527,7 @@ namespace physics
     const float VELOCITY_JUMP = 135.0f;
     const float VELOCITY_CROUCH = 0.4f;
     const float VELOCITY_LADDER = 0.7f;
-
-    const int DIVIDE_WATER = 8.0f;
+    const float VELOCITY_WATER_DAMP = 8.0f;
 
     VAR(floatspeed, 1, 100, 10000);
 
@@ -562,7 +561,10 @@ namespace physics
         }
         else if (canjump(d) || isinwater)
         {
-            if (isinwater && !d->inwater) d->vel.div(DIVIDE_WATER);
+            if (isinwater && !d->inwater)
+            {
+                d->vel.div(VELOCITY_WATER_DAMP);
+            }
             if (d->jumping)
             {
                 d->jumping = false;
@@ -577,15 +579,15 @@ namespace physics
                 if (isinwater)
                 {
                     // Dampen velocity change even harder, gives a decent water feel.
-                    d->vel.x /= DIVIDE_WATER;
-                    d->vel.y /= DIVIDE_WATER;
+                    d->vel.x /= VELOCITY_WATER_DAMP;
+                    d->vel.y /= VELOCITY_WATER_DAMP;
                 }
 
                 triggerphysicsevent(d, PHYSEVENT_JUMP, d->inwater);
             }
             else if (d->crouching < 0 && isinwater)
             {
-                d->vel.z = min(d->vel.z, -VELOCITY_JUMP / DIVIDE_WATER);
+                d->vel.z = min(d->vel.z, -VELOCITY_JUMP / VELOCITY_WATER_DAMP);
             }
         }
         if (!isfloating && !d->climbing && d->physstate == PHYS_FALL) d->timeinair += curtime;
@@ -605,8 +607,14 @@ namespace physics
             }
             if (!m.iszero())
             {
-                if (d->climbing && !d->crouching) m.addz(m.z >= 0 ? 1 : -1).normalize();
-                else m.normalize();
+                if (d->climbing && !d->crouching)
+                {
+                    m.addz(m.z >= 0 ? 1 : -1).normalize();
+                }
+                else
+                {
+                    m.normalize();
+                }
             }
         }
 
@@ -851,81 +859,6 @@ namespace physics
         }
     }
 
-    bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float gravity)
-    {
-        // Collision checks.
-        if (d->physstate != PHYS_BOUNCE && collide(d, vec(0, 0, 0), 0, false)) return true;
-        int mat = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->eyeheight) / 2));
-        bool isinwater = isliquidmaterial(mat);
-        if (isinwater)
-        {
-            d->vel.z -= gravity * mapgravity / 16 * secs;
-            d->vel.mul(max(1.0f - secs / waterfric, 0.0f));
-        }
-        else d->vel.z -= gravity * mapgravity * secs;
-        vec old(d->o);
-        loopi(2)
-        {
-            vec dir(d->vel);
-            dir.mul(secs);
-            d->o.add(dir);
-            if (!collide(d, dir, 0, true, true))
-            {
-                if (collideinside)
-                {
-                    d->o = old;
-                    d->vel.mul(-elasticity);
-                }
-                break;
-            }
-            else if (collideplayer)
-            {
-                break;
-            }
-            d->o = old;
-            game::bounced(d, collidewall);
-            float c = collidewall.dot(d->vel),
-                k = 1.0f + (1.0f - elasticity) * c / d->vel.magnitude();
-            d->vel.mul(k);
-            d->vel.sub(vec(collidewall).mul(elasticity * 2.0f * c));
-        }
-        if (d->physstate != PHYS_BOUNCE)
-        {
-            // Make sure bouncers don't start inside geometry!
-            if (d->o == old) return !collideplayer;
-            d->physstate = PHYS_BOUNCE;
-        }
-        return collideplayer != NULL;
-    }
-
-    bool isbouncing(physent* d, float elasticity, float waterfric, float gravity)
-    {
-        if (physsteps <= 0)
-        {
-            interpolateposition(d);
-            return false;
-        }
-
-        d->o = d->newpos;
-        bool hitplayer = false;
-        loopi(physsteps - 1)
-        {
-            if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
-            {
-                hitplayer = true;
-            }
-        }
-        d->deltapos = d->o;
-        if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
-        {
-            hitplayer = true;
-        }
-        d->newpos = d->o;
-        d->deltapos.sub(d->newpos);
-        interpolateposition(d);
-        return !hitplayer;
-    }
-
     VARP(footstepssounds, 0, 1, 1);
     VARP(footstepdelay, 1, 44000, 50000);
 
@@ -1070,38 +1003,18 @@ namespace physics
         }
     }
 
-    void updatevertex(dynent* pl, vec pos, vec& dpos, float gravity, float ts)
-    {
-        gameent* d = (gameent*)pl;
-        float grav = gravity ? gravity : mapgravity;
-        if (d->deathtype == DEATH_DISRUPT && lastmillis - d->lastpain <= 6000)
-        {
-            particle_splash(PART_RING, 1, 100, pos, 0x00FFFF, 1.4f, 10, 5);
-        }
-        else
-        {
-            dpos.z -= grav * ts * ts;
-        }
-    }
+#define DIR(name, v, d, s, os) ICOMMAND(name, "D", (int *down), \
+{ \
+    self->s = *down != 0; \
+    self->v = self->s ? d : (self->os ? -(d) : 0); \
+}); \
 
-    bool shouldmoveragdoll(dynent* pl, vec eye)
-    {
-        gameent* d = (gameent*)pl;
-        if (!isfirstpersondeath() && d->deathtype == DEATH_FALL) return false;
-        if (isfirstpersondeath() && d == self)
-        {
-            camera1->o = eye;
-            return false;
-        }
-        return true;
-    }
+    DIR(backward, move, -1, k_down, k_up);
+    DIR(forward, move, 1, k_up, k_down);
+    DIR(left, strafe, 1, k_left, k_right);
+    DIR(right, strafe, -1, k_right, k_left);
 
-#define dir(name,v,d,s,os) ICOMMAND(name, "D", (int *down), { self->s = *down != 0; self->v = self->s ? d : (self->os ? -(d) : 0); });
-
-    dir(backward, move, -1, k_down, k_up);
-    dir(forward, move, 1, k_up, k_down);
-    dir(left, strafe, 1, k_left, k_right);
-    dir(right, strafe, -1, k_right, k_left);
+#undef DIR
 
     bool canjump()
     {
@@ -1138,5 +1051,152 @@ namespace physics
     {
         docrouch(*down);
     });
+
+    bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float gravity)
+    {
+        // Collision checks.
+        if (d->physstate != PHYS_BOUNCE && collide(d, vec(0, 0, 0), 0, false)) return true;
+        int mat = lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (d->aboveeye - d->eyeheight) / 2));
+        bool isinwater = isliquidmaterial(mat);
+        if (isinwater)
+        {
+            d->vel.z -= gravity * mapgravity / 16 * secs;
+            d->vel.mul(max(1.0f - secs / waterfric, 0.0f));
+        }
+        else d->vel.z -= gravity * mapgravity * secs;
+        vec old(d->o);
+        loopi(2)
+        {
+            vec dir(d->vel);
+            dir.mul(secs);
+            d->o.add(dir);
+            if (!collide(d, dir, 0, true, true))
+            {
+                if (collideinside)
+                {
+                    d->o = old;
+                    d->vel.mul(-elasticity);
+                }
+                break;
+            }
+            else if (collideplayer)
+            {
+                break;
+            }
+            d->o = old;
+            game::bounced(d, collidewall);
+            float c = collidewall.dot(d->vel),
+                k = 1.0f + (1.0f - elasticity) * c / d->vel.magnitude();
+            d->vel.mul(k);
+            d->vel.sub(vec(collidewall).mul(elasticity * 2.0f * c));
+        }
+        if (d->physstate != PHYS_BOUNCE)
+        {
+            // Make sure bouncers don't start inside geometry!
+            if (d->o == old) return !collideplayer;
+            d->physstate = PHYS_BOUNCE;
+        }
+        return collideplayer != NULL;
+    }
+
+    bool isbouncing(physent* d, float elasticity, float waterfric, float gravity)
+    {
+        if (physsteps <= 0)
+        {
+            interpolateposition(d);
+            return false;
+        }
+
+        d->o = d->newpos;
+        bool hitplayer = false;
+        loopi(physsteps - 1)
+        {
+            if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
+            {
+                hitplayer = true;
+            }
+        }
+        d->deltapos = d->o;
+        if (hasbounced(d, physframetime / 1000.0f, elasticity, waterfric, gravity))
+        {
+            hitplayer = true;
+        }
+        d->newpos = d->o;
+        d->deltapos.sub(d->newpos);
+        interpolateposition(d);
+        return !hitplayer;
+    }
+
+    void updateragdoll(dynent* pl, vec center, float radius, bool& water)
+    {
+        int material = lookupmaterial(vec(center.x, center.y, center.z + radius / 2));
+        water = isliquidmaterial(material & MATF_VOLUME);
+        if (!pl->inwater && water)
+        {
+            triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material & MATF_VOLUME, center);
+        }
+        else if (pl->inwater && !water)
+        {
+            material = lookupmaterial(center);
+            water = isliquidmaterial(material & MATF_VOLUME);
+            if (!water)
+            {
+                triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater, center);
+            }
+        }
+        pl->inwater = water ? material & MATF_VOLUME : MAT_AIR;
+
+        gameent* d = (gameent*)pl;
+        if (d->deathstate == Death_Shock && lastmillis - d->lastpain <= 2000)
+        {
+            float scale = 1.0f + rndscale(12.0f);
+            particle_flare(center, center, 1, PART_ELECTRICITY, 0xEE88EE, scale);
+            addgamelight(center, vec(238.0f, 136.0f, 238.0f), scale * 2);
+        }
+    }
+
+    FVAR(ragdollgravity, 0, 198.0f, 200);
+    VAR(ragdolltwitch, 1, 10, 15);
+
+    void updateragdollvertex(dynent* pl, vec pos, vec& dpos, float ts)
+    {
+        gameent* d = (gameent*)pl;
+        float gravity = ragdollgravity ? ragdollgravity : mapgravity;
+        if (d->deathstate == Death_Disrupt)
+        {
+            particle_flare(pos, pos, 1, PART_RING, 0x00FFFF, 2.0f * d->transparency);
+        }
+        else
+        {
+            dpos.z -= gravity * ts * ts;
+            if (d->deathstate == Death_Shock && lastmillis - d->lastpain <= 2500)
+            {
+                dpos.add(vec(rnd(201) - 100, rnd(201) - 100, rnd(201) - 100).normalize().mul(ragdolltwitch * ts));
+            }
+        }
+    }
+
+    FVAR(ragdolleyesmooth, 0, 0, 1);
+    VAR(ragdolleyesmoothmillis, 1, 1, 10000);
+
+    void updateragdolleye(dynent* pl, vec eye, const vec offset)
+    {
+        gameent* d = (gameent*)pl;
+        bool isfirstperson = isfirstpersondeath();
+        if (!isfirstperson && (d->deathstate == Death_Fall || d->deathstate == Death_Gib))
+        {
+            return;
+        }
+
+        if (d == self && isfirstperson)
+        {
+            camera1->o = eye;
+            return;
+        }
+
+        eye.add(offset);
+        float k = pow(ragdolleyesmooth, float(curtime) / ragdolleyesmoothmillis);
+        d->o.lerp(eye, 1 - k);
+    }
 }
 

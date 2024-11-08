@@ -1,13 +1,11 @@
 #include "game.h"
 
-extern int zoom;
-
 namespace game
 {
     bool intermission = false, gamewaiting = false;
     bool betweenrounds = false, hunterchosen = false;
     int maptime = 0, maprealtime = 0, maplimit = -1;
-    int lastspawnattempt = 0, lastheartbeat = 0;
+    int lastspawnattempt = 0;
 
     gameent *self = NULL; // ourselves (our client)
     vector<gameent *> players; // other clients
@@ -169,35 +167,6 @@ namespace game
         return followingplayer(self);
     }
 
-    void setupcamera()
-    {
-        gameent *target = followingplayer();
-        if(target)
-        {
-            self->yaw = target->yaw;
-            self->pitch = target->state==CS_DEAD ? 0 : target->pitch;
-            self->o = target->o;
-            self->resetinterp();
-        }
-    }
-
-    bool detachcamera()
-    {
-        gameent *d = followingplayer();
-        if(d) return specmode > 1 || d->state == CS_DEAD;
-        return (intermission && self->state != CS_SPECTATOR) || (!isfirstpersondeath() && self->state == CS_DEAD);
-    }
-
-    bool collidecamera()
-    {
-        switch(self->state)
-        {
-            case CS_EDITING: return false;
-            case CS_SPECTATOR: return followingplayer()!=NULL;
-        }
-        return true;
-    }
-
     VARP(smoothmove, 0, 75, 100);
     VARP(smoothdist, 0, 32, 64);
 
@@ -224,34 +193,11 @@ namespace game
         }
     }
 
-    VARP(lowhealthscreen, 0, 1, 1);
-    VARP(lowhealthscreenmillis, 500, 1000, 2000);
-    VARP(lowhealthscreenamount, 50, 200, 1000);
-    VARP(lowhealthscreenfactor, 1, 5, 100);
-
-    void managelowhealthscreen(gameent* d)
-    {
-        bool haslowhealth = d->state == CS_ALIVE && d->health <= d->maxhealth / 4;
-        if (d != followingplayer(self) || intermission || !lowhealthscreen || !haslowhealth)
-        {
-            d->stopchannelsound(Chan_LowHealth, 400);
-            return;
-        }
-        
-        d->playchannelsound(Chan_LowHealth, S_LOW_HEALTH, 200, true);
-        if (!lastheartbeat || lastmillis - lastheartbeat >= lowhealthscreenmillis)
-        {
-            damageblend(lowhealthscreenamount, lowhealthscreenfactor);
-            lastheartbeat = lastmillis;
-        }
-    }
-
     void otherplayers(int curtime)
     {
         loopv(players)
         {
             gameent *d = players[i];
-            managelowhealthscreen(d);
             if(d == self || d->ai) continue;
 
             if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d);
@@ -312,6 +258,7 @@ namespace game
         moveragdolls();
         gets2c();
         updatemonsters(curtime);
+        managelowhealthscreen();
         if(connected)
         {
             if(self->state == CS_DEAD)
@@ -480,50 +427,9 @@ namespace game
         return m_invasion && d->type == ENT_AI;
     }
 
-    bool allowthirdperson()
-    {
-        return self->state==CS_SPECTATOR || m_edit || (m_berserker && self->role == ROLE_BERSERKER);
-    }
-    ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
-
-    bool editing() { return m_edit; }
-
-    VARP(firstpersondeath, 0, 0, 1);
-
-    bool isfirstpersondeath()
-    {
-        return firstpersondeath || m_story;
-    }
-
-    int checkzoom()
-    {
-        gameent *hud = followingplayer(self);
-        if(hud->state != CS_ALIVE && hud->state != CS_LAGGED) return 0;
-        return guns[hud->gunselect].zoom;
-    }
-
-    FVARP(damagerolldiv, 0, 4.0f, 10);
-
-    void damagehud(int damage, gameent* d, gameent* actor)
-    {
-        if (!d)
-        {
-            return;
-        }
-
-        if (actor)
-        {
-            if (d != actor)
-            {
-                damagecompass(damage, actor->o);
-            }
-        }
-        if (damagerolldiv)
-        {
-            float damageRoll = damage / damagerolldiv;
-            physics::addroll(d, damageRoll);
-        }
-        damageblend(damage);
+    bool editing()
+    { 
+        return m_edit;
     }
 
     VARP(hitsound, 0, 1, 1);
@@ -556,7 +462,7 @@ namespace game
         }
         if(d == hud)
         {
-            damagehud(damage, d, actor);
+            setdamagehud(damage, d, actor);
         }
 
         ai::damaged(d, actor);
@@ -567,11 +473,41 @@ namespace game
     }
 
     VARP(gore, 0, 1, 1);
-    VARP(deathfromabove, 0, 1, 1);
     VARP(deathscream, 0, 1, 1);
-    VARR(mapdeath, 0, 0, 4);
 
-    void deathstate(gameent *d, bool restore)
+    void managedeatheffects(gameent* d)
+    {
+        if (gore && d->deathstate == Death_Gib)
+        {
+            gibeffect(max(-d->health, 0), d->vel, d);
+        }
+        if (deathscream)
+        {
+            bool isfirstperson = d == self && isfirstpersondeath();
+            if (!isfirstperson)
+            {
+                int diesound = getplayermodelinfo(d).diesound[d->deathstate];
+                if (validsound(diesound))
+                {
+                    playsound(diesound, d);
+                }
+            }
+        }
+        // Fiddle around with velocity to produce funny results.
+        if (d->deathstate == Death_Headshot)
+        {
+            d->vel.x = d->vel.y = 0;
+        }
+        else if (d->deathstate == Death_Shock)
+        {
+            d->vel.z = max(d->vel.z, GUN_PULSE_SHOCK_IMPULSE);
+            particle_flare(d->o, d->o, 100, PART_ELECTRICITY, 0xDD88DD, 12.0f);
+        }
+    }
+
+    VARP(deathfromabove, 0, 1, 1);
+
+    void setdeathstate(gameent *d, bool restore)
     {
         d->state = CS_DEAD;
         d->lastpain = lastmillis;
@@ -583,13 +519,7 @@ namespace game
         stopownersounds(d);
         if(!restore)
         {
-            bool firstpersondeath = d == self && isfirstpersondeath(),
-                 isnoisy =  d->deathtype != DEATH_FIST && d->deathtype != DEATH_DISRUPT;
-            if(gore && d->gibbed()) gibeffect(max(-d->health, 0), d->vel, d, d->deathtype == 1);
-            else if(!firstpersondeath && deathscream && isnoisy)
-            {
-                playsound(getplayermodelinfo(d).diesound, d); // silent melee kills
-            }
+            managedeatheffects(d);
             d->deaths++;
         }
         if(d == self)
@@ -731,6 +661,28 @@ namespace game
         if(spree[0] != '\0') conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
     }
 
+    VARR(mapdeath, 0, Death_Default, Death_Num);
+
+    int getdeathstate(gameent* d, int atk, int flags)
+    {
+        if (d->shouldgib())
+        {
+            return Death_Gib;
+        }
+        if (flags)
+        {
+            if (flags & KILL_HEADSHOT)
+            {
+                return Death_Headshot;
+            }
+        }
+        if (validatk(atk))
+        {
+            return attacks[atk].deathstate;
+        }
+        return mapdeath;
+    }
+
     VARP(killsound, 0, 1, 1);
 
     void kill(gameent *d, gameent *actor, int atk, int flags)
@@ -771,11 +723,9 @@ namespace game
                 else playsound(S_KILL);
             }
         }
-        // update player state and reset ai
-        if(attacks[atk].action == ACT_MELEE) d->deathtype = DEATH_FIST;
-        else if(atk == ATK_PISTOL_COMBO) d->deathtype = DEATH_DISRUPT;
-        else if(d == actor && d->deathtype != mapdeath) d->deathtype = mapdeath;
-        deathstate(d);
+        // Update player state and reset AI.
+        d->deathstate = getdeathstate(d, atk, flags);
+        setdeathstate(d);
         ai::kill(d, actor);
     }
 
@@ -1061,7 +1011,10 @@ namespace game
         if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
         {
             if(d->state!=CS_ALIVE) return;
-            if(!m_mp(gamemode)) kill(d, d, -1);
+            if (!m_mp(gamemode))
+            {
+                kill(d, d, -1);
+            }
             else
             {
                 int seq = (d->lifesequence<<16) | ((lastmillis / 1000) & 0xFFFF);
@@ -1071,82 +1024,10 @@ namespace game
                     d->suicided = seq;
                 }
             }
-            if(d->deathtype != mapdeath) d->deathtype = mapdeath;
         }
         else if(d->type == ENT_AI) suicidemonster((monster *)d);
     }
     ICOMMAND(suicide, "", (), suicide(self));
-
-    bool needminimap() { return m_ctf; }
-
-    float abovegameplayhud(int w, int h)
-    {
-        switch(hudplayer()->state)
-        {
-            case CS_EDITING:
-            case CS_SPECTATOR:
-                return 1;
-            default:
-                return 1650.0f/1800.0f;
-        }
-    }
-
-    float clipconsole(float w, float h)
-    {
-        if(cmode) return cmode->clipconsole(w, h);
-        return 0;
-    }
-
-    const char *defaultcrosshair(int index)
-    {
-        switch(index)
-        {
-            case 5: return "data/interface/crosshair/ally.png";
-            case 4: return "data/interface/crosshair/dot_hit.png";
-            case 3: return "data/interface/crosshair/dot.png";
-            case 2: return "data/interface/crosshair/default_hit.png";
-            case 1: return "data/interface/crosshair/default.png";
-            default: return "data/interface/crosshair/dot.png";
-        }
-    }
-
-    VARP(allycrosshair, 0, 1, 1);
-    VARP(hitcrosshair, 0, 280, 1000);
-
-    int selectcrosshair(vec &col)
-    {
-        gameent *d = hudplayer();
-        if(d->state == CS_SPECTATOR || d->state == CS_DEAD || intermission) return -1;
-
-        if(d->state != CS_ALIVE) return 0;
-
-        int crosshair = 1;
-        bool scoped = zoomedin() && checkzoom() == ZOOM_SCOPE;
-        if(scoped)
-        {
-            crosshair = 3;
-            col = vec(1, 0, 0);
-        }
-        if(!betweenrounds)
-        {
-            if(d->lasthit && lastmillis - d->lasthit < hitcrosshair)
-            {
-                if(scoped) crosshair = 4;
-                else crosshair = 2;
-            }
-            else if(allycrosshair)
-            {
-                dynent *o = intersectclosest(d->o, worldpos, d);
-                if(o && o->type == ENT_PLAYER && isally(((gameent *)o), d))
-                {
-                    crosshair = 5;
-                    if(m_teammode) col = vec::hexcolor(teamtextcolor[d->team]);
-                }
-            }
-        }
-        if(d->gunwait) col.mul(0.5f);
-        return crosshair;
-    }
 
     int maxsoundradius(int n)
     {

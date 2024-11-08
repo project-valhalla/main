@@ -1343,176 +1343,9 @@ void pushhudtranslate(float tx, float ty, float sx, float sy)
 int vieww = -1, viewh = -1;
 float curfov, curavatarfov, fovy, aspect;
 int farplane;
-VARP(zoominvel, 0, 90, 500);
-VARP(zoomoutvel, 0, 80, 500);
-VARP(zoomfov, 10, 42, 90);
-VARP(fov, 10, 100, 150);
-VAR(avatarzoomfov, 1, 1, 1);
-VAR(avatarfov, 10, 39, 100);
-FVAR(avatardepth, 0, 0.7f, 1);
 FVARNP(aspect, forceaspect, 0, 0, 1e3f);
 
-static float zoomprogress = 0;
-VAR(zoom, -1, 0, 1);
-
-void disablezoom()
-{
-    zoom = 0;
-    zoomprogress = 0;
-}
-
-void computezoom()
-{
-    if(!zoom)
-    {
-        zoomprogress = 0;
-        curfov = fov;
-        curavatarfov = avatarfov;
-        return;
-    }
-    if(zoom > 0)
-    {
-        zoomprogress = zoominvel ? min(zoomprogress + float(elapsedtime) / zoominvel, 1.0f) : 1;
-    }
-    else
-    {
-        zoomprogress = zoomoutvel ? max(zoomprogress - float(elapsedtime) / zoomoutvel, 0.0f) : 0;
-        if(zoomprogress <= 0) zoom = 0;
-    }
-    curfov = zoomfov*zoomprogress + fov*(1 - zoomprogress);
-    curavatarfov = avatarzoomfov*zoomprogress + avatarfov*(1 - zoomprogress);
-}
-
-FVARP(zoomsens, 1e-4f, 4.5f, 1e4f);
-FVARP(zoomaccel, 0, 0, 1000);
-VARP(zoomautosens, 0, 1, 1);
-FVARP(sensitivity, 1e-4f, 10, 1e4f);
-FVARP(sensitivityscale, 1e-4f, 100, 1e4f);
-VARP(invmouse, 0, 0, 1);
-FVARP(mouseaccel, 0, 0, 1000);
-
-VAR(thirdperson, 0, 0, 2);
-FVAR(thirdpersondistance, 0, 14, 50);
-FVAR(thirdpersonup, -25, 0.5f, 25);
-FVAR(thirdpersonside, -25, 5.0f, 25);
-FVAR(thirdpersondistancedead, 0, 30, 50);
-FVAR(thirdpersonupdead, -25, 0, 25);
-FVAR(thirdpersonsidedead, -25, 0, 25);
-physent *camera1 = NULL;
-bool detachedcamera = false;
-bool isthirdperson() { return player!=camera1 || detachedcamera; }
-
-void fixcamerarange()
-{
-    const float MAXPITCH = 90.0f;
-    if(camera1->pitch>MAXPITCH) camera1->pitch = MAXPITCH;
-    if(camera1->pitch<-MAXPITCH) camera1->pitch = -MAXPITCH;
-    while(camera1->yaw<0.0f) camera1->yaw += 360.0f;
-    while(camera1->yaw>=360.0f) camera1->yaw -= 360.0f;
-}
-
-void modifyorient(float yaw, float pitch)
-{
-    camera1->yaw += yaw;
-    camera1->pitch += pitch;
-    fixcamerarange();
-    if(camera1!=player && !detachedcamera)
-    {
-        player->yaw = camera1->yaw;
-        player->pitch = camera1->pitch;
-    }
-}
-
-void mousemove(int dx, int dy)
-{
-    if(!game::allowmouselook()) return;
-    float cursens = sensitivity, curaccel = mouseaccel;
-    if(zoom)
-    {
-        if(zoomautosens)
-        {
-            cursens = float(sensitivity*zoomfov)/fov;
-            curaccel = float(mouseaccel*zoomfov)/fov;
-        }
-        else
-        {
-            cursens = zoomsens;
-            curaccel = zoomaccel;
-        }
-    }
-    if(curaccel && curtime && (dx || dy)) cursens += curaccel * sqrtf(dx*dx + dy*dy)/curtime;
-    cursens /= sensitivityscale;
-    modifyorient(dx*cursens, dy*cursens*(invmouse ? 1 : -1));
-}
-
-void recomputecamera()
-{
-    game::setupcamera();
-    computezoom();
-
-    bool allowthirdperson = game::allowthirdperson();
-    bool shoulddetach = (allowthirdperson && thirdperson > 1) || game::detachcamera();
-    if((!allowthirdperson || !thirdperson) && !shoulddetach)
-    {
-        camera1 = player;
-        detachedcamera = false;
-    }
-    else
-    {
-        static physent tempcamera;
-        camera1 = &tempcamera;
-        if(detachedcamera && shoulddetach) camera1->o = player->o;
-        else
-        {
-            *camera1 = *player;
-            detachedcamera = shoulddetach;
-        }
-        camera1->reset();
-        camera1->type = ENT_CAMERA;
-        camera1->move = -1;
-        camera1->eyeheight = camera1->aboveeye = camera1->radius = camera1->xradius = camera1->yradius = 2;
-
-        matrix3 orient;
-        orient.identity();
-        orient.rotate_around_z(camera1->yaw*RAD);
-        orient.rotate_around_x(camera1->pitch*RAD);
-        orient.rotate_around_y(camera1->roll*-RAD);
-        vec dir = vec(orient.b).neg(), side = vec(orient.a).neg(), up = orient.c;
-
-        bool playing = player->state == CS_ALIVE && !game::intermission;
-        float tup = playing ? thirdpersonup : thirdpersonupdead, tside = playing ? thirdpersonside : thirdpersonsidedead,
-              tdist = playing ? thirdpersondistance : thirdpersondistancedead;
-        if(game::collidecamera())
-        {
-            movecamera(camera1, dir, tdist, 1);
-            movecamera(camera1, dir, clamp(tdist - camera1->o.dist(player->o), 0.0f, 1.0f), 0.1f);
-            if(tup)
-            {
-                vec pos = camera1->o;
-                float dist = fabs(tup);
-                if(tup < 0) up.neg();
-                movecamera(camera1, up, dist, 1);
-                movecamera(camera1, up, clamp(dist - camera1->o.dist(pos), 0.0f, 1.0f), 0.1f);
-            }
-            if(tside)
-            {
-                vec pos = camera1->o;
-                float dist = fabs(tside);
-                if(tside < 0) side.neg();
-                movecamera(camera1, side, dist, 1);
-                movecamera(camera1, side, clamp(dist - camera1->o.dist(pos), 0.0f, 1.0f), 0.1f);
-            }
-        }
-        else
-        {
-            camera1->o.add(vec(dir).mul(tdist));
-            if(tup) camera1->o.add(vec(up).mul(tup));
-            if(tside) camera1->o.add(vec(side).mul(tside));
-        }
-    }
-
-    setviewcell(camera1->o);
-}
+physent* camera1 = NULL;
 
 float calcfrustumboundsphere(float nearplane, float farplane,  const vec &pos, const vec &view, vec &center)
 {
@@ -1522,7 +1355,7 @@ float calcfrustumboundsphere(float nearplane, float farplane,  const vec &pos, c
         return minimapradius.magnitude();
     }
 
-    float width = tan(fov/2.0f*RAD), height = width / aspect,
+    float width = tan(game::fov/2.0f*RAD), height = width / aspect,
           cdist = ((nearplane + farplane)/2)*(1 + width*width + height*height);
     if(cdist <= farplane)
     {
@@ -1558,9 +1391,11 @@ vec calcavatarpos(const vec &pos, float dist)
     return dir.add(camera1->o);
 }
 
+FVAR(avatardepth, 0, 0.7f, 1);
+
 void renderavatar()
 {
-    if(isthirdperson()) return;
+    if (game::isthirdperson()) return;
 
     matrix4 oldprojmatrix = nojittermatrix;
     projmatrix.perspective(curavatarfov, aspect, nearplane, farplane);
@@ -2068,7 +1903,11 @@ void clipminimap(ivec &bbmin, ivec &bbmax, cube *c = worldroot, const ivec &co =
 
 void drawminimap()
 {
-    if(!game::needminimap()) { clearminimap(); return; }
+    if(!game::hasminimap())
+    { 
+        clearminimap();
+        return;
+    }
 
     if(!showminimap)
     {
@@ -2513,302 +2352,9 @@ void gl_drawmainmenu()
     renderbackground(NULL, NULL, NULL, NULL, true);
 }
 
-VARNP(damagecompass, usedamagecompass, 0, 1, 1);
-VARP(damagecompassfade, 1, 1000, 10000);
-VARP(damagecompasssize, 1, 30, 100);
-VARP(damagecompassalpha, 1, 25, 100);
-VARP(damagecompassmin, 1, 25, 1000);
-VARP(damagecompassmax, 1, 200, 1000);
-
-float damagedirs[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-
-void damagecompass(int n, const vec &loc)
-{
-    if(!usedamagecompass || minimized) return;
-    vec delta(loc);
-    delta.sub(camera1->o);
-    float yaw = 0, pitch;
-    if(delta.magnitude() > 4)
-    {
-        vectoyawpitch(delta, yaw, pitch);
-        yaw -= camera1->yaw;
-    }
-    if(yaw >= 360) yaw = fmod(yaw, 360);
-    else if(yaw < 0) yaw = 360 - fmod(-yaw, 360);
-    int dir = (int(yaw+22.5f)%360)/45;
-    damagedirs[dir] += max(n, damagecompassmin)/float(damagecompassmax);
-    if(damagedirs[dir]>1) damagedirs[dir] = 1;
-
-}
-void drawdamagecompass(int w, int h)
-{
-    hudnotextureshader->set();
-
-    int dirs = 0;
-    float size = damagecompasssize/100.0f*min(h, w)/2.0f;
-    loopi(8) if(damagedirs[i]>0)
-    {
-        if(!dirs)
-        {
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            gle::colorf(1, 0, 0, damagecompassalpha/100.0f);
-            gle::defvertex();
-            gle::begin(GL_TRIANGLES);
-        }
-        dirs++;
-
-        float logscale = 32,
-              scale = log(1 + (logscale - 1)*damagedirs[i]) / log(logscale),
-              offset = -size/2.0f-min(h, w)/4.0f;
-        matrix4x3 m;
-        m.identity();
-        m.settranslation(w/2, h/2, 0);
-        m.rotate_around_z(i*45*RAD);
-        m.translate(0, offset, 0);
-        m.scale(size*scale);
-
-        gle::attrib(m.transform(vec2(1, 1)));
-        gle::attrib(m.transform(vec2(-1, 1)));
-        gle::attrib(m.transform(vec2(0, 0)));
-
-        // fade in log space so short blips don't disappear too quickly
-        scale -= float(curtime)/damagecompassfade;
-        damagedirs[i] = scale > 0 ? (pow(logscale, scale) - 1) / (logscale - 1) : 0;
-    }
-    if(dirs) gle::end();
-}
-
-int damageblendmillis = 0;
-
-VARFP(damagescreen, 0, 1, 1, { if(!damagescreen) damageblendmillis = 0; });
-VARP(damagescreenfactor, 1, 10, 100);
-VARP(damagescreenalpha, 1, 70, 100);
-VARP(damagescreenfade, 0, 500, 1000);
-VARP(damagescreenmin, 1, 50, 1000);
-VARP(damagescreenmax, 1, 100, 1000);
-
-void damageblend(int n, const int factor)
-{
-    if(!damagescreen || minimized) return;
-    if(lastmillis > damageblendmillis) damageblendmillis = lastmillis;
-    damageblendmillis += clamp(n, damagescreenmin, damagescreenmax) * (factor ? factor : damagescreenfactor);
-}
-
-void drawdamagescreen(int w, int h)
-{
-    if(lastmillis >= damageblendmillis) return;
-
-    hudshader->set();
-
-    static Texture *damagetex = NULL;
-    if(!damagetex) damagetex = textureload("data/interface/hud/damage.png", 3);
-
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    setusedtexture(damagetex);
-    float fade = damagescreenalpha/100.0f;
-    if(damageblendmillis - lastmillis < damagescreenfade)
-        fade *= float(damageblendmillis - lastmillis)/damagescreenfade;
-    gle::colorf(fade, fade, fade, fade);
-
-    hudquad(0, 0, w, h);
-}
-
-int screenflashmillis = 0;
-
-VARFP(screenflash, 0, 1, 1,
-{
-    if(!screenflash)
-    {
-        screenflashmillis = 0;
-    }
-});
-VARP(screenflashfactor, 1, 5, 100);
-VARP(screenflashalpha, 1, 25, 100);
-VARP(screenflashfade, 0, 600, 1000);
-VARP(screenflashmin, 1, 20, 1000);
-VARP(screenflashmax, 1, 200, 1000);
-
-void addscreenflash(int n)
-{
-    if(!screenflash || minimized) return;
-    if(lastmillis > screenflashmillis) screenflashmillis = lastmillis;
-    screenflashmillis += clamp(n, screenflashmin, screenflashmax) * screenflashfactor;
-}
-
-void drawscreenflash(int w, int h)
-{
-    if(lastmillis >= screenflashmillis) return;
-
-    hudnotextureshader->set();
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    float fade = screenflashalpha / 100.0f;
-    if(screenflashmillis - lastmillis < screenflashfade)
-    {
-        fade *= float(screenflashmillis - lastmillis) / screenflashfade;
-    }
-    gle::colorf(1, 1, 1, fade);
-    hudquad(0, 0, w, h);
-}
-
-void clearscreeneffects()
-{
-    damageblendmillis = screenflashmillis = 0;
-    loopi(8) damagedirs[i] = 0;
-}
-
-void drawblend(int x, int y, int w, int h, float r, float g, float b)
-{
-    glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-    gle::colorf(r, g, b);
-    gle::defvertex(2);
-    gle::begin(GL_TRIANGLE_STRIP);
-    gle::attribf(x, y);
-    gle::attribf(x + w, y);
-    gle::attribf(x, y + h);
-    gle::attribf(x + w, y + h);
-    gle::end();
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-}
-
-bool zoomedin()
-{
-    return zoomprogress >= 1 && zoom > 0;
-}
-
-void drawzoom(int w, int h)
-{
-    if(minimized || !zoomedin()) return;
-
-    int zoomtype = game::checkzoom();
-    if(!zoomtype) return;
-
-    hudshader->set();
-    static Texture *scopetex = NULL;
-    if(zoomtype == ZOOM_SCOPE) scopetex = textureload("data/interface/hud/scope.png", 3);
-    else if(zoomtype == ZOOM_SHADOW) scopetex = textureload("data/interface/shadow.png", 3);
-    if(!scopetex) return;
-
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    setusedtexture(scopetex);
-    if(zoomtype == ZOOM_SCOPE)
-    {
-        float x = 0, y = 0, dimension = 0, coverage = 1, blend = 1.f - coverage;
-        if (w > h)
-        {
-            dimension = h;
-            x += (w - h) / 2;
-            drawblend(0, 0, x, dimension, blend, blend, blend);
-            drawblend(x + dimension, 0, x + 1, dimension, blend, blend, blend);
-        }
-        else if (h > w)
-        {
-            dimension = w;
-            y += (h - w) / 2;
-            drawblend(0, 0, dimension, y, blend, blend, blend);
-            drawblend(0, y + dimension, dimension, y, blend, blend, blend);
-        }
-        else dimension = h;
-        gle::colorf(1, 1, 1, coverage);
-        drawquad(x, y, dimension, dimension, 0, 0, 1, 1, false, false);
-    }
-    else
-    {
-        gle::colorf(1, 1, 1, 1);
-        hudquad(0, 0, w, h);
-    }
-}
-
 VAR(showstats, 0, 1, 1);
 VAR(showhud, 0, 1, 1);
 VAR(editcursor, 0, 1, 1);
-
-VARP(crosshairsize, 0, 18, 40);
-VARP(cursorsize, 0, 18, 40);
-VARP(crosshairfx, 0, 1, 1);
-VARP(crosshaircolors, 0, 1, 1);
-
-#define MAXCROSSHAIRS 6
-static Texture *crosshairs[MAXCROSSHAIRS] = { NULL, NULL, NULL, NULL };
-
-void loadcrosshair(const char *name, int i)
-{
-    if(i < 0 || i >= MAXCROSSHAIRS) return;
-    crosshairs[i] = name ? textureload(name, 3, true) : notexture;
-    if(crosshairs[i] == notexture)
-    {
-        name = game::defaultcrosshair(i);
-        if(!name) name = "data/interface/crosshair/dot.png";
-        crosshairs[i] = textureload(name, 3, true);
-    }
-}
-
-void loadcrosshair_(const char *name, int *i)
-{
-    loadcrosshair(name, *i);
-}
-
-COMMANDN(loadcrosshair, loadcrosshair_, "si");
-
-ICOMMAND(getcrosshair, "i", (int *i),
-{
-    const char *name = "";
-    if(*i >= 0 && *i < MAXCROSSHAIRS)
-    {
-        name = crosshairs[*i] ? crosshairs[*i]->name : game::defaultcrosshair(*i);
-        if(!name) name = "data/interface/crosshair/default.png";
-    }
-    result(name);
-});
-
-void writecrosshairs(stream *f)
-{
-    loopi(MAXCROSSHAIRS) if(crosshairs[i] && crosshairs[i]!=notexture)
-        f->printf("loadcrosshair %s %d\n", escapestring(crosshairs[i]->name), i);
-    f->printf("\n");
-}
-
-void drawcrosshair(int w, int h)
-{
-    bool windowhit = UI::hascursor();
-    if(!windowhit && (!showhud || mainmenu)) return;
-
-    vec color(1, 1, 1);
-    float cx = 0.5f, cy = 0.5f, chsize;
-    Texture *crosshair;
-    if(windowhit)
-    {
-        static Texture *cursor = NULL;
-        if(!cursor) cursor = textureload("data/interface/cursor.png", 3, true);
-        crosshair = cursor;
-        chsize = cursorsize*3 * UI::uiscale;
-        UI::getcursorpos(cx, cy);
-    }
-    else
-    {
-        //if(zoomedin() && game::checkzoom() == ZOOM_SCOPE) return;
-        int index = game::selectcrosshair(color);
-        if(index < 0) return;
-        if(!crosshairfx) index = 0;
-        if(!crosshairfx || !crosshaircolors) color = vec(1, 1, 1);
-        crosshair = crosshairs[index];
-        if(!crosshair)
-        {
-            loadcrosshair(NULL, index);
-            crosshair = crosshairs[index];
-        }
-        chsize = crosshairsize*3 * UI::uiscale;
-    }
-    if(crosshair->type&Texture::ALPHA) glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    else glBlendFunc(GL_ONE, GL_ONE);
-    hudshader->set();
-    gle::color(color);
-    float x = cx*w - (windowhit ? 0 : chsize/2.0f);
-    float y = cy*h - (windowhit ? 0 : chsize/2.0f);
-    setusedtexture(crosshair);
-
-    hudquad(x, y, chsize, chsize);
-}
 
 VARP(wallclock, 0, 0, 1);
 VARP(wallclock24, 0, 0, 1);
@@ -2907,7 +2453,7 @@ void gl_drawhud()
         renderconsole(conw, conh, abovehud - FONTH/2);
     }
 
-    drawcrosshair(w, h);
+    game::drawpointers(w, h);
 
     glDisable(GL_BLEND);
 
@@ -2952,10 +2498,7 @@ void gl_drawframe()
             resethudmatrix();
             resethudshader();
             glEnable(GL_BLEND);
-            drawzoom(hudw, hudh);
-            drawscreenflash(hudw, hudh);
-            drawdamagescreen(hudw, hudh);
-            drawdamagecompass(hudw, hudh);
+            game::drawhud(hudw, hudh);
             glDisable(GL_BLEND);
         }
     }

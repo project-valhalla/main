@@ -516,14 +516,12 @@ game/gamephysics.o: shared/ents.h shared/command.h shared/glexts.h
 game/gamephysics.o: shared/glemu.h engine/sound.h shared/iengine.h
 game/gamephysics.o: shared/igame.h shared/unicode.h game/weapon.h game/ai.h
 game/gamephysics.o: game/gamemode.h game/entity.h game/monster.h
-game/gamephysics.o: shared/igame.h game/weapon.h game/ai.h game/gamemode.h
-game/gamephysics.o: game/entity.h game/monster.h
 game/hud.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/hud.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
-game/hud.o: engine/sound.h shared/iengine.h shared/igame.h game/weapon.h
-game/hud.o: game/ai.h game/gamemode.h game/entity.h game/monster.h
-game/hud.o: engine/engine.h engine/world.h engine/octa.h engine/light.h
-game/hud.o: engine/texture.h engine/bih.h engine/model.h
+game/hud.o: engine/sound.h shared/iengine.h shared/igame.h shared/unicode.h
+game/hud.o: game/weapon.h game/ai.h game/gamemode.h game/entity.h
+game/hud.o: game/monster.h engine/engine.h engine/world.h engine/octa.h
+game/hud.o: engine/light.h engine/texture.h engine/bih.h engine/model.h
 
 shared/cube.h.gch: shared/tools.h shared/geom.h shared/ents.h
 shared/cube.h.gch: shared/command.h shared/glexts.h shared/glemu.h

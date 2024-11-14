@@ -714,6 +714,7 @@ namespace game
     extern void doaction(int act);
     extern void hurt(gameent* d);
     extern void suicide(gameent* d);
+    extern void managedeatheffects(gameent* d);
 
     extern bool clientoption(const char* arg);
     extern bool gamewaiting, betweenrounds, hunterchosen;
@@ -726,6 +727,7 @@ namespace game
     extern int following, specmode;
     extern int smoothmove, smoothdist;
     extern int gore;
+    extern int deathscream;
     extern int getdeathstate(gameent* d, int atk, int flags);
 
     extern const char* colorname(gameent* d, const char* name = NULL, const char* alt = NULL, const char* color = "");
@@ -884,7 +886,7 @@ namespace game
     extern void clearragdolls();
     extern void moveragdolls();
     extern void syncplayer();
-    extern void renderai(dynent* d, const char* mdlname, modelattach* attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade = 1, bool ragdoll = false);
+    extern void rendermonster(dynent* d, const char* mdlname, modelattach* attachments, const int attack, const int attackdelay, const int lastaction, const int lastpain, const float fade = 1, const bool ragdoll = false);
 
     extern int getplayercolor(gameent* d, int team);
     extern int chooserandomplayermodel(int seed);

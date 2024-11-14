@@ -355,13 +355,18 @@ namespace game
         void monsterdeath(int forcestate = -1, int atk = -1, int flags = 0)
         {
             state = CS_DEAD;
+            int killflags = 0;
+            if (flags & HIT_HEAD)
+            {
+                killflags |= KILL_HEADSHOT;
+            }
             if (validdeathstate(forcestate))
             {
                 deathstate = forcestate;
             }
             else
             {
-                deathstate = getdeathstate(this, atk, flags);
+                deathstate = getdeathstate(this, atk, killflags);
             }
             lastpain = lastmillis;
             exploding = false;
@@ -371,6 +376,8 @@ namespace game
             {
                 deathstate = Death_Gib;
             }
+            const bool isnoisy = deathstate != Death_Fist && deathstate != Death_Gib && deathstate != Death_Headshot && deathstate != Death_Disrupt;
+            managedeatheffects(this);
             if (deathstate == Death_Gib)
             {
                 if (gore)
@@ -383,7 +390,7 @@ namespace game
                     game::explode(true, this, o, vel, NULL, attacks[matk].damage, matk);
                 }
             }
-            else if (!(flags & HIT_HEAD))
+            else if (deathscream && isnoisy)
             {
                 int diesound = monstertypes[mtype].diesound;
                 if (validsound(diesound))
@@ -391,7 +398,7 @@ namespace game
                     playsound(diesound, this);
                 }
             }
-            monsterkilled(id, flags & HIT_HEAD ? KILL_HEADSHOT : 0);
+            monsterkilled(id, killflags);
         }
 
         void heal()
@@ -679,14 +686,18 @@ namespace game
                     a[ai++] = modelattach("tag_muzzle", &m.muzzle);
                 }
                 float fade = 1;
-                if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);
+                if (m.state == CS_DEAD)
+                {
+                    const int millis = m.deathstate == Death_Fall ? 1000 : 9000;
+                    fade -= clamp(float(lastmillis - (m.lastpain + millis)) / 1000, 0.0f, 1.0f);
+                }
                 int attackanimation = 0;
                 if(m.monsterstate == MS_ATTACKING || m.bursting)
                 {
                     if(m.attacking > ACT_MELEE) attackanimation = ANIM_SHOOT;
                     else attackanimation = ANIM_MELEE;
                 }
-                renderai(&m, monstertypes[m.mtype].mdlname, a, 0, -attackanimation, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
+                rendermonster(&m, monstertypes[m.mtype].mdlname, a, -attackanimation, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
             }
         }
     }

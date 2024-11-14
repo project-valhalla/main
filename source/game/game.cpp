@@ -532,11 +532,16 @@ namespace game
 
     void managedeatheffects(gameent* d)
     {
+        if (!d)
+        {
+            return;
+        }
+
         if (gore && d->deathstate == Death_Gib)
         {
             gibeffect(max(-d->health, 0), d->vel, d);
         }
-        if (deathscream)
+        if (deathscream && d->type == ENT_PLAYER)
         {
             bool isfirstperson = d == self && isfirstpersondeath();
             if (!isfirstperson)

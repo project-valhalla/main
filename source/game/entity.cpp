@@ -849,21 +849,9 @@ namespace entities
         {
             entity->flags |= EF_ANIM;
         }
-        switch (state)
+        if (state == TriggerState_Triggering || state == TriggerState_Triggered)
         {
-            case TriggerState_Triggering:
-            {
-                entity->flags |= EF_NOCOLLIDE;
-                break;
-            }
-
-            case TriggerState_Triggered:
-            {
-                entity->flags |= EF_NOCOLLIDE;
-                break;
-            }
-
-            default: break;
+            entity->flags |= EF_NOCOLLIDE;
         }
         entity->triggerstate = state;
         entity->lasttrigger = lastmillis;

@@ -829,6 +829,7 @@ int playsoundname(const char *s, physent *owner, const vec *loc, int vol, int fl
 }
 
 ICOMMAND(uisound, "si", (const char *s, int *vol), if(uivol) playsoundname(s, NULL, NULL, *vol, SND_UI));
+ICOMMAND(gamesound, "si", (const char* s, int* vol), if (soundvol) playsoundname(s, NULL, NULL, *vol, 0));
 ICOMMAND(playsound, "i", (int *n), playsound(*n));
 ICOMMAND(voicecom, "ssi", (const char *sound, char *text, int *team),
 {

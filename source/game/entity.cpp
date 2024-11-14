@@ -341,7 +341,7 @@ namespace entities
 
     // these functions are called when the client touches the item
 
-    void playentitysound(const int fallback, const int mapsound, const vec o)
+    void playentitysound(const int fallback, const int mapsound, const vec &o)
     {
         int sound = fallback, flags = 0;
         if(mapsound > 0)
@@ -818,36 +818,28 @@ namespace entities
         return 4.0f;
     }
 
-    void triggerswap(int id, int id2)
+    void triggertoggle(int id, int id2 = -1)
     {
         loopv(ents)
         {
             extentity* entity = ents[i];
-            if (entity->type == TRIGGER && (entity->attr1 == id || (id2 && entity->attr1 == id2)))
+            if (entity->type != TRIGGER)
             {
-                entity->setactivity(entity->isactive() ? false : true);
+                continue;
             }
-        }
-    }
-    ICOMMAND(triggerswap, "ii", (int* id, int* id2), triggerswap(*id, *id2));
-
-    void triggertoggle(int id)
-    {
-        loopv(ents)
-        {
-            extentity* entity = ents[i];
-            if (entity->type == TRIGGER && entity->attr1 == id)
+            if (entity->attr1 == id || (id2 >= 0 && entity->attr1 == id2))
             {
                 entity->setactivity(entity->isactive() ? false : true);
             }
         }
     }
     ICOMMAND(triggertoggle, "i", (int* id), triggertoggle(*id));
+    ICOMMAND(triggerswap, "ii", (int* id, int* id2), triggertoggle(*id, *id2));
 
-    void triggermapmodel(int id, int state, int sound)
+    void triggermapmodel(int id, int state, int sound = -1)
     {
         extentity* entity = ents[id];
-        if (entity->type != ET_MAPMODEL)
+        if (!entity || entity->type != ET_MAPMODEL)
         {
             return;
         }
@@ -875,7 +867,10 @@ namespace entities
         }
         entity->triggerstate = state;
         entity->lasttrigger = lastmillis;
-        playentitysound(S_TRIGGER, sound, entity->o);
+        if (validsound(sound))
+        {
+            playentitysound(S_TRIGGER, sound, entity->o);
+        }
     }
     ICOMMAND(triggermapmodel, "iib", (int* id, int* state, int* sound), triggermapmodel(*id, *state, *sound));
 #endif

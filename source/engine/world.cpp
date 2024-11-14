@@ -1305,57 +1305,67 @@ int findentity(int type, int index, int attr1, int attr2)
     return -1;
 }
 
-int spawncycle = -1;
+struct spawninfo
+{ 
+    const extentity* e;
+    float weight;
+};
 
-void findplayerspawn(dynent *d, int forceent, int tag) // place at random spawn
+// Compiles a vector of available playerstarts, each with a non-zero weight
+// which serves as a measure of its desirability for a spawning player.
+float gatherspawninfos(dynent* d, int tag, vector<spawninfo>& spawninfos)
 {
-    int pick = forceent;
-    if(pick<0)
+    const vector<extentity*>& ents = entities::getents();
+    float total = 0.0f;
+    loopv(ents)
     {
-        int r = rnd(10)+1;
-        pick = spawncycle;
-        loopi(r)
-        {
-            pick = findentity(ET_PLAYERSTART, pick+1, -1, tag);
-            if(pick < 0) break;
-        }
-        if(pick < 0 && tag)
-        {
-            pick = spawncycle;
-            loopi(r)
-            {
-                pick = findentity(ET_PLAYERSTART, pick+1, -1, 0);
-                if(pick < 0) break;
-            }
-        }
-        if(pick >= 0) spawncycle = pick;
+        const extentity& e = *ents[i];
+        if (e.type != ET_PLAYERSTART || e.attr2 != tag) continue;
+        spawninfo& s = spawninfos.add();
+        s.e = &e;
+        s.weight = game::ratespawn(d, e);
+        total += s.weight;
     }
-    if(pick>=0)
+    return total;
+}
+
+// Randomly picks a weighted spawn from the provided vector and removes it.
+// The probability of a given spawn being picked is proportional to its weight.
+// If all weights are zero, the index is picked uniformly.
+static const extentity* poprandomspawn(vector<spawninfo>& spawninfos, float& total)
+{
+    if (spawninfos.empty()) return NULL;
+    int index = 0;
+    if (total > 0.0f)
     {
-        const vector<extentity *> &ents = entities::getents();
-        d->pitch = 0;
-        d->roll = 0;
-        for(int attempt = pick;;)
-        {
-            d->o = ents[attempt]->o;
-            d->yaw = ents[attempt]->attr1;
-            if(entinmap(d, true)) break;
-            attempt = findentity(ET_PLAYERSTART, attempt+1, -1, tag);
-            if(attempt<0 || attempt==pick)
-            {
-                d->o = ents[pick]->o;
-                d->yaw = ents[pick]->attr1;
-                entinmap(d);
-                break;
-            }
-        }
+        float x = rndscale(total);
+        do x -= spawninfos[index].weight; while (x > 0 && ++index < spawninfos.length() - 1);
     }
-    else
-    {
-        d->o.x = d->o.y = d->o.z = 0.5f*worldsize;
-        d->o.z += 1;
-        entinmap(d);
-    }
+    else index = rnd(spawninfos.length());
+    spawninfo s = spawninfos.removeunordered(index);
+    total -= s.weight;
+    return s.e;
+}
+
+static inline bool tryspawn(dynent* d, const extentity& e)
+{
+    d->o = e.o;
+    d->yaw = e.attr1;
+    return entinmap(d, true);
+}
+
+void findplayerspawn(dynent* d, int forceent, int tag)
+{
+    const vector<extentity*>& ents = entities::getents();
+    d->pitch = 0;
+    d->roll = 0;
+    if (ents.inrange(forceent) && tryspawn(d, *ents[forceent])) return;
+    vector<spawninfo> spawninfos;
+    float total = gatherspawninfos(d, tag, spawninfos);
+    while (const extentity* e = poprandomspawn(spawninfos, total)) if (tryspawn(d, *e)) return;
+    d->o = vec(0.5f * worldsize).addz(1);
+    d->yaw = 0;
+    entinmap(d);
 }
 
 void splitocta(cube *c, int size)

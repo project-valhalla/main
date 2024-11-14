@@ -34,26 +34,68 @@ namespace entities
 
     bool canspawnitem(int type)
     {
-        if(!validitem(type) || m_noitems(mutators)) return false;
+        if (!validitem(type) || m_noitems(mutators))
+        {
+            return false;
+        }
+
         switch(type)
         {
             case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL: case I_AMMO_GRENADE:
-                if(m_tactics(mutators) || m_voosh(mutators)) return false;
+            {
+                if (m_tactics(mutators) || m_voosh(mutators))
+                {
+                    return false;
+                }
+                break;
+            }
+
             case I_YELLOWSHIELD: case I_REDSHIELD:
-                if(m_insta(mutators) || m_effic(mutators)) return false;
+            {
+                if (m_insta(mutators) || m_effic(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
             case I_HEALTH:
-                if(m_insta(mutators) || m_effic(mutators) || m_vampire(mutators)) return false;
+            {
+                if (m_insta(mutators) || m_effic(mutators) || m_vampire(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
             case I_MEGAHEALTH: case I_ULTRAHEALTH:
-                if(m_insta(mutators) || m_vampire(mutators)) return false;
+            {
+                if (m_insta(mutators) || m_vampire(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
             case I_DDAMAGE: case I_ARMOR: case I_INFINITEAMMO:
-                if(m_insta(mutators) || m_nopowerups(mutators)) return false;
+            {
+                if (m_insta(mutators) || m_nopowerups(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
             case I_HASTE: case I_AGILITY: case I_INVULNERABILITY:
-                if(m_nopowerups(mutators)) return false;
+            {            
+                if (m_nopowerups(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
+            default: break;
         }
         return true;
     }
@@ -154,20 +196,30 @@ namespace entities
 
     void markentity(extentity& entity)
     {
-        if (m_noitems(mutators) || !validitem(entity.type))
+        if (m_noitems(mutators) || (!validitem(entity.type) && entity.type != TRIGGER))
         {
             return;
         }
 
-        if (canspawnitem(entity.type) && entity.spawned())
+        if (m_story)
         {
-            if (entity.type >= I_DDAMAGE && entity.type <= I_INVULNERABILITY)
+            if (entity.type == TRIGGER && entity.isactive() && entity.attr5 == Trigger_Interest)
             {
-                particle_hud_mark(entity.o, 0, 2, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                particle_hud_mark(entity.o, 1, 2, PART_GAME_ICONS, 1, 0x00FF3F, 4.0f);
             }
-            else if (entity.type == I_ULTRAHEALTH)
+        }
+        else
+        {
+            if (canspawnitem(entity.type) && entity.spawned())
             {
-                particle_hud_mark(entity.o, 3, 1, PART_GAME_ICONS, 1, 0xFF9796, 2.0f);
+                if (entity.type >= I_DDAMAGE && entity.type <= I_INVULNERABILITY)
+                {
+                    particle_hud_mark(entity.o, 0, 2, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                }
+                else if (entity.type == I_ULTRAHEALTH)
+                {
+                    particle_hud_mark(entity.o, 3, 1, PART_GAME_ICONS, 1, 0xFF9796, 2.0f);
+                }
             }
         }
     }
@@ -184,8 +236,12 @@ namespace entities
         loopv(ents)
         {
             extentity& e = *ents[i];
+            if (!e.isactive())
+            {
+                continue;
+            }
             markentity(e);
-            int revs = 10;
+            const int revs = 10;
             switch (e.type)
             {
                 case TELEPORT:
@@ -251,7 +307,10 @@ namespace entities
             return;
         }
 
-        ents[n]->clearspawned();
+        if (ents[n]->spawned())
+        {
+            ents[n]->clearspawned();
+        }
         if (!d)
         {
             return;
@@ -282,15 +341,15 @@ namespace entities
 
     // these functions are called when the client touches the item
 
-    void playentitysound(gameent *d, int sound, int attribute, vec o)
+    void playentitysound(const int fallback, const int mapsound, const vec o)
     {
-        int snd = sound, flags = 0;
-        if(attribute > 0)
+        int sound = fallback, flags = 0;
+        if(mapsound > 0)
         {
-            snd = attribute;
+            sound = mapsound;
             flags = SND_MAP;
         }
-        playsound(snd, NULL, d == followingplayer(self) ? NULL : &o, NULL, flags);
+        playsound(sound, NULL, o.iszero() ? NULL : &o, NULL, flags);
     }
 
     void teleportparticleeffects(gameent *d, vec p)
@@ -308,10 +367,11 @@ namespace entities
             extentity &e = *ents[tp];
             if(e.attr4 >= 0)
             {
-                playentitysound(d, S_TELEPORT, e.attr4, e.o);
+                gameent* hud = followingplayer(self);
+                playentitysound(S_TELEPORT, e.attr4, d == hud ? vec(0, 0, 0) : e.o);
                 if(ents.inrange(td) && ents[td]->type == TELEDEST)
                 {
-                    if (d != followingplayer(self))
+                    if (d != hud)
                     {
                         playsound(S_TELEDEST, NULL, &ents[td]->o);
                     }
@@ -345,7 +405,7 @@ namespace entities
             extentity &e = *ents[jp];
             if(e.attr4 >= 0)
             {
-                 playentitysound(d, S_JUMPPAD, e.attr4, e.o);
+                 playentitysound(S_JUMPPAD, e.attr4, d == followingplayer(self) ? vec(0, 0, 0) : e.o);
             }
             sway.addevent(d, SwayEvent_Land, 250, -2);
         }
@@ -394,22 +454,12 @@ namespace entities
     VARR(teleteam, 0, 1, 1);
     VARP(autoswitch, 0, 1, 1);
 
+    int respawnent = -1;
+
     void trypickup(int n, gameent *d)
     {
         switch(ents[n]->type)
         {
-            default:
-                if(d->canpickup(ents[n]->type) && allowpickup())
-                {
-                    addmsg(N_ITEMPICKUP, "rci", d, n);
-                    ents[n]->clearspawned(); // even if someone else gets it first
-                    // first time you pick up a weapon you switch to it automatically
-                    if(d->aitype == AI_BOT || !autoswitch || (ents[n]->type < I_AMMO_SG || ents[n]->type > I_AMMO_GRENADE)) break;
-                    itemstat &is = itemstats[ents[n]->type-I_AMMO_SG];
-                    if(!d->attacking && d->gunselect != is.info && !d->ammo[is.info]) gunselect(is.info, d);
-                }
-                break;
-
             case TELEPORT:
             {
                 if(d->lastpickup==ents[n]->type && lastmillis-d->lastpickupmillis<500) break;
@@ -441,14 +491,50 @@ namespace entities
 
             case TRIGGER:
             {
-                if(d->lastpickup == ents[n]->type && lastmillis-d->lastpickupmillis < 500) break;
-                if(ents[n]->attr5 && lastmillis - ents[n]->lasttrigger <= ents[n]->attr5) break;
+                if (d->lastpickup == ents[n]->type && lastmillis - d->lastpickupmillis < 100)
+                {
+                    break;
+                }
+                //if(ents[n]->attr5 && lastmillis - ents[n]->lasttrigger <= ents[n]->attr5) break;
+                defformatstring(hookname, "trigger_%d", ents[n]->attr1);
+                if (identexists(hookname))
+                {
+                    execident(hookname);
+                }
+                gameent* hud = followingplayer(self);
+                if (ents[n]->attr4 >= 0)
+                {
+                    playentitysound(S_TRIGGER, ents[n]->attr4, d == hud ? vec(0, 0, 0) : ents[n]->o);
+                }
+                int triggertype = ents[n]->attr5;
+                if (triggertype == Trigger_Item)
+                {
+                    if (d == hud)
+                    {
+                        addscreenflash(80);
+                    }
+                }
+                else if (triggertype == Trigger_RespawnPoint)
+                {
+                    respawnent = n;
+                }
+                ents[n]->setactivity(false);
                 d->lastpickup = ents[n]->type;
                 d->lastpickupmillis = lastmillis;
-                defformatstring(hookname, "trigger_%d", ents[n]->attr1);
-                execident(hookname);
-                if(ents[n]->attr4 >= 0) playentitysound(d, S_TRIGGER, ents[n]->attr4, ents[n]->o);
-                if(ents[n]->attr4) ents[n]->lasttrigger = lastmillis;
+                break;
+            }
+
+            default:
+            {
+                if (d->canpickup(ents[n]->type) && allowpickup())
+                {
+                    addmsg(N_ITEMPICKUP, "rci", d, n);
+                    ents[n]->clearspawned(); // even if someone else gets it first
+                    // first time you pick up a weapon you switch to it automatically
+                    if (d->aitype == AI_BOT || !autoswitch || (ents[n]->type < I_AMMO_SG || ents[n]->type > I_AMMO_GRENADE)) break;
+                    itemstat& is = itemstats[ents[n]->type - I_AMMO_SG];
+                    if (!d->attacking && d->gunselect != is.info && !d->ammo[is.info]) gunselect(is.info, d);
+                }
                 break;
             }
         }
@@ -461,16 +547,37 @@ namespace entities
         loopv(ents)
         {
             extentity &e = *ents[i];
-            if(e.type==NOTUSED) continue;
+            if (e.type == NOTUSED)
+            {
+                continue;
+            }
+            if (!e.isactive())
+            {
+                continue;
+            }
             float dist = e.o.dist(o);
             if(e.type == TRIGGER && m_story)
             {
-                if(dist < e.attr3) trypickup(i, d);
+                const int radius = e.attr3 ? e.attr3 : ENTITY_COLLECT_RADIUS;
+                if (dist < radius)
+                {
+                    trypickup(i, d);
+                }
                 continue;
             }
-            if(d->state == CS_SPECTATOR && e.type != TELEPORT) continue;
-            if(!e.spawned() && e.type!=TELEPORT && e.type!=JUMPPAD) continue;
-            if(dist<(e.type==TELEPORT ? 16 : 12)) trypickup(i, d);
+            if (d->state == CS_SPECTATOR && e.type != TELEPORT)
+            {
+                continue;
+            }
+            if (!e.spawned() && e.type != TELEPORT && e.type != JUMPPAD)
+            {
+                continue;
+            }
+            const int radius = e.type == TELEPORT ? ENTITY_TELEPORT_RADIUS : ENTITY_COLLECT_RADIUS;
+            if (dist < radius)
+            {
+                trypickup(i, d);
+            }
         }
     }
 
@@ -499,7 +606,7 @@ namespace entities
     void putitems(packetbuf &p)            // puts items in network stream and also spawns them locally
     {
         putint(p, N_ITEMLIST);
-        loopv(ents) if(validitem(ents[i]->type) && canspawnitem(ents[i]->type))
+        loopv(ents) if(canspawnitem(ents[i]->type))
         {
             putint(p, i);
             putint(p, ents[i]->type);
@@ -507,11 +614,22 @@ namespace entities
         putint(p, -1);
     }
 
-    void resetspawns() { loopv(ents) ents[i]->clearspawned(); }
+    void resetspawns()
+    { 
+        loopv(ents)
+        {
+            ents[i]->clearspawned();
+            if (ents[i]->type == TRIGGER && ents[i]->attr5 == Trigger_Interest)
+            {
+                continue;
+            }
+            ents[i]->setactivity(true);
+        }
+    }
 
     void spawnitems(bool force)
     {
-        loopv(ents) if(validitem(ents[i]->type) && canspawnitem(ents[i]->type))
+        loopv(ents) if(canspawnitem(ents[i]->type))
         {
             ents[i]->setspawned(force || !server::delayspawn(ents[i]->type));
             ents[i]->lastspawn = lastmillis;
@@ -556,6 +674,36 @@ namespace entities
 
     void animatemapmodel(const extentity &e, int &anim, int &basetime)
     {
+        switch (e.triggerstate)
+        {
+            case TriggerState_Reset:
+            {
+                anim = ANIM_TRIGGER | ANIM_START;
+                break;
+            }
+
+            case TriggerState_Triggering:
+            {
+                anim = ANIM_TRIGGER;
+                basetime = e.lasttrigger;
+                break;
+            }
+
+            case TriggerState_Triggered:
+            {
+                anim = ANIM_TRIGGER | ANIM_END;
+                break;
+            }
+
+            case TriggerState_Resetting:
+            {
+                anim = ANIM_TRIGGER | ANIM_REVERSE;
+                basetime = e.lasttrigger;
+                break;
+            }
+
+            default: break;
+        }
     }
 
     void fixentity(extentity &e)
@@ -630,10 +778,30 @@ namespace entities
         return type >= 0 && type < MAXENTTYPES ? gentities[type].name : "";
     }
 
+    static inline void cleartriggerflags(extentity* entity)
+    {
+        if (entity)
+        {
+            entity->flags &= ~(EF_ANIM | EF_NOVIS | EF_NOSHADOW | EF_NOCOLLIDE);
+            entity->lasttrigger = 0;
+            entity->triggerstate = TriggerState_Null;
+        }
+    }
+
+    void resettriggers()
+    {
+        loopv(ents)
+        {
+            extentity* e = ents[i];
+            if (e->type != ET_MAPMODEL) continue;
+            cleartriggerflags(e);
+        }
+    }
+
     void editent(int i, bool local)
     {
         extentity &e = *ents[i];
-        //e.flags = 0;
+        cleartriggerflags(&e);
         if (local)
         {
             addmsg(N_EDITENT, "rii3ii5", i, (int)(e.o.x * DMF), (int)(e.o.y * DMF), (int)(e.o.z * DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
@@ -649,6 +817,67 @@ namespace entities
         if(e.type==FLAG) return 0.0f;
         return 4.0f;
     }
+
+    void triggerswap(int id, int id2)
+    {
+        loopv(ents)
+        {
+            extentity* entity = ents[i];
+            if (entity->type == TRIGGER && (entity->attr1 == id || (id2 && entity->attr1 == id2)))
+            {
+                entity->setactivity(entity->isactive() ? false : true);
+            }
+        }
+    }
+    ICOMMAND(triggerswap, "ii", (int* id, int* id2), triggerswap(*id, *id2));
+
+    void triggertoggle(int id)
+    {
+        loopv(ents)
+        {
+            extentity* entity = ents[i];
+            if (entity->type == TRIGGER && entity->attr1 == id)
+            {
+                entity->setactivity(entity->isactive() ? false : true);
+            }
+        }
+    }
+    ICOMMAND(triggertoggle, "i", (int* id), triggertoggle(*id));
+
+    void triggermapmodel(int id, int state, int sound)
+    {
+        extentity* entity = ents[id];
+        if (entity->type != ET_MAPMODEL)
+        {
+            return;
+        }
+
+        cleartriggerflags(entity);
+        if (state > TriggerState_Null)
+        {
+            entity->flags |= EF_ANIM;
+        }
+        switch (state)
+        {
+            case TriggerState_Triggering:
+            {
+                entity->flags |= EF_NOCOLLIDE;
+                break;
+            }
+
+            case TriggerState_Triggered:
+            {
+                entity->flags |= EF_NOCOLLIDE;
+                break;
+            }
+
+            default: break;
+        }
+        entity->triggerstate = state;
+        entity->lasttrigger = lastmillis;
+        playentitysound(S_TRIGGER, sound, entity->o);
+    }
+    ICOMMAND(triggermapmodel, "iib", (int* id, int* state, int* sound), triggermapmodel(*id, *state, *sound));
 #endif
 }
 

@@ -26,6 +26,9 @@ enum                            // static entity types
 
 #define validitem(n) (((n) >= I_AMMO_SG && (n) <= I_INVULNERABILITY))
 
+const int ENTITY_TELEPORT_RADIUS = 16;
+const int ENTITY_COLLECT_RADIUS = 12;
+
 static const struct gentityinfo { const char *name, *prettyname, *file; } gentities[MAXENTTYPES] =
 {
     { "none",            "None",               NULL                   },
@@ -92,4 +95,20 @@ static struct itemstat { int add, max, spawntime, info, sound; } itemstats[] =
     { 30000, 60000, 100, PU_AMMO,            S_INFINITEAMMO,    }, // infinite ammo
     { 30000, 60000, 100, PU_AGILITY,         S_AGILITY,         }, // agility
     { 15000, 30000, 100, PU_INVULNERABILITY, S_INVULNERABILITY, }  // invulnerability
+};
+
+enum
+{
+    Trigger_Item = 0,
+    Trigger_Interest,
+    Trigger_RespawnPoint
+};
+
+enum
+{
+    TriggerState_Null = -1,
+    TriggerState_Reset,
+    TriggerState_Triggering,
+    TriggerState_Triggered,
+    TriggerState_Resetting
 };

@@ -35,21 +35,24 @@ enum
     EF_OCTA       = 1<<5,
     EF_RENDER     = 1<<6,
     EF_SOUND      = 1<<7,
-    EF_SPAWNED    = 1<<8
+    EF_SPAWNED    = 1<<8,
+    EF_ACTIVE     = 1<<9
 
 };
 
 struct extentity : entity                       // part of the entity that doesn't get saved to disk
 {
-    int flags, lasttrigger, lastspawn;
+    int flags, triggerstate, lasttrigger, lastspawn;
     extentity *attached;
 
-    extentity() : flags(0), lasttrigger(0), lastspawn(0), attached(NULL) {}
+    extentity() : flags(0), triggerstate(-1), lasttrigger(0), lastspawn(0), attached(NULL) {}
 
     bool spawned() const { return (flags&EF_SPAWNED) != 0; }
     void setspawned(bool val) { if(val) flags |= EF_SPAWNED; else flags &= ~EF_SPAWNED; }
     void setspawned() { flags |= EF_SPAWNED; }
     void clearspawned() { flags &= ~EF_SPAWNED; }
+    void setactivity(bool val) { if (val) flags |= EF_ACTIVE; else flags &= ~EF_ACTIVE; }
+    bool isactive() const { return (flags & EF_ACTIVE) != 0; }
 };
 
 #define MAXENTS 10000

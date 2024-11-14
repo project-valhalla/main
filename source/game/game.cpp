@@ -107,6 +107,7 @@ namespace game
     {
         removeprojectiles();
         clearmonsters();
+        entities::resettriggers();
     }
 
     int vooshgun;
@@ -302,10 +303,64 @@ namespace game
         if(self->clientnum>=0) c2sinfo();   // do this last, to reduce the effective frame lag
     }
 
+    float proximityscore(float x, float lower, float upper)
+    {
+        if (x <= lower) return 1.0f;
+        if (x >= upper) return 0.0f;
+        float a = x - lower, b = x - upper;
+        return (b * b) / (a * a + b * b);
+    }
+
+    // Avoid spawning near other players.
+    float ratespawn(dynent* pl, const extentity& e)
+    {
+        gameent* d = (gameent*)pl;
+        vec loc = vec(e.o).addz(d->eyeheight);
+        float maxrange = !m_noitems(mutators) ? 400.0f : (cmode ? 300.0f : 110.0f);
+        float minplayerdist = maxrange;
+        loopv(players)
+        {
+            const gameent* p = players[i];
+            if (p == d)
+            {
+                if (m_noitems(mutators) || (p->state != CS_ALIVE && lastmillis - p->lastpain > 3000))
+                {
+                    continue;
+                }
+            }
+            else if (p->state != CS_ALIVE || isally(p, d)) continue;
+
+            vec dir = vec(p->o).sub(loc);
+            float dist = dir.squaredlen();
+            if (dist >= minplayerdist * minplayerdist) continue;
+            dist = sqrtf(dist);
+            dir.mul(1 / dist);
+
+            // Scale actual distance if not in line of sight.
+            if (raycube(loc, dir, dist) < dist) dist *= 1.5f;
+            minplayerdist = min(minplayerdist, dist);
+        }
+        float rating = 1.0f - proximityscore(minplayerdist, 80.0f, maxrange);
+        return rating;
+    }
+
+    void pickgamespawn(gameent* d)
+    {
+        int forcedentity = m_story && d == self && entities::respawnent >= 0 ? entities::respawnent : -1;
+        int tag = m_teammode ? d->team : 0;
+        if (cmode)
+        {
+            cmode->pickspawn(d);
+        }
+        else
+        {
+            findplayerspawn(d, forcedentity, tag);
+        }
+    }
+
     void spawnplayer(gameent *d)   // place at random spawn
     {
-        if(cmode) cmode->pickspawn(d);
-        else findplayerspawn(d, -1, m_teammode ? d->team : 0);
+        pickgamespawn(d);
         spawnstate(d);
         if(d==self)
         {
@@ -411,7 +466,7 @@ namespace game
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
 
-    bool isally(gameent *a, gameent *b)
+    bool isally(const gameent *a, const gameent *b)
     {
         return (m_teammode && validteam(a->team) && validteam(b->team) && sameteam(a->team, b->team))
                || (m_role && a->role == b->role) || (m_invasion && a->type == ENT_PLAYER && b->type == ENT_PLAYER);
@@ -887,6 +942,7 @@ namespace game
         ai::savewaypoints();
         ai::clearwaypoints(true);
 
+        entities::respawnent = -1;
         if(!m_mp(gamemode)) spawnplayer(self);
         else findplayerspawn(self, -1, m_teammode ? self->team : 0);
         entities::resetspawns();

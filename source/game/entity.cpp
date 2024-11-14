@@ -329,13 +329,16 @@ namespace entities
             if (d == hud)
             {
                 conoutf(CON_GAMEINFO, "\f2%s power-up obtained", gentities[type].prettyname);
+                if (validsound(is.announcersound))
+                {
+                    playsound(is.announcersound, NULL, NULL, NULL, SND_ANNOUNCER);
+                }
             }
             else
             {
                 conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
                 playsound(S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
             }
-            
         }
     }
 

@@ -311,6 +311,7 @@ namespace game
         {
             case BNC_GRENADE2:
                 bnc.collidetype = COLLIDE_ELLIPSE;
+                // fall through
             case BNC_GRENADE:
                 bnc.bouncesound = S_BOUNCE_GRENADE;
                 break;

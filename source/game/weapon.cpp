@@ -276,8 +276,16 @@ namespace game
         {
             float typeradius = 1.4f;
             if(type == BNC_EJECT) typeradius = 0.3f;
+            else if (type == BNC_DEBRIS) typeradius = 0.9f;
             radius = xradius = yradius = typeradius;
             eyeheight = aboveeye = radius;
+        }
+
+        void checkliquid()
+        {
+            int material = lookupmaterial(o);
+            bool isinwater = isliquidmaterial(material & MATF_VOLUME);
+            inwater = isinwater ? material & MATF_VOLUME : MAT_AIR;
         }
     };
 
@@ -341,6 +349,7 @@ namespace game
         bnc.resetinterp();
 
         bnc.lastpos = owner->o;
+        bnc.checkliquid();
     }
 
     VARP(blood, 0, 1, 1);
@@ -374,8 +383,8 @@ namespace game
     void projstain(vec dir, const vec &pos, int atk)
     {
         vec negdir = vec(dir).neg();
-        float radius = attacks[atk].exprad * 0.75f;
-        addstain(STAIN_SCORCH, pos, negdir, radius);
+        float radius = attacks[atk].exprad;
+        addstain(STAIN_SCORCH, pos, negdir, radius * 0.75f);
         if(lookupmaterial(pos) & MAT_WATER) return; // no glow in water
         int gun = attacks[atk].gun;
         if(gun != GUN_ROCKET)
@@ -383,7 +392,7 @@ namespace game
             int color = 0x00FFFF;
             if(gun == GUN_PULSE) color = 0xEE88EE;
             else if(gun == GUN_GRENADE) color = 0x74BCF9;
-            addstain(STAIN_GLOW2, pos, negdir, radius / 2, color);
+            addstain(STAIN_GLOW2, pos, negdir, radius * 0.5f, color);
         }
     }
 
@@ -533,6 +542,12 @@ namespace game
             projsound = projchan = -1;
         }
 
+        void checkliquid()
+        {
+            int material = lookupmaterial(o);
+            bool isinwater = isliquidmaterial(material & MATF_VOLUME);
+            inwater = isinwater ? material & MATF_VOLUME : MAT_AIR;
+        }
     };
     vector<projectile> projs;
 
@@ -554,6 +569,7 @@ namespace game
         p.speed = attacks[atk].projspeed;
         p.lifetime = attacks[atk].lifetime;
         p.offsetmillis = OFFSETMILLIS;
+        p.checkliquid();
     }
 
     void damageeffect(int damage, dynent *d, vec p, int atk, int color, bool headshot)
@@ -937,10 +953,7 @@ namespace game
                 {
                     particle_splash(PART_WATER, 200, 250, p.o, 0xFFFFFF, 0.09f, 500, 1);
                     particle_splash(PART_SPLASH, 10, 80, p.o, 0xFFFFFF, 7.0f, 250, -1);
-                    if (transition == LiquidTransition_In)
-                    {
-                        playsound(S_IMPACT_WATER_PROJ, NULL, &p.o);
-                    }
+                    playsound(S_IMPACT_WATER_PROJ, NULL, &p.o);
                 }
                 for(int rtime = time; rtime > 0;)
                 {

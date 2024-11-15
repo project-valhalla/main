@@ -2120,6 +2120,7 @@ namespace game
             {
                 int state = getint(p);
                 updateroundstate(state);
+                break;
             }
 
             case N_CURRENTMASTER:

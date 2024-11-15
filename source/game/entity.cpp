@@ -43,7 +43,7 @@ namespace entities
         {
             case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL: case I_AMMO_GRENADE:
             {
-                if (m_tactics(mutators) || m_voosh(mutators))
+                if (m_insta(mutators) || m_tactics(mutators) || m_voosh(mutators))
                 {
                     return false;
                 }

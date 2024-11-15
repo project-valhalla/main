@@ -9,7 +9,7 @@ TESS_BIN=${TESS_DATA}/bin/bin_unix
 
 # TESS_OPTIONS contains any command line options you would like to start Tesseract with.
 #TESS_OPTIONS=""
-TESS_OPTIONS="-u${HOME}/.valhallaproject"
+TESS_OPTIONS="-u${HOME}/.valhalla"
 
 # SYSTEM_NAME should be set to the name of your operating system.
 #SYSTEM_NAME=Linux

@@ -11,4 +11,4 @@ IF EXIST bin\bin64\tesseract.exe (
     )
 )
 
-start %TESS_BIN%\tesseract.exe "-u$HOME\My Games\ValhallaProject" -glog.txt %*
+start %TESS_BIN%\tesseract.exe "-u$HOME\My Games\VALHALLA" -glog.txt %*

@@ -949,7 +949,7 @@ namespace ai
                 {
                     switch(wpspot(d, d->ai->route[n], true))
                     {
-                        case 2: d->ai->clear(false);
+                        case 2: d->ai->clear(false); // fall through
                         case 1: return true; // not close enough to pop it yet
                         case 0: default: break;
                     }

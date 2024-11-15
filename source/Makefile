@@ -1,5 +1,5 @@
 CXXFLAGS= -O3 -fomit-frame-pointer -ffast-math
-override CXXFLAGS+= -Wall -fsigned-char -fno-exceptions -fno-rtti
+override CXXFLAGS+= -Wall -Wimplicit-fallthrough -fsigned-char -fno-exceptions -fno-rtti
 
 PLATFORM= $(shell uname -s | tr '[:lower:]' '[:upper:]')
 PLATFORM_ARCH= $(shell uname -m)

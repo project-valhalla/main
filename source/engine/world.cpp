@@ -67,6 +67,7 @@ bool getentboundingbox(const extentity &e, ivec &o, ivec &r)
                 break;
             }
         // invisible mapmodels use entselradius
+        // fall through
         default:
             o = ivec(vec(e.o).sub(entselradius));
             r = ivec(vec(e.o).add(entselradius+1));
@@ -120,6 +121,7 @@ void modifyoctaentity(int flags, int id, extentity &e, cube *c, const ivec &cor,
                         break;
                     }
                     // invisible mapmodel
+                    // fall through
                 default:
                     oe.other.add(id);
                     break;
@@ -179,6 +181,7 @@ void modifyoctaentity(int flags, int id, extentity &e, cube *c, const ivec &cor,
                         break;
                     }
                     // invisible mapmodel
+                    // fall through
                 default:
                     oe.other.removeobj(id);
                     break;

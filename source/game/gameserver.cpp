@@ -598,6 +598,7 @@ namespace server
                 case '!':
                     mode++;
                     if(mode[0] != '?') break;
+                    // fall through
                 case '?':
                     mode++;
                     loopk(NUMGAMEMODES) if(searchmodename(gamemodes[k].name, mode))

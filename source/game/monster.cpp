@@ -729,7 +729,7 @@ namespace game
         }
         defformatstring(newbestscore, "%d", bestscore);
         alias(bestscoremap, newbestscore);
-        conoutf(CON_INFO, "\f2Total score (time + time penalties): %d seconds (best so far: %d seconds)", score, bestscore);
+        conoutf(CON_INFO, "\f2Total score (time + time penalties): %d seconds (best so far: %d seconds)", score, bestScore);
     }
 
     void endsp(bool allkilled)

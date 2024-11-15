@@ -2587,7 +2587,7 @@ namespace server
     {
         if(!gameroundlimit || gamewaiting) return false;
         rounds++;
-        if(rounds >= gameroundlimit)
+        if(rounds > gameroundlimit)
         {
             if(checkovertime()) return false;
             startintermission();

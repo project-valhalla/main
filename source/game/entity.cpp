@@ -842,8 +842,12 @@ namespace entities
 
     void triggermapmodel(int id, int state, int sound = -1)
     {
-        extentity* entity = ents[id];
-        if (!entity || entity->type != ET_MAPMODEL)
+        extentity* entity = NULL;
+        if (ents.inrange(id))
+        {
+            entity = ents[id];
+        }
+        if (!entity || !m_story || entity->type != ET_MAPMODEL)
         {
             return;
         }

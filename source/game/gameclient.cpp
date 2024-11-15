@@ -329,10 +329,10 @@ namespace game
 
     bool isprivileged(int cn)
     {
-        gameent *d = getclient(cn);
+        gameent* d = cn < 0 ? self : getclient(cn);
         return d && d->privilege >= PRIV_MASTER;
     }
-    ICOMMAND(isprivileged, "i", (int *cn), intret(isprivileged(*cn) ? 1 : 0));
+    ICOMMAND(isprivileged, "b", (int *cn), intret(isprivileged(*cn) ? 1 : 0));
 
     bool isauth(int cn)
     {

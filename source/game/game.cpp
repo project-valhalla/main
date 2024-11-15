@@ -311,6 +311,11 @@ namespace game
         return (b * b) / (a * a + b * b);
     }
 
+    static inline float harmonicmean(float a, float b)
+    {
+        return a + b > 0 ? 2 * a * b / (a + b) : 0.0f;
+    }
+
     // Avoid spawning near other players.
     float ratespawn(dynent* pl, const extentity& e)
     {
@@ -341,7 +346,7 @@ namespace game
             minplayerdist = min(minplayerdist, dist);
         }
         float rating = 1.0f - proximityscore(minplayerdist, 80.0f, maxrange);
-        return rating;
+        return cmode ? harmonicmean(rating, cmode->ratespawn(d, e)) : rating;
     }
 
     void pickgamespawn(gameent* d)

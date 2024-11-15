@@ -1311,12 +1311,24 @@ struct spawninfo
     float weight;
 };
 
+bool checkspawntags = false;
+
 // Compiles a vector of available playerstarts, each with a non-zero weight
 // which serves as a measure of its desirability for a spawning player.
 float gatherspawninfos(dynent* d, int tag, vector<spawninfo>& spawninfos)
 {
     const vector<extentity*>& ents = entities::getents();
     float total = 0.0f;
+    static int checktag = 0;
+    if(tag > 0 && checkspawntags)
+    {
+        checktag = findentity(ET_PLAYERSTART, 0, -1, tag);
+        checkspawntags = false;
+    }
+    if(checktag < 0)
+    {
+        tag = 0;
+    }
     loopv(ents)
     {
         const extentity& e = *ents[i];
@@ -1359,10 +1371,10 @@ void findplayerspawn(dynent* d, int forceent, int tag)
     const vector<extentity*>& ents = entities::getents();
     d->pitch = 0;
     d->roll = 0;
-    if (ents.inrange(forceent) && tryspawn(d, *ents[forceent])) return;
+    if(ents.inrange(forceent) && tryspawn(d, *ents[forceent])) return;
     vector<spawninfo> spawninfos;
     float total = gatherspawninfos(d, tag, spawninfos);
-    while (const extentity* e = poprandomspawn(spawninfos, total)) if (tryspawn(d, *e)) return;
+    while (const extentity* e = poprandomspawn(spawninfos, total)) if(tryspawn(d, *e)) return;
     d->o = vec(0.5f * worldsize).addz(1);
     d->yaw = 0;
     entinmap(d);
@@ -1402,6 +1414,8 @@ void resetmap()
     nospeclights = 0;
     smalphalights = 0;
     volumetricsmalphalights = 0;
+
+    checkspawntags = true;
 }
 
 void startmap(const char *name)

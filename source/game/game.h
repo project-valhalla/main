@@ -686,6 +686,7 @@ namespace game
         virtual bool aipursue(gameent *d, ai::aistate &b) { return false; }
         virtual int getteamscore(int team) { return 0; }
         virtual int respawnwait(gameent* d, bool seconds = false) { return 0; }
+        virtual float ratespawn(gameent* d, const extentity& e) { return 1.0f; }
         virtual float clipconsole(float w, float h) { return 0; }
     };
 

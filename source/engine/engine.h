@@ -47,7 +47,7 @@ struct textinfo
 // number of text lines to fill the whole screen (higher = smaller text)
 #define CONSOLETEXTROWS 45
 #define LOADSCREENTEXTROWS 45
-#define UITEXTROWS 36
+#define UITEXTROWS 32
 #define PARTICLETEXTROWS 15 // NOTE: particles use a different scale
 
 extern Shader *textshader;

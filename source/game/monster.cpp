@@ -22,8 +22,8 @@ namespace game
 {
     static vector<int> teleports;
 
-    VAR(skill, 1, 8, 10);
-    VAR(killsendsp, 0, 1, 1);
+    VAR(spskill, 1, 8, 10);
+    VAR(spkillsend, 0, 1, 1);
 
     bool monsterhurt;
     vec monsterhurtpos;
@@ -32,7 +32,7 @@ namespace game
     {
         int monsterstate; // one of MS_*, MS_NONE means it's not an NPC
 
-        int mtype, tag; // see monstertypes table
+        int mtype, id; // see monstertypes table
         gameent *enemy; // monster wants to kill this entity
         float targetyaw; // monster wants to look in this direction
         int trigger; // millis at which transition to another monsterstate takes place
@@ -44,8 +44,8 @@ namespace game
         int lastunblocked, detonating;
         int bursting, shots;
 
-        monster(int _type, int _yaw, int _tag, int _canmove, int _state, int _trigger, int _move) :
-            monsterstate(_state), tag(_tag),
+        monster(int _type, int _yaw, int _id, int _canmove, int _state, int _trigger, int _move) :
+            monsterstate(_state), id(_id),
             stacked(NULL),
             stackpos(0, 0, 0)
         {
@@ -355,13 +355,18 @@ namespace game
         void monsterdeath(int forcestate = -1, int atk = -1, int flags = 0)
         {
             state = CS_DEAD;
+            int killflags = 0;
+            if (flags & HIT_HEAD)
+            {
+                killflags |= KILL_HEADSHOT;
+            }
             if (validdeathstate(forcestate))
             {
                 deathstate = forcestate;
             }
             else
             {
-                deathstate = getdeathstate(this, atk, flags);
+                deathstate = getdeathstate(this, atk, killflags);
             }
             lastpain = lastmillis;
             exploding = false;
@@ -371,6 +376,8 @@ namespace game
             {
                 deathstate = Death_Gib;
             }
+            const bool isnoisy = deathstate != Death_Fist && deathstate != Death_Gib && deathstate != Death_Headshot && deathstate != Death_Disrupt;
+            managedeatheffects(this);
             if (deathstate == Death_Gib)
             {
                 if (gore)
@@ -383,7 +390,7 @@ namespace game
                     game::explode(true, this, o, vel, NULL, attacks[matk].damage, matk);
                 }
             }
-            else if (!(flags & HIT_HEAD))
+            else if (deathscream && isnoisy)
             {
                 int diesound = monstertypes[mtype].diesound;
                 if (validsound(diesound))
@@ -391,7 +398,7 @@ namespace game
                     playsound(diesound, this);
                 }
             }
-            monsterkilled(flags & HIT_HEAD ? KILL_HEADSHOT : 0);
+            monsterkilled(id, killflags);
         }
 
         void heal()
@@ -480,13 +487,13 @@ namespace game
         d->stackpos = o->o;
     }
 
-    int nummonsters(int tag, int state)
+    int nummonsters(int id, int state)
     {
         int n = 0;
-        loopv(monsters) if(monsters[i]->tag==tag && (monsters[i]->state==CS_ALIVE ? state!=1 : state>=1)) n++;
+        loopv(monsters) if(monsters[i]->id == id && (monsters[i]->state==CS_ALIVE ? state!=1 : state>=1)) n++;
         return n;
     }
-    ICOMMAND(nummonsters, "ii", (int *tag, int *state), intret(nummonsters(*tag, *state)));
+    ICOMMAND(nummonsters, "ii", (int *id, int *state), intret(nummonsters(*id, *state)));
 
     void preloadmonsters()
     {
@@ -540,7 +547,7 @@ namespace game
         if(m_invasion)
         {
             nextmonster = mtimestart = lastmillis+10000;
-            monstertotal = spawnremain = skill*10;
+            monstertotal = spawnremain = spskill * 10;
         }
         else if(m_story || m_edit)
         {
@@ -554,33 +561,31 @@ namespace game
                 m->o = e.o;
                 entinmap(m);
                 updatedynentcache(m);
-                monstertotal++;
+                if (m->canmove)
+                {
+                    // Inactive monsters are unnecessary.
+                    monstertotal++;
+                }
             }
         }
         teleports.setsize(0);
         loopv(entities::ents) if(entities::ents[i]->type==TELEPORT) teleports.add(i);
     }
 
-    void endsp(bool allkilled)
-    {
-        conoutf(CON_GAMEINFO, "\f2You have cleared the map!");
-        monstertotal = 0;
-        forceintermission();
-    }
-    ICOMMAND(endsp, "", (), endsp(false));
-
-    void monsterkilled(int flags)
+    void monsterkilled(int id, int flags)
     {
         if(flags) checkannouncements(self, flags);
         if(!m_invasion && !m_story) return;
         numkilled++;
         self->frags = numkilled;
         remain = monstertotal-numkilled;
-        if(remain>0 && remain<=5) conoutf(CON_GAMEINFO, "\f2%d monster(s) remaining", remain);
+        if (remain > 0 && remain <= 5) conoutf(CON_GAMEINFO, "\f2%d kill%s remaining", remain, remain == 1 ? "" : "s");
         if(remain == 5 || remain == 1)
         {
             playsound(remain == 5 ? S_ANNOUNCER_5_KILLS : S_ANNOUNCER_1_KILL, NULL, NULL, NULL, SND_ANNOUNCER);
         }
+        defformatstring(hook, "monsterdead_%d", id);
+        execident(hook);
     }
 
     void checkmonsterinfight(monster *that, gameent *enemy)
@@ -620,7 +625,7 @@ namespace game
             spawnmonster();
         }
 
-        if(m_invasion && killsendsp && monstertotal && !spawnremain && numkilled==monstertotal) endsp(true);
+        if((m_invasion || (m_story && spkillsend)) && monstertotal && !spawnremain && numkilled == monstertotal) endsp(true);
 
         bool monsterwashurt = monsterhurt;
 
@@ -681,14 +686,18 @@ namespace game
                     a[ai++] = modelattach("tag_muzzle", &m.muzzle);
                 }
                 float fade = 1;
-                if(m.state==CS_DEAD) fade -= clamp(float(lastmillis - (m.lastpain + 9000))/1000, 0.0f, 1.0f);
+                if (m.state == CS_DEAD)
+                {
+                    const int millis = m.deathstate == Death_Fall ? 1000 : 9000;
+                    fade -= clamp(float(lastmillis - (m.lastpain + millis)) / 1000, 0.0f, 1.0f);
+                }
                 int attackanimation = 0;
                 if(m.monsterstate == MS_ATTACKING || m.bursting)
                 {
                     if(m.attacking > ACT_MELEE) attackanimation = ANIM_SHOOT;
                     else attackanimation = ANIM_MELEE;
                 }
-                renderai(&m, monstertypes[m.mtype].mdlname, a, 0, -attackanimation, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
+                rendermonster(&m, monstertypes[m.mtype].mdlname, a, -attackanimation, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
             }
         }
     }
@@ -703,21 +712,33 @@ namespace game
         m->monsterpain(damage, at, atk, flags);
     }
 
-    void spsummary(int accuracy)
+    void calculatesummary()
     {
         int pen, score = 0;
-        pen = ((lastmillis-maptime)*100)/game::scaletime(1000); score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time taken: %d seconds (%d simulated seconds)", pen, (lastmillis-maptime)/1000);
-        pen = self->deaths*60; score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time penalty for %d deaths (1 minute each): %d seconds", self->deaths, pen);
-        pen = remain*10;          score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time penalty for %d monsters remaining (10 seconds each): %d seconds", remain, pen);
-        pen = (10-skill)*20;      score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time penalty for lower skill level (20 seconds each): %d seconds", pen);
-        pen = 100-accuracy;       score += pen; if(pen) conoutf(CON_GAMEINFO, "\f2Time penalty for missed shots (1 second each %%): %d seconds", pen);
-        defformatstring(aname, "bestscore_%s", getclientmap());
-        const char *bestsc = getalias(aname);
-        int bestscore = *bestsc ? parseint(bestsc) : score;
-        if(score<bestscore) bestscore = score;
-        defformatstring(nscore, "%d", bestscore);
-        alias(aname, nscore);
-        conoutf(CON_GAMEINFO, "\f2Total score (time + time penalties): %d seconds (best so far: %d seconds)", score, bestscore);
+        pen = ((lastmillis-maptime) * 100) / game::scaletime(1000);
+        score += pen; if(pen) conoutf(CON_INFO, "\f2Time taken: %d seconds (%d simulated seconds)", pen, (lastmillis-maptime) / 1000);
+        pen = self->deaths * 60;   score += pen; if(pen) conoutf(CON_INFO, "\f2Time penalty for %d deaths (1 minute each): %d seconds", self->deaths, pen);
+        pen = remain * 10;         score += pen; if(pen) conoutf(CON_INFO, "\f2Time penalty for %d monsters remaining (10 seconds each): %d seconds", remain, pen);
+        pen = (10 - spskill) * 20; score += pen; if(pen) conoutf(CON_INFO, "\f2Time penalty for lower skill level (20 seconds each): %d seconds", pen);
+        defformatstring(bestscoremap, "bestscore_%s", getclientmap());
+        const char * bestscore = getalias(bestscoremap);
+        int bestScore = *bestscore ? parseint(bestscore) : score;
+        if (score < bestScore)
+        {
+            bestScore = score;
+        }
+        defformatstring(newbestscore, "%d", bestscore);
+        alias(bestscoremap, newbestscore);
+        conoutf(CON_INFO, "\f2Total score (time + time penalties): %d seconds (best so far: %d seconds)", score, bestScore);
     }
+
+    void endsp(bool allkilled)
+    {
+        conoutf(CON_GAMEINFO, "\f2You have cleared the map!");
+        monstertotal = 0;
+        forceintermission();
+        calculatesummary();
+    }
+    ICOMMAND(endsp, "", (), endsp(false));
 }
 

@@ -1104,7 +1104,7 @@ namespace physics
         if (physsteps <= 0)
         {
             interpolateposition(d);
-            return false;
+            return true;
         }
 
         d->o = d->newpos;

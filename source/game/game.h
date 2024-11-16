@@ -20,6 +20,7 @@ enum
     ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
     ANIM_GUN_IDLE, ANIM_GUN_SHOOT, ANIM_GUN_SHOOT2, ANIM_GUN_MELEE, ANIM_GUN_SWITCH, ANIM_GUN_TAUNT,
     ANIM_VWEP_IDLE, ANIM_VWEP_SHOOT, ANIM_VWEP_MELEE,
+    ANIM_TRIGGER,
     NUMANIMS
 };
 
@@ -38,6 +39,7 @@ static const char * const animnames[] =
     "edit", "lag", "taunt", "win", "lose",
     "gun idle", "gun shoot", "gun shoot 2", "gun melee", "gun switch", "gun taunt",
     "vwep idle", "vwep shoot", "vwep melee",
+    "trigger",
 };
 
 // network quantization scale
@@ -203,11 +205,15 @@ struct gamestate
             case I_HEALTH:
             case I_MEGAHEALTH:
             case I_ULTRAHEALTH:
-                return health<is.max;
+            {
+                return health < is.max;
+            }
 
             case I_YELLOWSHIELD:
             case I_REDSHIELD:
-                return shield<is.max;
+            {
+                return shield < is.max;
+            }
 
             case I_DDAMAGE:
             case I_HASTE:
@@ -215,15 +221,20 @@ struct gamestate
             case I_INFINITEAMMO:
             case I_AGILITY:
             case I_INVULNERABILITY:
+            {
                 if(powerupmillis < is.info || poweruptype == is.info)
                 {
                     return true;
                 }
                 return false;
+            }
 
             default:
-                return ammo[is.info]<is.max;
+            {
+                return ammo[is.info] < is.max;
+            }
         }
+        return false;
     }
 
     void pickup(int type)
@@ -235,13 +246,17 @@ struct gamestate
             case I_HEALTH:
             case I_MEGAHEALTH:
             case I_ULTRAHEALTH:
+            {
                 health = min(health+is.add, is.max);
                 break;
+            }
 
             case I_YELLOWSHIELD:
             case I_REDSHIELD:
+            {
                 shield = min(shield+is.add, is.max);
                 break;
+            }
 
             case I_DDAMAGE:
             case I_ARMOR:
@@ -249,13 +264,17 @@ struct gamestate
             case I_INFINITEAMMO:
             case I_AGILITY:
             case I_INVULNERABILITY:
+            {
                 poweruptype = is.info;
                 powerupmillis = min(powerupmillis+is.add, is.max);
                 break;
+            }
 
             default:
+            {
                 ammo[is.info] = min(ammo[is.info]+is.add, is.max);
                 break;
+            }
         }
     }
 
@@ -618,6 +637,9 @@ namespace entities
     extern void pickupeffects(int n, gameent *d);
     extern void teleporteffects(gameent *d, int tp, int td, bool local = true);
     extern void jumppadeffects(gameent *d, int jp, bool local = true);
+    extern void resettriggers();
+
+    extern int respawnent;
 
     extern vector<extentity*> ents;
 }
@@ -680,6 +702,7 @@ namespace game
         virtual bool aipursue(gameent *d, ai::aistate &b) { return false; }
         virtual int getteamscore(int team) { return 0; }
         virtual int respawnwait(gameent* d, bool seconds = false) { return 0; }
+        virtual float ratespawn(gameent* d, const extentity& e) { return 1.0f; }
         virtual float clipconsole(float w, float h) { return 0; }
     };
 
@@ -694,6 +717,7 @@ namespace game
     extern void clientdisconnected(int cn, bool notify = true);
     extern void clearclients(bool notify = true);
     extern void startgame();
+    extern void pickgamespawn(gameent* d);
     extern void spawnplayer(gameent *d);
     extern void spawneffect(gameent *d);
     extern void respawn();
@@ -707,10 +731,11 @@ namespace game
     extern void doaction(int act);
     extern void hurt(gameent* d);
     extern void suicide(gameent* d);
+    extern void managedeatheffects(gameent* d);
 
     extern bool clientoption(const char* arg);
     extern bool gamewaiting, betweenrounds, hunterchosen;
-    extern bool isally(gameent* a, gameent* b);
+    extern bool isally(const gameent* a, const gameent* b);
     extern bool isinvulnerable(gameent* target, gameent* actor);
 
     extern int vooshgun;
@@ -719,6 +744,7 @@ namespace game
     extern int following, specmode;
     extern int smoothmove, smoothdist;
     extern int gore;
+    extern int deathscream;
     extern int getdeathstate(gameent* d, int atk, int flags);
 
     extern const char* colorname(gameent* d, const char* name = NULL, const char* alt = NULL, const char* color = "");
@@ -851,7 +877,7 @@ namespace game
     extern void suicidemonster(monster *m);
     extern void healmonsters();
     extern void hitmonster(int damage, monster *m, gameent *at, int atk, int flags = 0);
-    extern void monsterkilled(int flags = 0);
+    extern void monsterkilled(int id, int flags = 0);
     extern void checkmonsterinfight(monster *that, gameent *enemy);
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);
@@ -877,7 +903,7 @@ namespace game
     extern void clearragdolls();
     extern void moveragdolls();
     extern void syncplayer();
-    extern void renderai(dynent* d, const char* mdlname, modelattach* attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade = 1, bool ragdoll = false);
+    extern void rendermonster(dynent* d, const char* mdlname, modelattach* attachments, const int attack, const int attackdelay, const int lastaction, const int lastpain, const float fade = 1, const bool ragdoll = false);
 
     extern int getplayercolor(gameent* d, int team);
     extern int chooserandomplayermodel(int seed);

@@ -67,6 +67,7 @@ bool getentboundingbox(const extentity &e, ivec &o, ivec &r)
                 break;
             }
         // invisible mapmodels use entselradius
+        // fall through
         default:
             o = ivec(vec(e.o).sub(entselradius));
             r = ivec(vec(e.o).add(entselradius+1));
@@ -120,6 +121,7 @@ void modifyoctaentity(int flags, int id, extentity &e, cube *c, const ivec &cor,
                         break;
                     }
                     // invisible mapmodel
+                    // fall through
                 default:
                     oe.other.add(id);
                     break;
@@ -179,6 +181,7 @@ void modifyoctaentity(int flags, int id, extentity &e, cube *c, const ivec &cor,
                         break;
                     }
                     // invisible mapmodel
+                    // fall through
                 default:
                     oe.other.removeobj(id);
                     break;
@@ -1305,57 +1308,79 @@ int findentity(int type, int index, int attr1, int attr2)
     return -1;
 }
 
-int spawncycle = -1;
+struct spawninfo
+{ 
+    const extentity* e;
+    float weight;
+};
 
-void findplayerspawn(dynent *d, int forceent, int tag) // place at random spawn
+bool checkspawntags = false;
+
+// Compiles a vector of available playerstarts, each with a non-zero weight
+// which serves as a measure of its desirability for a spawning player.
+float gatherspawninfos(dynent* d, int tag, vector<spawninfo>& spawninfos)
 {
-    int pick = forceent;
-    if(pick<0)
+    const vector<extentity*>& ents = entities::getents();
+    float total = 0.0f;
+    static int checktag = 0;
+    if(tag > 0 && checkspawntags)
     {
-        int r = rnd(10)+1;
-        pick = spawncycle;
-        loopi(r)
-        {
-            pick = findentity(ET_PLAYERSTART, pick+1, -1, tag);
-            if(pick < 0) break;
-        }
-        if(pick < 0 && tag)
-        {
-            pick = spawncycle;
-            loopi(r)
-            {
-                pick = findentity(ET_PLAYERSTART, pick+1, -1, 0);
-                if(pick < 0) break;
-            }
-        }
-        if(pick >= 0) spawncycle = pick;
+        checktag = findentity(ET_PLAYERSTART, 0, -1, tag);
+        checkspawntags = false;
     }
-    if(pick>=0)
+    if(checktag < 0)
     {
-        const vector<extentity *> &ents = entities::getents();
-        d->pitch = 0;
-        d->roll = 0;
-        for(int attempt = pick;;)
-        {
-            d->o = ents[attempt]->o;
-            d->yaw = ents[attempt]->attr1;
-            if(entinmap(d, true)) break;
-            attempt = findentity(ET_PLAYERSTART, attempt+1, -1, tag);
-            if(attempt<0 || attempt==pick)
-            {
-                d->o = ents[pick]->o;
-                d->yaw = ents[pick]->attr1;
-                entinmap(d);
-                break;
-            }
-        }
+        tag = 0;
     }
-    else
+    loopv(ents)
     {
-        d->o.x = d->o.y = d->o.z = 0.5f*worldsize;
-        d->o.z += 1;
-        entinmap(d);
+        const extentity& e = *ents[i];
+        if (e.type != ET_PLAYERSTART || e.attr2 != tag) continue;
+        spawninfo& s = spawninfos.add();
+        s.e = &e;
+        s.weight = game::ratespawn(d, e);
+        total += s.weight;
     }
+    return total;
+}
+
+// Randomly picks a weighted spawn from the provided vector and removes it.
+// The probability of a given spawn being picked is proportional to its weight.
+// If all weights are zero, the index is picked uniformly.
+static const extentity* poprandomspawn(vector<spawninfo>& spawninfos, float& total)
+{
+    if (spawninfos.empty()) return NULL;
+    int index = 0;
+    if (total > 0.0f)
+    {
+        float x = rndscale(total);
+        do x -= spawninfos[index].weight; while (x > 0 && ++index < spawninfos.length() - 1);
+    }
+    else index = rnd(spawninfos.length());
+    spawninfo s = spawninfos.removeunordered(index);
+    total -= s.weight;
+    return s.e;
+}
+
+static inline bool tryspawn(dynent* d, const extentity& e)
+{
+    d->o = e.o;
+    d->yaw = e.attr1;
+    return entinmap(d, true);
+}
+
+void findplayerspawn(dynent* d, int forceent, int tag)
+{
+    const vector<extentity*>& ents = entities::getents();
+    d->pitch = 0;
+    d->roll = 0;
+    if(ents.inrange(forceent) && tryspawn(d, *ents[forceent])) return;
+    vector<spawninfo> spawninfos;
+    float total = gatherspawninfos(d, tag, spawninfos);
+    while (const extentity* e = poprandomspawn(spawninfos, total)) if(tryspawn(d, *e)) return;
+    d->o = vec(0.5f * worldsize).addz(1);
+    d->yaw = 0;
+    entinmap(d);
 }
 
 void splitocta(cube *c, int size)
@@ -1392,6 +1417,8 @@ void resetmap()
     nospeclights = 0;
     smalphalights = 0;
     volumetricsmalphalights = 0;
+
+    checkspawntags = true;
 }
 
 void startmap(const char *name)

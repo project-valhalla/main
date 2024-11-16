@@ -145,6 +145,7 @@ namespace game
     extern float clipconsole(float w, float h);
     extern float calcradarscale();
     extern float minimapalpha;
+    extern float ratespawn(dynent* pl, const extentity& e);
 
     extern dynent *iterdynents(int i);
 }

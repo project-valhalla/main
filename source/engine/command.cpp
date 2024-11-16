@@ -1771,6 +1771,7 @@ static void compilestatements(vector<uint> &code, const char *&p, int rettype, i
         {
             case '/':
                 if(p[2] != '/') break;
+                // fall through
             case ';': case ' ': case '\t': case '\r': case '\n': case '\0':
                 p++;
                 if(idname.str)
@@ -3266,6 +3267,7 @@ void writecfg(const char *name)
         case VAL_STR:
             if(!id.val.s[0]) break;
             if(!validateblock(id.val.s)) { f->printf("%s = %s\n", escapeid(id), escapestring(id.val.s)); break; }
+            // fall through
         case VAL_FLOAT:
         case VAL_INT:
             f->printf("%s = [%s]\n", escapeid(id), id.getstr()); break;

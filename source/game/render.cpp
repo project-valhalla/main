@@ -409,50 +409,71 @@ namespace game
         rendermodel(playermodel.directory, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), d->transparency));
     }
 
-    void renderai(dynent *d, const char *mdlname, modelattach *attachments, int hold, int attack, int attackdelay, int lastaction, int lastpain, float fade, bool ragdoll)
+    void rendermonster(dynent *d, const char *mdlname, modelattach *attachments, const int attack, const int attackdelay, const int lastaction, const int lastpain, const float fade, const bool ragdoll)
     {
-        if(d->type != ENT_AI) return;
-        int anim = hold ? hold : ANIM_IDLE|ANIM_LOOP;
+        if (d->type != ENT_AI)
+        {
+            return;
+        }
+
+        int anim = ANIM_IDLE|ANIM_LOOP;
         vec o = d->feetpos();
         int basetime = 0;
-        if(animoverride) anim = (animoverride<0 ? ANIM_ALL : animoverride)|ANIM_LOOP;
-        else if(d->state==CS_DEAD)
+        if (animoverride)
         {
-            anim = ANIM_DYING|ANIM_NOPITCH;
+            anim = (animoverride < 0 ? ANIM_ALL : animoverride) | ANIM_LOOP;
+        }
+        else if (d->state==CS_DEAD)
+        {
+            anim = ANIM_DYING | ANIM_NOPITCH;
             basetime = lastpain;
             if(ragdoll) anim |= ANIM_RAGDOLL;
-            else if(lastmillis-basetime>1000) anim = ANIM_DEAD|ANIM_LOOP|ANIM_NOPITCH;
+            else if (lastmillis - basetime > 1000)
+            {
+                anim = ANIM_DEAD | ANIM_LOOP | ANIM_NOPITCH;
+            }
         }
         else
         {
-            if(lastmillis-lastpain < 300)
+            if (lastmillis - lastpain < 300)
             {
                 anim = ANIM_PAIN;
                 basetime = lastpain;
             }
-            else if(lastpain < lastaction && attack < 0)
+            else if (lastpain < lastaction && attack < 0)
             {
                 anim = attack < 0 ? -attack : attack;
                 basetime = lastaction;
             }
-            if(d->inwater && d->physstate<=PHYS_FALL) anim |= (((d->move || d->strafe) || d->vel.z+d->falling.z>0 ? ANIM_SWIM : ANIM_SINK)|ANIM_LOOP)<<ANIM_SECONDARY;
-            else if(d->timeinair>100) anim |= (ANIM_JUMP|ANIM_END)<<ANIM_SECONDARY;
-            else if(d->move || d->strafe)
+            if (d->inwater && d->physstate <= PHYS_FALL)
             {
-                if(d->move>0) anim |= (ANIM_RUN_N|ANIM_LOOP)<<ANIM_SECONDARY;
+                anim |= (((d->move || d->strafe) || d->vel.z + d->falling.z > 0 ? ANIM_SWIM : ANIM_SINK) | ANIM_LOOP) << ANIM_SECONDARY;
+            }
+            else if (d->timeinair > 100)
+            {
+                anim |= (ANIM_JUMP | ANIM_END) << ANIM_SECONDARY;
+            }
+            else if (d->move || d->strafe)
+            {
+                if(d->move>0) anim |= (ANIM_RUN_N|ANIM_LOOP) << ANIM_SECONDARY;
                 else if(d->strafe)
                 {
-                    if(d->move<0) anim |= ((d->strafe>0 ? ANIM_RUN_E : ANIM_RUN_W)|ANIM_REVERSE|ANIM_LOOP)<<ANIM_SECONDARY;
-                    else anim |= ((d->strafe>0 ? ANIM_RUN_W : ANIM_RUN_E)|ANIM_LOOP)<<ANIM_SECONDARY;
+                    if(d->move<0) anim |= ((d->strafe>0 ? ANIM_RUN_E : ANIM_RUN_W)|ANIM_REVERSE|ANIM_LOOP) << ANIM_SECONDARY;
+                    else anim |= ((d->strafe>0 ? ANIM_RUN_W : ANIM_RUN_E)|ANIM_LOOP) << ANIM_SECONDARY;
                 }
-                else if(d->move<0) anim |= (ANIM_RUN_S|ANIM_LOOP)<<ANIM_SECONDARY;
+                else if(d->move<0) anim |= (ANIM_RUN_S|ANIM_LOOP) << ANIM_SECONDARY;
             }
 
-            if((anim&ANIM_INDEX)==ANIM_IDLE && (anim>>ANIM_SECONDARY)&ANIM_INDEX) anim >>= ANIM_SECONDARY;
+            if ((anim & ANIM_INDEX) == ANIM_IDLE && (anim >> ANIM_SECONDARY) & ANIM_INDEX)
+            {
+                anim >>= ANIM_SECONDARY;
+            }
         }
-        if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP)<<ANIM_SECONDARY;
+        if(!((anim>>ANIM_SECONDARY)&ANIM_INDEX)) anim |= (ANIM_IDLE|ANIM_LOOP) << ANIM_SECONDARY;
         int flags = MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY |  MDL_CULL_DIST;
-        rendermodel(mdlname, anim, o, d->yaw+90, d->pitch, 0, flags, d, attachments, basetime, 0, fade);
+        gameent* m = (gameent*)d;
+        m->transparency = updatetransparency(m, fade);
+        rendermodel(mdlname, anim, o, d->yaw + 90, d->pitch, 0, flags, d, attachments, basetime, 0, fade, vec4(1, 1, 1, m->transparency));
     }
 
     static inline void renderplayer(gameent *d, float fade = 1, int flags = 0)

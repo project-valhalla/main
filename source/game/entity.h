@@ -26,6 +26,9 @@ enum                            // static entity types
 
 #define validitem(n) (((n) >= I_AMMO_SG && (n) <= I_INVULNERABILITY))
 
+const int ENTITY_TELEPORT_RADIUS = 16;
+const int ENTITY_COLLECT_RADIUS = 12;
+
 static const struct gentityinfo { const char *name, *prettyname, *file; } gentities[MAXENTTYPES] =
 {
     { "none",            "None",               NULL                   },
@@ -73,23 +76,39 @@ enum // power-up types
     PU_INVULNERABILITY
 };
 
-static struct itemstat { int add, max, spawntime, info, sound; } itemstats[] =
+static struct itemstat { int add, max, spawntime, info, sound, announcersound; } itemstats[] =
 {
-    { 12,    60,    15,  GUN_SCATTER,        S_AMMO_SG,         }, // shotgun ammo
-    { 40,    200,   15,  GUN_SMG,            S_AMMO_SMG,        }, // SMG ammo
-    { 80,    400,   15,  GUN_PULSE,          S_AMMO_PULSE,      }, // pulse battery
-    { 6,     30,    15,  GUN_ROCKET,         S_AMMO_ROCKET,     }, // rockets
-    { 8,     40,    15,  GUN_RAIL,           S_AMMO_RAIL,       }, // railgun ammo
-    { 6,     30,    15,  GUN_GRENADE,        S_AMMO_GRENADE,    }, // grenades
-    { 25,    100,   25,  NULL,               S_HEALTH,          }, // regular health
-    { 50,    200,   35,  NULL,               S_SHIELD_LIGHT,    }, // light shield
-    { 100,   200,   35,  NULL,               S_SHIELD_HEAVY,    }, // heavy shield
-    { 50,    200,   60,  NULL,               S_SUPERHEALTH,     }, // super health
-    { 100,   200,   80,  NULL,               S_MEGAHEALTH,      }, // mega health
-    { 30000, 60000, 100, PU_DAMAGE,          S_DAMAGE,          }, // double damage
-    { 30000, 60000, 100, PU_HASTE,           S_HASTE,           }, // haste
-    { 30000, 60000, 100, PU_ARMOR,           S_ARMOR,           }, // armor
-    { 30000, 60000, 100, PU_AMMO,            S_INFINITEAMMO,    }, // infinite ammo
-    { 30000, 60000, 100, PU_AGILITY,         S_AGILITY,         }, // agility
-    { 15000, 30000, 100, PU_INVULNERABILITY, S_INVULNERABILITY, }  // invulnerability
+    { 12,    60,    15,  GUN_SCATTER,        S_AMMO_SG,         -1                          }, // shotgun ammo
+    { 40,    200,   15,  GUN_SMG,            S_AMMO_SMG,        -1                          }, // SMG ammo
+    { 80,    400,   15,  GUN_PULSE,          S_AMMO_PULSE,      -1                          }, // pulse battery
+    { 6,     30,    15,  GUN_ROCKET,         S_AMMO_ROCKET,     -1                          }, // rockets
+    { 8,     40,    15,  GUN_RAIL,           S_AMMO_RAIL,       -1                          }, // railgun ammo
+    { 6,     30,    15,  GUN_GRENADE,        S_AMMO_GRENADE,    -1                          }, // grenades
+    { 25,    100,   25,  NULL,               S_HEALTH,          -1                          }, // regular health
+    { 50,    200,   35,  NULL,               S_SHIELD_LIGHT,    -1                          }, // light shield
+    { 100,   200,   35,  NULL,               S_SHIELD_HEAVY,    -1                          }, // heavy shield
+    { 50,    200,   60,  NULL,               S_SUPERHEALTH,     -1                          }, // super health
+    { 100,   200,   80,  NULL,               S_MEGAHEALTH,      -1                          }, // mega health
+    { 30000, 60000, 100, PU_DAMAGE,          S_DAMAGE,          S_ANNOUNCER_DAMAGE          }, // double damage
+    { 30000, 60000, 100, PU_HASTE,           S_HASTE,           S_ANNOUNCER_HASTE           }, // haste
+    { 30000, 60000, 100, PU_ARMOR,           S_ARMOR,           S_ANNOUNCER_ARMOR           }, // armor
+    { 30000, 60000, 100, PU_AMMO,            S_INFINITEAMMO,    S_ANNOUNCER_INFINITEAMMO    }, // infinite ammo
+    { 30000, 60000, 100, PU_AGILITY,         S_AGILITY,         S_ANNOUNCER_AGILITY         }, // agility
+    { 15000, 30000, 100, PU_INVULNERABILITY, S_INVULNERABILITY, S_ANNOUNCER_INVULNERABILITY }  // invulnerability
+};
+
+enum
+{
+    Trigger_Item = 0,
+    Trigger_Interest,
+    Trigger_RespawnPoint
+};
+
+enum
+{
+    TriggerState_Null = -1,
+    TriggerState_Reset,
+    TriggerState_Triggering,
+    TriggerState_Triggered,
+    TriggerState_Resetting
 };

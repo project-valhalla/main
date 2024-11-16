@@ -329,10 +329,10 @@ namespace game
 
     bool isprivileged(int cn)
     {
-        gameent *d = getclient(cn);
+        gameent* d = cn < 0 ? self : getclient(cn);
         return d && d->privilege >= PRIV_MASTER;
     }
-    ICOMMAND(isprivileged, "i", (int *cn), intret(isprivileged(*cn) ? 1 : 0));
+    ICOMMAND(isprivileged, "b", (int *cn), intret(isprivileged(*cn) ? 1 : 0));
 
     bool isauth(int cn)
     {
@@ -1760,8 +1760,7 @@ namespace game
                 s->respawn();
                 parsestate(s, p);
                 s->state = CS_ALIVE;
-                if(cmode) cmode->pickspawn(s);
-                else findplayerspawn(s, -1, m_teammode ? s->team : 0);
+                pickgamespawn(s);
                 if(cmode) cmode->respawned(s);
                 ai::spawned(s);
                 if(s == self) spawneffect(s);
@@ -2121,6 +2120,7 @@ namespace game
             {
                 int state = getint(p);
                 updateroundstate(state);
+                break;
             }
 
             case N_CURRENTMASTER:

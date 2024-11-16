@@ -579,10 +579,10 @@ void texmix(ImageData &s, int c1, int c2, int c3, int c4)
     readwritetex(d, s,
         switch(numchans)
         {
-            case 4: dst[3] = src[c4];
-            case 3: dst[2] = src[c3];
-            case 2: dst[1] = src[c2];
-            case 1: dst[0] = src[c1];
+            case 4: dst[3] = src[c4]; // fall through
+            case 3: dst[2] = src[c3]; // fall through
+            case 2: dst[1] = src[c2]; // fall through
+            case 1: dst[0] = src[c1]; // fall through
         }
     );
     s.replace(d);

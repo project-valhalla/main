@@ -598,6 +598,7 @@ namespace server
                 case '!':
                     mode++;
                     if(mode[0] != '?') break;
+                    // fall through
                 case '?':
                     mode++;
                     loopk(NUMGAMEMODES) if(searchmodename(gamemodes[k].name, mode))
@@ -919,26 +920,68 @@ namespace server
 
     bool canspawnitem(int type)
     {
-        if(!validitem(type) || m_noitems(mutators)) return false;
-        switch(type)
+        if (!validitem(type) || m_noitems(mutators))
+        {
+            return false;
+        }
+
+        switch (type)
         {
             case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL: case I_AMMO_GRENADE:
-                if(m_tactics(mutators) || m_voosh(mutators)) return false;
+            {
+                if (m_insta(mutators) || m_tactics(mutators) || m_voosh(mutators))
+                {
+                    return false;
+                }
+                break;
+            }
+
             case I_YELLOWSHIELD: case I_REDSHIELD:
-                if(m_insta(mutators) || m_effic(mutators)) return false;
+            {
+                if (m_insta(mutators) || m_effic(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
             case I_HEALTH:
-                if(m_insta(mutators) || m_effic(mutators) || m_vampire(mutators)) return false;
+            {
+                if (m_insta(mutators) || m_effic(mutators) || m_vampire(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
             case I_MEGAHEALTH: case I_ULTRAHEALTH:
-                if(m_insta(mutators) || m_vampire(mutators)) return false;
+            {
+                if (m_insta(mutators) || m_vampire(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
             case I_DDAMAGE: case I_ARMOR: case I_INFINITEAMMO:
-                if(m_insta(mutators) || m_nopowerups(mutators)) return false;
+            {
+                if (m_insta(mutators) || m_nopowerups(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
             case I_HASTE: case I_AGILITY: case I_INVULNERABILITY:
-                if(m_nopowerups(mutators)) return false;
+            {
+                if (m_nopowerups(mutators))
+                {
+                    return false;
+                }
                 break;
+            }
+
+            default: break;
         }
         return true;
     }
@@ -2877,7 +2920,7 @@ namespace server
         }
     }
 
-    bool isally(clientinfo *a, clientinfo *b)
+    bool isally(const clientinfo *a, const clientinfo *b)
     {
         return (m_teammode && sameteam(a->team, b->team)) || (m_role && a->state.role == b->state.role);
     }

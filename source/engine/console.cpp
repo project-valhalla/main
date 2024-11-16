@@ -107,6 +107,33 @@ ICOMMAND(toggleconsole, "", (), UI::toggleui("fullconsole"));
 VARFP(conshadow, 0, 255, 255, clearconsoletextures());
 VARFP(conoutline, 0, 0, 255, clearconsoletextures());
 
+inline void prepare_console_text(const char *str, textinfo &info, int maxw, int cursor)
+{
+    prepare_text(str, info, maxw, bvec(255, 255, 255), cursor, conoutline ? ceil(FONTH / 32.f) : 0, bvec4(0, 0, 0, conoutline));
+}
+inline void draw_console_text(const textinfo &info, float left, float top)
+{
+    if(conshadow)
+    {
+        const float d = 3.f / 4.f * conscale;
+        draw_text(info, left - d, top + d, conshadow, true);
+    }
+    draw_text(info, left, top);
+}
+void draw_console_text(const char *str, float left, float top, int maxw, int cursor)
+{
+    textinfo info;
+    prepare_console_text(str, info, maxw, cursor);
+    if(!info.tex) return;
+    if(conshadow)
+    {
+        const float d = 3.f / 4.f * conscale;
+        draw_text(info, left - d, top + d, conshadow, true);
+    }
+    draw_text(info, left, top);
+    glDeleteTextures(1, &info.tex);
+}
+
 float rendercommand(float x, float y, float w)
 {
     if(commandmillis < 0) return 0;
@@ -118,17 +145,12 @@ float rendercommand(float x, float y, float w)
     pushfont();
     setfont("default");
     textinfo info;
-    prepare_text(buf, info, w, bvec(255, 255, 255), commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf), conoutline ? ceil(FONTH / 32.f) : 0, bvec4(0, 0, 0, conoutline));
+    prepare_console_text(buf, info, w, commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf));
     y -= info.h;
     
     if(info.tex)
     {
-        if(conshadow)
-        {
-            const float d = 3.f / 4.f * conscale;
-            draw_text(info, x - d, y + d, conshadow, true);
-        }
-        draw_text(info, x, y);
+        draw_console_text(info, x, y);
         glDeleteTextures(1, &info.tex);
     }
     
@@ -191,7 +213,7 @@ void clearconsoletextures()
     }
 }
 
-float drawconlines(int conskip, int confade, float conwidth, float conheight, float conoff, int maxlines, int shadow, int outline, int filter, float y = 0, int dir = 1)
+float drawconlines(int conskip, int confade, float conwidth, float conheight, float conoff, int maxlines, bool full, int filter, float y = 0, int dir = 1)
 {
     filter &= CON_FLAGS;
     int numl = conlines.length(), offset = min(conskip, numl);
@@ -238,19 +260,16 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         if(conlines[idx].w != conwidth || conlines[idx].fontsize != fontsize || !info.tex)
         {
             if(info.tex) glDeleteTextures(1, &info.tex);
-            prepare_text(line, info, conwidth, bvec(255, 255, 255), -1, outline ? ceil(FONTH / 32.f) : 0, bvec4(0, 0, 0, outline));
+            if(!full) prepare_console_text(line, info, conwidth, -1);
+            else prepare_text(line, info, conwidth, bvec(255, 255, 255), -1);
             conlines[idx].w = conwidth;
             conlines[idx].fontsize = fontsize;
         }
         if(dir <= 0) y -= info.h;
         if(info.tex)
         {
-            if(shadow)
-            {
-                const float d = 3.f / 4.f * conscale;
-                draw_text(info, conoff-d, y+d, shadow, true);
-            }
-            draw_text(info, conoff, y);
+            if(!full) draw_console_text(info, conoff, y);
+            else draw_text(info, conoff, y);
         }
         if(dir > 0) y += info.h;
     }
@@ -265,7 +284,7 @@ float renderfullconsole(float w, float h)
     float conpad = FONTH*1.5/2,
           conheight = h - 2*conpad,
           conwidth = w - 2*conpad;
-    drawconlines(conskip, 0, conwidth, conheight, conpad, 0, 0, 0, fullconfilter);
+    drawconlines(conskip, 0, conwidth, conheight, conpad, 0, true, fullconfilter);
     popfont();
     return conheight + 2*conpad;
 }
@@ -278,9 +297,9 @@ float renderconsole(float w, float h, float abovehud)
     pushfont();
     setfont("default");
     setfontsize(hudh * conscale / CONSOLETEXTROWS);
-    float y = drawconlines(conskip, confade, conwidth, conheight, conpad, consize, conshadow, conoutline, confilter);
+    float y = drawconlines(conskip, confade, conwidth, conheight, conpad, consize, false, confilter);
     if(miniconsize && miniconwidth)
-        drawconlines(miniconskip, miniconfade, (miniconwidth*(w - 2*conpad))/100, min(float(FONTH*1.5*miniconsize), abovehud - y), conpad, miniconsize, conshadow, conoutline, miniconfilter, abovehud, -1);
+        drawconlines(miniconskip, miniconfade, (miniconwidth*(w - 2*conpad))/100, min(float(FONTH*1.5*miniconsize), abovehud - y), conpad, miniconsize, false, miniconfilter, abovehud, -1);
     popfont();
     return y;
 }

@@ -71,11 +71,18 @@ extern int  text_visible(const char *str, float hitx, float hity, int maxw, int 
 extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxw, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
 extern void reloadfonts();
 
+extern void draw_console_text(const char *str, float left, float top, int maxw = 0, int cursor = -1);
+
 static inline void setfontsize(float size) { fontsize = size; }
 static inline void draw_textf(const char *fstr, float left, float top, ...)
 {
     defvformatstring(str, top, fstr);
     draw_text(str, left, top);
+}
+static inline void draw_console_textf(const char *fstr, float left, float top, ...)
+{
+    defvformatstring(str, top, fstr);
+    draw_console_text(str, left, top);
 }
 
 // texture

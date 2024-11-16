@@ -1139,7 +1139,7 @@ namespace recorder
         else totalsize /= 1e3;
 
         setfontsize(hudh * conscale / CONSOLETEXTROWS);
-        draw_textf("recorded %.1f%s %d%%", w-10*FONTH, FONTH-FONTH/2, totalsize, unit, int(calcquality()*100));
+        draw_console_textf("recorded %.1f%s %d%%", w-10*FONTH, FONTH-FONTH/2, totalsize, unit, int(calcquality()*100));
 
         glDisable(GL_BLEND);
     }

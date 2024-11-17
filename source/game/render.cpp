@@ -659,12 +659,15 @@ namespace game
         }
 
         int anim = ANIM_GUN_IDLE|ANIM_LOOP, basetime = 0;
-        bool animateattack = d->lastattack == ATK_MELEE || attacks[d->lastattack].gun == d->gunselect;
-        if(animateattack && d->lastaction && d->lastattack >= 0 && lastmillis - d->lastaction < attacks[d->lastattack].attackdelay)
+        if(validatk(d->lastattack))
         {
-            if(anim >= 0) anim = attacks[d->lastattack].hudanim;
-            basetime = d->lastaction;
-            d->lastswitch = 0;
+            bool animateattack = d->lastattack == ATK_MELEE || attacks[d->lastattack].gun == d->gunselect;
+            if(animateattack && d->lastaction && lastmillis - d->lastaction < attacks[d->lastattack].attackdelay)
+            {
+                if(anim >= 0) anim = attacks[d->lastattack].hudanim;
+                basetime = d->lastaction;
+                d->lastswitch = 0;
+            }
         }
         if(d->lastswitch && lastmillis - d->lastswitch <= 600)
         {

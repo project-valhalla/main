@@ -34,6 +34,7 @@ namespace game
         d->stopchannelsound(Chan_Weapon, 200);
         if (!validgun(gun))
         {
+            if(!validgun(d->gunselect)) return;
             gun = d->gunselect;
         }
         int switchsound = guns[gun].switchsound;
@@ -1577,7 +1578,7 @@ namespace game
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
         if(attacktime<d->gunwait) return;
         d->gunwait = 0;
-        if(!d->attacking) return;
+        if(!d->attacking || !validgun(d->gunselect)) return;
         int gun = d->gunselect, act = d->attacking, atk = guns[gun].attacks[act];
         d->lastaction = lastmillis;
         d->lastattack = atk;

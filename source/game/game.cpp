@@ -641,7 +641,7 @@ namespace game
         }
         else if(d == actor)
         {
-            if(attacks[atk].gun == GUN_ZOMBIE)
+            if(validatk(atk) && attacks[atk].gun == GUN_ZOMBIE)
             {
                 act = "got infected";
                 killfeedweaponinfo = GUN_ZOMBIE;
@@ -655,7 +655,7 @@ namespace game
             if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
 
         }
-        else
+        else if(validatk(atk))
         {
             if(attacks[atk].gun == GUN_ZOMBIE) act = "infected";
             if(isally(d, actor)) conoutf(CON_FRAGINFO, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));

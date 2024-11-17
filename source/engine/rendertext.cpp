@@ -193,7 +193,7 @@ void tabify(const char *str, int *numtabs)
 
 COMMAND(tabify, "si");
 
-void draw_textf(const char *fstr, float left, float top, ...)
+void draw_textf(const char *fstr, double left, double top, ...)
 {
     defvformatstring(str, top, fstr);
     draw_text(str, left, top);

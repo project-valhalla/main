@@ -727,7 +727,7 @@ namespace game
         {
             bestScore = score;
         }
-        defformatstring(newbestscore, "%d", bestscore);
+        defformatstring(newbestscore, "%d", bestScore);
         alias(bestscoremap, newbestscore);
         conoutf(CON_INFO, "\f2Total score (time + time penalties): %d seconds (best so far: %d seconds)", score, bestScore);
     }

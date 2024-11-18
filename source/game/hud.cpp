@@ -270,9 +270,12 @@ namespace game
     void managelowhealthscreen()
     {
         gameent* hud = followingplayer(self);
-        if (!lowhealthscreen || intermission || !hud->haslowhealth())
+        if (!lowhealthscreen || intermission || !(hud->haslowhealth() && !m_insta(mutators)))
         {
-            hud->stopchannelsound(Chan_LowHealth, 400);
+            if (validsound(hud->chan[Chan_LowHealth]))
+            {
+                hud->stopchannelsound(Chan_LowHealth, 400);
+            }
             return;
         }
 

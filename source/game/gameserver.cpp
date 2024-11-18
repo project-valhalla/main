@@ -988,13 +988,12 @@ namespace server
 
     int spawntime(int type)
     {
-        return itemstats[type-I_AMMO_SG].spawntime * 1000;
+        return itemstats[type-I_AMMO_SG].respawntime * 1000;
     }
 
     bool delayspawn(int type)
     {
-        return !m_story && type >= I_YELLOWSHIELD && type <= I_INVULNERABILITY;
-        return false;
+        return !m_story && itemstats[type - I_AMMO_SG].isspawndelayed;
     }
 
     bool allowpickup()

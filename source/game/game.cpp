@@ -526,7 +526,7 @@ namespace game
         }
 
         ai::damaged(d, actor);
-        if(local && (d->health <= 0 || atk == ATK_INSTA || (m_insta(mutators) && actor->type == ENT_AI)))
+        if(local && (d->health <= 0 || attacks[atk].damage < 0) || (m_invasion && m_insta(mutators) && actor->type == ENT_AI))
         {
             kill(d, actor, atk, flags);
         }

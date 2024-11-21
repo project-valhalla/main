@@ -275,7 +275,7 @@ namespace game
     void managelowhealthscreen()
     {
         gameent* hud = followingplayer(self);
-        if (!lowhealthscreen || intermission || !(hud->haslowhealth() && !m_insta(mutators)))
+        if (!lowhealthscreen || intermission || !hud->haslowhealth())
         {
             if (validsound(hud->chan[Chan_LowHealth]))
             {

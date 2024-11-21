@@ -354,7 +354,6 @@ struct gamestate
     {
         if(m_insta(mutators))
         {
-            maxhealth = health = 1;
             gunselect = GUN_INSTA;
             ammo[GUN_INSTA] = 1;
         }
@@ -389,6 +388,12 @@ struct gamestate
             ammo[GUN_PISTOL] = 100;
             if(!m_story) ammo[GUN_GRENADE] = 1;
         }
+    }
+
+    void instantkill(int extradamage)
+    {
+        shield = 0;
+        health -= health + extradamage;
     }
 
     // Subtract damage/shield points and apply damage here.

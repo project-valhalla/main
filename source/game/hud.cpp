@@ -728,12 +728,13 @@ namespace game
 
     static inline void calculatecrosshairsize(float& size)
     {
+        float crouchprogress = self->eyeheight / self->maxheight;
         float zoomprogress = 1.0f;
         if (zoomstate.progress < 1)
         {
             zoomprogress = 1.0f - zoomstate.progress;
         }
-        size *= zoomprogress;
+        size *= crouchprogress * zoomprogress;
 	}
 
     static void drawcrosshair(const int w, const int h, float x, float y, float size)

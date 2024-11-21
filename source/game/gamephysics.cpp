@@ -321,7 +321,7 @@ namespace physics
         return found;
     }
 
-    const int CROUCH_TIME = 200;
+    const int CROUCH_TIME = 180;
 
     void crouchplayer(gameent* d, int moveres, bool local)
     {

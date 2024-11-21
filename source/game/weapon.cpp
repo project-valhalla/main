@@ -49,7 +49,7 @@ namespace game
         }
         if (d == self)
         {
-            disablezoom();
+            zoomstate.disable();
         }
     }
 
@@ -59,7 +59,7 @@ namespace game
         {
             return;
         }
-        if (guns[self->gunselect].zoom && zoom)
+        if (zoom && guns[self->gunselect].zoom)
         {
             zoomfov = clamp(zoomfov - dir, 10, 90);
         }
@@ -185,7 +185,7 @@ namespace game
 
     vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d)
     {
-        if (zoom && d == self)
+        if (zoomstate.isenabled() && d == self)
         {
             return d->feetpos(4);
         }
@@ -1370,7 +1370,6 @@ namespace game
                 break;
             }
             case S_RAIL_A:
-            case S_RAIL_INSTAGIB:
             {
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
                 if(d == hud)
@@ -1893,6 +1892,16 @@ namespace game
             if(!isweaponbouncer(bnc.bouncetype)) continue;
             obstacles.avoidnear(NULL, bnc.o.z + attacks[bnc.atk].exprad + 1, bnc.o, radius + attacks[bnc.atk].exprad);
         }
+    }
+
+    int checkweaponzoom()
+    {
+        gameent* hud = followingplayer(self);
+        if (hud->state == CS_ALIVE || hud->state == CS_LAGGED)
+        {
+            return guns[hud->gunselect].zoom;
+        }
+        return Zoom_None;
     }
 
     VARP(hudgunsway, 0, 1, 1);

@@ -165,7 +165,7 @@ namespace game
         {
             setdeathstate(self, true);
         }
-        disablezoom();
+        zoomstate.disable();
         self->suicided = self->respawned = -2;
         checkfollow();
     }
@@ -2182,10 +2182,10 @@ namespace game
                 if(!s) return;
                 if(val)
                 {
-                    if(s==self)
+                    if(s == self)
                     {
                         if(editmode) toggleedit();
-                        disablezoom();
+                        zoomstate.disable();
                         extern int deathfromabove;
                         if(deathfromabove) s->pitch = 0; // reset player pitch if it has been lowered on death
                     }

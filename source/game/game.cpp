@@ -417,12 +417,13 @@ namespace game
     {
         if (self->attacking == ACT_MELEE)
         {
-            disablezoom();
+            zoomstate.disable();
             return true;
         }
 
-        if (guns[gun].zoom)
-        {
+        const int zoomtype = checkweaponzoom();
+        if (zoomtype != Zoom_None)
+        {   
             if (act == ACT_SECONDARY)
             {
                 msgsound(S_WEAPON_ZOOM, self);
@@ -443,10 +444,9 @@ namespace game
                 }
                 return false;
             }
-
             if (act == ACT_PRIMARY)
             {
-                if (zoom)
+                if (zoomstate.isenabled())
                 {
                     act = ACT_SECONDARY;
                 }
@@ -589,7 +589,7 @@ namespace game
         }
         if(d == self)
         {
-            disablezoom();
+            zoomstate.disable();
             d->attacking = ACT_IDLE;
             if(!isfirstpersondeath())
             {
@@ -817,7 +817,7 @@ namespace game
                 playsound(S_ANNOUNCER_WIN, NULL, NULL, NULL, SND_ANNOUNCER);
             }
             else playsound(S_INTERMISSION);
-            disablezoom();
+            zoomstate.disable();
             execident("on_intermission");
         }
     }
@@ -942,7 +942,7 @@ namespace game
 
         syncplayer();
 
-        disablezoom();
+        zoomstate.disable();
 
         execident("on_mapstart");
     }

@@ -3,7 +3,7 @@
 
 namespace game
 {
-    float clipconsole(float w, float h)
+    float clipconsole(const float w, const float h)
     {
         if (cmode)
         {
@@ -41,41 +41,46 @@ namespace game
     }
 
     VARP(fov, 10, 100, 150);
-    VAR(avatarzoomfov, 1, 1, 1);
+    VAR(avatarzoomfov, 1, 1, 60);
     VAR(avatarfov, 10, 39, 100);
     VAR(zoom, -1, 0, 1);
     VARP(zoominvel, 0, 90, 500);
     VARP(zoomoutvel, 0, 80, 500);
     VARP(zoomfov, 10, 42, 90);
 
-    float zoomprogress = 0;
+    zoominfo zoomstate;
 
-    void disablezoom()
-    {
-        zoom = 0;
-        zoomprogress = 0;
-    }
-
-    void computezoom()
+    void zoominfo::update()
     {
         if (!zoom)
         {
-            zoomprogress = 0;
+            progress = 0;
             curfov = fov;
             curavatarfov = avatarfov;
             return;
         }
         if (zoom > 0)
         {
-            zoomprogress = zoominvel ? min(zoomprogress + float(elapsedtime) / zoominvel, 1.0f) : 1;
+            progress = zoominvel ? min(progress + float(elapsedtime) / zoominvel, 1.0f) : 1;
         }
         else
         {
-            zoomprogress = zoomoutvel ? max(zoomprogress - float(elapsedtime) / zoomoutvel, 0.0f) : 0;
-            if (zoomprogress <= 0) zoom = 0;
+            progress = zoomoutvel ? max(progress - float(elapsedtime) / zoomoutvel, 0.0f) : 0;
+            if (progress <= 0) zoom = 0;
         }
-        curfov = zoomfov * zoomprogress + fov * (1 - zoomprogress);
-        curavatarfov = avatarzoomfov * zoomprogress + avatarfov * (1 - zoomprogress);
+        curfov = zoomfov * progress + fov * (1 - progress);
+        curavatarfov = avatarzoomfov * progress + avatarfov * (1 - progress);
+    }
+
+    void zoominfo::disable()
+    {
+        zoom = 0;
+        progress = 0;
+    }
+
+    bool zoominfo::isenabled()
+    {
+        return progress >= 1 && zoom >= 1;
     }
 
     VARP(firstpersondeath, 0, 0, 1);
@@ -98,7 +103,7 @@ namespace game
     VARP(mouseinvert, 0, 0, 1);
     FVARP(mouseacceleration, 0, 0, 1000);
 
-    static void updateorientation(float yaw, float pitch)
+    static void updateorientation(const float yaw, const float pitch)
     {
         camera1->yaw += yaw;
         camera1->pitch += pitch;
@@ -110,7 +115,7 @@ namespace game
         }
     }
 
-    void mousemove(int dx, int dy)
+    void mousemove(const int dx, const int dy)
     {
         if (!hasfreelook())
         {
@@ -184,7 +189,7 @@ namespace game
     void recomputecamera()
     {
         setupcamera();
-        computezoom();
+        zoomstate.update();
 
         bool shoulddetach = (allowthirdperson() && thirdperson > 1) || iscameradetached();
         if ((!allowthirdperson() || !thirdperson) && !shoulddetach)
@@ -296,7 +301,7 @@ namespace game
 
     float damagedirs[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-    void damagecompass(int n, const vec& loc)
+    void damagecompass(const int amount, const vec& loc)
     {
         if (!usedamagecompass)
         {
@@ -313,12 +318,12 @@ namespace game
         if (yaw >= 360) yaw = fmod(yaw, 360);
         else if (yaw < 0) yaw = 360 - fmod(-yaw, 360);
         int dir = (int(yaw + 22.5f) % 360) / 45;
-        damagedirs[dir] += max(n, damagecompassmin) / float(damagecompassmax);
+        damagedirs[dir] += max(amount, damagecompassmin) / float(damagecompassmax);
         if (damagedirs[dir] > 1) damagedirs[dir] = 1;
 
     }
 
-    static void drawdamagecompass(int w, int h)
+    static void drawdamagecompass(const int w, const int h)
     {
         hudnotextureshader->set();
 
@@ -365,14 +370,14 @@ namespace game
     VARP(damagescreenmin, 1, 50, 1000);
     VARP(damagescreenmax, 1, 100, 1000);
 
-    void damageblend(int n, const int factor)
+    void damageblend(const int amount, const int factor)
     {
         if (!damagescreen) return;
         if (lastmillis > damageblendmillis) damageblendmillis = lastmillis;
-        damageblendmillis += clamp(n, damagescreenmin, damagescreenmax) * (factor ? factor : damagescreenfactor);
+        damageblendmillis += clamp(amount, damagescreenmin, damagescreenmax) * (factor ? factor : damagescreenfactor);
     }
 
-    static void drawdamagescreen(int w, int h)
+    static void drawdamagescreen(const int w, const int h)
     {
         if (lastmillis >= damageblendmillis)
         {
@@ -411,14 +416,14 @@ namespace game
     VARP(screenflashmin, 1, 20, 1000);
     VARP(screenflashmax, 1, 200, 1000);
 
-    void addscreenflash(int n)
+    void addscreenflash(const int amount)
     {
         if (!screenflash) return;
         if (lastmillis > screenflashmillis) screenflashmillis = lastmillis;
-        screenflashmillis += clamp(n, screenflashmin, screenflashmax) * screenflashfactor;
+        screenflashmillis += clamp(amount, screenflashmin, screenflashmax) * screenflashfactor;
     }
 
-    void drawscreenflash(int w, int h)
+    void drawscreenflash(const int w, const int h)
     {
         if (lastmillis >= screenflashmillis) return;
 
@@ -434,10 +439,9 @@ namespace game
         hudquad(0, 0, w, h);
     }
 
-    void drawblend(int x, int y, int w, int h, float r, float g, float b)
+    void drawblend(const int x, const int y, const int w, const int h, const float r, const float g, const float b, const float a = 1.0f)
     {
-        glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-        gle::colorf(r, g, b);
+        gle::colorf(r, g, b, a);
         gle::defvertex(2);
         gle::begin(GL_TRIANGLE_STRIP);
         gle::attribf(x, y);
@@ -445,32 +449,16 @@ namespace game
         gle::attribf(x, y + h);
         gle::attribf(x + w, y + h);
         gle::end();
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 
-    inline bool iszoomedin()
+    static void drawzoom(const int w, const int h)
     {
-        return zoomprogress >= 1 && zoom > 0;
-    }
-
-    inline int checkzoom()
-    {
-        gameent* hud = followingplayer(self);
-        if (hud->state == CS_ALIVE || hud->state == CS_LAGGED)
-        {
-            return guns[hud->gunselect].zoom;
-        }
-        return 0;
-    }
-
-    static void drawzoom(int w, int h)
-    {
-        if (!iszoomedin())
+        if (!zoomstate.isinprogress())
         {
             return;
         }
 
-        int zoomtype = checkzoom();
+        int zoomtype = checkweaponzoom();
         if (!zoomtype)
         {
             return;
@@ -485,37 +473,38 @@ namespace game
         }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         setusedtexture(scopetex);
+        float alpha = zoomstate.progress;
         if (zoomtype == Zoom_Scope)
         {
-            float x = 0, y = 0, dimension = 0, coverage = 1, blend = 1.f - coverage;
+            float x = 0, y = 0, dimension = 0;
             if (w > h)
             {
                 dimension = h;
                 x += (w - h) / 2;
-                drawblend(0, 0, x, dimension, blend, blend, blend);
-                drawblend(x + dimension, 0, x + 1, dimension, blend, blend, blend);
+                drawblend(0, 0, x, dimension, 0, 0, 0, alpha);
+                drawblend(x + dimension, 0, x + 1, dimension, 0, 0, 0, alpha);
             }
             else if (h > w)
             {
                 dimension = w;
                 y += (h - w) / 2;
-                drawblend(0, 0, dimension, y, blend, blend, blend);
-                drawblend(0, y + dimension, dimension, y, blend, blend, blend);
+                drawblend(0, 0, dimension, y, 0, 0, 0, alpha);
+                drawblend(0, y + dimension, dimension, y, 0, 0, 0, alpha);
             }
             else dimension = h;
-            gle::colorf(1, 1, 1, coverage);
+            gle::colorf(1, 1, 1, alpha);
             drawquad(x, y, dimension, dimension, 0, 0, 1, 1, false, false);
         }
         else
         {
-            gle::colorf(1, 1, 1, 1);
+            gle::colorf(1, 1, 1, alpha);
             hudquad(0, 0, w, h);
         }
     }
 
     FVARP(damagerolldiv, 0, 4.0f, 10);
 
-    void setdamagehud(int damage, gameent* d, gameent* actor)
+    void setdamagehud(const int damage, gameent* d, gameent* actor)
     {
         if (!d)
         {
@@ -544,7 +533,7 @@ namespace game
         {
             damagedirs[i] = 0;
         }
-        disablezoom();
+        zoomstate.disable();
     }
 
     void drawhud(int w, int h)
@@ -624,7 +613,7 @@ namespace game
         f->printf("\n");
     }
 
-    static void drawpointerquad(float x, float y, float size, vec color, Texture* texture)
+    static void drawpointerquad(const float x, const float y, const float size, const vec &color, Texture* texture)
     {
         if (texture)
         {
@@ -643,7 +632,7 @@ namespace game
         }
     }
 
-    static void drawcursor(int w, int h, float x, float y, float size)
+    static void drawcursor(const int w, const int h, float x, float y, const float size)
     {
         static Texture* pointer = NULL;
         if (!pointer) pointer = textureload(getdefaultpointer(Pointer_Cursor), 3);
@@ -657,7 +646,7 @@ namespace game
     VARP(crosshairscope, 0, 1, 1);
     VARP(crosshairhit, 0, 300, 1000);
 
-    int selectcrosshair(vec& color, int type)
+    int selectcrosshair(vec& color, const int type)
     {
         gameent* d = hudplayer();
         if (d->state == CS_SPECTATOR || d->state == CS_DEAD || intermission)
@@ -678,7 +667,8 @@ namespace game
 
             if (crosshairscope)
             {
-                if (iszoomedin() && checkzoom() == Zoom_Scope)
+                const int zoomtype = checkweaponzoom();
+                if (zoomstate.isenabled() && zoomtype == Zoom_Scope)
                 {
                     crosshair = Pointer_Scope;
                     color = vec(1, 0, 0);
@@ -710,7 +700,7 @@ namespace game
         return crosshair;
     }
 
-    bool isvalidpointer(Texture*& texture, vec& color, int type = Pointer_Crosshair)
+    bool isvalidpointer(Texture*& texture, vec& color, const int type = Pointer_Crosshair)
     {
         int index = selectcrosshair(color, type);
         if (index < 0)
@@ -736,12 +726,23 @@ namespace game
         return center * dimension - size / 2.0f;
     }
 
-    static void drawcrosshair(int w, int h, float x, float y, float size)
+    static inline void calculatecrosshairsize(float& size)
+    {
+        float zoomprogress = 1.0f;
+        if (zoomstate.progress < 1)
+        {
+            zoomprogress = 1.0f - zoomstate.progress;
+        }
+        size *= zoomprogress;
+	}
+
+    static void drawcrosshair(const int w, const int h, float x, float y, float size)
     {
         vec color(1, 1, 1);
         Texture* crosshair = NULL;
         if (isvalidpointer(crosshair, color))
         {
+            calculatecrosshairsize(size);
             x = getpointercenter(w, size);
             y = getpointercenter(h, size);
             drawpointerquad(x, y, size, color, crosshair);
@@ -775,7 +776,7 @@ namespace game
         }
     }
 
-    void drawpointers(int w, int h)
+    void drawpointers(const int w, const int h)
     {
         bool hascursor = UI::hascursor();
         if ((hascursor && !cursorsize) || (!hascursor && (!showhud || mainmenu || !crosshairsize)))
@@ -811,7 +812,7 @@ namespace game
     }
     ICOMMAND(calcradarscale, "", (), floatret(calcradarscale()));
 
-    void drawminimap(gameent* d, float x, float y, float s)
+    void drawminimap(gameent* d, const float x, const float y, const float s)
     {
         vec pos = vec(d->o).sub(minimapcenter).mul(minimapscale).add(0.5f), dir;
         vecfromyawpitch(camera1->yaw, 0, 1, 0, dir);
@@ -834,7 +835,7 @@ namespace game
         settexture("data/interface/radar/radar.png", 3);
     }
 
-    void drawradar(float x, float y, float s)
+    void drawradar(const float x, const float y, const float s)
     {
         gle::defvertex(2);
         gle::deftexcoord0();
@@ -846,7 +847,7 @@ namespace game
         gle::end();
     }
 
-    void drawteammate(gameent* d, float x, float y, float s, gameent* o, float scale, float blipsize = 1)
+    void drawteammate(gameent* d, const float x, const float y, const float s, gameent* o, const float scale, const float blipsize = 1)
     {
         vec dir = d->o;
         dir.sub(o->o).div(scale);
@@ -864,13 +865,13 @@ namespace game
         gle::attribf(bx - bs * v.y, by + bs * v.x); gle::attribf(0, 1);
     }
 
-    void setbliptex(int team, const char* type)
+    void setbliptex(const int team, const char* type)
     {
         defformatstring(blipname, "data/interface/radar/blip%s%s.png", teamblipcolor[validteam(team) ? team : 0], type);
         settexture(blipname, 3);
     }
 
-    void drawplayerblip(gameent* d, float x, float y, float s, float blipsize = 1)
+    void drawplayerblip(gameent* d, const float x, const float y, float s, const float blipsize = 1)
     {
         if (d->state != CS_ALIVE && d->state != CS_DEAD) return;
         float scale = calcradarscale();
@@ -882,7 +883,7 @@ namespace game
         gle::end();
     }
 
-    void drawteammates(gameent* d, float x, float y, float s)
+    void drawteammates(gameent* d, const float x, const float y, const float s)
     {
         if (!radarteammates) return;
         float scale = calcradarscale();

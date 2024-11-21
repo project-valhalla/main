@@ -113,7 +113,7 @@ namespace game
     extern void drawpointers(int w, int h);
     extern void computezoom();
     extern void recomputecamera();
-    extern void mousemove(int dx, int dy);
+    extern void mousemove(const int dx, const int dy);
     extern void writecrosshairs(stream* f);
     extern void clearscreeneffects();
 
@@ -135,7 +135,7 @@ namespace game
     extern const char *getmapinfo();
     extern const char *getscreenshotinfo();
 
-    extern int fov, zoom, zoomfov;
+    extern int fov, zoomfov;
     extern int numdynents();
     extern int scaletime(int t);
     extern int numanims();

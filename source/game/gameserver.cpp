@@ -2952,13 +2952,23 @@ namespace server
             firstblood = true;
             kflags |= KILL_FIRST;
         }
-        if(actor->state.spree > 0) switch(actor->state.spree)
+        if (actor->state.spree > 0) switch (actor->state.spree)
         {
             case 5: kflags |= KILL_SPREE; break;
             case 10: kflags |= KILL_SAVAGE; break;
             case 15: kflags |= KILL_UNSTOPPABLE; break;
-            case 20: kflags |= KILL_LEGENDARY; break;
-            case 25: actor->state.spree = 5; break; // restarts
+            case 20:
+            case 25:
+            case 30:
+            case 35:
+            case 40:
+            case 45:
+            case 50:
+            {
+                kflags |= KILL_LEGENDARY;
+                if (actor->state.spree >= 50) actor->state.spree = 0; // Reset the spree.
+                break;
+            }
         }
         if(flags & HIT_HEAD) kflags |= KILL_HEADSHOT;
         if(m_berserker)
@@ -3079,7 +3089,7 @@ namespace server
         died(target, actor, atk, damage, flags);
     }
 
-    int calcdamage(int damage, clientinfo *target, clientinfo *actor, int atk, int flags)
+    int calculatedamage(int damage, clientinfo *target, clientinfo *actor, int atk, int flags)
     {
         if(target != actor)
         {
@@ -3139,7 +3149,7 @@ namespace server
             loopj(i) if(hits[j].target==h.target) { dup = true; break; }
             if(dup) continue;
             float radiusdamage = attacks[atk].damage*(1-h.dist/EXP_DISTSCALE/attacks[atk].exprad);
-            dodamage(target, ci, calcdamage(radiusdamage, target, ci, atk, h.flags), atk, 0, h.dir);
+            dodamage(target, ci, calculatedamage(radiusdamage, target, ci, atk, h.flags), atk, 0, h.dir);
         }
     }
 
@@ -3189,7 +3199,7 @@ namespace server
 
                 totalrays += h.rays;
                 if(totalrays>maxrays) continue;
-                int raydamage = h.rays*attacks[atk].damage, damage = calcdamage(raydamage, target, ci, atk, h.flags);
+                int raydamage = h.rays*attacks[atk].damage, damage = calculatedamage(raydamage, target, ci, atk, h.flags);
                 dodamage(target, ci, damage, atk, h.flags, h.dir, to);
                 hit = true;
                 sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
@@ -3290,7 +3300,7 @@ namespace server
                 {
                     if(lastmillis-ci->state.lastdamage >= DELAY_ENVDAM && !ci->state.haspowerup(PU_INVULNERABILITY))
                     {
-                        dodamage(ci, ci, calcdamage(DAM_ENV, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
+                        dodamage(ci, ci, calculatedamage(DAM_ENV, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
                         ci->state.lastdamage = lastmillis;
                     }
                 }

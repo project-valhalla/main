@@ -3209,10 +3209,17 @@ namespace UI
     ICOMMAND(uiallowinput, "b", (int *val), { if(window) { if(*val >= 0) window->allowinput = *val!=0; intret(window->allowinput ? 1 : 0); } });
     ICOMMAND(uieschide, "b", (int *val), { if(window) { if(*val >= 0) window->eschide = *val!=0; intret(window->eschide ? 1 : 0); } });
 
+    ICOMMAND(uibind, "ss", (char* key, char* action),
+    {
+        const char *window = world->children.last()->getname();
+        clearuibinds(window);
+        binduikey(key, action, window);
+    });
+
     ICOMMAND(uiaspect,      "", (), floatret(float(hudw)/hudh));
-    ICOMMAND(uilockcursor,  "", (), { cursorlockedx = true; cursorlockedy = true;});
-    ICOMMAND(uilockcursorx, "", (),   cursorlockedx = true);
-    ICOMMAND(uilockcursory, "", (),   cursorlockedy = true);
+    ICOMMAND(uilockcursor,  "", (), { cursorlockedx = true; cursorlockedy = true; });
+    ICOMMAND(uilockcursorx, "", (), cursorlockedx = true);
+    ICOMMAND(uilockcursory, "", (), cursorlockedy = true);
 
     ICOMMAND(uicursor,  "", (), intret(world->allowinput()));
     ICOMMAND(uicursorx, "", (), floatret(cursortrackvec.x));

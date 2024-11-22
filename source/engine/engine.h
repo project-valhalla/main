@@ -582,6 +582,8 @@ extern void clearsleep(bool clearoverrides = true);
 extern float conscale;
 
 extern void processkey(int code, bool isdown, int modstate = 0);
+extern void binduikey(char* key, char* action, const char* window);
+extern void clearuibinds(const char* window = NULL);
 extern void processtextinput(const char *str, int len);
 extern float rendercommand(float x, float y, float w);
 extern float renderfullconsole(float w, float h);

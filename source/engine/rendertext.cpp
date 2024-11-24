@@ -9,6 +9,10 @@ float fontsize = 0;                 // pixel height of the current font
 const matrix4x3 *textmatrix = NULL; // used for text particles
 Shader *textshader = NULL;          // used for text particles
 
+// apply a black shadow or outline to console text to improve visibility
+VARFP(conshadow, 0, 255, 255, clearconsoletextures());
+VARFP(conoutline, 0, 0, 255, clearconsoletextures());
+
 // text colors
 static bvec palette[10];
 ICOMMAND(textcolor, "ii", (int *i, int *c),
@@ -562,6 +566,32 @@ void draw_text(const char *str, float left, float top, bvec color, int a, int ma
     prepare_text(str, info, maxw, color, -1, 0, bvec4(color, a), align, justify, lang, no_fallback);
     if(!info.tex) return;
     draw_text(info, left, top, a);
+    glDeleteTextures(1, &info.tex);
+}
+void prepare_console_text(const char *str, textinfo &info, int maxw, int cursor)
+{
+    prepare_text(str, info, maxw, bvec(255, 255, 255), cursor, conoutline ? ceil(FONTH / 32.f) : 0, bvec4(0, 0, 0, conoutline));
+}
+void draw_console_text(const textinfo &info, float left, float top)
+{
+    if(conshadow)
+    {
+        const float d = 3.f / 4.f * conscale;
+        draw_text(info, left - d, top + d, conshadow, true);
+    }
+    draw_text(info, left, top);
+}
+void draw_console_text(const char *str, float left, float top, int maxw, int cursor)
+{
+    textinfo info;
+    prepare_console_text(str, info, maxw, cursor);
+    if(!info.tex) return;
+    if(conshadow)
+    {
+        const float d = 3.f / 4.f * conscale;
+        draw_text(info, left - d, top + d, conshadow, true);
+    }
+    draw_text(info, left, top);
     glDeleteTextures(1, &info.tex);
 }
 

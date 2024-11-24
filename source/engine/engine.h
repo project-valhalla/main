@@ -71,6 +71,8 @@ extern int  text_visible(const char *str, float hitx, float hity, int maxw, int 
 extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxw, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
 extern void reloadfonts();
 
+extern void prepare_console_text(const char *str, textinfo &info, int maxw, int cursor);
+extern void draw_console_text(const textinfo &info, float left, float top);
 extern void draw_console_text(const char *str, float left, float top, int maxw = 0, int cursor = -1);
 
 static inline void setfontsize(float size) { fontsize = size; }

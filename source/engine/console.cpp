@@ -103,37 +103,6 @@ ICOMMAND(fullconsole, "iN$", (int *val, int *numargs, ident *id),
 });
 ICOMMAND(toggleconsole, "", (), UI::toggleui("fullconsole"));
 
-// apply a black shadow or outline to console text to improve visibility
-VARFP(conshadow, 0, 255, 255, clearconsoletextures());
-VARFP(conoutline, 0, 0, 255, clearconsoletextures());
-
-inline void prepare_console_text(const char *str, textinfo &info, int maxw, int cursor)
-{
-    prepare_text(str, info, maxw, bvec(255, 255, 255), cursor, conoutline ? ceil(FONTH / 32.f) : 0, bvec4(0, 0, 0, conoutline));
-}
-inline void draw_console_text(const textinfo &info, float left, float top)
-{
-    if(conshadow)
-    {
-        const float d = 3.f / 4.f * conscale;
-        draw_text(info, left - d, top + d, conshadow, true);
-    }
-    draw_text(info, left, top);
-}
-void draw_console_text(const char *str, float left, float top, int maxw, int cursor)
-{
-    textinfo info;
-    prepare_console_text(str, info, maxw, cursor);
-    if(!info.tex) return;
-    if(conshadow)
-    {
-        const float d = 3.f / 4.f * conscale;
-        draw_text(info, left - d, top + d, conshadow, true);
-    }
-    draw_text(info, left, top);
-    glDeleteTextures(1, &info.tex);
-}
-
 float rendercommand(float x, float y, float w)
 {
     if(commandmillis < 0) return 0;

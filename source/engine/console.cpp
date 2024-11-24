@@ -313,16 +313,26 @@ struct keym
         ACTION_DEFAULT = 0,
         ACTION_SPECTATOR,
         ACTION_EDITING,
+        ACTION_UI,
         NUMACTIONS
     };
 
     int code;
     char *name;
-    char *actions[NUMACTIONS];
+    char *actions[NUMACTIONS], *window;;
     bool pressed;
 
-    keym() : code(-1), name(NULL), pressed(false) { loopi(NUMACTIONS) actions[i] = newstring(""); }
-    ~keym() { DELETEA(name); loopi(NUMACTIONS) DELETEA(actions[i]); }
+    keym() : code(-1), name(NULL), pressed(false)
+    {
+        loopi(NUMACTIONS) actions[i] = newstring("");
+        window = newstring("");
+    }
+    ~keym()
+    { 
+        DELETEA(name);
+        loopi(NUMACTIONS) DELETEA(actions[i]);
+        DELETEA(window);
+    }
 
     void clear(int type);
     void clear() { loopi(NUMACTIONS) clear(i); }
@@ -380,11 +390,19 @@ void getbind(char *key, int type)
     result(km ? km->actions[type] : "");
 }
 
-void bindkey(char *key, char *action, int state, const char *cmd)
+void bindkey(char *key, char *action, int state, const char *cmd, const char* window = NULL)
 {
     if(identflags&IDF_OVERRIDDEN) { conoutf(CON_ERROR, "cannot override %s \"%s\"", cmd, key); return; }
     keym *km = findbind(key);
-    if(!km) { conoutf(CON_ERROR, "unknown key \"%s\"", key); return; }
+    if(!km)
+    { 
+        conoutf(CON_ERROR, "unknown key \"%s\"", key);
+        return;
+    }
+    if(window)
+    {
+        km->window = newstring(window);
+    }
     char *&binding = km->actions[state];
     if(!keypressed || keyaction!=binding) delete[] binding;
     // trim white-space to make searchbinds more reliable
@@ -392,6 +410,11 @@ void bindkey(char *key, char *action, int state, const char *cmd)
     int len = strlen(action);
     while(len>0 && iscubespace(action[len-1])) len--;
     binding = newstring(action, len);
+}
+
+void binduikey(char* key, char* action, const char* window)
+{
+    bindkey(key, action, keym::ACTION_UI, "uibind", window);
 }
 
 ICOMMAND(bind,     "ss", (char *key, char *action), bindkey(key, action, keym::ACTION_DEFAULT, "bind"));
@@ -412,12 +435,25 @@ void keym::clear(int type)
         if(!keypressed || keyaction!=binding) delete[] binding;
         binding = newstring("");
     }
+    if(window[0] && type == keym::ACTION_UI)
+    {
+        delete[] window;
+        window = newstring("");
+    }
 }
-
 ICOMMAND(clearbinds, "", (), enumerate(keyms, keym, km, km.clear(keym::ACTION_DEFAULT)));
 ICOMMAND(clearspecbinds, "", (), enumerate(keyms, keym, km, km.clear(keym::ACTION_SPECTATOR)));
 ICOMMAND(cleareditbinds, "", (), enumerate(keyms, keym, km, km.clear(keym::ACTION_EDITING)));
 ICOMMAND(clearallbinds, "", (), enumerate(keyms, keym, km, km.clear()));
+
+void clearuibinds(const char* window)
+{
+    enumerate(keyms, keym, km,
+    {
+        if(!window || strcmp(km.window, window)) km.clear(keym::ACTION_UI));
+    }
+}
+ICOMMAND(clearuibinds, "", (), clearuibinds());
 
 bool isfullconsoletoggled = false;
 ICOMMAND(togglefullconsole, "", (),
@@ -585,7 +621,11 @@ void execbind(keym &k, bool isdown)
     if(isdown)
     {
         int state = keym::ACTION_DEFAULT;
-        if(!mainmenu)
+        if(k.window[0] && UI::uivisible(k.window))
+        {
+            state = keym::ACTION_UI;
+        }
+        else if(!mainmenu)
         {
             if(editmode) state = keym::ACTION_EDITING;
             else if(player->state==CS_SPECTATOR) state = keym::ACTION_SPECTATOR;
@@ -599,6 +639,13 @@ void execbind(keym &k, bool isdown)
     }
     k.pressed = isdown;
 }
+
+void iskeyheld(char *key)
+{
+    keym* km = findbind(key);
+    intret(km->pressed ? 1 : 0);
+}
+ICOMMAND(iskeyheld, "s", (char* key), iskeyheld(key));
 
 bool consoleinput(const char *str, int len)
 {

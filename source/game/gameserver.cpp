@@ -988,13 +988,12 @@ namespace server
 
     int spawntime(int type)
     {
-        return itemstats[type-I_AMMO_SG].spawntime * 1000;
+        return itemstats[type-I_AMMO_SG].respawntime * 1000;
     }
 
     bool delayspawn(int type)
     {
-        return !m_story && type >= I_YELLOWSHIELD && type <= I_INVULNERABILITY;
-        return false;
+        return !m_story && itemstats[type - I_AMMO_SG].isspawndelayed;
     }
 
     bool allowpickup()
@@ -2953,13 +2952,23 @@ namespace server
             firstblood = true;
             kflags |= KILL_FIRST;
         }
-        if(actor->state.spree > 0) switch(actor->state.spree)
+        if (actor->state.spree > 0) switch (actor->state.spree)
         {
             case 5: kflags |= KILL_SPREE; break;
             case 10: kflags |= KILL_SAVAGE; break;
             case 15: kflags |= KILL_UNSTOPPABLE; break;
-            case 20: kflags |= KILL_LEGENDARY; break;
-            case 25: actor->state.spree = 5; break; // restarts
+            case 20:
+            case 25:
+            case 30:
+            case 35:
+            case 40:
+            case 45:
+            case 50:
+            {
+                kflags |= KILL_LEGENDARY;
+                if (actor->state.spree >= 50) actor->state.spree = 0; // Reset the spree.
+                break;
+            }
         }
         if(flags & HIT_HEAD) kflags |= KILL_HEADSHOT;
         if(m_berserker)
@@ -3073,7 +3082,14 @@ namespace server
         suicide(ci);
     }
 
-    int calcdamage(int damage, clientinfo *target, clientinfo *actor, int atk, int flags)
+    void instantkill(int& damage, int extradamage, clientinfo* target, clientinfo* actor, int atk, int flags)
+    {
+        target->state.instantkill(extradamage);
+        damage = target->state.health;
+        died(target, actor, atk, damage, flags);
+    }
+
+    int calculatedamage(int damage, clientinfo *target, clientinfo *actor, int atk, int flags)
     {
         if(target != actor)
         {
@@ -3084,14 +3100,20 @@ namespace server
         }
         if(!(flags & HIT_MATERIAL))
         {
+            if (attacks[atk].damage < 0)
+            {
+                int extradamage = flags & HIT_HEAD ? attacks[atk].headshotdam : 0;
+                instantkill(damage, extradamage, target, actor, atk, flags);
+                return target->state.health;
+            }
             if(attacks[atk].headshotdam && !attacks[atk].projspeed) // weapons deal locational damage only if headshot damage is specified (except for projectiles)
             {
                 if(flags & HIT_HEAD)
                 {
                     if(m_mayhem(mutators)) // force death if it's a blow to the head when the Mayhem mutator is enabled
                     {
-                        died(target, actor, atk, damage, flags);
-                        return (damage = target->state.health);
+                        instantkill(damage, attacks[atk].headshotdam, target, actor, atk, flags);
+                        return damage;
                     }
                     else damage += attacks[atk].headshotdam;
                 }
@@ -3127,7 +3149,7 @@ namespace server
             loopj(i) if(hits[j].target==h.target) { dup = true; break; }
             if(dup) continue;
             float radiusdamage = attacks[atk].damage*(1-h.dist/EXP_DISTSCALE/attacks[atk].exprad);
-            dodamage(target, ci, calcdamage(radiusdamage, target, ci, atk, h.flags), atk, 0, h.dir);
+            dodamage(target, ci, calculatedamage(radiusdamage, target, ci, atk, h.flags), atk, 0, h.dir);
         }
     }
 
@@ -3177,7 +3199,7 @@ namespace server
 
                 totalrays += h.rays;
                 if(totalrays>maxrays) continue;
-                int raydamage = h.rays*attacks[atk].damage, damage = calcdamage(raydamage, target, ci, atk, h.flags);
+                int raydamage = h.rays*attacks[atk].damage, damage = calculatedamage(raydamage, target, ci, atk, h.flags);
                 dodamage(target, ci, damage, atk, h.flags, h.dir, to);
                 hit = true;
                 sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
@@ -3278,7 +3300,7 @@ namespace server
                 {
                     if(lastmillis-ci->state.lastdamage >= DELAY_ENVDAM && !ci->state.haspowerup(PU_INVULNERABILITY))
                     {
-                        dodamage(ci, ci, calcdamage(DAM_ENV, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
+                        dodamage(ci, ci, calculatedamage(DAM_ENV, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
                         ci->state.lastdamage = lastmillis;
                     }
                 }

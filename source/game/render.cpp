@@ -605,7 +605,7 @@ namespace game
         {
             renderplayer(exclude, 1, MDL_ONLYSHADOW);
         }
-        else if (!f && (self->state == CS_ALIVE || (self->state == CS_EDITING && third) || (self->state == CS_DEAD && showdeadplayers)) && zoomprogress < 1)
+        else if (!f && (self->state == CS_ALIVE || (self->state == CS_EDITING && third) || (self->state == CS_DEAD && showdeadplayers)) && zoomstate.progress < 1)
         {
             float fade = 1.0f;
             if (self->deathstate == Death_Fall)
@@ -629,7 +629,6 @@ namespace game
         if(!file) return;
 
         sway.update(d);
-
         const playermodelinfo &playermodel = getplayermodelinfo(d);
         int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
         defformatstring(gunname, "%s/%s", playermodel.armdirectory, file);
@@ -659,12 +658,15 @@ namespace game
         }
 
         int anim = ANIM_GUN_IDLE|ANIM_LOOP, basetime = 0;
-        bool animateattack = d->lastattack == ATK_MELEE || attacks[d->lastattack].gun == d->gunselect;
-        if(animateattack && d->lastaction && d->lastattack >= 0 && lastmillis - d->lastaction < attacks[d->lastattack].attackdelay)
+        if(validatk(d->lastattack))
         {
-            if(anim >= 0) anim = attacks[d->lastattack].hudanim;
-            basetime = d->lastaction;
-            d->lastswitch = 0;
+            bool animateattack = d->lastattack == ATK_MELEE || attacks[d->lastattack].gun == d->gunselect;
+            if(animateattack && d->lastaction && lastmillis - d->lastaction < attacks[d->lastattack].attackdelay)
+            {
+                if(anim >= 0) anim = attacks[d->lastattack].hudanim;
+                basetime = d->lastaction;
+                d->lastswitch = 0;
+            }
         }
         if(d->lastswitch && lastmillis - d->lastswitch <= 600)
         {

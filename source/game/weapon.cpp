@@ -34,6 +34,7 @@ namespace game
         d->stopchannelsound(Chan_Weapon, 200);
         if (!validgun(gun))
         {
+            if(!validgun(d->gunselect)) return;
             gun = d->gunselect;
         }
         int switchsound = guns[gun].switchsound;
@@ -48,7 +49,7 @@ namespace game
         }
         if (d == self)
         {
-            disablezoom();
+            zoomstate.disable();
         }
     }
 
@@ -58,7 +59,7 @@ namespace game
         {
             return;
         }
-        if (guns[self->gunselect].zoom && zoom)
+        if (zoom && guns[self->gunselect].zoom)
         {
             zoomfov = clamp(zoomfov - dir, 10, 90);
         }
@@ -184,7 +185,7 @@ namespace game
 
     vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d)
     {
-        if (zoom && d == self)
+        if (zoomstate.isenabled() && d == self)
         {
             return d->feetpos(4);
         }
@@ -701,6 +702,12 @@ namespace game
         }
     }
 
+    void instantkill(int& damage, int extradamage, gameent* target)
+    {
+        target->instantkill(extradamage);
+        damage = target->health;
+    }
+
     int calcdamage(int damage, gameent *target, gameent *actor, int atk, int flags)
     {
         if(target != actor && isinvulnerable(target, actor))
@@ -709,11 +716,21 @@ namespace game
         }
         if (!(flags & HIT_MATERIAL))
         {
+            if (attacks[atk].damage < 0)
+            {
+                int extradamage = flags & HIT_HEAD ? attacks[atk].headshotdam : 0;
+                instantkill(damage, extradamage, target);
+                return damage;
+            }
             if (attacks[atk].headshotdam && !attacks[atk].projspeed) // weapons deal locational damage only if headshot damage is specified (except for projectiles)
             {
                 if (flags & HIT_HEAD)
                 {
-                    if(m_mayhem(mutators)) return (damage = target->health); // force death if it's a blow to the head when the Mayhem mutator is enabled
+                    if (m_mayhem(mutators))
+                    {
+                        instantkill(damage, attacks[atk].headshotdam, target);
+                        return damage;
+                    }
                     else damage += attacks[atk].headshotdam;
                 }
                 if (flags & HIT_LEGS) damage /= 2;
@@ -1087,19 +1104,22 @@ namespace game
             case ATK_RAIL2:
             case ATK_INSTA:
             {
-                bool insta = attacks[atk].gun == GUN_INSTA;
-                adddynlight(vec(to).madd(dir, 4), 60, !insta ? vec(0.25f, 1.0f, 0.75f) :  vec(0.25f, 0.75f, 1.0f), 180, 75, DL_EXPAND);
+                bool isInstagib = attacks[atk].gun == GUN_INSTA;
+                adddynlight(vec(to).madd(dir, 4), 60, !isInstagib ? vec(0.25f, 1.0f, 0.75f) : vec(0.5f, 0.5f, 0.5f), 180, 75, DL_EXPAND);
                 if(hit)
                 {
-                    if(insta) particle_flare(to, to, 200, PART_ELECTRICITY, 0x50CFE5, 6.0f);
+                    if (isInstagib)
+                    {
+                        particle_flare(to, to, 200, PART_ELECTRICITY, 0x008080, 5.0f);
+                    }
                     break;
                 }
                 if(iswater || isglass) break;
-                particle_splash(PART_EXPLODE4, 80, 80, to, !insta ? 0x77DD77 : 0x50CFE5, 1.25f, 100, 80);
-                particle_splash(PART_SPARK2, 5 + rnd(20), 200 + rnd(380), to, !insta ? 0x77DD77 : 0x50CFE5, 0.1f + rndscale(0.3f), 200, 3);
+                particle_splash(PART_EXPLODE4, 80, 80, to, !isInstagib ? 0x77DD77 : 0x008080, 1.25f, 100, 80);
+                particle_splash(PART_SPARK2, 5 + rnd(20), 200 + rnd(380), to, !isInstagib ? 0x77DD77 : 0x008080, 0.1f + rndscale(0.3f), 200, 3);
                 particle_splash(PART_SMOKE, 20, 180, to, 0x808080, 2.0f, 60, 80);
                 addstain(STAIN_BULLETHOLE_BIG, to, dir, 2.5f);
-                addstain(STAIN_GLOW1, to, dir, 2.0f, !insta ? 0x77DD77 : 0x50CFE5);
+                addstain(STAIN_GLOW1, to, dir, 2.0f, !isInstagib ? 0x77DD77 : 0x008080);
                 break;
             }
 
@@ -1181,7 +1201,7 @@ namespace game
                 {
                     if (d == hud)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x202020, 3.0f, d);
+                        particle_flare(d->muzzle, d->muzzle, atk == ATK_SCATTER2 ? 850 : 450, PART_MUZZLE_SMOKE, 0x202020, 3.0f, d);
                         particle_flare(d->muzzle, d->muzzle, 120, PART_SPARKS, 0xEFE598, 2.50f + rndscale(3.50f), d);
                     }
                     particle_flare(d->muzzle, d->muzzle, 60, PART_MUZZLE_FLASH, 0xEFE598, 2.4f, d);
@@ -1326,11 +1346,13 @@ namespace game
 
                 if(muzzleflash && d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 60, PART_MUZZLE_FLASH, 0x50CFE5, 1.75f, d);
+                    particle_flare(d->muzzle, d->muzzle, 60, PART_MUZZLE_FLASH, 0x008080, 1.75f, d);
+                    particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x006060, 3.0f, d);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 80, vec(0.25f, 0.75f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                particle_flare(hudgunorigin(gun, from, to, d), to, 100, PART_LIGHTNING, 0x50CFE5, 1.0f);
-                particle_flare(hudgunorigin(gun, from, to, d), to, 500, PART_TRAIL, 0x50CFE5, 1.0f);
+                particle_trail(PART_SMOKE, 350, hudgunorigin(gun, from, to, d), to, 0x006060, 0.3f, 50);
+                particle_flare(hudgunorigin(gun, from, to, d), to, 100, PART_LIGHTNING, 0x008080, 1.0f);
+                particle_flare(hudgunorigin(gun, from, to, d), to, 500, PART_TRAIL_PROJECTILE, 0x008080, 1.0f);
                 break;
 
             default: break;
@@ -1369,7 +1391,6 @@ namespace game
                 break;
             }
             case S_RAIL_A:
-            case S_RAIL_INSTAGIB:
             {
                 playsound(sound, NULL, d==hudplayer() ? NULL : &d->o);
                 if(d == hud)
@@ -1577,7 +1598,7 @@ namespace game
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
         if(attacktime<d->gunwait) return;
         d->gunwait = 0;
-        if(!d->attacking) return;
+        if(!d->attacking || !validgun(d->gunselect)) return;
         int gun = d->gunselect, act = d->attacking, atk = guns[gun].attacks[act];
         d->lastaction = lastmillis;
         d->lastattack = atk;
@@ -1892,6 +1913,16 @@ namespace game
             if(!isweaponbouncer(bnc.bouncetype)) continue;
             obstacles.avoidnear(NULL, bnc.o.z + attacks[bnc.atk].exprad + 1, bnc.o, radius + attacks[bnc.atk].exprad);
         }
+    }
+
+    int checkweaponzoom()
+    {
+        gameent* hud = followingplayer(self);
+        if (hud->state == CS_ALIVE || hud->state == CS_LAGGED)
+        {
+            return guns[hud->gunselect].zoom;
+        }
+        return Zoom_None;
     }
 
     VARP(hudgunsway, 0, 1, 1);

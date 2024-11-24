@@ -417,12 +417,13 @@ namespace game
     {
         if (self->attacking == ACT_MELEE)
         {
-            disablezoom();
+            zoomstate.disable();
             return true;
         }
 
-        if (guns[gun].zoom)
-        {
+        const int zoomtype = checkweaponzoom();
+        if (zoomtype != Zoom_None)
+        {   
             if (act == ACT_SECONDARY)
             {
                 msgsound(S_WEAPON_ZOOM, self);
@@ -443,10 +444,9 @@ namespace game
                 }
                 return false;
             }
-
             if (act == ACT_PRIMARY)
             {
-                if (zoom)
+                if (zoomstate.isenabled())
                 {
                     act = ACT_SECONDARY;
                 }
@@ -526,7 +526,7 @@ namespace game
         }
 
         ai::damaged(d, actor);
-        if(local && (d->health <= 0 || atk == ATK_INSTA || (m_insta(mutators) && actor->type == ENT_AI)))
+        if(local && (d->health <= 0 || attacks[atk].damage < 0) || (m_invasion && m_insta(mutators) && actor->type == ENT_AI))
         {
             kill(d, actor, atk, flags);
         }
@@ -589,7 +589,7 @@ namespace game
         }
         if(d == self)
         {
-            disablezoom();
+            zoomstate.disable();
             d->attacking = ACT_IDLE;
             if(!isfirstpersondeath())
             {
@@ -641,7 +641,7 @@ namespace game
         }
         else if(d == actor)
         {
-            if(attacks[atk].gun == GUN_ZOMBIE)
+            if(validatk(atk) && attacks[atk].gun == GUN_ZOMBIE)
             {
                 act = "got infected";
                 killfeedweaponinfo = GUN_ZOMBIE;
@@ -655,7 +655,7 @@ namespace game
             if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
 
         }
-        else
+        else if(validatk(atk))
         {
             if(attacks[atk].gun == GUN_ZOMBIE) act = "infected";
             if(isally(d, actor)) conoutf(CON_FRAGINFO, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
@@ -817,7 +817,7 @@ namespace game
                 playsound(S_ANNOUNCER_WIN, NULL, NULL, NULL, SND_ANNOUNCER);
             }
             else playsound(S_INTERMISSION);
-            disablezoom();
+            zoomstate.disable();
             execident("on_intermission");
         }
     }
@@ -942,7 +942,7 @@ namespace game
 
         syncplayer();
 
-        disablezoom();
+        zoomstate.disable();
 
         execident("on_mapstart");
     }

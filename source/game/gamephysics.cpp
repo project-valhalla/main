@@ -321,7 +321,7 @@ namespace physics
         return found;
     }
 
-    const int CROUCH_TIME = 200;
+    const int CROUCH_TIME = 180;
 
     void crouchplayer(gameent* d, int moveres, bool local)
     {
@@ -368,7 +368,7 @@ namespace physics
     {
         vec old(d->o);
         bool collided = false, slidecollide = false;
-        vec obstacle;
+        vec obstacle(0, 0, 0);
         d->o.add(dir);
         if (collide(d, dir) || (d->type == ENT_AI && collide(d, vec(0, 0, 0), 0, false)))
         {

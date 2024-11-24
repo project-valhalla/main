@@ -355,7 +355,6 @@ struct gamestate
     {
         if(m_insta(mutators))
         {
-            maxhealth = health = 1;
             gunselect = GUN_INSTA;
             ammo[GUN_INSTA] = 1;
         }
@@ -390,6 +389,12 @@ struct gamestate
             ammo[GUN_PISTOL] = 100;
             if(!m_story) ammo[GUN_GRENADE] = 1;
         }
+    }
+
+    void instantkill(int extradamage)
+    {
+        shield = 0;
+        health -= health + extradamage;
     }
 
     // Subtract damage/shield points and apply damage here.
@@ -860,6 +865,7 @@ namespace game
 
     extern int getweapon(const char* name);
     extern int calcdamage(int damage, gameent* target, gameent* actor, int atk, int flags = HIT_TORSO);
+    extern int checkweaponzoom();
 
     extern vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d);
 
@@ -912,21 +918,43 @@ namespace game
     extern const playermodelinfo &getplayermodelinfo(gameent *d);
 
     // hud.cpp
-    extern void drawradar(float x, float y, float s);
-    extern void setbliptex(int team, const char* type = "");
+    extern void drawradar(const float x, const float y, const float s);
+    extern void setbliptex(const int team, const char* type = "");
     extern void managelowhealthscreen();
-    extern void damageblend(int damage, int factor = 0);
-    extern void setdamagehud(int damage, gameent* d, gameent* actor);
-    extern void addscreenflash(int n);
+    extern void damageblend(const int damage, const int factor = 0);
+    extern void setdamagehud(const int damage, gameent* d, gameent* actor);
+    extern void addscreenflash(const int amount);
     extern void fixcamerarange();
-    extern void disablezoom();
 
     extern bool allowthirdperson();
 
     extern int thirdperson;
+    extern int zoom;
     extern int lowhealthscreen;
 
-    extern float zoomprogress;
+    struct zoominfo
+    {
+        float progress;
+
+        zoominfo() : progress(0)
+        {
+        }
+        ~zoominfo()
+        {
+        }
+
+        void update();
+        void disable();
+
+        bool isenabled();
+
+        bool isinprogress()
+        {
+            return progress > 0;
+        }
+    };
+
+    extern zoominfo zoomstate;
 }
 
 namespace server

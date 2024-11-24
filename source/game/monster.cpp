@@ -448,9 +448,10 @@ namespace game
                 monsterhurtpos = o;
             }
             health -= damage;
-            if(health <= 0 || (m_insta(mutators) && d->type != ENT_AI))
+            if(health <= 0)
             {
-                monsterdeath(m_insta(mutators) ? Death_Gib : -1, atk, flags);
+                int forcestate = m_insta(mutators) && (flags & HIT_HEAD || monstertypes[mtype].isexplosive) ? Death_Gib : -1;
+                monsterdeath(forcestate, atk, flags);
             }
             else
             {
@@ -727,7 +728,7 @@ namespace game
         {
             bestScore = score;
         }
-        defformatstring(newbestscore, "%d", bestscore);
+        defformatstring(newbestscore, "%d", bestScore);
         alias(bestscoremap, newbestscore);
         conoutf(CON_INFO, "\f2Total score (time + time penalties): %d seconds (best so far: %d seconds)", score, bestScore);
     }

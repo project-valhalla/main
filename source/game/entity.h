@@ -76,25 +76,30 @@ enum // power-up types
     PU_INVULNERABILITY
 };
 
-static struct itemstat { int add, max, spawntime, info, sound, announcersound; } itemstats[] =
+static struct itemstat
+{ 
+    int add, max, respawntime, info;
+    bool isspawndelayed;
+    int sound, announcersound;
+} itemstats[] =
 {
-    { 12,    60,    15,  GUN_SCATTER,        S_AMMO_SG,         -1                          }, // shotgun ammo
-    { 40,    200,   15,  GUN_SMG,            S_AMMO_SMG,        -1                          }, // SMG ammo
-    { 80,    400,   15,  GUN_PULSE,          S_AMMO_PULSE,      -1                          }, // pulse battery
-    { 6,     30,    15,  GUN_ROCKET,         S_AMMO_ROCKET,     -1                          }, // rockets
-    { 8,     40,    15,  GUN_RAIL,           S_AMMO_RAIL,       -1                          }, // railgun ammo
-    { 6,     30,    15,  GUN_GRENADE,        S_AMMO_GRENADE,    -1                          }, // grenades
-    { 25,    100,   25,  NULL,               S_HEALTH,          -1                          }, // regular health
-    { 50,    200,   35,  NULL,               S_SHIELD_LIGHT,    -1                          }, // light shield
-    { 100,   200,   35,  NULL,               S_SHIELD_HEAVY,    -1                          }, // heavy shield
-    { 50,    200,   60,  NULL,               S_SUPERHEALTH,     -1                          }, // super health
-    { 100,   200,   80,  NULL,               S_MEGAHEALTH,      -1                          }, // mega health
-    { 30000, 60000, 100, PU_DAMAGE,          S_DAMAGE,          S_ANNOUNCER_DAMAGE          }, // double damage
-    { 30000, 60000, 100, PU_HASTE,           S_HASTE,           S_ANNOUNCER_HASTE           }, // haste
-    { 30000, 60000, 100, PU_ARMOR,           S_ARMOR,           S_ANNOUNCER_ARMOR           }, // armor
-    { 30000, 60000, 100, PU_AMMO,            S_INFINITEAMMO,    S_ANNOUNCER_INFINITEAMMO    }, // infinite ammo
-    { 30000, 60000, 100, PU_AGILITY,         S_AGILITY,         S_ANNOUNCER_AGILITY         }, // agility
-    { 15000, 30000, 100, PU_INVULNERABILITY, S_INVULNERABILITY, S_ANNOUNCER_INVULNERABILITY }  // invulnerability
+    { 12,    60,    15,  GUN_SCATTER,        false, S_AMMO_SG,         -1                          }, // shotgun ammo
+    { 40,    200,   15,  GUN_SMG,            false, S_AMMO_SMG,        -1                          }, // SMG ammo
+    { 80,    400,   15,  GUN_PULSE,          false, S_AMMO_PULSE,      -1                          }, // pulse battery
+    { 6,     30,    15,  GUN_ROCKET,         false, S_AMMO_ROCKET,     -1                          }, // rockets
+    { 8,     40,    15,  GUN_RAIL,           false, S_AMMO_RAIL,       -1                          }, // railgun ammo
+    { 6,     30,    15,  GUN_GRENADE,        false, S_AMMO_GRENADE,    -1                          }, // grenades
+    { 25,    100,   25,  NULL,               false, S_HEALTH,          -1                          }, // regular health
+    { 50,    200,   35,  NULL,               true,  S_SHIELD_LIGHT,    -1                          }, // light shield
+    { 100,   200,   35,  NULL,               true,  S_SHIELD_HEAVY,    -1                          }, // heavy shield
+    { 50,    200,   60,  NULL,               true,  S_SUPERHEALTH,     -1                          }, // super health
+    { 100,   200,   80,  NULL,               true,  S_MEGAHEALTH,      -1                          }, // mega health
+    { 30000, 60000, 100, PU_DAMAGE,          true,  S_DAMAGE,          S_ANNOUNCER_DAMAGE          }, // double damage
+    { 30000, 60000, 100, PU_HASTE,           true,  S_HASTE,           S_ANNOUNCER_HASTE           }, // haste
+    { 30000, 60000, 100, PU_ARMOR,           true,  S_ARMOR,           S_ANNOUNCER_ARMOR           }, // armor
+    { 30000, 60000, 100, PU_AMMO,            true,  S_INFINITEAMMO,    S_ANNOUNCER_INFINITEAMMO    }, // infinite ammo
+    { 30000, 60000, 100, PU_AGILITY,         true,  S_AGILITY,         S_ANNOUNCER_AGILITY         }, // agility
+    { 15000, 30000, 100, PU_INVULNERABILITY, true,  S_INVULNERABILITY, S_ANNOUNCER_INVULNERABILITY }  // invulnerability
 };
 
 enum

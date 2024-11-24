@@ -68,6 +68,7 @@ namespace game
     ICOMMAND(getteam, "", (), intret((self->clientnum < 0 || m_teammode) && validteam(self->team) ? self->team : 0));
     ICOMMAND(getteamname, "i", (int *num), result(teamname(*num)));
     ICOMMAND(getteamcolor, "", (), intret(teamtextcolor[m_teammode ? self->team : 0]));
+    ICOMMAND(getteamtextcode, "", (), result(teamtextcode[m_teammode ? self->team : 0]));
 
     struct authkey
     {
@@ -165,7 +166,7 @@ namespace game
         {
             setdeathstate(self, true);
         }
-        disablezoom();
+        zoomstate.disable();
         self->suicided = self->respawned = -2;
         checkfollow();
     }
@@ -2182,10 +2183,10 @@ namespace game
                 if(!s) return;
                 if(val)
                 {
-                    if(s==self)
+                    if(s == self)
                     {
                         if(editmode) toggleedit();
-                        disablezoom();
+                        zoomstate.disable();
                         extern int deathfromabove;
                         if(deathfromabove) s->pitch = 0; // reset player pitch if it has been lowered on death
                     }

@@ -74,12 +74,12 @@ extern void reloadfonts();
 extern void draw_console_text(const char *str, float left, float top, int maxw = 0, int cursor = -1);
 
 static inline void setfontsize(float size) { fontsize = size; }
-static inline void draw_textf(const char *fstr, float left, float top, ...)
+static inline void draw_textf(const char *fstr, double left, double top, ...)
 {
     defvformatstring(str, top, fstr);
     draw_text(str, left, top);
 }
-static inline void draw_console_textf(const char *fstr, float left, float top, ...)
+static inline void draw_console_textf(const char *fstr, double left, double top, ...)
 {
     defvformatstring(str, top, fstr);
     draw_console_text(str, left, top);

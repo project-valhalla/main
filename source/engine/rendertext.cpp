@@ -207,8 +207,7 @@ bool init_pangocairo()
 
     loopi(10) palette[i] = bvec(255, 255, 255);
 
-    defformatstring(msg, "Text rendering: Pango %s, Cairo %s", pango_version_string(), cairo_version_string());
-    conoutf(CON_INIT, msg);
+    conoutf(CON_INIT, "Text rendering: Pango %s, Cairo %s", pango_version_string(), cairo_version_string());
     return true;
 }
 

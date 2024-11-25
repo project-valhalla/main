@@ -1129,8 +1129,10 @@ namespace game
             if(fall > 0xFF) flags |= 1<<5;
             if(d->falling.x || d->falling.y || d->falling.z > 0) flags |= 1<<6;
         }
-        if(lookupmaterial(d->o) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_LAVA)
-            flags |= 1<<7;
+        if (lookupmaterial(d->o) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_LAVA)
+        {
+            flags |= 1 << 7;
+        }
         if(d->crouching < 0) flags |= 1<<8;
         putuint(q, flags);
         loopk(3)
@@ -1839,7 +1841,8 @@ namespace game
                 if(!target || !actor) break;
                 target->health = health;
                 target->shield = shield;
-                damaged(damage, to.iszero() ? target->o : to, target, actor, atk, flags, false);
+                damageentity(damage, target, actor, atk, flags, false);
+                applyhiteffects(damage, target, actor, to.iszero() ? target->o : to, atk, flags, false);
                 break;
             }
 

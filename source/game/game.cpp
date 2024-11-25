@@ -158,7 +158,7 @@ namespace game
 
     gameent *pointatplayer()
     {
-        loopv(players) if(players[i] != self && intersect(players[i], self->o, worldpos)) return players[i];
+        loopv(players) if(players[i] != self && isintersecting(players[i], self->o, worldpos)) return players[i];
         return NULL;
     }
 
@@ -301,6 +301,11 @@ namespace game
             }
         }
         if(self->clientnum>=0) c2sinfo();   // do this last, to reduce the effective frame lag
+    }
+
+    void addgamedynamiclights()
+    {
+        updateprojectilelights();
     }
 
     float proximityscore(float x, float lower, float upper)
@@ -490,46 +495,6 @@ namespace game
     bool editing()
     { 
         return m_edit;
-    }
-
-    VARP(hitsound, 0, 1, 1);
-
-    void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags, bool local)
-    {
-        if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission)
-        {
-            return;
-        }
-        if(local)
-        {
-            damage = d->dodamage(damage);
-        }
-        else if(actor == self && !(flags & HIT_MATERIAL)) return;
-        else if(!isinvulnerable(d, actor)) d->lastpain = lastmillis;
-
-        damageeffect(damage, d, p, atk, getbloodcolor(d), flags & HIT_HEAD);
-
-        if(isinvulnerable(d, actor)) return;
-
-        gameent *hud = hudplayer();
-        if(hud != self && actor == hud && d != actor)
-        {
-            if(hitsound && actor->lasthit != lastmillis)
-            {
-                playsound(isally(d, actor) ? S_HIT_ALLY : S_HIT);
-                actor->lasthit = lastmillis;
-            }
-        }
-        if(d == hud)
-        {
-            setdamagehud(damage, d, actor);
-        }
-
-        ai::damaged(d, actor);
-        if(local && (d->health <= 0 || attacks[atk].damage < 0) || (m_invasion && m_insta(mutators) && actor->type == ENT_AI))
-        {
-            kill(d, actor, atk, flags);
-        }
     }
 
     VARP(gore, 0, 1, 1);
@@ -1060,15 +1025,29 @@ namespace game
         else return "\ff";
     }
 
-    void hurt(gameent *d)
+    void hurt(gameent* d)
     {
-        if(m_mp(gamemode)) return;
-        if(d == self || (d->type == ENT_PLAYER && d->ai))
+        // Apply environmental damage locally when inside harmful materials like lava.
+        if (m_mp(gamemode))
         {
-            if(d->state != CS_ALIVE) return;
-            if((d->lasthurt && lastmillis - d->lasthurt < DELAY_ENVDAM) || d->haspowerup(PU_INVULNERABILITY)) return;
-            damaged(DAM_ENV, d->o, d, d, -1, HIT_MATERIAL, true);
-            d->lasthurt = lastmillis;
+            return;
+        }
+
+        if (d == self || (d->type == ENT_PLAYER && d->ai))
+        {
+            // This is local, so valid only if the entity is a bot or ourselves.
+            if (d->state != CS_ALIVE || d->haspowerup(PU_INVULNERABILITY))
+            {
+                // The entity is dead or invulnerable? We stop caring.
+                return;
+            }
+
+            if (d->lasthurt && lastmillis - d->lasthurt >= DELAY_ENVIRONMENT_DAMAGE)
+            {
+                // If the delay has elapsed, apply environmental damage to the entity.
+                damageentity(DAMAGE_ENVIRONMENT, d, d, -1, HIT_MATERIAL, true);
+                d->lasthurt = lastmillis;
+            }
         }
     }
 
@@ -1124,9 +1103,9 @@ namespace game
             case S_FOOTSTEP_WATER:
                 return 300;
 
-            case S_BOUNCE_CARTRIDGE_SG:
-            case S_BOUNCE_CARTRIDGE_SMG:
-            case S_BOUNCE_CARTRIDGE_RAILGUN:
+            case S_BOUNCE_EJECT1:
+            case S_BOUNCE_EJECT2:
+            case S_BOUNCE_EJECT3:
                 return 100;
 
             default: return 500;

@@ -105,17 +105,23 @@ namespace server
 
         projectilestate() : numprojs(0) {}
 
-        void reset() { numprojs = 0; }
+        void reset()
+        { 
+            numprojs = 0;
+        }
 
         void add(int val)
         {
-            if(numprojs>=N) numprojs = 0;
+            if (numprojs >= N)
+            {
+                numprojs = 0;
+            }
             projs[numprojs++] = val;
         }
 
         bool remove(int val)
         {
-            loopi(numprojs) if(projs[i]==val)
+            loopi(numprojs) if (projs[i] == val)
             {
                 projs[i] = projs[--numprojs];
                 return true;
@@ -131,7 +137,7 @@ namespace server
         int lastdeath, deadflush, lastspawn, lifesequence;
         int lastpain, lastdamage, lastregeneration;
         int lastmove, lastshot, lastatk;
-        projectilestate<8> projs, bouncers;
+        projectilestate<8> projectiles;
         int frags, flags, deaths, points, teamkills, shotdamage, damage, spree;
         int lasttimeplayed, timeplayed;
         float effectiveness;
@@ -152,8 +158,7 @@ namespace server
         {
             if(state!=CS_SPECTATOR) state = editstate = CS_DEAD;
             maxhealth = 100;
-            projs.reset();
-            bouncers.reset();
+            projectiles.reset();
 
             timeplayed = 0;
             effectiveness = 0;
@@ -178,8 +183,7 @@ namespace server
         void reassign()
         {
             respawn();
-            projs.reset();
-            bouncers.reset();
+            projectiles.reset();
         }
     };
 
@@ -2561,8 +2565,7 @@ namespace server
                 }
                 ci->state.respawn();
                 sendspawn(ci);
-                ci->state.projs.reset();
-                ci->state.bouncers.reset();
+                ci->state.projectiles.reset();
             }
         }
     }
@@ -3120,7 +3123,7 @@ namespace server
                 if(flags & HIT_LEGS) damage /= 2;
             }
             if(actor->state.haspowerup(PU_DAMAGE) || actor->state.role == ROLE_BERSERKER) damage *= 2;
-            if((isally(target, actor) || target == actor) && !m_betrayal) damage /= DAM_ALLYDIV;
+            if((isally(target, actor) || target == actor) && !m_betrayal) damage /= DAMAGE_ALLYDIV;
         }
         if (target->state.haspowerup(PU_ARMOR) || target->state.role == ROLE_BERSERKER) damage /= 2;
         if(!damage) damage = 1;
@@ -3130,13 +3133,9 @@ namespace server
     void explodeevent::process(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        if(attacks[atk].gravity && attacks[atk].elasticity)
+        if (!gs.projectiles.remove(id))
         {
-            if(!gs.bouncers.remove(id)) return;
-        }
-        else if(attacks[atk].projspeed)
-        {
-            if(!gs.projs.remove(id)) return;
+            return;
         }
         sendf(-1, 1, "ri4x", N_EXPLODEFX, ci->clientnum, atk, id, ci->ownernum);
         loopv(hits)
@@ -3180,13 +3179,9 @@ namespace server
         sendf(-1, 1, "ri3x", N_SHOTEVENT, ci->clientnum, atk, ci->ownernum);
         gs.shotdamage += attacks[atk].damage*attacks[atk].rays;
         bool hit = false;
-        if(attacks[atk].gravity && attacks[atk].elasticity) // elasticity and gravity means it's a bouncer (grenade)
+        if (isweaponprojectile(attacks[atk].projectile))
         {
-            gs.bouncers.add(id);
-        }
-        else if(attacks[atk].projspeed) // projectile speed with no elasticity or gravity means we have a regular projectile (rocket)
-        {
-            gs.projs.add(id);
+            gs.projectiles.add(id);
         }
         else
         {
@@ -3298,9 +3293,9 @@ namespace server
                 }
                 if(ci->damagemat)
                 {
-                    if(lastmillis-ci->state.lastdamage >= DELAY_ENVDAM && !ci->state.haspowerup(PU_INVULNERABILITY))
+                    if(lastmillis-ci->state.lastdamage >= DELAY_ENVIRONMENT_DAMAGE && !ci->state.haspowerup(PU_INVULNERABILITY))
                     {
-                        dodamage(ci, ci, calculatedamage(DAM_ENV, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
+                        dodamage(ci, ci, calculatedamage(DAMAGE_ENVIRONMENT, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
                         ci->state.lastdamage = lastmillis;
                     }
                 }
@@ -4054,8 +4049,7 @@ namespace server
                     ci->state.editstate = ci->state.state;
                     ci->state.state = CS_EDITING;
                     ci->events.deletecontents();
-                    ci->state.projs.reset();
-                    ci->state.bouncers.reset();
+                    ci->state.projectiles.reset();
                 }
                 else ci->state.state = ci->state.editstate;
                 QUEUE_MSG;

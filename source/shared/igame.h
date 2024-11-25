@@ -108,7 +108,7 @@ namespace game
     extern void particletrack(physent *owner, vec &o, vec &d);
     extern void dynlighttrack(physent *owner, vec &o, vec &hud);
     extern void voicecom(int sound, char *text, bool isteam);
-    extern void adddynlights();
+    extern void addgamedynamiclights();
     extern void drawhud(int w, int h);
     extern void drawpointers(int w, int h);
     extern void computezoom();

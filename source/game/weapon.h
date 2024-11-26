@@ -8,10 +8,10 @@ struct hitmsg
 // Hit flags: information on how the player has been damaged.
 enum
 {
-    HIT_TORSO    = 1 << 0,
-    HIT_LEGS     = 1 << 1,
-    HIT_HEAD     = 1 << 2,
-    HIT_MATERIAL = 1 << 3
+    Hit_Torso       = 1 << 0,
+    Hit_Head        = 1 << 1,
+    Hit_Legs        = 1 << 2,
+    Hit_Environment = 1 << 3
 };
 
 // Kill flags: information on how the player has been killed.
@@ -104,7 +104,7 @@ const float EXP_DISTSCALE = 1.5f; // Explosion damage is going to be scaled by d
 
 static const struct attackinfo
 {
-    int gun, action, projectile, attackdelay, damage, headshotdam, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use;
+    int gun, action, projectile, attackdelay, damage, headshotdamage, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use;
     float gravity, elasticity;
     bool isfullauto;
     int anim, vwepanim, hudanim, sound, impactsound, hitsound, deathstate;

@@ -90,7 +90,7 @@ struct projectile : dynent
         roll = 0;
         model[0] = 0;
         offset = lastposition = dv = from = to = vec(0, 0, 0);
-		owner = NULL;
+        owner = NULL;
     }
     ~projectile()
     {

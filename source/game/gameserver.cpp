@@ -2973,7 +2973,7 @@ namespace server
                 break;
             }
         }
-        if(flags & HIT_HEAD) kflags |= KILL_HEADSHOT;
+        if(flags & Hit_Head) kflags |= KILL_HEADSHOT;
         if(m_berserker)
         {
             checkberserker(target);
@@ -3040,7 +3040,7 @@ namespace server
     {
         if((target == actor && !selfdamage) || (isally(target, actor) && !teamdamage) || (m_round && betweenrounds)) return;
         servstate &ts = target->state;
-        ts.dodamage(damage, flags & HIT_MATERIAL? true : false);
+        ts.dodamage(damage, flags & Hit_Environment? true : false);
         target->state.lastpain = lastmillis;
         sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield, int(to.x*DMF), int(to.y*DMF), int(to.z*DMF));
         if(target!=actor && damage > 0)
@@ -3101,26 +3101,27 @@ namespace server
                 return 0;
             }
         }
-        if(!(flags & HIT_MATERIAL))
+        if(!(flags & Hit_Environment))
         {
             if (attacks[atk].damage < 0)
             {
-                int extradamage = flags & HIT_HEAD ? attacks[atk].headshotdam : 0;
+                int extradamage = flags & Hit_Head ? attacks[atk].headshotdamage : 0;
                 instantkill(damage, extradamage, target, actor, atk, flags);
                 return target->state.health;
             }
-            if(attacks[atk].headshotdam && !attacks[atk].projspeed) // weapons deal locational damage only if headshot damage is specified (except for projectiles)
+            if(attacks[atk].headshotdamage)
             {
-                if(flags & HIT_HEAD)
+				// Weapons deal locational damage only if headshot damage is specified.
+                if(flags & Hit_Head)
                 {
                     if(m_mayhem(mutators)) // force death if it's a blow to the head when the Mayhem mutator is enabled
                     {
-                        instantkill(damage, attacks[atk].headshotdam, target, actor, atk, flags);
+                        instantkill(damage, attacks[atk].headshotdamage, target, actor, atk, flags);
                         return damage;
                     }
-                    else damage += attacks[atk].headshotdam;
+                    else damage += attacks[atk].headshotdamage;
                 }
-                if(flags & HIT_LEGS) damage /= 2;
+                if(flags & Hit_Legs) damage /= 2;
             }
             if(actor->state.haspowerup(PU_DAMAGE) || actor->state.role == ROLE_BERSERKER) damage *= 2;
             if((isally(target, actor) || target == actor) && !m_betrayal) damage /= DAMAGE_ALLYDIV;
@@ -3295,7 +3296,7 @@ namespace server
                 {
                     if(lastmillis-ci->state.lastdamage >= DELAY_ENVIRONMENT_DAMAGE && !ci->state.haspowerup(PU_INVULNERABILITY))
                     {
-                        dodamage(ci, ci, calculatedamage(DAMAGE_ENVIRONMENT, ci, ci, -1, HIT_MATERIAL), -1, HIT_MATERIAL);
+                        dodamage(ci, ci, calculatedamage(DAMAGE_ENVIRONMENT, ci, ci, -1, Hit_Environment), -1, Hit_Environment);
                         ci->state.lastdamage = lastmillis;
                     }
                 }

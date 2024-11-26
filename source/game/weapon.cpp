@@ -623,26 +623,27 @@ namespace game
         {
             return 0;
         }
-        if (!(flags & HIT_MATERIAL))
+        if (!(flags & Hit_Environment))
         {
             if (attacks[atk].damage < 0 || (m_insta(mutators) && actor->type == ENT_AI && target->type == ENT_PLAYER))
             {
-                int extradamage = flags & HIT_HEAD && attacks[atk].headshotdam ? attacks[atk].headshotdam : 0;
+                int extradamage = flags & Hit_Head && attacks[atk].headshotdamage ? attacks[atk].headshotdamage : 0;
                 instantkill(damage, extradamage, target);
                 return damage;
             }
-            if (attacks[atk].headshotdam && !isweaponprojectile(attacks[atk].projectile)) // weapons deal locational damage only if headshot damage is specified (except for projectiles)
+            if (attacks[atk].headshotdamage)
             {
-                if (flags & HIT_HEAD)
+				// Weapons deal locational damage only if headshot damage is specified.
+                if (flags & Hit_Head)
                 {
                     if (m_mayhem(mutators))
                     {
-                        instantkill(damage, attacks[atk].headshotdam, target);
+                        instantkill(damage, attacks[atk].headshotdamage, target);
                         return damage;
                     }
-                    else damage += attacks[atk].headshotdam;
+                    else damage += attacks[atk].headshotdamage;
                 }
-                if (flags & HIT_LEGS) damage /= 2;
+                if (flags & Hit_Legs) damage /= 2;
             }
             if (actor->haspowerup(PU_DAMAGE) || actor->role == ROLE_BERSERKER) damage *= 2;
             if (isally(target, actor) || target == actor) damage /= DAMAGE_ALLYDIV;
@@ -706,7 +707,7 @@ namespace game
         int maxrays = attacks[atk].rays;
         dynent* o;
         float dist;
-        int margin = attacks[atk].margin, flags = HIT_TORSO;
+        int margin = attacks[atk].margin, flags = Hit_Torso;
         bool hitlegs = false, hithead = false;
         if (attacks[atk].rays > 1)
         {
@@ -733,10 +734,10 @@ namespace game
                     hits[j] = NULL;
                     numhits++;
                 }
-                if (attacks[atk].headshotdam) // if an attack does not have headshot damage, then it does not deal locational damage
+                if (attacks[atk].headshotdamage) // if an attack does not have headshot damage, then it does not deal locational damage
                 {
-                    if (hithead) flags |= HIT_HEAD;
-                    if (hitlegs) flags |= HIT_LEGS;
+                    if (hithead) flags |= Hit_Head;
+                    if (hitlegs) flags |= Hit_Legs;
                 }
                 registerhit(o, d, rays[i], vec(to).sub(from).safenormalize(), attacks[atk].damage * numhits, atk, from.dist(to), numhits, flags);
             }
@@ -749,10 +750,10 @@ namespace game
                 hithead = isheadhitbox(o, from, to, dist);
                 shorten(from, to, dist);
                 impacteffects(atk, d, from, to, true);
-                if (attacks[atk].headshotdam) // if an attack does not have headshot damage, then it does not deal locational damage
+                if (attacks[atk].headshotdamage) // if an attack does not have headshot damage, then it does not deal locational damage
                 {
-                    if (hithead) flags = HIT_HEAD;
-                    else if (hitlegs) flags = HIT_LEGS;
+                    if (hithead) flags = Hit_Head;
+                    else if (hitlegs) flags = Hit_Legs;
                 }
                 registerhit(o, d, to, vec(to).sub(from).safenormalize(), attacks[atk].damage, atk, from.dist(to), 1, flags);
             }
@@ -919,7 +920,7 @@ namespace game
 
     void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& hitposition, int atk, int flags, bool local)
     {
-        if (!target || (!local && actor == self && !(flags & HIT_MATERIAL)))
+        if (!target || (!local && actor == self && !(flags & Hit_Environment)))
         {
             return;
         }
@@ -958,7 +959,7 @@ namespace game
             }
         }
 
-        damageeffect(damage, target, hitposition, atk, flags & HIT_HEAD);
+        damageeffect(damage, target, hitposition, atk, flags & Hit_Head);
     }
 
     void gunselect(int gun, gameent* d)

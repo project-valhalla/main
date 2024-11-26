@@ -849,14 +849,14 @@ namespace game
     extern void weaponswitch(gameent* d);
     extern void damageentity(int damage, gameent* d, gameent* actor, int atk, int flags = 0, bool local = true);
     extern void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& hitposition, int atk, int flags, bool local);
-    extern void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int atk, float dist, int rays = 1, int flags = HIT_TORSO);
+    extern void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int atk, float dist, int rays = 1, int flags = Hit_Torso);
 
     extern float intersectdist;
 
     extern bool isintersecting(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);
 
     extern int getweapon(const char* name);
-    extern int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags = HIT_TORSO);
+    extern int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags = Hit_Torso);
     extern int checkweaponzoom();
 
     extern vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d);

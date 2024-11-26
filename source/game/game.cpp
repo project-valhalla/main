@@ -1045,7 +1045,7 @@ namespace game
             if (d->lasthurt && lastmillis - d->lasthurt >= DELAY_ENVIRONMENT_DAMAGE)
             {
                 // If the delay has elapsed, apply environmental damage to the entity.
-                damageentity(DAMAGE_ENVIRONMENT, d, d, -1, HIT_MATERIAL, true);
+                damageentity(DAMAGE_ENVIRONMENT, d, d, -1, Hit_Environment, true);
                 d->lasthurt = lastmillis;
             }
         }

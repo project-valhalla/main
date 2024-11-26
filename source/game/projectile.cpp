@@ -389,19 +389,41 @@ namespace game
 
     void handleliquidtransitions(projectile& proj)
     {
-        const bool isinwater = ((lookupmaterial(proj.o) & MATF_VOLUME) == MAT_WATER);
-        if (isinwater && projs[proj.projtype].flags & ProjFlag_Quench)
+        const bool isInWater = ((lookupmaterial(proj.o) & MATF_VOLUME) == MAT_WATER);
+        const bool hasWaterTransitions = proj.projtype != Projectile_Debris;
+        if (isInWater && projs[proj.projtype].flags & ProjFlag_Quench)
         {
             proj.isdestroyed = true;
+            if (!hasWaterTransitions)
+            {
+                return;
+            }
         }
-        const int transition = physics::liquidtransition(&proj, lookupmaterial(proj.o), isinwater);
+        const int transition = physics::liquidtransition(&proj, lookupmaterial(proj.o), isInWater);
         if (transition > 0)
         {
-            particle_splash(PART_WATER, 200, 250, proj.o, 0xFFFFFF, 0.09f, 500, 1);
-            particle_splash(PART_SPLASH, 10, 80, proj.o, 0xFFFFFF, 7.0f, 250, -1);
-            if (transition == LiquidTransition_In)
+            int impactsound = -1;
+            if (proj.radius >= 1.0f)
             {
-                playsound(S_IMPACT_WATER_PROJ, NULL, &proj.o);
+                particle_splash(PART_WATER, 200, 250, proj.o, 0xFFFFFF, 0.09f, 500, 1);
+                particle_splash(PART_SPLASH, 10, 80, proj.o, 0xFFFFFF, 7.0f, 250, -1);
+                if (transition == LiquidTransition_In)
+                {
+                    impactsound = S_IMPACT_WATER_PROJ;
+                }
+            }
+            else
+            {
+                particle_splash(PART_WATER, 30, 250, proj.o, 0xFFFFFF, 0.05f, 500, 1);
+                particle_splash(PART_SPLASH, 10, 80, proj.o, 0xFFFFFF, 1.0f, 150, -1);
+                if (transition == LiquidTransition_In)
+                {
+                    impactsound = S_IMPACT_WATER;
+                }
+            }
+            if (validsound(impactsound))
+            {
+                playsound(impactsound, NULL, &proj.o);
             }
             proj.lastposition = proj.o;
         }
@@ -456,7 +478,7 @@ namespace game
         {
             if (hasenoughvelocity || proj.flags & ProjFlag_Linear)
             {
-                regular_particle_splash(PART_BUBBLE, 1, 200, position, 0xFFFFFF, 1.0f, 8, 50, 1);
+                regular_particle_splash(PART_BUBBLE, 1, 200, position, 0xFFFFFF, proj.radius, 8, 50, 1);
             }
             return;
         }

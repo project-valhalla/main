@@ -51,7 +51,7 @@ static const struct projectileinfo
     { Projectile_Pulse,    ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Quench | ProjFlag_Impact, NULL,                   S_BOUNCE_ROCKET,  S_PULSE_LOOP,   0, 0, 1.0f },
     { Projectile_Plasma,   ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Quench | ProjFlag_Impact, NULL,                   S_BOUNCE_ROCKET,  S_PISTOL_LOOP,  0, 0, 1.0f },
     { Projectile_Gib,      ProjFlag_Junk | ProjFlag_Bounce,                                       "projectile/gib",       -1,               -1,             2, 5, 1.5f },
-    { Projectile_Debris,   ProjFlag_Junk | ProjFlag_Bounce,                                       NULL,                   -1,               -1,             0, 0, 1.8f },
+    { Projectile_Debris,   ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Quench,                     NULL,                   -1,               -1,             0, 0, 1.8f },
     { Projectile_Casing,   ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Eject,                      "projectile/eject/00",  S_BOUNCE_EJECT1,  -1,             2, 0, 0.3f },
     { Projectile_Casing2,  ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Eject,                      "projectile/eject/01",  S_BOUNCE_EJECT2,  -1,             2, 0, 0.4f },
     { Projectile_Casing3,  ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Eject,                      "projectile/eject/02",  S_BOUNCE_EJECT3,  -1,             2, 0, 0.5f },

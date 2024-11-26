@@ -625,9 +625,9 @@ namespace game
         }
         if (!(flags & HIT_MATERIAL))
         {
-            if (attacks[atk].damage < 0)
+            if (attacks[atk].damage < 0 || (m_insta(mutators) && actor->type == ENT_AI && target->type == ENT_PLAYER))
             {
-                int extradamage = flags & HIT_HEAD ? attacks[atk].headshotdam : 0;
+                int extradamage = flags & HIT_HEAD && attacks[atk].headshotdam ? attacks[atk].headshotdam : 0;
                 instantkill(damage, extradamage, target);
                 return damage;
             }

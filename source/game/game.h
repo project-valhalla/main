@@ -782,8 +782,6 @@ namespace game
     // projectile.cpp
     extern vector<projectile*> projectiles;
 
-    extern projectile* getprojectile(int id, gameent* owner = NULL);
-
     extern void updateprojectiles(int time);
     extern void updateprojectilelights();
     extern void removeprojectiles(gameent* owner = NULL);

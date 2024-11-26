@@ -96,7 +96,7 @@ void updatedynlights()
     loopv(dynlights)
     {
         dynlight &d = dynlights[i];
-        if(d.owner) game::dynlighttrack(d.owner, d.o, d.hud);
+        if(d.owner) game::trackdynamiclights(d.owner, d.o, d.hud);
         d.calcradius();
         d.calccolor();
     }

@@ -104,8 +104,6 @@ namespace game
         proj.setsounds();
     }
 
-    extern int blood;
-
     void applybounceeffects(projectile* proj, const vec& surface)
     {
         if (proj->inwater) return;
@@ -117,6 +115,7 @@ namespace game
                 playsound(proj->bouncesound, NULL, &proj->o, NULL, 0, 0, 0, -1);
             }
         }
+        extern int blood;
         switch (proj->projtype)
         {
             case Projectile_Rocket2:
@@ -435,6 +434,7 @@ namespace game
         int tailColor = 0xFFFFFF;
         float tailSize = 2.0f, tailMinLength = 90.0f;
         const bool hasenoughvelocity = proj.vel.magnitude() > 30.0f;
+        extern int blood;
         if (proj.inwater)
         {
             if (hasenoughvelocity || proj.flags & ProjFlag_Linear)

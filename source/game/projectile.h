@@ -61,28 +61,29 @@ inline bool isweaponprojectile(int projectile)
 
 struct projectile : dynent
 {
-    gameent* owner;
-
-    vec offset, lastposition;
-
     bool islocal, isdestroyed;
 
-    float lastyaw, roll, gravity, elasticity, offsetheight, dist;
-
-    int health, id, atk, projtype, flags, lifetime;
+    int id, atk, projtype, flags, lifetime;
     int variant, bounces, offsetmillis;
     int lastbounce, bouncesound, loopchan, loopsound;
 
-    vec dv, from, to;
+    float lastyaw, gravity, elasticity, offsetheight, dist;
 
     string model;
 
-    projectile() : isdestroyed(false), roll(0), variant(0), bounces(0), lastbounce(0), bouncesound(-1), loopchan(-1), loopsound(-1)
+    vec offset, lastposition, dv, from, to;
+
+    gameent* owner;
+
+    projectile() : isdestroyed(false), variant(0), bounces(0), lastbounce(0), bouncesound(-1), loopchan(-1), loopsound(-1)
     {
         state = CS_ALIVE;
         type = ENT_PROJECTILE;
         collidetype = COLLIDE_ELLIPSE;
+        roll = 0;
         model[0] = 0;
+        offset = lastposition = dv = from = to = vec(0, 0, 0);
+		owner = NULL;
     }
     ~projectile()
     {

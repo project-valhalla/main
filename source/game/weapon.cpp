@@ -36,7 +36,7 @@ namespace game
         }
     }
 
-    void particletrack(physent *owner, vec &o, vec &d)
+    void trackparticles(physent *owner, vec &o, vec &d)
     {
         if(owner->type != ENT_PLAYER && owner->type != ENT_AI) return;
         gameent *pl = (gameent *)owner;
@@ -52,7 +52,7 @@ namespace game
         }
     }
 
-    void dynlighttrack(physent *owner, vec &o, vec &hud)
+    void trackdynamiclights(physent *owner, vec &o, vec &hud)
     {
         if(owner->type!=ENT_PLAYER && owner->type != ENT_AI) return;
         gameent *pl = (gameent *)owner;

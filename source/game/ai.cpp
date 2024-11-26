@@ -639,8 +639,8 @@ namespace ai
         else if(m_voosh(mutators)) d->ai->weappref = vooshgun;
         else
         {
-        	if(forcegun >= 0 && forcegun < NUMGUNS) d->ai->weappref = forcegun;
-			else d->ai->weappref = rnd(NUMGUNS-3);
+            if(forcegun >= 0 && forcegun < NUMGUNS) d->ai->weappref = forcegun;
+            else d->ai->weappref = rnd(NUMGUNS-3);
         }
         vec dp = d->headpos();
         findorientation(dp, d->yaw, d->pitch, d->ai->target);
@@ -1097,7 +1097,7 @@ namespace ai
             d->ai->spot = vec(0, 0, 0);
         }
 
-		if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
+        if(!d->ai->dontmove) jumpto(d, b, d->ai->spot);
 
         gameent *e = getclient(d->ai->enemy);
         bool enemyok = e && targetable(d, e);
@@ -1332,8 +1332,8 @@ namespace ai
                         entities::updatepowerups(curtime, d);
                     }
                 }
-				entities::checkitems(d);
-				if(cmode) cmode->checkitems(d);
+                entities::checkitems(d);
+                if(cmode) cmode->checkitems(d);
             }
         }
         else if(d->state == CS_DEAD)

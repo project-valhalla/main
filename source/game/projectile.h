@@ -26,8 +26,8 @@ enum
     Projectile_Gib,
     Projectile_Debris,
     Projectile_Eject,
-	Projectile_Eject2,
-	Projectile_Eject3,
+    Projectile_Eject2,
+    Projectile_Eject3,
     Projectile_Bullet,
     Projectile_Max
 };

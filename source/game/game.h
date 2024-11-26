@@ -840,7 +840,7 @@ namespace game
     extern swayinfo sway;
 
     extern void shoot(gameent *d, const vec &targ);
-	extern void updaterecoil(gameent* d, int curtime);
+    extern void updaterecoil(gameent* d, int curtime);
     extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
     extern void scanhit(vec& from, vec& to, gameent* d, int atk);
     extern void gibeffect(int damage, const vec &vel, gameent *d);

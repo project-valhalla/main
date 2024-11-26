@@ -125,14 +125,14 @@ namespace game
                 break;
             }
             
-			case Projectile_Gib:
-			{
-				if (blood)
-				{
-					addstain(STAIN_BLOOD, vec(proj->o).sub(vec(surface).mul(proj->radius)), surface, 2.96f / proj->bounces, getbloodcolor(proj->owner), rnd(4));
-				}
-				break;
-			}
+            case Projectile_Gib:
+            {
+                if (blood)
+                {
+                    addstain(STAIN_BLOOD, vec(proj->o).sub(vec(surface).mul(proj->radius)), surface, 2.96f / proj->bounces, getbloodcolor(proj->owner), rnd(4));
+                }
+                break;
+            }
 
             default: break;
         }
@@ -269,7 +269,7 @@ namespace game
             case ATK_PISTOL_COMBO:
             {
                 explosioncolor = 0x00FFFF;
-				explosionlightcolor = vec(0.0f, 1.0f, 1.0f);
+                explosionlightcolor = vec(0.0f, 1.0f, 1.0f);
                 if (atk == ATK_PISTOL2 && iswater)
                 {
                     particle_flare(v, v, 300, PART_ELECTRICITY, explosioncolor, 12.0f);
@@ -524,7 +524,7 @@ namespace game
                 break;
             }
 
-			default: break;
+            default: break;
         }
         if (proj.flags & ProjFlag_Linear)
         {

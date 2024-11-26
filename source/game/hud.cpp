@@ -735,7 +735,7 @@ namespace game
             zoomprogress = 1.0f - zoomstate.progress;
         }
         size *= crouchprogress * zoomprogress;
-	}
+    }
 
     static void drawcrosshair(const int w, const int h, float x, float y, float size)
     {

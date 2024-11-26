@@ -545,10 +545,13 @@ namespace game
                 makeprojectile(d, from, rays[i], local, id, atk, projectile, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
             }
         }
-        const int ejectProjectile = guns[gun].ejectprojectile;
-        if (isvalidprojectile(ejectProjectile) && shouldeject)
+        if (validgun(gun))
         {
-            spawnbouncer(d->eject, d, ejectProjectile);
+            const int ejectProjectile = guns[gun].ejectprojectile;
+            if (isvalidprojectile(ejectProjectile) && shouldeject)
+            {
+                spawnbouncer(d->eject, d, ejectProjectile);
+            }
         }
         bool looped = false;
         if (validsound(d->chansound[Chan_Attack]) && d->chansound[Chan_Attack] != sound)

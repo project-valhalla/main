@@ -6,13 +6,13 @@ static const int OFFSET_MILLIS = 500;
 
 enum
 {
-    ProjFlag_Weapon   = 1 << 0, // Related to a weapon.
-    ProjFlag_Junk     = 1 << 1, // Lightweight projectiles for cosmetic effects.
-    ProjFlag_Bounce   = 1 << 2, // Bounces off surfaces.
-    ProjFlag_Linear   = 1 << 3, // Follows a linear trajectory.
-    ProjFlag_Impact   = 1 << 4, // Detonates on collision with geometry or entities.
-    ProjFlag_Quench   = 1 << 5, // Destroyed upon contact with water.
-    ProjFlag_Hittable = 1 << 6  // Can be hit and destroyed by other weapons.
+    ProjFlag_Weapon = 1 << 0, // Related to a weapon.
+    ProjFlag_Junk   = 1 << 1, // Lightweight projectiles for cosmetic effects.
+    ProjFlag_Bounce = 1 << 2, // Bounces off surfaces.
+    ProjFlag_Linear = 1 << 3, // Follows a linear trajectory.
+    ProjFlag_Impact = 1 << 4, // Detonates on collision with geometry or entities.
+    ProjFlag_Quench = 1 << 5, // Destroyed upon contact with water.
+    ProjFlag_Eject  = 1 << 6  // Can be hit and destroyed by other weapons.
 };
 
 enum
@@ -25,13 +25,16 @@ enum
     Projectile_Plasma,
     Projectile_Gib,
     Projectile_Debris,
-    Projectile_Eject,
-    Projectile_Eject2,
-    Projectile_Eject3,
+    Projectile_Casing,
+    Projectile_Casing2,
+    Projectile_Casing3,
     Projectile_Bullet,
     Projectile_Max
 };
-inline bool isvalidprojectile(int type) { return type >= 0 && type < Projectile_Max; }
+inline bool isvalidprojectile(int type)
+{ 
+    return type >= 0 && type < Projectile_Max;
+}
 
 static const struct projectileinfo
 {
@@ -49,14 +52,18 @@ static const struct projectileinfo
     { Projectile_Plasma,   ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Quench | ProjFlag_Impact, NULL,                   S_BOUNCE_ROCKET,  S_PISTOL_LOOP,  0, 0, 1.0f },
     { Projectile_Gib,      ProjFlag_Junk | ProjFlag_Bounce,                                       "projectile/gib",       -1,               -1,             2, 5, 1.5f },
     { Projectile_Debris,   ProjFlag_Junk | ProjFlag_Bounce,                                       NULL,                   -1,               -1,             0, 0, 1.8f },
-    { Projectile_Eject,    ProjFlag_Junk | ProjFlag_Bounce,                                       "projectile/eject/00",  S_BOUNCE_EJECT1,  -1,             2, 0, 0.3f },
-    { Projectile_Eject2,   ProjFlag_Junk | ProjFlag_Bounce,                                       "projectile/eject/01",  S_BOUNCE_EJECT2,  -1,             2, 0, 0.4f },
-    { Projectile_Eject3,   ProjFlag_Junk | ProjFlag_Bounce,                                       "projectile/eject/02",  S_BOUNCE_EJECT3,  -1,             2, 0, 0.5f },
+    { Projectile_Casing,   ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Eject,                      "projectile/eject/00",  S_BOUNCE_EJECT1,  -1,             2, 0, 0.3f },
+    { Projectile_Casing2,  ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Eject,                      "projectile/eject/01",  S_BOUNCE_EJECT2,  -1,             2, 0, 0.4f },
+    { Projectile_Casing3,  ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Eject,                      "projectile/eject/02",  S_BOUNCE_EJECT3,  -1,             2, 0, 0.5f },
     { Projectile_Bullet,   ProjFlag_Weapon | ProjFlag_Junk | ProjFlag_Linear,                     NULL,                   -1,               -1,             0, 0, 0.4f }
 };
 inline bool isweaponprojectile(int projectile)
 { 
     return isvalidprojectile(projectile) && projs[projectile].flags & ProjFlag_Weapon && !(projs[projectile].flags & ProjFlag_Junk);
+}
+inline bool isejectedprojectile(int projectile)
+{
+    return isvalidprojectile(projectile) && projs[projectile].flags & ProjFlag_Eject;
 }
 
 struct projectile : dynent

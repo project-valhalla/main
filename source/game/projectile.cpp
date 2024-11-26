@@ -695,7 +695,7 @@ namespace game
     {
         vec to(rnd(100) - 50, rnd(100) - 50, rnd(100) - 50);
         float elasticity = 0.6f;
-        if (type == Projectile_Eject)
+        if (isejectedprojectile(type))
         {
             to = vec(-50, 1, rnd(30) - 15);
             to.rotate_around_z(d->yaw * RAD);

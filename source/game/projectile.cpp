@@ -308,15 +308,29 @@ namespace game
         }
     }
 
-    void applyradialeffect(dynent* o, const vec& v, const vec& vel, gameent* at, const int atk, const int flags)
+    void calculatesplashdamage(dynent* o, const vec& position, const vec& velocity, gameent* at, const int atk, const int flags)
     {
-        if (o->state != CS_ALIVE) return;
+        if (o->state != CS_ALIVE)
+        {
+            return;
+        }
         vec dir;
-        float distance = projectiledistance(o, dir, v, vel, flags);
+        float distance = projectiledistance(o, dir, position, velocity, flags);
         if (distance < attacks[atk].exprad)
         {
             int damage = static_cast<int>(attacks[atk].damage * (1 - distance / EXP_DISTSCALE / attacks[atk].exprad));
             registerhit(o, at, o->o, dir, damage, atk, distance);
+        }
+    }
+
+    void applyradialeffect(const vec& position, const vec& velocity, gameent* owner, dynent* safe, const int atk, const int flags)
+    {
+        const int numdyn = numdynents();
+        loopi(numdyn)
+        {
+            dynent* o = iterdynents(i);
+            if (o->o.reject(position, o->radius + attacks[atk].exprad) || (safe && o == safe)) continue;
+            calculatesplashdamage(o, position, velocity, owner, atk, flags);
         }
     }
 
@@ -327,15 +341,18 @@ namespace game
         vec offset = proj.flags & ProjFlag_Linear ? v : proj.offsetposition();
         addexplosioneffects(proj.owner, proj.atk, pos);
 
-        if (betweenrounds || !islocal) return;
-
-        const int numdyn = numdynents();
-        loopi(numdyn)
+        if (betweenrounds || !islocal)
         {
-            dynent* o = iterdynents(i);
-            if (o->o.reject(pos, o->radius + attacks[proj.atk].exprad) || o == safe) continue;
-            applyradialeffect(o, pos, proj.vel, proj.owner, proj.atk, proj.flags);
+            return;
         }
+
+        applyradialeffect(pos, proj.vel, proj.owner, safe, proj.atk, proj.flags);
+    }
+
+    void explode(gameent* owner, const int atk, const vec &position, const vec& velocity)
+    {
+        addexplosioneffects(owner, atk, position);
+        applyradialeffect(position, velocity, owner, NULL, atk, 0);
     }
 
     void explodeeffects(const int atk, gameent* d, const bool islocal, const int id)

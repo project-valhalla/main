@@ -793,6 +793,7 @@ namespace game
     extern void collidewithentity(physent* bouncer, physent* collideentity);
     extern void explodeeffects(const int atk, gameent* d, const bool islocal, const int id = 0);
     extern void avoidprojectiles(ai::avoidset& obstacles, const float radius);
+    extern void explode(gameent* owner, const int atk, const vec& position, const vec& velocity);
 
     // weapon.cpp
     enum

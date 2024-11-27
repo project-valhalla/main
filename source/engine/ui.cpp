@@ -2065,7 +2065,7 @@ namespace UI
     {
         float scale, wrap;
         Color color;
-        textinfo info;
+        text::Label label;
         int fontid, lastchange;
         int align, shadow, outlinealpha;
         float outline;
@@ -2074,7 +2074,7 @@ namespace UI
         bool changed;
         uint crc; // string hash used for change detection
 
-        Text() : scale(0), wrap(0), color(0), info({0, 0, 0}), lastchange(0), align(curwrapalign), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), justify(curjustify), nofallback(curnofallback), language(NULL), crc(0) {}
+        Text() : scale(0), wrap(0), color(0), lastchange(0), align(curwrapalign), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), justify(curjustify), nofallback(curnofallback), language(NULL), crc(0) {}
 
         void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1)
         {
@@ -2137,24 +2137,21 @@ namespace UI
             pushhudscale(textscale);
             if(shadow)
             {
-                draw_text(info, x-0.001/textscale, y+0.001/textscale, (color.a < shadow ? color.a : shadow), true);
+                label.draw(x-0.001/textscale, y+0.001/textscale, (color.a < shadow ? color.a : shadow), true);
             }
-            draw_text(info, x, y, color.a);
+            label.draw(x, y, color.a);
             pophudmatrix();
         }
 
-        void hide() { Object::hide(); cleartext(); }
+        void hide() { Object::hide(); label.clear(); }
 
         void cleartext()
         {
-            if(info.tex)
-            {
-                glDeleteTextures(1, &info.tex);
-                info.tex = 0;
-            }
+            Object::cleartext();
+            label.clear();
         }
 
-        ~Text() { cleartext(); delete[] language; }
+        ~Text() { label.clear(); delete[] language; }
 
         void layout()
         {
@@ -2176,14 +2173,14 @@ namespace UI
                     crc = crc_new;
                 }
             }
-            if(changed && info.tex) cleartext();
+            if(changed && label.valid()) label.clear();
 
-            if(!info.tex)
+            if(!label.valid())
             {
-                prepare_text(text, info, int(wrap/k), bvec(color.r, color.g, color.b), -1, outline * FONTH / 16.f, bvec4(0, 0, 0, outlinealpha), align, justify, language, nofallback);
+                label = text::prepare(text, int(wrap/k), bvec(color.r, color.g, color.b), -1, outline * FONTH / 16.f, bvec4(0, 0, 0, outlinealpha), align, justify, language, nofallback);
             }
-            w = max(w, info.w*k);
-            h = max(h, info.h*k);
+            w = max(w, label.width()*k);
+            h = max(h, label.height()*k);
         }
     };
 
@@ -3918,7 +3915,7 @@ namespace UI
 
         int tw = hudw, th = hudh;
         if(forceaspect) tw = int(ceil(th*forceaspect));
-        gettextres(tw, th);
+        text::getres(tw, th);
         uicontextscale = 1.f/th * uiscale;
     }
 

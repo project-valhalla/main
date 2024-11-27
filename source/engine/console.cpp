@@ -4,7 +4,7 @@
 #include "engine.h"
 
 #define MAXCONLINES 1000
-struct cline { char *line; int type, outtime; float fontsize, w; textinfo info; };
+struct cline { char *line; int type, outtime; float fontsize, w; text::Label label; };
 reversequeue<cline, MAXCONLINES> conlines;
 
 int commandmillis = -1, inputmillis = 0;
@@ -19,7 +19,6 @@ VARFP(maxcon, 10, 200, MAXCONLINES,
     {
         cline &cl = conlines.pop();
         delete[] cl.line;
-        if(cl.info.tex) glDeleteTextures(1, &cl.info.tex);
     }
 });
 
@@ -63,22 +62,19 @@ void conline(int type, const char *sf) // add a line to the console buffer
         if(!(prev&CON_TAG_MASK)) break;
         if(type == prev)
         {
-            buf = conlines.remove(i).line;
+            buf = conlines[i].line;
+            //buf = conlines.remove(i).line;
+            conlines.remove(i);
             break;
         }
     }
     if(!buf) buf = conlines.length() >= maxcon ? conlines.remove().line : newstring("", CONSTRLEN-1);
     cline &cl = conlines.add();
-    if(cl.info.tex)
-    {
-        glDeleteTextures(1, &cl.info.tex);
-        cl.info.tex = 0;
-    }
+    cl.label.clear();
     cl.line = buf;
     cl.type = type;
     cl.outtime = totalmillis; // for how long to keep line on screen
     cl.fontsize = cl.w = 0;
-    cl.info = {0, 0, 0};
     defformatstring(prefixedsf, "%s%s", getprefix(type), sf);
     copystring(cl.line, prefixedsf, CONSTRLEN);
 }
@@ -113,18 +109,13 @@ float rendercommand(float x, float y, float w)
 
     pushfont();
     setfont("default");
-    textinfo info;
-    prepare_console_text(buf, info, w, commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf));
-    y -= info.h;
+    const text::Label label = text::prepare_for_console(buf, w, commandpos>=0 ? commandpos+1 + strlen(prompt) : strlen(buf));
+    y -= label.height();
     
-    if(info.tex)
-    {
-        draw_console_text(info, x, y);
-        glDeleteTextures(1, &info.tex);
-    }
+    label.draw_as_console(x, y);
     
     popfont();
-    return info.h;
+    return label.height();
 }
 
 VARP(consize, 0, 5, 100);
@@ -165,21 +156,14 @@ ICOMMAND(clearconsole, "", (),
     {
         cline &cl = conlines.pop();
         delete[] cl.line;
-        if(cl.info.tex)
-        {
-            glDeleteTextures(1, &cl.info.tex);
-        }
+        cl.label.clear();
     }
 });
 
 // free conline textures, necessary when changing font settings or calling `resetgl()`
 void clearconsoletextures()
 {
-    loopv(conlines) if(conlines[i].info.tex)
-    {
-        glDeleteTextures(1, &conlines[i].info.tex);
-        conlines[i].info.tex = 0;
-    }
+    loopv(conlines) conlines[i].label.clear();
 }
 
 float drawconlines(int conskip, int confade, float conwidth, float conheight, float conoff, int maxlines, bool full, int filter, float y = 0, int dir = 1)
@@ -206,14 +190,15 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         if(!(conlines[idx].type&filter)) continue;
         char *line = conlines[idx].line;
         int width, height;
-        if(conlines[idx].w != conwidth || conlines[idx].fontsize != fontsize || !conlines[idx].info.tex)
+        const text::Label& label = conlines[idx].label;
+        if(conlines[idx].w != conwidth || conlines[idx].fontsize != fontsize || !label.valid())
         {
-            measure_text(line, conwidth, width, height);
+            text::measure(line, conwidth, width, height);
         }
         else
         {
-            width = conlines[idx].info.w;
-            height = conlines[idx].info.h;
+            width = label.width();
+            height = label.height();
         }
         if(maxlines > 0) { if(++n > maxlines) { numl = i; if(offset == idx) ++offset; break; } }
         else if(totalheight + height > conheight) { numl = i; if(offset == idx) ++offset; break; }
@@ -225,22 +210,21 @@ float drawconlines(int conskip, int confade, float conwidth, float conheight, fl
         int idx = offset + (dir > 0 ? numl-i-1 : i);
         if(!(conlines[idx].type&filter)) continue;
         char *line = conlines[idx].line;
-        textinfo &info = conlines[idx].info;
-        if(conlines[idx].w != conwidth || conlines[idx].fontsize != fontsize || !info.tex)
+        text::Label& label = conlines[idx].label;
+        if(conlines[idx].w != conwidth || conlines[idx].fontsize != fontsize || !label.valid())
         {
-            if(info.tex) glDeleteTextures(1, &info.tex);
-            if(!full) prepare_console_text(line, info, conwidth, -1);
-            else prepare_text(line, info, conwidth, bvec(255, 255, 255), -1);
+            if(!full) label = text::prepare_for_console(line, conwidth, -1);
+            else label = text::prepare(line, conwidth, bvec(255, 255, 255), -1);
             conlines[idx].w = conwidth;
             conlines[idx].fontsize = fontsize;
         }
-        if(dir <= 0) y -= info.h;
-        if(info.tex)
+        if(dir <= 0) y -= label.height();
+        if(label.valid())
         {
-            if(!full) draw_console_text(info, conoff, y);
-            else draw_text(info, conoff, y);
+            if(!full) label.draw_as_console(conoff, y);
+            else label.draw(conoff, y);
         }
-        if(dir > 0) y += info.h;
+        if(dir > 0) y += label.height();
     }
     return y+conoff;
 }

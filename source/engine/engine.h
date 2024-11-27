@@ -33,12 +33,6 @@ extern int screenw, screenh, renderw, renderh, hudw, hudh;
 extern vector<int> entgroup;
 
 // rendertext
-struct textinfo
-{
-    GLuint tex;
-    int w, h;
-};
-
 #define FONTH (fontsize)
 #define FONTW (FONTH/2)
 #define MINRESW 640
@@ -61,30 +55,101 @@ extern int  getcurfontid();
 extern bool setfont(const char *name);
 extern void pushfont();
 extern bool popfont();
-extern void measure_text(const char *str, int maxw, int &w, int &h, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
-extern void prepare_text(const char *str, textinfo &info, int maxw, bvec color = bvec(255, 255, 255), int cursor = -1, float outline = 0, bvec4 ol_color = bvec4(0, 0, 0, 0), int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
-extern void prepare_text_particle(const char *str, textinfo &info, bvec color = bvec(255, 255, 255), float outline = 0, bvec4 ol_color = bvec4(0, 0, 0, 0), const char *lang = NULL, bool no_fallback = false);
-extern void draw_text(const textinfo &info, float left, float top, int a = 255, bool black = false);
-extern void draw_text(const char *str, float left, float top, bvec color = bvec(255, 255, 255), int a = 255, int maxw = 0, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
-extern void gettextres(int &w, int &h);
-extern int  text_visible(const char *str, float hitx, float hity, int maxw, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
-extern void text_pos(const char *str, int cursor, int &cx, int &cy, int maxw, int align = -1, int justify = 0, const char *lang = NULL, bool no_fallback = false);
 extern void reloadfonts();
-
-extern void prepare_console_text(const char *str, textinfo &info, int maxw, int cursor);
-extern void draw_console_text(const textinfo &info, float left, float top);
-extern void draw_console_text(const char *str, float left, float top, int maxw = 0, int cursor = -1);
-
 static inline void setfontsize(float size) { fontsize = size; }
-static inline void draw_textf(const char *fstr, double left, double top, ...)
+
+namespace text
 {
-    defvformatstring(str, top, fstr);
-    draw_text(str, left, top);
-}
-static inline void draw_console_textf(const char *fstr, double left, double top, ...)
-{
-    defvformatstring(str, top, fstr);
-    draw_console_text(str, left, top);
+    // A rendered text label, ready to be drawn
+    class Label
+    {
+        GLuint tex;
+        int w, h;
+
+    public:
+        Label();
+        ~Label();
+        Label(const Label&) = delete;
+        Label(Label&&) noexcept;
+        Label& operator=(const Label&) = delete;
+        Label& operator=(Label&&) noexcept;
+
+        bool valid()  const { return tex != 0; }
+        int  width()  const { return w; }
+        int  height() const { return h; }
+        void clear();
+
+        void draw(double left, double top,
+            int alpha = 255,
+            bool black = false
+        ) const;
+        void draw_as_console(double left, double top) const;
+
+        friend Label prepare(const char *, int, bvec, int, float, bvec4, int, int, const char *, bool);
+    };
+
+    void measure(const char *str, int maxw, int &w, int &h,
+        int align = -1,
+        int justify = 0,
+        const char *lang = NULL,
+        bool no_fallback = false
+    );
+    Label prepare(const char *str, int maxw,
+        bvec color = bvec(255, 255, 255),
+        int cursor = -1,
+        float outline = 0,
+        bvec4 ol_color = bvec4(0, 0, 0, 0),
+        int align = -1,
+        int justify = 0,
+        const char *lang = NULL,
+        bool no_fallback = false
+    );
+    Label prepare_for_console(const char *str, int maxw, int cursor);
+    const Label& prepare_for_particle(const char *str,
+        bvec color = bvec(255, 255, 255),
+        float outline = 0,
+        bvec4 ol_color = bvec4(0, 0, 0, 0),
+        const char *lang = NULL,
+        bool no_fallback = false
+    );
+
+    void draw(const char *str, double left, double top,
+        bvec color = bvec(255, 255, 255),
+        int a = 255,
+        int maxw = 0,
+        int align = -1,
+        int justify = 0,
+        const char *lang = NULL,
+        bool no_fallback = false
+    );
+    static inline void draw_fmt(const char *fstr, double left, double top, ...)
+    {
+        defvformatstring(str, top, fstr);
+        draw(str, left, top);
+    }
+    void draw_as_console(const char *str, double left, double top,
+        int maxw = 0,
+        int cursor = -1
+    );
+    static inline void draw_as_console_fmt(const char *fstr, double left, double top, ...)
+    {
+        defvformatstring(str, top, fstr);
+        draw_as_console(str, left, top);
+    }
+    
+    void getres(int &w, int &h);
+    int visible(const char *str, float hitx, float hity, int maxw,
+        int align = -1,
+        int justify = 0,
+        const char *lang = NULL,
+        bool no_fallback = false
+    );
+    void pos(const char *str, int cursor, int &cx, int &cy, int maxw,
+        int align = -1,
+        int justify = 0,
+        const char *lang = NULL,
+        bool no_fallback = false
+    );
 }
 
 // texture

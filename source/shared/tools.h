@@ -1215,14 +1215,14 @@ template <class T, int SIZE> struct queue
 
     T remove(int offset)
     {
-        T val = removing(offset);
-        if(head+offset >= SIZE) for(int i = head+offset - SIZE + 1; i < tail; i++) data[i-1] = data[i];
-        else if(head < tail) for(int i = head+offset + 1; i < tail; i++) data[i-1] = data[i];
+        T val = (T&&)(removing(offset));
+        if(head+offset >= SIZE) for(int i = head+offset - SIZE + 1; i < tail; i++) data[i-1] = (T&&)(data[i]);
+        else if(head < tail) for(int i = head+offset + 1; i < tail; i++) data[i-1] = (T&&)(data[i]);
         else
         {
-            for(int i = head+offset + 1; i < SIZE; i++) data[i-1] = data[i];
-            data[SIZE-1] = data[0];
-            for(int i = 1; i < tail; i++) data[i-1] = data[i];
+            for(int i = head+offset + 1; i < SIZE; i++) data[i-1] = (T&&)(data[i]);
+            data[SIZE-1] = (T&&)(data[0]);
+            for(int i = 1; i < tail; i++) data[i-1] = (T&&)(data[i]);
         }
         tail--;
         if(tail < 0) tail += SIZE;

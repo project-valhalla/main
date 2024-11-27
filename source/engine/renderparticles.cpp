@@ -515,14 +515,13 @@ struct textrenderer : listrenderer
         setfont(p->font);
         setfontsize(hudh / PARTICLETEXTROWS);
 
-        textinfo info;
-        prepare_text_particle(p->text, info, p->color, FONTH / 32.f, bvec4(0, 0, 0, 255), p->language);
-        if(!info.tex)
+        const text::Label& label = text::prepare_for_particle(p->text, p->color, FONTH / 32.f, bvec4(0, 0, 0, 255), p->language);
+        if(!label.valid())
         {
             popfont();
             return;
         }
-        float scale = p->size/80.0f, xoff = -info.w/2, yoff = -info.h/2;
+        float scale = p->size/80.0f, xoff = -label.width()/2, yoff = -label.width()/2;
         if((type&0xFF)==PT_TEXTUP) { xoff += detrnd((size_t)p, 100)-50; yoff -= detrnd((size_t)p, 101); }
 
         matrix4x3 m(camright, vec(camup).neg(), vec(camdir).neg(), o);
@@ -530,7 +529,7 @@ struct textrenderer : listrenderer
         m.translate(xoff, yoff, 50);
 
         textmatrix = &m;
-        draw_text(info, 0, 0, blend);
+        label.draw(0, 0, blend);
         popfont();
         textmatrix = NULL;
     }
@@ -955,7 +954,7 @@ void debugparticles()
     pushhudmatrix();
     hudmatrix.ortho(0, FONTH*n*2*vieww/float(viewh), FONTH*n*2, 0, -1, 1); // squeeze into top-left corner
     flushhudmatrix();
-    loopi(n) draw_text(parts[i]->info, FONTH, (i+n/2)*FONTH);
+    loopi(n) text::draw(parts[i]->info, FONTH, (i+n/2)*FONTH);
     pophudmatrix();
 }
 

@@ -210,31 +210,28 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     if(caption)
     {
         setfontsize(h * 1.5 / LOADSCREENTEXTROWS);
-        textinfo i_caption;
         pushfont();
         setfont("wide");
-        prepare_text(caption, i_caption, 0);
+        const text::Label caption_label = text::prepare(caption, 0);
         popfont();
-        int tw = i_caption.w;
-        float tsz = 0.04f*lw/FONTH,
+        const int tw = caption_label.width();
+        const float tsz = 0.04f*lw/FONTH,
               tx = 0.5f*(w - tw*tsz), ty = h - 0.075f*1.5f*lw - FONTH*tsz;
 
-        draw_text(i_caption, tx, ty);
-        glDeleteTextures(1, &i_caption.tex);
+        caption_label.draw(tx, ty);
     }
     if(mapshot || mapname)
     {
         setfontsize(h * 1 / LOADSCREENTEXTROWS);
-        textinfo i_info, i_name;
+        text::Label info_label;
         float infowidth = 0.5f*lw, sz = 0.35f*lw,
             msz = (0.85f*lw - sz)/(infowidth + FONTH),
             x = 0.5f*w, ly = 0.5f*lw, y = (0.5f*(h*0.5f - ly) + ly) - sz/15,
-            mx = 0, my = 0, mw = 0;//, mh = 0;
+            mx = 0, my = 0, mw = 0;
         if(mapinfo)
         {
-            prepare_text(mapinfo, i_info, infowidth);
-            mw = i_info.w;
-            //mh = i_info.h;
+            info_label = text::prepare(mapinfo, infowidth);
+            mw = info_label.width();
             x -= 0.5f*mw*msz;
             if(mapshot && mapshot!=notexture)
             {
@@ -254,19 +251,16 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
             setfontsize(h * 1.5 / LOADSCREENTEXTROWS);
             pushfont();
             setfont("wide");
-            prepare_text(mapname, i_name, 0);
+            const text::Label name_label = text::prepare(mapname, 0);
             popfont();
-            float /*tw = i_name.w,*/ tsz = sz/(8*FONTH)/*, tx = max(0.5f*(mw*msz - tw*tsz), 0.0f)*/;
+            float tsz = sz/(8*FONTH);
 
-            //draw_text(i_name, x+mx+tx, y);
-            draw_text(i_name, x + sz + (infowidth - i_name.w) / 2, y);
-            glDeleteTextures(1, &i_name.tex);
+            name_label.draw(x + sz + (infowidth - name_label.width()) / 2, y);
             my = 1.5f*FONTH*tsz;
         }
         if(mapinfo)
         {
-            draw_text(i_info, x+mx, y+my);
-            glDeleteTextures(1, &i_info.tex);
+            info_label.draw(x+mx, y+my);
         }
     }
 
@@ -295,7 +289,7 @@ void renderbackground(const char *caption, Texture *mapshot, const char *mapname
     int w = hudw, h = hudh;
     if(forceaspect) w = int(ceil(h*forceaspect));
     getbackgroundres(w, h);
-    gettextres(w, h);
+    text::getres(w, h);
 
     if(force)
     {
@@ -357,14 +351,12 @@ void renderprogressview(int w, int h, float bar, const char *text)   // also use
     if(text)
     {
         setfontsize(h * 0.8 / LOADSCREENTEXTROWS);
-        textinfo i_text;
-        prepare_text(text, i_text, 0, bvec(255, 255, 255));
-        int tw = i_text.w;
+        const text::Label label = text::prepare(text, 0, bvec(255, 255, 255));
+        const int tw = label.width();
         float tsz = bh*0.6f/FONTH;
         if(tw*tsz > mw) tsz = mw/tw;
 
-        draw_text(i_text, bx+sw, by+ (bh - FONTH*tsz)/2);
-        glDeleteTextures(1, &i_text.tex);
+        label.draw(bx+sw, by+ (bh - FONTH * tsz)/2);
     }
 
     glDisable(GL_BLEND);
@@ -393,7 +385,7 @@ void renderprogress(float bar, const char *text, bool background)   // also used
     int w = hudw, h = hudh;
     if(forceaspect) w = int(ceil(h*forceaspect));
     getbackgroundres(w, h);
-    gettextres(w, h);
+    text::getres(w, h);
 
     extern int mesa_swap_bug, curvsync;
     bool forcebackground = progressbackground || (mesa_swap_bug && (curvsync || totalmillis==1));

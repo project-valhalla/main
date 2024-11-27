@@ -195,7 +195,7 @@ struct editor
     void updateheight()
     {
         int width;
-        measure_text(lines[0].text, pixelwidth, width, pixelheight);
+        text::measure(lines[0].text, pixelwidth, width, pixelheight);
     }
 
     void setfile(const char *fname)
@@ -470,8 +470,8 @@ struct editor
                 {
                     int x, y;
                     char *str = currentline().text;
-                    text_pos(str, cx+1, x, y, pixelwidth);
-                    if(y > 0) { cx = text_visible(str, x, y-FONTH, pixelwidth); break; }
+                    text::pos(str, cx+1, x, y, pixelwidth);
+                    if(y > 0) { cx = text::visible(str, x, y-FONTH, pixelwidth); break; }
                 }
                 cy--;
                 break;
@@ -480,10 +480,10 @@ struct editor
                 {
                     int x, y, width, height;
                     char *str = currentline().text;
-                    text_pos(str, cx, x, y, pixelwidth);
-                    measure_text(str, pixelwidth, width, height);
+                    text::pos(str, cx, x, y, pixelwidth);
+                    text::measure(str, pixelwidth, width, height);
                     y += FONTH;
-                    if(y < height) { cx = text_visible(str, x, y, pixelwidth); break; }
+                    if(y < height) { cx = text::visible(str, x, y, pixelwidth); break; }
                 }
                 cy++;
                 break;
@@ -572,12 +572,12 @@ struct editor
         for(int i = scrolly; i < lines.length(); i++)
         {
             int width, height;
-            measure_text(lines[i].text, maxwidth, width, height);
+            text::measure(lines[i].text, maxwidth, width, height);
             if(h + height > pixelheight) break;
 
             if(hity >= h && hity <= h+height)
             {
-                int x = text_visible(lines[i].text, hitx, hity-h, maxwidth);
+                int x = text::visible(lines[i].text, hitx, hity-h, maxwidth);
                 if(dragged) { mx = x; my = i; } else { cx = x; cy = i; };
                 break;
             }
@@ -592,7 +592,7 @@ struct editor
         for(int ph = pixelheight; slines > 0 && ph > 0;)
         {
             int width, height;
-            measure_text(lines[slines-1].text, maxwidth, width, height);
+            text::measure(lines[slines-1].text, maxwidth, width, height);
             if(height > ph) break;
             ph -= height;
             slines--;
@@ -616,7 +616,7 @@ struct editor
             for(int i = cy; i >= scrolly; i--)
             {
                 int width, height;
-                measure_text(lines[i].text, maxwidth, width, height);
+                text::measure(lines[i].text, maxwidth, width, height);
                 if(h + height > pixelheight) { scrolly = i+1; break; }
                 h += height;
             }
@@ -626,14 +626,14 @@ struct editor
         {
             // convert from cursor coords into pixel coords
             int psx, psy, pex, pey;
-            text_pos(lines[sy].text, sx, psx, psy, maxwidth);
-            text_pos(lines[ey].text, ex, pex, pey, maxwidth);
+            text::pos(lines[sy].text, sx, psx, psy, maxwidth);
+            text::pos(lines[ey].text, ex, pex, pey, maxwidth);
             int maxy = lines.length();
             int h = 0;
             for(int i = scrolly; i < maxy; i++)
             {
                 int width, height;
-                measure_text(lines[i].text, maxwidth, width, height);
+                text::measure(lines[i].text, maxwidth, width, height);
                 if(h + height > pixelheight) { maxy = i; break; }
                 if(i == sy) psy += h;
                 if(i == ey) { pey += h; break; }
@@ -682,28 +682,24 @@ struct editor
         int h = 0;
         for(int i = scrolly; i < lines.length(); i++)
         {
-            textinfo info;
-            prepare_text(lines[i].text, info, maxwidth, bvec(255, 255, 255), hit&&(cy==i)?cx:-1);
-            if(h + info.h > pixelheight) break;
+            const text::Label label = text::prepare(lines[i].text, maxwidth, bvec(255, 255, 255), hit&&(cy==i)?cx:-1);
+            if(h + label.height() > pixelheight) break;
 
-            if(info.tex)
-            {
-                draw_text(info, x, y);
-                glDeleteTextures(1, &info.tex);
-            }
-            if(linewrap && info.h > FONTH) // line wrap indicator
+            if(label.valid()) label.draw(x, y);
+
+            if(linewrap && label.height() > FONTH) // line wrap indicator
             {
                 hudnotextureshader->set();
                 gle::colorub(0x80, 0xA0, 0x80);
                 gle::defvertex(2);
                 gle::begin(GL_TRIANGLE_STRIP);
                 gle::attribf(x,         y+h+FONTH);
-                gle::attribf(x,         y+h+info.h);
+                gle::attribf(x,         y+h+label.height());
                 gle::attribf(x-FONTW/2, y+h+FONTH);
-                gle::attribf(x-FONTW/2, y+h+info.h);
+                gle::attribf(x-FONTW/2, y+h+label.height());
                 gle::end();
             }
-            h+=info.h;
+            h+=label.height();
         }
     }
 };

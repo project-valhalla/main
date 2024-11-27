@@ -633,7 +633,7 @@ namespace game
             }
             if (attacks[atk].headshotdamage)
             {
-				// Weapons deal locational damage only if headshot damage is specified.
+                // Weapons deal locational damage only if headshot damage is specified.
                 if (flags & Hit_Head)
                 {
                     if (m_mayhem(mutators))
@@ -964,6 +964,7 @@ namespace game
 
     void gunselect(int gun, gameent* d)
     {
+        d->lastswitchattempt = lastmillis;
         if (gun == d->gunselect || lastmillis - d->lastswitch < 100)
         {
             return;
@@ -1020,7 +1021,14 @@ namespace game
                 gun = (gun + dir) % NUMGUNS;
                 if (force || self->ammo[gun]) break;
             }
-            if (gun != self->gunselect) gunselect(gun, self);
+            if (gun != self->gunselect)
+            {
+                gunselect(gun, self);
+            }
+            else
+            {
+                self->lastswitchattempt = lastmillis;
+            }
         }
     }
     ICOMMAND(nextweapon, "ii", (int* dir, int* force), nextweapon(*dir, *force != 0));
@@ -1039,16 +1047,33 @@ namespace game
     void setweapon(const char* name, bool force = false)
     {
         int gun = getweapon(name);
-        if (self->state != CS_ALIVE || !validgun(gun)) return;
-        if (force || self->ammo[gun]) gunselect(gun, self);
+        if (self->state != CS_ALIVE || !validgun(gun))
+        {
+            return;
+        }
+        if (force || self->ammo[gun])
+        {
+            gunselect(gun, self);
+        }
+        else
+        {
+            self->lastswitchattempt = lastmillis;
+        }
     }
     ICOMMAND(setweapon, "si", (char* name, int* force), setweapon(name, *force != 0));
 
     void cycleweapon(int numguns, int* guns, bool force = false)
     {
-        if (numguns <= 0 || self->state != CS_ALIVE) return;
+        if (numguns <= 0 || self->state != CS_ALIVE)
+        {
+            return;
+        }
         int offset = 0;
-        loopi(numguns) if (guns[i] == self->gunselect) { offset = i + 1; break; }
+        loopi(numguns) if (guns[i] == self->gunselect)
+        {
+            offset = i + 1;
+            break;
+        }
         loopi(numguns)
         {
             int gun = guns[(i + offset) % numguns];
@@ -1058,6 +1083,7 @@ namespace game
                 return;
             }
         }
+        self->lastswitchattempt = lastmillis;
         playsound(S_WEAPON_NOAMMO);
     }
     ICOMMAND(cycleweapon, "V", (tagval* args, int numargs),
@@ -1070,7 +1096,10 @@ namespace game
 
     void weaponswitch(gameent* d)
     {
-        if (d->state != CS_ALIVE) return;
+        if (d->state != CS_ALIVE)
+        {
+            return;
+        }
         int s = d->gunselect;
         if (s != GUN_SCATTER && d->ammo[GUN_SCATTER])
         {
@@ -1101,14 +1130,21 @@ namespace game
 
     ICOMMAND(weapon, "V", (tagval* args, int numargs),
     {
-        if (self->state != CS_ALIVE) return;
+        if (self->state != CS_ALIVE)
+        {
+            return;
+        }
         loopi(3)
         {
             const char* name = i < numargs ? args[i].getstr() : "";
             if (name[0])
             {
                 int gun = getweapon(name);
-                if (validgun(gun) && gun != self->gunselect && self->ammo[gun]) { gunselect(gun, self); return; }
+                if (validgun(gun) && gun != self->gunselect && self->ammo[gun])
+                { 
+                    gunselect(gun, self);
+                    return;
+                }
             }
             else
             { 
@@ -1116,6 +1152,7 @@ namespace game
                 return;
             }
         }
+        self->lastswitchattempt = lastmillis;
         playsound(S_WEAPON_NOAMMO);
     });
 

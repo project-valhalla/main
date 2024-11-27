@@ -283,20 +283,30 @@ namespace game
         if(d) intret(d->gunselect);
     });
 
+    ICOMMAND(isgunselect, "s", (char* gun),
+    {
+        gameent* d = followingplayer(self);
+        int weapon = getweapon(gun);
+        intret(validgun(weapon) && d->gunselect == weapon ? 1 : 0);
+    });
+
+    ICOMMAND(getlastswitchattempt, "", (),
+    {
+        gameent* d = followingplayer(self);
+        intret(d->lastswitchattempt);
+    });
+
     ICOMMAND(getclientammo, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
         if(d) intret(d->ammo[d->gunselect]);
     });
 
-    ICOMMAND(hasammo, "ii", (int *gun, int *excludeselect),
+    ICOMMAND(hasammo, "s", (char* gun),
     {
         gameent *d = followingplayer(self);
-        if((!*excludeselect || (*excludeselect && d->gunselect != *gun)) && d->ammo[*gun])
-        {
-            intret(1);
-        }
-        else intret(0);
+        int weapon = getweapon(gun);
+        intret(validgun(weapon) && d->ammo[weapon] ? 1 : 0);
     });
 
     ICOMMAND(getclientpowerup, "i", (int *cn),
@@ -1885,6 +1895,7 @@ namespace game
                 int gun = getint(p);
                 if(!validgun(gun)) return;
                 d->gunselect = gun;
+                d->lastswitchattempt = lastmillis;
                 doweaponchangeffects(d, gun);
                 break;
             }

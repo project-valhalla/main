@@ -275,7 +275,7 @@ namespace game
                 adddynlight(vec(to).madd(dir, 4), 80, vec(1.0f, 0.50f, 1.0f), 20);
                 if (hit)
                 {
-                    particle_flare(to, to, 120, PART_ELECTRICITY, 0xEE88EE, 8.0f);
+                    particle_flare(to, to, 120, PART_ELECTRICITY, 0xEE88EE, 1.0f + rndscale(8.0f));
                     break;
                 }
                 if (iswater) break;
@@ -296,7 +296,7 @@ namespace game
                 {
                     if (isInstagib)
                     {
-                        particle_flare(to, to, 200, PART_ELECTRICITY, 0x008080, 5.0f);
+                        particle_flare(to, to, 200, PART_ELECTRICITY, 0x008080, 2.0f + rndscale(5.0f));
                     }
                     break;
                 }
@@ -1100,32 +1100,16 @@ namespace game
         {
             return;
         }
-        int s = d->gunselect;
-        if (s != GUN_SCATTER && d->ammo[GUN_SCATTER])
+
+        static const int weaponPriority[] = { GUN_SMG, GUN_SCATTER, GUN_PULSE, GUN_ROCKET, GUN_RAIL, GUN_GRENADE, GUN_INSTA, GUN_ZOMBIE, GUN_PISTOL };
+        for (int weapon : weaponPriority)
         {
-            s = GUN_SCATTER;
+            if (weapon != d->gunselect && d->ammo[weapon])
+            {
+                gunselect(weapon, d);
+                break;
+            }
         }
-        else if (s != GUN_SMG && d->ammo[GUN_SMG])
-        {
-            s = GUN_SMG;
-        }
-        else if (s != GUN_PULSE && d->ammo[GUN_PULSE])
-        {
-            s = GUN_PULSE;
-        }
-        else if (s != GUN_ROCKET && d->ammo[GUN_ROCKET])
-        {
-            s = GUN_ROCKET;
-        }
-        else if (s != GUN_RAIL && d->ammo[GUN_RAIL])
-        {
-            s = GUN_RAIL;
-        }
-        else if (s != GUN_GRENADE && d->ammo[GUN_GRENADE])
-        {
-            s = GUN_GRENADE;
-        }
-        gunselect(s, d);
     }
 
     ICOMMAND(weapon, "V", (tagval* args, int numargs),

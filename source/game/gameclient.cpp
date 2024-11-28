@@ -2268,7 +2268,8 @@ namespace game
                     stopownersounds(d);
                     playsound(S_INFECTED, d);
                     particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
-                    d->lastswitch = lastmillis;
+                    doweaponchangeffects(d, GUN_ZOMBIE);
+                    d->lastswitchattempt = lastmillis;
                 }
                 if (d == followingplayer(self))
                 {
@@ -2284,7 +2285,8 @@ namespace game
                 gameent *d = getclient(cn);
                 if(!d) return;
                 d->voosh(gun);
-                d->lastswitch = lastmillis;
+                doweaponchangeffects(d, gun);
+                d->lastswitchattempt = lastmillis;
                 if(d == self) playsound(S_VOOSH);
                 break;
             }

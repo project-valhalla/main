@@ -3709,7 +3709,7 @@ void chopstr(char *s, int *lim, char *ellipsis)
         if(*lim < 0) // strchop "abcdef" -3 "" => def ; strchop "abcdef" -3 "AB" => ABf ; strchop "abcdef" -3 "ABCD" => ABCD
         {
             uint _c;
-            const int offset = uni_noffset(s, maxlen - uni_elen);
+            const int offset = uni_negoffset(s, maxlen - uni_elen);
             int n = uni_offset(s + offset, maxlen - uni_elen);
             n += uni_getchar(s + offset + n, _c);
 
@@ -4446,6 +4446,9 @@ ICOMMAND(codestr, "i", (int *i),
     uni_code2str(*i, dst);
     stringret(dst);
 })
+ICOMMAND(strbytelen, "s", (char *s), intret(strlen(s)));
+ICOMMAND(char2byteindex, "si", (char *s, int *i), intret(uni_offset(s, *i)));
+ICOMMAND(byte2charindex, "si", (char *s, int *i), intret(uni_index(s, *i)));
 
 int naturalsort(const char *a, const char *b)
 {

@@ -332,6 +332,7 @@ static void add_text_to_layout(const char *markup, int len, PangoLayout *layout,
     }
     text[j] = '\0';
     if(map_markup_to_text) map_markup_to_text[i] = j;
+    if(map_text_to_markup) map_text_to_markup[j] = i;
 
     if(attr)
     {
@@ -416,22 +417,40 @@ void reloadfonts() { clear_text_particles(); UI::cleartext(); }
 
 namespace text
 {
-    Label::Label() : tex(0) {};
+    Label::Label() : tex(0), layout(nullptr), map_markup_to_text(nullptr), map_text_to_markup(nullptr) {};
     Label::~Label()
     {
+        delete[] map_markup_to_text;
+        delete[] map_text_to_markup;
+        if(layout) g_object_unref(layout);
         if(tex != 0) glDeleteTextures(1, &tex);
     }
-    Label::Label(Label&& other) noexcept : tex(other.tex), w(other.w), h(other.h)
+    Label::Label(Label&& other) noexcept : tex(other.tex), w(other.w), h(other.h), ox(other.ox), oy(other.oy), layout(other.layout), map_markup_to_text(other.map_markup_to_text), map_text_to_markup(other.map_text_to_markup)
     {
+        other.map_markup_to_text = nullptr;
+        other.map_text_to_markup = nullptr;
+        other.layout = nullptr;
         other.tex = 0;
     }
     Label& Label::operator=(Label&& other) noexcept
     {
+        if(&other == this) return *this;
+        delete[] map_markup_to_text;
+        delete[] map_text_to_markup;
+        if(layout) g_object_unref(layout);
         if(tex != 0) glDeleteTextures(1, &tex);
         tex = other.tex;
         w = other.w;
         h = other.h;
+        ox = other.ox;
+        oy = other.oy;
+        layout = other.layout;
+        map_markup_to_text = other.map_markup_to_text;
+        map_text_to_markup = other.map_text_to_markup;
         other.tex = 0;
+        other.layout = nullptr;
+        other.map_markup_to_text = nullptr;
+        other.map_text_to_markup = nullptr;
         return *this;
     }
     void Label::clear()
@@ -441,6 +460,15 @@ namespace text
             glDeleteTextures(1, &tex);
             tex = 0;
         }
+        if(layout != nullptr)
+        {
+            g_object_unref(layout);
+            layout = nullptr;
+        }
+        delete[] map_markup_to_text;
+        delete[] map_text_to_markup;
+        map_markup_to_text = nullptr;
+        map_text_to_markup = nullptr;
     }
 
     void Label::draw(double left, double top, int a, bool black) const
@@ -484,6 +512,19 @@ namespace text
         draw(left, top);
     }
 
+    // TODO: apply x/y offsets
+    int Label::xy_to_index(float x, float y) const
+    {
+        const int px = (x - ox) * PANGO_SCALE, py = (y - oy) * PANGO_SCALE;
+        int ix, _trailing;
+        if(!pango_layout_xy_to_index(layout, px, py, &ix, &_trailing))
+        {
+            // user clicked outside of the label: set the cursor to the end of the string
+            ix = strlen(pango_layout_get_text(layout));
+        }
+        return map_text_to_markup ? map_text_to_markup[ix] : ix;
+    }
+
     void measure(const char *str, int maxw, int &w, int &h, int align, int justify, const char *lang, bool no_fallback)
     {
         int _offset;
@@ -491,24 +532,18 @@ namespace text
         if(layout) g_object_unref(layout);
     }
 
-    Label prepare(const char *str, int maxw, bvec color, int cursor, float outline, bvec4 ol_color, int align, int justify, const char *lang, bool no_fallback)
+    Label prepare(const char *str, int maxw, bvec color, int cursor, float outline, bvec4 ol_color, int align, int justify, const char *lang, bool no_fallback, bool keep_layout)
     {
         Label label;
         
         // measure text dimensions and create pango layout
         int width, height, offset;
         const int len = strlen(str);
-        int *map_markup_to_text = new int[len+1];
-        PangoLayout *layout = measure_text_internal(str, len, maxw, align, justify, color, width, height, offset, cursor >= 0 ? map_markup_to_text : NULL, NULL, lang, no_fallback);
-        if(!layout)
+        if(cursor >= 0 || keep_layout) label.map_markup_to_text = new int[len+1];
+        if(keep_layout) label.map_text_to_markup = new int[len+1];
+        label.layout = measure_text_internal(str, len, maxw, align, justify, color, width, height, offset, label.map_markup_to_text ? label.map_markup_to_text : NULL, label.map_text_to_markup ? label.map_text_to_markup : NULL, lang, no_fallback);
+        if(!label.layout || !width || !height)
         {
-            delete[] map_markup_to_text;
-            return label;
-        }
-        if(!width || !height)
-        {
-            g_object_unref(layout);
-            delete[] map_markup_to_text;
             return label;
         }
 
@@ -522,25 +557,23 @@ namespace text
         cairo_set_font_options(cr, options);
         cairo_move_to(cr, offset + ol_offset, ol_offset);
 
-        // draw text onto the surface
+        // draw text outline
         if(outline)
         {
             cairo_set_source_rgba(cr, ol_color.r/255.f, ol_color.g/255.f, ol_color.b/255.f, ol_color.a/255.f);
             cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
             cairo_set_line_width(cr, 2 * outline);
-            pango_cairo_layout_path(cr, layout);
+            pango_cairo_layout_path(cr, label.layout);
             cairo_stroke(cr);
         }
-        cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-        cairo_move_to(cr, offset + ol_offset, ol_offset);
-        pango_cairo_show_layout(cr, layout);
 
-        // add the cursor
+        // draw cursor outline and the cursor itself on top of it
         if(cursor >= 0 && ((totalmillis - inputmillis <= cursorblink) || !cursorblink || ((totalmillis - inputmillis) % (2*cursorblink)) <= cursorblink))
         {
-            cursor = min((int)strlen(pango_layout_get_text(layout)), map_markup_to_text[cursor]);
+            if(cursor > len) cursor = len;
+            cursor = min((int)strlen(pango_layout_get_text(label.layout)), label.map_markup_to_text[cursor]);
             PangoRectangle cur_rect;
-            pango_layout_get_cursor_pos(layout, cursor, &cur_rect, NULL);
+            pango_layout_get_cursor_pos(label.layout, cursor, &cur_rect, NULL);
 
             const float curw = max(1.f, fontsize / 16);
             cairo_rectangle(cr, cur_rect.x/PANGO_SCALE+ol_offset, cur_rect.y/PANGO_SCALE+ol_offset, curw, cur_rect.height/PANGO_SCALE);
@@ -553,26 +586,35 @@ namespace text
             cairo_fill(cr);
         }
 
+        // draw text on top of everything
+        cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+        cairo_move_to(cr, offset + ol_offset, ol_offset);
+        pango_cairo_show_layout(cr, label.layout);
+
+        if(!keep_layout)
+        {
+            g_object_unref(label.layout);
+            label.layout = nullptr;
+        }
+
         // create and upload texture
         glGenTextures(1, &label.tex);
         if(!label.tex)
         {
-            g_object_unref(layout);
             cairo_destroy(cr);
             cairo_surface_destroy(surface);
-            delete[] map_markup_to_text;
             return label;
         }
         glBindTexture(GL_TEXTURE_RECTANGLE, label.tex);
         glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_COMPRESSED_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, cairo_image_surface_get_data(surface));
         label.w = width;
         label.h = height;
+        label.ox = offset + ol_offset;
+        label.oy = ol_offset;
 
         // clean up
-        g_object_unref(layout);
         cairo_destroy(cr);
         cairo_surface_destroy(surface);
-        delete[] map_markup_to_text;
         return label;
     }
 

@@ -135,7 +135,7 @@ static inline int uni_offset(const char *str, uint ix)
     return (p - str);
 }
 // same but starting from the end of the string (str[-ix])
-static inline int uni_noffset(const char *str, uint ix)
+static inline int uni_negoffset(const char *str, uint ix)
 {
     const char *p = str + strlen(str);
     loopi(ix)

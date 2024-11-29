@@ -58,6 +58,7 @@ extern bool popfont();
 extern void reloadfonts();
 static inline void setfontsize(float size) { fontsize = size; }
 
+struct _PangoLayout;
 namespace text
 {
     // A rendered text label, ready to be drawn
@@ -65,6 +66,10 @@ namespace text
     {
         GLuint tex;
         int w, h;
+        int ox, oy; // offsets
+        _PangoLayout *layout;
+        int *map_markup_to_text;
+        int *map_text_to_markup;
 
     public:
         Label();
@@ -85,15 +90,21 @@ namespace text
         ) const;
         void draw_as_console(double left, double top) const;
 
-        friend Label prepare(const char *, int, bvec, int, float, bvec4, int, int, const char *, bool);
+        // do not call if the label was not prepared with `keep_layout=true`
+        int xy_to_index(float x, float y) const;
+
+        friend Label prepare(const char *, int, bvec, int, float, bvec4, int, int, const char *, bool, bool);
     };
 
+    // measure text before creating the label
+    // TODO: consider removing in favor of `Label::prepare()`
     void measure(const char *str, int maxw, int &w, int &h,
         int align = -1,
         int justify = 0,
         const char *lang = NULL,
         bool no_fallback = false
     );
+
     Label prepare(const char *str, int maxw,
         bvec color = bvec(255, 255, 255),
         int cursor = -1,
@@ -101,8 +112,9 @@ namespace text
         bvec4 ol_color = bvec4(0, 0, 0, 0),
         int align = -1,
         int justify = 0,
-        const char *lang = NULL,
-        bool no_fallback = false
+        const char *lang = NULL,            // language code, used for text shaping
+        bool no_fallback = false,           // don't use fallback fonts for unavailable glyphs
+        bool keep_layout = false            // use only if you need to call `xy_to_index()`
     );
     Label prepare_for_console(const char *str, int maxw, int cursor);
     const Label& prepare_for_particle(const char *str,

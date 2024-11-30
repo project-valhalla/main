@@ -593,12 +593,17 @@ void execbind(keym &k, bool isdown)
     k.pressed = isdown;
 }
 
-void iskeyheld(char *key)
+int iskeyheld(char *key)
 {
-    keym* km = findbind(key);
-    intret(km->pressed ? 1 : 0);
+    // look for the key name in the keymap
+    const keym* km = findbind(key);
+    if(!km) return 0;
+
+    // convert keycode to scancode
+    const SDL_Scancode scancode = SDL_GetScancodeFromKey(km->code);
+    return SDL_GetKeyboardState(nullptr)[scancode];
 }
-ICOMMAND(iskeyheld, "s", (char* key), iskeyheld(key));
+ICOMMAND(iskeyheld, "s", (char* key), intret(iskeyheld(key)));
 
 bool consoleinput(const char *str, int len)
 {
@@ -816,9 +821,6 @@ bool consolekey(int code, bool isdown)
 
     return true;
 }
-
-// returns 1 if the user is holding either of the CTRL keys
-ICOMMAND(holdingctrl, "", (), intret(SDL_GetModState()&MOD_KEYS ? 1 : 0));
 
 void processtextinput(const char *str, int len)
 {

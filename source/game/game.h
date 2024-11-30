@@ -173,6 +173,7 @@ struct demoheader
     int version, protocol;
 };
 
+#include "projectile.h"
 #include "weapon.h"
 #include "ai.h"
 #include "gamemode.h"
@@ -463,7 +464,7 @@ struct gameent : dynent, gamestate
     int lastaction, lastattack, lasthit;
     int deathstate;
     int attacking;
-    int lasttaunt, lastfootstep, lastyelp, lastswitch, lastroll;
+    int lasttaunt, lastfootstep, lastyelp, lastswitch, lastswitchattempt, lastroll;
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots, lives, holdingflag;
     editinfo *edit;
@@ -488,7 +489,7 @@ struct gameent : dynent, gamestate
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
                 lastpain(0), lasthurt(0),
-                lastfootstep(0), lastyelp(0), lastswitch(0), lastroll(0),
+                lastfootstep(0), lastyelp(0), lastswitch(0), lastswitchattempt(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
                 transparency(1),
@@ -520,7 +521,7 @@ struct gameent : dynent, gamestate
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
     {
         vec push(dir);
-        bool istrickjump = actor == this && attacks[atk].exprad;
+        bool istrickjump = actor == this && isweaponprojectile(attacks[atk].projectile) && attacks[atk].exprad;
         if (istrickjump)
         {
             // Projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further.
@@ -598,7 +599,7 @@ struct gameent : dynent, gamestate
 
     bool shouldgib()
     {
-        return health <= HEALTH_GIB;
+        return health <= THRESHOLD_GIB;
     }
 };
 
@@ -658,8 +659,8 @@ namespace physics
     extern void addroll(gameent* d, float amount);
 
     extern bool canmove(gameent* d);
-    extern bool hasbounced(physent* d, float secs, float elasticity, float waterfric, float grav);
-    extern bool isbouncing(physent* d, float elasticity, float waterfric, float grav);
+    extern bool hasbounced(projectile* proj, float secs, float elasticity, float waterfric, float gravity);
+    extern bool isbouncing(projectile* proj, float elasticity, float waterfric, float gravity);
     extern bool hascamerapitchmovement(gameent* d);
 
     extern int physsteps;
@@ -727,7 +728,6 @@ namespace game
     extern void spawneffect(gameent *d);
     extern void respawn();
     extern void setdeathstate(gameent *d, bool restore = false);
-    extern void damaged(int damage, vec &p, gameent *d, gameent *actor, int atk, int flags = 0, bool local = true);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void checkannouncements(gameent *actor, int flags);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = KILL_NONE);
@@ -795,6 +795,22 @@ namespace game
 
     extern vector<uchar> messages;
 
+    // projectile.cpp
+    extern vector<projectile*> projectiles;
+
+    extern void updateprojectiles(int time);
+    extern void updateprojectilelights();
+    extern void removeprojectiles(gameent* owner = NULL);
+    extern void renderprojectiles();
+    extern void preloadprojectiles();
+    extern void makeprojectile(gameent* owner, const vec& from, const vec& to, bool islocal, const int id, const int atk, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0);
+    extern void spawnbouncer(const vec& from, gameent* d, int type);
+    extern void bounce(physent* d, const vec& surface);
+    extern void collidewithentity(physent* bouncer, physent* collideentity);
+    extern void explodeeffects(const int atk, gameent* d, const bool islocal, const int id = 0);
+    extern void avoidprojectiles(ai::avoidset& obstacles, const float radius);
+    extern void explode(gameent* owner, const int atk, const vec& position, const vec& velocity);
+
     // weapon.cpp
     enum
     {
@@ -839,37 +855,31 @@ namespace game
     extern swayinfo sway;
 
     extern void shoot(gameent *d, const vec &targ);
+    extern void updaterecoil(gameent* d, int curtime);
     extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
-    extern void explode(bool local, gameent *owner, const vec &v, const vec &vel, dynent *safe, int damage, int atk);
-    extern void explodeeffects(int atk, gameent *d, bool local, int id = 0);
-    extern void damageeffect(int damage, dynent *d, vec p, int atk, int color, bool headshot = false);
+    extern void scanhit(vec& from, vec& to, gameent* d, int atk);
     extern void gibeffect(int damage, const vec &vel, gameent *d);
-    extern void clearbouncers();
-    extern void updatebouncers(int curtime);
-    extern void renderbouncers();
-    extern void updateprojectiles(int curtime);
-    extern void removeprojectiles(gameent* owner);
-    extern void renderprojectiles();
-    extern void preloadbouncers();
     extern void updateweapons(int curtime);
     extern void gunselect(int gun, gameent* d);
     extern void doweaponchangeffects(gameent* d, int gun = -1);
     extern void weaponswitch(gameent* d);
-    extern void removeprojectiles(gameent* owner = NULL);
-    extern void avoidprojectiles(ai::avoidset& obstacles, float radius);
+    extern void damageentity(int damage, gameent* d, gameent* actor, int atk, int flags = 0, bool local = true);
+    extern void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& hitposition, int atk, int flags, bool local);
+    extern void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int atk, float dist, int rays = 1, int flags = Hit_Torso);
 
     extern float intersectdist;
 
-    extern bool intersect(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);
-    extern bool intersecthead(dynent *d, const vec &from, const vec &to, float &dist = intersectdist);
+    extern bool isintersecting(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);
 
     extern int getweapon(const char* name);
-    extern int calcdamage(int damage, gameent* target, gameent* actor, int atk, int flags = HIT_TORSO);
+    extern int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags = Hit_Torso);
     extern int checkweaponzoom();
 
     extern vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d);
 
     extern dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin = 0, float& dist = intersectdist);
+
+    extern vector<hitmsg> hits;
 
     // monster.cpp
     struct monster;
@@ -882,7 +892,7 @@ namespace game
     extern void rendermonsters();
     extern void suicidemonster(monster *m);
     extern void healmonsters();
-    extern void hitmonster(int damage, monster *m, gameent *at, int atk, int flags = 0);
+    extern void hitmonster(int damage, monster *m, gameent *at, int atk, const vec& velocity, int flags = 0);
     extern void monsterkilled(int id, int flags = 0);
     extern void checkmonsterinfight(monster *that, gameent *enemy);
     extern void endsp(bool allkilled);

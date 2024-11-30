@@ -122,7 +122,8 @@ CLIENT_OBJS= \
 	game/monster.o \
 	game/weapon.o \
 	game/gamephysics.o \
-	game/hud.o
+	game/hud.o \
+	game/projectile.o
 
 CLIENT_PCH= shared/cube.h.gch engine/engine.h.gch game/game.h.gch
 

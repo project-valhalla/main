@@ -356,7 +356,7 @@ namespace game
         {
             state = CS_DEAD;
             int killflags = 0;
-            if (flags & HIT_HEAD)
+            if (flags & Hit_Head)
             {
                 killflags |= KILL_HEADSHOT;
             }
@@ -387,7 +387,7 @@ namespace game
                 int matk = monstertypes[mtype].atk;
                 if (monstertypes[mtype].isexplosive)
                 {
-                    game::explode(true, this, o, vel, NULL, attacks[matk].damage, matk);
+                    game::explode(this, matk, o, vel);
                 }
             }
             else if (deathscream && isnoisy)
@@ -450,7 +450,7 @@ namespace game
             health -= damage;
             if(health <= 0)
             {
-                int forcestate = m_insta(mutators) && (flags & HIT_HEAD || monstertypes[mtype].isexplosive) ? Death_Gib : -1;
+                int forcestate = m_insta(mutators) && (flags & Hit_Head || monstertypes[mtype].isexplosive) ? Death_Gib : -1;
                 monsterdeath(forcestate, atk, flags);
             }
             else
@@ -708,9 +708,12 @@ namespace game
         m->monsterdeath();
     }
 
-    void hitmonster(int damage, monster *m, gameent *at, int atk, int flags)
+    VARP(monsterdeadpush, 1, 5, 20);
+
+    void hitmonster(int damage, monster *m, gameent *at, int atk, const vec& velocity, int flags)
     {
         m->monsterpain(damage, at, atk, flags);
+        m->hitpush(damage * (m->health <= 0 ? monsterdeadpush : 1), velocity, at, atk);
     }
 
     void calculatesummary()

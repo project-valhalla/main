@@ -172,6 +172,9 @@
     <ClCompile Include="..\shared\zip.cpp">
       <Filter>Source\shared</Filter>
     </ClCompile>
+    <ClCompile Include="..\game\projectile.cpp">
+      <Filter>Source\game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\game\ai.h">
@@ -305,6 +308,9 @@
     </ClInclude>
     <ClInclude Include="..\engine\sound.h">
       <Filter>Header\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game\projectile.h">
+      <Filter>Header\game</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

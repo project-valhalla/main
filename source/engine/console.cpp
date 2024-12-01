@@ -50,11 +50,6 @@ const char *getprefix(int type)
 
 void conline(int type, const char *sf) // add a line to the console buffer
 {
-    if(!conlines.length())
-    {
-        // initialize the queue with zeroes
-        memset(conlines.data, 0, MAXCONLINES * sizeof(cline));
-    }
     char *buf = NULL;
     if(type&CON_TAG_MASK) for(int i = conlines.length()-1; i >= max(conlines.length()-contags, 0); i--)
     {

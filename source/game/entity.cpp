@@ -537,6 +537,7 @@ namespace entities
                     {
                         const int type = ents[n]->type;
                         game::checkitem(type);
+                        game::autoswitchweapon(type);
                     }
                 }
                 break;

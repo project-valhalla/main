@@ -401,9 +401,12 @@ namespace game
                         impacteffects(atk, d, from, rays[i], hit);
                     }
                 }
-                loopi(attacks[atk].rays)
+                if (atk == ATK_SCATTER2)
                 {
-                    particle_flare(hudgunorigin(gun, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.95f);
+                    loopi(attacks[atk].rays)
+                    {
+                        particle_flare(hudgunorigin(gun, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.95f);
+                    }
                 }
                 break;
             }
@@ -1139,6 +1142,35 @@ namespace game
         self->lastswitchattempt = lastmillis;
         playsound(S_WEAPON_NOAMMO);
     });
+
+    VARP(autoswitch, 0, 1, 1);
+
+    void autoswitchweapon(int type)
+    {
+        /* This function makes our client switch to the weapon we just picked up,
+         * meaning the argument is the type of the item.
+         * To switch to a specific weapon, we have other specialised functions.
+         */
+        if (!autoswitch || type < I_AMMO_SG || type > I_AMMO_GRENADE)
+        {
+            // We stop caring if auto switch is disabled or the item is not a weapon.
+            return;
+        }
+
+        const bool isAttacking = self->attacking || zoomstate.isinprogress();
+        if (isAttacking)
+        {
+            // Do not interrupt someone during a fight.
+            self->lastswitchattempt = lastmillis; // Let the player know we tried to switch (and possibly reflect that on thw HUD).
+            return;
+        }
+
+        itemstat& is = itemstats[type - I_AMMO_SG];
+        if (self->gunselect != is.info && !self->ammo[is.info])
+        {
+            gunselect(is.info, self);
+        }
+    }
 
     int checkweaponzoom()
     {

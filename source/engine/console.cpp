@@ -599,6 +599,7 @@ int iskeyheld(char *key)
     return SDL_GetKeyboardState(nullptr)[scancode];
 }
 ICOMMAND(iskeyheld, "s", (char* key), intret(iskeyheld(key)));
+ICOMMAND(iscmdlineopen, "", (), intret(commandmillis >= 0 ? 1 : 0));
 
 bool consoleinput(const char *str, int len)
 {

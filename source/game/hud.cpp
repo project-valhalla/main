@@ -548,6 +548,24 @@ namespace game
         }
     }
 
+    void checkitem(int type)
+    {
+        switch (type)
+        {
+            case I_HEALTH:
+            case I_MEGAHEALTH:
+            case I_ULTRAHEALTH:
+            {
+                gameent* hud = followingplayer(self);
+                if (hud->health >= hud->maxhealth / 2)
+                {
+                    damageblendmillis = 0;
+                }
+                break;
+            }
+        }
+    }
+
     VARP(cursorsize, 0, 18, 40);
     VARP(crosshairsize, 0, 18, 40);
     VARP(crosshairfx, 0, 1, 1);

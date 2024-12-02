@@ -918,6 +918,7 @@ namespace game
     extern void damageblend(const int damage, const int factor = 0);
     extern void setdamagehud(const int damage, gameent* d, gameent* actor);
     extern void addscreenflash(const int amount);
+    extern void checkitem(int type);
     extern void fixcamerarange();
 
     extern bool allowthirdperson();

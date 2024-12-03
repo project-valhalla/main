@@ -2152,14 +2152,14 @@ namespace UI
             uicursorindex = label.xy_to_index(cx/k, cy/k);
         }
 
-        bool key(int code, bool isdown)
+        bool rawkey(int code, bool isdown)
         {
-            if(Object::key(code, isdown)) return true;
+            if(Object::rawkey(code, isdown)) return true;
             if(!isdown || cursor < 0) return false;
             const char *keyname = getkeyname(code);
             if(!keyname) return false;
             copystring(uikeycode, keyname);
-            return true;
+            return code != -1; // propagate left clicks
         }
 
         bool textinput(const char *str, int len)

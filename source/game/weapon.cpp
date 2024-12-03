@@ -1167,7 +1167,7 @@ namespace game
         if (isAttacking)
         {
             // Do not interrupt someone during a fight.
-            self->lastswitchattempt = lastmillis; // Let the player know we tried to switch (and possibly reflect that on thw HUD).
+            self->lastswitchattempt = lastmillis; // Let the player know we tried to switch (and possibly reflect that on the HUD).
             return;
         }
 

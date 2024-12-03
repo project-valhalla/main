@@ -131,7 +131,7 @@ struct particle
     int gravity, fade, millis;
     bvec color;
     uchar flags;
-    float size;
+    float size, maxsize;
     union
     {
         const char *text;
@@ -180,7 +180,7 @@ struct partrenderer
     virtual void init(int n) { }
     virtual void reset() = 0;
     virtual void resettracked(physent *owner) { }
-    virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity = 0) = 0;
+    virtual particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity = 0, float maxsize = 0) = 0;
     virtual void update() { }
     virtual void render() = 0;
     virtual bool haswork() = 0;
@@ -209,14 +209,19 @@ struct partrenderer
         }
         else
         {
-            ts = lastmillis-p->millis;
-            blend = max(255 - (ts<<8)/p->fade, 0);
+            ts = lastmillis - p->millis;
+            blend = max(255 - (ts << 8) / p->fade, 0);
+            if(p->maxsize)
+            {
+                float growth = (p->maxsize - p->size) * (ts / (p->fade + 1000.0f)) * (game::gamespeed / 100.0f);
+                p->size = min(p->size + growth, p->maxsize);
+            }
             if(p->gravity)
             {
                 if(ts > p->fade) ts = p->fade;
                 float t = ts;
-                o.add(vec(d).mul(t/5000.0f));
-                o.z -= t*t/(2.0f * 5000.0f * p->gravity);
+                o.add(vec(d).mul(t / 5000.0f));
+                o.z -= t * t / (2.0f * 5000.0f * p->gravity);
             }
             if(type&PT_COLLIDE && o.z < p->val && step)
             {
@@ -325,7 +330,7 @@ struct listrenderer : partrenderer
         }
     }
 
-    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity)
+    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity, float maxsize)
     {
         if(!parempty)
         {
@@ -345,6 +350,7 @@ struct listrenderer : partrenderer
         p->millis = lastmillis + emitoffset;
         p->color = bvec::hexcolor(color);
         p->size = size;
+        p->maxsize = maxsize;
         p->owner = NULL;
         p->flags = 0;
         return p;
@@ -682,7 +688,7 @@ struct varenderer : partrenderer
         return (numparts > 0);
     }
 
-    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity)
+    particle *addpart(const vec &o, const vec &d, int fade, int color, float size, int gravity, float maxsize)
     {
         particle *p = parts + (numparts < maxparts ? numparts++ : rnd(maxparts)); //next free slot, or kill a random kitten
         p->o = o;
@@ -692,6 +698,7 @@ struct varenderer : partrenderer
         p->millis = lastmillis + emitoffset;
         p->color = bvec::hexcolor(color);
         p->size = size;
+        p->maxsize = maxsize;
         p->owner = NULL;
         p->flags = 0x80 | (rndmask ? rnd(0x80) & rndmask : 0);
         lastupdate = -1;
@@ -1018,7 +1025,7 @@ void renderparticles(int layer)
 
 static int addedparticles = 0;
 
-static inline particle *newparticle(const vec &o, const vec &d, int fade, int type, int color, float size, int gravity = 0)
+static inline particle *newparticle(const vec &o, const vec &d, int fade, int type, int color, float size, int gravity = 0, float maxsize = 0)
 {
     static particle dummy;
     if(seedemitter)
@@ -1028,12 +1035,12 @@ static inline particle *newparticle(const vec &o, const vec &d, int fade, int ty
     }
     if(fade + emitoffset < 0) return &dummy;
     addedparticles++;
-    return parts[type]->addpart(o, d, fade, color, size, gravity);
+    return parts[type]->addpart(o, d, fade, color, size, gravity, maxsize);
 }
 
 VARP(maxparticledistance, 256, 2048, 4096);
 
-static void splash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity)
+static void splash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity, float maxsize)
 {
     if(camera1->o.dist(p) > maxparticledistance && !seedemitter) return;
     float collidez = parts[type]->type&PT_COLLIDE ? p.z - raycube(p, vec(0, 0, -1), COLLIDERADIUS, RAY_CLIPMAT) + (parts[type]->stain >= 0 ? COLLIDEERROR : 0) : -1;
@@ -1051,14 +1058,14 @@ static void splash(int type, int color, int radius, int num, int fade, const vec
         while(x*x+y*y+z*z>radius*radius);
         vec tmp = vec((float)x, (float)y, (float)z);
         int f = (num < 10) ? (fmin + rnd(fmax)) : (fmax - (i*(fmax-fmin))/(num-1)); //help deallocater by using fade distribution rather than random
-        newparticle(p, tmp, f, type, color, size, gravity)->val = collidez;
+        newparticle(p, tmp, f, type, color, size, gravity, maxsize)->val = collidez;
     }
 }
 
-static void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity, int delay = 0)
+static void regularsplash(int type, int color, int radius, int num, int fade, const vec &p, float size, int gravity, int delay = 0, float maxsize = 0)
 {
     if(!canemitparticles() || (delay > 0 && rnd(delay) != 0)) return;
-    splash(type, color, radius, num, fade, p, size, gravity);
+    splash(type, color, radius, num, fade, p, size, gravity, maxsize);
 }
 
 bool canaddparticles()
@@ -1066,21 +1073,21 @@ bool canaddparticles()
     return !minimized;
 }
 
-void regular_particle_splash(int type, int num, int fade, const vec &p, int color, float size, int radius, int gravity, int delay)
+void regular_particle_splash(int type, int num, int fade, const vec &p, int color, float size, int radius, int gravity, int delay, float maxsize)
 {
     if(!canaddparticles()) return;
-    regularsplash(type, color, radius, num, fade, p, size, gravity, delay);
+    regularsplash(type, color, radius, num, fade, p, size, gravity, delay, maxsize);
 }
 
-void particle_splash(int type, int num, int fade, const vec &p, int color, float size, int radius, int gravity)
+void particle_splash(int type, int num, int fade, const vec &p, int color, float size, int radius, int gravity, float maxsize)
 {
     if(!canaddparticles()) return;
-    splash(type, color, radius, num, fade, p, size, gravity);
+    splash(type, color, radius, num, fade, p, size, gravity, maxsize);
 }
 
 VARP(maxtrail, 1, 500, 10000);
 
-void particle_trail(int type, int fade, const vec &s, const vec &e, int color, float size, int gravity)
+void particle_trail(int type, int fade, const vec &s, const vec &e, int color, float size, int gravity, float maxsize)
 {
     if(!canaddparticles()) return;
     vec v;
@@ -1092,7 +1099,7 @@ void particle_trail(int type, int fade, const vec &s, const vec &e, int color, f
     {
         p.add(v);
         vec tmp = vec(float(rnd(11)-5), float(rnd(11)-5), float(rnd(11)-5));
-        newparticle(p, tmp, rnd(fade)+fade, type, color, size, gravity);
+        newparticle(p, tmp, rnd(fade)+fade, type, color, size, gravity, maxsize);
     }
 }
 
@@ -1151,17 +1158,17 @@ void particle_meter(const vec &s, float val, int type, int fade, int color, int 
     p->progress = clamp(int(val*100), 0, 100);
 }
 
-void particle_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *owner)
+void particle_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *owner, float maxsize)
 {
     if(!canaddparticles()) return;
-    newparticle(p, dest, fade, type, color, size, 0)->owner = owner;
+    newparticle(p, dest, fade, type, color, size, 0, maxsize)->owner = owner;
 }
 
 void particle_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size)
 {
     if(!canaddparticles()) return;
     float growth = maxsize - size;
-    if(fade < 0) fade = int(growth*20);
+    if(fade < 0) fade = int(growth * 20);
     newparticle(dest, vec(0, 0, 1), fade, type, color, size)->val = growth;
 }
 

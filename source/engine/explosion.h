@@ -137,8 +137,8 @@ struct fireballrenderer : listrenderer
     void renderpart(listparticle *p, const vec &o, const vec &d, int blend, int ts)
     {
         float pmax = p->val,
-              size = p->fade ? float(ts)/p->fade : 1,
-              psize = p->size + pmax * size;
+              growth = p->fade ? float(ts)/p->fade : 1,
+              psize = p->size + pmax * growth;
 
         if(isfoggedsphere(psize * explosionwobble, p->o)) return;
 

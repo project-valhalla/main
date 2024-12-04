@@ -713,7 +713,7 @@ namespace game
     extern void respawn();
     extern void setdeathstate(gameent *d, bool restore = false);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
-    extern void checkannouncements(gameent *actor, int flags);
+    extern void checkannouncements(gameent* d, gameent *actor, int flags);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = KILL_NONE);
     extern void updatetimer(int time, int type);
     extern void msgsound(int n, physent *d = NULL);
@@ -878,7 +878,7 @@ namespace game
     extern void suicidemonster(monster *m);
     extern void healmonsters();
     extern void hitmonster(int damage, monster *m, gameent *at, int atk, const vec& velocity, int flags = 0);
-    extern void monsterkilled(int id, int flags = 0);
+    extern void monsterkilled(gameent* monster, int id, int flags = 0);
     extern void checkmonsterinfight(monster *that, gameent *enemy);
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);

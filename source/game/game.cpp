@@ -584,7 +584,6 @@ namespace game
     bool killfeedheadshot = false;
 
     SVAR(lasthudkillinfo, "");
-    string hudkillinfo;
 
     void writeobituary(gameent *d, gameent *actor, int atk, int flags)
     {
@@ -592,16 +591,21 @@ namespace game
         gameent *h = followingplayer(self);
         if(!h) h = self;
         const char *act = "killed";
+        string hudkillinfo;
         if(flags & KILL_TRAITOR)
         {
             act = "assassinated";
-            conoutf(CON_FRAGINFO, "%s \fs\f2was %s\fr", teamcolorname(d), act);
+            conoutf(CON_FRAGINFO, "%s \fs\f2was %s\fr", colorname(d), act);
             if(d == actor)
             {
-                if(d == h) formatstring(hudkillinfo, "\f2You were %s", act);
+                if(d == h)
+                {
+                    formatstring(hudkillinfo, "\f2You were %s\fr", act);
+                    setsvar("lasthudkillinfo", hudkillinfo);
+                }
                 playsound(S_TRAITOR_KILL);
             }
-            else if(actor == h) formatstring(hudkillinfo, "\fs\f2You %s\fr %s", act, colorname(d));
+            else if(actor == h) formatstring(hudkillinfo, "\fs\f2You %s %s\fr", act, colorname(d));
             killfeedweaponinfo = -3;
         }
         else if(d == actor)
@@ -620,18 +624,36 @@ namespace game
             if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
 
         }
-        else if(validatk(atk))
+        else if (validatk(atk))
         {
-            if(attacks[atk].gun == GUN_ZOMBIE) act = "infected";
-            if(isally(d, actor)) conoutf(CON_FRAGINFO, "%s \fs\f2%s an ally (\fr%s\fs\f2)\fr", teamcolorname(actor), act, teamcolorname(d));
-            else conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
-            if(d == h || actor == h)
+            if (d->deathstate == Death_Gib && attacks[atk].gibobituary)
             {
-                formatstring(hudkillinfo, "\fs\f2You %s%s%s%s \fr%s", d == h ? "got " : "", act, d == h ? " by" : "", ismonster(actor) ? " a" : "", d == h ? colorname(actor) : colorname(d));
+                act = attacks[atk].gibobituary;
+            }
+            else if (attacks[atk].obituary)
+            {
+                act = attacks[atk].obituary;
+            }
+            if (isally(d, actor))
+            {
+                conoutf(CON_FRAGINFO, "%s \fs\f2%s an ally (%s)\fr", teamcolorname(actor), act, teamcolorname(d));
+                if (d == h || actor == h)
+                {
+                    formatstring(hudkillinfo, "\fs\f6You %s%s%s an ally (%s)!\fr", d == h ? "were " : "", act, d == h ? " by " : "", teamcolorname(d));
+                    setsvar("lasthudkillinfo", hudkillinfo);
+                }
+            }
+            else
+            {
+                conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
+                if (d == h || actor == h)
+                {
+                    formatstring(hudkillinfo, "\fs\f2You %s%s%s%s %s\fr", d == h ? "got " : "", act, d == h ? " by" : "", ismonster(actor) ? " a" : "", d == h ? teamcolorname(actor) : teamcolorname(d));
+                    setsvar("lasthudkillinfo", hudkillinfo);
+                }
             }
             killfeedweaponinfo = attacks[atk].action == ACT_MELEE ? -1 : attacks[atk].gun;
         }
-        if(d == h || actor == h) setsvar("lasthudkillinfo", hudkillinfo);
         if(m_invasion && actor->type == ENT_AI)
         {
             killfeedweaponinfo = -4;
@@ -640,7 +662,7 @@ namespace game
         killfeedactorcn = actor->clientnum;
         killfeedtargetcn = d->clientnum;
         killfeedheadshot = flags & KILL_HEADSHOT;
-        execident("on_killfeed");
+        execident("on_obituary");
         if(d == self)
         {
             execident("on_death");
@@ -657,38 +679,91 @@ namespace game
     ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
     ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
-    void checkannouncements(gameent *actor, int flags)
+    void announce(int sound)
     {
-        if(flags & KILL_HEADSHOT) playsound(S_ANNOUNCER_HEADSHOT, NULL, NULL, NULL, SND_ANNOUNCER);
+        if (validsound(sound))
+        {
+            playsound(sound, NULL, NULL, NULL, SND_ANNOUNCER);
+        }
+    }
 
-        const char *spree = "";
+    void checkannouncements(gameent* d, gameent *actor, int flags)
+    {
+        if (!flags || isally(d, actor))
+        {
+            /* No announcements to check (or even worse, we killed an ally)?
+             * Nothing to celebrate then.
+             */
+            return;
+        }
+
+        if (actor->aitype == AI_BOT)
+        {
+            // Bots taunting players when getting extraordinary kills.
+            taunt(actor);
+        }
+        if(actor != followingplayer(self))
+        {
+            /* Now: time to announce extraordinary kills.
+             * Unless we are the player who achieved these (or spectating them),
+             * we do not care.
+             */
+            return;
+        }
+
+        if (flags & KILL_HEADSHOT)
+        {
+            announce(S_ANNOUNCER_HEADSHOT);
+        }
+        if (d->type == ENT_AI)
+        {
+            /* NPCs are not players!
+             * Announcing kills (kill streaks, multi-kills, etc.) is unnecessary.
+             */
+            return;
+        }
+
         if(flags & KILL_FIRST)
         {
-            playsound(S_ANNOUNCER_FIRST_BLOOD, NULL, NULL, NULL, SND_ANNOUNCER);
-            if(!(flags & KILL_TRAITOR)) conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor));
+            announce(S_ANNOUNCER_FIRST_BLOOD);
+            if (!(flags & KILL_TRAITOR))
+            {
+                conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor));
+            }
         }
+        const char* spree = "";
         if(flags & KILL_SPREE)
         {
-            playsound(S_ANNOUNCER_KILLING_SPREE, NULL, NULL, NULL, SND_ANNOUNCER);
+            announce(S_ANNOUNCER_KILLING_SPREE);
             spree = "\f2killing";
         }
         if(flags & KILL_SAVAGE)
         {
-            playsound(S_ANNOUNCER_SAVAGE, NULL, NULL, NULL, SND_ANNOUNCER);
+            announce(S_ANNOUNCER_SAVAGE);
             spree = "\f6savage";
         }
         if(flags & KILL_UNSTOPPABLE)
         {
-            playsound(S_ANNOUNCER_UNSTOPPABLE, NULL, NULL, NULL, SND_ANNOUNCER);
+            announce(S_ANNOUNCER_UNSTOPPABLE);
             spree = "\f3unstoppable";
         }
         if(flags & KILL_LEGENDARY)
         {
-            playsound(S_ANNOUNCER_LEGENDARY, NULL, NULL, NULL, SND_ANNOUNCER);
+            announce(S_ANNOUNCER_LEGENDARY);
             spree = "\f5legendary";
         }
-        if(flags & KILL_TRAITOR) return;
-        if(spree[0] != '\0') conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
+        if (spree[0] == '\0' || flags & KILL_TRAITOR)
+        {
+            /* No spree to announce? We are finished.
+             * 
+             * If this is an assassination by a traitor instead,
+             * announce the kill streak we achieved just the same...
+             * but without triggering a console message (to not confuse players).
+             */
+            return;
+        }
+
+        conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
     }
 
     VARR(mapdeath, 0, Death_Default, Death_Num);
@@ -725,12 +800,7 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-        writeobituary(d, actor, atk, flags); // obituary (console messages, kill feed)
-        if(flags)
-        {
-            if(actor->aitype == AI_BOT) taunt(actor); // bots taunting players when getting extraordinary kills
-            if(actor == followingplayer(self)) checkannouncements(actor, flags);
-        }
+        checkannouncements(d, actor, flags);
         if (actor == followingplayer(self))
         {
             if (actor->role == ROLE_BERSERKER)
@@ -757,6 +827,8 @@ namespace game
         d->deathstate = getdeathstate(d, atk, flags);
         setdeathstate(d);
         ai::kill(d, actor);
+        // Write obituary and update killfeed.
+        writeobituary(d, actor, atk, flags); // Obituary (console messages, kill feed).
     }
 
     void updatetimer(int time, int type)
@@ -1003,8 +1075,8 @@ namespace game
 
     const char *teamcolorname(gameent *d, const char *alt)
     {
-        if(!teamcolortext || !m_teammode || !validteam(d->team)) return colorname(d, NULL, alt);
-        return colorname(d, NULL, alt, teamtextcode[d->team]);
+        const int team = teamcolortext && m_teammode && validteam(d->team) ? d->team : 0;
+        return colorname(d, NULL, alt, teamtextcode[team]);
     }
 
     const char *teamcolor(const char *prefix, const char *suffix, int team, const char *alt)

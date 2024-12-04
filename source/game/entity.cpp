@@ -533,6 +533,7 @@ namespace entities
                 {
                     addmsg(N_ITEMPICKUP, "rci", d, n);
                     ents[n]->clearspawned(); // Even if someone else gets it first.
+                    d->lastpickupmillis = lastmillis;
                     if (d == self)
                     {
                         const int type = ents[n]->type;

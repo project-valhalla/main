@@ -548,15 +548,17 @@ namespace game
         }
     }
 
+    SVAR(lasthudpickupinfo, "");
+
     void checkitem(int type)
     {
+        gameent* hud = followingplayer(self);
         switch (type)
         {
             case I_HEALTH:
             case I_MEGAHEALTH:
             case I_ULTRAHEALTH:
             {
-                gameent* hud = followingplayer(self);
                 if (hud->health >= hud->maxhealth / 2)
                 {
                     damageblendmillis = 0;
@@ -564,6 +566,10 @@ namespace game
                 break;
             }
         }
+        string pickupinfo;
+        itemstat& is = itemstats[type - I_AMMO_SG];
+        formatstring(pickupinfo, "+%d %s", is.add, is.name);
+        setsvar("lasthudpickupinfo", pickupinfo);
     }
 
     VARP(cursorsize, 0, 18, 40);

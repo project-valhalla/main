@@ -645,8 +645,8 @@ namespace entities
     {
         int spawncolor = 0x00E463;
         particle_splash(PART_SPARK, 20, 100, e->o, spawncolor, 1.0f, 100, 60);
-        particle_flare(e->o, e->o, 200, PART_EXPLODE1, 0x83E550, 16.0f);
-        adddynlight(e->o, 100, vec::hexcolor(spawncolor), 200, 75, DL_SHRINK|L_NOSHADOW);
+        particle_flare(e->o, e->o, 500, PART_EXPLODE1, 0x83E550, 1.0f, NULL, 16.0f);
+        adddynlight(e->o, 116, vec::hexcolor(spawncolor), 500, 75, DL_EXPAND | L_NOSHADOW);
         playsound(S_ITEM_SPAWN, NULL, &e->o, NULL, 0, 0, 0, -1, 0, 1500);
         if (e->type >= I_DDAMAGE && e->type <= I_INVULNERABILITY)
         {  

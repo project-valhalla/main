@@ -231,7 +231,7 @@ namespace game
                 explosionlightcolor = vec(0.831f, 0.498f, 0.0f);
                 if (iswater) break;
                 explosiontype = PART_EXPLOSION3;
-                particle_flare(v, v, 280, PART_EXPLODE1 + rnd(3), 0xFFC864, 56.0f);
+                particle_flare(v, v, 280, PART_EXPLODE1 + rnd(3), 0xFFC864, 35.0f, NULL, 56.0f);
                 particle_splash(PART_SPARK2, 100, 250, v, explosioncolor, 0.10f + rndscale(0.50f), 600, 1);
                 particle_splash(PART_SMOKE, 100, 280, v, 0x222222, 10.0f, 250, 200);
                 break;
@@ -241,14 +241,15 @@ namespace game
             {
                 explosioncolor = 0xEE88EE;
                 explosionlightcolor = vec(0.933f, 0.533f, 0.933f);
+                fade = 250;
                 if (iswater)
                 {
-                    particle_flare(v, v, 300, PART_ELECTRICITY, explosioncolor, 12.0f);
+                    particle_flare(v, v, 300, PART_ELECTRICITY, explosioncolor, 5.0f, NULL, 12.0f);
                     return;
                 }
                 explosiontype = PART_EXPLOSION2;
                 particle_splash(PART_SPARK2, 5 + rnd(20), 200, v, explosioncolor, 0.08f + rndscale(0.35f), 400, 2);
-                particle_flare(v, v, 250, PART_EXPLODE1 + rnd(2), 0xF1B4F1, 15.0f);
+                particle_flare(v, v, 250, PART_EXPLODE1 + rnd(2), 0xF1B4F1, 15.0f, NULL, 0.5f);
                 particle_splash(PART_SMOKE, 60, 180, v, 0x222222, 2.5f + rndscale(3.8f), 180, 60);
                 break;
             }
@@ -269,13 +270,13 @@ namespace game
             {
                 explosioncolor = 0x00FFFF;
                 explosionlightcolor = vec(0.0f, 1.0f, 1.0f);
-                if (atk == ATK_PISTOL2 && iswater)
-                {
-                    particle_flare(v, v, 300, PART_ELECTRICITY, explosioncolor, 12.0f);
-                    return;
-                }
                 minsize = attacks[atk].exprad * 1.15f;
                 maxsize = 0;
+                if (atk == ATK_PISTOL2 && iswater)
+                {
+                    particle_flare(v, v, 300, PART_ELECTRICITY, explosioncolor, 5.0f, NULL, 12.0f);
+                    return;
+                }
                 particle_fireball(v, 1.0f, PART_EXPLOSION2, atk == ATK_PISTOL2 ? 200 : 500, 0x00FFFF, attacks[atk].exprad);
                 particle_splash(PART_SPARK2, 50, 180, v, 0x00FFFF, 0.18f, 500);
                 if (atk == ATK_PISTOL_COMBO)
@@ -540,7 +541,7 @@ namespace game
             {
                 if (blood && hasenoughvelocity)
                 {
-                    regular_particle_splash(PART_BLOOD, 0 + rnd(4), 400, position, getbloodcolor(proj.owner), 0.80f, 25);
+                    regular_particle_splash(PART_BLOOD, 0 + rnd(4), 400, position, getbloodcolor(proj.owner), 1.0f, 25);
                 }
                 break;
             }

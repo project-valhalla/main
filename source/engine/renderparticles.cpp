@@ -131,7 +131,7 @@ struct particle
     int gravity, fade, millis;
     bvec color;
     uchar flags;
-    float size, maxsize;
+    float initsize, size, maxsize;
     union
     {
         const char *text;
@@ -213,8 +213,8 @@ struct partrenderer
             blend = max(255 - (ts << 8) / p->fade, 0);
             if(p->maxsize)
             {
-                float growth = (p->maxsize - p->size) * (ts / (p->fade + 1000.0f)) * (game::gamespeed / 100.0f);
-                p->size = min(p->size + growth, p->maxsize);
+                const float growth = clamp(ts / (float)p->fade, 0.0f, 1.0f);
+                p->size = lerp(p->initsize, p->maxsize, growth);
             }
             if(p->gravity)
             {
@@ -349,7 +349,7 @@ struct listrenderer : partrenderer
         p->fade = fade;
         p->millis = lastmillis + emitoffset;
         p->color = bvec::hexcolor(color);
-        p->size = size;
+        p->initsize = p->size = size;
         p->maxsize = maxsize;
         p->owner = NULL;
         p->flags = 0;
@@ -697,7 +697,7 @@ struct varenderer : partrenderer
         p->fade = fade;
         p->millis = lastmillis + emitoffset;
         p->color = bvec::hexcolor(color);
-        p->size = size;
+        p->initsize = p->size = size;
         p->maxsize = maxsize;
         p->owner = NULL;
         p->flags = 0x80 | (rndmask ? rnd(0x80) & rndmask : 0);
@@ -858,7 +858,7 @@ struct softquadrenderer : quadrenderer
 static partrenderer *parts[] =
 {
     new quadrenderer("<grey>data/texture/particle/blood01.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4|PT_COLLIDE, STAIN_BLOOD),           // blood spats (note: rgb is inverted)
-    new quadrenderer("<grey>data/texture/particle/blood02.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4),                                   // blood drops
+    new quadrenderer("<grey>data/texture/particle/blood02.png", PT_PART|PT_FLIP|PT_MOD|PT_RND4, STAIN_BLOOD),                      // blood drops
     new trailrenderer("data/texture/particle/water.png", PT_TRAIL|PT_COLLIDE, STAIN_RAIN, 10, PART_SPLASH, 5),                     // water
     new quadrenderer("data/texture/particle/glass.png", PT_PART|PT_FLIP|PT_BRIGHT|PT_RND4),                                        // glass
     new quadrenderer("<grey>data/texture/particle/smoke.png", PT_PART|PT_RND4|PT_FLIP|PT_LERP),                                    // smoke
@@ -874,9 +874,9 @@ static partrenderer *parts[] =
     &fireballs,                                                                                                                    // fire ball
     new quadrenderer("data/texture/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                              // sparks
     new trailrenderer("data/texture/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                                    // spark trail
-    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion01.png", PT_PART|PT_FLIP|PT_BRIGHT),                      // explosion sprite
-    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion02.png", PT_PART|PT_FLIP|PT_BRIGHT),                      // explosion sprite
-    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion03.png", PT_PART|PT_FLIP|PT_BRIGHT),                      // explosion sprite
+    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion01.png", PT_PART|PT_FLIP|PT_BRIGHT),                        // explosion sprite
+    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion02.png", PT_PART|PT_FLIP|PT_BRIGHT),                        // explosion sprite
+    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion03.png", PT_PART|PT_FLIP|PT_BRIGHT),                        // explosion sprite
     new quadrenderer("data/texture/particle/explosion04.png", PT_PART|PT_FLIP|PT_BRIGHT),                                          // explosion
     new quadrenderer("<animation:100,2,2>data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),       // electric explosion sprite
     new quadrenderer("data/texture/particle/base.png", PT_PART|PT_FLIP|PT_BRIGHT),                                                 // edit mode entities
@@ -890,7 +890,7 @@ static partrenderer *parts[] =
     new quadrenderer("data/texture/particle/muzzle04.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 4
     new quadrenderer("<animation:25,4,0,1>data/texture/particle/muzzle05.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),         // muzzle flash 5
     new quadrenderer("<grey><animation:50,2,3,1>data/texture/particle/muzzle_smoke.png", PT_PART|PT_FEW|PT_FLIP|PT_LERP|PT_TRACK), // muzzle smoke
-    new quadrenderer("<animation:30,2,2,1>data/texture/particle/sparks.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),             // muzzle sparks
+    new quadrenderer("<animation:30,2,2,1>data/texture/particle/sparks.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),           // muzzle sparks
     new quadrenderer("data/texture/particle/comics.png", PT_PART|PT_LERP|PT_NOLAYER),                                              // comics effect
     new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_FEW|PT_ICON|PT_HUD|PT_LERP|PT_NOLAYER),                  // game icons
     new quadrenderer("data/interface/particle/editor_icons.png", PT_PART|PT_ICON|PT_LERP|PT_NOLAYER),                              // editor icons

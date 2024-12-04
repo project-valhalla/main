@@ -135,7 +135,6 @@ namespace game
     extern const char *getmapinfo();
     extern const char *getscreenshotinfo();
 
-    extern int gamespeed;
     extern int fov, zoomfov;
     extern int numdynents();
     extern int scaletime(int t);

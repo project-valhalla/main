@@ -50,7 +50,7 @@ enum
     GUN_SCATTER = 0, GUN_SMG, GUN_PULSE, GUN_ROCKET, GUN_RAIL, GUN_GRENADE, GUN_PISTOL,
 
     // Special weapons.
-    GUN_INSTA, GUN_ZOMBIE,
+    GUN_INSTA, GUN_ZOMBIE, GUN_MELEE,
 
     NUMGUNS
 };
@@ -113,7 +113,7 @@ static const struct attackinfo
 {
     // melee: default melee for all weapons
     { -1,          ACT_MELEE,                      -1,  650,  60,  0,   0, 2,    0,  0,   14,  1,   50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist,      "pummeled", "shattered"   },
-    { -1,          ACT_MELEE,                      -1,  420,  25,  0,   0, 1,    0,  0,   16,  1,   50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist,      "pummeled", "shattered"   },
+    { GUN_MELEE,   ACT_MELEE,                      -1,  420,  25,  0,   0, 1,    0,  0,   16,  1,   50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist,      "pummeled", "shattered"   },
     // shotgun
     { GUN_SCATTER, ACT_PRIMARY,     Projectile_Bullet,  880,   5,  5, 260, 0, 2000, 20, 1024, 20,   60,  0,  500, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default,   "shot",     "splattered"  },
     { GUN_SCATTER, ACT_SECONDARY,                  -1, 1000,   6,  5, 120, 0,    0, 28, 1024, 10,   60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT2, S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default,   "shot",     "splattered"  },
@@ -156,5 +156,6 @@ static const struct guninfo
     { "grenade",    "grenade",    "weapon/grenade/world",    { -1, ATK_MELEE,  ATK_GRENADE1, ATK_GRENADE2 }, S_GRENADE_SWITCH, Zoom_None,   -1                 },
     { "pistol",     "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1,  ATK_PISTOL2  }, S_PISTOL_SWITCH,  Zoom_None,   -1                 },
     { "instagun",   "instagun",   "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,    ATK_INSTA    }, S_RAIL_SWITCH,    Zoom_Scope,  -1                 },
-    { "zombie",     "zombie",     "",                        { -1, ATK_ZOMBIE, ATK_ZOMBIE,   ATK_ZOMBIE   }, -1,               Zoom_Shadow, -1                 }
+    { "zombie",     "zombie",     NULL,                      { -1, ATK_ZOMBIE, ATK_ZOMBIE,   ATK_ZOMBIE   }, -1,               Zoom_Shadow, -1                 },
+    { "melee",      "melee",      NULL,                      { -1, ATK_MELEE2, ATK_MELEE2,   ATK_MELEE2   }, -1,               Zoom_None,   -1                 }
 };

@@ -456,7 +456,6 @@ namespace entities
     }
 
     VARR(teleteam, 0, 1, 1);
-    VARP(autoswitch, 0, 1, 1);
 
     int respawnent = -1;
 
@@ -533,11 +532,14 @@ namespace entities
                 if (d->canpickup(ents[n]->type) && allowpickup())
                 {
                     addmsg(N_ITEMPICKUP, "rci", d, n);
-                    ents[n]->clearspawned(); // even if someone else gets it first
-                    // first time you pick up a weapon you switch to it automatically
-                    if (d->aitype == AI_BOT || !autoswitch || (ents[n]->type < I_AMMO_SG || ents[n]->type > I_AMMO_GRENADE)) break;
-                    itemstat& is = itemstats[ents[n]->type - I_AMMO_SG];
-                    if (!d->attacking && d->gunselect != is.info && !d->ammo[is.info]) gunselect(is.info, d);
+                    ents[n]->clearspawned(); // Even if someone else gets it first.
+                    d->lastpickupmillis = lastmillis;
+                    if (d == self)
+                    {
+                        const int type = ents[n]->type;
+                        game::checkitem(type);
+                        game::autoswitchweapon(type);
+                    }
                 }
                 break;
             }
@@ -644,8 +646,8 @@ namespace entities
     {
         int spawncolor = 0x00E463;
         particle_splash(PART_SPARK, 20, 100, e->o, spawncolor, 1.0f, 100, 60);
-        particle_flare(e->o, e->o, 200, PART_EXPLODE1, 0x83E550, 16.0f);
-        adddynlight(e->o, 100, vec::hexcolor(spawncolor), 200, 75, DL_SHRINK|L_NOSHADOW);
+        particle_flare(e->o, e->o, 500, PART_EXPLODE1, 0x83E550, 1.0f, NULL, 16.0f);
+        adddynlight(e->o, 116, vec::hexcolor(spawncolor), 500, 75, DL_EXPAND | L_NOSHADOW);
         playsound(S_ITEM_SPAWN, NULL, &e->o, NULL, 0, 0, 0, -1, 0, 1500);
         if (e->type >= I_DDAMAGE && e->type <= I_INVULNERABILITY)
         {  

@@ -398,7 +398,7 @@ namespace game
                     playsound(diesound, this);
                 }
             }
-            monsterkilled(id, killflags);
+            monsterkilled(this, id, killflags);
         }
 
         void heal()
@@ -573,9 +573,9 @@ namespace game
         loopv(entities::ents) if(entities::ents[i]->type==TELEPORT) teleports.add(i);
     }
 
-    void monsterkilled(int id, int flags)
+    void monsterkilled(gameent* monster, int id, int flags)
     {
-        if(flags) checkannouncements(self, flags);
+        if (flags) checkannouncements(monster, self, flags);
         if(!m_invasion && !m_story) return;
         numkilled++;
         self->frags = numkilled;

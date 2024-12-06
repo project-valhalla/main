@@ -321,6 +321,12 @@ namespace game
         if(d) intret(d->powerupmillis);
     });
 
+    ICOMMAND(getlastpickupmillis, "", (),
+    {
+        gameent *d = followingplayer(self);
+        intret(d->lastpickupmillis);
+    });
+
     ICOMMAND(getclientflag, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
@@ -1943,6 +1949,7 @@ namespace game
                 int i = getint(p), cn = getint(p);
                 gameent *d = getclient(cn);
                 entities::pickupeffects(i, d);
+                d->lastpickupmillis;
                 break;
             }
 
@@ -2239,7 +2246,6 @@ namespace game
                 gameent *d = getclient(tcn),
                         *actor = getclient(acn);
                 if(!d || !actor) break;
-                d->assignrole(role);
                 if(role == ROLE_BERSERKER)
                 {
                     if (!m_berserker)
@@ -2249,7 +2255,7 @@ namespace game
                     d->stopchannelsound(Chan_PowerUp);
                     conoutf(CON_GAMEINFO, "%s \f2is the berserker!", colorname(d));
                     playsound(S_BERSERKER, d);
-                    particle_flare(d->o, d->o, 350, PART_COMICS, 0xFFFFFF, 20.0f);
+                    particle_flare(d->o, d->o, 500, PART_COMICS, 0xFFFFFF, 0.1f, NULL, 30.0f);
                     // Temporary:
                     thirdperson = 1;
                 }
@@ -2275,6 +2281,7 @@ namespace game
                 {
                     addscreenflash(150);
                 }
+                d->assignrole(role);
                 break;
             }
 

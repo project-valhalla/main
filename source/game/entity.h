@@ -81,25 +81,26 @@ static struct itemstat
     int add, max, respawntime, info;
     bool isspawndelayed;
     int sound, announcersound;
+    const char* name;
 } itemstats[] =
 {
-    { 12,    60,    15,  GUN_SCATTER,        false, S_AMMO_SG,         -1                          }, // shotgun ammo
-    { 40,    200,   15,  GUN_SMG,            false, S_AMMO_SMG,        -1                          }, // SMG ammo
-    { 80,    400,   15,  GUN_PULSE,          false, S_AMMO_PULSE,      -1                          }, // pulse battery
-    { 6,     30,    15,  GUN_ROCKET,         false, S_AMMO_ROCKET,     -1                          }, // rockets
-    { 8,     40,    15,  GUN_RAIL,           false, S_AMMO_RAIL,       -1                          }, // railgun ammo
-    { 6,     30,    15,  GUN_GRENADE,        false, S_AMMO_GRENADE,    -1                          }, // grenades
-    { 25,    100,   25,  NULL,               false, S_HEALTH,          -1                          }, // regular health
-    { 50,    200,   35,  NULL,               true,  S_SHIELD_LIGHT,    -1                          }, // light shield
-    { 100,   200,   35,  NULL,               true,  S_SHIELD_HEAVY,    -1                          }, // heavy shield
-    { 50,    200,   60,  NULL,               true,  S_SUPERHEALTH,     -1                          }, // super health
-    { 100,   200,   80,  NULL,               true,  S_MEGAHEALTH,      -1                          }, // mega health
-    { 30000, 60000, 100, PU_DAMAGE,          true,  S_DAMAGE,          S_ANNOUNCER_DAMAGE          }, // double damage
-    { 30000, 60000, 100, PU_HASTE,           true,  S_HASTE,           S_ANNOUNCER_HASTE           }, // haste
-    { 30000, 60000, 100, PU_ARMOR,           true,  S_ARMOR,           S_ANNOUNCER_ARMOR           }, // armor
-    { 30000, 60000, 100, PU_AMMO,            true,  S_INFINITEAMMO,    S_ANNOUNCER_INFINITEAMMO    }, // infinite ammo
-    { 30000, 60000, 100, PU_AGILITY,         true,  S_AGILITY,         S_ANNOUNCER_AGILITY         }, // agility
-    { 15000, 30000, 100, PU_INVULNERABILITY, true,  S_INVULNERABILITY, S_ANNOUNCER_INVULNERABILITY }  // invulnerability
+    { 12,    60,    15,  GUN_SCATTER,        false, S_AMMO_SG,         -1,                          "Scattergun shells"  }, // Scattergun ammo.
+    { 40,    200,   15,  GUN_SMG,            false, S_AMMO_SMG,        -1,                          "SMG cartridges"     }, // SMG ammo.
+    { 80,    400,   15,  GUN_PULSE,          false, S_AMMO_PULSE,      -1,                          "Pulse cells"        }, // Pulse rifle battery.
+    { 6,     30,    15,  GUN_ROCKET,         false, S_AMMO_ROCKET,     -1,                          "Rockets"            }, // Rocket launcher ammo.
+    { 8,     40,    15,  GUN_RAIL,           false, S_AMMO_RAIL,       -1,                          "Railgun ammunition" }, // Rocket launcher ammo.
+    { 6,     30,    15,  GUN_GRENADE,        false, S_AMMO_GRENADE,    -1,                          "Grenades"           }, // Grenade Launcher ammo.
+    { 25,    100,   25,  -1,                 false, S_HEALTH,          -1,                          "Health"             }, // Regular health.
+    { 50,    200,   35,  -1,                 true,  S_SHIELD_LIGHT,    -1,                          "Shield"             }, // Small shield.
+    { 100,   200,   35,  -1,                 true,  S_SHIELD_HEAVY,    -1,                          "Shield"             }, // Big shield.
+    { 50,    200,   60,  -1,                 true,  S_SUPERHEALTH,     -1,                          "Health"             }, // Mega Health.
+    { 100,   200,   80,  -1,                 true,  S_MEGAHEALTH,      -1,                          "Health"             }, // Ultra health.
+    { 30000, 60000, 100, PU_DAMAGE,          true,  S_DAMAGE,          S_ANNOUNCER_DAMAGE,          "Power-up"           }, // Double damage power-up.
+    { 30000, 60000, 100, PU_HASTE,           true,  S_HASTE,           S_ANNOUNCER_HASTE,           "Power-up"           }, // Haste power-up.
+    { 30000, 60000, 100, PU_ARMOR,           true,  S_ARMOR,           S_ANNOUNCER_ARMOR,           "Power-up"           }, // Armor power-up.
+    { 30000, 60000, 100, PU_AMMO,            true,  S_INFINITEAMMO,    S_ANNOUNCER_INFINITEAMMO,    "Power-up"           }, // Infinite ammo power-up.
+    { 30000, 60000, 100, PU_AGILITY,         true,  S_AGILITY,         S_ANNOUNCER_AGILITY,         "Power-up"           }, // Agility power-up.
+    { 15000, 30000, 100, PU_INVULNERABILITY, true,  S_INVULNERABILITY, S_ANNOUNCER_INVULNERABILITY, "Power-up"           }  // Invulnerability power-up.
 };
 
 enum

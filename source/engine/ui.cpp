@@ -303,11 +303,11 @@ namespace UI
             });
         }
 
-        virtual void cleartext()
+        virtual void clearlabels()
         {
             loopchildren(o,
             {
-                o->cleartext();
+                o->clearlabels();
             });
         }
 
@@ -2198,9 +2198,9 @@ namespace UI
 
         void hide() { Object::hide(); label.clear(); }
 
-        void cleartext()
+        void clearlabels()
         {
-            Object::cleartext();
+            Object::clearlabels();
             label.clear();
         }
 
@@ -3961,9 +3961,9 @@ namespace UI
         DELETEP(world);
     }
 
-    void cleartext()
+    void clearlabels()
     {
-        world->cleartext();
+        world->clearlabels();
     }
 
     void calctextscale()

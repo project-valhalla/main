@@ -834,7 +834,7 @@ namespace UI
     void update();
     void render();
     void cleanup();
-    void cleartext();
+    void clearlabels();
     void resetcursor();
     void getcursorpos(float& x, float& y);
 

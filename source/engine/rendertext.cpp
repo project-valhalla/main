@@ -413,7 +413,7 @@ static PangoLayout *measure_text_internal(const char *str, int len, int maxw, in
     return layout;
 }
 
-void reloadfonts() { clear_text_particles(); UI::cleartext(); }
+void reloadfonts() { clear_text_particles(); UI::clearlabels(); }
 
 namespace text
 {

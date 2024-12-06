@@ -670,8 +670,7 @@ namespace physics
 // checks if two strings are visually identical or very similar
 static inline bool duplicatestring(const char *a, const char *b)
 {
-    const uint alen = uni_strlen(a);
-    if(alen != uni_strlen(b)) return false;
+    if(uni_strlen(a) != uni_strlen(b)) return false;
     uint c, d;
     size_t s = uni_getchar(a, c), z = uni_getchar(b, d);
     for(const char *p = a, *q = b; c; p += s, q += z, s = uni_getchar(p, c), z = uni_getchar(q, d))

@@ -5,7 +5,7 @@
 #include <fontconfig/fontconfig.h>
 
 static int fontid = 0;              // used by UI for change detection
-float fontsize = 0;                 // pixel height of the current font
+double fontsize = 0;                // pixel height of the current font
 const matrix4x3 *textmatrix = NULL; // used for text particles
 Shader *textshader = NULL;          // used for text particles
 
@@ -506,7 +506,7 @@ namespace text
     {
         if(conshadow)
         {
-            const double d = 3.f / 4.f * conscale;
+            const double d = 0.75 * conscale;
             draw(left - d, top + d, conshadow, true);
         }
         draw(left, top);
@@ -532,7 +532,7 @@ namespace text
         if(layout) g_object_unref(layout);
     }
 
-    Label prepare(const char *str, int maxw, bvec color, int cursor, float outline, bvec4 ol_color, int align, int justify, const char *lang, bool no_fallback, bool keep_layout)
+    Label prepare(const char *str, int maxw, bvec color, int cursor, double outline, bvec4 ol_color, int align, int justify, const char *lang, bool no_fallback, bool keep_layout)
     {
         Label label;
         
@@ -548,7 +548,7 @@ namespace text
         }
 
         // create surface and cairo context
-        if(cursor >= 0) width += max(4.f, fontsize); // make space for the cursor
+        if(cursor >= 0) width += max(4., fontsize); // make space for the cursor
         const int ol_offset = ceil(outline);
         width += 2 * ol_offset;
         height += 2 * ol_offset;
@@ -560,7 +560,7 @@ namespace text
         // draw text outline
         if(outline)
         {
-            cairo_set_source_rgba(cr, ol_color.r/255.f, ol_color.g/255.f, ol_color.b/255.f, ol_color.a/255.f);
+            cairo_set_source_rgba(cr, ol_color.r/255., ol_color.g/255., ol_color.b/255., ol_color.a/255.);
             cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
             cairo_set_line_width(cr, 2 * outline);
             pango_cairo_layout_path(cr, label.layout);
@@ -575,14 +575,14 @@ namespace text
             PangoRectangle cur_rect;
             pango_layout_get_cursor_pos(label.layout, cursor, &cur_rect, NULL);
 
-            const float curw = max(1.f, fontsize / 16);
+            const double curw = max(1., fontsize / 16.);
             cairo_rectangle(cr, cur_rect.x/PANGO_SCALE+ol_offset, cur_rect.y/PANGO_SCALE+ol_offset, curw, cur_rect.height/PANGO_SCALE);
             if(outline)
             {
-                cairo_set_source_rgba(cr, ol_color.r/255.f, ol_color.g/255, ol_color.b/255.f, ol_color.a/255.f);
+                cairo_set_source_rgba(cr, ol_color.r/255., ol_color.g/255., ol_color.b/255., ol_color.a/255.);
                 cairo_stroke_preserve(cr);
             }
-            cairo_set_source_rgba(cr, cursorcolor.r/255.f, cursorcolor.g/255.f, cursorcolor.b/255.f, 1.0);
+            cairo_set_source_rgba(cr, cursorcolor.r/255., cursorcolor.g/255., cursorcolor.b/255., 1.);
             cairo_fill(cr);
         }
 
@@ -620,16 +620,16 @@ namespace text
 
     Label prepare_for_console(const char *str, int maxw, int cursor)
     {
-        return prepare(str, maxw, bvec(255, 255, 255), cursor, conoutline ? ceil(FONTH / 32.f) : 0, bvec4(0, 0, 0, conoutline));
+        return prepare(str, maxw, bvec(255, 255, 255), cursor, conoutline ? ceil(FONTH / 32.) : 0, bvec4(0, 0, 0, conoutline));
     }
 
-    const Label& prepare_for_particle(const char *str, bvec color, float outline, bvec4 ol_color, const char *lang, bool no_fallback)
+    const Label& prepare_for_particle(const char *str, bvec color, double outline, bvec4 ol_color, const char *lang, bool no_fallback)
     {
         const int c = color.tohexcolor();
         const char *l = lang ? lang : "";
         uint
             key = crc32(0  , (const Bytef *)str, strlen(str)) + curfont->id;
-            key = crc32(key, (const Bytef *)(&outline), sizeof(float));
+            key = crc32(key, (const Bytef *)(&outline), sizeof(double));
             key = crc32(key, (const Bytef *)(&c), sizeof(int));
             key = crc32(key, (const Bytef *)(&ol_color.mask), sizeof(uint));
             key = crc32(key, (const Bytef *)l, strlen(l));
@@ -660,7 +660,7 @@ namespace text
         {
             if(conshadow)
             {
-                const double d = 3.f / 4.f * conscale;
+                const double d = 0.75 * conscale;
                 label.draw(left - d, top + d, conshadow, true);
             }
             label.draw(left, top);

@@ -47,7 +47,7 @@ extern vector<int> entgroup;
 extern Shader *textshader;
 extern const matrix4x3 *textmatrix;
 extern float textscale;
-extern float fontsize;
+extern double fontsize;
 
 extern bool init_pangocairo();
 extern void done_pangocairo();
@@ -56,7 +56,7 @@ extern bool setfont(const char *name);
 extern void pushfont();
 extern bool popfont();
 extern void reloadfonts();
-static inline void setfontsize(float size) { fontsize = size; }
+static inline void setfontsize(double size) { fontsize = size; }
 
 struct _PangoLayout;
 namespace text
@@ -93,7 +93,7 @@ namespace text
         // do not call if the label was not prepared with `keep_layout=true`
         int xy_to_index(float x, float y) const;
 
-        friend Label prepare(const char *, int, bvec, int, float, bvec4, int, int, const char *, bool, bool);
+        friend Label prepare(const char *, int, bvec, int, double, bvec4, int, int, const char *, bool, bool);
     };
 
     // measure text before creating the label
@@ -108,7 +108,7 @@ namespace text
     Label prepare(const char *str, int maxw,
         bvec color = bvec(255, 255, 255),
         int cursor = -1,
-        float outline = 0,
+        double outline = 0,
         bvec4 ol_color = bvec4(0, 0, 0, 0),
         int align = -1,
         int justify = 0,
@@ -119,7 +119,7 @@ namespace text
     Label prepare_for_console(const char *str, int maxw, int cursor);
     const Label& prepare_for_particle(const char *str,
         bvec color = bvec(255, 255, 255),
-        float outline = 0,
+        double outline = 0,
         bvec4 ol_color = bvec4(0, 0, 0, 0),
         const char *lang = NULL,
         bool no_fallback = false

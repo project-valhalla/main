@@ -1986,11 +1986,12 @@ namespace UI
     bool curjustify = false, curnofallback = false;
     static const char *curlanguage = newstring("");
 
-    #define WITHTEXTATTR(name, tmp, val, body) \
+    #define WITHTEXTATTR(name, tmp, val, body) do { \
         tmp = cur##name; \
         cur##name = val; \
         body; \
-        cur##name = tmp;
+        cur##name = tmp; \
+    } while(0)
 
     struct WrapAlign : Object
     {
@@ -2105,7 +2106,6 @@ namespace UI
             Object::setup();
             changed = false;
             const float newscale = scale_ * uiscale;
-
             const int curfontid = getcurfontid();
             if(!uimillis || (totalmillis - lastchange >= uimillis) || !lastchange)
             {
@@ -2185,8 +2185,8 @@ namespace UI
 
             setfontsize(scale * hudh);
 
-            const float textscale = drawscale(),
-                x = round(sx/textscale), y = round(sy/textscale);
+            const double textscale = drawscale();
+            const double x = round(sx/textscale), y = round(sy/textscale);
             pushhudscale(textscale);
             if(shadow)
             {
@@ -2196,13 +2196,8 @@ namespace UI
             pophudmatrix();
         }
 
-        void hide() { Object::hide(); label.clear(); }
-
-        void clearlabels()
-        {
-            Object::clearlabels();
-            label.clear();
-        }
+        void hide()        { Object::hide()       ; label.clear(); }
+        void clearlabels() { Object::clearlabels(); label.clear(); }
 
         ~Text() { delete[] language; }
 
@@ -2216,7 +2211,7 @@ namespace UI
 
             setfontsize(scale * hudh);
 
-            float k = drawscale();
+            const float k = drawscale();
 
             // text changes are detected here
             const char *text = getstr();
@@ -2348,7 +2343,7 @@ namespace UI
                 setfont(font); \
                 Object::func##children(cx, cy, mask, inside, setflags); \
                 popfont(); \
-            } \
+            }
         DOSTATES
         #undef DOSTATE
 
@@ -2401,7 +2396,7 @@ namespace UI
 
             changedraw(CHANGE_SHADER | CHANGE_COLOR);
 
-            float k = drawscale() / uiscale;
+            const float k = drawscale() / uiscale;
             pushhudtranslate(sx, sy, k);
             renderfullconsole(w/k, h/k);
             pophudmatrix();
@@ -2992,7 +2987,7 @@ namespace UI
             setfontsize(scale * hudh);
 
             float k = drawscale();
-            w = max(w, (edit->pixelwidth + FONTW)*k);
+            w = max(w, (edit->pixelwidth + (float)FONTW)*k);
             h = max(h, edit->pixelheight*k);
         }
 

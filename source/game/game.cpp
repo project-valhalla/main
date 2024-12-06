@@ -979,7 +979,7 @@ namespace game
         return NULL;
     }
 
-    inline bool duplicatename(gameent *d, const char *name = NULL, const char *alt = NULL)
+    bool duplicatename(gameent *d, const char *name = NULL, const char *alt = NULL)
     {
         if(!name) name = d->name;
         if(alt && d != self && duplicatestring(name, alt)) return true;

@@ -833,9 +833,9 @@ namespace game
             }
             if (blood && color != -1)
             {
-				particle_flare(hit, hit, 280, PART_BLOOD, color, 0.1f, NULL, 6.5f);
-				particle_splash(PART_BLOOD2, 100, 280, hit, color, 1.4f, 150, 2, 0.001f);
-				particle_splash(PART_BLOOD, damage / 10, 1000, hit, color, 2.60f);
+                particle_flare(hit, hit, 280, PART_BLOOD, color, 0.1f, NULL, 6.5f);
+                particle_splash(PART_BLOOD2, 100, 280, hit, color, 1.4f, 150, 2, 0.001f);
+                particle_splash(PART_BLOOD, damage / 10, 1000, hit, color, 2.60f);
             }
             else
             {
@@ -1348,7 +1348,6 @@ namespace game
         swayevent.millis = lastmillis;
         swayevent.duration = duration;
         swayevent.factor = factor;
-        swayevent.pitch = 0;
     }
 
     void swayinfo::processevents()
@@ -1361,11 +1360,26 @@ namespace game
                 switch (events.type)
                 {
                     case SwayEvent_Land:
+                    case SwayEvent_LandHeavy:
                     case SwayEvent_Switch:
                     {
-                        float progress = clamp((lastmillis - events.millis) / (float)events.duration, 0.0f, 1.0f);
-                        events.pitch = events.factor * sinf(progress * PI);
-                        pitch += events.pitch;
+                        const float progress = clamp((lastmillis - events.millis) / (float)events.duration, 0.0f, 1.0f);
+                        const float curve = events.factor * sinf(progress * PI);
+                        pitch += curve;
+                        if (events.type == SwayEvent_LandHeavy)
+                        {
+                            roll += curve;
+                            dir.addz(curve * 0.05f);
+                        }
+                        break;
+                    }
+
+                    case SwayEvent_Crouch:
+                    {
+                        const float progress = clamp((lastmillis - events.millis) / (float)events.duration, 0.0f, 1.0f);
+                        const float curve = ease::outback(progress) * sinf(progress * PI) * events.factor;
+                        roll += curve;
+                        dir.addz(curve * 0.03f);
                         break;
                     }
                 }

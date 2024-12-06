@@ -964,7 +964,7 @@ namespace physics
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
                 msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
-                sway.addevent(d, SwayEvent_Land, 380, -8);
+                sway.addevent(d, SwayEvent_LandHeavy, 380, -2);
                 addroll(d, rollonland);
                 d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
                 break;
@@ -1044,8 +1044,16 @@ namespace physics
 
     void docrouch(int down)
     {
-        if (!down) self->crouching = abs(self->crouching);
-        else if (cancrouch()) self->crouching = -1;
+        if (!down)
+        {
+            self->crouching = abs(self->crouching);
+            sway.addevent(self, SwayEvent_Crouch, 350, -3);
+        }
+        else if (cancrouch())
+        {
+            self->crouching = -1;
+            sway.addevent(self, SwayEvent_Crouch, 380, -2);
+        }
     }
     ICOMMAND(crouch, "D", (int* down),
     {
@@ -1213,4 +1221,3 @@ namespace physics
         d->o.lerp(eye, 1 - k);
     }
 }
-

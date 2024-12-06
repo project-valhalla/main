@@ -274,7 +274,7 @@ namespace entities
                     trans = 0.5f;
                 }
                 float progress = min((lastmillis - e.lastspawn) / 1000.0f, 1.0f);
-                float size = easeoutelastic(progress);
+                float size = ease::outelastic(progress);
                 rendermodel(mdlname, ANIM_MAPMODEL | ANIM_LOOP, p, lastmillis / (float)revs, 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, size, vec4(1, 1, 1, trans));
             }
         }

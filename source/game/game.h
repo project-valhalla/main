@@ -799,6 +799,8 @@ namespace game
     enum
     {
         SwayEvent_Land,
+        SwayEvent_LandHeavy,
+        SwayEvent_Crouch,
         SwayEvent_Switch
     };
 
@@ -814,12 +816,11 @@ namespace game
             {
                 type = ENT_CAMERA;
             }
-        } guninterp;
+        } interpolation;
 
         struct swayEvent
         {
             int type, millis, duration, factor;
-            float pitch;
         };
         vector<swayEvent> swayevents;
 

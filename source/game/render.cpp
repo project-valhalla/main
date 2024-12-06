@@ -641,7 +641,7 @@ namespace game
             anim |= ANIM_LOOP;
             basetime = 0;
         }
-        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, MDL_NOBATCH, &sway.guninterp, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
+        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, MDL_NOBATCH, &sway.interpolation, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
 
         if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
     }

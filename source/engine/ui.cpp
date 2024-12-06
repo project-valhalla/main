@@ -3757,20 +3757,20 @@ namespace UI
         }
     }
 
-    ICOMMAND(uicolortext, "tife", (tagval *text, int *c, float *scale, uint *children),
-        buildtext(*text, *scale, uitextscale, Color(*c), -1, -1, false, children));
+    ICOMMAND(uicolortext, "tifieN", (tagval *text, int *c, float *scale, int *cursor, uint *children, int *numargs),
+        buildtext(*text, *scale, uitextscale, Color(*c), -1, *numargs>=4 ? *cursor : -1, *numargs>=4, children));
 
     ICOMMAND(uitext, "tfieN", (tagval *text, float *scale, int *cursor, uint *children, int *numargs),
-        buildtext(*text, *scale, uitextscale, Color(255, 255, 255), -1, *numargs >= 3 ? *cursor : -1, *numargs >= 3, children));
+        buildtext(*text, *scale, uitextscale, Color(255, 255, 255), -1, *numargs>=3 ? *cursor : -1, *numargs>=3, children));
 
     ICOMMAND(uitextfill, "ffe", (float *minw, float *minh, uint *children),
         BUILD(Filler, o, o->setup(*minw * uitextscale*0.5f, *minh * uitextscale), children));
 
-    ICOMMAND(uiwrapcolortext, "tfife", (tagval *text, float *wrap, int *c, float *scale, uint *children),
-        buildtext(*text, *scale, uitextscale, Color(*c), *wrap, -1, false, children));
+    ICOMMAND(uiwrapcolortext, "tfifieN", (tagval *text, float *wrap, int *c, float *scale, int *cursor, uint *children, int *numargs),
+        buildtext(*text, *scale, uitextscale, Color(*c), *wrap, *numargs>=5 ? *cursor : -1, *numargs>=5, children));
 
-    ICOMMAND(uiwraptext, "tffe", (tagval *text, float *wrap, float *scale, uint *children),
-        buildtext(*text, *scale, uitextscale, Color(255, 255, 255), *wrap, -1, false, children));
+    ICOMMAND(uiwraptext, "tffieN", (tagval *text, float *wrap, float *scale, int *cursor, uint *children, int *numargs),
+        buildtext(*text, *scale, uitextscale, Color(255, 255, 255), *wrap, *numargs>=4 ? *cursor : -1, *numargs>=4, children));
 
     ICOMMAND(uicolorcontext, "tife", (tagval *text, int *c, float *scale, uint *children),
         buildtext(*text, *scale, FONTH*uicontextscale, Color(*c), -1, -1, false, children));

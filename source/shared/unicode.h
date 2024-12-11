@@ -1,11 +1,12 @@
 // UTF-8 support
 
-#include "cube.h"
+#include <string.h>
 
 // reads the next character into `codepoint` and returns the number of bytes it takes up
-static inline int uni_getchar(const char *str, uint &codepoint)
+// `str` must be null-terminated
+static inline int uni_getchar(const char *str, unsigned int& codepoint)
 {
-    const uchar *p = (const uchar *)str;
+    const unsigned char *p = (const unsigned char *)str;
     if(p[0] <= 0x7F)
     {
         codepoint = p[0];
@@ -37,7 +38,7 @@ static inline int uni_getchar(const char *str, uint &codepoint)
 static inline int uni_prevchar(const char *str, int i)
 {
     if(i <= 0) return 0;
-    const uchar *p = (const uchar *)str;
+    const unsigned char *p = (const unsigned char *)str;
     if(p[i-1] <= 0x7F) return 1;
     if(i >= 2 && p[i-2] >> 5 == 0x06 && p[i-1] >> 6 == 0x02) return 2;
     if(i >= 3 && p[i-3] >> 4 == 0x0E && p[i-2] >> 6 == 0x02 && p[i-1] >> 6 == 0x02) return 3;
@@ -46,7 +47,7 @@ static inline int uni_prevchar(const char *str, int i)
 }
 
 // encodes a single codepoint
-static inline int uni_code2str(uint codepoint, char *dst)
+static inline int uni_code2str(unsigned int codepoint, char *dst)
 {
     if(codepoint <= 0x007F)
     {
@@ -82,63 +83,60 @@ static inline int uni_code2str(uint codepoint, char *dst)
     return 0;
 }
 
-static inline uint uni_strlen(const char *str)
+static inline unsigned int uni_strlen(const char *str)
 {
-    uint c, len = 0;
-    const char *p = str;
-    while(*p)
+    unsigned int _c, len = 0;
+    while(*str)
     {
-        p += uni_getchar(p, c);
+        str += uni_getchar(str, _c);
         ++len;
     }
     return len;
 }
 
 // returns the codepoint of the character at index `ix`
-static inline uint uni_charat(const char *str, int ix)
+static inline unsigned int uni_charat(const char *str, int ix)
 {
+    unsigned int c;
     if(ix >= 0)
     {
-        const char *p = str;
-        uint c;
-        loopi(ix)
+        for(int i = 0; i < ix; ++i)
         {
-            if(!*p) return 0;
-            p += uni_getchar(p, c);
+            if(!*str) return 0;
+            str += uni_getchar(str, c);
         }
-        if(!*p) return 0;
-        uni_getchar(p, c);
+        if(!*str) return 0;
+        uni_getchar(str, c);
         return c;
     }
 
-    uint len = strlen(str), b = 0;
-    const char *p = str+len;
-    loopi(-ix)
+    const unsigned int len = strlen(str);
+    unsigned int b = 0;
+    for(int i = 0; i > ix; --i)
     {
         b += uni_prevchar(str, len-b);
     }
-    uint c;
-    uni_getchar(p-b, c);
+    uni_getchar(str+len-b, c);
     return c;
 }
 
 // offset of the character at index `ix`
-static inline int uni_offset(const char *str, uint ix)
+static inline int uni_offset(const char *str, unsigned int ix)
 {
     const char *p = str;
-    uint c;
-    loopi(ix)
+    unsigned int _c;
+    for(int i = 0; i < ix; ++i)
     {
         if(!*p) break;
-        p += uni_getchar(p, c);
+        p += uni_getchar(p, _c);
     }
     return (p - str);
 }
 // same but starting from the end of the string (str[-ix])
-static inline int uni_negoffset(const char *str, uint ix)
+static inline int uni_negoffset(const char *str, unsigned int ix)
 {
     const char *p = str + strlen(str);
-    loopi(ix)
+    for(int i = 0; i < ix; ++i)
     {
         if(p <= str) break;
         p -= uni_prevchar(str, p - str);
@@ -146,25 +144,25 @@ static inline int uni_negoffset(const char *str, uint ix)
     return (p - str);
 }
 
-// returns the index of the unicode character at offset `i`
-static inline int uni_index(const char *str, uint i)
+// returns the index of the unicode character at offset `off`
+static inline int uni_index(const char *str, unsigned int off)
 {
     const char *p = str, *end = str + strlen(str);
-    uint _c;
+    unsigned int _c;
     int ret = 0;
-    loopj(i)
+    while(ret < off)
     {
-        if(p >= end || p >= str + i) return ret;
+        if(p >= end || p >= str + off) return ret;
         p += uni_getchar(p, _c);
-        ret++;
+        ++ret;
     }
     return ret;
 }
 
 // only supports ASCII
-static inline void uni_strlower(char *src, char *dst)
+static inline void uni_strlower(const char *src, char *dst)
 {
-    for(uchar *p = (uchar *)src; *p; ++p)
+    for(const unsigned char *p = (unsigned char *)src; *p; ++p)
     {
         if(*p >= 'A' && *p <= 'Z')
         {
@@ -174,9 +172,9 @@ static inline void uni_strlower(char *src, char *dst)
         ++dst;
     }
 }
-static inline void uni_strupper(char *src, char *dst)
+static inline void uni_strupper(const char *src, char *dst)
 {
-    for(uchar *p = (uchar *)src; *p; ++p)
+    for(const unsigned char *p = (unsigned char *)src; *p; ++p)
     {
         if(*p >= 'a' && *p <= 'z')
         {

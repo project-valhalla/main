@@ -64,9 +64,9 @@ namespace text
     // A rendered text label, ready to be drawn
     class Label
     {
-        GLuint tex;
         int w, h;
         int ox, oy; // offsets
+        GLuint tex;
         _PangoLayout *layout;
         int *map_markup_to_text;
         int *map_text_to_markup;
@@ -93,15 +93,14 @@ namespace text
         // do not call if the label was not prepared with `keep_layout=true`
         int xy_to_index(float x, float y) const;
 
-        friend Label prepare(const char *, int, bvec, int, double, bvec4, int, int, const char *, bool, bool);
+        friend Label prepare(const char *, int, bvec, int, double, bvec4, int, int, const char *, bool, bool, bool);
     };
 
     // measure text before creating the label
-    // TODO: consider removing in favor of `Label::prepare()`
     void measure(const char *str, int maxw, int &w, int &h,
         int align = -1,
         int justify = 0,
-        const char *lang = NULL,
+        const char *lang = nullptr,
         bool no_fallback = false
     );
 
@@ -112,26 +111,27 @@ namespace text
         bvec4 ol_color = bvec4(0, 0, 0, 0),
         int align = -1,
         int justify = 0,
-        const char *lang = NULL,            // language code, used for text shaping
+        const char *lang = nullptr,         // language code, used for text shaping
         bool no_fallback = false,           // don't use fallback fonts for unavailable glyphs
-        bool keep_layout = false            // use only if you need to call `xy_to_index()`
+        bool keep_layout = false,           // use only if you need to call `xy_to_index()`
+        bool reserve_cursor = false         // reserve space for the cursor, even if the cursor is absent
     );
     Label prepare_for_console(const char *str, int maxw, int cursor);
     const Label& prepare_for_particle(const char *str,
         bvec color = bvec(255, 255, 255),
         double outline = 0,
         bvec4 ol_color = bvec4(0, 0, 0, 0),
-        const char *lang = NULL,
+        const char *lang = nullptr,
         bool no_fallback = false
     );
 
     void draw(const char *str, double left, double top,
         bvec color = bvec(255, 255, 255),
-        int a = 255,
+        int alpha = 255,
         int maxw = 0,
         int align = -1,
         int justify = 0,
-        const char *lang = NULL,
+        const char *lang = nullptr,
         bool no_fallback = false
     );
     static inline void draw_fmt(const char *fstr, double left, double top, ...)
@@ -153,13 +153,13 @@ namespace text
     int visible(const char *str, float hitx, float hity, int maxw,
         int align = -1,
         int justify = 0,
-        const char *lang = NULL,
+        const char *lang = nullptr,
         bool no_fallback = false
     );
     void pos(const char *str, int cursor, int &cx, int &cy, int maxw,
         int align = -1,
         int justify = 0,
-        const char *lang = NULL,
+        const char *lang = nullptr,
         bool no_fallback = false
     );
 }

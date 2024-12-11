@@ -51,6 +51,13 @@ static inline void swap(T &a, T &b)
     a = b;
     b = t;
 }
+template<class T, class U = T>
+static inline T exchange(T& a, U&& b)
+{
+    T old_value = (T&&)a;
+    a = b; // should be `a = std::forward<U>(b)` or use `std::exchange` directly
+    return old_value;
+}
 #ifdef max
 #undef max
 #endif

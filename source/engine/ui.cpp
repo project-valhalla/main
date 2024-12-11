@@ -2053,7 +2053,7 @@ namespace UI
         const char *gettype() const { return typestr(); }
 
         const char *val, *tmp;
-        Language() : val(NULL), tmp(NULL) {}
+        Language() : val(nullptr), tmp(nullptr) {}
         ~Language() { DELETEA(val); DELETEA(tmp); }
         void setup(const char *val_) { SETSTR(val, val_); }
         void layout()                      { SETSTR(tmp, curlanguage); SETSTR(curlanguage, val); Object::layout(); SETSTR(curlanguage, tmp); }
@@ -2099,7 +2099,7 @@ namespace UI
         bool changed;
         uint crc; // string hash used for change detection
 
-        Text() : scale(0), wrap(0), color(0), lastchange(0), align(curwrapalign), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), justify(curjustify), nofallback(curnofallback), language(NULL), cursor(-1), has_cursor(false), crc(0) {}
+        Text() : scale(0), wrap(0), color(0), lastchange(0), align(curwrapalign), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), justify(curjustify), nofallback(curnofallback), language(nullptr), cursor(-1), has_cursor(false), crc(0) {}
 
         void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false)
         {
@@ -2151,7 +2151,6 @@ namespace UI
             const float k = drawscale();
             uicursorindex = label.xy_to_index(cx/k, cy/k);
         }
-
         bool rawkey(int code, bool isdown)
         {
             if(Object::rawkey(code, isdown)) return true;
@@ -2161,7 +2160,6 @@ namespace UI
             copystring(uikeycode, keyname);
             return code != -1; // propagate left clicks
         }
-
         bool textinput(const char *str, int len)
         {
             if(Object::textinput(str, len)) return true;
@@ -2182,8 +2180,6 @@ namespace UI
             Object::draw(sx, sy);
 
             changedraw(CHANGE_SHADER | CHANGE_COLOR);
-
-            setfontsize(scale * hudh);
 
             const double textscale = drawscale();
             const double x = round(sx/textscale), y = round(sy/textscale);
@@ -2229,7 +2225,7 @@ namespace UI
 
             if(!label.valid())
             {
-                label = text::prepare(text, int(wrap/k), bvec(color.r, color.g, color.b), cursor, outline * FONTH / 16.f, bvec4(0, 0, 0, outlinealpha), align, justify, language, nofallback, /*keep_layout=*/has_cursor);
+                label = text::prepare(text, int(wrap/k), bvec(color.r, color.g, color.b), cursor, outline * FONTH / 16.f, bvec4(0, 0, 0, outlinealpha), align, justify, language, nofallback, /*keep_layout=*/has_cursor, /*reserve_cursor=*/has_cursor);
             }
             w = max(w, label.width()*k);
             h = max(h, label.height()*k);
@@ -2300,7 +2296,7 @@ namespace UI
     {
         char *font;
 
-        Font() : font(NULL) {}
+        Font() : font(nullptr) {}
         ~Font() { delete[] font; }
 
         static const char* typestr() { return "#Font"; }

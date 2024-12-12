@@ -798,7 +798,7 @@ namespace game
     // weapon.cpp
     enum
     {
-        SwayEvent_Land,
+        SwayEvent_Land = 0,
         SwayEvent_LandHeavy,
         SwayEvent_Crouch,
         SwayEvent_Switch
@@ -921,37 +921,89 @@ namespace game
     extern void setdamagehud(const int damage, gameent* d, gameent* actor);
     extern void addscreenflash(const int amount);
     extern void checkitem(int type);
-    extern void fixcamerarange();
 
-    extern bool allowthirdperson();
-
-    extern int thirdperson;
-    extern int zoom;
     extern int lowhealthscreen;
 
-    struct zoominfo
+    namespace camera
     {
-        float progress;
-
-        zoominfo() : progress(0)
+        enum
         {
-        }
-        ~zoominfo()
+            CameraEvent_Land = 0,
+            CameraEvent_Shake,
+            CameraEvent_Spawn,
+            CameraEvent_Teleport
+        };
+
+        struct camerainfo
         {
-        }
+            bool isdetached;
+            float yaw, pitch, roll, fov;
+            float bobfade, bobspeed, bobdist;
+            vec direction;
 
-        void update();
-        void disable();
+            struct CameraEvent
+            {
+                int type, millis, duration;
+                float factor;
+            };
+            vector<CameraEvent> events;
 
-        bool isenabled();
+            struct ShakeEvent
+            {
+                int factor, millis, duration, elapsed;
+                float intensity;
+            };
+            vector<ShakeEvent> shakes;
 
-        bool isinprogress()
-        {
-            return progress > 0;
-        }
-    };
+            struct zoominfo
+            {
+                float progress;
 
-    extern zoominfo zoomstate;
+                zoominfo() : progress(0)
+                {
+                }
+                ~zoominfo()
+                {
+                }
+
+                void update();
+                void disable();
+
+                bool isenabled();
+
+                bool isinprogress()
+                {
+                    return progress > 0;
+                }
+            };
+            zoominfo zoomstate;
+
+            camerainfo() : isdetached(false), yaw(0), pitch(0), roll(0), fov(1), bobfade(0), bobspeed(0), bobdist(0)
+            {
+                direction = vec(0, 0, 0);
+            }
+            ~camerainfo()
+            {
+            }
+
+            void update();
+            void addevent(gameent* owner, int type, int duration, float factor = 0);
+            void processevents();
+            void addshake(int factor);
+            void updateshake();
+
+            vec getposition();
+        };
+
+        extern camerainfo camera;
+
+        extern void fixrange();
+
+        extern bool allowthirdperson();
+
+        extern int thirdperson;
+        extern int zoom;
+    }
 }
 
 namespace server

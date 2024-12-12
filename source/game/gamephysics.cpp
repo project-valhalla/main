@@ -950,6 +950,7 @@ namespace physics
                 if (event == PHYSEVENT_LAND_LIGHT)
                 {
                     sway.addevent(d, SwayEvent_Land, 350, -3);
+                    camera::camera.addevent(d, camera::CameraEvent_Land, 100, -1.0f);
                     triggerfootsteps(d, true);
                 }
                 else
@@ -965,6 +966,7 @@ namespace physics
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
                 msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
                 sway.addevent(d, SwayEvent_LandHeavy, 380, -2);
+                camera::camera.addevent(d, camera::CameraEvent_Land, 100);
                 addroll(d, rollonland);
                 d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
                 break;
@@ -1204,7 +1206,7 @@ namespace physics
     void updateragdolleye(dynent* pl, vec eye, const vec offset)
     {
         gameent* d = (gameent*)pl;
-        bool isfirstperson = isfirstpersondeath();
+        bool isfirstperson = camera::isfirstpersondeath();
         if (!isfirstperson && (d->deathstate == Death_Fall || d->deathstate == Death_Gib))
         {
             return;

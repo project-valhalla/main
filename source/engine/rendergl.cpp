@@ -1355,7 +1355,7 @@ float calcfrustumboundsphere(float nearplane, float farplane,  const vec &pos, c
         return minimapradius.magnitude();
     }
 
-    float width = tan(game::fov/2.0f*RAD), height = width / aspect,
+    float width = tan(game::camera::camerafov/2.0f*RAD), height = width / aspect,
           cdist = ((nearplane + farplane)/2)*(1 + width*width + height*height);
     if(cdist <= farplane)
     {
@@ -1395,7 +1395,7 @@ FVAR(avatardepth, 0, 0.7f, 1);
 
 void renderavatar()
 {
-    if (game::isthirdperson()) return;
+    if (game::camera::isthirdperson()) return;
 
     matrix4 oldprojmatrix = nojittermatrix;
     projmatrix.perspective(curavatarfov, aspect, nearplane, farplane);

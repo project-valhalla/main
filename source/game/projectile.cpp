@@ -83,7 +83,7 @@ namespace game
         {
             if (proj.flags & ProjFlag_Weapon)
             {
-                if (owner == hudplayer() && !isthirdperson())
+                if (owner == hudplayer() && !camera::isthirdperson())
                 {
                     proj.offset.sub(owner->o).rescale(16).add(owner->o);
                 }
@@ -156,7 +156,6 @@ namespace game
     {
         /*
          * When a projectile collides with another alive entity.
-         * 
          * Nothing yet.
          */
     }
@@ -218,6 +217,7 @@ namespace game
 
     void addexplosioneffects(gameent* owner, const int atk, vec v)
     {
+        // Explosion particles.
         int explosioncolor = 0x50CFE5, explosiontype = PART_EXPLOSION1, fade = 400;
         float minsize = 0.10f, maxsize = attacks[atk].exprad * 1.15f;
         vec explosionlightcolor = vec(1.0f, 3.0f, 4.0f);
@@ -290,6 +290,7 @@ namespace game
         particle_fireball(v, maxsize, explosiontype, fade, explosioncolor, minsize);
         adddynlight(v, attacks[atk].exprad * 3, explosionlightcolor, fade, 40);
         playsound(attacks[atk].impactsound, NULL, &v);
+        // Spawn debris projectiles.
         if (!iswater) // Debris in water are unnecessary.
         {
             const int numdebris = rnd(maxdebris - 5) + 5;
@@ -299,13 +300,19 @@ namespace game
             {
                 debrisorigin.add(vec(debrisvel).mul(8));
             }
-            if (numdebris && (attacks[atk].gun == GUN_ROCKET || attacks[atk].gun == GUN_SCATTER))
+            if (numdebris && attacks[atk].gun == GUN_ROCKET)
             {
                 loopi(numdebris)
                 {
                     spawnbouncer(debrisorigin, owner, Projectile_Debris);
                 }
             }
+        }
+        // Shake the screen if close enough to the explosion.
+        vec ray = vec(0, 0, 0);
+        if (raycubelos(camera1->o, v, ray) && camera1->o.dist(v) <= attacks[atk].exprad * 3)
+        {
+            camera::camera.addevent(self, camera::CameraEvent_Shake, attacks[atk].damage);
         }
     }
 

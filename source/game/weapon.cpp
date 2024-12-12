@@ -159,7 +159,7 @@ namespace game
         d->pitch += amount;
         float friction = 4.0f / curtime * 30.0f;
         d->pitchrecoil = d->pitchrecoil * (friction - 2.8f) / friction;
-        fixcamerarange();
+        camera::fixrange();
     }
 
     void checkattacksound(gameent *d, bool local)
@@ -263,7 +263,7 @@ namespace game
                 adddynlight(vec(to).madd(dir, 4), 15, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if (hit || iswater || isglass) break;
                 particle_fireball(to, 0.5f, PART_EXPLOSION2, 120, 0xFFC864, 2.0f);
-                particle_splash(PART_EXPLODE4, 50, 40, to, 0xFFC864, 1.0f);
+                particle_splash(PART_EXPLODE4, 50, 40, to, 0xFFC864, 1.0f, 150, 2, 0.1f);
                 particle_splash(PART_SPARK2, 30, 250, to, 0xFFC864, 0.05f + rndscale(0.2f), 250, 2, 0.001f);
                 particle_splash(PART_SMOKE, 30, 250, to, 0x555555, 0.2f, 80, 100, 6.0f);
                 addstain(STAIN_BULLETHOLE_SMALL, to, vec(from).sub(to).normalize(), 0.50f + rndscale(1.0f), 0xFFFFFF, rnd(4));
@@ -487,7 +487,7 @@ namespace game
             {
                 if (d->muzzle.x >= 0 && muzzleflash)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH5, 0x74BCF9, 0.5f, d, 4.0f);
+                    particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH5, 0x74BCF9, 0.2f, d, 3.5f);
                 }
                 up = vec(to).addz(dist / (atk == ATK_GRENADE1 ? 8 : 16));
                 break;
@@ -883,7 +883,11 @@ namespace game
 
     void gibeffect(int damage, const vec& vel, gameent* d)
     {
-        if (!gore) return;
+        if (!gore)
+        {
+            return;
+        }
+
         vec from = d->abovehead();
         loopi(min(damage, 8) + 1)
         {
@@ -896,6 +900,10 @@ namespace game
             addstain(STAIN_BLOOD, d->o, d->vel.neg(), 25, getbloodcolor(d), rnd(4));
         }
         playsound(S_GIB, d);
+        if (d == self || camera1->o.dist(from) <= 50.0f)
+        {
+            camera::camera.addevent(self, camera::CameraEvent_Shake, damage * 2);
+        }
     }
 
     VARP(hitsound, 0, 0, 1);
@@ -953,7 +961,8 @@ namespace game
 
                     if (attacks[atk].action == ACT_MELEE)
                     {
-                        physics::addroll(actor, damage / 2.0f);
+                        // Simulate a strong impact.
+                        camera::camera.addevent(actor, camera::CameraEvent_Shake, damage * 2);
                     }
                 }
             }
@@ -1003,7 +1012,7 @@ namespace game
         }
         if (d == self)
         {
-            zoomstate.disable();
+            camera::camera.zoomstate.disable();
         }
     }
 
@@ -1013,9 +1022,9 @@ namespace game
         {
             return;
         }
-        if (zoom && guns[self->gunselect].zoom)
+        if (camera::zoom && guns[self->gunselect].zoom)
         {
-            zoomfov = clamp(zoomfov - dir, 10, 90);
+            camera::zoomfov = clamp(camera::zoomfov - dir, 10, 90);
         }
         else
         {
@@ -1159,7 +1168,7 @@ namespace game
             return;
         }
 
-        const bool isAttacking = self->attacking || zoomstate.isinprogress();
+        const bool isAttacking = self->attacking || camera::camera.zoomstate.isinprogress();
         if (isAttacking)
         {
             // Do not interrupt someone during a fight.
@@ -1188,7 +1197,7 @@ namespace game
 
     vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d)
     {
-        if (zoomstate.isenabled() && d == self)
+        if (camera::camera.zoomstate.isenabled() && d == self)
         {
             return d->feetpos(4);
         }
@@ -1198,7 +1207,7 @@ namespace game
         }
 
         vec offset(from);
-        if (d != hudplayer() || isthirdperson())
+        if (d != hudplayer() || camera::isthirdperson())
         {
             vec front, right;
             vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
@@ -1355,7 +1364,12 @@ namespace game
         loopv(swayevents)
         {
             swayEvent& events = swayevents[i];
-            if (lastmillis - events.millis <= events.duration)
+            const int elapsed = lastmillis - events.millis;
+            if (elapsed > events.duration)
+            {
+                swayevents.remove(i--);
+            }
+            else
             {
                 switch (events.type)
                 {
@@ -1363,31 +1377,26 @@ namespace game
                     case SwayEvent_LandHeavy:
                     case SwayEvent_Switch:
                     {
-                        const float progress = clamp((lastmillis - events.millis) / (float)events.duration, 0.0f, 1.0f);
-                        const float curve = events.factor * sinf(progress * PI);
-                        pitch += curve;
+                        const float progress = clamp((lastmillis - events.millis) / static_cast<float>(events.duration), 0.0f, 1.0f);
+                        const float curve = events.factor * sinf(progress * M_PI);
                         if (events.type == SwayEvent_LandHeavy)
                         {
                             roll += curve;
-                            dir.addz(curve * 0.05f);
+                            dir.z += curve * 0.05f;
                         }
+                        pitch += curve;
                         break;
                     }
 
                     case SwayEvent_Crouch:
                     {
-                        const float progress = clamp((lastmillis - events.millis) / (float)events.duration, 0.0f, 1.0f);
-                        const float curve = ease::outback(progress) * sinf(progress * PI) * events.factor;
+                        const float progress = clamp((lastmillis - events.millis) / static_cast<float>(events.duration), 0.0f, 1.0f);
+                        const float curve = ease::outback(progress) * sinf(progress * M_PI) * events.factor;
                         roll += curve;
-                        dir.addz(curve * 0.03f);
+                        dir.z += curve * 0.03f;
                         break;
                     }
                 }
-            }
-            else
-            {
-                swayevents.remove(i--);
-                continue;
             }
         }
     }

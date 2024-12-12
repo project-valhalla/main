@@ -50,7 +50,7 @@ namespace game
     {
         if(following<0) return;
         following = -1;
-        thirdperson = 0;
+        camera::thirdperson = 0;
     }
 
     void follow(char *arg)
@@ -164,7 +164,7 @@ namespace game
 
     gameent *hudplayer()
     {
-        if((thirdperson && allowthirdperson()) || specmode > 1) return self;
+        if((camera::thirdperson && camera::allowthirdperson()) || specmode > 1) return self;
         return followingplayer(self);
     }
 
@@ -255,6 +255,7 @@ namespace game
         }
         updateweapons(curtime);
         otherplayers(curtime);
+        camera::camera.update();
         ai::update();
         moveragdolls();
         gets2c();
@@ -388,6 +389,7 @@ namespace game
         {
             clearscreeneffects();
             addscreenflash(200);
+            camera::camera.addevent(d, camera::CameraEvent_Spawn, 380);
         }
         int color = 0x00FF5B;
         if (d->type == ENT_PLAYER)
@@ -422,7 +424,7 @@ namespace game
     {
         if (self->attacking == ACT_MELEE)
         {
-            zoomstate.disable();
+            camera::camera.zoomstate.disable();
             return true;
         }
 
@@ -438,7 +440,7 @@ namespace game
                 }
                 else
                 {
-                    zoom = zoom ? -1 : 1;
+                    camera::zoom = camera::zoom ? -1 : 1;
                 }
                 if (self->attacking == ACT_PRIMARY)
                 {
@@ -451,7 +453,7 @@ namespace game
             }
             if (act == ACT_PRIMARY)
             {
-                if (zoomstate.isenabled())
+                if (camera::camera.zoomstate.isenabled())
                 {
                     act = ACT_SECONDARY;
                 }
@@ -513,7 +515,7 @@ namespace game
         }
         if (deathscream && d->type == ENT_PLAYER)
         {
-            bool isfirstperson = d == self && isfirstpersondeath();
+            bool isfirstperson = d == self && camera::isfirstpersondeath();
             if (!isfirstperson)
             {
                 int diesound = getplayermodelinfo(d).diesound[d->deathstate];
@@ -554,9 +556,9 @@ namespace game
         }
         if(d == self)
         {
-            zoomstate.disable();
+            camera::camera.zoomstate.disable();
             d->attacking = ACT_IDLE;
-            if(!isfirstpersondeath())
+            if(!camera::isfirstpersondeath())
             {
                 if(!restore && deathfromabove)
                 {
@@ -570,7 +572,7 @@ namespace game
                 playsound(S_DEATH);
             }
             if(m_invasion) self->lives--;
-            if(thirdperson) thirdperson = 0;
+            if(camera::thirdperson) camera::thirdperson = 0;
         }
         else
         {
@@ -755,7 +757,7 @@ namespace game
         if (spree[0] == '\0' || flags & KILL_TRAITOR)
         {
             /* No spree to announce? We are finished.
-             * 
+             *
              * If this is an assassination by a traitor instead,
              * announce the kill streak we achieved just the same...
              * but without triggering a console message (to not confuse players).
@@ -854,7 +856,7 @@ namespace game
                 playsound(S_ANNOUNCER_WIN, NULL, NULL, NULL, SND_ANNOUNCER);
             }
             else playsound(S_INTERMISSION);
-            zoomstate.disable();
+            camera::camera.zoomstate.disable();
             execident("on_intermission");
         }
     }
@@ -979,7 +981,7 @@ namespace game
 
         syncplayer();
 
-        zoomstate.disable();
+        camera::camera.zoomstate.disable();
 
         execident("on_mapstart");
     }

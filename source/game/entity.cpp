@@ -382,6 +382,7 @@ namespace entities
                     else
                     {
                         addscreenflash(150);
+                        camera::camera.addevent(d, camera::CameraEvent_Teleport, 500);
                     }
                     teleportparticleeffects(d, ents[td]->o);
                 }

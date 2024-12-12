@@ -529,8 +529,8 @@ void execbind(keym &k, bool isdown)
 
 void iskeyheld(char *key)
 {
-    keym* km = findbind(key);
-    intret(km->pressed ? 1 : 0);
+    const keym *km = findbind(key);
+    intret(km && km->pressed ? 1 : 0);
 }
 ICOMMAND(iskeyheld, "s", (char* key), iskeyheld(key));
 
@@ -555,6 +555,25 @@ bool consoleinput(const char *str, int len)
 
     return true;
 }
+
+// returns the contents of the clipboard
+void getclipboard()
+{
+    if(!SDL_HasClipboardText())
+    {
+        result("");
+        return;
+    }
+    char *cb = SDL_GetClipboardText();
+    if(!cb)
+    {
+        result("");
+        return;
+    }
+    stringret(newstring(cb, MAXSTRLEN));
+    SDL_free(cb);
+}
+COMMAND(getclipboard, "");
 
 void pasteconsole()
 {

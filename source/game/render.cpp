@@ -242,6 +242,10 @@ namespace game
                 {
                     transparency = 0.1f;
                 }
+                else if(lastmillis - d->lastspawn <= DURATION_SPAWN)
+                {
+                    transparency = clamp((lastmillis - d->lastspawn) / 1000.0f, 0.0f, 1.0f);
+                }
                 break;
             }
 
@@ -641,7 +645,12 @@ namespace game
             anim |= ANIM_LOOP;
             basetime = 0;
         }
-        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, MDL_NOBATCH, &sway.interpolation, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
+        int flags = MDL_NOBATCH;
+        if (lastmillis - d->lastspawn <= DURATION_SPAWN)
+        {
+            flags |= MDL_FORCETRANSPARENT;
+        }
+        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, flags, &sway.interpolation, a, basetime, 0, 1, vec4(vec::hexcolor(color)));
 
         if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
     }

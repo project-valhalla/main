@@ -85,8 +85,6 @@ namespace game
             halted = exploding = false;
             lastunblocked = detonating = 0;
             bursting = shots = 0;
-
-            spawneffect(this);
         }
 
         void normalize_yaw(float angle)

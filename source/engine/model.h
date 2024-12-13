@@ -45,8 +45,8 @@ struct model
     virtual void preloadmeshes() {}
     virtual void cleanup() {}
 
-    virtual void startrender() {}
-    virtual void endrender() {}
+    virtual void startrender(const int flags = 0) {}
+    virtual void endrender(const int flags = 0) {}
 
     void boundbox(vec &center, vec &radius)
     {

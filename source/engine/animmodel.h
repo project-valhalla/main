@@ -1657,13 +1657,18 @@ struct animmodel : model
     static int matrixpos;
     static matrix4 matrixstack[64];
 
-    void startrender()
+    void startrender(const int flags)
     {
         enabletc = enabletangents = enablebones = enabledepthoffset = false;
         enablecullface = true;
         lastvbuf = lasttcbuf = lastxbuf = lastbbuf = lastebuf = lastenvmaptex = closestenvmaptex = 0;
         lasttex = lastdecal = lastmasks = lastnormalmap = NULL;
         shaderparamskey::invalidate();
+        if(flags&MDL_NOBATCH && flags&MDL_FORCETRANSPARENT)
+        {
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        }
     }
 
     static void disablebones()
@@ -1699,11 +1704,15 @@ struct animmodel : model
         lastvbuf = lasttcbuf = lastxbuf = lastbbuf = lastebuf = 0;
     }
 
-    void endrender()
+    void endrender(const int flags)
     {
         if(lastvbuf || lastebuf) disablevbo();
         if(!enablecullface) glEnable(GL_CULL_FACE);
         if(enabledepthoffset) disablepolygonoffset(GL_POLYGON_OFFSET_FILL);
+        if(flags&MDL_NOBATCH && flags&MDL_FORCETRANSPARENT)
+        {
+            glDisable(GL_BLEND);
+        }
     }
 };
 

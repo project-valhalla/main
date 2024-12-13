@@ -373,33 +373,49 @@ namespace game
     {
         pickgamespawn(d);
         spawnstate(d);
-        if(d==self)
+        if(d == self)
         {
-            if(editmode) d->state = CS_EDITING;
-            else if(d->state != CS_SPECTATOR) d->state = CS_ALIVE;
+            if (editmode)
+            {
+                d->state = CS_EDITING;
+            }
+            else if (d->state != CS_SPECTATOR)
+            {
+                d->state = CS_ALIVE;
+            }
         }
-        else d->state = CS_ALIVE;
+        else
+        {
+            d->state = CS_ALIVE;
+        }
         checkfollow();
+        spawneffect(d);
     }
 
     void spawneffect(gameent *d)
     {
         stopownersounds(d);
-        if (d == followingplayer(self))
-        {
-            clearscreeneffects();
-            addscreenflash(200);
-            camera::camera.addevent(d, camera::CameraEvent_Spawn, 380);
-        }
-        int color = 0x00FF5B;
         if (d->type == ENT_PLAYER)
         {
-            color = getplayercolor(d, d->team);
+            if (d == followingplayer(self))
+            {
+                clearscreeneffects();
+                addscreenflash(200);
+                camera::camera.addevent(d, camera::CameraEvent_Spawn, 380);
+            }
+            adddynlight(d->o, 100, vec(1, 1, 1), 800, 100, DL_EXPAND | L_NOSHADOW);
+            doweaponchangeffects(d);
+            playsound(S_PLAYER_SPAWN, d);
         }
-        particle_splash(PART_SPARK2, 250, 200, d->o, color, 0.60f, 200, 5);
-        adddynlight(d->o, 35, vec::hexcolor(color), 900, 100);
-        doweaponchangeffects(d);
-        playsound(S_SPAWN, d);
+        else
+        {
+            static const int color = 0x00e661;
+            particle_flare(d->o, d->o, 350, PART_EXPLODE1, color, 2.0f, NULL, d->radius + 50.0f);
+            particle_flare(d->o, d->o, 280, PART_ELECTRICITY, color, 2.0f, NULL, d->radius + 30.0f);
+            adddynlight(d->o, 100, vec::hexcolor(color), 350, 100, DL_EXPAND | L_NOSHADOW);
+            playsound(S_MONSTER_SPAWN, d);
+        }
+        d->lastspawn = lastmillis;
     }
 
     void respawn()

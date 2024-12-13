@@ -1007,11 +1007,11 @@ hasboundbox:
             d->query = newquery(d);
             if(d->query) startquery(d->query);
         }
-        m->startrender();
+        m->startrender(flags);
         setaamask(true);
         if(flags&MDL_FULLBRIGHT) anim |= ANIM_FULLBRIGHT;
         m->render(anim, basetime, basetime2, o, yaw, pitch, roll, d, a, size, color);
-        m->endrender();
+        m->endrender(flags);
         if(flags&MDL_CULL_QUERY && d->query) endquery(d->query);
         disableaamask();
         return;
@@ -1138,4 +1138,3 @@ void setbbfrommodel(dynent *d, const char *mdl)
         d->eyeheight += zrad;
     }
 }
-

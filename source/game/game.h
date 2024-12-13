@@ -706,6 +706,7 @@ namespace game
     extern void nextfollow(int dir = 1);
     extern void clientdisconnected(int cn, bool notify = true);
     extern void clearclients(bool notify = true);
+    extern void cleargame();
     extern void startgame();
     extern void pickgamespawn(gameent* d);
     extern void spawnplayer(gameent *d);
@@ -821,7 +822,7 @@ namespace game
         {
             int type, millis, duration, factor;
         };
-        vector<swayEvent> swayevents;
+        vector<swayEvent> events;
 
         swayinfo() : fade(0), speed(0), dist(0), yaw(0), pitch(0), pitchadd(0), roll(0), o(0, 0, 0), dir(0, 0, 0)
         {
@@ -844,6 +845,7 @@ namespace game
     extern void scanhit(vec& from, vec& to, gameent* d, int atk);
     extern void gibeffect(int damage, const vec &vel, gameent *d);
     extern void updateweapons(int curtime);
+    extern void clearweapons();
     extern void gunselect(int gun, gameent* d);
     extern void doweaponchangeffects(gameent* d, int gun = -1);
     extern void weaponswitch(gameent* d);
@@ -996,6 +998,8 @@ namespace game
 
         extern camerainfo camera;
 
+        extern void update();
+        extern void reset();
         extern void fixrange();
 
         extern bool allowthirdperson();

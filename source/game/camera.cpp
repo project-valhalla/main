@@ -5,6 +5,17 @@ namespace game
 {
     namespace camera
     {
+        void update()
+        {
+            camera.update();
+        }
+
+        void reset()
+        {
+            camera.events.shrink(0);
+            camera.shakes.shrink(0);
+        }
+
         bool isthirdperson()
         {
             return self != camera1 || camera.isdetached;

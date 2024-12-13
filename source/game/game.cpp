@@ -847,7 +847,6 @@ namespace game
             removeprojectiles(d);
             removetrackedparticles(d);
             removetrackeddynlights(d);
-            announcer::reset();
             if(cmode) cmode->removeplayer(d);
             removegroupedplayer(d);
             players.removeobj(d);
@@ -875,14 +874,20 @@ namespace game
 
     VARP(showmodeinfo, 0, 1, 1);
 
-    void startgame()
+    void cleargame()
     {
         removeprojectiles();
+        clearweapons();
         clearmonsters();
         clearragdolls();
-        announcer::reset();
-
         clearteaminfo();
+        camera::reset();
+        announcer::reset();
+    }
+
+    void startgame()
+    {
+        cleargame();
 
         // reset perma-state
         loopv(players) players[i]->startgame();

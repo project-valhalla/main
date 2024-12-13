@@ -238,6 +238,12 @@ namespace game
         }
     }
 
+    void clearweapons()
+    {
+        sway.events.shrink(0);
+        hits.setsize(0);
+    }
+
     void impacteffects(int atk, gameent* d, const vec& from, const vec& to, bool hit = false)
     {
         if (!validatk(atk) || (!hit && isemptycube(to)) || from.dist(to) > attacks[atk].range) return;
@@ -1352,7 +1358,7 @@ namespace game
             return;
         }
 
-        swayEvent& swayevent = swayevents.add();
+        swayEvent& swayevent = events.add();
         swayevent.type = type;
         swayevent.millis = lastmillis;
         swayevent.duration = duration;
@@ -1361,25 +1367,25 @@ namespace game
 
     void swayinfo::processevents()
     {
-        loopv(swayevents)
+        loopv(events)
         {
-            swayEvent& events = swayevents[i];
-            const int elapsed = lastmillis - events.millis;
-            if (elapsed > events.duration)
+            swayEvent& event = events[i];
+            const int elapsed = lastmillis - event.millis;
+            if (elapsed > event.duration)
             {
-                swayevents.remove(i--);
+                events.remove(i--);
             }
             else
             {
-                switch (events.type)
+                switch (event.type)
                 {
                     case SwayEvent_Land:
                     case SwayEvent_LandHeavy:
                     case SwayEvent_Switch:
                     {
-                        const float progress = clamp((lastmillis - events.millis) / static_cast<float>(events.duration), 0.0f, 1.0f);
-                        const float curve = events.factor * sinf(progress * M_PI);
-                        if (events.type == SwayEvent_LandHeavy)
+                        const float progress = clamp((lastmillis - event.millis) / static_cast<float>(event.duration), 0.0f, 1.0f);
+                        const float curve = event.factor * sinf(progress * M_PI);
+                        if (event.type == SwayEvent_LandHeavy)
                         {
                             roll += curve;
                             dir.z += curve * 0.05f;
@@ -1390,8 +1396,8 @@ namespace game
 
                     case SwayEvent_Crouch:
                     {
-                        const float progress = clamp((lastmillis - events.millis) / static_cast<float>(events.duration), 0.0f, 1.0f);
-                        const float curve = ease::outback(progress) * sinf(progress * M_PI) * events.factor;
+                        const float progress = clamp((lastmillis - event.millis) / static_cast<float>(event.duration), 0.0f, 1.0f);
+                        const float curve = ease::outback(progress) * sinf(progress * M_PI) * event.factor;
                         roll += curve;
                         dir.z += curve * 0.03f;
                         break;

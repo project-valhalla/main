@@ -573,7 +573,10 @@ namespace game
 
     void monsterkilled(gameent* monster, int id, int flags)
     {
-        if (flags) checkannouncements(monster, self, flags);
+        if (flags)
+        {
+            announcer::parseannouncements(monster, self, flags);
+        }
         if(!m_invasion && !m_story) return;
         numkilled++;
         self->frags = numkilled;

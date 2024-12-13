@@ -488,15 +488,12 @@ void resetchannels()
     channels.shrink(0);
 }
 
-int soundqueue[MAX_QUEUE], queuedsounds = 0; // keep track of the sounds in the queue
-
 void clear_sound()
 {
     closemumble();
     if(nosound) return;
     stopmusic();
 
-    queuedsounds = 0;
     gamesounds.cleanup();
     mapsounds.cleanup();
     Mix_CloseAudio();
@@ -611,17 +608,6 @@ void syncchannels()
     }
 }
 
-void playqueuedsounds()
-{
-    if(!queuedsounds) return;
-    playsound(soundqueue[0], NULL, NULL, NULL, SND_ANNOUNCER);
-    for(int i = 1; i < queuedsounds; i++)
-    {
-        soundqueue[i - 1] = soundqueue[i]; // shift the remaining sounds down in the queue
-    }
-    queuedsounds--;
-}
-
 VARP(minimizedsounds, 0, 0, 1);
 
 void updatesounds()
@@ -647,7 +633,6 @@ void updatesounds()
         if(!Mix_PlayingMusic()) musicdone();
         else if(Mix_PausedMusic()) Mix_ResumeMusic();
     }
-    playqueuedsounds();
 }
 
 VARP(maxsoundsatonce, 0, 0, 100);
@@ -674,14 +659,16 @@ void preloadmapsounds()
     }
 }
 
-void queuesound(int n)
+bool ischannelinuse(int flags)
 {
-    if(queuedsounds < MAX_QUEUE)
+    loopv(channels)
     {
-        // add the sound to the queue and increment the count
-        soundqueue[queuedsounds] = n;
-        queuedsounds++;
+        if (channels[i].flags & flags && channels[i].inuse)
+        {
+            return true;
+        }
     }
+    return false;
 }
 
 int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, int loops, int fade, int chanid, int radius, int expire)
@@ -750,18 +737,6 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
     if(chanid < 0) loopv(channels) if(!channels[i].volume) { Mix_HaltChannel(i); freechannel(i); chanid = i; break; }
     if(chanid < 0) return -1;
 
-    if(flags & SND_ANNOUNCER)
-    {
-        loopv(channels)
-        {
-            if(channels[i].flags & SND_ANNOUNCER && channels[i].inuse)
-            {
-                queuesound(n);
-                return -1;
-            }
-        }
-    }
-
     soundchannel &chan = newchannel(chanid, &slot, owner, loc, ent, flags, radius);
 
     if(!owner && !loc)
@@ -786,7 +761,6 @@ int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, 
 
 void stopsounds(int exclude)
 {
-    queuedsounds = 0;
     loopv(channels) if(channels[i].inuse)
     {
         if(channels[i].flags & exclude) continue;
@@ -840,7 +814,6 @@ ICOMMAND(voicecom, "ssi", (const char *sound, char *text, int *team),
 void resetsound()
 {
     clearchanges(CHANGE_SOUND);
-    queuedsounds = 0;
     if(!nosound)
     {
         gamesounds.cleanupsamples();

@@ -256,6 +256,7 @@ namespace game
         updateweapons(curtime);
         otherplayers(curtime);
         camera::camera.update();
+        announcer::update();
         ai::update();
         moveragdolls();
         gets2c();
@@ -697,93 +698,6 @@ namespace game
     ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
     ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
-    void announce(int sound)
-    {
-        if (validsound(sound))
-        {
-            playsound(sound, NULL, NULL, NULL, SND_ANNOUNCER);
-        }
-    }
-
-    void checkannouncements(gameent* d, gameent *actor, int flags)
-    {
-        if (!flags || isally(d, actor))
-        {
-            /* No announcements to check (or even worse, we killed an ally)?
-             * Nothing to celebrate then.
-             */
-            return;
-        }
-
-        if (actor->aitype == AI_BOT)
-        {
-            // Bots taunting players when getting extraordinary kills.
-            taunt(actor);
-        }
-        if(actor != followingplayer(self))
-        {
-            /* Now: time to announce extraordinary kills.
-             * Unless we are the player who achieved these (or spectating them),
-             * we do not care.
-             */
-            return;
-        }
-
-        if (flags & KILL_HEADSHOT)
-        {
-            announce(S_ANNOUNCER_HEADSHOT);
-        }
-        if (d->type == ENT_AI)
-        {
-            /* NPCs are not players!
-             * Announcing kills (kill streaks, multi-kills, etc.) is unnecessary.
-             */
-            return;
-        }
-
-        if(flags & KILL_FIRST)
-        {
-            announce(S_ANNOUNCER_FIRST_BLOOD);
-            if (!(flags & KILL_TRAITOR))
-            {
-                conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor));
-            }
-        }
-        const char* spree = "";
-        if(flags & KILL_SPREE)
-        {
-            announce(S_ANNOUNCER_KILLING_SPREE);
-            spree = "\f2killing";
-        }
-        if(flags & KILL_SAVAGE)
-        {
-            announce(S_ANNOUNCER_SAVAGE);
-            spree = "\f6savage";
-        }
-        if(flags & KILL_UNSTOPPABLE)
-        {
-            announce(S_ANNOUNCER_UNSTOPPABLE);
-            spree = "\f3unstoppable";
-        }
-        if(flags & KILL_LEGENDARY)
-        {
-            announce(S_ANNOUNCER_LEGENDARY);
-            spree = "\f5legendary";
-        }
-        if (spree[0] == '\0' || flags & KILL_TRAITOR)
-        {
-            /* No spree to announce? We are finished.
-             *
-             * If this is an assassination by a traitor instead,
-             * announce the kill streak we achieved just the same...
-             * but without triggering a console message (to not confuse players).
-             */
-            return;
-        }
-
-        conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
-    }
-
     VARR(mapdeath, 0, Death_Default, Death_Num);
 
     int getdeathstate(gameent* d, int atk, int flags)
@@ -818,7 +732,7 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-        checkannouncements(d, actor, flags);
+        announcer::parseannouncements(d, actor, flags);
         if (actor == followingplayer(self))
         {
             if (actor->role == ROLE_BERSERKER)
@@ -845,8 +759,8 @@ namespace game
         d->deathstate = getdeathstate(d, atk, flags);
         setdeathstate(d);
         ai::kill(d, actor);
-        // Write obituary and update killfeed.
-        writeobituary(d, actor, atk, flags); // Obituary (console messages, kill feed).
+        // Write obituary (console messages, kill feed).
+        writeobituary(d, actor, atk, flags);
     }
 
     void updatetimer(int time, int type)
@@ -933,6 +847,7 @@ namespace game
             removeprojectiles(d);
             removetrackedparticles(d);
             removetrackeddynlights(d);
+            announcer::reset();
             if(cmode) cmode->removeplayer(d);
             removegroupedplayer(d);
             players.removeobj(d);
@@ -965,6 +880,7 @@ namespace game
         removeprojectiles();
         clearmonsters();
         clearragdolls();
+        announcer::reset();
 
         clearteaminfo();
 

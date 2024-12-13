@@ -816,6 +816,8 @@ namespace UI
 
         void hide(Window *w, int index)
         {
+            ::textinput(false, TI_GUI);
+            ::keyrepeat(false, KR_GUI);
             children.remove(index);
             childstate = 0;
             loopchildren(o, childstate |= o->state | o->childstate);
@@ -1949,18 +1951,58 @@ namespace UI
         else dst = newstring(src); \
     } while(0)
 
+    static int uicursorindex = -1;
+    ICOMMAND(uicursorindex, "", (), intret(uicursorindex));
+
+    string uikeycode, uitextinput;
+    ICOMMAND(uikeycode, "", (), result(uikeycode));
+    ICOMMAND(uitextinput, "", (), result(uitextinput));
+    
+    ICOMMAND(uisettextinput, "i", (int *val),
+    {
+        ::textinput(*val ? true : false, TI_GUI);
+        ::keyrepeat(*val ? true : false, KR_GUI);
+    });
+
     struct Text : Object
     {
         float scale, wrap;
         Color color;
+        int cursor;
+        bool has_cursor;
 
-        void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1)
+        void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false)
         {
             Object::setup();
 
             scale = scale_ * uiscale;
             color = color_;
             wrap = wrap_;
+            cursor = cursor_;
+            has_cursor = has_cursor_;
+        }
+
+        void press(float cx, float cy)
+        {
+            if(!has_cursor) return;
+            const float k = drawscale();
+            uicursorindex = text_visible(getstr(), cx/k, cy/k, wrap >= 0 ? wrap/k : -1);
+        }
+        bool rawkey(int code, bool isdown)
+        {
+            if(Object::rawkey(code, isdown)) return true;
+            if(!isdown || cursor < 0) return false;
+            const char *keyname = getkeyname(code);
+            if(!keyname) return false;
+            copystring(uikeycode, keyname);
+            return code != -1; // propagate left clicks
+        }
+        bool textinput(const char *str, int len)
+        {
+            if(Object::textinput(str, len)) return true;
+            if(cursor < 0) return false;
+            copystring(uitextinput, str, len+1);
+            return true;
         }
 
         static const char *typestr() { return "#Text"; }
@@ -1978,13 +2020,17 @@ namespace UI
 
             float oldscale = textscale;
             textscale = drawscale();
-            draw_text(getstr(), sx/textscale, sy/textscale, color.r, color.g, color.b, color.a, -1, wrap >= 0 ? int(wrap/textscale) : -1);
+            draw_text(getstr(), sx/textscale, sy/textscale, color.r, color.g, color.b, color.a, cursor, wrap >= 0 ? int(wrap/textscale) : -1);
             textscale = oldscale;
         }
 
         void layout()
         {
             Object::layout();
+
+            uicursorindex = -1;
+            copystring(uikeycode, "");
+            copystring(uitextinput, "");
 
             float k = drawscale(), tw, th;
             text_boundsf(getstr(), tw, th, wrap >= 0 ? int(wrap/k) : -1);
@@ -2000,9 +2046,9 @@ namespace UI
         TextString() : str(NULL) {}
         ~TextString() { delete[] str; }
 
-        void setup(const char *str_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1)
+        void setup(const char *str_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false)
         {
-            Text::setup(scale_, color_, wrap_);
+            Text::setup(scale_, color_, wrap_, cursor_, has_cursor_);
 
             SETSTR(str, str_);
         }
@@ -2020,9 +2066,9 @@ namespace UI
 
         TextInt() : val(0) { str[0] = '0'; str[1] = '\0'; }
 
-        void setup(int val_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1)
+        void setup(int val_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false)
         {
-            Text::setup(scale_, color_, wrap_);
+            Text::setup(scale_, color_, wrap_, cursor_, has_cursor_);
 
             if(val != val_) { val = val_; intformat(str, val, sizeof(str)); }
         }
@@ -2040,9 +2086,9 @@ namespace UI
 
         TextFloat() : val(0) { memcpy(str, "0.0", 4); }
 
-        void setup(float val_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1)
+        void setup(float val_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false)
         {
-            Text::setup(scale_, color_, wrap_);
+            Text::setup(scale_, color_, wrap_, cursor_, has_cursor_);
 
             if(val != val_) { val = val_; floatformat(str, val, sizeof(str)); }
         }
@@ -3460,24 +3506,24 @@ namespace UI
     ICOMMAND(uimodcircle, "ife", (int *c, float *size, uint *children),
         BUILD(Circle, o, o->setup(Color(*c), *size, Circle::MODULATE), children));
 
-    static inline void buildtext(tagval &t, float scale, float scalemod, const Color &color, float wrap, uint *children)
+    static inline void buildtext(tagval &t, float scale, float scalemod, const Color &color, float wrap, int cursor, bool has_cursor, uint *children)
     {
         if(scale <= 0) scale = 1;
         scale *= scalemod;
         switch(t.type)
         {
             case VAL_INT:
-                BUILD(TextInt, o, o->setup(t.i, scale, color, wrap), children);
+                BUILD(TextInt, o, o->setup(t.i, scale, color, wrap, cursor, has_cursor), children);
                 break;
             case VAL_FLOAT:
-                BUILD(TextFloat, o, o->setup(t.f, scale, color, wrap), children);
+                BUILD(TextFloat, o, o->setup(t.f, scale, color, wrap, cursor, has_cursor), children);
                 break;
             case VAL_CSTR:
             case VAL_MACRO:
             case VAL_STR:
                 if(t.s[0])
                 {
-                    BUILD(TextString, o, o->setup(t.s, scale, color, wrap), children);
+                    BUILD(TextString, o, o->setup(t.s, scale, color, wrap, cursor, has_cursor), children);
                     break;
                 }
                 // fall-through
@@ -3487,35 +3533,35 @@ namespace UI
         }
     }
 
-    ICOMMAND(uicolortext, "tife", (tagval *text, int *c, float *scale, uint *children),
-        buildtext(*text, *scale, uitextscale, Color(*c), -1, children));
+    ICOMMAND(uicolortext, "tifieN", (tagval *text, int *c, float *scale, int *cursor, uint *children, int *numargs),
+        buildtext(*text, *scale, uitextscale, Color(*c), -1, *numargs>=4 ? *cursor : -1, *numargs>=4, children));
 
-    ICOMMAND(uitext, "tfe", (tagval *text, float *scale, uint *children),
-        buildtext(*text, *scale, uitextscale, Color(255, 255, 255), -1, children));
+    ICOMMAND(uitext, "tfieN", (tagval *text, float *scale, int *cursor, uint *children, int *numargs),
+        buildtext(*text, *scale, uitextscale, Color(255, 255, 255), -1, *numargs>=3 ? *cursor : -1, *numargs>=3, children));
 
     ICOMMAND(uitextfill, "ffe", (float *minw, float *minh, uint *children),
         BUILD(Filler, o, o->setup(*minw * uitextscale*0.5f, *minh * uitextscale), children));
 
-    ICOMMAND(uiwrapcolortext, "tfife", (tagval *text, float *wrap, int *c, float *scale, uint *children),
-        buildtext(*text, *scale, uitextscale, Color(*c), *wrap, children));
+    ICOMMAND(uiwrapcolortext, "tfifieN", (tagval *text, float *wrap, int *c, float *scale, int *cursor, uint *children, int *numargs),
+        buildtext(*text, *scale, uitextscale, Color(*c), *wrap, *numargs>=5 ? *cursor : -1, *numargs>=5, children));
 
-    ICOMMAND(uiwraptext, "tffe", (tagval *text, float *wrap, float *scale, uint *children),
-        buildtext(*text, *scale, uitextscale, Color(255, 255, 255), *wrap, children));
+    ICOMMAND(uiwraptext, "tffieN", (tagval *text, float *wrap, float *scale, int *cursor, uint *children, int *numargs),
+        buildtext(*text, *scale, uitextscale, Color(255, 255, 255), *wrap, *numargs>=4 ? *cursor : -1, *numargs>=4, children));
 
     ICOMMAND(uicolorcontext, "tife", (tagval *text, int *c, float *scale, uint *children),
-        buildtext(*text, *scale, FONTH*uicontextscale, Color(*c), -1, children));
+        buildtext(*text, *scale, FONTH*uicontextscale, Color(*c), -1, -1, false, children));
 
     ICOMMAND(uicontext, "tfe", (tagval *text, float *scale, uint *children),
-        buildtext(*text, *scale, FONTH*uicontextscale, Color(255, 255, 255), -1, children));
+        buildtext(*text, *scale, FONTH*uicontextscale, Color(255, 255, 255), -1, -1, false, children));
 
     ICOMMAND(uicontextfill, "ffe", (float *minw, float *minh, uint *children),
         BUILD(Filler, o, o->setup(*minw * FONTH*uicontextscale*0.5f, *minh * FONTH*uicontextscale), children));
 
     ICOMMAND(uiwrapcolorcontext, "tfife", (tagval *text, float *wrap, int *c, float *scale, uint *children),
-        buildtext(*text, *scale, FONTH*uicontextscale, Color(*c), *wrap, children));
+        buildtext(*text, *scale, FONTH*uicontextscale, Color(*c), *wrap, -1, false, children));
 
     ICOMMAND(uiwrapcontext, "tffe", (tagval *text, float *wrap, float *scale, uint *children),
-        buildtext(*text, *scale, FONTH*uicontextscale, Color(255, 255, 255), *wrap, children));
+        buildtext(*text, *scale, FONTH*uicontextscale, Color(255, 255, 255), *wrap, -1, false, children));
 
     ICOMMAND(uitexteditor, "siifsie", (char *name, int *length, int *height, float *scale, char *initval, int *mode, uint *children),
         BUILD(TextEditor, o, o->setup(name, *length, *height, (*scale <= 0 ? 1 : *scale) * uitextscale, initval, *mode <= 0 ? EDITORFOREVER : *mode), children));

@@ -2063,26 +2063,6 @@ namespace UI
 
     #undef WITHTEXTATTR
 
-    static int uicursorindex = -1;
-    ICOMMAND(uicursorindex, "", (), intret(uicursorindex));
-
-    // makes the text input cursor stop blinking for a short while, call this when setting the cursor position from cubescript
-    ICOMMAND(resetcursorblink, "", (), { inputmillis = totalmillis; });
-
-    string uikeycode, uitextinput;
-    ICOMMAND(uikeycode, "", (), result(uikeycode));
-    ICOMMAND(uitextinput, "", (), result(uitextinput));
-    ICOMMAND(uienabletextinput, "", (),
-    {
-        ::textinput(true, TI_GUI);
-        ::keyrepeat(true, KR_GUI);
-    });
-    ICOMMAND(uidisabletextinput, "", (),
-    {
-        ::textinput(false, TI_GUI);
-        ::keyrepeat(false, KR_GUI);
-    })
-
     // NOTE: `scale` is the text height in screenfuls at `uiscale 1`
     struct Text : Object
     {

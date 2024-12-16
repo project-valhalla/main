@@ -2066,6 +2066,9 @@ namespace UI
     static int uicursorindex = -1;
     ICOMMAND(uicursorindex, "", (), intret(uicursorindex));
 
+    // makes the text input cursor stop blinking for a short while, call this when setting the cursor position from cubescript
+    ICOMMAND(resetcursorblink, "", (), { inputmillis = totalmillis; });
+
     string uikeycode, uitextinput;
     ICOMMAND(uikeycode, "", (), result(uikeycode));
     ICOMMAND(uitextinput, "", (), result(uitextinput));

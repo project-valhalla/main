@@ -588,12 +588,12 @@ void execbind(keym &k, bool isdown)
     k.pressed = isdown;
 }
 
-int iskeyheld(char *key)
+void iskeyheld(char *key)
 {
     const keym *km = findbind(key);
     intret(km && km->pressed ? 1 : 0);
 }
-ICOMMAND(iskeyheld, "s", (char* key), intret(iskeyheld(key)));
+ICOMMAND(iskeyheld, "s", (char* key), iskeyheld(key));
 ICOMMAND(iscmdlineopen, "", (), intret(commandmillis >= 0 ? 1 : 0));
 
 bool consoleinput(const char *str, int len)

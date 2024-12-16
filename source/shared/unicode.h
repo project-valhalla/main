@@ -125,7 +125,7 @@ static inline int uni_offset(const char *str, unsigned int ix)
 {
     const char *p = str;
     unsigned int _c;
-    for(int i = 0; i < ix; ++i)
+    for(unsigned int i = 0; i < ix; ++i)
     {
         if(!*p) break;
         p += uni_getchar(p, _c);
@@ -136,7 +136,7 @@ static inline int uni_offset(const char *str, unsigned int ix)
 static inline int uni_negoffset(const char *str, unsigned int ix)
 {
     const char *p = str + strlen(str);
-    for(int i = 0; i < ix; ++i)
+    for(unsigned int i = 0; i < ix; ++i)
     {
         if(p <= str) break;
         p -= uni_prevchar(str, p - str);
@@ -149,7 +149,7 @@ static inline int uni_index(const char *str, unsigned int off)
 {
     const char *p = str, *end = str + strlen(str);
     unsigned int _c;
-    int ret = 0;
+    unsigned int ret = 0;
     while(ret < off)
     {
         if(p >= end || p >= str + off) return ret;

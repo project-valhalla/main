@@ -1969,22 +1969,6 @@ static inline float cotan360(int angle)
     return sc.x / sc.y;
 }
 
-static inline float easeoutelastic(float progress)
-{
-    if (progress == 0)
-    {
-        return 0;
-    }
-    else if (progress == 1)
-    {
-        return 1;
-    }
-    else
-    {
-        return pow(2, -10 * progress) * sin((progress * 10 - 0.75) * ((2 * M_PI) / 3)) + 1;
-    }
-}
-
 static inline float lerp360(float angle, float target, float factor)
 {
     float diff = target - angle;
@@ -2007,4 +1991,29 @@ static inline T lerpstep(T a, T b, T step)
     return a > b ?
         a - min(step, a - b) :
         a + min(step, b - a);
+}
+
+namespace ease
+{
+    static inline float outelastic(const float progress)
+    {
+        if (progress == 0)
+        {
+            return 0;
+        }
+        else if (progress == 1)
+        {
+            return 1;
+        }
+        else
+        {
+            return pow(2.0f, -10.0f * progress) * sin((progress * 10.0f - 0.75f) * ((2.0f * M_PI) / 3)) + 1.0f;
+        }
+    }
+
+    static inline float outback(const float progress)
+    {
+        const float overshoot = 1.70158f;
+        return 1.0f + (overshoot + 1) * pow(progress - 1.0f, 3.0f) + overshoot * pow(progress - 1.0f, 2.0f);
+    }
 }

@@ -590,13 +590,8 @@ void execbind(keym &k, bool isdown)
 
 int iskeyheld(char *key)
 {
-    // look for the key name in the keymap
-    const keym* km = findbind(key);
-    if(!km) return 0;
-
-    // convert keycode to scancode
-    const SDL_Scancode scancode = SDL_GetScancodeFromKey(km->code);
-    return SDL_GetKeyboardState(nullptr)[scancode];
+    const keym *km = findbind(key);
+    intret(km && km->pressed ? 1 : 0);
 }
 ICOMMAND(iskeyheld, "s", (char* key), intret(iskeyheld(key)));
 ICOMMAND(iscmdlineopen, "", (), intret(commandmillis >= 0 ? 1 : 0));
@@ -623,6 +618,25 @@ bool consoleinput(const char *str, int len)
 
     return true;
 }
+
+// returns the contents of the clipboard
+void getclipboard()
+{
+    if(!SDL_HasClipboardText())
+    {
+        result("");
+        return;
+    }
+    char *cb = SDL_GetClipboardText();
+    if(!cb)
+    {
+        result("");
+        return;
+    }
+    stringret(newstring(cb, MAXSTRLEN));
+    SDL_free(cb);
+}
+COMMAND(getclipboard, "");
 
 void pasteconsole()
 {

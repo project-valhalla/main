@@ -2063,6 +2063,19 @@ namespace UI
 
     #undef WITHTEXTATTR
 
+    static int uicursorindex = -1;
+    ICOMMAND(uicursorindex, "", (), intret(uicursorindex));
+
+    string uikeycode, uitextinput;
+    ICOMMAND(uikeycode, "", (), result(uikeycode));
+    ICOMMAND(uitextinput, "", (), result(uitextinput));
+    
+    ICOMMAND(uisettextinput, "i", (int *val),
+    {
+        ::textinput(*val ? true : false, TI_GUI);
+        ::keyrepeat(*val ? true : false, KR_GUI);
+    });
+  
     // NOTE: `scale` is the text height in screenfuls at `uiscale 1`
     struct Text : Object
     {

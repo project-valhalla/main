@@ -460,7 +460,7 @@ struct gameent : dynent, gamestate
     int clientnum, privilege, lastupdate, plag, ping;
     int lifesequence;                   // sequence id for each respawn, used in damage test
     int respawned, suicided;
-    int lastpain, lasthurt;
+    int lastpain, lasthurt, lastspawn;
     int lastaction, lastattack, lasthit;
     int deathstate;
     int attacking;
@@ -488,7 +488,7 @@ struct gameent : dynent, gamestate
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
-                lastpain(0), lasthurt(0),
+                lastpain(0), lasthurt(0), lastspawn(0),
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastswitchattempt(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
                 edit(NULL), pitchrecoil(0), smoothmillis(-1),
@@ -721,6 +721,7 @@ namespace game
     extern void nextfollow(int dir = 1);
     extern void clientdisconnected(int cn, bool notify = true);
     extern void clearclients(bool notify = true);
+    extern void cleargame();
     extern void startgame();
     extern void pickgamespawn(gameent* d);
     extern void spawnplayer(gameent *d);
@@ -728,7 +729,6 @@ namespace game
     extern void respawn();
     extern void setdeathstate(gameent *d, bool restore = false);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
-    extern void checkannouncements(gameent* d, gameent *actor, int flags);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = KILL_NONE);
     extern void updatetimer(int time, int type);
     extern void msgsound(int n, physent *d = NULL);
@@ -813,7 +813,9 @@ namespace game
     // weapon.cpp
     enum
     {
-        SwayEvent_Land,
+        SwayEvent_Land = 0,
+        SwayEvent_LandHeavy,
+        SwayEvent_Crouch,
         SwayEvent_Switch
     };
 
@@ -829,14 +831,13 @@ namespace game
             {
                 type = ENT_CAMERA;
             }
-        } guninterp;
+        } interpolation;
 
         struct swayEvent
         {
             int type, millis, duration, factor;
-            float pitch;
         };
-        vector<swayEvent> swayevents;
+        vector<swayEvent> events;
 
         swayinfo() : fade(0), speed(0), dist(0), yaw(0), pitch(0), pitchadd(0), roll(0), o(0, 0, 0), dir(0, 0, 0)
         {
@@ -859,6 +860,7 @@ namespace game
     extern void scanhit(vec& from, vec& to, gameent* d, int atk);
     extern void gibeffect(int damage, const vec &vel, gameent *d);
     extern void updateweapons(int curtime);
+    extern void clearweapons();
     extern void gunselect(int gun, gameent* d);
     extern void doweaponchangeffects(gameent* d, int gun = -1);
     extern void weaponswitch(gameent* d);
@@ -935,37 +937,98 @@ namespace game
     extern void setdamagehud(const int damage, gameent* d, gameent* actor);
     extern void addscreenflash(const int amount);
     extern void checkitem(int type);
-    extern void fixcamerarange();
 
-    extern bool allowthirdperson();
-
-    extern int thirdperson;
-    extern int zoom;
     extern int lowhealthscreen;
 
-    struct zoominfo
+    namespace camera
     {
-        float progress;
-
-        zoominfo() : progress(0)
+        enum
         {
-        }
-        ~zoominfo()
+            CameraEvent_Land = 0,
+            CameraEvent_Shake,
+            CameraEvent_Spawn,
+            CameraEvent_Teleport
+        };
+
+        struct camerainfo
         {
-        }
+            bool isdetached;
+            float yaw, pitch, roll, fov;
+            float bobfade, bobspeed, bobdist;
+            vec direction;
 
-        void update();
-        void disable();
+            struct CameraEvent
+            {
+                int type, millis, duration;
+                float factor;
+            };
+            vector<CameraEvent> events;
 
-        bool isenabled();
+            struct ShakeEvent
+            {
+                int factor, millis, duration, elapsed;
+                float intensity;
+            };
+            vector<ShakeEvent> shakes;
 
-        bool isinprogress()
-        {
-            return progress > 0;
-        }
-    };
+            struct zoominfo
+            {
+                float progress;
 
-    extern zoominfo zoomstate;
+                zoominfo() : progress(0)
+                {
+                }
+                ~zoominfo()
+                {
+                }
+
+                void update();
+                void disable();
+
+                bool isenabled();
+
+                bool isinprogress()
+                {
+                    return progress > 0;
+                }
+            };
+            zoominfo zoomstate;
+
+            camerainfo() : isdetached(false), yaw(0), pitch(0), roll(0), fov(1), bobfade(0), bobspeed(0), bobdist(0)
+            {
+                direction = vec(0, 0, 0);
+            }
+            ~camerainfo()
+            {
+            }
+
+            void update();
+            void addevent(gameent* owner, int type, int duration, float factor = 0);
+            void processevents();
+            void addshake(int factor);
+            void updateshake();
+
+            vec getposition();
+        };
+
+        extern camerainfo camera;
+
+        extern void update();
+        extern void reset();
+        extern void fixrange();
+
+        extern bool allowthirdperson();
+
+        extern int thirdperson;
+        extern int zoom;
+    }
+
+    namespace announcer
+    {
+        extern void parseannouncements(gameent* d, gameent* actor, int flags);
+        extern void update();
+        extern void reset();
+    }
 }
 
 namespace server

@@ -8,7 +8,7 @@ enum
     S_FOOTSTEP_GLASS, S_FOOTSTEP_WATER,
     S_WATER_IN, S_WATER_OUT, S_UNDERWATER, S_LAVA_IN,
 
-    S_SPAWN, S_PLAYER_DAMAGE,
+    S_PLAYER_SPAWN, S_PLAYER_DAMAGE,
 
     S_PAIN_MALE, S_DIE_MALE1, S_DIE_MALE2, S_DIE_MALE3, S_DIE_MALE4, S_TAUNT_MALE,
     S_PAIN_FEMALE, S_DIE_FEMALE1, S_DIE_FEMALE2, S_DIE_FEMALE3, S_DIE_FEMALE4, S_TAUNT_FEMALE,
@@ -85,6 +85,7 @@ enum
     S_GUARD_PAIN, S_GUARD_DEATH, S_GUARD_HALT, S_GUARD_UNHALT, S_GUARD_ATTACK, S_GUARD_INFIGHT,
     S_BAUUL_PAIN, S_BAUUL_DEATH, S_BAUUL_HALT,
     S_SPIDER_PAIN, S_SPIDER_DEATH, S_SPIDER_HALT, S_SPIDER_ATTACK, S_SPIDER_INFIGHT,
+    S_MONSTER_SPAWN,
 
     // mode
     S_FLAGPICKUP, S_FLAGDROP, S_FLAGRETURN, S_FLAGSCORE, S_FLAGRESET, S_FLAGFAIL, S_FLAGLOOP,
@@ -111,15 +112,16 @@ enum
     SND_UI        = 1<<4
 };
 
-const int MAX_QUEUE = 10; // queued sounds up to a maximum of 10
-
-extern int playsound(int n, physent *owner = NULL, const vec *loc = NULL, extentity *ent = NULL, int flags = 0, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);
-extern int playsoundname(const char *s, physent *owner = NULL, const vec *loc = NULL, int vol = 0, int flags = 0, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);
 extern void preloadsound(int n);
 extern void preloadmapsound(int n);
-extern bool stopsound(int n, int chanid, int fade = 0);
 extern void stopsounds(int exclude = 0);
 extern void stopmapsounds();
 extern void stopownersounds(physent *d);
 extern void initsound();
 extern void pauseaudio(int value);
+
+extern bool stopsound(int n, int chanid, int fade = 0);
+extern bool ischannelinuse(int flags);
+
+extern int playsound(int n, physent* owner = NULL, const vec* loc = NULL, extentity* ent = NULL, int flags = 0, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);
+extern int playsoundname(const char* s, physent* owner = NULL, const vec* loc = NULL, int vol = 0, int flags = 0, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);

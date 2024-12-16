@@ -893,7 +893,7 @@ void checkinput()
                 {
                     int dx = event.motion.xrel, dy = event.motion.yrel;
                     checkmousemotion(dx, dy);
-                    if(!UI::movecursor(dx, dy, screenw, screenh)) game::mousemove(dx, dy);
+                    if(!UI::movecursor(dx, dy, screenw, screenh)) game::camera::movemouse(dx, dy);
                     mousemoved = true;
                 }
                 else if(shouldgrab) inputgrab(grabinput = true);
@@ -1320,7 +1320,7 @@ int main(int argc, char **argv)
         frames++;
 
         // miscellaneous general game effects
-        game::recomputecamera();
+        game::camera::compute();
         updateparticles();
         updatesounds();
         updatetextures();

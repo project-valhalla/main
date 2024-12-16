@@ -166,7 +166,7 @@ namespace game
         {
             setdeathstate(self, true);
         }
-        zoomstate.disable();
+        camera::camera.zoomstate.disable();
         self->suicided = self->respawned = -2;
         checkfollow();
     }
@@ -1067,6 +1067,7 @@ namespace game
             nextmutators = mutators = 0;
             clientmap[0] = '\0';
         }
+		cleargame();
         execident("on_disconnect");
     }
 
@@ -2207,7 +2208,7 @@ namespace game
                     if(s == self)
                     {
                         if(editmode) toggleedit();
-                        zoomstate.disable();
+                        camera::camera.zoomstate.disable();
                         extern int deathfromabove;
                         if(deathfromabove) s->pitch = 0; // reset player pitch if it has been lowered on death
                     }
@@ -2257,7 +2258,7 @@ namespace game
                     playsound(S_BERSERKER, d);
                     particle_flare(d->o, d->o, 500, PART_COMICS, 0xFFFFFF, 0.1f, NULL, 30.0f);
                     // Temporary:
-                    thirdperson = 1;
+                    camera::thirdperson = 1;
                 }
                 else if(role == ROLE_ZOMBIE)
                 {

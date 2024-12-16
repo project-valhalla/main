@@ -85,8 +85,6 @@ namespace game
             halted = exploding = false;
             lastunblocked = detonating = 0;
             bursting = shots = 0;
-
-            spawneffect(this);
         }
 
         void normalize_yaw(float angle)
@@ -575,7 +573,10 @@ namespace game
 
     void monsterkilled(gameent* monster, int id, int flags)
     {
-        if (flags) checkannouncements(monster, self, flags);
+        if (flags)
+        {
+            announcer::parseannouncements(monster, self, flags);
+        }
         if(!m_invasion && !m_story) return;
         numkilled++;
         self->frags = numkilled;

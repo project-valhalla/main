@@ -242,6 +242,10 @@ namespace game
                 {
                     transparency = 0.1f;
                 }
+                else if(lastmillis - d->lastspawn <= DURATION_SPAWN)
+                {
+                    transparency = clamp((lastmillis - d->lastspawn) / 1000.0f, 0.0f, 1.0f);
+                }
                 break;
             }
 
@@ -484,7 +488,7 @@ namespace game
 
     void booteffect(gameent *d)
     {
-        if(d == followingplayer(self) && !isthirdperson()) return;
+        if(d == followingplayer(self) && !camera::isthirdperson()) return;
         if(d->timeinair > 650 && (d->haspowerup(PU_AGILITY) || d->role == ROLE_BERSERKER || d->role == ROLE_ZOMBIE))
         {
             if(d->lastfootright.z >= 0) particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_STRAIGHT, getplayercolor(d, d->team), 0.3f);
@@ -577,8 +581,8 @@ namespace game
     {
         ai::render();
 
-        bool third = isthirdperson();
-        gameent *f = followingplayer(), *exclude = third ? NULL : f;
+        bool isthirdPerson = camera::isthirdperson();
+        gameent *f = followingplayer(), *exclude = isthirdPerson ? NULL : f;
         loopv(players)
         {
             gameent *d = players[i];
@@ -605,14 +609,14 @@ namespace game
         {
             renderplayer(exclude, 1, MDL_ONLYSHADOW);
         }
-        else if (!f && (self->state == CS_ALIVE || (self->state == CS_EDITING && third) || (self->state == CS_DEAD && showdeadplayers)) && zoomstate.progress < 1)
+        else if (!f && (self->state == CS_ALIVE || (self->state == CS_EDITING && isthirdPerson) || (self->state == CS_DEAD && showdeadplayers)) && camera::camera.zoomstate.progress < 1)
         {
             float fade = 1.0f;
             if (self->deathstate == Death_Fall)
             {
                 fade -= clamp(float(lastmillis - self->lastpain) / 1000, 0.0f, 1.0f);
             }
-            renderplayer(self, fade, third ? 0 : MDL_ONLYSHADOW);
+            renderplayer(self, fade, isthirdPerson ? 0 : MDL_ONLYSHADOW);
         }
             
         booteffect(self);
@@ -641,7 +645,12 @@ namespace game
             anim |= ANIM_LOOP;
             basetime = 0;
         }
-        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, MDL_NOBATCH, &sway.guninterp, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1));
+        int flags = MDL_NOBATCH;
+        if (lastmillis - d->lastspawn <= DURATION_SPAWN)
+        {
+            flags |= MDL_FORCETRANSPARENT;
+        }
+        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, flags, &sway.interpolation, a, basetime, 0, 1, vec4(vec::hexcolor(color)));
 
         if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
     }

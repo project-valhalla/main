@@ -102,6 +102,8 @@ const int DAMAGE_ENVIRONMENT = 5; // Environmental damage like lava, damage mate
 const float EXP_SELFPUSH = 2.5f; // How much our player is going to be pushed from our own projectiles.
 const float EXP_DISTSCALE = 1.5f; // Explosion damage is going to be scaled by distance.
 
+const int DURATION_SPAWN = 1000;
+
 static const struct attackinfo
 {
     int gun, action, projectile, attackdelay, damage, headshotdamage, spread, margin, projspeed, kickamount, range, rays, hitpush, exprad, lifetime, use;

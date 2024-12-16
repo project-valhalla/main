@@ -1157,7 +1157,7 @@ VARP(hudmarkmaxdist, 0, 1024, 4096);
 void particle_hud_mark(const vec &s, int ix, int iy, int type, int fade, int color, float size)
 {
     if(!canaddparticles()) return;
-    vec o;
+    vec o = vec(0, 0, 0);
     if((camera1->o.dist(s) <= hudmarkmindist && raycubelos(s, camera1->o, o)) || camera1->o.dist(s) > hudmarkmaxdist)
     {
         return;

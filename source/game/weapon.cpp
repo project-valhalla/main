@@ -159,7 +159,7 @@ namespace game
         d->pitch += amount;
         float friction = 4.0f / curtime * 30.0f;
         d->pitchrecoil = d->pitchrecoil * (friction - 2.8f) / friction;
-        fixcamerarange();
+        camera::fixrange();
     }
 
     void checkattacksound(gameent *d, bool local)
@@ -238,6 +238,12 @@ namespace game
         }
     }
 
+    void clearweapons()
+    {
+        sway.events.shrink(0);
+        hits.setsize(0);
+    }
+
     void impacteffects(int atk, gameent* d, const vec& from, const vec& to, bool hit = false)
     {
         if (!validatk(atk) || (!hit && isemptycube(to)) || from.dist(to) > attacks[atk].range) return;
@@ -263,7 +269,7 @@ namespace game
                 adddynlight(vec(to).madd(dir, 4), 15, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if (hit || iswater || isglass) break;
                 particle_fireball(to, 0.5f, PART_EXPLOSION2, 120, 0xFFC864, 2.0f);
-                particle_splash(PART_EXPLODE4, 50, 40, to, 0xFFC864, 1.0f);
+                particle_splash(PART_EXPLODE4, 50, 40, to, 0xFFC864, 1.0f, 150, 2, 0.1f);
                 particle_splash(PART_SPARK2, 30, 250, to, 0xFFC864, 0.05f + rndscale(0.2f), 250, 2, 0.001f);
                 particle_splash(PART_SMOKE, 30, 250, to, 0x555555, 0.2f, 80, 100, 6.0f);
                 addstain(STAIN_BULLETHOLE_SMALL, to, vec(from).sub(to).normalize(), 0.50f + rndscale(1.0f), 0xFFFFFF, rnd(4));
@@ -487,7 +493,7 @@ namespace game
             {
                 if (d->muzzle.x >= 0 && muzzleflash)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH5, 0x74BCF9, 0.5f, d, 4.0f);
+                    particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH5, 0x74BCF9, 0.2f, d, 3.5f);
                 }
                 up = vec(to).addz(dist / (atk == ATK_GRENADE1 ? 8 : 16));
                 break;
@@ -833,9 +839,9 @@ namespace game
             }
             if (blood && color != -1)
             {
-				particle_flare(hit, hit, 280, PART_BLOOD, color, 0.1f, NULL, 6.5f);
-				particle_splash(PART_BLOOD2, 100, 280, hit, color, 1.4f, 150, 2, 0.001f);
-				particle_splash(PART_BLOOD, damage / 10, 1000, hit, color, 2.60f);
+                particle_flare(hit, hit, 280, PART_BLOOD, color, 0.1f, NULL, 6.5f);
+                particle_splash(PART_BLOOD2, 100, 280, hit, color, 1.4f, 150, 2, 0.001f);
+                particle_splash(PART_BLOOD, damage / 10, 1000, hit, color, 2.60f);
             }
             else
             {
@@ -883,7 +889,11 @@ namespace game
 
     void gibeffect(int damage, const vec& vel, gameent* d)
     {
-        if (!gore) return;
+        if (!gore)
+        {
+            return;
+        }
+
         vec from = d->abovehead();
         loopi(min(damage, 8) + 1)
         {
@@ -896,6 +906,10 @@ namespace game
             addstain(STAIN_BLOOD, d->o, d->vel.neg(), 25, getbloodcolor(d), rnd(4));
         }
         playsound(S_GIB, d);
+        if (d == self || camera1->o.dist(from) <= 50.0f)
+        {
+            camera::camera.addevent(self, camera::CameraEvent_Shake, damage * 2);
+        }
     }
 
     VARP(hitsound, 0, 0, 1);
@@ -953,7 +967,8 @@ namespace game
 
                     if (attacks[atk].action == ACT_MELEE)
                     {
-                        physics::addroll(actor, damage / 2.0f);
+                        // Simulate a strong impact.
+                        camera::camera.addevent(actor, camera::CameraEvent_Shake, damage * 2);
                     }
                 }
             }
@@ -1003,7 +1018,7 @@ namespace game
         }
         if (d == self)
         {
-            zoomstate.disable();
+            camera::camera.zoomstate.disable();
         }
     }
 
@@ -1013,9 +1028,9 @@ namespace game
         {
             return;
         }
-        if (zoom && guns[self->gunselect].zoom)
+        if (camera::zoom && guns[self->gunselect].zoom)
         {
-            zoomfov = clamp(zoomfov - dir, 10, 90);
+            camera::zoomfov = clamp(camera::zoomfov - dir, 10, 90);
         }
         else
         {
@@ -1159,7 +1174,7 @@ namespace game
             return;
         }
 
-        const bool isAttacking = self->attacking || zoomstate.isinprogress();
+        const bool isAttacking = self->attacking || camera::camera.zoomstate.isinprogress();
         if (isAttacking)
         {
             // Do not interrupt someone during a fight.
@@ -1188,7 +1203,7 @@ namespace game
 
     vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d)
     {
-        if (zoomstate.isenabled() && d == self)
+        if (camera::camera.zoomstate.isenabled() && d == self)
         {
             return d->feetpos(4);
         }
@@ -1198,7 +1213,7 @@ namespace game
         }
 
         vec offset(from);
-        if (d != hudplayer() || isthirdperson())
+        if (d != hudplayer() || camera::isthirdperson())
         {
             vec front, right;
             vecfromyawpitch(d->yaw, d->pitch, 1, 0, front);
@@ -1343,37 +1358,51 @@ namespace game
             return;
         }
 
-        swayEvent& swayevent = swayevents.add();
+        swayEvent& swayevent = events.add();
         swayevent.type = type;
         swayevent.millis = lastmillis;
         swayevent.duration = duration;
         swayevent.factor = factor;
-        swayevent.pitch = 0;
     }
 
     void swayinfo::processevents()
     {
-        loopv(swayevents)
+        loopv(events)
         {
-            swayEvent& events = swayevents[i];
-            if (lastmillis - events.millis <= events.duration)
+            swayEvent& event = events[i];
+            const int elapsed = lastmillis - event.millis;
+            if (elapsed > event.duration)
             {
-                switch (events.type)
-                {
-                    case SwayEvent_Land:
-                    case SwayEvent_Switch:
-                    {
-                        float progress = clamp((lastmillis - events.millis) / (float)events.duration, 0.0f, 1.0f);
-                        events.pitch = events.factor * sinf(progress * PI);
-                        pitch += events.pitch;
-                        break;
-                    }
-                }
+                events.remove(i--);
             }
             else
             {
-                swayevents.remove(i--);
-                continue;
+                switch (event.type)
+                {
+                    case SwayEvent_Land:
+                    case SwayEvent_LandHeavy:
+                    case SwayEvent_Switch:
+                    {
+                        const float progress = clamp((lastmillis - event.millis) / static_cast<float>(event.duration), 0.0f, 1.0f);
+                        const float curve = event.factor * sinf(progress * M_PI);
+                        if (event.type == SwayEvent_LandHeavy)
+                        {
+                            roll += curve;
+                            dir.z += curve * 0.05f;
+                        }
+                        pitch += curve;
+                        break;
+                    }
+
+                    case SwayEvent_Crouch:
+                    {
+                        const float progress = clamp((lastmillis - event.millis) / static_cast<float>(event.duration), 0.0f, 1.0f);
+                        const float curve = ease::outback(progress) * sinf(progress * M_PI) * event.factor;
+                        roll += curve;
+                        dir.z += curve * 0.03f;
+                        break;
+                    }
+                }
             }
         }
     }

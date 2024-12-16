@@ -1,5 +1,5 @@
-#include "game.h"
 #include "engine.h"
+#include "game.h"
 
 namespace game
 {
@@ -10,259 +10,6 @@ namespace game
             return cmode->clipconsole(w, h);
         }
         return 0;
-    }
-
-    bool detachedcamera = false;
-
-    bool isthirdperson()
-    {
-        return player != camera1 || detachedcamera;
-    }
-
-    void fixcamerarange()
-    {
-        static const float MAXPITCH = 90.0f;
-        if (camera1->pitch > MAXPITCH)
-        {
-            camera1->pitch = MAXPITCH;
-        }
-        if (camera1->pitch < -MAXPITCH)
-        {
-            camera1->pitch = -MAXPITCH;
-        }
-        while (camera1->yaw < 0.0f)
-        {
-            camera1->yaw += 360.0f;
-        }
-        while (camera1->yaw >= 360.0f)
-        {
-            camera1->yaw -= 360.0f;
-        }
-    }
-
-    VARP(fov, 10, 100, 150);
-    VAR(avatarzoomfov, 1, 1, 60);
-    VAR(avatarfov, 10, 39, 100);
-    VAR(zoom, -1, 0, 1);
-    VARP(zoominvel, 0, 90, 500);
-    VARP(zoomoutvel, 0, 80, 500);
-    VARP(zoomfov, 10, 42, 90);
-
-    zoominfo zoomstate;
-
-    void zoominfo::update()
-    {
-        if (!zoom)
-        {
-            progress = 0;
-            curfov = fov;
-            curavatarfov = avatarfov;
-            return;
-        }
-        if (zoom > 0)
-        {
-            progress = zoominvel ? min(progress + float(elapsedtime) / zoominvel, 1.0f) : 1;
-        }
-        else
-        {
-            progress = zoomoutvel ? max(progress - float(elapsedtime) / zoomoutvel, 0.0f) : 0;
-            if (progress <= 0) zoom = 0;
-        }
-        curfov = zoomfov * progress + fov * (1 - progress);
-        curavatarfov = avatarzoomfov * progress + avatarfov * (1 - progress);
-    }
-
-    void zoominfo::disable()
-    {
-        zoom = 0;
-        progress = 0;
-    }
-
-    bool zoominfo::isenabled()
-    {
-        return progress >= 1 && zoom >= 1;
-    }
-
-    VARP(firstpersondeath, 0, 0, 1);
-
-    bool isfirstpersondeath()
-    {
-        return firstpersondeath || m_story;
-    }
-
-    inline bool hasfreelook()
-    {
-        return (!ispaused() || !remote) && !(self->state == CS_DEAD && isfirstpersondeath());
-    }
-
-    FVARP(zoomsensitivity, 1e-4f, 4.5f, 1e4f);
-    FVARP(zoomacceleration, 0, 0, 1000);
-    VARP(zoomautosensitivity, 0, 1, 1);
-    FVARP(mousesensitivity, 1e-4f, 10, 1e4f);
-    FVARP(mousesensitivityscale, 1e-4f, 100, 1e4f);
-    VARP(mouseinvert, 0, 0, 1);
-    FVARP(mouseacceleration, 0, 0, 1000);
-
-    static void updateorientation(const float yaw, const float pitch)
-    {
-        camera1->yaw += yaw;
-        camera1->pitch += pitch;
-        fixcamerarange();
-        if (camera1 != player && !detachedcamera)
-        {
-            player->yaw = camera1->yaw;
-            player->pitch = camera1->pitch;
-        }
-    }
-
-    void mousemove(const int dx, const int dy)
-    {
-        if (!hasfreelook())
-        {
-            return;
-        }
-        float cursens = mousesensitivity, curaccel = mouseacceleration;
-        if (zoom)
-        {
-            if (zoomautosensitivity)
-            {
-                cursens = float(mousesensitivity * zoomfov) / fov;
-                curaccel = float(mouseacceleration * zoomfov) / fov;
-            }
-            else
-            {
-                cursens = zoomsensitivity;
-                curaccel = zoomacceleration;
-            }
-        }
-        if (curaccel && curtime && (dx || dy)) cursens += curaccel * sqrtf(dx * dx + dy * dy) / curtime;
-        cursens /= mousesensitivityscale;
-        updateorientation(dx * cursens, dy * cursens * (mouseinvert ? 1 : -1));
-    }
-
-    void setupcamera()
-    {
-        gameent* target = followingplayer();
-        if (target)
-        {
-            self->yaw = target->yaw;
-            self->pitch = target->state == CS_DEAD ? 0 : target->pitch;
-            self->o = target->o;
-            self->resetinterp();
-        }
-    }
-
-    bool allowthirdperson()
-    {
-        return self->state == CS_SPECTATOR || m_edit || (m_berserker && self->role == ROLE_BERSERKER);
-    }
-    ICOMMAND(allowthirdperson, "", (), intret(allowthirdperson()));
-
-    inline bool iscameradetached()
-    {
-        gameent* d = followingplayer();
-        if (d)
-        {
-            return specmode > 1 || d->state == CS_DEAD;
-        }
-        return (intermission && self->state != CS_SPECTATOR) || (!isfirstpersondeath() && self->state == CS_DEAD);
-    }
-
-    inline bool iscameracolliding()
-    {
-        switch (self->state)
-        {
-            case CS_EDITING: return false;
-            case CS_SPECTATOR: return followingplayer() != NULL;
-        }
-        return true;
-    }
-
-    VAR(thirdperson, 0, 0, 2);
-    FVAR(thirdpersondistance, 0, 14, 50);
-    FVAR(thirdpersonup, -25, 0.5f, 25);
-    FVAR(thirdpersonside, -25, 5.0f, 25);
-    FVAR(thirdpersondistancedead, 0, 30, 50);
-    FVAR(thirdpersonupdead, -25, 0, 25);
-    FVAR(thirdpersonsidedead, -25, 0, 25);
-
-    void recomputecamera()
-    {
-        setupcamera();
-        zoomstate.update();
-
-        bool shoulddetach = (allowthirdperson() && thirdperson > 1) || iscameradetached();
-        if ((!allowthirdperson() || !thirdperson) && !shoulddetach)
-        {
-            camera1 = player;
-            detachedcamera = false;
-        }
-        else
-        {
-            static physent tempcamera;
-            camera1 = &tempcamera;
-            if (detachedcamera && shoulddetach) camera1->o = player->o;
-            else
-            {
-                *camera1 = *player;
-                detachedcamera = shoulddetach;
-            }
-            camera1->reset();
-            camera1->type = ENT_CAMERA;
-            camera1->move = -1;
-            camera1->eyeheight = camera1->aboveeye = camera1->radius = camera1->xradius = camera1->yradius = 2;
-            matrix3 orient;
-            orient.identity();
-            orient.rotate_around_z(camera1->yaw * RAD);
-            orient.rotate_around_x(camera1->pitch * RAD);
-            orient.rotate_around_y(camera1->roll * -RAD);
-            vec dir = vec(orient.b).neg(), side = vec(orient.a).neg(), up = orient.c;
-            bool isalive = player->state == CS_ALIVE && !intermission;
-            float verticaloffset = isalive ? thirdpersonup : thirdpersonupdead;
-            float horizontaloffset = isalive ? thirdpersonside : thirdpersonsidedead;
-            float distance = isalive ? thirdpersondistance : thirdpersondistancedead;
-            if (iscameracolliding())
-            {
-                movecamera(camera1, dir, distance, 1);
-                movecamera(camera1, dir, clamp(distance - camera1->o.dist(player->o), 0.0f, 1.0f), 0.1f);
-                if (verticaloffset)
-                {
-                    vec pos = camera1->o;
-                    float dist = fabs(verticaloffset);
-                    if (verticaloffset < 0)
-                    {
-                        up.neg();
-                    }
-                    movecamera(camera1, up, dist, 1);
-                    movecamera(camera1, up, clamp(dist - camera1->o.dist(pos), 0.0f, 1.0f), 0.1f);
-                }
-                if (horizontaloffset)
-                {
-                    vec pos = camera1->o;
-                    float dist = fabs(horizontaloffset);
-                    if (horizontaloffset < 0)
-                    {
-                        side.neg();
-                    }
-                    movecamera(camera1, side, dist, 1);
-                    movecamera(camera1, side, clamp(dist - camera1->o.dist(pos), 0.0f, 1.0f), 0.1f);
-                }
-            }
-            else
-            {
-                camera1->o.add(vec(dir).mul(distance));
-                if (verticaloffset)
-                {
-                    camera1->o.add(vec(up).mul(verticaloffset));
-                }
-                if (horizontaloffset)
-                {
-                    camera1->o.add(vec(side).mul(horizontaloffset));
-                }
-            }
-        }
-
-        setviewcell(camera1->o);
     }
 
     VARP(lowhealthscreen, 0, 1, 1);
@@ -396,7 +143,7 @@ namespace game
         if (damageblendmillis - lastmillis < damagescreenfade)
         {
             fade *= float(damageblendmillis - lastmillis) / damagescreenfade;
-        }  
+        }
         gle::colorf(fade, fade, fade, fade);
         hudquad(0, 0, w, h);
     }
@@ -453,7 +200,7 @@ namespace game
 
     static void drawzoom(const int w, const int h)
     {
-        if (!zoomstate.isinprogress())
+        if (!camera::camera.zoomstate.isinprogress())
         {
             return;
         }
@@ -473,7 +220,7 @@ namespace game
         }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         setusedtexture(scopetex);
-        float alpha = zoomstate.progress;
+        float alpha = camera::camera.zoomstate.progress;
         if (zoomtype == Zoom_Scope)
         {
             float x = 0, y = 0, dimension = 0;
@@ -533,7 +280,7 @@ namespace game
         {
             damagedirs[i] = 0;
         }
-        zoomstate.disable();
+        camera::camera.zoomstate.disable();
     }
 
     void drawhud(int w, int h)
@@ -566,8 +313,8 @@ namespace game
                 break;
             }
         }
-        string pickupinfo;
         itemstat& is = itemstats[type - I_AMMO_SG];
+        string pickupinfo;
         formatstring(pickupinfo, "+%d %s", is.add, is.name);
         setsvar("lasthudpickupinfo", pickupinfo);
     }
@@ -692,7 +439,7 @@ namespace game
             if (crosshairscope)
             {
                 const int zoomtype = checkweaponzoom();
-                if (zoomstate.isenabled() && zoomtype == Zoom_Scope)
+                if (camera::camera.zoomstate.isenabled() && zoomtype == Zoom_Scope)
                 {
                     crosshair = Pointer_Scope;
                     color = vec(1, 0, 0);
@@ -754,9 +501,9 @@ namespace game
     {
         float crouchprogress = self->eyeheight / self->maxheight;
         float zoomprogress = 1.0f;
-        if (zoomstate.progress < 1)
+        if (camera::camera.zoomstate.progress < 1)
         {
-            zoomprogress = 1.0f - zoomstate.progress;
+            zoomprogress = 1.0f - camera::camera.zoomstate.progress;
         }
         size *= crouchprogress * zoomprogress;
     }
@@ -794,7 +541,7 @@ namespace game
         if (hud->lasthit && lastmillis - hud->lasthit <= crosshairhit)
         {
             float progress = min((lastmillis - hud->lasthit) / static_cast<float>(crosshairhit), 1.0f);
-            size *= sin(progress * PI) * 1.5f;
+            size *= sin(progress * M_PI) * 1.5f;
             x = getpointercenter(w, size);
             y = getpointercenter(h, size);
             drawpointerquad(x, y, size, color, hit);

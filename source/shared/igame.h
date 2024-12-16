@@ -98,7 +98,6 @@ namespace game
     extern void newmap(int size);
     extern void startmap(const char *name);
     extern void preload();
-    extern void setupcamera();
     extern void rendergame();
     extern void renderavatar();
     extern void renderplayerpreview(int model, int color, int team, int weap);
@@ -111,9 +110,6 @@ namespace game
     extern void addgamedynamiclights();
     extern void drawhud(int w, int h);
     extern void drawpointers(int w, int h);
-    extern void computezoom();
-    extern void recomputecamera();
-    extern void mousemove(const int dx, const int dy);
     extern void writecrosshairs(stream* f);
     extern void clearscreeneffects();
 
@@ -122,8 +118,6 @@ namespace game
     extern bool ispaused();
     extern bool intermission;
     extern bool hasminimap();
-    extern bool isthirdperson();
-    extern bool isfirstpersondeath();
 
     extern const char *gameident();
     extern const char *gameconfig();
@@ -135,7 +129,6 @@ namespace game
     extern const char *getmapinfo();
     extern const char *getscreenshotinfo();
 
-    extern int fov, zoomfov;
     extern int numdynents();
     extern int scaletime(int t);
     extern int numanims();
@@ -148,6 +141,17 @@ namespace game
     extern float ratespawn(dynent* pl, const extentity& e);
 
     extern dynent *iterdynents(int i);
+
+    namespace camera
+    {
+        extern void compute();
+        extern void movemouse(const int dx, const int dy);
+
+        extern bool isthirdperson();
+        extern bool isfirstpersondeath();
+
+        extern int camerafov, zoomfov;
+    }
 }
 
 // server

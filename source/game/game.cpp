@@ -50,7 +50,7 @@ namespace game
     {
         if(following<0) return;
         following = -1;
-        thirdperson = 0;
+        camera::thirdperson = 0;
     }
 
     void follow(char *arg)
@@ -164,7 +164,7 @@ namespace game
 
     gameent *hudplayer()
     {
-        if((thirdperson && allowthirdperson()) || specmode > 1) return self;
+        if((camera::thirdperson && camera::allowthirdperson()) || specmode > 1) return self;
         return followingplayer(self);
     }
 
@@ -255,6 +255,8 @@ namespace game
         }
         updateweapons(curtime);
         otherplayers(curtime);
+        camera::camera.update();
+        announcer::update();
         ai::update();
         moveragdolls();
         gets2c();
@@ -372,32 +374,49 @@ namespace game
     {
         pickgamespawn(d);
         spawnstate(d);
-        if(d==self)
+        if(d == self)
         {
-            if(editmode) d->state = CS_EDITING;
-            else if(d->state != CS_SPECTATOR) d->state = CS_ALIVE;
+            if (editmode)
+            {
+                d->state = CS_EDITING;
+            }
+            else if (d->state != CS_SPECTATOR)
+            {
+                d->state = CS_ALIVE;
+            }
         }
-        else d->state = CS_ALIVE;
+        else
+        {
+            d->state = CS_ALIVE;
+        }
         checkfollow();
+        spawneffect(d);
     }
 
     void spawneffect(gameent *d)
     {
         stopownersounds(d);
-        if (d == followingplayer(self))
-        {
-            clearscreeneffects();
-            addscreenflash(200);
-        }
-        int color = 0x00FF5B;
         if (d->type == ENT_PLAYER)
         {
-            color = getplayercolor(d, d->team);
+            if (d == followingplayer(self))
+            {
+                clearscreeneffects();
+                addscreenflash(200);
+                camera::camera.addevent(d, camera::CameraEvent_Spawn, 380);
+            }
+            adddynlight(d->o, 100, vec(1, 1, 1), 800, 100, DL_EXPAND | L_NOSHADOW);
+            doweaponchangeffects(d);
+            playsound(S_PLAYER_SPAWN, d);
         }
-        particle_splash(PART_SPARK2, 250, 200, d->o, color, 0.60f, 200, 5);
-        adddynlight(d->o, 35, vec::hexcolor(color), 900, 100);
-        doweaponchangeffects(d);
-        playsound(S_SPAWN, d);
+        else
+        {
+            static const int color = 0x00e661;
+            particle_flare(d->o, d->o, 350, PART_EXPLODE1, color, 2.0f, NULL, d->radius + 50.0f);
+            particle_flare(d->o, d->o, 280, PART_ELECTRICITY, color, 2.0f, NULL, d->radius + 30.0f);
+            adddynlight(d->o, 100, vec::hexcolor(color), 350, 100, DL_EXPAND | L_NOSHADOW);
+            playsound(S_MONSTER_SPAWN, d);
+        }
+        d->lastspawn = lastmillis;
     }
 
     void respawn()
@@ -422,7 +441,7 @@ namespace game
     {
         if (self->attacking == ACT_MELEE)
         {
-            zoomstate.disable();
+            camera::camera.zoomstate.disable();
             return true;
         }
 
@@ -438,7 +457,7 @@ namespace game
                 }
                 else
                 {
-                    zoom = zoom ? -1 : 1;
+                    camera::zoom = camera::zoom ? -1 : 1;
                 }
                 if (self->attacking == ACT_PRIMARY)
                 {
@@ -451,7 +470,7 @@ namespace game
             }
             if (act == ACT_PRIMARY)
             {
-                if (zoomstate.isenabled())
+                if (camera::camera.zoomstate.isenabled())
                 {
                     act = ACT_SECONDARY;
                 }
@@ -513,7 +532,7 @@ namespace game
         }
         if (deathscream && d->type == ENT_PLAYER)
         {
-            bool isfirstperson = d == self && isfirstpersondeath();
+            bool isfirstperson = d == self && camera::isfirstpersondeath();
             if (!isfirstperson)
             {
                 int diesound = getplayermodelinfo(d).diesound[d->deathstate];
@@ -554,9 +573,9 @@ namespace game
         }
         if(d == self)
         {
-            zoomstate.disable();
+            camera::camera.zoomstate.disable();
             d->attacking = ACT_IDLE;
-            if(!isfirstpersondeath())
+            if(!camera::isfirstpersondeath())
             {
                 if(!restore && deathfromabove)
                 {
@@ -570,7 +589,7 @@ namespace game
                 playsound(S_DEATH);
             }
             if(m_invasion) self->lives--;
-            if(thirdperson) thirdperson = 0;
+            if(camera::thirdperson) camera::thirdperson = 0;
         }
         else
         {
@@ -679,93 +698,6 @@ namespace game
     ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
     ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
 
-    void announce(int sound)
-    {
-        if (validsound(sound))
-        {
-            playsound(sound, NULL, NULL, NULL, SND_ANNOUNCER);
-        }
-    }
-
-    void checkannouncements(gameent* d, gameent *actor, int flags)
-    {
-        if (!flags || isally(d, actor))
-        {
-            /* No announcements to check (or even worse, we killed an ally)?
-             * Nothing to celebrate then.
-             */
-            return;
-        }
-
-        if (actor->aitype == AI_BOT)
-        {
-            // Bots taunting players when getting extraordinary kills.
-            taunt(actor);
-        }
-        if(actor != followingplayer(self))
-        {
-            /* Now: time to announce extraordinary kills.
-             * Unless we are the player who achieved these (or spectating them),
-             * we do not care.
-             */
-            return;
-        }
-
-        if (flags & KILL_HEADSHOT)
-        {
-            announce(S_ANNOUNCER_HEADSHOT);
-        }
-        if (d->type == ENT_AI)
-        {
-            /* NPCs are not players!
-             * Announcing kills (kill streaks, multi-kills, etc.) is unnecessary.
-             */
-            return;
-        }
-
-        if(flags & KILL_FIRST)
-        {
-            announce(S_ANNOUNCER_FIRST_BLOOD);
-            if (!(flags & KILL_TRAITOR))
-            {
-                conoutf(CON_GAMEINFO, "%s \f2drew first blood!", colorname(actor));
-            }
-        }
-        const char* spree = "";
-        if(flags & KILL_SPREE)
-        {
-            announce(S_ANNOUNCER_KILLING_SPREE);
-            spree = "\f2killing";
-        }
-        if(flags & KILL_SAVAGE)
-        {
-            announce(S_ANNOUNCER_SAVAGE);
-            spree = "\f6savage";
-        }
-        if(flags & KILL_UNSTOPPABLE)
-        {
-            announce(S_ANNOUNCER_UNSTOPPABLE);
-            spree = "\f3unstoppable";
-        }
-        if(flags & KILL_LEGENDARY)
-        {
-            announce(S_ANNOUNCER_LEGENDARY);
-            spree = "\f5legendary";
-        }
-        if (spree[0] == '\0' || flags & KILL_TRAITOR)
-        {
-            /* No spree to announce? We are finished.
-             * 
-             * If this is an assassination by a traitor instead,
-             * announce the kill streak we achieved just the same...
-             * but without triggering a console message (to not confuse players).
-             */
-            return;
-        }
-
-        conoutf(CON_GAMEINFO, "%s \f2is on a \fs%s\fr spree!", colorname(actor), spree);
-    }
-
     VARR(mapdeath, 0, Death_Default, Death_Num);
 
     int getdeathstate(gameent* d, int atk, int flags)
@@ -800,7 +732,7 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-        checkannouncements(d, actor, flags);
+        announcer::parseannouncements(d, actor, flags);
         if (actor == followingplayer(self))
         {
             if (actor->role == ROLE_BERSERKER)
@@ -827,8 +759,8 @@ namespace game
         d->deathstate = getdeathstate(d, atk, flags);
         setdeathstate(d);
         ai::kill(d, actor);
-        // Write obituary and update killfeed.
-        writeobituary(d, actor, atk, flags); // Obituary (console messages, kill feed).
+        // Write obituary (console messages, kill feed).
+        writeobituary(d, actor, atk, flags);
     }
 
     void updatetimer(int time, int type)
@@ -854,7 +786,7 @@ namespace game
                 playsound(S_ANNOUNCER_WIN, NULL, NULL, NULL, SND_ANNOUNCER);
             }
             else playsound(S_INTERMISSION);
-            zoomstate.disable();
+            camera::camera.zoomstate.disable();
             execident("on_intermission");
         }
     }
@@ -942,13 +874,20 @@ namespace game
 
     VARP(showmodeinfo, 0, 1, 1);
 
-    void startgame()
+    void cleargame()
     {
         removeprojectiles();
+        clearweapons();
         clearmonsters();
         clearragdolls();
-
         clearteaminfo();
+        camera::reset();
+        announcer::reset();
+    }
+
+    void startgame()
+    {
+        cleargame();
 
         // reset perma-state
         loopv(players) players[i]->startgame();
@@ -979,7 +918,7 @@ namespace game
 
         syncplayer();
 
-        zoomstate.disable();
+        camera::camera.zoomstate.disable();
 
         execident("on_mapstart");
     }

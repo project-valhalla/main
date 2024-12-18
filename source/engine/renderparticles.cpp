@@ -1329,8 +1329,10 @@ static void makeparticles(entity &e)
             break;
         }
         case 1: //steam vent - <dir>
+        {
             regularsplash(PART_STEAM, 0x897661, 50, 1, 200, offsetvec(e.o, e.attr2, rnd(10)), 2.4f, -20);
             break;
+        }
         case 2: //water fountain - <dir>
         {
             int color;
@@ -1376,24 +1378,42 @@ static void makeparticles(entity &e)
             break;
         }
         case 11: // flame <radius> <height> <rgb> - radius=100, height=100 is the classic size
+        {
             regularflame(PART_FLAME, e.o, float(e.attr2)/100.0f, float(e.attr3)/100.0f, colorfromattr(e.attr4), 3, 2.0f);
             break;
+        }
         case 12: // smoke plume <radius> <height> <rgb>
+        {
             regularflame(PART_SMOKE, e.o, float(e.attr2)/100.0f, float(e.attr3)/100.0f, colorfromattr(e.attr4), 1, 4.0f, 100.0f, 2000.0f, -20);
             break;
+        }
         case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>
         case 33:
         case 34:
         case 35:
+        {
             flares.addflare(e.o, e.attr2, e.attr3, e.attr4, (e.attr1&0x02)!=0, (e.attr1&0x01)!=0);
             break;
+        }
+        case 36: // Temporary way to trigger light effects
+        {
+            extentity* ent = (extentity*)&e;
+            if(!ent->lasttrigger || lastmillis - ent->lasttrigger >= e.attr5 * 1000)
+            {
+                adddynlight(e.o, e.attr2, vec(1.0f, 1.0f, 1.0f), e.attr3, e.attr4, L_NOSHADOW, e.attr2 / 2.0f);
+                ent->lasttrigger = lastmillis;
+            }
+            break;
+        }
         default:
+        {
             if(!editmode)
             {
                 defformatstring(ds, "particles %d?", e.attr1);
                 particle_textcopy(e.o, ds, PART_TEXT, 1, 0x6496FF, 2.0f);
             }
             break;
+        }
     }
 }
 

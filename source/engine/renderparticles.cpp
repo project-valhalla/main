@@ -1398,9 +1398,10 @@ static void makeparticles(entity &e)
         case 36: // Temporary way to trigger light effects
         {
             extentity* ent = (extentity*)&e;
-            if(!ent->lasttrigger || lastmillis - ent->lasttrigger >= e.attr5 * 1000)
+            if(!ent->lasttrigger || lastmillis - ent->lasttrigger >= e.attr2 * 1000)
             {
-                adddynlight(e.o, e.attr2, vec(1.0f, 1.0f, 1.0f), e.attr3, e.attr4, L_NOSHADOW, e.attr2 / 2.0f);
+                const int color = colorfromattr(e.attr4);
+                adddynlight(e.o, e.attr3, vec::hexcolor(color), e.attr5, 0, L_NOSHADOW);
                 ent->lasttrigger = lastmillis;
             }
             break;

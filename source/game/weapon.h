@@ -159,5 +159,5 @@ static const struct guninfo
     { "pistol",     "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1,  ATK_PISTOL2  }, S_PISTOL_SWITCH,  Zoom_None,   -1                 },
     { "instagun",   "instagun",   "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,    ATK_INSTA    }, S_RAIL_SWITCH,    Zoom_Scope,  -1                 },
     { "zombie",     "zombie",     NULL,                      { -1, ATK_ZOMBIE, ATK_ZOMBIE,   ATK_ZOMBIE   }, -1,               Zoom_Shadow, -1                 },
-    { "melee",      "melee",      NULL,                      { -1, ATK_MELEE2, ATK_MELEE2,   ATK_MELEE2   }, -1,               Zoom_None,   -1                 }
+    { "melee",      NULL,         NULL,                      { -1, ATK_MELEE2, ATK_MELEE2,   ATK_MELEE2   }, -1,               Zoom_None,   -1                 }
 };

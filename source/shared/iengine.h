@@ -105,6 +105,7 @@ extern void mpdelcube(selinfo &sel, bool local);
 extern void mpremip(bool local);
 extern bool mpeditvslot(int delta, int allfaces, selinfo &sel, ucharbuf &buf);
 extern void mpcalclight(bool local);
+extern float rayent(const vec& o, const vec& ray, float radius, int mode, int size, int& orient, int& ent);
 
 // command
 extern int variable(const char *name, int min, int cur, int max, int *storage, identfun fun, int flags);

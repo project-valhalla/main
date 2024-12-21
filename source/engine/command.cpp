@@ -4269,6 +4269,16 @@ ICOMMAND(log2, "f", (float *a), floatret(log(*a)/M_LN2));
 ICOMMAND(log10, "f", (float *a), floatret(log10(*a)));
 ICOMMAND(exp, "f", (float *a), floatret(exp(*a)));
 
+ICOMMAND(lerp, "iif", (int *a, int *b, float *t), intret(lerp(*a, *b, *t)));
+ICOMMAND(lerpf, "fff", (float *a, float *b, float *t), floatret(lerp(*a, *b, *t)));
+ICOMMAND(lerp360, "fff", (float *a, float *b, float *t), floatret(lerp360(*a, *b, *t)));
+
+ICOMMAND(getstepmillis, "ii", (int *ts, int* ms),
+{
+    const float progress = clamp((lastmillis - *ts) / (float)*ms, 0.0f, 1.0f);
+    floatret(progress);
+});
+
 #define MINMAXCMD(name, fmt, type, op) \
     ICOMMAND(name, #fmt "1V", (tagval *args, int numargs), \
     { \

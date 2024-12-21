@@ -1067,7 +1067,7 @@ namespace game
             nextmutators = mutators = 0;
             clientmap[0] = '\0';
         }
-		cleargame();
+        cleargame();
         execident("on_disconnect");
     }
 

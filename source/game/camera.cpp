@@ -70,7 +70,7 @@ namespace game
             if (camera1 != self && !camera.isdetached)
             {
                 self->yaw = camera1->yaw;
-                player->pitch = camera1->pitch;
+                self->pitch = camera1->pitch;
             }
         }
 
@@ -161,7 +161,7 @@ namespace game
             {
                 static physent tempcamera;
                 camera1 = &tempcamera;
-                if (camera.isdetached && shoulddetach) camera1->o = player->o;
+                if (camera.isdetached && shoulddetach) camera1->o = self->o;
                 else
                 {
                     *camera1 = *self;
@@ -177,14 +177,14 @@ namespace game
                 orient.rotate_around_x(camera1->pitch * RAD);
                 orient.rotate_around_y(camera1->roll * -RAD);
                 vec dir = vec(orient.b).neg(), side = vec(orient.a).neg(), up = orient.c;
-                bool isalive = player->state == CS_ALIVE && !intermission;
+                bool isalive = self->state == CS_ALIVE && !intermission;
                 float verticaloffset = isalive ? thirdpersonup : thirdpersonupdead;
                 float horizontaloffset = isalive ? thirdpersonside : thirdpersonsidedead;
                 float distance = isalive ? thirdpersondistance : thirdpersondistancedead;
                 if (iscolliding())
                 {
                     movecamera(camera1, dir, distance, 1);
-                    movecamera(camera1, dir, clamp(distance - camera1->o.dist(player->o), 0.0f, 1.0f), 0.1f);
+                    movecamera(camera1, dir, clamp(distance - camera1->o.dist(self->o), 0.0f, 1.0f), 0.1f);
                     if (verticaloffset)
                     {
                         vec pos = camera1->o;

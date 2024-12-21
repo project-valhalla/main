@@ -281,7 +281,7 @@ namespace game
 
     void renderplayer(gameent *d, const playermodelinfo &playermodel, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
-        if (gore && d->deathstate == Death_Gib)
+        if (d->deathstate == Death_Gib)
         {
             return;
         }

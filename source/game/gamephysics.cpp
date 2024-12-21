@@ -198,7 +198,7 @@ namespace physics
     bool canmove(gameent* d)
     {
         if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(gore && d->state == CS_DEAD && d->deathstate == Death_Gib);
+        return !intermission && !(d->state == CS_DEAD && d->deathstate == Death_Gib);
     }
 
     bool trystepdown(gameent* d, vec& dir, bool init = false)

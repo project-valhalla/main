@@ -732,7 +732,6 @@ namespace game
     extern int lastspawnattempt;
     extern int following, specmode;
     extern int smoothmove, smoothdist;
-    extern int gore;
     extern int deathscream;
     extern int getdeathstate(gameent* d, int atk, int flags);
 
@@ -920,6 +919,7 @@ namespace game
     extern void managelowhealthscreen();
     extern void damageblend(const int damage, const int factor = 0);
     extern void setdamagehud(const int damage, gameent* d, gameent* actor);
+    extern void addbloodsplatter(const int amount, const int color);
     extern void addscreenflash(const int amount);
     extern void checkitem(int type);
 

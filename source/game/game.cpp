@@ -516,7 +516,6 @@ namespace game
         return m_edit;
     }
 
-    VARP(gore, 0, 1, 1);
     VARP(deathscream, 0, 1, 1);
 
     void managedeatheffects(gameent* d)
@@ -526,7 +525,7 @@ namespace game
             return;
         }
 
-        if (gore && d->deathstate == Death_Gib)
+        if (d->deathstate == Death_Gib)
         {
             gibeffect(max(-d->health, 0), d->vel, d);
         }

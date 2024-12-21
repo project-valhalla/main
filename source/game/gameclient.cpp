@@ -1950,7 +1950,7 @@ namespace game
                 int i = getint(p), cn = getint(p);
                 gameent *d = getclient(cn);
                 entities::pickupeffects(i, d);
-                d->lastpickupmillis;
+                d->lastpickupmillis = lastmillis;
                 break;
             }
 

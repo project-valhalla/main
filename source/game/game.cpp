@@ -1171,7 +1171,7 @@ namespace game
     const char *gameconfig() { return "config/game.cfg"; }
     const char *savedconfig() { return "config/saved.cfg"; }
     const char *defaultconfig() { return "config/default.cfg"; }
-    const char *autoexec() { return "config/autoexec.cfg"; }
+    const char *autoexec() { return "autoexec.cfg"; }
     const char *savedservers() { return "config/server/history.cfg"; }
 
     void loadconfigs()
@@ -1181,4 +1181,3 @@ namespace game
 
     bool clientoption(const char *arg) { return false; }
 }
-

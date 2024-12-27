@@ -390,7 +390,6 @@ namespace game
 
     void checkitem(int type)
     {
-        gameent* hud = followingplayer(self);
         switch (type)
         {
             case I_HEALTH:

@@ -105,12 +105,15 @@ inline bool validsound(int sound) { return sound >= 0; }
 // sound flags.
 enum
 {
-    SND_MAP       = 1<<0,
-    SND_NO_ALT    = 1<<1,
-    SND_USE_ALT   = 1<<2,
-    SND_ANNOUNCER = 1<<3,
-    SND_UI        = 1<<4
+    SND_GAME      = 1<<0,
+    SND_MAP       = 1<<1,
+    SND_ANNOUNCER = 1<<2,
+    SND_UI        = 1<<3,
+    SND_NO_ALT    = 1<<4,
+    SND_USE_ALT   = 1<<5
 };
+
+const int MAX_VOLUME = 255;
 
 extern void preloadsound(int n);
 extern void preloadmapsound(int n);
@@ -124,4 +127,4 @@ extern bool stopsound(int n, int chanid, int fade = 0);
 extern bool ischannelinuse(int flags);
 
 extern int playsound(int n, physent* owner = NULL, const vec* loc = NULL, extentity* ent = NULL, int flags = 0, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);
-extern int playsoundname(const char* s, physent* owner = NULL, const vec* loc = NULL, int vol = 0, int flags = 0, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);
+extern int playsoundname(const char* s, physent* owner = NULL, const vec* loc = NULL, int vol = 0, int flags = SND_GAME, int loops = 0, int fade = 0, int chanid = -1, int radius = 0, int expire = -1);

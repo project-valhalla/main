@@ -116,22 +116,44 @@ void stopchannels(int flags = 0)
     loopv(channels)
     {
         soundchannel &chan = channels[i];
-        if((flags && !(chan.flags&flags)) || !chan.inuse) continue;
+        if(!chan.inuse || (flags && !(chan.flags&flags))) continue;
         Mix_HaltChannel(i);
         freechannel(i);
     }
 }
 
+extern int musicvol;
 void setmusicvol(int musicvol);
-VARFP(soundvol, 0, 200, 255, if(!soundvol)
+VARFP(mastervol, 0, 255, 255,
 {
-    stopchannels();
-    setmusicvol(0);
+    if(!mastervol)
+    {
+        stopchannels();
+        setmusicvol(0);
+    }
+    else setmusicvol(musicvol);
 });
-VARFP(announcervol, 0, 250, 255, { if(!announcervol) stopchannels(SND_ANNOUNCER); });
-VARFP(uivol, 0, 180, 255, { if(!announcervol) stopchannels(SND_UI); });
-VARFP(musicvol, 0, 35, 255, setmusicvol(soundvol ? musicvol : 0));
-VARFP(ambientsounds, 0, 1, 1, if(!ambientsounds) { stopmapsounds(); });
+VARFP(gamevol, 0, 200, 255,
+{
+    if(!gamevol) stopchannels(SND_GAME|SND_MAP);
+});
+VARFP(announcervol, 0, 250, 255,
+{ 
+    if(!announcervol) stopchannels(SND_ANNOUNCER);
+});
+VARFP(uivol, 0, 180, 255,
+{ 
+    if(!uivol) stopchannels(SND_UI);
+});
+VARFP(musicvol, 0, 35, 255,
+{
+    setmusicvol(mastervol ? musicvol : 0);
+});
+
+VARFP(ambientsounds, 0, 1, 1,
+{
+    if (!ambientsounds) stopmapsounds();
+});
 
 char *musicfile = NULL, *musicdonecmd = NULL;
 
@@ -142,7 +164,7 @@ stream *musicstream = NULL;
 void setmusicvol(int musicvol)
 {
     if(nosound) return;
-    if(music) Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+    if(music) Mix_VolumeMusic((musicvol * mastervol * MIX_MAX_VOLUME) / (MAX_VOLUME * MAX_VOLUME));
 }
 
 void stopmusic(int fade = 0)
@@ -280,7 +302,7 @@ void playmusic(const char *name, int *fade, const char *cmd)
 {
     if(nosound) return;
     stopmusic(*name ? 0 : *fade);
-    if(!musicvol || !*name) return;
+    if(!musicvol || !mastervol || !*name) return;
     string file;
     static const char * const exts[] = { "", ".wav", ".ogg" };
     loopk(sizeof(exts)/sizeof(exts[0]))
@@ -294,7 +316,7 @@ void playmusic(const char *name, int *fade, const char *cmd)
             if(cmd && *cmd) musicdonecmd = newstring(cmd);
             if(*fade) Mix_FadeInMusic(music, cmd && *cmd ? 0 : -1, *fade);
             else Mix_PlayMusic(music, cmd && *cmd ? 0 : -1);
-            Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+            Mix_VolumeMusic((musicvol * mastervol * MIX_MAX_VOLUME) / (MAX_VOLUME * MAX_VOLUME));
             intret(1);
             break;
         }
@@ -580,11 +602,12 @@ bool updatechannel(soundchannel &chan)
             panf = 0.5f - 0.5f*v.x/v.magnitude2(); // range is from 0 (left) to 1 (right)
         }
     }
-    int voltype = chan.flags&SND_ANNOUNCER? announcervol : (chan.flags&SND_UI? uivol : soundvol),
-        vol = clamp(int(volf*voltype*chan.slot->volume*(MIX_MAX_VOLUME/float(255*255)) + 0.5f), 0, MIX_MAX_VOLUME);
-    int pan = clamp(int(panf*255.9f), 0, 255);
-    if(vol == chan.volume && pan == chan.pan) return false;
-    chan.volume = vol;
+    const int volumetype = chan.flags&SND_ANNOUNCER ? announcervol : (chan.flags&SND_UI ? uivol : gamevol);
+    const int volume = volumetype * chan.slot->volume * mastervol;
+    const int volumeclamped = clamp(int(volf * volume * (MIX_MAX_VOLUME / powf(MAX_VOLUME, 3)) + 0.5f), 0, MIX_MAX_VOLUME);
+    const int pan = clamp(int(panf*255.9f), 0, 255);
+    if(volumeclamped == chan.volume && pan == chan.pan) return false;
+    chan.volume = volumeclamped;
     chan.pan = pan;
     chan.dirty = true;
     return true;
@@ -671,10 +694,18 @@ bool ischannelinuse(int flags)
     return false;
 }
 
+bool hasvolume(int flags)
+{
+    if(flags & SND_GAME && !gamevol) return false;
+    if(flags & SND_MAP && !ambientsounds) return false;
+    if(flags & SND_ANNOUNCER && !announcervol) return false;
+    if(flags & SND_UI && !uivol) return false;
+    return true;
+}
+
 int playsound(int n, physent *owner, const vec *loc, extentity *ent, int flags, int loops, int fade, int chanid, int radius, int expire)
 {
-    if(nosound || !soundvol || (minimized && !minimizedsounds) ||
-      (!announcervol && flags&SND_ANNOUNCER) || (!uivol && flags&SND_UI) || (!ambientsounds && flags&SND_MAP)) return -1;
+    if(nosound || !mastervol || (minimized && !minimizedsounds) || !hasvolume(flags)) return -1;
 
     soundtype &sounds = ent || flags&SND_MAP ? mapsounds : gamesounds;
     if(!sounds.configs.inrange(n)) { conoutf(CON_WARN, "unregistered sound: %d", n); return -1; }
@@ -803,8 +834,8 @@ int playsoundname(const char *s, physent *owner, const vec *loc, int vol, int fl
 }
 
 ICOMMAND(uisound, "si", (const char *s, int *vol), if(uivol) playsoundname(s, NULL, NULL, *vol, SND_UI));
-ICOMMAND(gamesound, "si", (const char* s, int* vol), if (soundvol) playsoundname(s, NULL, NULL, *vol, 0));
-ICOMMAND(playsound, "i", (int *n), playsound(*n));
+ICOMMAND(gamesound, "si", (const char* s, int* vol), if(gamevol) playsoundname(s, NULL, NULL, *vol));
+ICOMMAND(playsound, "i", (int *n), if(gamevol) playsound(*n));
 ICOMMAND(voicecom, "ssi", (const char *sound, char *text, int *team),
 {
     int id = gamesounds.findsound(sound, 0);
@@ -840,7 +871,7 @@ void resetsound()
     if(music && loadmusic(musicfile))
     {
         Mix_PlayMusic(music, musicdonecmd ? 0 : -1);
-        Mix_VolumeMusic((musicvol*MIX_MAX_VOLUME)/255);
+        Mix_VolumeMusic((musicvol * mastervol * MIX_MAX_VOLUME) / (MAX_VOLUME * MAX_VOLUME));
     }
     else
     {

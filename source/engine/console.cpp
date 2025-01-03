@@ -570,7 +570,10 @@ void getclipboard()
         result("");
         return;
     }
-    stringret(newstring(cb, MAXSTRLEN));
+    string paste;
+    size_t decoded = decodeutf8((uchar *)paste, sizeof(paste)-1, (const uchar *)cb, strlen(cb));
+    paste[decoded] = '\0';
+    result(paste);
     SDL_free(cb);
 }
 COMMAND(getclipboard, "");

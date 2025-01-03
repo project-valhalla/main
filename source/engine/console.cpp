@@ -527,12 +527,14 @@ void execbind(keym &k, bool isdown)
     k.pressed = isdown;
 }
 
-void iskeyheld(char *key)
+bool iskeyheld(char *key)
 {
     const keym *km = findbind(key);
-    intret(km && km->pressed ? 1 : 0);
+    if(!km) return false;
+    const SDL_Scancode scancode = SDL_GetScancodeFromKey(km->code);
+    return SDL_GetKeyboardState(NULL)[scancode];
 }
-ICOMMAND(iskeyheld, "s", (char* key), iskeyheld(key));
+ICOMMAND(iskeyheld, "s", (char* key), intret(iskeyheld(key) ? 1 : 0));
 
 bool consoleinput(const char *str, int len)
 {

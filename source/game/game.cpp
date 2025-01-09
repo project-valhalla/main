@@ -553,8 +553,6 @@ namespace game
         }
     }
 
-    VARP(deathfromabove, 0, 1, 1);
-
     void setdeathstate(gameent *d, bool restore)
     {
         d->state = CS_DEAD;
@@ -570,25 +568,19 @@ namespace game
             managedeatheffects(d);
             d->deaths++;
         }
-        if(d == self)
+        if (d == self)
         {
-            camera::camera.zoomstate.disable();
+            camera::restore(restore);
             d->attacking = ACT_IDLE;
-            if(!camera::isfirstpersondeath())
-            {
-                if(!restore && deathfromabove)
-                {
-                    d->pitch = -90; // lower your pitch to see your death from above
-                }
-                d->roll = 0;
-            }
-            else
+            if (camera::isfirstpersondeath())
             {
                 stopsounds(SND_UI | SND_ANNOUNCER);
                 playsound(S_DEATH);
             }
-            if(m_invasion) self->lives--;
-            if(camera::thirdperson) camera::thirdperson = 0;
+            if (m_invasion)
+            {
+                self->lives--;
+            }
         }
         else
         {
@@ -684,7 +676,11 @@ namespace game
         if(d == self)
         {
             execident("on_death");
-            if(d == actor) execident("on_suicide");
+            if (d == actor)
+            {
+                execident("on_suicide");
+            }
+            d->lastattacker = actor->clientnum;
         }
         else if(actor == self)
         {

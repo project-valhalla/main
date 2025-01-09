@@ -5,17 +5,6 @@ namespace game
 {
     namespace camera
     {
-        void update()
-        {
-            camera.update();
-        }
-
-        void reset()
-        {
-            camera.events.shrink(0);
-            camera.shakes.shrink(0);
-        }
-
         bool isthirdperson()
         {
             return self != camera1 || camera.isdetached;
@@ -47,6 +36,73 @@ namespace game
         bool isfirstpersondeath()
         {
             return firstpersondeath || m_story;
+        }
+
+        VARP(killcamera, 0, 1, 1);
+        FVARP(killcameramillis, 1.0f, 250.0f, 5000.0f);
+
+        static void updatekillcamera()
+        {
+            if (!killcamera)
+            {
+                if (self->lastattacker)
+                {
+                    self->lastattacker = -1;
+                }
+                return;
+            }
+
+            gameent* hud = followingplayer(self);
+            gameent* last = getclient(hud->lastattacker);
+            if (!last || last == hud)
+            {
+                /* Safety check.
+                 * If we don't have a fragger (or as an extra we fragged ourselves),
+                 * we have none to follow, so we stop caring.
+                 */
+                return;
+            }
+            if (hud->state != CS_DEAD || last->state != CS_ALIVE)
+            {
+                /* If we are not dead, or our fragger is not alive,
+                 * we will reset information and forget about this until it becomes relevant.
+                 */
+                hud->lastattacker = -1;
+                if (hud->state == CS_DEAD)
+                {
+                    restore();
+                }
+                return;
+            }
+            const vec camera = camera1->o;
+            const vec direction = vec(last->o).sub(camera).normalize();
+            vec position = vec(0, 0, 0);
+            static int lastUpdate = 0;
+            const bool isVisible = raycubelos(camera1->o, last->o, position);
+            if (isVisible || lastmillis - hud->lastpain < DURATION_SPAWN)
+            {
+                float yaw = 0, pitch = 0;
+                vectoyawpitch(direction, yaw, pitch);
+                camera1->yaw = yaw;
+                camera1->pitch = pitch;
+                fixrange();
+                camera1->o = hud->o;
+                if (lastUpdate)
+                {
+                    lastUpdate = 0;
+                }
+            }
+            else
+            {
+                if (!lastUpdate)
+                {
+                    lastUpdate = lastmillis;
+                }
+                float progress = clamp((lastmillis - lastUpdate) / killcameramillis, 0.0f, 1.0f);
+                vec startPoint = hud->o;
+                vec endPoint = last->o;
+                camera1->o = startPoint.lerp(endPoint, progress);
+            }
         }
 
         inline bool hasfreelook()
@@ -125,13 +181,16 @@ namespace game
             return true;
         }
 
-        VAR(thirdperson, 0, 0, 2);
-        FVAR(thirdpersondistance, 0, 14, 50);
-        FVAR(thirdpersonup, -25, 0.5f, 25);
-        FVAR(thirdpersonside, -25, 5.0f, 25);
-        FVAR(thirdpersondistancedead, 0, 30, 50);
-        FVAR(thirdpersonupdead, -25, 0, 25);
-        FVAR(thirdpersonsidedead, -25, 0, 25);
+        void update()
+        {
+            camera.update();
+        }
+
+        void reset()
+        {
+            camera.events.shrink(0);
+            camera.shakes.shrink(0);
+        }
 
         void set()
         {
@@ -144,6 +203,14 @@ namespace game
                 self->resetinterp();
             }
         }
+
+        VAR(thirdperson, 0, 0, 2);
+        FVAR(thirdpersondistance, 0, 14, 50);
+        FVAR(thirdpersonup, -25, 0.5f, 25);
+        FVAR(thirdpersonside, -25, 5.0f, 25);
+        FVAR(thirdpersondistancedead, 0, 30, 50);
+        FVAR(thirdpersonupdead, -25, 0, 25);
+        FVAR(thirdpersonsidedead, -25, 0, 25);
 
         void compute()
         {
@@ -171,6 +238,7 @@ namespace game
                 camera1->type = ENT_CAMERA;
                 camera1->move = -1;
                 camera1->eyeheight = camera1->aboveeye = camera1->radius = camera1->xradius = camera1->yradius = 2;
+                updatekillcamera();
                 matrix3 orient;
                 orient.identity();
                 orient.rotate_around_z(camera1->yaw * RAD);
@@ -223,6 +291,39 @@ namespace game
             }
 
             setviewcell(camera1->o);
+        }
+
+        VARP(deathpitch, 0, 2, 2);
+
+        void restore(bool shouldIgnorePitch)
+        {
+            camera::camera.zoomstate.disable();
+            if (self->state == CS_DEAD)
+            {
+                if (!camera::isfirstpersondeath())
+                {
+                    if (deathpitch && !shouldIgnorePitch)
+                    {
+                        if (deathpitch == 2)
+                        {
+                            self->pitch = camera1->pitch = -90; // Lower your pitch to see your death from above.
+                        }
+                        else
+                        {
+                            self->pitch = camera1->pitch = 0;
+                        }
+                    }
+                    self->roll = camera1->roll = 0;
+                }
+            }
+            else
+            {
+                self->pitch = self->roll = camera1->pitch = camera1->roll = 0;
+            }
+            if (camera::thirdperson)
+            {
+                camera::thirdperson = 0;
+            }
         }
 
         camerainfo camera;

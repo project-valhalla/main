@@ -78,18 +78,18 @@ namespace game
             const vec direction = vec(last->o).sub(camera).normalize();
             vec position = vec(0, 0, 0);
             static int lastUpdate = 0;
+            static int lastFollow = 0;
             const bool isVisible = raycubelos(camera1->o, last->o, position);
-            if (isVisible || lastmillis - hud->lastpain < DURATION_SPAWN)
+            const bool hasDelay = lastmillis - hud->lastpain < DURATION_SPAWN || lastmillis - lastFollow <= killcameramillis;
+            if (isVisible || hasDelay)
             {
-                float yaw = 0, pitch = 0;
-                vectoyawpitch(direction, yaw, pitch);
-                camera1->yaw = yaw;
-                camera1->pitch = pitch;
+                vectoyawpitch(direction, camera1->yaw, camera1->pitch);
                 fixrange();
                 camera1->o = hud->o;
                 if (lastUpdate)
                 {
                     lastUpdate = 0;
+                    lastFollow = lastmillis;
                 }
             }
             else
@@ -97,10 +97,11 @@ namespace game
                 if (!lastUpdate)
                 {
                     lastUpdate = lastmillis;
+                    lastFollow = 0;
                 }
-                float progress = clamp((lastmillis - lastUpdate) / killcameramillis, 0.0f, 1.0f);
+                const float progress = clamp((lastmillis - lastUpdate) / killcameramillis, 0.0f, 1.0f);
                 vec startPoint = hud->o;
-                vec endPoint = last->o;
+                const vec endPoint = last->o;
                 camera1->o = startPoint.lerp(endPoint, progress);
             }
         }

@@ -244,7 +244,6 @@ bool init_pangocairo()
     cairo_font_options_set_antialias   (global_font_options, antialias_);
     cairo_font_options_set_hint_style  (global_font_options, hintstyle_);
     cairo_font_options_set_hint_metrics(global_font_options, CAIRO_HINT_METRICS_ON);
-    cairo_font_options_set_color_mode  (global_font_options, CAIRO_COLOR_MODE_COLOR); // cairo 1.18
 
     dummy_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0);
     if(CAIRO_STATUS_SUCCESS != cairo_surface_status(dummy_surface))

@@ -571,29 +571,24 @@ namespace text
             cairo_stroke(cr);
         }
 
-        // draw cursor outline and the cursor itself on top of it
-        if(cursor >= 0 && ((totalmillis - inputmillis <= cursorblink) || !cursorblink || ((totalmillis - inputmillis) % (2*cursorblink)) <= cursorblink))
-        {
-            if(cursor > len) cursor = len;
-            cursor = min((int)strlen(pango_layout_get_text(label.layout)), label.map_markup_to_text[cursor]);
-            PangoRectangle cur_rect;
-            pango_layout_get_cursor_pos(label.layout, cursor, &cur_rect, nullptr);
-
-            const double curw = max(1., fontsize / 16.);
-            cairo_rectangle(cr, cur_rect.x/PANGO_SCALE+ol_offset, cur_rect.y/PANGO_SCALE+ol_offset, curw, cur_rect.height/PANGO_SCALE);
-            if(outline)
-            {
-                cairo_set_source_rgba(cr, ol_color.r/255., ol_color.g/255., ol_color.b/255., ol_color.a/255.);
-                cairo_stroke_preserve(cr);
-            }
-            cairo_set_source_rgba(cr, cursorcolor.r/255., cursorcolor.g/255., cursorcolor.b/255., 1.);
-            cairo_fill(cr);
-        }
-
-        // draw text on top of everything
+        // draw text
         cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
         cairo_move_to(cr, offset + ol_offset, ol_offset);
         pango_cairo_show_layout(cr, label.layout);
+
+        // draw the cursor
+        if(cursor >= 0 && (!cursorblink || (totalmillis - inputmillis <= cursorblink) || (totalmillis - inputmillis % (2 * cursorblink)) <= cursorblink))
+        {
+            if(cursor > len) cursor = len;
+            cursor = min((int)strlen(pango_layout_get_text(label.layout)), label.map_markup_to_text[cursor]);
+            PangoRectangle cursor_rect;
+            pango_layout_get_cursor_pos(label.layout, cursor, &cursor_rect, nullptr);
+
+            const double cursor_width = max(1., fontsize / 16.);
+            cairo_rectangle(cr, cursor_rect.x / PANGO_SCALE + ol_offset, cursor_rect.y / PANGO_SCALE + ol_offset, cursor_width, cursor_rect.height / PANGO_SCALE);
+            cairo_set_source_rgba(cr, cursorcolor.r / 255., cursorcolor.g / 255., cursorcolor.b / 255., 1.);
+            cairo_fill(cr);
+        }
 
         if(!keep_layout)
         {

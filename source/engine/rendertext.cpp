@@ -9,28 +9,42 @@ double fontsize = 0;                   // pixel height of the current font
 const matrix4x3 *textmatrix = nullptr; // used for text particles
 Shader *textshader = nullptr;          // used for text particles
 
+#pragma region global_font_settings
 // apply a black shadow or outline to console text to improve visibility
-VARFP(conshadow, 0, 255, 255, clearconsoletextures());
-VARFP(conoutline, 0, 0, 255, clearconsoletextures());
+VARFP(conshadow,  0, 255, 255, clearconsoletextures());
+VARFP(conoutline, 0,   0, 255, clearconsoletextures());
 
-// text colors
+// how often the cursor blinks, in milliseconds; set to zero to disable blinking
+VARFP(cursorblink, 0, 750, 2000,
+{
+    cursorblink = cursorblink ? max(250, cursorblink) : 0;
+});
+
+CVARP(cursorcolor, 0xFFFFFF);
+
+// configurable text colors
 static bvec palette[10];
 ICOMMAND(textcolor, "ii", (int *i, int *c),
 {
-    if(*i >= 0 && *i <= 9) palette[*i] = bvec::hexcolor(*c);
-    clearconsoletextures();
-    reloadfonts();
+    if(*i >= 0 && *i <= 9)
+    {
+        palette[*i] = bvec::hexcolor(*c);
+        clearconsoletextures();
+        reloadfonts();
+    }
 });
 
-static cairo_font_options_t *options = nullptr;  // global font options
-static cairo_surface_t *dummy_surface = nullptr; // used to measure text
+static cairo_font_options_t *global_font_options = nullptr; // global font options
+static cairo_surface_t      *dummy_surface       = nullptr; // used to measure text
 
+// NOTE: subpixel antialiasing is not available because we need to render on transparent backgrounds
 static cairo_antialias_t  antialias_ = CAIRO_ANTIALIAS_GRAY;
 static cairo_hint_style_t hintstyle_ = CAIRO_HINT_STYLE_DEFAULT;
 VARFP(fontantialias, 0, 1, 1,
 {
     antialias_ = fontantialias ? CAIRO_ANTIALIAS_GRAY : CAIRO_ANTIALIAS_NONE;
-    if(options) cairo_font_options_set_antialias(options, antialias_);
+    if(!global_font_options) return;
+    cairo_font_options_set_antialias(global_font_options, antialias_);
     clearconsoletextures();
     reloadfonts();
 });
@@ -44,14 +58,14 @@ VARFP(fonthinting, -1, -1, 3,
         case  3: hintstyle_ = CAIRO_HINT_STYLE_FULL   ; break;
         default: hintstyle_ = CAIRO_HINT_STYLE_DEFAULT;
     }
-    if(options) cairo_font_options_set_hint_style(options, hintstyle_);
+    if(!global_font_options) return;
+    cairo_font_options_set_hint_style(global_font_options, hintstyle_);
     clearconsoletextures();
     reloadfonts();
 })
+#pragma endregion global_font_settings
 
-VARFP(cursorblink, 0, 750, 2000, { cursorblink = cursorblink ? max(250, cursorblink) : 0; });
-CVARP(cursorcolor, 0xFFFFFF);
-
+#pragma region particles
 // a cache for rendered text particles
 static hashtable<uint, text::Label> particle_cache;
 static vector<uint> particle_queue;
@@ -61,7 +75,9 @@ static void clear_text_particles()
     particle_cache.clear();
     particle_queue.setsize(0);
 }
+#pragma endregion particles
 
+#pragma region font_management
 // register a TTF file
 // NOTE: on Windows and MacOs, this assumes that pango was compiled with fontconfig support,
 // and that the `PANGOCAIRO_BACKEND` env var is set to `fc` or `fontconfig`
@@ -73,29 +89,29 @@ void addfontfile(const char *filename)
 }
 COMMANDN(registerfont, addfontfile, "s");
 
-struct font
+struct Font
 {
     char *name;
     int id;
     char *opentype_features;
     PangoFontDescription *desc;
 
-    font() : name(nullptr), opentype_features(nullptr), desc(nullptr) {}
-    ~font()
+    Font() : name(nullptr), opentype_features(nullptr), desc(nullptr) {}
+    ~Font()
     {
         delete[] name;
         delete[] opentype_features;
         if(desc) pango_font_description_free(desc);
     }
 };
-static font *curfont = nullptr, *lastfont = nullptr;
-static hashnameset<font> fonts;
-static vector<font *> fontstack;
+static Font *curfont = nullptr, *lastfont = nullptr;
+static hashnameset<Font> fonts;
+static vector<Font *> fontstack;
 
 void newfont(const char *name, const char *family)
 {
-    font *f = &fonts[name];
-    if(f->name) f->~font();
+    Font *f = &fonts[name];
+    if(f->name) f->~Font();
     f->name = newstring(name);
     f->id = fontid++;
     f->opentype_features = newstring("");
@@ -180,7 +196,8 @@ void fontvariations(char *variations)
 }
 COMMAND(fontvariations, "s");
 
-static inline bool setfont(font *f)
+// set the current font
+static inline bool setfont(Font *f)
 {
     if(!f) return false;
     curfont = f;
@@ -188,29 +205,52 @@ static inline bool setfont(font *f)
 }
 bool setfont(const char *name)
 {
-    font *f = fonts.access(name);
+    Font *f = fonts.access(name);
     return setfont(f);
 }
-void pushfont() { fontstack.add(curfont); }
+
+// font stack management
+void pushfont()
+{
+    fontstack.add(curfont);
+}
 bool popfont()
 {
     if(fontstack.empty()) return false;
     curfont = fontstack.pop();
     return true;
 }
-int getcurfontid() { return curfont->id; }
 
+int getcurrentfontid()
+{
+    return curfont->id;
+}
+
+void reloadfonts()
+{
+    clear_text_particles();
+    UI::clearlabels();
+}
+#pragma endregion font_management
+
+#pragma region pango_initialization
 bool init_pangocairo()
 {
-    options = cairo_font_options_create();
-    if(!options) return false;
-    cairo_font_options_set_antialias(options, antialias_);
-    cairo_font_options_set_hint_style(options, hintstyle_);
-    cairo_font_options_set_hint_metrics(options, CAIRO_HINT_METRICS_ON);
-    cairo_font_options_set_color_mode(options, CAIRO_COLOR_MODE_COLOR); // cairo 1.18
+    global_font_options = cairo_font_options_create();
+    if(CAIRO_STATUS_SUCCESS != cairo_font_options_status(global_font_options))
+    {
+        return false;
+    }
+    cairo_font_options_set_antialias   (global_font_options, antialias_);
+    cairo_font_options_set_hint_style  (global_font_options, hintstyle_);
+    cairo_font_options_set_hint_metrics(global_font_options, CAIRO_HINT_METRICS_ON);
+    cairo_font_options_set_color_mode  (global_font_options, CAIRO_COLOR_MODE_COLOR); // cairo 1.18
 
     dummy_surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 0, 0);
-    if(!dummy_surface) return false;
+    if(CAIRO_STATUS_SUCCESS != cairo_surface_status(dummy_surface))
+    {
+        return false;
+    }
 
     loopi(10) palette[i] = bvec(255, 255, 255);
 
@@ -221,10 +261,12 @@ bool init_pangocairo()
 void done_pangocairo()
 {
     fonts.clear();
-    if(options) cairo_font_options_destroy(options);
+    if(global_font_options) cairo_font_options_destroy(global_font_options);
     if(dummy_surface) cairo_surface_destroy(dummy_surface);
 }
+#pragma endregion pango_initialization
 
+#pragma region markup_and_layout
 //stack[sp] is current color index
 static inline bvec text_color(char c, char *stack, int size, int& sp, bvec color)
 {
@@ -262,9 +304,18 @@ static inline bvec text_color(char c, char *stack, int size, int& sp, bvec color
 
 // adds a string to the layout parsing basic markup (\f codes)
 // NOTE: `markup` is the original string with \f codes; `text` is the stripped version without \f codes
-static void add_text_to_layout(const char *markup, int len, PangoLayout *layout, bvec color, int *map_markup_to_text, int *map_text_to_markup, const char *lang, bool no_fallback)
+static void add_text_to_layout(
+    const char *markup,      // the input string with \f codes
+    int markup_length,       // length of the above
+    PangoLayout *layout,     // the layout to fill
+    const bvec& color,       // initial color of the text
+    int *map_markup_to_text, // output: maps character indices from markup to text
+    int *map_text_to_markup, // output: reverse of the above
+    const char *lang,        // optional language code of the text (can affect text shaping)
+    bool no_fallback         // disable fallback fonts for unavailable glyphs?
+)
 {
-    char *text = newstring(len);
+    char *text = newstring(markup_length);
 
     bvec tcolor = color;
     char colorstack[10];
@@ -273,7 +324,7 @@ static void add_text_to_layout(const char *markup, int len, PangoLayout *layout,
 
     PangoAttrList *list = pango_attr_list_new();
     PangoAttribute *attr; // colors and global features
-    PangoAttribute *m;    // markup
+    PangoAttribute *m;    // used for markup attributes
 
     // OpenType features
     if(curfont->opentype_features[0])
@@ -281,14 +332,12 @@ static void add_text_to_layout(const char *markup, int len, PangoLayout *layout,
         attr = pango_attr_font_features_new(curfont->opentype_features); // pango 1.38
         pango_attr_list_insert(list, attr);
     }
-
     // no fallback to system fonts
     if(no_fallback)
     {
         attr = pango_attr_fallback_new(FALSE);
         pango_attr_list_insert(list, attr);
     }
-
     // language
     if(lang)
     {
@@ -296,18 +345,18 @@ static void add_text_to_layout(const char *markup, int len, PangoLayout *layout,
         pango_attr_list_insert(list, attr);
     }
 
-    // arguments are 16-bit values so colors must be multiplied by 257
+    // initial color: arguments must be converted to 16-bit values
     attr = pango_attr_foreground_new(tcolor.r * 257, tcolor.g * 257, tcolor.b * 257);
-    if(attr) attr->start_index = 0;
+    attr->start_index = 0;
 
     int begin_bold = -1, begin_italic = -1, begin_underline = -1, begin_strikethrough = -1;
-    int n_bold = 0, n_italic = 0, n_underline = 0, n_strikethrough = 0;
+    int n_bold = 0, n_italic = 0, n_underline = 0, n_strikethrough = 0; // counters used for nesting
 
     // parse markup
     int i = 0, j = 0;
-    for(; i < len; ++i)
+    for(; i < markup_length; ++i)
     {
-        if(markup[i] == '\f' && i < (len - 1))
+        if(markup[i] == '\f' && i < (markup_length - 1))
         {
             switch(markup[i+1])
             {
@@ -332,7 +381,7 @@ static void add_text_to_layout(const char *markup, int len, PangoLayout *layout,
         if(!attr)
         {
             attr = pango_attr_foreground_new(tcolor.r * 257, tcolor.g * 257, tcolor.b * 257);
-            if(attr) attr->start_index = j;
+            attr->start_index = j;
         }
         if(map_markup_to_text) map_markup_to_text[i] = j;
         if(map_text_to_markup) map_text_to_markup[j] = i;
@@ -342,7 +391,7 @@ static void add_text_to_layout(const char *markup, int len, PangoLayout *layout,
     if(map_markup_to_text) map_markup_to_text[i] = j;
     if(map_text_to_markup) map_text_to_markup[j] = i;
 
-    if(attr)
+    if(attr) // color
     {
         attr->end_index = j;
         pango_attr_list_insert(list, attr);
@@ -379,34 +428,38 @@ static void add_text_to_layout(const char *markup, int len, PangoLayout *layout,
 }
 #undef MARKUP_CASE
 
-static PangoLayout *measure_text_internal(const char *str, int len, int maxw, int align, int justify, bvec color, int& w, int& h, int& offset, int *map_markup_to_text, int *map_text_to_markup, const char *lang, bool no_fallback)
+// creates a layout and fills it with text, and measures its width, height and horizontal offset
+static PangoLayout *measure_text_internal(
+    const char *str,         // the string to measure
+    int len,                 // length of the string
+    int max_width,           // maximum width in pixels (no limit if <=0)
+    int align,               // text alignment: -1 = left, 0 = center, 1 = right
+    int justify,             // text justification (0 = disable, enable otherwise)
+    const bvec& color,       // initial color of the text
+    int& width,              // output: the measured width
+    int& height,             // output: the measured height
+    int& offset,             // output: the measured offset
+    int *map_markup_to_text, // output: maps character indices from markup to text
+    int *map_text_to_markup, // output: reverse of the above
+    const char *lang,        // optional language code of the text (can affect text shaping)
+    bool no_fallback         // disable fallback fonts for unavailable glyphs?
+)
 {
     // create cairo context
-    cairo_t *cr = cairo_create(dummy_surface);
-    if(!cr)
-    {
-        w = h = offset = 0;
-        return nullptr;
-    }
-    cairo_set_font_options(cr, options);
+    cairo_t *cairo_context = cairo_create(dummy_surface);
+    cairo_set_font_options(cairo_context, global_font_options);
 
     // create layout
-    PangoLayout *layout = pango_cairo_create_layout(cr);
-    if(!layout)
-    {
-        w = h = offset = 0;
-        cairo_destroy(cr);
-        return nullptr;
-    }
+    PangoLayout *layout = pango_cairo_create_layout(cairo_context);
 
     // set font family and size
     pango_font_description_set_absolute_size(curfont->desc, fontsize * PANGO_SCALE); // pango 1.8
     pango_layout_set_font_description(layout, curfont->desc);
 
     // line wrapping: set maximum width, alignment and justification
-    if(maxw > 0)
+    if(max_width > 0)
     {
-        pango_layout_set_width(layout, maxw * PANGO_SCALE);
+        pango_layout_set_width(layout, max_width * PANGO_SCALE);
         pango_layout_set_wrap(layout, PANGO_WRAP_WORD_CHAR);
         pango_layout_set_alignment(layout, align > 0 ? PANGO_ALIGN_RIGHT : align < 0 ? PANGO_ALIGN_LEFT : PANGO_ALIGN_CENTER);
         pango_layout_set_justify(layout, justify ? TRUE : FALSE);
@@ -418,19 +471,24 @@ static PangoLayout *measure_text_internal(const char *str, int len, int maxw, in
     // get pixel size
     PangoRectangle r;
     pango_layout_get_extents(layout, nullptr, &r);
-    w      = r.width  / PANGO_SCALE;
-    h      = r.height / PANGO_SCALE;
+    width  = r.width  / PANGO_SCALE;
+    height = r.height / PANGO_SCALE;
     offset = -r.x     / PANGO_SCALE;
 
-    cairo_destroy(cr);
+    cairo_destroy(cairo_context);
     return layout;
 }
+#pragma endregion markup_and_layout
 
-void reloadfonts() { clear_text_particles(); UI::clearlabels(); }
-
+#pragma region label
 namespace text
 {
-    Label::Label() : tex(0), layout(nullptr), map_markup_to_text(nullptr), map_text_to_markup(nullptr) {};
+    Label::Label() :
+        tex(0),
+        layout(nullptr),
+        map_markup_to_text(nullptr),
+        map_text_to_markup(nullptr)
+        {};
     Label::~Label()
     {
         if(tex != 0) glDeleteTextures(1, &tex);
@@ -464,6 +522,7 @@ namespace text
         map_text_to_markup = exchange(other.map_text_to_markup, nullptr);
         return *this;
     }
+    // empties the text content of the label
     void Label::clear()
     {
         if(tex != 0)
@@ -476,11 +535,18 @@ namespace text
             g_object_unref(layout);
             layout = nullptr;
         }
-        DELETEA(map_markup_to_text);
-        DELETEA(map_text_to_markup);
+        delete[] map_markup_to_text;
+        delete[] map_text_to_markup;
+        map_markup_to_text = map_text_to_markup = nullptr;
     }
 
-    void Label::draw(double left, double top, int alpha, bool black) const
+    // draws the label to the screen
+    void Label::draw(
+        double left, // screen X coordinate
+        double top,  // screen Y coordinate
+        int alpha,   // text opacity (0-255)
+        bool black   // make it black? (used for shadows)
+    ) const
     {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -510,7 +576,7 @@ namespace text
         }
         gle::end();
     }
-
+    // like `draw()` but with a shadow
     void Label::draw_as_console(double left, double top) const
     {
         if(conshadow)
@@ -521,6 +587,8 @@ namespace text
         draw(left, top);
     }
 
+    // converts (x,y) pixel coordinates to a character (byte) index
+    // NOTE: do not call if the label was not prepared with `keep_layout=true`
     int Label::xy_to_index(float x, float y) const
     {
         const int px = (x - ox) * PANGO_SCALE, py = (y - oy) * PANGO_SCALE;
@@ -533,7 +601,21 @@ namespace text
         return map_text_to_markup ? map_text_to_markup[ix] : ix;
     }
 
-    Label prepare(const char *str, int maxw, bvec color, int cursor, double outline, bvec4 ol_color, int align, int justify, const char *lang, bool no_fallback, bool keep_layout, bool reserve_cursor)
+    // creates a label from a string
+    Label prepare(
+        const char *str,            // the label text
+        int max_width,              // maximum width in pixels
+        const bvec& color,          // initial color of the text
+        int cursor,                 // byte index of the cursor (disabled if <0)
+        double outline,             // outline thickness
+        const bvec4& outline_color, // outline color (RGBA)
+        int align,                  // text alignment: -1 = left, 0 = center, 1 = right
+        int justify,                // text justification (0 = disable, enable otherwise)
+        const char *lang,           // optional language code of the text (can affect text shaping)
+        bool no_fallback,           // disable fallback fonts for unavailable glyphs?
+        bool keep_layout,           // keep layout in memory? (necessary if you need to call `xy_to_index()` on the label)
+        bool reserve_cursor         // reserve space to the right for the cursor?
+    )
     {
         Label label;
         
@@ -542,8 +624,8 @@ namespace text
         const int len = strlen(str);
         if(cursor >= 0 || keep_layout) label.map_markup_to_text = new int[len+1];
         if(keep_layout) label.map_text_to_markup = new int[len+1];
-        label.layout = measure_text_internal(str, len, maxw, align, justify, color, width, height, offset, label.map_markup_to_text, label.map_text_to_markup, lang, no_fallback);
-        if(!label.layout || !width || !height)
+        label.layout = measure_text_internal(str, len, max_width, align, justify, color, width, height, offset, label.map_markup_to_text, label.map_text_to_markup, lang, no_fallback);
+        if(!width || !height)
         {
             return label;
         }
@@ -553,31 +635,40 @@ namespace text
         {
             width += max(1., ceil(fontsize / 16.));
         }
-        const int ol_offset = ceil(outline);
-        width += 2 * ol_offset;
-        height += 2 * ol_offset;
+        const int outline_offset = ceil(outline);
+        width  += 2 * outline_offset;
+        height += 2 * outline_offset;
         cairo_surface_t *surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
-        cairo_t *cr = cairo_create(surface);
-        cairo_set_font_options(cr, options);
-        cairo_move_to(cr, offset + ol_offset, ol_offset);
+        cairo_t *cairo_context = cairo_create(surface);
+        cairo_set_font_options(cairo_context, global_font_options);
+        cairo_move_to(cairo_context, offset + outline_offset, outline_offset);
 
         // draw text outline
         if(outline)
         {
-            cairo_set_source_rgba(cr, ol_color.r/255., ol_color.g/255., ol_color.b/255., ol_color.a/255.);
-            cairo_set_line_join(cr, CAIRO_LINE_JOIN_ROUND);
-            cairo_set_line_width(cr, 2 * outline);
-            pango_cairo_layout_path(cr, label.layout);
-            cairo_stroke(cr);
+            cairo_set_source_rgba(cairo_context,
+                outline_color.r/255.,
+                outline_color.g/255.,
+                outline_color.b/255.,
+                outline_color.a/255.
+            );
+            cairo_set_line_join(cairo_context, CAIRO_LINE_JOIN_ROUND);
+            cairo_set_line_width(cairo_context, 2 * outline);
+            pango_cairo_layout_path(cairo_context, label.layout);
+            cairo_stroke(cairo_context);
         }
 
         // draw text
-        cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
-        cairo_move_to(cr, offset + ol_offset, ol_offset);
-        pango_cairo_show_layout(cr, label.layout);
+        cairo_set_source_rgba(cairo_context, 1.0, 1.0, 1.0, 1.0);
+        cairo_move_to(cairo_context, offset + outline_offset, outline_offset);
+        pango_cairo_show_layout(cairo_context, label.layout);
 
         // draw the cursor
-        if(cursor >= 0 && (!cursorblink || (totalmillis - inputmillis <= cursorblink) || (totalmillis - inputmillis % (2 * cursorblink)) <= cursorblink))
+        if(cursor >= 0 && (
+            !cursorblink                                                   ||
+            (totalmillis - inputmillis <= cursorblink)                     ||
+            (totalmillis - inputmillis % (2 * cursorblink)) <= cursorblink
+        ))
         {
             if(cursor > len) cursor = len;
             cursor = min((int)strlen(pango_layout_get_text(label.layout)), label.map_markup_to_text[cursor]);
@@ -585,9 +676,19 @@ namespace text
             pango_layout_get_cursor_pos(label.layout, cursor, &cursor_rect, nullptr);
 
             const double cursor_width = max(1., fontsize / 16.);
-            cairo_rectangle(cr, cursor_rect.x / PANGO_SCALE + ol_offset, cursor_rect.y / PANGO_SCALE + ol_offset, cursor_width, cursor_rect.height / PANGO_SCALE);
-            cairo_set_source_rgba(cr, cursorcolor.r / 255., cursorcolor.g / 255., cursorcolor.b / 255., 1.);
-            cairo_fill(cr);
+            cairo_rectangle(cairo_context,
+                cursor_rect.x / PANGO_SCALE + outline_offset,
+                cursor_rect.y / PANGO_SCALE + outline_offset,
+                cursor_width,
+                cursor_rect.height / PANGO_SCALE
+            );
+            cairo_set_source_rgba(cairo_context,
+                cursorcolor.r / 255.,
+                cursorcolor.g / 255.,
+                cursorcolor.b / 255.,
+                1.
+            );
+            cairo_fill(cairo_context);
         }
 
         if(!keep_layout)
@@ -596,11 +697,11 @@ namespace text
             label.layout = nullptr;
         }
 
-        // create and upload texture
+        // create GPU texture
         glGenTextures(1, &label.tex);
         if(!label.tex)
         {
-            cairo_destroy(cr);
+            cairo_destroy(cairo_context);
             cairo_surface_destroy(surface);
             return label;
         }
@@ -608,28 +709,30 @@ namespace text
         glTexImage2D(GL_TEXTURE_RECTANGLE, 0, GL_COMPRESSED_RGBA, width, height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, cairo_image_surface_get_data(surface));
         label.w = width;
         label.h = height;
-        label.ox = offset + ol_offset;
-        label.oy = ol_offset;
+        label.ox = offset + outline_offset;
+        label.oy = outline_offset;
 
         // clean up
-        cairo_destroy(cr);
+        cairo_destroy(cairo_context);
         cairo_surface_destroy(surface);
         return label;
     }
 
-    void measure(const char *str, int maxw, int& w, int& h, int align, int justify, const char *lang, bool no_fallback)
+    // same as `prepare()` but with appropriate settings for console text
+    Label prepare_for_console(const char *str, int max_width, int cursor)
     {
-        int _offset;
-        PangoLayout *layout = measure_text_internal(str, strlen(str), maxw, align, justify, bvec(0, 0, 0), w, h, _offset, nullptr, nullptr, lang, no_fallback);
-        if(layout) g_object_unref(layout);
+        return prepare(str, max_width, bvec(255, 255, 255), cursor, conoutline ? ceil(FONTH / 32.) : 0, bvec4(0, 0, 0, conoutline));
     }
 
-    Label prepare_for_console(const char *str, int maxw, int cursor)
-    {
-        return prepare(str, maxw, bvec(255, 255, 255), cursor, conoutline ? ceil(FONTH / 32.) : 0, bvec4(0, 0, 0, conoutline));
-    }
-
-    const Label& prepare_for_particle(const char *str, bvec color, double outline, bvec4 ol_color, const char *lang, bool no_fallback)
+    // same as `prepare()` but use a cache so that the same label doesn't have to be recreated every time
+    const Label& prepare_for_particle(
+        const char *str,
+        const bvec& color,
+        double outline,
+        const bvec4& outline_color,
+        const char *lang,
+        bool no_fallback
+    )
     {
         const int c = color.tohexcolor();
         const char *l = lang ? lang : "";
@@ -637,11 +740,13 @@ namespace text
             key = crc32(0  , (const Bytef *)str, strlen(str)) + curfont->id;
             key = crc32(key, (const Bytef *)(&outline), sizeof(double));
             key = crc32(key, (const Bytef *)(&c), sizeof(int));
-            key = crc32(key, (const Bytef *)(&ol_color.mask), sizeof(uint));
+            key = crc32(key, (const Bytef *)(&outline_color.mask), sizeof(uint));
             key = crc32(key, (const Bytef *)l, strlen(l));
+
         Label& label = particle_cache[key];
         if(label.valid()) return label;
-        label = prepare(str, 0, color, -1, outline, ol_color, -1, 0, lang, no_fallback);
+
+        label = prepare(str, 0, color, -1, outline, outline_color, -1, 0, lang, no_fallback);
         if(particle_queue.length() >= 256)
         {
             const uint oldkey = particle_queue[0];
@@ -653,15 +758,45 @@ namespace text
         return label;
     }
 
-    void draw(const char *str, double left, double top, bvec color, int alpha, int maxw, int align, int justify, const char *lang, bool no_fallback)
+    // measure the dimensions of a string without creating the label (skips texture creation)
+    void measure(
+        const char *str,  // the string to measure
+        int max_width,    // maximum width in pixels
+        int& width,       // output: the measured width
+        int& height,      // output: the measured height
+        int align,        // text alignment: -1 = left, 0 = center, 1 = right
+        int justify,      // text justification (0 = disable, enable otherwise)
+        const char *lang, // optional language code of the text (can affect text shaping)
+        bool no_fallback  // disable fallback fonts for unavailable glyphs?
+    )
     {
-        const Label label = prepare(str, maxw, color, -1, 0, bvec4(color, alpha), align, justify, lang, no_fallback);
+        int _offset;
+        PangoLayout *layout = measure_text_internal(str, strlen(str), max_width, align, justify, bvec(0, 0, 0), width, height, _offset, nullptr, nullptr, lang, no_fallback);
+        g_object_unref(layout);
+    }
+
+    // draw a string directly to the screen
+    void draw(
+        const char *str,   // the string to draw
+        double left,       // screen X coordinate
+        double top,        // screen Y coordinate
+        const bvec& color, // initial color of the text
+        int alpha,         // text opacity (0-255)
+        int max_width,     // maximum width in pixels
+        int align,         // text alignment: -1 = left, 0 = center, 1 = right
+        int justify,       // text justification (0 = disable, enable otherwise)
+        const char *lang,  // optional language code of the text (can affect text shaping)
+        bool no_fallback   // disable fallback fonts for unavailable glyphs?
+    )
+    {
+        const Label label = prepare(str, max_width, color, -1, 0, bvec4(color, alpha), align, justify, lang, no_fallback);
         if(label.valid()) label.draw(left, top, alpha);
     }
 
-    void draw_as_console(const char *str, double left, double top, int maxw, int cursor)
+    // same as `draw()` but with appropriate settings for console text
+    void draw_as_console(const char *str, double left, double top, int max_width, int cursor)
     {
-        const Label label = prepare_for_console(str, maxw, cursor);
+        const Label label = prepare_for_console(str, max_width, cursor);
         if(label.valid())
         {
             if(conshadow)
@@ -691,18 +826,13 @@ namespace text
     }
 
     // used by the text editor
-    int visible(const char *str, float hitx, float hity, int maxw, int align, int justify, const char *lang, bool no_fallback)
+    int visible(const char *str, float hitx, float hity, int max_width, int align, int justify, const char *lang, bool no_fallback)
     {
         int width, height, _offset;
         const int len = strlen(str);
         if(!len) return 0;
         int *map_text_to_markup = new int[len+1];
-        PangoLayout *layout = measure_text_internal(str, len, maxw, align, justify, bvec(0, 0, 0), width, height, _offset, nullptr, map_text_to_markup, lang, no_fallback);
-        if(!layout)
-        {
-            delete[] map_text_to_markup;
-            return len;
-        }
+        PangoLayout *layout = measure_text_internal(str, len, max_width, align, justify, bvec(0, 0, 0), width, height, _offset, nullptr, map_text_to_markup, lang, no_fallback);
         if(!width || !height)
         {
             g_object_unref(layout);
@@ -722,9 +852,8 @@ namespace text
         delete[] map_text_to_markup;
         return ret;
     }
-
     // used by the text editor
-    void pos(const char *str, int cursor, int& cx, int& cy, int maxw, int align, int justify, const char *lang, bool no_fallback)
+    void pos(const char *str, int cursor, int& cx, int& cy, int max_width, int align, int justify, const char *lang, bool no_fallback)
     {
         int width, height, _offset;
         const int len = strlen(str);
@@ -734,13 +863,7 @@ namespace text
             return;
         }
         int *map_markup_to_text = new int[len+1];
-        PangoLayout *layout = measure_text_internal(str, len, maxw, align, justify, bvec(0, 0, 0), width, height, _offset, map_markup_to_text, nullptr, lang, no_fallback);
-        if(!layout)
-        {
-            cx = cy = 0;
-            delete[] map_markup_to_text;
-            return;
-        }
+        PangoLayout *layout = measure_text_internal(str, len, max_width, align, justify, bvec(0, 0, 0), width, height, _offset, map_markup_to_text, nullptr, lang, no_fallback);
         if(!width || !height)
         {
             g_object_unref(layout);
@@ -759,3 +882,4 @@ namespace text
         delete[] map_markup_to_text;
     }
 } // namespace text
+#pragma endregion label

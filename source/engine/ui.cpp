@@ -2102,7 +2102,7 @@ namespace UI
             Object::setup();
             changed = false;
             const float newscale = scale_ * uiscale;
-            const int curfontid = getcurfontid();
+            const int curfontid = getcurrentfontid();
             if(!uimillis || (totalmillis - lastchange >= uimillis) || !lastchange)
             {
                 if(

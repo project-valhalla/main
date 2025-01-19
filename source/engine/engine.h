@@ -51,7 +51,7 @@ extern double fontsize;
 
 extern bool init_pangocairo();
 extern void done_pangocairo();
-extern int  getcurfontid();
+extern int  getcurrentfontid();
 extern bool setfont(const char *name);
 extern void pushfont();
 extern bool popfont();
@@ -82,65 +82,89 @@ namespace text
         bool valid()  const { return tex != 0; }
         int  width()  const { return w; }
         int  height() const { return h; }
+
+        // empties the text content of the label
         void clear();
 
-        void draw(double left, double top,
-            int alpha = 255,
-            bool black = false
+        // draws the label to the screen
+        void draw(
+            double left,       // screen X coordinate
+            double top,        // screen Y coordinate
+            int alpha = 255,   // text opacity (0-255)
+            bool black = false // make it black? (used for shadows)
         ) const;
+        // like `draw()` but with a shadow
         void draw_as_console(double left, double top) const;
-
-        // do not call if the label was not prepared with `keep_layout=true`
+        
+        // converts (x,y) pixel coordinates to a character (byte) index
+        // NOTE: do not call if the label was not prepared with `keep_layout=true`
         int xy_to_index(float x, float y) const;
 
-        friend Label prepare(const char *, int, bvec, int, double, bvec4, int, int, const char *, bool, bool, bool);
+        friend Label prepare(const char *, int, const bvec&, int, double, const bvec4&, int, int, const char *, bool, bool, bool);
     };
 
-    // measure text before creating the label
-    void measure(const char *str, int maxw, int &w, int &h,
-        int align = -1,
-        int justify = 0,
-        const char *lang = nullptr,
-        bool no_fallback = false
+    // creates a label from a string
+    Label prepare(
+        const char *str,                                // the label text
+        int max_width,                                  // maximum width in pixels
+        const bvec& color = bvec(255, 255, 255),        // initial color of the text
+        int cursor = -1,                                // byte index of the cursor (disabled if <0)
+        double outline = 0,                             // outline thickness
+        const bvec4& outline_color = bvec4(0, 0, 0, 0), // outline color (RGBA)
+        int align = -1,                                 // text alignment: -1 = left, 0 = center, 1 = right
+        int justify = 0,                                // text justification (0 = disable, enable otherwise)
+        const char *lang = nullptr,                     // optional language code of the text (can affect text shaping)
+        bool no_fallback = false,                       // disable fallback fonts for unavailable glyphs?
+        bool keep_layout = false,                       // keep layout in memory? (necessary if you need to call `xy_to_index()` on the label)
+        bool reserve_cursor = false                     // reserve space to the right for the cursor?
     );
 
-    Label prepare(const char *str, int maxw,
-        bvec color = bvec(255, 255, 255),
-        int cursor = -1,
-        double outline = 0,
-        bvec4 ol_color = bvec4(0, 0, 0, 0),
-        int align = -1,
-        int justify = 0,
-        const char *lang = nullptr,         // language code, used for text shaping
-        bool no_fallback = false,           // don't use fallback fonts for unavailable glyphs
-        bool keep_layout = false,           // use only if you need to call `xy_to_index()`
-        bool reserve_cursor = false         // reserve space for the cursor, even if the cursor is absent
-    );
-    Label prepare_for_console(const char *str, int maxw, int cursor);
+    // same as `prepare()` but with appropriate settings for console text
+    Label prepare_for_console(const char *str, int max_width, int cursor);
+
+    // same as `prepare()` but use a cache so that the same label doesn't have to be recreated every time
     const Label& prepare_for_particle(const char *str,
-        bvec color = bvec(255, 255, 255),
+        const bvec& color = bvec(255, 255, 255),
         double outline = 0,
-        bvec4 ol_color = bvec4(0, 0, 0, 0),
+        const bvec4& outline_color = bvec4(0, 0, 0, 0),
         const char *lang = nullptr,
         bool no_fallback = false
     );
 
-    void draw(const char *str, double left, double top,
-        bvec color = bvec(255, 255, 255),
-        int alpha = 255,
-        int maxw = 0,
-        int align = -1,
-        int justify = 0,
-        const char *lang = nullptr,
-        bool no_fallback = false
+    // measure text before creating the label
+    void measure(
+        const char *str,            // the string to measure
+        int max_width,              // maximum width in pixels
+        int& width,                 // output: the measured width
+        int& height,                // output: the measured height
+        int align = -1,             // text alignment: -1 = left, 0 = center, 1 = right
+        int justify = 0,            // text justification (0 = disable, enable otherwise)
+        const char *lang = nullptr, // optional language code of the text (can affect text shaping)
+        bool no_fallback = false    // disable fallback fonts for unavailable glyphs?
+    );
+
+    // draw a string directly to the screen
+    void draw(
+        const char *str,                         // the string to draw
+        double left,                             // screen X coordinate
+        double top,                              // screen Y coordinate
+        const bvec& color = bvec(255, 255, 255), // initial color of the text
+        int alpha = 255,                         // text opacity (0-255)
+        int max_width = 0,                       // maximum width in pixels
+        int align = -1,                          // text alignment: -1 = left, 0 = center, 1 = right
+        int justify = 0,                         // text justification (0 = disable, enable otherwise)
+        const char *lang = nullptr,              // optional language code of the text (can affect text shaping)
+        bool no_fallback = false                 // disable fallback fonts for unavailable glyphs?
     );
     static inline void draw_fmt(const char *fstr, double left, double top, ...)
     {
         defvformatstring(str, top, fstr);
         draw(str, left, top);
     }
+
+    // same as `draw()` but with appropriate settings for console text
     void draw_as_console(const char *str, double left, double top,
-        int maxw = 0,
+        int max_width = 0,
         int cursor = -1
     );
     static inline void draw_as_console_fmt(const char *fstr, double left, double top, ...)
@@ -149,14 +173,17 @@ namespace text
         draw_as_console(str, left, top);
     }
     
-    void getres(int &w, int &h);
-    int visible(const char *str, float hitx, float hity, int maxw,
+    void getres(int& w, int& h);
+
+    // used by the text editor
+    int visible(const char *str, float hitx, float hity, int max_width,
         int align = -1,
         int justify = 0,
         const char *lang = nullptr,
         bool no_fallback = false
     );
-    void pos(const char *str, int cursor, int &cx, int &cy, int maxw,
+    // used by the text editor
+    void pos(const char *str, int cursor, int& cx, int& cy, int max_width,
         int align = -1,
         int justify = 0,
         const char *lang = nullptr,

@@ -1067,7 +1067,7 @@ namespace game
             nextmutators = mutators = 0;
             clientmap[0] = '\0';
         }
-		cleargame();
+        cleargame();
         execident("on_disconnect");
     }
 
@@ -1950,7 +1950,7 @@ namespace game
                 int i = getint(p), cn = getint(p);
                 gameent *d = getclient(cn);
                 entities::pickupeffects(i, d);
-                d->lastpickupmillis;
+                d->lastpickupmillis = lastmillis;
                 break;
             }
 
@@ -2205,17 +2205,18 @@ namespace game
                 if(!s) return;
                 if(val)
                 {
-                    if(s == self)
+                    if(s == self && editmode)
                     {
-                        if(editmode) toggleedit();
-                        camera::camera.zoomstate.disable();
-                        extern int deathfromabove;
-                        if(deathfromabove) s->pitch = 0; // reset player pitch if it has been lowered on death
+                        toggleedit();
                     }
                     else if(!waiting) conoutf("%s \fs\f0has entered spectator mode\fr", colorname(s));
                     saveragdoll(s);
                     s->state = CS_SPECTATOR;
                     execident("on_spectate");
+                    if (s == self)
+                    {
+                        camera::restore();
+                    }
                 }
                 else if(s->state == CS_SPECTATOR)
                 {

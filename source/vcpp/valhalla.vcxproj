@@ -980,6 +980,8 @@
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(IntDir)engine.pch</PrecompiledHeaderOutputFile>
       <PrecompiledHeaderOutputFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">$(IntDir)engine.pch</PrecompiledHeaderOutputFile>
     </ClCompile>
+    <ClCompile Include="..\game\announcer.cpp" />
+    <ClCompile Include="..\game\camera.cpp" />
     <ClCompile Include="..\game\gamephysics.cpp" />
     <ClCompile Include="..\game\hud.cpp" />
     <ClCompile Include="..\game\monster.cpp" />

@@ -378,10 +378,7 @@ namespace game
             managedeatheffects(this);
             if (deathstate == Death_Gib)
             {
-                if (gore)
-                {
-                    gibeffect(max(-health, 0), vel, this);
-                }
+                gibeffect(max(-health, 0), vel, this);
                 int matk = monstertypes[mtype].atk;
                 if (monstertypes[mtype].isexplosive)
                 {

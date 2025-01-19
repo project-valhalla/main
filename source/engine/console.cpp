@@ -588,12 +588,14 @@ void execbind(keym &k, bool isdown)
     k.pressed = isdown;
 }
 
-void iskeyheld(char *key)
+bool iskeyheld(char *key)
 {
     const keym *km = findbind(key);
-    intret(km && km->pressed ? 1 : 0);
+    if(!km) return false;
+    const SDL_Scancode scancode = SDL_GetScancodeFromKey(km->code);
+    return SDL_GetKeyboardState(NULL)[scancode];
 }
-ICOMMAND(iskeyheld, "s", (char* key), iskeyheld(key));
+ICOMMAND(iskeyheld, "s", (char* key), intret(iskeyheld(key) ? 1 : 0));
 ICOMMAND(iscmdlineopen, "", (), intret(commandmillis >= 0 ? 1 : 0));
 
 bool consoleinput(const char *str, int len)
@@ -633,7 +635,10 @@ void getclipboard()
         result("");
         return;
     }
-    stringret(newstring(cb, MAXSTRLEN));
+    string paste;
+    size_t decoded = decodeutf8((uchar *)paste, sizeof(paste)-1, (const uchar *)cb, strlen(cb));
+    paste[decoded] = '\0';
+    result(paste);
     SDL_free(cb);
 }
 COMMAND(getclipboard, "");

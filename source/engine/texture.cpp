@@ -524,10 +524,10 @@ void texcropdata(ImageData &s, ImageData &d, int x, int y, int w, int h)
 void texmad(ImageData &s, const vec &mul, const vec &add)
 {
     if(s.bpp < 3 && (mul.x != mul.y || mul.y != mul.z || add.x != add.y || add.y != add.z))
+    {
         swizzleimage(s);
-    writetex(s,
-        loopk(min(s.bpp, 3)) dst[k] = uchar(clamp(round(dst[k] * mul[k] + 255 * add[k]), 0.0f, 255.0f));
-    );
+    }
+    writetex(s, loopk(min(s.bpp, 3)) dst[k] = uchar(clamp(round(dst[k] * mul[k] + 255 * add[k]), 0.0f, 255.0f)););
 }
 
 void texintmul(ImageData &s, const uint32_t &color)
@@ -537,10 +537,10 @@ void texintmul(ImageData &s, const uint32_t &color)
     mul.y = (color >> 8 & 255);
     mul.z = (color & 255);
     if(s.bpp < 3 && (mul.x != mul.y || mul.y != mul.z))
+    {
         swizzleimage(s);
-    writetex(s,
-        loopk(min(s.bpp, 3)) dst[k] = uchar(clamp(round((mul[k] / 255.0f) * dst[k]), 0.0f, 255.0f));
-    );
+    }
+    writetex(s, loopk(min(s.bpp, 3)) dst[k] = uchar(clamp(round((mul[k] / 255.0f) * dst[k]), 0.0f, 255.0f)););
 }
 
 void texcolorify(ImageData &s, const vec &color, vec weights)
@@ -563,6 +563,11 @@ void texcolormask(ImageData &s, const vec &color1, const vec &color2)
         loopk(3) dst[k] = uchar(clamp(round(color[k] * src[k]), 0.0f, 255.0f));
     );
     s.replace(d);
+}
+
+void texinvert(ImageData &s)
+{
+    writetex(s, loopk(min(s.bpp, 3)) dst[k] = 255 - dst[k];);
 }
 
 void texdup(ImageData &s, int srcchan, int dstchan)
@@ -668,6 +673,18 @@ void texagrad(ImageData &s, float x2, float y2, float x1, float y1)
         }
         cury += dy;
     }
+}
+
+void texarem(ImageData& s)
+{
+    if(s.bpp != 4) return;
+    ImageData d(s.w, s.h, 3);
+    readwritetex(d, s,
+        dst[0] = src[0];
+        dst[1] = src[1];
+        dst[2] = src[2];
+    );
+    s.replace(d);
 }
 
 void texblend(ImageData &d, ImageData &s, ImageData &m)
@@ -1769,30 +1786,32 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
     {
         PARSETEXCOMMANDS(cmds);
         if(d.compressed) goto compressed;
-        if(matchstring(cmd, len, "mad")) texmad(d, parsevec(arg[0]), parsevec(arg[1]));
-        else if(matchstring(cmd, len, "intmul")) texintmul(d, atoi(arg[0]));
-        else if(matchstring(cmd, len, "colorify")) texcolorify(d, parsevec(arg[0]), parsevec(arg[1]));
-        else if(matchstring(cmd, len, "colormask")) texcolormask(d, parsevec(arg[0]), *arg[1] ? parsevec(arg[1]) : vec(1, 1, 1));
-        else if(matchstring(cmd, len, "normal"))
+        if (matchstring(cmd, len, "mad")) texmad(d, parsevec(arg[0]), parsevec(arg[1]));
+        else if (matchstring(cmd, len, "intmul")) texintmul(d, atoi(arg[0]));
+        else if (matchstring(cmd, len, "colourify") || matchstring(cmd, len, "colorify")) texcolorify(d, parsevec(arg[0]), parsevec(arg[1]));
+        else if (matchstring(cmd, len, "colourmask") || matchstring(cmd, len, "colormask")) texcolormask(d, parsevec(arg[0]), *arg[1] ? parsevec(arg[1]) : vec(1, 1, 1));
+        else if (matchstring(cmd, len, "invert")) texinvert(d);
+        else if (matchstring(cmd, len, "normal"))
         {
             int emphasis = atoi(arg[0]);
             texnormal(d, emphasis > 0 ? emphasis : 3);
         }
-        else if(matchstring(cmd, len, "dup")) texdup(d, atoi(arg[0]), atoi(arg[1]));
-        else if(matchstring(cmd, len, "offset")) texoffset(d, atoi(arg[0]), atoi(arg[1]));
-        else if(matchstring(cmd, len, "rotate")) texrotate(d, atoi(arg[0]), ttype);
-        else if(matchstring(cmd, len, "reorient")) texreorient(d, atoi(arg[0]) > 0, atoi(arg[1]) > 0, atoi(arg[2]) > 0, ttype);
-        else if(matchstring(cmd, len, "crop")) texcrop(d, atoi(arg[0]), atoi(arg[1]), *arg[2] ? atoi(arg[2]) : -1, *arg[3] ? atoi(arg[3]) : -1);
-        else if(matchstring(cmd, len, "mix")) texmix(d, *arg[0] ? atoi(arg[0]) : -1, *arg[1] ? atoi(arg[1]) : -1, *arg[2] ? atoi(arg[2]) : -1, *arg[3] ? atoi(arg[3]) : -1);
-        else if(matchstring(cmd, len, "grey")) texgrey(d);
-        else if(matchstring(cmd, len, "blur"))
+        else if (matchstring(cmd, len, "dup")) texdup(d, atoi(arg[0]), atoi(arg[1]));
+        else if (matchstring(cmd, len, "offset")) texoffset(d, atoi(arg[0]), atoi(arg[1]));
+        else if (matchstring(cmd, len, "rotate")) texrotate(d, atoi(arg[0]), ttype);
+        else if (matchstring(cmd, len, "reorient")) texreorient(d, atoi(arg[0]) > 0, atoi(arg[1]) > 0, atoi(arg[2]) > 0, ttype);
+        else if (matchstring(cmd, len, "crop")) texcrop(d, atoi(arg[0]), atoi(arg[1]), *arg[2] ? atoi(arg[2]) : -1, *arg[3] ? atoi(arg[3]) : -1);
+        else if (matchstring(cmd, len, "mix")) texmix(d, *arg[0] ? atoi(arg[0]) : -1, *arg[1] ? atoi(arg[1]) : -1, *arg[2] ? atoi(arg[2]) : -1, *arg[3] ? atoi(arg[3]) : -1);
+        else if (matchstring(cmd, len, "grey") || matchstring(cmd, len, "gray")) texgrey(d);
+        else if (matchstring(cmd, len, "blur"))
         {
             int emphasis = atoi(arg[0]), repeat = atoi(arg[1]);
             texblur(d, emphasis > 0 ? clamp(emphasis, 1, 2) : 1, repeat > 0 ? repeat : 1);
         }
-        else if(matchstring(cmd, len, "fade")) texfade(d, atof(arg[0]));
-        else if(matchstring(cmd, len, "premul")) texpremul(d);
-        else if(matchstring(cmd, len, "agrad")) texagrad(d, atof(arg[0]), atof(arg[1]), atof(arg[2]), atof(arg[3]));
+        else if (matchstring(cmd, len, "fade")) texfade(d, atof(arg[0]));
+        else if (matchstring(cmd, len, "premul")) texpremul(d);
+        else if (matchstring(cmd, len, "agrad")) texagrad(d, atof(arg[0]), atof(arg[1]), atof(arg[2]), atof(arg[3]));
+        else if (matchstring(cmd, len, "arem")) texarem(d);
         else if(matchstring(cmd, len, "blend"))
         {
             ImageData src, mask;
@@ -1821,7 +1840,7 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
         {
             if(compress) *compress = -1;
         }
-        else if(matchstring(cmd, len, "animation"))
+        else if(matchstring(cmd, len, "animate"))
         {
             if(anim)
             {

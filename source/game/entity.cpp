@@ -547,9 +547,64 @@ namespace entities
         }
     }
 
+    bool ishovered(int& entity)
+    {
+        int orient = 0;
+        const float maxDistance = 1e16f;
+        const float distance = rayent(camera1->o, camdir, maxDistance, RAY_ENTS | RAY_SKIPFIRST, 0, orient, entity);
+        return distance < maxDistance && entity > -1;
+    }
+
+    FVARP(itemhoverdistance, 0, 100.0f, 500.0f);
+    int hoveredweapon = -1;
+
+    void checkhovereditem(gameent* d)
+    {
+        if (!itemhoverdistance || m_noitems(mutators) || d->state != CS_ALIVE || d != followingplayer(self))
+        {
+            return;
+        }
+
+        int id = -1;
+        if (ishovered(id))
+        {
+            extentity* entity = NULL;
+            if (ents.inrange(id))
+            {
+                entity = ents[id];
+            }
+            if (entity && entity->spawned() && validitem(entity->type))
+            {
+                const bool isClose = camera1->o.dist(entity->o) <= itemhoverdistance;
+                if (isClose)
+                {
+                    if (entity->type >= I_AMMO_SG && entity->type <= I_AMMO_GRENADE)
+                    {
+                        if (!validgun(hoveredweapon))
+                        {
+                            hoveredweapon = itemstats[entity->type - I_AMMO_SG].info;
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+        // Remove valid hover information.
+        if (validgun(hoveredweapon))
+        {
+            hoveredweapon = -1;
+        }
+    }
+    ICOMMAND(gethoverweapon, "", (), intret(hoveredweapon));
+
     void checkitems(gameent *d)
     {
-        if(d->state!=CS_ALIVE && d->state!=CS_SPECTATOR) return;
+        if (d->state != CS_ALIVE && d->state != CS_SPECTATOR)
+        {
+            return;
+        }
+
+        checkhovereditem(d);
         vec o = d->feetpos();
         loopv(ents)
         {

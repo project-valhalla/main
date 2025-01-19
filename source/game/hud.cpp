@@ -12,33 +12,6 @@ namespace game
         return 0;
     }
 
-    VARP(lowhealthscreen, 0, 1, 1);
-    VARP(lowhealthscreenmillis, 500, 1000, 2000);
-    VARP(lowhealthscreenamount, 50, 200, 1000);
-    VARP(lowhealthscreenfactor, 1, 5, 100);
-
-    int lastheartbeat = 0;
-
-    void managelowhealthscreen()
-    {
-        gameent* hud = followingplayer(self);
-        if (!lowhealthscreen || intermission || !hud->haslowhealth())
-        {
-            if (validsound(hud->chan[Chan_LowHealth]))
-            {
-                hud->stopchannelsound(Chan_LowHealth, 400);
-            }
-            return;
-        }
-
-        hud->playchannelsound(Chan_LowHealth, S_LOW_HEALTH, 200, true);
-        if (!lastheartbeat || lastmillis - lastheartbeat >= lowhealthscreenmillis)
-        {
-            damageblend(lowhealthscreenamount, lowhealthscreenfactor);
-            lastheartbeat = lastmillis;
-        }
-    }
-
     VARNP(damagecompass, usedamagecompass, 0, 1, 1);
     VARP(damagecompassfade, 1, 1000, 10000);
     VARP(damagecompasssize, 1, 30, 100);
@@ -146,6 +119,122 @@ namespace game
         }
         gle::colorf(fade, fade, fade, fade);
         hudquad(0, 0, w, h);
+    }
+
+    VARP(lowhealthscreen, 0, 1, 1);
+    VARP(lowhealthscreenmillis, 500, 1000, 2000);
+    VARP(lowhealthscreenamount, 50, 200, 1000);
+    VARP(lowhealthscreenfactor, 1, 5, 100);
+
+    int lastheartbeat = 0;
+
+    void managelowhealthscreen()
+    {
+        gameent* hud = followingplayer(self);
+        if (!lowhealthscreen || intermission || !hud->haslowhealth())
+        {
+            if (validsound(hud->chan[Chan_LowHealth]))
+            {
+                hud->stopchannelsound(Chan_LowHealth, 400);
+            }
+            return;
+        }
+
+        hud->playchannelsound(Chan_LowHealth, S_LOW_HEALTH, 200, true);
+        if (!lastheartbeat || lastmillis - lastheartbeat >= lowhealthscreenmillis)
+        {
+            damageblend(lowhealthscreenamount, lowhealthscreenfactor);
+            lastheartbeat = lastmillis;
+        }
+    }
+
+    struct Splatter
+    {
+        int amount, millis;
+        float x, y;
+        vec color;
+
+        Splatter() : amount(0), millis(0), x(0), y(0), color(0, 0, 0)
+        {
+        }
+        ~Splatter()
+        {
+        }
+
+        void setcolor(const int hex)
+        {
+            color = vec::hexcolor(hex);
+            color.x = 1.0f - color.x;
+            color.y = 1.0f - color.y;
+            color.z = 1.0f - color.z;
+        }
+
+        void setaxes()
+        {
+            x = rnd(hudw) - hudw / 2;
+            y = rnd(hudh) - hudh / 2;
+        }
+    };
+    vector<Splatter> splatters;
+
+    VARP(splatterscreen, 0, 1, 1);
+    VARP(splatterscreenmin, 1, 50, 1000);
+    VARP(splatterscreenmax, 1, 250, 1000);
+    VARP(splatterscreenfactor, 1, 100, 1000);
+    VARP(splatterscreenfade, 0, 1000, 1000);
+    VARP(splatterscreenalpha, 1, 80, 100);
+
+    void addbloodsplatter(const int amount, const int color)
+    {
+        if (!splatterscreen)
+        {
+            return;
+        }
+
+        Splatter& splatter = splatters.add();
+        splatter.amount = amount;
+        splatter.millis = lastmillis + (clamp(amount, splatterscreenmin, splatterscreenmax) * splatterscreenfactor);
+        splatter.setcolor(color);
+        splatter.setaxes();
+    }
+
+    void drawsplatter(const int w, const int h, Splatter* splatter)
+    {
+        hudshader->set();
+        static Texture* splattertex = NULL;
+        if (!splattertex)
+        {
+            splattertex = textureload("<grey>data/interface/hud/splat.png", 3);
+        }
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        setusedtexture(splattertex);
+        float fade = splatterscreenalpha / 100.0f;
+        if (splatter->millis - lastmillis < splatterscreenfade)
+        {
+            fade *= float(splatter->millis - lastmillis) / splatterscreenfade;
+        }
+        gle::colorf(splatter->color.x, splatter->color.y, splatter->color.z, fade);
+        hudquad(splatter->x, splatter->y, w, h);
+    }
+
+    void drawsplatters(const int w, const int h)
+    {
+        if (!splatters.length())
+        {
+            return;
+        }
+        loopv(splatters)
+        {
+            Splatter& splatter = splatters[i];
+            if (lastmillis >= splatter.millis)
+            {
+                splatters.remove(i--);
+            }
+            else
+            {
+                drawsplatter(w, h, &splatter);
+            }
+        }
     }
 
     int screenflashmillis = 0;
@@ -281,6 +370,7 @@ namespace game
             damagedirs[i] = 0;
         }
         camera::camera.zoomstate.disable();
+        splatters.shrink(0);
     }
 
     void drawhud(int w, int h)
@@ -292,6 +382,7 @@ namespace game
             drawscreenflash(w, h);
             drawdamagescreen(w, h);
             drawdamagecompass(w, h);
+            drawsplatters(w, h);
         }
     }
 
@@ -299,16 +390,16 @@ namespace game
 
     void checkitem(int type)
     {
-        gameent* hud = followingplayer(self);
         switch (type)
         {
             case I_HEALTH:
             case I_MEGAHEALTH:
             case I_ULTRAHEALTH:
             {
-                if (hud->health >= hud->maxhealth / 2)
+                const int fade = lastmillis + damagescreenfade;
+                if (damageblendmillis > fade)
                 {
-                    damageblendmillis = 0;
+                    damageblendmillis = fade; // Force damage screen to fade out.
                 }
                 break;
             }

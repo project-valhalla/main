@@ -516,7 +516,6 @@ namespace game
         return m_edit;
     }
 
-    VARP(gore, 0, 1, 1);
     VARP(deathscream, 0, 1, 1);
 
     void managedeatheffects(gameent* d)
@@ -526,7 +525,7 @@ namespace game
             return;
         }
 
-        if (gore && d->deathstate == Death_Gib)
+        if (d->deathstate == Death_Gib)
         {
             gibeffect(max(-d->health, 0), d->vel, d);
         }
@@ -554,8 +553,6 @@ namespace game
         }
     }
 
-    VARP(deathfromabove, 0, 1, 1);
-
     void setdeathstate(gameent *d, bool restore)
     {
         d->state = CS_DEAD;
@@ -571,25 +568,19 @@ namespace game
             managedeatheffects(d);
             d->deaths++;
         }
-        if(d == self)
+        if (d == self)
         {
-            camera::camera.zoomstate.disable();
+            camera::restore(restore);
             d->attacking = ACT_IDLE;
-            if(!camera::isfirstpersondeath())
-            {
-                if(!restore && deathfromabove)
-                {
-                    d->pitch = -90; // lower your pitch to see your death from above
-                }
-                d->roll = 0;
-            }
-            else
+            if (camera::isfirstpersondeath())
             {
                 stopsounds(SND_UI | SND_ANNOUNCER);
                 playsound(S_DEATH);
             }
-            if(m_invasion) self->lives--;
-            if(camera::thirdperson) camera::thirdperson = 0;
+            if (m_invasion)
+            {
+                self->lives--;
+            }
         }
         else
         {
@@ -685,7 +676,11 @@ namespace game
         if(d == self)
         {
             execident("on_death");
-            if(d == actor) execident("on_suicide");
+            if (d == actor)
+            {
+                execident("on_suicide");
+            }
+            d->lastattacker = actor->clientnum;
         }
         else if(actor == self)
         {
@@ -1172,7 +1167,7 @@ namespace game
     const char *gameconfig() { return "config/game.cfg"; }
     const char *savedconfig() { return "config/saved.cfg"; }
     const char *defaultconfig() { return "config/default.cfg"; }
-    const char *autoexec() { return "config/autoexec.cfg"; }
+    const char *autoexec() { return "autoexec.cfg"; }
     const char *savedservers() { return "config/server/history.cfg"; }
 
     void loadconfigs()
@@ -1182,4 +1177,3 @@ namespace game
 
     bool clientoption(const char *arg) { return false; }
 }
-

@@ -281,7 +281,7 @@ namespace game
 
     void renderplayer(gameent *d, const playermodelinfo &playermodel, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
-        if (gore && d->deathstate == Death_Gib)
+        if (d->deathstate == Death_Gib)
         {
             return;
         }
@@ -477,7 +477,7 @@ namespace game
         int flags = MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY |  MDL_CULL_DIST;
         gameent* m = (gameent*)d;
         m->transparency = updatetransparency(m, fade);
-        rendermodel(mdlname, anim, o, d->yaw + 90, d->pitch, 0, flags, d, attachments, basetime, 0, fade, vec4(1, 1, 1, m->transparency));
+        rendermodel(mdlname, anim, o, d->yaw, d->pitch, 0, flags, d, attachments, basetime, 0, fade, vec4(1, 1, 1, m->transparency));
     }
 
     static inline void renderplayer(gameent *d, float fade = 1, int flags = 0)

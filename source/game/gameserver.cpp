@@ -2704,7 +2704,7 @@ namespace server
     void voosh()
     {
         previousvooshgun = vooshgun;
-        do vooshgun = rnd(NUMGUNS-1); while(vooshgun == previousvooshgun);
+        do vooshgun = rnd(NUMGUNS - 2); while(vooshgun == previousvooshgun);
         sendvoosh(vooshgun);
     }
 
@@ -2773,7 +2773,7 @@ namespace server
         if(m_voosh(mutators))
         {
             vooshtime = gamemillis + 20000;
-            vooshgun = rnd(NUMGUNS-1);
+            vooshgun = rnd(NUMGUNS - 2);
         }
 
         if(!m_mp(gamemode)) kicknonlocalclients(DISC_LOCAL);

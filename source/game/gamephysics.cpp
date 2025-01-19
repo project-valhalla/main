@@ -198,7 +198,7 @@ namespace physics
     bool canmove(gameent* d)
     {
         if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(gore && d->state == CS_DEAD && d->deathstate == Death_Gib);
+        return !intermission && !(d->state == CS_DEAD && d->deathstate == Death_Gib);
     }
 
     bool trystepdown(gameent* d, vec& dir, bool init = false)
@@ -729,6 +729,7 @@ namespace physics
         }
     }
 
+    VARP(rolleffect, 0, 1, 1);
     VARP(rollstrafemax, 0, 1, 20);
     FVAR(rollstrafe, 0, 0.018f, 90);
     FVAR(rollfade, 0, 0.9f, 1);
@@ -736,7 +737,7 @@ namespace physics
 
     void addroll(gameent* d, float amount)
     {
-        if (!d || (d->lastroll && lastmillis - d->lastroll < 500))
+        if (!rolleffect || !d || (d->lastroll && lastmillis - d->lastroll < 500))
         {
             return;
         }
@@ -801,9 +802,16 @@ namespace physics
             }
         }
 
-        // Automatically apply smooth roll when strafing.
-        if (d->strafe && rollstrafemax && !isfloating) d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / rollstrafemax, 0.0f, 1.0f), 0.33f) * d->strafe * curtime * rollstrafe, -rollstrafemax, rollstrafemax);
-        else d->roll *= curtime == PHYSFRAMETIME ? rollfade : pow(rollfade, curtime / float(PHYSFRAMETIME));
+        if (rolleffect)
+        {
+            // Automatically apply smooth roll when strafing.
+            if (d->strafe && rollstrafemax && !isfloating) d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / rollstrafemax, 0.0f, 1.0f), 0.33f) * d->strafe * curtime * rollstrafe, -rollstrafemax, rollstrafemax);
+            else d->roll *= curtime == PHYSFRAMETIME ? rollfade : pow(rollfade, curtime / float(PHYSFRAMETIME));
+        }
+        else if (d->roll)
+        {
+            d->roll = 0;
+        }
 
         if (d->state == CS_ALIVE) updatedynentcache(d);
 

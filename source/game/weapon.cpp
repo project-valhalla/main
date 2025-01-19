@@ -887,6 +887,9 @@ namespace game
         }
     }
 
+    VARP(gore, 0, 1, 1);
+    FVARP(goredistance, 0, 50.0f, 100.0f);
+
     void gibeffect(int damage, const vec& vel, gameent* d)
     {
         if (!gore)
@@ -894,7 +897,7 @@ namespace game
             return;
         }
 
-        vec from = d->abovehead();
+        const vec from = d->abovehead();
         loopi(min(damage, 8) + 1)
         {
             spawnbouncer(from, d, Projectile_Gib);
@@ -906,9 +909,11 @@ namespace game
             addstain(STAIN_BLOOD, d->o, d->vel.neg(), 25, getbloodcolor(d), rnd(4));
         }
         playsound(S_GIB, d);
-        if (d == self || camera1->o.dist(from) <= 50.0f)
+        if (blood && (d == self || (goredistance && camera1->o.dist(from) <= goredistance)))
         {
-            camera::camera.addevent(self, camera::CameraEvent_Shake, damage * 2);
+            const int goreDamage = damage * 2;
+            camera::camera.addevent(self, camera::CameraEvent_Shake, goreDamage);
+            addbloodsplatter(goreDamage, getbloodcolor(d));
         }
     }
 

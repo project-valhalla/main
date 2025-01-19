@@ -891,23 +891,23 @@ static partrenderer *parts[] =
     &fireballs,                                                                                                                    // fire ball
     new quadrenderer("data/texture/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                              // sparks
     new trailrenderer("data/texture/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                                    // spark trail
-    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion01.png", PT_PART|PT_FLIP|PT_BRIGHT),                        // explosion sprite
-    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion02.png", PT_PART|PT_FLIP|PT_BRIGHT),                        // explosion sprite
-    new quadrenderer("<animation:10,8,8>data/texture/particle/explosion03.png", PT_PART|PT_FLIP|PT_BRIGHT),                        // explosion sprite
+    new quadrenderer("<animate:10,8,8>data/texture/particle/explosion01.png", PT_PART|PT_FLIP|PT_BRIGHT),                          // explosion sprite
+    new quadrenderer("<animate:10,8,8>data/texture/particle/explosion02.png", PT_PART|PT_FLIP|PT_BRIGHT),                          // explosion sprite
+    new quadrenderer("<animate:10,8,8>data/texture/particle/explosion03.png", PT_PART|PT_FLIP|PT_BRIGHT),                          // explosion sprite
     new quadrenderer("data/texture/particle/explosion04.png", PT_PART|PT_FLIP|PT_BRIGHT),                                          // explosion
-    new quadrenderer("<animation:100,2,2>data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),       // electric explosion sprite
+    new quadrenderer("<animate:100,2,2>data/texture/particle/electricity.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),         // electric explosion sprite
     new quadrenderer("data/texture/particle/base.png", PT_PART|PT_FLIP|PT_BRIGHT),                                                 // edit mode entities
     new quadrenderer("data/texture/particle/orb.png", PT_PART|PT_FLIP|PT_FEW|PT_BRIGHT),                                           // energy orb
     new quadrenderer("data/texture/particle/ring.png", PT_PART|PT_FLIP|PT_BRIGHT),                                                 // energy ring
     new quadrenderer("data/texture/particle/splash.png", PT_PART|PT_FLIP),                                                         // liquid splash
     new quadrenderer("data/texture/particle/bubble.png", PT_PART | PT_FLIP),                                                       // liquid bubble
     new quadrenderer("data/texture/particle/muzzle01.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 1
-    new quadrenderer("<animation:50,4,2,1>data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),         // muzzle flash 2
+    new quadrenderer("<animate:50,4,2,1>data/texture/particle/muzzle02.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),           // muzzle flash 2
     new quadrenderer("data/texture/particle/muzzle03.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 3
     new quadrenderer("data/texture/particle/muzzle04.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),                             // muzzle flash 4
-    new quadrenderer("<animation:25,4,0,1>data/texture/particle/muzzle05.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),         // muzzle flash 5
-    new quadrenderer("<grey><animation:50,2,3,1>data/texture/particle/muzzle_smoke.png", PT_PART|PT_FEW|PT_FLIP|PT_LERP|PT_TRACK), // muzzle smoke
-    new quadrenderer("<animation:30,2,2,1>data/texture/particle/sparks.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),           // muzzle sparks
+    new quadrenderer("<animate:25,4,0,1>data/texture/particle/muzzle05.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),           // muzzle flash 5
+    new quadrenderer("<grey><animate:50,2,3,1>data/texture/particle/muzzle_smoke.png", PT_PART|PT_FEW|PT_FLIP|PT_LERP|PT_TRACK),   // muzzle smoke
+    new quadrenderer("<animate:30,2,2,1>data/texture/particle/sparks.png", PT_PART|PT_FEW|PT_FLIP|PT_BRIGHT|PT_TRACK),             // muzzle sparks
     new quadrenderer("data/texture/particle/comics.png", PT_PART|PT_LERP|PT_NOLAYER),                                              // comics effect
     new quadrenderer("data/interface/particle/game_icons.png", PT_PART|PT_FEW|PT_ICON|PT_HUD|PT_LERP|PT_NOLAYER),                  // game icons
     new quadrenderer("data/interface/particle/editor_icons.png", PT_PART|PT_ICON|PT_LERP|PT_NOLAYER),                              // editor icons
@@ -1367,8 +1367,10 @@ static void makeparticles(entity &e)
             break;
         }
         case 1: //steam vent - <dir>
+        {
             regularsplash(PART_STEAM, 0x897661, 50, 1, 200, offsetvec(e.o, e.attr2, rnd(10)), 2.4f, -20);
             break;
+        }
         case 2: //water fountain - <dir>
         {
             int color;
@@ -1414,24 +1416,43 @@ static void makeparticles(entity &e)
             break;
         }
         case 11: // flame <radius> <height> <rgb> - radius=100, height=100 is the classic size
+        {
             regularflame(PART_FLAME, e.o, float(e.attr2)/100.0f, float(e.attr3)/100.0f, colorfromattr(e.attr4), 3, 2.0f);
             break;
+        }
         case 12: // smoke plume <radius> <height> <rgb>
+        {
             regularflame(PART_SMOKE, e.o, float(e.attr2)/100.0f, float(e.attr3)/100.0f, colorfromattr(e.attr4), 1, 4.0f, 100.0f, 2000.0f, -20);
             break;
+        }
         case 32: //lens flares - plain/sparkle/sun/sparklesun <red> <green> <blue>
         case 33:
         case 34:
         case 35:
+        {
             flares.addflare(e.o, e.attr2, e.attr3, e.attr4, (e.attr1&0x02)!=0, (e.attr1&0x01)!=0);
             break;
+        }
+        case 36: // Temporary way to trigger light effects
+        {
+            extentity* ent = (extentity*)&e;
+            if(!ent->lasttrigger || lastmillis - ent->lasttrigger >= e.attr2 * 1000)
+            {
+                const int color = colorfromattr(e.attr4);
+                adddynlight(e.o, e.attr3, vec::hexcolor(color), e.attr5, 0, L_NOSHADOW);
+                ent->lasttrigger = lastmillis;
+            }
+            break;
+        }
         default:
+        {
             if(!editmode)
             {
                 defformatstring(ds, "particles %d?", e.attr1);
                 particle_textcopy(e.o, ds, PART_TEXT, 1, 0x6496FF, 2.0f);
             }
             break;
+        }
     }
 }
 

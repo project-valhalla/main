@@ -666,7 +666,7 @@ namespace text
         if(cursor >= 0 && (
             !cursorblink                                                   ||
             (totalmillis - inputmillis <= cursorblink)                     ||
-            (totalmillis - inputmillis % (2 * cursorblink)) <= cursorblink
+            ((totalmillis - inputmillis) % (2 * cursorblink)) <= cursorblink
         ))
         {
             if(cursor > len) cursor = len;

@@ -649,28 +649,6 @@ void pasteconsole()
     SDL_free(cb);
 }
 
-// returns the contents of the clipboard
-ICOMMAND(getclipboard, "", (),
-{
-    if(!SDL_HasClipboardText())
-    {
-        result("");
-    }
-    else
-    {
-        char *cb = SDL_GetClipboardText();
-        if(!cb)
-        {
-            result("");
-        }
-        else
-        {
-            result(cb);
-            SDL_free(cb);
-        }
-    }
-});
-
 static char *skipword(char *s)
 {
     while(int c = *s++) if(!iscubespace(c))

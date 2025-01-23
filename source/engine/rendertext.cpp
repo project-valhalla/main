@@ -342,26 +342,6 @@ int text_visible(const char *str, float hitx, float hity, int maxwidth)
     return i;
 }
 
-//inverse of text_visible
-void text_posf(const char *str, int cursor, float &cx, float &cy, int maxwidth)
-{
-    #define TEXTINDEX(idx) if(idx == cursor) { cx = x; cy = y; break; }
-    #define TEXTWHITE(idx)
-    #define TEXTLINE(idx)
-    #define TEXTCOLOR(idx)
-    #define TEXTCHAR(idx) x += cw;
-    #define TEXTWORD TEXTWORDSKELETON if(i >= cursor) break;
-    cx = cy = 0;
-    TEXTSKELETON
-    TEXTEND(cursor)
-    #undef TEXTINDEX
-    #undef TEXTWHITE
-    #undef TEXTLINE
-    #undef TEXTCOLOR
-    #undef TEXTCHAR
-    #undef TEXTWORD
-}
-
 void text_boundsf(const char *str, float &width, float &height, int maxwidth)
 {
     #define TEXTINDEX(idx)

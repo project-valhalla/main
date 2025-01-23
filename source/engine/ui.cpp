@@ -1981,9 +1981,10 @@ namespace UI
         else dst = newstring(src); \
     } while(0)
 
+    // text attributes
     static int curwrapalign = -1, curshadow = 0, curfontoutlinealpha = 0;
-    float curfontoutline = 0.f;
-    bool curjustify = false, curnofallback = false;
+    static float curfontoutline = 0.f;
+    static int curjustify = false, curnofallback = false;
     static const char *curlanguage = newstring("");
 
     #define WITHTEXTATTR(name, tmp, val, body) do { \
@@ -2009,10 +2010,11 @@ namespace UI
         static const char *typestr() { return "#Justify"; }
         const char *gettype() const { return typestr(); }
 
-        bool tmp;
-        void layout()                      { tmp = curjustify; curjustify = true; Object::layout(); curjustify = tmp; }
-        void draw(float sx, float sy)      { tmp = curjustify; curjustify = true; Object::draw(sx, sy); curjustify = tmp; }
-        void buildchildren(uint *contents) { tmp = curjustify; curjustify = true; Object::buildchildren(contents); curjustify = tmp; }
+        int val, tmp;
+        void setup(int val_) { val = val_; }
+        void layout()                      { WITHTEXTATTR(justify, tmp, val, Object::layout()); }
+        void draw(float sx, float sy)      { WITHTEXTATTR(justify, tmp, val, Object::draw(sx, sy)); }
+        void buildchildren(uint *contents) { WITHTEXTATTR(justify, tmp, val, Object::buildchildren(contents)); }
     };
     struct Shadow : Object
     {
@@ -2031,21 +2033,22 @@ namespace UI
         const char *gettype() const { return typestr(); }
 
         float val, tmp;
-        int   aval, atmp;
-        void setup(float val_, int aval_) { val = val_; aval = aval_; }
-        void layout()                      { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, atmp, aval, Object::layout())); }
-        void draw(float sx, float sy)      { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, atmp, aval, Object::draw(sx, sy))); }
-        void buildchildren(uint *contents) { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, atmp, aval, Object::buildchildren(contents))); }
+        int alpha_val, alpha_tmp;
+        void setup(float val_, int alpha_val_) { val = val_; alpha_val = alpha_val_; }
+        void layout()                      { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, alpha_tmp, alpha_val, Object::layout())); }
+        void draw(float sx, float sy)      { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, alpha_tmp, alpha_val, Object::draw(sx, sy))); }
+        void buildchildren(uint *contents) { WITHTEXTATTR(fontoutline, tmp, val, WITHTEXTATTR(fontoutlinealpha, alpha_tmp, alpha_val, Object::buildchildren(contents))); }
     };
     struct NoFallback : Object
     {
         static const char *typestr() { return "#NoFallback"; }
         const char *gettype() const { return typestr(); }
 
-        bool tmp;
-        void layout()                      { tmp = curnofallback; curnofallback = true; Object::layout(); curnofallback = tmp; }
-        void draw(float sx, float sy)      { tmp = curnofallback; curnofallback = true; Object::draw(sx, sy); curnofallback = tmp; }
-        void buildchildren(uint *contents) { tmp = curnofallback; curnofallback = true; Object::buildchildren(contents); curnofallback = tmp; }
+        int val, tmp;
+        void setup(int val_) { val = val_; }
+        void layout()                      { WITHTEXTATTR(nofallback, tmp, val, Object::layout()); }
+        void draw(float sx, float sy)      { WITHTEXTATTR(nofallback, tmp, val, Object::draw(sx, sy)); }
+        void buildchildren(uint *contents) { WITHTEXTATTR(nofallback, tmp, val, Object::buildchildren(contents)); }
     };
     struct Language : Object
     {
@@ -2088,7 +2091,7 @@ namespace UI
         int fontid, lastchange;
         int align, shadow, outlinealpha;
         float outline;
-        bool justify, nofallback;
+        int justify, nofallback;
         const char *language;
         int cursor;
         bool has_cursor;
@@ -3702,8 +3705,8 @@ namespace UI
     ICOMMAND(uiwrapalign, "ie", (int *val, uint *children),
         BUILD(WrapAlign, o, o->setup(*val), children));
     
-    ICOMMAND(uijustify, "e", (uint *children),
-        BUILD(Justify, o, o->setup(), children));
+    ICOMMAND(uijustify, "ie", (int *val, uint *children),
+        BUILD(Justify, o, o->setup(*val), children));
     
     ICOMMAND(uishadow, "ie", (int *val, uint *children),
         BUILD(Shadow, o, o->setup(*val), children));
@@ -3711,8 +3714,8 @@ namespace UI
     ICOMMAND(uifontoutline, "fie", (float *val, int *a, uint *children),
         BUILD(FontOutline, o, o->setup(*val, *a), children));
     
-    ICOMMAND(uinofallback, "e", (uint *children),
-        BUILD(NoFallback, o, o->setup(), children));
+    ICOMMAND(uinofallback, "ie", (int *val, uint *children),
+        BUILD(NoFallback, o, o->setup(*val), children));
     
     ICOMMAND(uilanguage, "se", (char *val, uint *children),
         BUILD(Language, o, o->setup(val), children));

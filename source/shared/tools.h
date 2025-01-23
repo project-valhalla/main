@@ -1370,34 +1370,6 @@ enum
     T_NAME       = 1<<4
 };
 
-/* (enable all of unicode for now)
-// characters that can be shown in the console
-static inline int iscubeprint(uint c)
-{
-    return (c >= 0x0021 && c <= 0x007E) // ASCII [94]
-
-        || (c >= 0x00A1 && c <= 0x00AC) // (exclude 0x00AD soft hyphen)
-        || (c >= 0x00AE && c <= 0x00FF) // Latin-1 Supplement [94]
-
-        || (c >= 0x0100 && c <= 0x017F) // Latin Extended-A [128]
-        || (c >= 0x0180 && c <= 0x024F) // Latin Extended-B [208]
-
-        || (c >= 0x0370 && c <= 0x0377)
-        || (c >= 0x037A && c <= 0x037F)
-        || (c >= 0x0384 && c <= 0x038A)
-        || (c == 0x038C)
-        || (c >= 0x038E && c <= 0x03A1)
-        || (c >= 0x03A3 && c <= 0x03FF) // Greek and Coptic [135]
-
-        || (c >= 0x0400 && c <= 0x0482) // (exclude combining cyrillic characters)
-        || (c >= 0x048A && c <= 0x04FF) // Cyrillic [249]
-
-        || (c >= 0x0500 && c <= 0x052F) // Cyrillic Supplement [48]
-        || (c >= 0x1E00 && c <= 0x1EFF) // Latin Extended Additional [256]
-
-        || (c >= 0x20A0 && c <= 0x20C0) // Currency Symbols [33]
-    ;
-}*/
 static inline int iscubespace(uint c) { return c == ' ' || c == '\n' || c == '\r' || c == '\t' ? 1 : 0; }
 static inline int iscubealpha(uint c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ? 1 : 0; }
 static inline int iscubealnum(uint c) { return (c >= '0' && c <= '9') || iscubealpha(c) ? 1 : 0; }
@@ -1405,7 +1377,7 @@ static inline int iscubelower(uint c) { return (c >= 'a' && c <= 'z') ? 1 : 0; }
 static inline int iscubeupper(uint c) { return (c >= 'A' && c <= 'Z') ? 1 : 0; }
 static inline int iscubecntrl(uint c) { return (c <= 0x08 || c == 0x0B || (c >= 0x0E && c <= 0x1F) || (c >= 0x7F && c <= 0x9F)) ? 1 : 0; }
 static inline int iscubepunct(uint c) { return (c >= '!' && c <= '/') || (c >= ':' && c <= '@') || (c >= '[' && c <= '`') || (c >= '{' && c <= '~') ? 1 : 0; }
-// a subeset of console characters that are allowed in player names
+// a subset of console characters that are allowed in player names
 // the default font should contain glyphs for all of these
 static inline int iscubenamesafe(uint c)
 {
@@ -1437,80 +1409,80 @@ static inline uint homoglyph(uint c)
 {
 	switch(c)
 	{
-		case 0x00B8: return 0x002C;
-		case 0x0060: return 0x0027;
-		case 0x00B4: return 0x0027;
-		case 0x0417: return 0x0033;
-		case 0x0431: return 0x0036;
-		case 0x03B1: return 0x0061;
-		case 0x0430: return 0x0061;
-		case 0x0391: return 0x0041;
-		case 0x0410: return 0x0041;
-		case 0x042C: return 0x0062;
-		case 0x0392: return 0x0042;
-		case 0x0412: return 0x0042;
-		case 0x0441: return 0x0063;
-		case 0x0421: return 0x0043;
-		case 0x0435: return 0x0065;
-		case 0x0395: return 0x0045;
-		case 0x0415: return 0x0045;
-		case 0x011B: return 0x0115;
-		case 0x011A: return 0x0114;
-		case 0x0397: return 0x0048;
-		case 0x041D: return 0x0048;
-		case 0x0131: return 0x0069;
-		case 0x03B9: return 0x0069;
-		case 0x0456: return 0x0069;
-		case 0x0458: return 0x006A;
-		case 0x0408: return 0x004A;
-		case 0x039A: return 0x004B;
-		case 0x041A: return 0x004B;
-		case 0x007C: return 0x006C;
-		case 0x0031: return 0x006C;
-		case 0x0049: return 0x006C;
-		case 0x0399: return 0x006C;
-		case 0x0406: return 0x006C;
-		case 0x039C: return 0x004D;
-		case 0x041C: return 0x004D;
-		case 0x039D: return 0x004E;
-		case 0x03BF: return 0x006F;
-		case 0x03C3: return 0x006F;
-		case 0x043E: return 0x006F;
-		case 0x0030: return 0x004F;
-		case 0x039F: return 0x004F;
-		case 0x041E: return 0x004F;
-		case 0x0150: return 0x00D6;
-		case 0x03C1: return 0x0070;
-		case 0x0440: return 0x0070;
-		case 0x03A1: return 0x0050;
-		case 0x0420: return 0x0050;
-		case 0x03BA: return 0x0138;
-		case 0x043A: return 0x0138;
-		case 0x0433: return 0x0072;
-		case 0x0455: return 0x0073;
-		case 0x0405: return 0x0053;
-		case 0x03B2: return 0x00DF;
-		case 0x03A4: return 0x0054;
-		case 0x0422: return 0x0054;
-		case 0x021A: return 0x0162;
-		case 0x03C5: return 0x0075;
-		case 0x03BD: return 0x0076;
-		case 0x00D7: return 0x0078;
-		case 0x0445: return 0x0078;
-		case 0x03A7: return 0x0058;
-		case 0x0425: return 0x0058;
-		case 0x03B3: return 0x0079;
-		case 0x0443: return 0x0079;
-		case 0x03A5: return 0x0059;
-		case 0x0423: return 0x0059;
-		case 0x0396: return 0x005A;
-		case 0x0413: return 0x0393;
-		case 0x00B5: return 0x03BC;
-		case 0x043F: return 0x03C0;
-		case 0x041F: return 0x03A0;
-		case 0x0424: return 0x03A6;
-		case 0x0419: return 0x040D;
-		case 0x045D: return 0x0439;
+		case 0x60:
+		case 0xb4: return 0x27;
+		case 0xb8: return 0x2c;
+		case 0x417: return 0x33;
+		case 0x431: return 0x36;
+		case 0x391:
+		case 0x410: return 0x41;
+		case 0x392:
+		case 0x412: return 0x42;
+		case 0x421: return 0x43;
+		case 0x395:
+		case 0x415: return 0x45;
+		case 0x397:
+		case 0x41d: return 0x48;
+		case 0x408: return 0x4a;
+		case 0x39a:
+		case 0x41a: return 0x4b;
+		case 0x39c:
+		case 0x41c: return 0x4d;
+		case 0x39d: return 0x4e;
+		case 0x30:
+		case 0x39f:
+		case 0x41e: return 0x4f;
+		case 0x3a1:
+		case 0x420: return 0x50;
+		case 0x405: return 0x53;
+		case 0x3a4:
+		case 0x422: return 0x54;
+		case 0x3a7:
+		case 0x425: return 0x58;
+		case 0x3a5:
+		case 0x423: return 0x59;
+		case 0x396: return 0x5a;
+		case 0x3b1:
+		case 0x430: return 0x61;
+		case 0x42c: return 0x62;
+		case 0x441: return 0x63;
+		case 0x435: return 0x65;
+		case 0x131:
+		case 0x3b9:
+		case 0x456: return 0x69;
+		case 0x458: return 0x6a;
+		case 0x7c:
+		case 0x31:
+		case 0x49:
+		case 0x399:
+		case 0x406: return 0x6c;
+		case 0x3bf:
+		case 0x3c3:
+		case 0x43e: return 0x6f;
+		case 0x3c1:
+		case 0x440: return 0x70;
+		case 0x433: return 0x72;
+		case 0x455: return 0x73;
+		case 0x3c5: return 0x75;
+		case 0x3bd: return 0x76;
+		case 0xd7:
+		case 0x445: return 0x78;
+		case 0x3b3:
+		case 0x443: return 0x79;
+		case 0x150: return 0xd6;
+		case 0x3b2: return 0xdf;
+		case 0x11a: return 0x114;
+		case 0x11b: return 0x115;
+		case 0x3ba:
+		case 0x43a: return 0x138;
+		case 0x21a: return 0x162;
+		case 0x413: return 0x393;
+		case 0x41f: return 0x3a0;
+		case 0x424: return 0x3a6;
+		case 0xb5: return 0x3bc;
+		case 0x43f: return 0x3c0;
+		case 0x419: return 0x40d;
+		case 0x45d: return 0x439;
 	}
 	return c;
 }

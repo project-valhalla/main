@@ -160,27 +160,27 @@ static inline int uni_index(const char *str, unsigned int off)
 }
 
 // only supports ASCII
+static inline char uni_charlower(char c)
+{
+    if(c >= 'A' && c <= 'Z') return 'a' + (c - 'A');
+    return c;
+}
+static inline char uni_charupper(char c)
+{
+    if(c >= 'a' && c <= 'z') return 'A' + (c - 'a');
+    return c;
+}
 static inline void uni_strlower(const char *src, char *dst)
 {
-    for(const unsigned char *p = (unsigned char *)src; *p; ++p)
+    for(const char *p = src; *p; ++p)
     {
-        if(*p >= 'A' && *p <= 'Z')
-        {
-            *dst = 'a' + (*p - 'A');
-        }
-        else *dst = *p;
-        ++dst;
+        *dst++ = uni_charlower(*p);
     }
 }
 static inline void uni_strupper(const char *src, char *dst)
 {
-    for(const unsigned char *p = (unsigned char *)src; *p; ++p)
+    for(const char *p = src; *p; ++p)
     {
-        if(*p >= 'a' && *p <= 'z')
-        {
-            *dst = 'A' + (*p - 'a');
-        }
-        else *dst = *p;
-        ++dst;
+        *dst++ = uni_charupper(*p);
     }
 }

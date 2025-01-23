@@ -1,7 +1,7 @@
 // console.cpp: the console buffer, its display, and command line control
 
-#include "unicode.h"
 #include "engine.h"
+#include "unicode.h"
 
 #define MAXCONLINES 1000
 struct cline { char *line; int type, outtime; float fontsize, w; text::Label label; };

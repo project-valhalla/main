@@ -1,4 +1,5 @@
 #include "cube.h"
+#include "unicode.h"
 
 ///////////////////////////// console ////////////////////////
 
@@ -28,18 +29,12 @@ void conoutf(int type, int tag, const char *fmt, ...)
 
 ///////////////////////// character conversion ///////////////
 
-static inline int uni_charlower(char c)
-{
-    if(c >= 'A' && c <= 'Z') return 'a' + (c - 'A');
-    return c;
-}
-
 int cubecasecmp(const char *s1, const char *s2, int n)
 {
     if(!s1 || !s2) return !s2 - !s1;
     while(n-- > 0)
     {
-        int c1 = uni_charlower(*s1++), c2 = uni_charlower(*s2++);
+        const char c1 = uni_charlower(*s1++), c2 = uni_charlower(*s2++);
         if(c1 != c2) return c1 - c2;
         if(!c1) break;
     }
@@ -50,7 +45,7 @@ char *cubecasefind(const char *haystack, const char *needle)
 {
     if(haystack && needle) for(const char *h = haystack, *n = needle;;)
     {
-        int hc = uni_charlower(*h++), nc = uni_charlower(*n++);
+        const char hc = uni_charlower(*h++), nc = uni_charlower(*n++);
         if(!nc) return (char*)h - (n - needle);
         if(hc != nc)
         {

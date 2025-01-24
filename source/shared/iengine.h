@@ -255,7 +255,6 @@ extern void draw_textf(const char *fstr, double left, double top, ...) PRINTFARG
 extern float text_widthf(const char *str);
 extern void text_boundsf(const char *str, float &width, float &height, int maxwidth = -1);
 extern int text_visible(const char *str, float hitx, float hity, int maxwidth);
-extern void text_posf(const char *str, int cursor, float &cx, float &cy, int maxwidth);
 
 static inline int text_width(const char *str)
 {
@@ -268,14 +267,6 @@ static inline void text_bounds(const char *str, int &width, int &height, int max
     text_boundsf(str, widthf, heightf, maxwidth);
     width = int(ceil(widthf));
     height = int(ceil(heightf));
-}
-
-static inline void text_pos(const char *str, int cursor, int &cx, int &cy, int maxwidth)
-{
-    float cxf, cyf;
-    text_posf(str, cursor, cxf, cyf, maxwidth);
-    cx = int(cxf);
-    cy = int(cyf);
 }
 
 // texture

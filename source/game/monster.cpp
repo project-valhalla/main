@@ -244,12 +244,17 @@ namespace game
                     if(trigger < lastmillis)
                     {
                         int atk = monstertypes[mtype].atk;
+                        bool isUsingMelee = false;
                         if(!burstfire || (burstfire && bursting))
                         {
                             ai::findorientation(orient, yaw, pitch, attacktarget);
                             if(attacktarget.dist(o) <= attacks[atk].exprad) goto stopfiring;
                             lastaction = 0;
-                            if(meleerange && attacks[atk].action != ACT_MELEE) atk = meleeatk;
+                            if (meleerange && attacks[atk].action != ACT_MELEE)
+                            {
+                                atk = meleeatk;
+                                isUsingMelee = true;
+                            }
                             attacking = attacks[atk].action;
                             shoot(this, attacktarget);
 
@@ -257,7 +262,7 @@ namespace game
                             bool burstcomplete = shots >= monstertypes[mtype].burstshots;
                             if(!burstfire || (burstfire && burstcomplete))
                             {
-                                if(!burstfire && atk != meleeatk) emitattacksound();
+                                if(!burstfire && !isUsingMelee) emitattacksound();
                                 goto stopfiring;
                             }
                         }

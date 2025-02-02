@@ -6,28 +6,28 @@ namespace entities
 
     int extraentinfosize() { return 0; }       // size in bytes of what the 2 methods below read/write... so it can be skipped by other games
 
-    void writeent(entity &e, char *buf)   // write any additional data to disk (except for ET_ ents)
+    void writeent(entity& e, char* buf)   // write any additional data to disk (except for ET_ ents)
     {
     }
 
-    void readent(entity &e, char *buf, int ver)     // read from disk, and init
+    void readent(entity& e, char* buf, int ver)     // read from disk, and init
     {
     }
 
 #ifndef STANDALONE
-    vector<extentity *> ents;
+    vector<extentity*> ents;
 
-    vector<extentity *> &getents() { return ents; }
+    vector<extentity*>& getents() { return ents; }
 
-    bool mayattach(extentity &e) { return false; }
-    bool attachent(extentity &e, extentity &a) { return false; }
+    bool mayattach(extentity& e) { return false; }
+    bool attachent(extentity& e, extentity& a) { return false; }
 
-    const char *entmodel(const entity &e)
+    const char* entmodel(const entity& e)
     {
-        if(e.type == TELEPORT || e.type == TRIGGER)
+        if (e.type == TELEPORT || e.type == TRIGGER)
         {
-            if(e.attr2 > 0) return mapmodelname(e.attr2);
-            if(e.attr2 < 0) return NULL;
+            if (e.attr2 > 0) return mapmodelname(e.attr2);
+            if (e.attr2 < 0) return NULL;
         }
         return e.type < MAXENTTYPES ? gentities[e.type].file : NULL;
     }
@@ -39,7 +39,7 @@ namespace entities
             return false;
         }
 
-        switch(type)
+        switch (type)
         {
             case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL: case I_AMMO_GRENADE:
             {
@@ -87,7 +87,7 @@ namespace entities
             }
 
             case I_HASTE: case I_AGILITY: case I_INVULNERABILITY:
-            {            
+            {
                 if (m_nopowerups(mutators))
                 {
                     return false;
@@ -127,17 +127,22 @@ namespace entities
             {
                 case TELEPORT:
                 case TRIGGER:
+                {
                     if (e.attr2 > 0)
                     {
                         preloadmodel(mapmodelname(e.attr2));
                     }
-                    break;      
+                    break;
+                }
+
                 case JUMPPAD:
+                {
                     if (e.attr4 > 0)
                     {
                         preloadmapsound(e.attr4);
-                    }  
+                    }
                     break;
+                }
             }
         }
     }
@@ -254,6 +259,7 @@ namespace entities
                     }
                     break;
                 }
+
                 default:
                 {
                     if ((!editmode && !e.spawned()) || !validitem(e.type))
@@ -280,30 +286,25 @@ namespace entities
         }
     }
 
-    void addammo(int type, int &v, bool local)
+    void addammo(int type, int& v, bool local)
     {
-        itemstat &is = itemstats[type-I_AMMO_SG];
+        itemstat& is = itemstats[type - I_AMMO_SG];
         v += is.add;
-        if(v>is.max) v = is.max;
-        if(local) msgsound(is.sound);
-    }
-    void repammo(gameent *d, int type, bool local)
-    {
-        addammo(type, d->ammo[type-I_AMMO_SG+GUN_SCATTER], local);
+        if (v > is.max) v = is.max;
+        if (local) msgsound(is.sound);
     }
 
-   /* This function is called once the server acknowledges that you really
-    * picked up the item (in multiplayer someone may grab it before you).
-    */
-    void pickupeffects(int n, gameent *d)
+    void repammo(gameent* d, int type, bool local)
     {
-        if (!ents.inrange(n))
-        {
-            return;
-        }
+        addammo(type, d->ammo[type - I_AMMO_SG + GUN_SCATTER], local);
+    }
 
-        int type = ents[n]->type;
-        if (!validitem(type))
+    /* This function is called once the server acknowledges that you really
+     * picked up the item (in multiplayer someone may grab it before you).
+     */
+    void dopickupeffects(const int n, gameent* d)
+    {
+        if (!d || !ents.inrange(n) || !validitem(ents[n]->type))
         {
             return;
         }
@@ -312,19 +313,11 @@ namespace entities
         {
             ents[n]->clearspawned();
         }
-        if (!d)
-        {
-            return;
-        }
-
+        const int type = ents[n]->type;
         d->pickup(type);
+        itemstat& is = itemstats[type - I_AMMO_SG];
         gameent* hud = followingplayer(self);
-        itemstat &is = itemstats[type-I_AMMO_SG];
         playsound(is.sound, NULL, d == hud ? NULL : &d->o, NULL, 0, 0, 0, -1, 0, 1800);
-        if (d == hud)
-        {
-            addscreenflash(80);
-        }
         if (type >= I_DDAMAGE && type <= I_INVULNERABILITY)
         {
             if (d == hud)
@@ -332,18 +325,35 @@ namespace entities
                 conoutf(CON_GAMEINFO, "\f2%s power-up obtained", gentities[type].prettyname);
                 if (validsound(is.announcersound))
                 {
-                    playsound(is.announcersound, NULL, NULL, NULL, SND_ANNOUNCER);
+                    announcer::playannouncement(is.announcersound);
                 }
             }
             else
             {
                 conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
-                playsound(S_POWERUP, NULL, NULL, NULL, SND_ANNOUNCER);
+                playsound(S_POWERUP);
             }
+        }
+        dohudpickupeffects(type, d);
+    }
+
+    void dohudpickupeffects(const int type, gameent* d, bool shouldCheck)
+    {
+        gameent* hud = followingplayer(self);
+        if (d != hud)
+        {
+            return;
+        }
+
+        addscreenflash(ENTITY_COLLECT_FLASH);
+        if (shouldCheck)
+        {
+            game::checkentity(type);
+            d->lastpickupmillis = lastmillis;
         }
     }
 
-    // these functions are called when the client touches the item
+    // These following functions are called when the client touches the entity.
 
     void playentitysound(const int fallback, const int mapsound, const vec &o)
     {
@@ -381,7 +391,7 @@ namespace entities
                     }
                     else
                     {
-                        addscreenflash(150);
+                        addscreenflash(ENTITY_TELEPORT_FLASH);
                         camera::camera.addevent(d, camera::CameraEvent_Teleport, 500);
                     }
                     teleportparticleeffects(d, ents[td]->o);
@@ -513,10 +523,7 @@ namespace entities
                 int triggertype = ents[n]->attr5;
                 if (triggertype == Trigger_Item)
                 {
-                    if (d == hud)
-                    {
-                        addscreenflash(80);
-                    }
+                    dohudpickupeffects(n, d);
                 }
                 else if (triggertype == Trigger_RespawnPoint)
                 {
@@ -524,7 +531,6 @@ namespace entities
                 }
                 ents[n]->setactivity(false);
                 d->lastpickup = ents[n]->type;
-                d->lastpickupmillis = lastmillis;
                 break;
             }
 
@@ -534,13 +540,6 @@ namespace entities
                 {
                     addmsg(N_ITEMPICKUP, "rci", d, n);
                     ents[n]->clearspawned(); // Even if someone else gets it first.
-                    d->lastpickupmillis = lastmillis;
-                    if (d == self)
-                    {
-                        const int type = ents[n]->type;
-                        game::checkitem(type);
-                        game::autoswitchweapon(type);
-                    }
                 }
                 break;
             }
@@ -770,39 +769,50 @@ namespace entities
 
     void fixentity(extentity &e)
     {
-        switch(e.type)
+        switch (e.type)
         {
             case FLAG:
+            {
                 e.attr5 = e.attr4;
                 e.attr4 = e.attr3;
                 // fall through
+            }
             case TELEDEST:
+            {
                 e.attr3 = e.attr2;
                 e.attr2 = e.attr1;
                 e.attr1 = (int)self->yaw;
                 break;
-             case TARGET:
+            }
+
+            case TARGET:
+            {
                 e.attr2 = e.attr1;
                 break;
+            }
 
         }
     }
 
     void entradius(extentity &e, bool color)
     {
-        switch(e.type)
+        switch (e.type)
         {
             case TELEPORT:
-                loopv(ents) if(ents[i]->type == TELEDEST && e.attr1==ents[i]->attr2)
+            {
+                loopv(ents) if (ents[i]->type == TELEDEST && e.attr1 == ents[i]->attr2)
                 {
                     renderentarrow(e, vec(ents[i]->o).sub(e.o).normalize(), e.o.dist(ents[i]->o));
                     break;
                 }
                 break;
+            }
 
             case JUMPPAD:
-                renderentarrow(e, vec((int)(char)e.attr3*10.0f, (int)(char)e.attr2*10.0f, e.attr1*12.5f).normalize(), 4);
+            {
+                renderentarrow(e, vec((int)(char)e.attr3 * 10.0f, (int)(char)e.attr2 * 10.0f, e.attr1 * 12.5f).normalize(), 4);
                 break;
+            }
 
             case FLAG:
             case TELEDEST:
@@ -814,8 +824,10 @@ namespace entities
             }
 
             case TRIGGER:
+            {
                 renderentsphere(e, e.attr3);
                 break;
+            }
 
             case TARGET:
             {

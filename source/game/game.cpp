@@ -12,6 +12,8 @@ namespace game
     vector<gameent *> bestplayers;
     vector<int> bestteams;
 
+    ICOMMAND(numplayers, "", (), intret(players.length()));
+
     void taunt(gameent *d)
     {
         if(d->state!=CS_ALIVE || lastmillis-d->lasttaunt<1000) return;
@@ -119,12 +121,33 @@ namespace game
         return d;
     }
 
+    bool canspawn()
+    {
+        if (!m_round)
+        {
+            return true;
+        }
+        else if ((m_hunt && !hunterchosen) || gamewaiting)
+        {
+            return true;
+        }
+        return false;
+    }
+    ICOMMAND(canspawn, "", (), intret(canspawn() ? 1 : 0));
+
+    const int getrespawndelay()
+    {
+        return cmode ? cmode->respawnwait() : SPAWN_DELAY;
+    }
+    ICOMMAND(getrespawndelay, "", (), intret(getrespawndelay()));
+
     VARP(queuerespawn, 0, 1, 1);
 
     void respawnself()
     {
         if(ispaused()) return;
-        if(queuerespawn && lastmillis - self->lastpain <= (cmode ? cmode->respawnwait(self, true) : DELAY_RESPAWN))
+        const int delay = getrespawndelay();
+        if(queuerespawn && lastmillis - self->lastpain <= delay)
         {
             self->respawnqueued = true;
             return;
@@ -272,14 +295,13 @@ namespace game
                     self->move = self->strafe = 0;
                     physics::moveplayer(self, 10, true);
                 }
-                if(lastmillis - self->lastpain > (cmode ? cmode->respawnwait(self, true) : DELAY_RESPAWN))
+                if(lastmillis - self->lastpain > getrespawndelay())
                 {
                     if(self->respawnqueued)
                     {
                         respawnself();
                         self->respawnqueued = false;
                     }
-                    setsvar("lasthudkillinfo", tempformatstring("%s now", m_round ? "Spectate" : (m_invasion && self->lives <= 0 ? "Retry" : "Respawn")));
                 }
             }
             else if(!intermission)
@@ -401,10 +423,10 @@ namespace game
             if (d == followingplayer(self))
             {
                 clearscreeneffects();
-                addscreenflash(200);
+                addscreenflash(SPAWN_DURATION);
                 camera::camera.addevent(d, camera::CameraEvent_Spawn, 380);
             }
-            adddynlight(d->o, 100, vec(1, 1, 1), 800, 100, DL_EXPAND | L_NOSHADOW);
+            adddynlight(d->o, 100, vec(1, 1, 1), SPAWN_DURATION, 100, DL_EXPAND | L_NOSHADOW);
             doweaponchangeffects(d);
             playsound(S_PLAYER_SPAWN, d);
         }
@@ -419,13 +441,24 @@ namespace game
         d->lastspawn = lastmillis;
     }
 
+    const int getrespawnwait(gameent* d)
+    {
+        if (m_edit || self->state != CS_DEAD)
+        {
+            return 0;
+        }
+        int wait = cmode ? cmode->respawnwait() : SPAWN_DELAY;
+        return max(0, wait - (lastmillis - d->lastpain));
+    }
+    ICOMMAND(getrespawnwait, "", (int* seconds), intret(getrespawnwait(self)));
+
     void respawn()
     {
         if(self->state==CS_DEAD)
         {
             self->attacking = ACT_IDLE;
-            int wait = cmode ? cmode->respawnwait(self) : 0;
-            if(wait>0)
+            const int wait = getrespawnwait(self);
+            if(wait > 0)
             {
                 lastspawnattempt = lastmillis;
                 return;
@@ -434,6 +467,7 @@ namespace game
         }
     }
     COMMAND(respawn, "");
+    ICOMMAND(getlastspawnattempt, "", (), intret(lastspawnattempt));
 
     // inputs
 
@@ -568,19 +602,17 @@ namespace game
             managedeatheffects(d);
             d->deaths++;
         }
-        if (d == self)
+        if(d == self)
         {
             camera::restore(restore);
             d->attacking = ACT_IDLE;
-            if (camera::isfirstpersondeath())
+            if(camera::isfirstpersondeath())
             {
                 stopsounds(SND_UI | SND_ANNOUNCER);
                 playsound(S_DEATH);
             }
-            if (m_invasion)
-            {
-                self->lives--;
-            }
+            if(m_invasion) self->lives--;
+            if(camera::thirdperson) camera::thirdperson = 0;
         }
         else
         {
@@ -590,89 +622,153 @@ namespace game
         }
     }
 
-    int killfeedactorcn = -1, killfeedtargetcn = -1, killfeedweaponinfo = -1;
-    bool killfeedheadshot = false;
+    struct Killfeed
+    {
+        enum Type
+        {
+            REGULAR       = 0,
+            MONSTER       = 1,
+            ASSASSINATION = 2,
+            DEATH         = 3,
+            MEDAL         = 4
+        };
 
-    SVAR(lasthudkillinfo, "");
+        enum Crit
+        {
+            ZOOM        = 1 << 0,
+            HEADSHOT    = 1 << 1,
+            EXPLOSION   = 1 << 2
+        };
+
+        enum Weapon
+        {
+            MELEE = -1
+        };
+
+        int type = Type::REGULAR;
+        int actor = -1;
+        int victim = -1;
+        int weapon = -1;
+        int attack = -1;
+        int crit = 0;
+        int deathState = Death_Default;
+        int medal = 0;
+
+        void setCrit(const int flags, const int atk)
+        {
+            crit = 0;
+            if (flags & KILL_HEADSHOT)
+            {
+                crit |= Crit::HEADSHOT;
+            }
+            const int gun = attacks[atk].gun;
+            const bool isZoom = attacks[atk].action == ACT_SECONDARY && guns[gun].zoom != Zoom_None;
+            if (isZoom)
+            {
+                crit |= Crit::ZOOM;
+            }
+        }
+
+        struct Hud
+        {
+            int lastKillVictim = -1;
+            int lastKillWeapon = -1;
+            int lastKillAttack = -1;
+            int lastKillDeathState = Death_Default;
+            int lastKillerWeapon = -1;
+            int lastKillerAttack = -1;
+            int lastDeathState = Death_Default;
+        };
+        Hud hud;
+    };
+    Killfeed killFeed;
+
+    void writespecialkillfeed(int announcement)
+    {
+        if (m_betrayal)
+        {
+            return;
+        }
+
+        killFeed.type = killFeed.Type::MEDAL;
+        killFeed.actor = self->clientnum;
+        killFeed.medal = announcement;
+        execident("on_obituary");
+    }
 
     void writeobituary(gameent *d, gameent *actor, int atk, int flags)
     {
-        // console messages
-        gameent *h = followingplayer(self);
-        if(!h) h = self;
+        // Console messages and killfeed updates.
+        gameent* hud = followingplayer(self);
         const char *act = "killed";
-        string hudkillinfo;
-        if(flags & KILL_TRAITOR)
+        const int weapon = attacks[atk].gun;
+        if (actor->type == ENT_AI)
         {
-            act = "assassinated";
-            conoutf(CON_FRAGINFO, "%s \fs\f2was %s\fr", colorname(d), act);
-            if(d == actor)
+            conoutf(CON_FRAGINFO, "%s \fs\f2was %s by a\fr %s", teamcolorname(d), act, actor->name);
+            killFeed.type = killFeed.Type::MONSTER;
+        }
+        else
+        {
+            if (flags & KILL_TRAITOR)
             {
-                if(d == h)
-                {
-                    formatstring(hudkillinfo, "\f2You were %s\fr", act);
-                    setsvar("lasthudkillinfo", hudkillinfo);
-                }
+                act = "assassinated";
+                conoutf(CON_FRAGINFO, "%s \fs\f2was %s\fr", colorname(d), act);
+                killFeed.type = killFeed.Type::ASSASSINATION;
                 playsound(S_TRAITOR_KILL);
             }
-            else if(actor == h) formatstring(hudkillinfo, "\fs\f2You %s %s\fr", act, colorname(d));
-            killfeedweaponinfo = -3;
-        }
-        else if(d == actor)
-        {
-            if(validatk(atk) && attacks[atk].gun == GUN_ZOMBIE)
+            else if (d == actor)
             {
-                act = "got infected";
-                killfeedweaponinfo = GUN_ZOMBIE;
-            }
-            else
-            {
-                act = "died";
-                killfeedweaponinfo = -2;
-            }
-            conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr", teamcolorname(d), act);
-            if(d == h) formatstring(hudkillinfo, "\fs\f2You %s\fr", act);
-
-        }
-        else if (validatk(atk))
-        {
-            if (d->deathstate == Death_Gib && attacks[atk].gibobituary)
-            {
-                act = attacks[atk].gibobituary;
-            }
-            else if (attacks[atk].obituary)
-            {
-                act = attacks[atk].obituary;
-            }
-            if (isally(d, actor))
-            {
-                conoutf(CON_FRAGINFO, "%s \fs\f2%s an ally (%s)\fr", teamcolorname(actor), act, teamcolorname(d));
-                if (d == h || actor == h)
+                if (validatk(atk) && weapon == GUN_ZOMBIE)
                 {
-                    formatstring(hudkillinfo, "\fs\f6You %s%s%s an ally (%s)!\fr", d == h ? "were " : "", act, d == h ? " by " : "", teamcolorname(d));
-                    setsvar("lasthudkillinfo", hudkillinfo);
+                    act = "got infected";
                 }
-            }
-            else
-            {
-                conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
-                if (d == h || actor == h)
+                else
                 {
-                    formatstring(hudkillinfo, "\fs\f2You %s%s%s%s %s\fr", d == h ? "got " : "", act, d == h ? " by" : "", ismonster(actor) ? " a" : "", d == h ? teamcolorname(actor) : teamcolorname(d));
-                    setsvar("lasthudkillinfo", hudkillinfo);
+                    act = "died";
                 }
+                conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr", teamcolorname(d), act);
+                killFeed.type = killFeed.Type::DEATH;
             }
-            killfeedweaponinfo = attacks[atk].action == ACT_MELEE ? -1 : attacks[atk].gun;
+            else if (validatk(atk))
+            {
+                if (isally(d, actor))
+                {
+                    conoutf(CON_FRAGINFO, "%s \fs\f2%s an ally (%s)\fr", teamcolorname(actor), act, teamcolorname(d));
+                }
+                else
+                {
+                    conoutf(CON_FRAGINFO, "%s \fs\f2%s\fr %s", teamcolorname(actor), act, teamcolorname(d));
+                }
+                killFeed.type = killFeed.Type::REGULAR;
+                killFeed.weapon = atk == ATK_MELEE ? killFeed.Weapon::MELEE : weapon;
+            }
+            killFeed.actor = actor->clientnum;
+            killFeed.victim = d->clientnum;
+            if (d == hud)
+            {
+                d->lastattacker = actor->clientnum;
+            }
+            else if (actor == hud)
+            {
+                killFeed.hud.lastKillVictim = d->clientnum;
+            }
         }
-        if(m_invasion && actor->type == ENT_AI)
+        killFeed.attack = atk;
+        killFeed.setCrit(flags, atk);
+        killFeed.deathState = d->deathstate;
+        if (d == hud)
         {
-            killfeedweaponinfo = -4;
+            killFeed.hud.lastKillerAttack = atk;
+            killFeed.hud.lastDeathState = d->deathstate;
+            killFeed.hud.lastKillerWeapon = validgun(weapon) ? weapon : GUN_MELEE;
         }
-        // hooks
-        killfeedactorcn = actor->clientnum;
-        killfeedtargetcn = d->clientnum;
-        killfeedheadshot = flags & KILL_HEADSHOT;
-        execident("on_obituary");
+        else if (actor == hud)
+        {
+            killFeed.hud.lastKillAttack = atk;
+            killFeed.hud.lastKillWeapon = weapon;
+            killFeed.hud.lastKillDeathState = d->deathstate;
+        }
+        // Hooks.
         if(d == self)
         {
             execident("on_death");
@@ -680,18 +776,43 @@ namespace game
             {
                 execident("on_suicide");
             }
-            d->lastattacker = actor->clientnum;
         }
         else if(actor == self)
         {
-            if(isally(actor, d)) execident("on_teamkill");
-            else execident("on_kill");
+            if (isally(actor, d))
+            {
+                execident("on_teamkill");
+            }
+            else
+            {
+                execident("on_kill");
+            }
         }
+        execident("on_obituary");
     }
-    ICOMMAND(getkillfeedactor, "", (), intret(killfeedactorcn));
-    ICOMMAND(getkillfeedtarget, "", (), intret(killfeedtargetcn));
-    ICOMMAND(getkillfeedweap, "", (), intret(killfeedweaponinfo));
-    ICOMMAND(getkillfeedcrit, "", (), intret(killfeedheadshot? 1: 0));
+    ICOMMAND(getkillfeedtype, "", (), intret(killFeed.type));
+    ICOMMAND(getkillfeedactor, "", (), intret(killFeed.actor));
+    ICOMMAND(getkillfeedvictim, "", (), intret(killFeed.victim));
+    ICOMMAND(getkillfeedweapon, "", (), intret(killFeed.weapon));
+    ICOMMAND(getkillfeedattack, "", (), intret(killFeed.attack));
+    ICOMMAND(getkillfeedcrit, "", (), intret(killFeed.crit));
+    ICOMMAND(getkillfeeddeath, "", (), intret(killFeed.deathState));
+    ICOMMAND(getkillfeedmedal, "", (), intret(killFeed.medal));
+    ICOMMAND(getlastkillvictim, "", (), intret(killFeed.hud.lastKillVictim));
+    ICOMMAND(getlastkillweapon, "", (), intret(killFeed.hud.lastKillWeapon));
+    ICOMMAND(getlastkillattack, "", (), intret(killFeed.hud.lastKillAttack));
+    ICOMMAND(getlastkilldeathstate, "", (), intret(killFeed.hud.lastKillDeathState));
+    ICOMMAND(getlastkillerweapon, "", (), intret(killFeed.hud.lastKillerWeapon));
+    ICOMMAND(getlastkillerattack, "", (), intret(killFeed.hud.lastKillerAttack));
+    ICOMMAND(getlastdeathstate, "", (), intret(killFeed.hud.lastDeathState));
+    ICOMMAND(getlastkiller, "", (),
+    {
+        gameent * d = followingplayer(self);
+        if (d)
+        {
+            intret(d->lastattacker);
+        }
+    });
 
     VARR(mapdeath, 0, Death_Default, Death_Num);
 
@@ -743,7 +864,7 @@ namespace game
                         playsound(S_KILL_SELF);
                     }
                 }
-                else if (isally(actor, d))
+                else if (isally(actor, d) && !m_hideallies)
                 {
                     playsound(S_KILL_ALLY);
                 }
@@ -775,12 +896,15 @@ namespace game
             if(m_teammode) getbestteams(bestteams);
             else getbestplayers(bestplayers);
 
-            if(validteam(self->team) ? bestteams.htfind(self->team)>=0 : bestplayers.find(self)>=0)
+            if(validteam(self->team) ? bestteams.htfind(self->team) >= 0 : bestplayers.find(self) >= 0)
             {
                 playsound(S_INTERMISSION_WIN);
-                playsound(S_ANNOUNCER_WIN, NULL, NULL, NULL, SND_ANNOUNCER);
+                announcer::playannouncement(S_ANNOUNCER_WIN);
             }
-            else playsound(S_INTERMISSION);
+            else
+            {
+                playsound(S_INTERMISSION);
+            }
             camera::camera.zoomstate.disable();
             execident("on_intermission");
         }
@@ -792,8 +916,16 @@ namespace game
     ICOMMAND(getaccuracy, "", (), intret((self->totaldamage*100)/max(self->totalshots, 1)));
     ICOMMAND(gettotaldamage, "", (), intret(self->totaldamage));
     ICOMMAND(gettotalshots, "", (), intret(self->totalshots));
-    ICOMMAND(getrespawnwait, "", (), intret(cmode && self->state == CS_DEAD ? cmode->respawnwait(self, false) : 0));
-    ICOMMAND(getlastspawnattempt, "", (), intret(lastspawnattempt));
+    ICOMMAND(getlastswitchattempt, "", (),
+    {
+        gameent * d = followingplayer(self);
+        intret(d->lastswitchattempt);
+    });
+    ICOMMAND(getlastswitch, "", (),
+    {
+        gameent * d = followingplayer(self);
+        intret(d->lastswitch);
+    });
 
     vector<gameent *> clients;
 
@@ -1048,7 +1180,7 @@ namespace game
                 return;
             }
 
-            if (d->lasthurt && lastmillis - d->lasthurt >= DELAY_ENVIRONMENT_DAMAGE)
+            if (d->lasthurt && lastmillis - d->lasthurt >= DAMAGE_ENVIRONMENT_DELAY)
             {
                 // If the delay has elapsed, apply environmental damage to the entity.
                 damageentity(DAMAGE_ENVIRONMENT, d, d, -1, Hit_Environment, true);

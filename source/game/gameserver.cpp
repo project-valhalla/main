@@ -1713,7 +1713,7 @@ namespace server
                 N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_DIED, 4, N_FORCEDEATH,
                 N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP,
                 N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME,
-                N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP,
+                N_NOTICE, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP,
                 N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_ROUND, N_ROUNDSCORE, N_ASSIGNROLE, N_SCORE, N_VOOSH,
                 N_CLIENT, N_AUTHCHAL, N_INITAI, N_DEMOPACKET, -2, N_CALCLIGHT, N_REMIP, N_NEWMAP, N_GETMAP, N_SENDMAP,
                 N_CLIPBOARD, -3, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_EDITVAR, N_EDITVSLOT,
@@ -2319,7 +2319,7 @@ namespace server
             }
         }
         if(!tied) return false;
-        sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_OVERTIME, m_teammode ? "\f2Overtime: teams are tied" : "\f2Overtime: scores are tied");
+        sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::OVERTIME);
         if (!m_round && timeisup)
         {
             updatetimelimit(overtime, false, TimeUpdate_Overtime);
@@ -2392,11 +2392,30 @@ namespace server
         else
         {
             int remain = gamescorelimit - highscore;
-            if(remain == 10 || remain == 5 || remain == 1)
+            switch (remain)
             {
-                defformatstring(announcement, "\f2%d kill%s remain%s", remain, remain == 1 ? "" : "s", remain == 1 ? "s" : "");
-                int announcementsound = remain == 10 ? S_ANNOUNCER_10_KILLS : (remain == 5 ? S_ANNOUNCER_5_KILLS : S_ANNOUNCER_1_KILL);
-                sendf(-1, 1, "ri2s", N_ANNOUNCE, announcementsound, announcement);
+                case 1:
+                {
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::ONE_KILL);
+                    break;
+                }
+
+                case 5:
+                {
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::FIVE_KILLS);
+                    break;
+                }
+
+                case 10:
+                {
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::TEN_KILLS);
+                    break;
+                }
+
+                default:
+                {
+                    break;
+                }
             }
         }
         if(highscore >= gamescorelimit)
@@ -2404,7 +2423,7 @@ namespace server
             if(checkovertime()) return;
             startintermission();
             defformatstring(winner, "%s%s \fs\f2reached the score limit\fr", team ? teamtextcode[ci->team] : "", team ? teamnames[ci->team] : colorname(ci));
-            sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, winner);
+            sendf(-1, 1, "ri2s", N_NOTICE, NULL, winner);
         }
     }
 
@@ -2465,7 +2484,7 @@ namespace server
         }
         ci->state.assignrole(ROLE_ZOMBIE);
         sendf(-1, 1, "ri4", N_ASSIGNROLE, ci->clientnum, actor->clientnum, ROLE_ZOMBIE);
-        if(!hunterchosen) sendf(-1, 1, "ri2s", N_ANNOUNCE, S_INFECTION, "\fs\f2Infection has begun\fr");
+        if(!hunterchosen) sendf(-1, 1, "ri2s", N_NOTICE, S_INFECTION, "\fs\f2Infection has begun\fr");
     }
 
     void chooserandomclient()
@@ -2503,10 +2522,10 @@ namespace server
             if(ci->state.state != CS_ALIVE && ci->state.state != CS_LAGGED) continue;
             if(ci->state.role == ROLE_TRAITOR)
             {
-                sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_TRAITOR, "\f2You are the traitor");
+                sendf(ci->clientnum, 1, "ri2s", N_NOTICE, S_TRAITOR, "\f2You are the traitor");
                 continue;
             }
-            sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_VICTIM, "\f2You are a victim");
+            sendf(ci->clientnum, 1, "ri2s", N_NOTICE, S_VICTIM, "\f2You are a victim");
         }
     }
 
@@ -2594,7 +2613,7 @@ namespace server
         {
             if(checkovertime()) return false;
             startintermission();
-            if(rounds == gameroundlimit) sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, "\f2Maximum number of rounds has been reached");
+            if(rounds == gameroundlimit) sendf(-1, 1, "ri2s", N_NOTICE, NULL, "\f2Maximum number of rounds has been reached");
             return true;
         }
         return false;
@@ -2633,19 +2652,19 @@ namespace server
         {
             if((survivors <= 0 && hunters <= 0) || (timeisup && survivors <= 0 && hunters > 0))
             {
-                sendf(-1, 1, "ri2s", N_ANNOUNCE, timeisup ? S_WIN_SURVIVORS : S_WIN_ZOMBIES, timeisup? "\f2Time is up": "\f2Nobody survived");
+                sendf(-1, 1, "ri2s", N_NOTICE, timeisup ? S_WIN_SURVIVORS : S_WIN_ZOMBIES, timeisup? "\f2Time is up": "\f2Nobody survived");
                 endround();
             }
             else if(hunters <= 0 || (timeisup && survivors > 0))
             {
-                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_SURVIVORS, "\f2Survivors win the round");
+                sendf(-1, 1, "ri2s", N_NOTICE, S_WIN_SURVIVORS, "\f2Survivors win the round");
                 rewardsurvivors = true;
                 score = 5;
                 endround();
             }
             else if(survivors <= 0)
             {
-                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_WIN_ZOMBIES, m_infection ? "\f2Zombies win the round" : "\f2Traitor wins the round");
+                sendf(-1, 1, "ri2s", N_NOTICE, S_WIN_ZOMBIES, m_infection ? "\f2Zombies win the round" : "\f2Traitor wins the round");
                 rewardhunters = true;
                 score = m_infection ? 1 : 5;
                 endround();
@@ -2655,7 +2674,7 @@ namespace server
         {
             if(survivors <= 0)
             {
-                sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ROUND, "\f2Nobody survived");
+                sendf(-1, 1, "ri2s", N_NOTICE, S_ROUND, "\f2Nobody survived");
                 endround();
             }
             else if(survivors < 2)
@@ -2668,7 +2687,7 @@ namespace server
         }
         if(timeisup && !betweenrounds)
         {
-            sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ROUND, "\f2Time is up");
+            sendf(-1, 1, "ri2s", N_NOTICE, S_ROUND, "\f2Time is up");
             endround(); // make sure to start a new round if we ran out of time in any round-based mode
         }
         if(gamewaiting || m_elimination || (!rewardsurvivors && !rewardhunters)) return;
@@ -2680,7 +2699,7 @@ namespace server
             addscore(ci, score);
             if(!interm && m_lms && ci->state.aitype == AI_NONE)
             {
-                sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, S_ROUND_WIN, "\f2You win the round");
+                sendf(ci->clientnum, 1, "ri2s", N_NOTICE, S_ROUND_WIN, "\f2You win the round");
             }
         }
     }
@@ -3111,7 +3130,7 @@ namespace server
             }
             if(attacks[atk].headshotdamage)
             {
-				// Weapons deal locational damage only if headshot damage is specified.
+                // Weapons deal locational damage only if headshot damage is specified.
                 if(flags & Hit_Head)
                 {
                     if(m_mayhem(mutators)) // force death if it's a blow to the head when the Mayhem mutator is enabled
@@ -3270,7 +3289,7 @@ namespace server
                     {
                         extern void forcespectator(clientinfo *ci);
                         forcespectator(ci);
-                        sendf(ci->clientnum, 1, "ri2s", N_ANNOUNCE, NULL, "\f0You entered spectator mode due to inactivity");
+                        sendf(ci->clientnum, 1, "ri2s", N_NOTICE, NULL, "\f0You entered spectator mode due to inactivity");
                     }
                     else if(m_round) suicide(ci);
                 }
@@ -3294,7 +3313,7 @@ namespace server
                 }
                 if(ci->damagemat)
                 {
-                    if(lastmillis-ci->state.lastdamage >= DELAY_ENVIRONMENT_DAMAGE && !ci->state.haspowerup(PU_INVULNERABILITY))
+                    if(lastmillis-ci->state.lastdamage >= DAMAGE_ENVIRONMENT_DELAY && !ci->state.haspowerup(PU_INVULNERABILITY))
                     {
                         dodamage(ci, ci, calculatedamage(DAMAGE_ENVIRONMENT, ci, ci, -1, Hit_Environment), -1, Hit_Environment);
                         ci->state.lastdamage = lastmillis;
@@ -3343,16 +3362,15 @@ namespace server
 
             if(gamelimit && m_timed)
             {
-                if(remainingminutes(1, oldgamemillis)) // one minute
+                if(remainingminutes(1, oldgamemillis)) // One minute.
                 {
-                    sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_1_MINUTE, "\f2One minute remains");
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::ONE_MINUTE);
                 }
-                else if(remainingminutes(5, oldgamemillis)) // five minutes
+                else if(remainingminutes(5, oldgamemillis)) // Five minutes.
                 {
-                    sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ANNOUNCER_5_MINUTES, "\f2Five minutes remain");
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::FIVE_MINUTES);
                 }
             }
-
             if(m_demo) readdemo();
             else if(!gamelimit || !m_timed || (m_round && !interm) || gamemillis < gamelimit)
             {
@@ -4084,10 +4102,10 @@ namespace server
                 break;
 
             case N_TRYSPAWN:
-                if(!ci || !cq || cq->state.state!=CS_DEAD || cq->state.lastspawn>=0 || (!m_edit && cq->state.lastdeath && gamemillis+curtime-cq->state.lastdeath <= DELAY_RESPAWN)) break;
+                if (!ci || !cq || cq->state.state != CS_DEAD || cq->state.lastspawn >= 0 || (!m_edit && cq->state.lastdeath && gamemillis + curtime - cq->state.lastdeath <= SPAWN_DELAY)) break;
                 if((smode && !smode->canspawn(cq)) || (((m_hunt && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
                 {
-                    if(cq->state.aitype==AI_NONE)
+                    if(m_round && cq->state.aitype == AI_NONE)
                     {
                         cq->ghost = true;
                         forcespectator(cq);

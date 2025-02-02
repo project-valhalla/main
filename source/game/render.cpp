@@ -242,7 +242,7 @@ namespace game
                 {
                     transparency = 0.1f;
                 }
-                else if(lastmillis - d->lastspawn <= DURATION_SPAWN)
+                else if(lastmillis - d->lastspawn <= SPAWN_DURATION)
                 {
                     transparency = clamp((lastmillis - d->lastspawn) / 1000.0f, 0.0f, 1.0f);
                 }
@@ -512,7 +512,7 @@ namespace game
 
     float renderstatusbars(gameent* d)
     {
-        if (!isally(self, d) || (d->state != CS_ALIVE && d->state != CS_LAGGED)) return 0;
+        if (!(isally(self, d) && !m_hideallies) || (d->state != CS_ALIVE && d->state != CS_LAGGED)) return 0;
 
         vec pos = d->abovehead().msub(camdir, 50 / 80.0f).msub(camup, 2.0f);
         float offset = 0;
@@ -544,35 +544,38 @@ namespace game
             return;
         }
 
-        float offset = renderstatusbars(d);
-        gameent* hud = followingplayer(self);
-        vec pos = d->abovehead().madd(camup, offset), hitpos;
-        if (hud->o.dist(d->o) > maxparticletextdistance || !raycubelos(pos, camera1->o, hitpos))
+        const float offset = renderstatusbars(d);
+        const gameent* hud = followingplayer(self);
+        vec position = d->abovehead().madd(camup, offset), hit;
+        if (camera1->o.dist(d->o) > maxparticletextdistance || !raycubelos(position, camera1->o, hit))
         {
-            if (isally(hud, d))
+            if (isally(hud, d) && !m_hideallies)
             {
-                if (d->state == CS_ALIVE) particle_hud_mark(pos, 2, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                if (d->state == CS_ALIVE)
+                {
+                    particle_hud_mark(position, 2, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                }
                 else if (d->deaths)
                 {
                     /* Mark the location of death only if the player died during the game (deaths > 0),
                      * otherwise it means they are in a "fake death state" immediately after joining the game.
                      */
-                    particle_hud_mark(pos, 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                    particle_hud_mark(position, 3, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
                 }
             }
             if (m_berserker && d->role == ROLE_BERSERKER)
             {
-                particle_hud_mark(pos, 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                particle_hud_mark(position, 1, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
             }
             if (d->haspowerup(PU_INVULNERABILITY))
             {
-                particle_hud_mark(pos, 0, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+                particle_hud_mark(position, 0, 1, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
             }
         }
         else if (d->state == CS_ALIVE && !hidenames())
         {
             int team = m_teammode && validteam(d->team) ? d->team : 0;
-            particle_text(pos, d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
+            particle_text(position, d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
         }
         booteffect(d);
     }
@@ -646,7 +649,7 @@ namespace game
             basetime = 0;
         }
         int flags = MDL_NOBATCH;
-        if (lastmillis - d->lastspawn <= DURATION_SPAWN)
+        if (lastmillis - d->lastspawn <= SPAWN_DURATION)
         {
             flags |= MDL_FORCETRANSPARENT;
         }

@@ -41,6 +41,21 @@ namespace game
         VARP(killcamera, 0, 1, 1);
         FVARP(killcameramillis, 1.0f, 250.0f, 5000.0f);
 
+        static void resetkillcamera()
+        {
+            gameent* hud = followingplayer(self);
+            if (hud->lastattacker <= -1)
+            {
+                return;
+            }
+
+            hud->lastattacker = -1;
+            if (hud->state == CS_DEAD)
+            {
+                restore();
+            }
+        }
+
         static void updatekillcamera()
         {
             if (!killcamera)
@@ -56,6 +71,7 @@ namespace game
                  * If we don't have a fragger (or as an extra we fragged ourselves),
                  * we have none to follow, so we stop caring.
                  */
+                resetkillcamera();
                 return;
             }
             if (hud->state != CS_DEAD || last->state != CS_ALIVE)
@@ -63,11 +79,7 @@ namespace game
                 /* If we are not dead, or our fragger is not alive,
                  * we will reset information and forget about this until it becomes relevant.
                  */
-                hud->lastattacker = -1;
-                if (hud->state == CS_DEAD)
-                {
-                    restore();
-                }
+                resetkillcamera();
                 return;
             }
             const vec camera = camera1->o;
@@ -76,7 +88,7 @@ namespace game
             static int lastUpdate = 0;
             static int lastFollow = 0;
             const bool isVisible = raycubelos(camera1->o, last->o, position);
-            const bool hasDelay = lastmillis - hud->lastpain < DURATION_SPAWN || lastmillis - lastFollow <= killcameramillis;
+            const bool hasDelay = lastmillis - hud->lastpain < SPAWN_DURATION || lastmillis - lastFollow <= killcameramillis;
             if (isVisible || hasDelay)
             {
                 vectoyawpitch(direction, camera1->yaw, camera1->pitch);

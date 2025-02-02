@@ -1000,6 +1000,12 @@ namespace game
         doweaponchangeffects(d, gun);
     }
     ICOMMAND(getweapon, "", (), intret(self->gunselect));
+    ICOMMAND(isgunselect, "s", (char* gun),
+    {
+        gameent * d = followingplayer(self);
+        int weapon = getweapon(gun);
+        intret(validgun(weapon) && d->gunselect == weapon ? 1 : 0);
+    });
 
     void doweaponchangeffects(gameent* d, int gun)
     {

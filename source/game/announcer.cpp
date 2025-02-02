@@ -4,121 +4,131 @@ namespace game
 {
     namespace announcer
     {
-        enum Announcements
+        struct Announcer
         {
-            HEADSHOT = 0,
-            FIRST,
-            SPREE,
-            SAVAGE,
-            UNSTOPPABLE,
-            LEGENDARY,
-            MAX_ANNOUNCEMENTS
-        };
+            int lastAnnouncement = 0;
+            int fade = 0;
 
-        enum AnnouncementTypes
-        {
-            GAME = 0,
-            SPECIAL,
-            STREAK,
-            MULTIKILL,
-            MAX_TYPES
-        };
+            struct Queue
+            {
+                int sound = -1;
+                int type = -1;
+            };
+            vector<Queue> queueItems;
 
-        struct announcementType
-        {
-            int announcement;
-            int type;
-            int sound;
-            const char* message;
+            void queueAnnouncement(int announcement);
+            void queueSound(int sound);
+            void checkQueue();
         };
-        static const announcementType announcements[Announcements::MAX_ANNOUNCEMENTS] =
-        {
-            { Announcements::HEADSHOT,    AnnouncementTypes::GAME,    S_ANNOUNCER_HEADSHOT,      "scored a headshot"                     },
-            { Announcements::FIRST,       AnnouncementTypes::SPECIAL, S_ANNOUNCER_FIRST_BLOOD,   "\f2drew first blood!"                  },
-            { Announcements::SPREE,       AnnouncementTypes::STREAK,  S_ANNOUNCER_KILLING_SPREE, "\f2is on a killing spree"              },
-            { Announcements::SAVAGE,      AnnouncementTypes::STREAK,  S_ANNOUNCER_SAVAGE,        "\f2is on a savage killing spree"       },
-            { Announcements::UNSTOPPABLE, AnnouncementTypes::STREAK,  S_ANNOUNCER_UNSTOPPABLE,   "\f2is on an unstoppable killing spree" },
-            { Announcements::LEGENDARY,   AnnouncementTypes::STREAK,  S_ANNOUNCER_LEGENDARY,     "\f2is on a legendary killing spree"    }
-        };
+        Announcer announcerInfo;
 
-        struct queue
+        void Announcer::queueAnnouncement(const int announcement)
         {
-            int sound;
-            int type;
-        };
-        vector<queue> queued;
+            if (announcement <= Announcements::INVALID)
+            {
+                return;
+            }
 
-        void queueannouncement(int announcement)
-        {
-            queue& newqueue = queued.add();
-            newqueue.type = announcement;
-            newqueue.sound = announcements[announcement].sound;
+            Queue& newEntry = queueItems.add();
+            newEntry.sound = announcements[announcement].sound;
+            newEntry.type = announcement;
         }
 
-        bool announce(int announcement, bool shouldQueue = true)
+        void Announcer::queueSound(int sound)
         {
-            int sound = announcements[announcement].sound;
+            if (!validsound(sound))
+            {
+                return;
+            }
+
+            Queue& newEntry = queueItems.add();
+            newEntry.sound = sound;
+            newEntry.type = Announcements::INVALID;
+        }
+
+        bool announce(const int announcement, const bool shouldQueue)
+        {
+            if (announcement <= Announcements::INVALID)
+            {
+                return false;
+            }
+
+            const int sound = announcements[announcement].sound;
             if (validsound(sound))
             {
-                if (!ischannelinuse(SND_ANNOUNCER))
+                if (!ischannelinuse(SND_ANNOUNCER) && playsound(sound, NULL, NULL, NULL, SND_ANNOUNCER) >= 0)
                 {
-                    if (playsound(sound, NULL, NULL, NULL, SND_ANNOUNCER) >= 0)
-                    {
-                        // Current announcement.
-                        return true;
-                    }
+                    announcerInfo.lastAnnouncement = announcement;
+                    execident("on_announcement");
+                    return true;
                 }
                 else if (shouldQueue)
                 {
-                    queueannouncement(announcement);
+                    announcerInfo.queueAnnouncement(announcement);
+                    return false;
+                }
+            }
+            return false;
+        }
+        ICOMMAND(getlastannouncement, "", (), intret(announcerInfo.lastAnnouncement));
+
+        bool playannouncement(const int sound, const bool shouldQueue)
+        {
+            if (validsound(sound))
+            {
+                if (!ischannelinuse(SND_ANNOUNCER) && playsound(sound, NULL, NULL, NULL, SND_ANNOUNCER) >= 0)
+                {
+                    return true;
+                }
+                else if (shouldQueue)
+                {
+                    announcerInfo.queueSound(sound);
                     return false;
                 }
             }
             return false;
         }
 
-        void checkqueue()
+        void Announcer::checkQueue()
         {
-            if (!queued.length())
+            if (!queueItems.length())
             {
                 return;
             }
 
             if (!ischannelinuse(SND_ANNOUNCER))
             {
-                loopv(queued)
+                loopv(queueItems)
                 {
-                    queue& first = queued[i];
-                    if (announce(first.type, false))
+                    Queue& firstEntry = queueItems[i];
+                    if ((firstEntry.type <= -1 && playannouncement(firstEntry.sound, false)) || announce(firstEntry.type, false))
                     {
                         /*
                          * Okay, we managed to announce the first announcement in the queue.
                          * Shift the remaining announcements down in the queue.
                          */
-                        queued.remove(i--);
+                        queueItems.remove(i--);
                         break;
                     }
                 }
             }
         }
 
-        void checkannouncement(int announcement, bool shouldAnnounce = true, gameent* actor = NULL)
+        void checkannouncement(const int announcement, const bool shouldPrint = true, gameent* actor = NULL)
         {
-            if (shouldAnnounce)
+            if (actor && announcement > Announcements::INVALID && shouldPrint)
             {
                 // Avoid confusing players in certain circumstances by triggering console messages.
-                if (actor)
+                if (announcements[announcement].type == AnnouncementTypes::STREAK || announcements[announcement].announcement == Announcements::FIRST)
                 {
-                    if (announcements[announcement].type == AnnouncementTypes::SPECIAL || announcements[announcement].type == AnnouncementTypes::STREAK)
-                    {
-                        conoutf(CON_GAMEINFO, "%s \fs%s\fr", colorname(actor), announcements[announcement].message);
-                    }
+                    conoutf(CON_FRAGINFO, "%s \f2%s", colorname(actor), announcements[announcement].message);
+                    writespecialkillfeed(announcement);
                 }
             }
             announce(announcement);
         }
 
-        void parseannouncements(gameent* d, gameent* actor, int flags)
+        void parseannouncements(const gameent* d, gameent* actor, const int flags)
         {
             if (!flags || isally(d, actor))
             {
@@ -155,37 +165,42 @@ namespace game
                 return;
             }
 
-            bool shouldAnnounce = !(flags & KILL_TRAITOR);
+            const bool shouldPrint = !(flags & KILL_TRAITOR);
+            int announcement = Announcements::INVALID;
             if (flags & KILL_FIRST)
             {
-                checkannouncement(Announcements::FIRST, shouldAnnounce, actor);
+                announcement = Announcements::FIRST;
             }
-            if (flags & KILL_SPREE)
+            else if (flags & KILL_SPREE)
             {
-                checkannouncement(Announcements::SPREE, shouldAnnounce, actor);
+                announcement = Announcements::SPREE;
             }
-            if (flags & KILL_SAVAGE)
+            else if (flags & KILL_SAVAGE)
             {
-                checkannouncement(Announcements::SAVAGE, shouldAnnounce, actor);
+                announcement = Announcements::SAVAGE;
             }
-            if (flags & KILL_UNSTOPPABLE)
+            else if (flags & KILL_UNSTOPPABLE)
             {
-                checkannouncement(Announcements::UNSTOPPABLE, shouldAnnounce, actor);
+                announcement = Announcements::UNSTOPPABLE;
             }
-            if (flags & KILL_LEGENDARY)
+            else if (flags & KILL_LEGENDARY)
             {
-                checkannouncement(Announcements::LEGENDARY, shouldAnnounce, actor);
+                announcement = Announcements::LEGENDARY;
+            }
+            if (announcement > Announcements::INVALID)
+            {
+                checkannouncement(announcement, shouldPrint, actor);
             }
         }
 
         void update()
         {
-            checkqueue();
+            announcerInfo.checkQueue();
         }
 
         void reset()
         {
-            queued.shrink(0);
+            announcerInfo.queueItems.shrink(0);
         }
     }
 }

@@ -71,6 +71,7 @@ static struct gamemodeinfo
 #define m_mp(mode)        (m_checknot(mode, M_LOCAL))
 
 #define sameteam(a,b)     (m_teammode && a==b)
+#define m_hideallies      (m_check(gamemode, M_BETRAYAL))
 
 enum
 {

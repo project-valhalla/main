@@ -948,6 +948,7 @@ namespace physics
                 }
                 if (!d->timeinair) msgsound(S_JUMP1, d);
                 else msgsound(S_JUMP2, d);
+                sway.addevent(d, SwayEvent_Jump, 380, -1.2f);
                 break;
             }
 
@@ -957,8 +958,8 @@ namespace physics
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
                 if (event == PHYSEVENT_LAND_LIGHT)
                 {
-                    sway.addevent(d, SwayEvent_Land, 350, -3);
-                    camera::camera.addevent(d, camera::CameraEvent_Land, 80, -1.0f);
+                    sway.addevent(d, SwayEvent_Land, 360, -2.1f);
+                    camera::camera.addevent(d, camera::CameraEvent_Land, 120, -1.0f);
                     triggerfootsteps(d, true);
                 }
                 else

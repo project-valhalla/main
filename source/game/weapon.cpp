@@ -1250,9 +1250,9 @@ namespace game
 
     VARP(hudgunsway, 0, 1, 1);
 
-    FVAR(swaystep, 1, 35.8f, 100);
-    FVAR(swayside, 0, 0.02f, 1);
-    FVAR(swayup, -1, 0.03f, 1);
+    FVAR(swaystep, 1, 35.0f, 100);
+    FVAR(swayside, 0, 0.025f, 1);
+    FVAR(swayup, -1, 0.02f, 1);
     FVAR(swayrollfactor, 1, 4.2f, 30);
     FVAR(swaydecay, 0.1f, 0.996f, 0.9999f);
     FVAR(swayinertia, 0.0f, 0.04f, 1.0f);
@@ -1321,7 +1321,8 @@ namespace game
         trans.add(vec(directionside).mul(swayside * magic5 * 2.0f));
         trans.add(vec(o).mul(-4.0f));
         trans.z += swayup * magic2 * 1.5f;
-        trans.z -= speedfactor * 0.2f;
+        trans.z += swayup * (fabs(sinf(steps)) - 1);
+        trans.z -= speedfactor * 0.15f;
 
         rotationyaw += swayside * magic3 * 24.0f;
         rotationpitch += swayup * magic2 * -10.0f;
@@ -1352,6 +1353,7 @@ namespace game
         rotationyaw += cameravelocity.x * -0.3f;
         rotationpitch += cameravelocity.y * -0.3f;
         rotationroll += cameravelocity.x * -0.5f;
+
         o.add(trans);
 
         yaw += rotationyaw;
@@ -1362,7 +1364,7 @@ namespace game
         if (!hudgunsway) o = owner->o;
     }
 
-    void swayinfo::addevent(gameent* owner, int type, int duration, int factor)
+    void swayinfo::addevent(gameent* owner, int type, int duration, float factor)
     {
         if (owner != followingplayer(self)) // The first-person weapon sway is rendered only for ourselves or the player being spectated.
         {
@@ -1390,6 +1392,15 @@ namespace game
             {
                 switch (event.type)
                 {
+                    case SwayEvent_Jump:
+                    {
+                        const float progress = clamp((lastmillis - event.millis) / static_cast<float>(event.duration), 0.0f, 1.0f);
+                        const float curve = sinf(progress * M_PI) * event.factor;
+                        pitch += curve;
+                        dir.z -= curve * 0.012f;
+                        break;
+                    }
+
                     case SwayEvent_Land:
                     case SwayEvent_LandHeavy:
                     case SwayEvent_Switch:

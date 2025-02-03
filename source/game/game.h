@@ -807,7 +807,8 @@ namespace game
     // weapon.cpp
     enum
     {
-        SwayEvent_Land = 0,
+        SwayEvent_Jump = 0,
+        SwayEvent_Land,
         SwayEvent_LandHeavy,
         SwayEvent_Crouch,
         SwayEvent_Switch
@@ -829,7 +830,8 @@ namespace game
 
         struct swayEvent
         {
-            int type, millis, duration, factor;
+            int type, millis, duration;
+            float factor;
         };
         vector<swayEvent> events;
 
@@ -842,7 +844,7 @@ namespace game
 
         void updatedirection(gameent* owner);
         void update(gameent* owner);
-        void addevent(gameent* owner, int type, int duration, int factor);
+        void addevent(gameent* owner, int type, int duration, float factor);
         void processevents();
     };
 

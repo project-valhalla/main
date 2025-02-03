@@ -3082,7 +3082,7 @@ namespace server
             sendf(ts.health<=0 ? -1 : target->ownernum, 1, "ri7", N_HITPUSH, target->clientnum, atk, damage, v.x, v.y, v.z);
             target->setpushed();
         }
-        if(ts.health<=0 || atk == ATK_INSTA)
+        if(ts.health <= 0)
         {
             if(!m_teammode && isally(target, actor)) suicide(actor);
             if(m_infection)
@@ -3108,7 +3108,6 @@ namespace server
     {
         target->state.instantkill(extradamage);
         damage = target->state.health;
-        died(target, actor, atk, damage, flags);
     }
 
     int calculatedamage(int damage, clientinfo *target, clientinfo *actor, int atk, int flags)

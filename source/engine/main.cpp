@@ -255,7 +255,14 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
             popfont();
             float tsz = sz/(8*FONTH);
 
-            name_label.draw(x + sz + (infowidth - name_label.width()) / 2, y);
+            if(mapshot && mapshot!=notexture && mapinfo)
+            {
+                name_label.draw(x + sz + (infowidth - name_label.width()) / 2, y);
+            }
+            else
+            {
+                name_label.draw(x - name_label.width() / 2, y);
+            }
             my = 1.5f*FONTH*tsz;
         }
         if(mapinfo)

@@ -174,21 +174,6 @@ namespace text
     }
     
     void getres(int& w, int& h);
-
-    // used by the text editor
-    int visible(const char *str, float hitx, float hity, int max_width,
-        int align = -1,
-        int justify = 0,
-        const char *lang = nullptr,
-        bool no_fallback = false
-    );
-    // used by the text editor
-    void pos(const char *str, int cursor, int& cx, int& cy, int max_width,
-        int align = -1,
-        int justify = 0,
-        const char *lang = nullptr,
-        bool no_fallback = false
-    );
 }
 
 // texture

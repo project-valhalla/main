@@ -448,7 +448,7 @@ engine/ui.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/ui.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 engine/ui.o: engine/sound.h shared/iengine.h shared/igame.h engine/world.h
 engine/ui.o: engine/octa.h engine/light.h engine/texture.h engine/bih.h
-engine/ui.o: engine/model.h engine/textedit.h shared/unicode.h
+engine/ui.o: engine/model.h
 engine/liquid.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 engine/liquid.o: shared/ents.h shared/command.h shared/glexts.h
 engine/liquid.o: shared/glemu.h engine/sound.h shared/iengine.h

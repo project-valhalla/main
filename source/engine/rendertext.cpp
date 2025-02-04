@@ -1,6 +1,5 @@
 #include "engine.h"
 
-#include <cairo.h>
 #include <pango/pangocairo.h>
 
 #if (!PANGO_VERSION_CHECK(1, 56, 0) || defined(OLDPANGO))

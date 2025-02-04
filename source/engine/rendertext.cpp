@@ -2,7 +2,19 @@
 
 #include <cairo.h>
 #include <pango/pangocairo.h>
-#include <fontconfig/fontconfig.h>
+
+#if (!PANGO_VERSION_CHECK(1, 56, 0) || defined(OLDPANGO))
+    #if (defined(WIN32) || defined(__APPLE__))
+        #error this project requires pango >= 1.56
+    #else
+        #define OLDPANGO 1
+        #pragma message ("compiling with support for old pango (>= 1.38)")
+    #endif
+#endif
+
+#ifdef OLDPANGO
+    #include <fontconfig/fontconfig.h>
+#endif
 
 static int fontid = 0;                 // used by UI for change detection
 double fontsize = 0;                   // pixel height of the current font
@@ -79,13 +91,17 @@ static void clear_text_particles()
 
 #pragma region font_management
 // register a TTF file
-// NOTE: on Windows and MacOs, this assumes that pango was compiled with fontconfig support,
-// and that the `PANGOCAIRO_BACKEND` env var is set to `fc` or `fontconfig`
 void addfontfile(const char *filename)
 {
     const char *found = findfile(filename, "rb");
     if(!found || !found[0]) return;
-    FcConfigAppFontAddFile(FcConfigGetCurrent(), (const unsigned char *)found);
+    //conoutf(CON_DEBUG, "Loading font file: %s", found);
+    #ifdef OLDPANGO
+        FcConfigAppFontAddFile(FcConfigGetCurrent(), (const unsigned char *)found);
+    #else
+        static PangoFontMap *fontMap = pango_cairo_font_map_get_default();
+        pango_font_map_add_font_file(fontMap, found, nullptr);
+    #endif
 }
 COMMANDN(registerfont, addfontfile, "s");
 

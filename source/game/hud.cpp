@@ -85,7 +85,7 @@ namespace game
 
     VARFP(damagescreen, 0, 1, 1, { if (!damagescreen) damageblendmillis = 0; });
     VARP(damagescreenfactor, 1, 10, 100);
-    VARP(damagescreenalpha, 1, 70, 100);
+    VARP(damagescreenalpha, 1, 90, 100);
     VARP(damagescreenfade, 0, 500, 1000);
     VARP(damagescreenmin, 1, 50, 1000);
     VARP(damagescreenmax, 1, 100, 1000);
@@ -388,7 +388,7 @@ namespace game
 
     SVAR(lasthudpickupinfo, "");
 
-    void checkitem(int type)
+    void checkentity(int type)
     {
         switch (type)
         {
@@ -404,13 +404,25 @@ namespace game
                 break;
             }
         }
-        itemstat& is = itemstats[type - I_AMMO_SG];
+        if (type == TRIGGER)
+        {
+            return;
+        }
+
         string pickupinfo;
-        formatstring(pickupinfo, "+%d %s", is.add, is.name);
+        if (validitem(type))
+        {
+            itemstat& is = itemstats[type - I_AMMO_SG];
+            formatstring(pickupinfo, "+%d %s", is.add, is.name);
+        }
+        else
+        {
+            formatstring(pickupinfo, "%s", gentities[type].prettyname);
+        }
         setsvar("lasthudpickupinfo", pickupinfo);
     }
 
-    VARP(cursorsize, 0, 18, 40);
+    VARP(cursorsize, 0, 25, 40);
     VARP(crosshairsize, 0, 18, 40);
     VARP(crosshairfx, 0, 1, 1);
     VARP(crosshaircolors, 0, 1, 1);
@@ -539,7 +551,7 @@ namespace game
             if (!betweenrounds && crosshairally)
             {
                 dynent* o = intersectclosest(d->o, worldpos, d);
-                if (o && o->type == ENT_PLAYER && isally(((gameent*)o), d))
+                if (o && o->type == ENT_PLAYER && isally(((gameent*)o), d) && !m_hideallies)
                 {
                     crosshair = Pointer_Ally;
                     color = vec::hexcolor(teamtextcolor[d->team]);
@@ -590,13 +602,14 @@ namespace game
 
     static inline void calculatecrosshairsize(float& size)
     {
-        float crouchprogress = self->eyeheight / self->maxheight;
+        const float crouchprogress = self->eyeheight / self->maxheight;
         float zoomprogress = 1.0f;
         if (camera::camera.zoomstate.progress < 1)
         {
             zoomprogress = 1.0f - camera::camera.zoomstate.progress;
         }
-        size *= crouchprogress * zoomprogress;
+        const float spawnprogress = clamp((lastmillis - self->lastspawn) / float(SPAWN_DURATION), 0.0f, 1.0f);
+        size *= crouchprogress * zoomprogress * spawnprogress;
     }
 
     static void drawcrosshair(const int w, const int h, float x, float y, float size)
@@ -646,14 +659,15 @@ namespace game
         {
             return;
         }
-        float scale = 3 * UI::uiscale;
         if (hascursor)
         {
+            const float scale = UI::uiscale * w / 900.0f;
             float size = cursorsize * scale;
             drawcursor(w, h, center, center, size);
         }
         else
         {
+            float scale = 3 * UI::uiscale;
             float x = 0, y = 0, size = crosshairsize * scale;
             drawcrosshair(w, h, x, y, size);
         }

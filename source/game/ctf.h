@@ -587,6 +587,7 @@ struct ctfclientmode : clientmode
         returnflag(i);
         conoutf(CON_GAMEINFO, "%s \fs\f2returned\fr %s", teamcolorname(d), teamcolorflag(f));
         playsound(S_FLAGRETURN);
+        entities::dohudpickupeffects(FLAG, d, false);
     }
 
     void resetflag(int i, int version)
@@ -624,6 +625,7 @@ struct ctfclientmode : clientmode
         conoutf(CON_GAMEINFO, "%s \fs\f2scored for\fr %s", teamcolorname(d), teamcolor("\fs\f2team\fr ", "", team, "\fs\f2a team\fr"));
         playsound(team==self->team ? S_FLAGSCORE : S_FLAGFAIL);
         if(d->aitype==AI_BOT) taunt(d);
+        entities::dohudpickupeffects(FLAG, d, false);
     }
 
     void takeflag(gameent *d, int i, int version)
@@ -637,6 +639,7 @@ struct ctfclientmode : clientmode
         else conoutf(CON_GAMEINFO, "%s \fs\f2stole\fr %s", teamcolorname(d), teamcolorflag(f));
         ownflag(i, d, lastmillis);
         playsound(S_FLAGPICKUP);
+        entities::dohudpickupeffects(FLAG, d);
     }
 
     void checkitems(gameent *d)
@@ -671,10 +674,9 @@ struct ctfclientmode : clientmode
        }
     }
 
-    int respawnwait(gameent *d, bool seconds)
+    int respawnwait()
     {
-        if(seconds) return RESPAWNSECS * 1000;
-        return max(0, RESPAWNSECS-(lastmillis-d->lastpain)/1000);
+        return RESPAWNSECS * 1000;
     }
 
     bool aihomerun(gameent *d, ai::aistate &b)

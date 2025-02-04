@@ -135,11 +135,17 @@ namespace game
         if(d)
         {
             bool isalive = d->state != CS_DEAD && !d->ghost;
-            int status = !isalive ? 0x606060 : 0xFFFFFF;
-            if(validprivilege(d->privilege))
+            int status = 0x606060;
+            if (isalive)
             {
-                status = privilegecolors[d->privilege];
-                if(!isalive) status = (status>>1)&0x7F7F7F;
+                if (d->role > ROLE_NONE)
+                {
+                    status = 0xFF6060;
+                }
+                else
+                {
+                    status = 0xFFFFFF;
+                }
             }
             intret(status);
         }

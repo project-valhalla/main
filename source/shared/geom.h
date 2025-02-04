@@ -1982,15 +1982,17 @@ static inline float lerp360(float angle, float target, float factor)
 }
 
 template<class T>
-static inline T lerp(T a, T b, float t) { return a + (b - a) * t; }
+static inline T lerp(T a, T b, float t)
+{ 
+    return a + (b - a) * t;
+}
 
 template<class T>
 static inline T lerpstep(T a, T b, T step)
 {
     if (a == b) return a;
-    return a > b ?
-        a - min(step, a - b) :
-        a + min(step, b - a);
+    if (a > b) return a - min(step, a - b);
+    else a + min(step, b - a);
 }
 
 namespace ease

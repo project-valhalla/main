@@ -236,7 +236,6 @@
 		<Unit filename="../engine/sound.cpp" />
 		<Unit filename="../engine/sound.h" />
 		<Unit filename="../engine/stain.cpp" />
-		<Unit filename="../engine/textedit.h" />
 		<Unit filename="../engine/texture.cpp" />
 		<Unit filename="../engine/texture.h" />
 		<Unit filename="../engine/ui.cpp" />

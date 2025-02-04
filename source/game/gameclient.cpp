@@ -191,6 +191,12 @@ namespace game
     }
     ICOMMAND(getclientteam, "i", (int *cn), intret(getclientteam(*cn)));
 
+    ICOMMAND(getclientteamtextcolor, "i", (int* cn),
+    {
+        gameent * d = getclient(*cn);
+        intret(teamtextcolor[m_teammode ? d->team : 0]);
+    });
+
     int getclientmodel(int cn)
     {
         gameent *d = cn < 0 ? self : getclient(cn);
@@ -283,19 +289,6 @@ namespace game
         if(d) intret(d->gunselect);
     });
 
-    ICOMMAND(isgunselect, "s", (char* gun),
-    {
-        gameent* d = followingplayer(self);
-        int weapon = getweapon(gun);
-        intret(validgun(weapon) && d->gunselect == weapon ? 1 : 0);
-    });
-
-    ICOMMAND(getlastswitchattempt, "", (),
-    {
-        gameent* d = followingplayer(self);
-        intret(d->lastswitchattempt);
-    });
-
     ICOMMAND(getclientammo, "i", (int *cn),
     {
         gameent *d = getclient(*cn);
@@ -342,6 +335,15 @@ namespace game
     {
         gameent *d = getclient(*cn);
         if(d) intret(d->privilege);
+    });
+
+    ICOMMAND(getclientprivilegecolor, "i", (int* cn),
+    {
+        gameent * d = getclient(*cn);
+        if (d && d->privilege)
+        {
+            intret(privilegecolors[d->privilege]);
+        }
     });
 
     bool isprivileged(int cn)
@@ -394,6 +396,29 @@ namespace game
         return d && d->state==CS_DEAD;
     }
     ICOMMAND(isdead, "b", (int *cn), intret(isdead(*cn) ? 1 : 0));
+
+    bool isally(int cn)
+    {
+        gameent* d = getclient(cn);
+        gameent* hud = followingplayer(self);
+        return d && isally(hud, d);
+    }
+    ICOMMAND(isally, "i", (int* cn), intret(isally(*cn) ? 1 : 0));
+
+    bool iswinner(int cn)
+    {
+        gameent* d = cn < 0 ? self : getclient(cn);
+        if (m_teammode && validteam(d->team) && bestteams.htfind(d->team) >= 0)
+        {
+            return true;
+        }
+        else if (bestplayers.find(d) >= 0)
+        {
+            return true;
+        }
+        return false;
+    }
+    ICOMMAND(iswinner, "b", (int* cn), intret(iswinner(*cn) ? 1 : 0));
 
     bool isai(int cn, int type)
     {
@@ -682,6 +707,8 @@ namespace game
     ICOMMANDS("m_lobby", "i", (int *mode), { int gamemode = *mode; intret(m_lobby); });
     ICOMMANDS("m_timed", "i", (int *mode), { int gamemode = *mode; intret(m_timed); });
     ICOMMANDS("m_story", "i", (int *mode), { int gamemode = *mode; intret(m_story); });
+    ICOMMANDS("m_round", "i", (int* mode), { int gamemode = *mode; intret(m_round); });
+    ICOMMANDS("m_hideallies", "i", (int* mode), { int gamemode = *mode; intret(m_hideallies); });
     ICOMMANDS("m_insta", "", (), { intret(m_insta(mutators)); });
 
     void changemap(const char *name, int mode, int muts) // request map change, server may ignore
@@ -1915,12 +1942,25 @@ namespace game
                 break;
             }
 
-            case N_ANNOUNCE:
+            case N_NOTICE:
             {
                 int sound = getint(p);
                 getstring(text, p);
-                if(sound >= 0) playsound(sound, NULL, NULL, NULL, SND_ANNOUNCER);
-                if(text[0]) conoutf(CON_GAMEINFO, "%s", text);
+                if (text[0])
+                {
+                    conoutf(CON_GAMEINFO, "%s", text);
+                }
+                if (validsound(sound))
+                {
+                    playsound(sound, NULL, NULL, NULL, SND_ANNOUNCER);
+                }
+                break;
+            }
+
+            case N_ANNOUNCE:
+            {
+                int announcement = getint(p);
+                announcer::announce(announcement);
                 break;
             }
 
@@ -1945,12 +1985,15 @@ namespace game
                 break;
             }
 
-            case N_ITEMACC:            // server acknowledges that I picked up this item
+            case N_ITEMACC: // Server acknowledged that we picked up this item.
             {
                 int i = getint(p), cn = getint(p);
                 gameent *d = getclient(cn);
-                entities::pickupeffects(i, d);
-                d->lastpickupmillis = lastmillis;
+                entities::dopickupeffects(i, d);
+                if (d == self)
+                {
+                    game::autoswitchweapon(type);
+                }
                 break;
             }
 
@@ -2271,17 +2314,17 @@ namespace game
                     {
                         hunterchosen = true;
                     }
-                    writeobituary(d, actor, ATK_ZOMBIE);
                     d->stopchannelsound(Chan_PowerUp);
                     stopownersounds(d);
                     playsound(S_INFECTED, d);
                     particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
                     doweaponchangeffects(d, GUN_ZOMBIE);
                     d->lastswitchattempt = lastmillis;
+                    writeobituary(d, actor, ATK_ZOMBIE);
                 }
                 if (d == followingplayer(self))
                 {
-                    addscreenflash(150);
+                    addscreenflash(ENTITY_TELEPORT_FLASH);
                 }
                 d->assignrole(role);
                 break;

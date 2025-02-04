@@ -2084,7 +2084,7 @@ namespace UI
     // NOTE: `scale` is the text height in screenfuls at `uiscale 1`
     struct Text : Object
     {
-        float scale, wrap;
+        float scale, wrap, alpha;
         Color color;
         text::Label label;
         int fontid, lastchange;
@@ -2099,7 +2099,7 @@ namespace UI
 
         Text() : scale(0), wrap(0), color(0), lastchange(0), align(curwrapalign), shadow(curshadow), outlinealpha(curfontoutlinealpha), outline(curfontoutline), justify(curjustify), nofallback(curnofallback), language(nullptr), cursor(-1), has_cursor(false), crc(0) {}
 
-        void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false)
+        void setup(float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false, float alpha_ = 1)
         {
             Object::setup();
             changed = false;
@@ -2140,6 +2140,7 @@ namespace UI
                 SETSTR(language, curlanguage);
                 cursor       = cursor_;
             }
+            alpha = alpha_;
             has_cursor = has_cursor_;
         }
 
@@ -2181,12 +2182,13 @@ namespace UI
 
             const double textscale = drawscale();
             const double x = round(sx/textscale), y = round(sy/textscale);
+            const int coloralpha = alpha < 1 ? static_cast<int>(alpha * 255.0f) : color.a;
             pushhudscale(textscale);
             if(shadow)
             {
-                label.draw(x-0.001/textscale, y+0.001/textscale, (color.a < shadow ? color.a : shadow), true);
+                label.draw(x-0.001/textscale, y+0.001/textscale, (coloralpha < shadow ? coloralpha : shadow), true);
             }
-            label.draw(x, y, color.a);
+            label.draw(x, y, coloralpha);
             pophudmatrix();
         }
 
@@ -2237,9 +2239,9 @@ namespace UI
         TextString() : str(NULL) {}
         ~TextString() { delete[] str; }
 
-        void setup(const char *str_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false)
+        void setup(const char *str_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false, float alpha_ = 1)
         {
-            Text::setup(scale_, color_, wrap_, cursor_, has_cursor_);
+            Text::setup(scale_, color_, wrap_, cursor_, has_cursor_, alpha_);
 
             SETSTR(str, str_);
         }
@@ -2257,9 +2259,9 @@ namespace UI
 
         TextInt() : val(0) { str[0] = '0'; str[1] = '\0'; }
 
-        void setup(int val_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false)
+        void setup(int val_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false, float alpha_ = 1)
         {
-            Text::setup(scale_, color_, wrap_, cursor_, has_cursor_);
+            Text::setup(scale_, color_, wrap_, cursor_, has_cursor_, alpha_);
 
             if(val != val_) { val = val_; intformat(str, val, sizeof(str)); }
         }
@@ -2277,9 +2279,9 @@ namespace UI
 
         TextFloat() : val(0) { memcpy(str, "0.0", 4); }
 
-        void setup(float val_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false)
+        void setup(float val_, float scale_ = 1, const Color &color_ = Color(255, 255, 255), float wrap_ = -1, int cursor_ = -1, bool has_cursor_ = false, float alpha_ = 1)
         {
-            Text::setup(scale_, color_, wrap_, cursor_, has_cursor_);
+            Text::setup(scale_, color_, wrap_, cursor_, has_cursor_, alpha_);
 
             if(val != val_) { val = val_; floatformat(str, val, sizeof(str)); }
         }
@@ -3427,24 +3429,24 @@ namespace UI
     ICOMMAND(uilanguage, "se", (char *val, uint *children),
         BUILD(Language, o, o->setup(val), children));
 
-    static inline void buildtext(tagval &t, float scale, float scalemod, const Color &color, float wrap, int cursor, bool has_cursor, uint *children)
+    static inline void buildtext(tagval &t, float scale, float scalemod, const Color &color, float wrap, int cursor, bool has_cursor, uint *children, float alpha = 1)
     {
         if(scale <= 0) scale = 1;
         scale *= scalemod;
         switch(t.type)
         {
             case VAL_INT:
-                BUILD(TextInt, o, o->setup(t.i, scale, color, wrap, cursor, has_cursor), children);
+                BUILD(TextInt, o, o->setup(t.i, scale, color, wrap, cursor, has_cursor, alpha), children);
                 break;
             case VAL_FLOAT:
-                BUILD(TextFloat, o, o->setup(t.f, scale, color, wrap, cursor, has_cursor), children);
+                BUILD(TextFloat, o, o->setup(t.f, scale, color, wrap, cursor, has_cursor, alpha), children);
                 break;
             case VAL_CSTR:
             case VAL_MACRO:
             case VAL_STR:
                 if(t.s[0])
                 {
-                    BUILD(TextString, o, o->setup(t.s, scale, color, wrap, cursor, has_cursor), children);
+                    BUILD(TextString, o, o->setup(t.s, scale, color, wrap, cursor, has_cursor, alpha), children);
                     break;
                 }
                 // fall-through
@@ -3456,6 +3458,9 @@ namespace UI
 
     ICOMMAND(uicolortext, "tifieN", (tagval *text, int *c, float *scale, int *cursor, uint *children, int *numargs),
         buildtext(*text, *scale, uitextscale, Color(*c), -1, *numargs>=4 ? *cursor : -1, *numargs>=4, children));
+
+    ICOMMAND(uicolorblendtext, "tiffieN", (tagval *text, int *c, float *alpha, float *scale, int *cursor, uint *children, int *numargs),
+        buildtext(*text, *scale, uitextscale, Color(*c), -1, *numargs>=5 ? *cursor : -1, *numargs>=5, children, *alpha));
 
     ICOMMAND(uitext, "tfieN", (tagval *text, float *scale, int *cursor, uint *children, int *numargs),
         buildtext(*text, *scale, uitextscale, Color(255, 255, 255), -1, *numargs>=3 ? *cursor : -1, *numargs>=3, children));

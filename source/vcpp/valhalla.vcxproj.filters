@@ -276,9 +276,6 @@
     <ClInclude Include="..\engine\skelmodel.h">
       <Filter>Header\engine</Filter>
     </ClInclude>
-    <ClInclude Include="..\engine\textedit.h">
-      <Filter>Header\engine</Filter>
-    </ClInclude>
     <ClInclude Include="..\engine\texture.h">
       <Filter>Header\engine</Filter>
     </ClInclude>

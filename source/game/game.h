@@ -105,7 +105,7 @@ enum
     N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT,
-    N_ANNOUNCE,
+    N_NOTICE, N_ANNOUNCE,
     N_MAPCHANGE, N_MAPVOTE, N_TEAMINFO, N_ITEMSPAWN, N_ITEMPICKUP, N_ITEMACC, N_TELEPORT, N_JUMPPAD,
     N_PING, N_PONG, N_CLIENTPING,
     N_TIMEUP, N_FORCEINTERMISSION,
@@ -136,7 +136,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
-    N_ANNOUNCE, 3,
+    N_NOTICE, 2, N_ANNOUNCE, 1,
     N_MAPCHANGE, 0, N_MAPVOTE, 0, N_TEAMINFO, 0, N_ITEMSPAWN, 2, N_ITEMPICKUP, 2, N_ITEMACC, 3,
     N_PING, 2, N_PONG, 2, N_CLIENTPING, 2,
     N_TIMEUP, 3, N_FORCEINTERMISSION, 1,
@@ -178,6 +178,7 @@ struct demoheader
 #include "ai.h"
 #include "gamemode.h"
 #include "entity.h"
+#include "announcer.h"
 
 // inherited by gameent and server clients
 struct gamestate
@@ -443,6 +444,9 @@ static const int teameffectcolor[1+MAXTEAMS] = { 0xFFFFFF, 0x2020FF, 0xFF2020 };
 const int TAUNT_DELAY = 1000;
 const int VOICECOM_DELAY = 2800;
 
+const int SPAWN_DURATION = 1000; // Spawn effect/shield duration.
+const int SPAWN_DELAY = 1500; // Spawn is possible after a specific number of milliseconds has elapsed.
+
 enum
 {
     // Reserved sound channels.
@@ -640,7 +644,8 @@ namespace entities
     extern void putitems(packetbuf &p);
     extern void setspawn(int i, bool shouldspawn, bool isforced = false);
     extern void teleport(int n, gameent *d);
-    extern void pickupeffects(int n, gameent *d);
+    extern void dopickupeffects(const int n, gameent *d);
+    extern void dohudpickupeffects(const int type, gameent* d, const bool shouldCheck = true);
     extern void teleporteffects(gameent *d, int tp, int td, bool local = true);
     extern void jumppadeffects(gameent *d, int jp, bool local = true);
     extern void resettriggers();
@@ -706,7 +711,7 @@ namespace game
         virtual bool aidefend(gameent *d, ai::aistate &b) { return false; }
         virtual bool aipursue(gameent *d, ai::aistate &b) { return false; }
         virtual int getteamscore(int team) { return 0; }
-        virtual int respawnwait(gameent* d, bool seconds = false) { return 0; }
+        virtual int respawnwait() { return 0; }
         virtual float ratespawn(gameent* d, const extentity& e) { return 1.0f; }
         virtual float clipconsole(float w, float h) { return 0; }
     };
@@ -728,8 +733,9 @@ namespace game
     extern void spawneffect(gameent *d);
     extern void respawn();
     extern void setdeathstate(gameent *d, bool restore = false);
+    extern void writespecialkillfeed(int announcement);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
-    extern void kill(gameent *d, gameent *actor, int atk, int flags = KILL_NONE);
+    extern void kill(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void updatetimer(int time, int type);
     extern void msgsound(int n, physent *d = NULL);
     extern void doaction(int act);
@@ -749,6 +755,8 @@ namespace game
     extern int smoothmove, smoothdist;
     extern int deathscream;
     extern int getdeathstate(gameent* d, int atk, int flags);
+    extern const int getrespawndelay();
+    extern const int getrespawnwait(gameent* d);
 
     extern const char* colorname(gameent* d, const char* name = NULL, const char* alt = NULL, const char* color = "");
     extern const char* teamcolorname(gameent* d, const char* alt = NULL);
@@ -767,6 +775,8 @@ namespace game
     extern gameent* self;
 
     extern vector<gameent*> players, clients;
+    extern vector<gameent*> bestplayers;
+    extern vector<int> bestteams;
 
     // client.cpp
     extern void ignore(int cn);
@@ -812,7 +822,8 @@ namespace game
     // weapon.cpp
     enum
     {
-        SwayEvent_Land = 0,
+        SwayEvent_Jump = 0,
+        SwayEvent_Land,
         SwayEvent_LandHeavy,
         SwayEvent_Crouch,
         SwayEvent_Switch
@@ -834,7 +845,8 @@ namespace game
 
         struct swayEvent
         {
-            int type, millis, duration, factor;
+            int type, millis, duration;
+            float factor;
         };
         vector<swayEvent> events;
 
@@ -847,7 +859,7 @@ namespace game
 
         void updatedirection(gameent* owner);
         void update(gameent* owner);
-        void addevent(gameent* owner, int type, int duration, int factor);
+        void addevent(gameent* owner, int type, int duration, float factor);
         void processevents();
     };
 
@@ -936,7 +948,7 @@ namespace game
     extern void setdamagehud(const int damage, gameent* d, gameent* actor);
     extern void addbloodsplatter(const int amount, const int color);
     extern void addscreenflash(const int amount);
-    extern void checkitem(int type);
+    extern void checkentity(int type);
 
     extern int lowhealthscreen;
 
@@ -1026,9 +1038,12 @@ namespace game
 
     namespace announcer
     {
-        extern void parseannouncements(gameent* d, gameent* actor, int flags);
+        extern void parseannouncements(const gameent* d, gameent* actor, const int flags);
         extern void update();
         extern void reset();
+
+        extern bool announce(const int announcement, const bool shouldQueue = true);
+        extern bool playannouncement(const int sound, const bool shouldQueue = true);
     }
 }
 

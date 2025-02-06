@@ -1231,4 +1231,25 @@ namespace physics
         float k = pow(ragdolleyesmooth, float(curtime) / ragdolleyesmoothmillis);
         d->o.lerp(eye, 1 - k);
     }
+
+    VARP(ragdollpush, 0, 1, 1);
+
+    void pushragdolls(const vec& position, const int margin)
+    {
+        if (!ragdollpush)
+        {
+            return;
+        }
+
+        loopv(ragdolls)
+        {
+            gameent* ragdoll = ragdolls[i];
+            if (ragdoll->o.reject(position, ragdoll->radius + margin))
+            {
+                continue;
+            }
+            vec delta = vec(ragdoll->o).sub(position).normalize();
+            pushragdoll(ragdoll, delta);
+        }
+    }
 }

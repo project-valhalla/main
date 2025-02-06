@@ -660,6 +660,7 @@ namespace physics
     extern void physicsframe();
     extern void updatephysstate(gameent* d);
     extern void addroll(gameent* d, float amount);
+    extern void pushragdolls(const vec& position, const int margin);
 
     extern bool canmove(gameent* d);
     extern bool hasbounced(projectile* proj, float secs, float elasticity, float waterfric, float gravity);
@@ -759,7 +760,7 @@ namespace game
     extern gameent* newclient(int cn);
     extern gameent* self;
 
-    extern vector<gameent*> players, clients;
+    extern vector<gameent*> players, clients, ragdolls;
     extern vector<gameent*> bestplayers;
     extern vector<int> bestteams;
 

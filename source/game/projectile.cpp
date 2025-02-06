@@ -340,6 +340,7 @@ namespace game
             if (o->o.reject(position, o->radius + attacks[atk].exprad) || (safe && o == safe)) continue;
             calculatesplashdamage(o, position, velocity, owner, atk, flags);
         }
+        physics::pushragdolls(position, attacks[atk].exprad);
     }
 
     void explodeprojectile(projectile& proj, const vec& v, dynent* safe, const bool islocal)

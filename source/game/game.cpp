@@ -582,6 +582,7 @@ namespace game
         }
         else if (d->deathstate == Death_Shock)
         {
+            static const float GUN_PULSE_SHOCK_IMPULSE = 95.0f; // Funny upward velocity applied to targets dying of electrocution.
             d->vel.z = max(d->vel.z, GUN_PULSE_SHOCK_IMPULSE);
             particle_flare(d->o, d->o, 100, PART_ELECTRICITY, 0xDD88DD, 12.0f);
         }

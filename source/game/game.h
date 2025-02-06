@@ -470,7 +470,7 @@ struct gameent : dynent, gamestate
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots, lives, holdingflag;
     editinfo *edit;
-    float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, pitchrecoil;
+    float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, recoil;
     int smoothmillis;
 
     int chan[Chan_Num], chansound[Chan_Num];
@@ -493,7 +493,7 @@ struct gameent : dynent, gamestate
                 lastpain(0), lasthurt(0), lastspawn(0),
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastswitchattempt(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
-                edit(NULL), pitchrecoil(0), smoothmillis(-1),
+                edit(NULL), recoil(0), smoothmillis(-1),
                 transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
                 muzzle(-1, -1, -1), eject(-1, -1, -1)
@@ -577,6 +577,7 @@ struct gameent : dynent, gamestate
         {
             stopchannelsound(i);
         }
+        recoil = 0;
     }
 
     void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)

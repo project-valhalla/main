@@ -26,7 +26,8 @@ namespace game
         vec offset;
         do offset = vec(rndscale(1), rndscale(1), rndscale(1)).sub(0.5f);
         while(offset.squaredlen() > 0.5f * 0.5f);
-        offset.mul((to.dist(from) / 1024) * spread / (d->crouched() && d->crouching ? 1.5f : 1));
+        const bool isCrouched = d->physstate >= PHYS_SLOPE && d->crouching && d->crouched();
+        offset.mul((to.dist(from) / 1024) * spread * (isCrouched ? 0.5f : 1.0f));
         offset.z /= 2;
         dest = vec(offset).add(to);
         if(dest != from)
@@ -78,6 +79,46 @@ namespace game
         return true;
     }
 
+    void addrecoil(gameent* d, const vec& dir, const int atk)
+    {
+        int kickAmount = attacks[atk].recoilamount;
+        if (kickAmount)
+        {
+            if (d->haspowerup(PU_DAMAGE))
+            {
+                static const int GUN_RECOIL_POWERUP_MULTIPLIER = 2;
+                kickAmount *= GUN_RECOIL_POWERUP_MULTIPLIER;
+            }
+            const bool isCrouched = d->physstate >= PHYS_SLOPE && d->crouching && d->crouched();
+            if (kickAmount && !isCrouched)
+            {
+                vec kickback = vec(dir).mul(kickAmount * -2.5f);
+                d->vel.add(kickback);
+            }
+            d->recoil = kickAmount;
+        }
+        else
+        {
+            static const int GUN_RECOIL_SHAKE = 40; // Default shake value for weapons with no recoil.
+            kickAmount = GUN_RECOIL_SHAKE;
+            camera::camera.addevent(d, camera::CameraEvent_Shake, kickAmount);
+        }
+    }
+
+    void updaterecoil(gameent* d, int curtime)
+    {
+        if (!d->recoil)
+        {
+            return;
+        }
+
+        const float amount = d->recoil * (curtime / 1000.0f);
+        d->pitch += amount;
+        float friction = 4.0f / curtime * 30.0f;
+        d->recoil = d->recoil * (friction - 2.8f) / friction;
+        camera::fixrange();
+    }
+
     void shoot(gameent *d, const vec &targ)
     {
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
@@ -102,13 +143,7 @@ namespace game
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
-        int kickamount = attacks[atk].kickamount;
-        if(d->haspowerup(PU_DAMAGE)) kickamount *= 2;
-        if(kickamount && !(d->physstate >= PHYS_SLOPE && d->crouching && d->crouched()))
-        {
-            vec kickback = vec(dir).mul(kickamount*-2.5f);
-            d->vel.add(kickback);
-        }
+        addrecoil(d, dir, atk);
         float shorten = attacks[atk].range && dist > attacks[atk].range ? attacks[atk].range : 0,
               barrier = raycube(d->o, dir, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
         if(barrier > 0 && barrier < dist && (!shorten || barrier < shorten))
@@ -149,17 +184,6 @@ namespace game
         d->gunwait = gunwait;
         if(d->gunselect == GUN_PISTOL && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;
-        d->pitchrecoil = kickamount * 0.10f;
-    }
-
-    void updaterecoil(gameent *d, int curtime)
-    {
-        if(!d->pitchrecoil || !curtime) return;
-        const float amount = d->pitchrecoil * (curtime / 1000.0f) * d->speed * 0.12f;
-        d->pitch += amount;
-        float friction = 4.0f / curtime * 30.0f;
-        d->pitchrecoil = d->pitchrecoil * (friction - 2.8f) / friction;
-        camera::fixrange();
     }
 
     void checkattacksound(gameent *d, bool local)

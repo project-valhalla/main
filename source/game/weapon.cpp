@@ -1197,28 +1197,30 @@ namespace game
 
     VARP(autoswitch, 0, 1, 1);
 
-    void autoswitchweapon(int type)
+    void autoswitchweapon(gameent* d, int type)
     {
         /* This function makes our client switch to the weapon we just picked up,
          * meaning the argument is the type of the item.
          * To switch to a specific weapon, we have other specialised functions.
          */
-        if (!autoswitch || type < I_AMMO_SG || type > I_AMMO_GRENADE)
+        if (d != self || !autoswitch || type < I_AMMO_SG || type > I_AMMO_GRENADE)
         {
-            // We stop caring if auto switch is disabled or the item is not a weapon.
+            /* We stop caring if this is not our client,
+             * auto-switch is disabled or the item is not a weapon.
+             */
             return;
         }
 
-        const bool isAttacking = self->attacking || camera::camera.zoomstate.isinprogress();
+        const bool isAttacking = d->attacking || camera::camera.zoomstate.isinprogress();
         if (isAttacking)
         {
             // Do not interrupt someone during a fight.
-            self->lastswitchattempt = lastmillis; // Let the player know we tried to switch (and possibly reflect that on the HUD).
+            d->lastswitchattempt = lastmillis; // Let the player know we tried to switch (and possibly reflect that on the HUD).
             return;
         }
 
         itemstat& is = itemstats[type - I_AMMO_SG];
-        if (self->gunselect != is.info && !self->ammo[is.info])
+        if (d->gunselect != is.info && !d->ammo[is.info])
         {
             gunselect(is.info, self);
         }

@@ -862,7 +862,7 @@ namespace game
     extern void gunselect(int gun, gameent* d);
     extern void doweaponchangeffects(gameent* d, int gun = -1);
     extern void weaponswitch(gameent* d);
-    extern void autoswitchweapon(int type);
+    extern void autoswitchweapon(gameent* d, int type);
     extern void damageentity(int damage, gameent* d, gameent* actor, int atk, int flags = 0, bool local = true);
     extern void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& hitposition, int atk, int flags, bool local);
     extern void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int atk, float dist, int rays = 1, int flags = Hit_Torso);

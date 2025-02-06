@@ -314,6 +314,7 @@ namespace entities
             ents[n]->clearspawned();
         }
         const int type = ents[n]->type;
+        game::autoswitchweapon(d, type);
         d->pickup(type);
         itemstat& is = itemstats[type - I_AMMO_SG];
         gameent* hud = followingplayer(self);

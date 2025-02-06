@@ -1990,10 +1990,6 @@ namespace game
                 int i = getint(p), cn = getint(p);
                 gameent *d = getclient(cn);
                 entities::dopickupeffects(i, d);
-                if (d == self)
-                {
-                    game::autoswitchweapon(type);
-                }
                 break;
             }
 

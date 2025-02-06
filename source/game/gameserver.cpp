@@ -4101,7 +4101,7 @@ namespace server
                 break;
 
             case N_TRYSPAWN:
-                if (!ci || !cq || cq->state.state != CS_DEAD || cq->state.lastspawn >= 0 || (!m_edit && cq->state.lastdeath && gamemillis + curtime - cq->state.lastdeath <= SPAWN_DELAY)) break;
+                if (!ci || !cq || cq->state.state != CS_DEAD || cq->state.lastspawn >= 0 || (!m_norespawndelay && cq->state.lastdeath && gamemillis + curtime - cq->state.lastdeath <= SPAWN_DELAY)) break;
                 if((smode && !smode->canspawn(cq)) || (((m_hunt && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
                 {
                     if(m_round && cq->state.aitype == AI_NONE)

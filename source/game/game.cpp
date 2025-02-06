@@ -137,7 +137,11 @@ namespace game
 
     const int getrespawndelay()
     {
-        return cmode ? cmode->respawnwait() : SPAWN_DELAY;
+        if (cmode)
+        {
+            return cmode->respawnwait();
+        }
+        return m_norespawndelay ? 0 : SPAWN_DELAY;
     }
     ICOMMAND(getrespawndelay, "", (), intret(getrespawndelay()));
 
@@ -443,7 +447,7 @@ namespace game
 
     const int getrespawnwait(gameent* d)
     {
-        if (m_edit || self->state != CS_DEAD)
+        if (m_norespawndelay || self->state != CS_DEAD)
         {
             return 0;
         }

@@ -225,7 +225,7 @@ struct ragdolldata
     }
 
     void move(dynent *pl, float ts);
-    void push(const vec& vel);
+    void push(const vec& pos);
     void constrain();
     void constraindist();
     void applyrotlimit(ragdollskel::tri &t1, ragdollskel::tri &t2, float angle, const vec &axis);

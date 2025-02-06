@@ -1992,25 +1992,16 @@ static inline T lerpstep(T a, T b, T step)
 {
     if (a == b) return a;
     if (a > b) return a - min(step, a - b);
-    else a + min(step, b - a);
+    return a + min(step, b - a);
 }
 
 namespace ease
 {
     static inline float outelastic(const float progress)
     {
-        if (progress == 0)
-        {
-            return 0;
-        }
-        else if (progress == 1)
-        {
-            return 1;
-        }
-        else
-        {
-            return pow(2.0f, -10.0f * progress) * sin((progress * 10.0f - 0.75f) * ((2.0f * M_PI) / 3)) + 1.0f;
-        }
+        if (progress == 0) return 0;
+        else if (progress == 1) return 1;
+        return pow(2.0f, -10.0f * progress) * sin((progress * 10.0f - 0.75f) * ((2.0f * M_PI) / 3)) + 1.0f;
     }
 
     static inline float outback(const float progress)

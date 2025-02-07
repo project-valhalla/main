@@ -101,8 +101,8 @@ namespace game
         {
             static const int GUN_RECOIL_SHAKE = 40; // Default shake value for weapons with no recoil.
             kickAmount = GUN_RECOIL_SHAKE;
-            camera::camera.addevent(d, camera::CameraEvent_Shake, kickAmount);
         }
+        camera::camera.addevent(d, camera::CameraEvent_Shake, kickAmount);
     }
 
     void updaterecoil(gameent* d, int curtime)

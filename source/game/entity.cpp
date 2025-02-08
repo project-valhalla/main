@@ -773,25 +773,18 @@ namespace entities
         switch (e.type)
         {
             case FLAG:
-            {
                 e.attr5 = e.attr4;
                 e.attr4 = e.attr3;
                 // fall through
-            }
             case TELEDEST:
-            {
                 e.attr3 = e.attr2;
                 e.attr2 = e.attr1;
                 e.attr1 = (int)self->yaw;
                 break;
-            }
 
             case TARGET:
-            {
                 e.attr2 = e.attr1;
                 break;
-            }
-
         }
     }
 

@@ -248,6 +248,7 @@
 		<Unit filename="../game/ai.h" />
 		<Unit filename="../game/aimanager.h" />
 		<Unit filename="../game/announcer.cpp" />
+		<Unit filename="../game/announcer.h" />
 		<Unit filename="../game/camera.cpp" />
 		<Unit filename="../game/ctf.h" />
 		<Unit filename="../game/elimination.h" />

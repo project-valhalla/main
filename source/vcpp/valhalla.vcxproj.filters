@@ -315,6 +315,9 @@
     <ClInclude Include="..\game\projectile.h">
       <Filter>Header\game</Filter>
     </ClInclude>
+    <ClInclude Include="..\game\announcer.h">
+      <Filter>Header\game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resource">

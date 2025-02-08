@@ -64,12 +64,43 @@ static const char * const mastermodenames[] =  { "Default",        "Open",      
 static const char * const mastermodecolors[] = {       "",          "\f0",         "\f2",           "\f4",            "\f3",             "\f6" };
 static const char * const mastermodeicons[] =  { "server",  "server_open", "server_veto", "server_locked", "server_private", "server_password" };
 
-// server privileges
-enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_AUTH };
-static const int privilegecolors[4]            = {   0xFFFFFF, 0x40FF80,        0xFF8000, 0xFF00FF };
-static const char * const privilegetextcode[4] = {         "",    "\f0",           "\f6",    "\f5" };
-static const char * const privilegenames[4]    = {  "unknown", "master", "administrator",   "auth" };
-inline bool validprivilege(int privilege) { return privilege > PRIV_NONE && privilege <= PRIV_AUTH; }
+// Server privileges.
+enum
+{ 
+    PRIV_NONE = 0,
+    PRIV_HOST,
+    PRIV_MODERATOR,
+    PRIV_ADMINISTRATOR,
+    PRIV_OWNER
+};
+static const int privilegecolors[5] =
+{
+    0xFFFFFF,
+    0x00FFFF,
+    0x00FF80,
+    0xFFC575,
+    0xF0A4F0
+};
+static const char * const privilegetextcodes[5] =
+{
+    "\ff",
+    "\f8",
+    "\f0",
+    "\f6",
+    "\f5"
+};
+static const char * const privilegenames[5] =
+{
+    "None",
+    "Host",
+    "Moderator",
+    "Administrator",
+    "Owner"
+};
+inline bool validprivilege(int privilege)
+{
+    return privilege > PRIV_NONE && privilege <= PRIV_ADMINISTRATOR;
+}
 
 // round states
 enum

@@ -340,7 +340,7 @@ namespace game
     ICOMMAND(getclientprivilegecolor, "i", (int* cn),
     {
         gameent * d = getclient(*cn);
-        if (d && d->privilege)
+        if (d && validprivilege(d->privilege))
         {
             intret(privilegecolors[d->privilege]);
         }
@@ -349,21 +349,21 @@ namespace game
     bool isprivileged(int cn)
     {
         gameent* d = cn < 0 ? self : getclient(cn);
-        return d && d->privilege >= PRIV_MASTER;
+        return d && d->privilege >= PRIV_HOST;
     }
     ICOMMAND(isprivileged, "b", (int *cn), intret(isprivileged(*cn) ? 1 : 0));
 
     bool isauth(int cn)
     {
         gameent *d = getclient(cn);
-        return d && d->privilege >= PRIV_AUTH;
+        return d && d->privilege >= PRIV_MODERATOR;
     }
     ICOMMAND(isauth, "i", (int *cn), intret(isauth(*cn) ? 1 : 0));
 
     bool isadmin(int cn)
     {
         gameent *d = getclient(cn);
-        return d && d->privilege >= PRIV_ADMIN;
+        return d && d->privilege >= PRIV_ADMINISTRATOR;
     }
     ICOMMAND(isadmin, "i", (int *cn), intret(isadmin(*cn) ? 1 : 0));
 
@@ -2505,7 +2505,7 @@ namespace game
     {
         if(remote)
         {
-            if(self->privilege<PRIV_MASTER) return;
+            if(self->privilege<PRIV_HOST) return;
             addmsg(N_STOPDEMO, "r");
         }
         else server::stopdemo();
@@ -2514,14 +2514,14 @@ namespace game
 
     void recorddemo(int val)
     {
-        if(remote && self->privilege<PRIV_MASTER) return;
+        if(remote && self->privilege<PRIV_HOST) return;
         addmsg(N_RECORDDEMO, "ri", val);
     }
     ICOMMAND(recorddemo, "i", (int *val), recorddemo(*val));
 
     void cleardemos(int val)
     {
-        if(remote && self->privilege<PRIV_MASTER) return;
+        if(remote && self->privilege<PRIV_HOST) return;
         addmsg(N_CLEARDEMOS, "ri", val);
     }
     ICOMMAND(cleardemos, "i", (int *val), cleardemos(*val));

@@ -172,7 +172,7 @@ namespace game
     });
 
     ICOMMAND(scoreboardshowfrags, "", (), intret(cmode && cmode->hidefrags() ? 0 : 1));
-    ICOMMAND(scoreboardshowclientnum, "", (), intret(showclientnum || self->privilege>=PRIV_MASTER ? 1 : 0));
+    ICOMMAND(scoreboardshowclientnum, "", (), intret(showclientnum || self->privilege>=PRIV_HOST ? 1 : 0));
     ICOMMAND(scoreboardmultiplayer, "", (), intret(multiplayer(false) || demoplayback ? 1 : 0));
 
     ICOMMAND(scoreboardhighlight, "i", (int *cn),

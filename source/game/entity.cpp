@@ -346,6 +346,7 @@ namespace entities
             return;
         }
 
+        static const int ENTITY_COLLECT_FLASH = 80;
         addscreenflash(ENTITY_COLLECT_FLASH);
         if (shouldCheck)
         {
@@ -392,6 +393,7 @@ namespace entities
                     }
                     else
                     {
+                        static const int ENTITY_TELEPORT_FLASH = 150;
                         addscreenflash(ENTITY_TELEPORT_FLASH);
                         camera::camera.addevent(d, camera::CameraEvent_Teleport, 500);
                     }
@@ -524,7 +526,7 @@ namespace entities
                 int triggertype = ents[n]->attr5;
                 if (triggertype == Trigger_Item)
                 {
-                    dohudpickupeffects(n, d);
+                    dohudpickupeffects(ents[n]->type, d);
                 }
                 else if (triggertype == Trigger_RespawnPoint)
                 {

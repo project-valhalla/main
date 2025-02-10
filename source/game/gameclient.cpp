@@ -2320,7 +2320,8 @@ namespace game
                 }
                 if (d == followingplayer(self))
                 {
-                    addscreenflash(ENTITY_TELEPORT_FLASH);
+                    static const int SCREEN_FLASH = 180;
+                    addscreenflash(SCREEN_FLASH);
                 }
                 d->assignrole(role);
                 break;

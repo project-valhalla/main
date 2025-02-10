@@ -176,6 +176,11 @@ namespace entities
 
     void searchentities()
     {
+        if (m_story)
+        {
+            return;
+        }
+
         gameent* hud = followingplayer(self);
         if (lowhealthscreen && hud->haslowhealth())
         {

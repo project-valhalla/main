@@ -973,9 +973,9 @@ namespace game
             return;
         }
 
+        gameent* hud = followingplayer(self);
         if (target->type == ENT_PLAYER || target->type == ENT_AI)
         {
-            gameent* hud = followingplayer(self);
             if (actor)
             {
                 if (!isinvulnerable(target, actor))
@@ -993,12 +993,6 @@ namespace game
                         playsound(isally(target, actor) ? S_HIT_ALLY : S_HIT);
                     }
                     actor->lasthit = lastmillis;
-
-                    if (attacks[atk].action == ACT_MELEE)
-                    {
-                        // Simulate a strong impact.
-                        camera::camera.addevent(actor, camera::CameraEvent_Shake, damage * 2);
-                    }
                 }
             }
 
@@ -1006,6 +1000,14 @@ namespace game
             {
                 setdamagehud(damage, target, actor);
             }
+        }
+
+        if (attacks[atk].action == ACT_MELEE && (target == hud || (actor && actor == hud)))
+        {
+            // Simulate a strong impact.
+            const int shake = damage * 2;
+            camera::camera.addevent(target, camera::CameraEvent_Shake, shake);
+            camera::camera.addevent(actor, camera::CameraEvent_Shake, shake);
         }
 
         damageeffect(damage, target, hitposition, atk, flags & Hit_Head);

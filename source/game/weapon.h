@@ -91,10 +91,9 @@ const int GUN_MAXRAYS = 20; // Maximum rays a player can shoot, we can't change 
 const int GUN_AIR_PUSH = 2; // Hit push multiplier for the mid-air friends.
 const int GUN_ZOMBIE_PUSH = 3; // Hit push multiplier for zombies.
 
-const int DAMAGE_ENVIRONMENT_DELAY = 500; // Environmental damage is dealt again after a specific number of milliseconds.
-
 const int DAMAGE_ALLYDIV = 2; // Divide damage dealt to self or allies.
 const int DAMAGE_ENVIRONMENT = 5; // Environmental damage like lava, damage material and fall damage.
+const int DAMAGE_ENVIRONMENT_DELAY = 500; // Environmental damage is dealt again after a specific number of milliseconds.
 
 const float EXP_SELFPUSH = 2.5f; // How much our player is going to be pushed from our own projectiles.
 const float EXP_DISTSCALE = 1.5f; // Explosion damage is going to be scaled by distance.

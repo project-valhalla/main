@@ -839,10 +839,16 @@ namespace physics
                         d->falling = d->vel = vec(0, 0, 0);
                     }
                 }
-                else if (d->climbing) d->climbing = false;
+                else if (d->climbing)
+                {
+                    d->climbing = false;
+                }
             }
         }
-        else if (d->climbing) d->climbing = false;
+        else if (d->climbing)
+        {
+            d->climbing = false;
+        }
 
         return true;
     }

@@ -798,48 +798,6 @@ namespace game
         }
     }
 
-    void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int attack, float dist, int rays, int flags)
-    {
-        if (betweenrounds || (target->type != ENT_PLAYER && target->type != ENT_AI))
-        {
-            return;
-        }
-
-        gameent* f = (gameent*)target;
-        damage = calculatedamage(damage, f, actor, attack, flags);
-        if (f->type == ENT_PLAYER && (!m_mp(gamemode) || f == actor))
-        {
-            f->hitpush(damage, velocity, actor, attack);
-        }
-        if (!m_mp(gamemode))
-        {
-            // Damage the target locally.
-            if (target->type == ENT_PLAYER)
-            {
-                damageentity(damage, f, actor, attack, flags);
-            }
-            else if (target->type == ENT_AI)
-            {
-                hitmonster(damage, (monster*)f, actor, attack, velocity, flags);
-            }
-        }
-        else
-        {
-            hitmsg& h = hits.add();
-            h.target = f->clientnum;
-            h.lifesequence = f->lifesequence;
-            h.dist = int(dist * DMF);
-            h.rays = rays;
-            h.flags = flags;
-            h.dir = f == actor ? ivec(0, 0, 0) : ivec(vec(velocity).mul(DNF));
-        }
-        // Apply hit effects like blood, shakes, etc.
-        if (target)
-        {
-            applyhiteffects(damage, f, actor, hitposition, attack, flags, true);
-        }
-    }
-
     VARP(blood, 0, 1, 1);
 
     void damageeffect(int damage, dynent* d, vec hit, int atk, bool headshot)
@@ -943,7 +901,7 @@ namespace game
 
     VARP(hitsound, 0, 0, 1);
 
-    void damageentity(int damage, gameent* d, gameent* actor, int atk, int flags, bool local)
+    void damageentity(int damage, gameent* d, gameent* actor, int atk, int flags, bool local = true)
     {
         if (intermission || (d->state != CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING))
         {
@@ -966,7 +924,7 @@ namespace game
         }
     }
 
-    void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& hitposition, int atk, int flags, bool local)
+    void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& position, int atk, int flags, bool local)
     {
         if (!target || (!local && actor == self && !(flags & Hit_Environment)))
         {
@@ -1010,7 +968,55 @@ namespace game
             camera::camera.addevent(actor, camera::CameraEvent_Shake, shake);
         }
 
-        damageeffect(damage, target, hitposition, atk, flags & Hit_Head);
+        damageeffect(damage, target, position, atk, flags & Hit_Head);
+    }
+
+    void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal)
+    {
+        damageentity(damage, target, actor, atk, flags, isLocal);
+        applyhiteffects(damage, target, actor, position, atk, flags, isLocal);
+    }
+
+    void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int attack, float dist, int rays, int flags)
+    {
+        if (betweenrounds || (target->type != ENT_PLAYER && target->type != ENT_AI))
+        {
+            return;
+        }
+
+        gameent* f = (gameent*)target;
+        damage = calculatedamage(damage, f, actor, attack, flags);
+        if (f->type == ENT_PLAYER && (!m_mp(gamemode) || f == actor))
+        {
+            f->hitpush(damage, velocity, actor, attack);
+        }
+        if (!m_mp(gamemode))
+        {
+            // Damage the target locally.
+            if (target->type == ENT_PLAYER)
+            {
+                damageentity(damage, f, actor, attack, flags);
+            }
+            else if (target->type == ENT_AI)
+            {
+                hitmonster(damage, (monster*)f, actor, attack, velocity, flags);
+            }
+        }
+        else
+        {
+            hitmsg& h = hits.add();
+            h.target = f->clientnum;
+            h.lifesequence = f->lifesequence;
+            h.dist = int(dist * DMF);
+            h.rays = rays;
+            h.flags = flags;
+            h.dir = f == actor ? ivec(0, 0, 0) : ivec(vec(velocity).mul(DNF));
+        }
+        // Apply hit effects like blood, shakes, etc.
+        if (target)
+        {
+            applyhiteffects(damage, f, actor, hitposition, attack, flags, true);
+        }
     }
 
     void gunselect(int gun, gameent* d)

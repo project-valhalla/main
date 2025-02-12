@@ -709,8 +709,15 @@ namespace game
         const int weapon = attacks[atk].gun;
         if (actor->type == ENT_AI)
         {
-            conoutf(CON_FRAGINFO, "%s \fs\f2was %s by a\fr %s", teamcolorname(d), act, actor->name);
-            killFeed.type = killFeed.Type::MONSTER;
+            if (d->type == ENT_PLAYER)
+            {
+                conoutf(CON_FRAGINFO, "%s \fs\f2was %s by a\fr %s", teamcolorname(d), act, actor->name);
+                killFeed.type = killFeed.Type::MONSTER;
+            }
+            else
+            {
+                return;
+            }
         }
         else
         {

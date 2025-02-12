@@ -688,15 +688,16 @@ namespace game
     };
     Killfeed killFeed;
 
-    void writespecialkillfeed(int announcement)
+    void printkillfeedannouncement(int announcement, gameent* actor)
     {
         if (m_betrayal)
         {
             return;
         }
 
+        conoutf(CON_FRAGINFO, "%s \f2%s", colorname(actor), announcer::announcements[announcement].message);
         killFeed.type = killFeed.Type::MEDAL;
-        killFeed.actor = self->clientnum;
+        killFeed.actor = actor->clientnum;
         killFeed.medal = announcement;
         execident("on_obituary");
     }

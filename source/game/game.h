@@ -751,7 +751,7 @@ namespace game
     extern void spawneffect(gameent *d);
     extern void respawn();
     extern void setdeathstate(gameent *d, bool restore = false);
-    extern void writespecialkillfeed(int announcement);
+    extern void printkillfeedannouncement(int announcement, gameent* actor);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void updatetimer(int time, int type);

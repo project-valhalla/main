@@ -2997,7 +2997,10 @@ namespace server
             case 50:
             {
                 kflags |= KILL_LEGENDARY;
-                if (actor->state.spree >= 50) actor->state.spree = 0; // Reset the spree.
+                if (actor->state.spree >= 50)
+                {
+                    actor->state.spree = 0; // Reset the spree.
+                }
                 break;
             }
         }

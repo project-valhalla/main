@@ -121,9 +121,15 @@ namespace game
                 // Avoid confusing players in certain circumstances by triggering console messages.
                 if (announcements[announcement].type == AnnouncementTypes::STREAK || announcements[announcement].announcement == Announcements::FIRST)
                 {
-                    conoutf(CON_FRAGINFO, "%s \f2%s", colorname(actor), announcements[announcement].message);
-                    writespecialkillfeed(announcement);
+                    printkillfeedannouncement(announcement, actor);
                 }
+            }
+            if (actor != followingplayer(self))
+            {
+                /* Now time to proccess the announcements further (play sounds, HUD interactions).
+                 * Unless we are the player who achieved these (or spectating them), we do not care.
+                 */
+                return;
             }
             announce(announcement);
         }
@@ -142,14 +148,6 @@ namespace game
             {
                 // Bots taunting players when getting extraordinary kills.
                 taunt(actor);
-            }
-            if (actor != followingplayer(self))
-            {
-                /* Now: time to announce extraordinary kills.
-                 * Unless we are the player who achieved these (or spectating them),
-                 * we do not care.
-                 */
-                return;
             }
 
             if (flags & KILL_HEADSHOT)

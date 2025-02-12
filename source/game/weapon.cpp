@@ -910,7 +910,7 @@ namespace game
 
         if (local)
         {
-            damage = d->dodamage(damage);
+            damage = d->dodamage(damage, flags & Hit_Environment);
         }
         else if (actor == self)
         {

@@ -3071,7 +3071,7 @@ namespace server
     {
         if((target == actor && !selfdamage) || (isally(target, actor) && !teamdamage) || (m_round && betweenrounds)) return;
         servstate &ts = target->state;
-        ts.dodamage(damage, flags & Hit_Environment? true : false);
+        ts.dodamage(damage, flags & Hit_Environment);
         target->state.lastpain = lastmillis;
         sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield, int(to.x*DMF), int(to.y*DMF), int(to.z*DMF));
         if(target!=actor && damage > 0)

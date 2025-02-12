@@ -446,7 +446,7 @@ namespace UI
 // ragdoll
 
 extern void moveragdoll(dynent *d);
-extern void pushragdoll(dynent* d, const vec& pos);
+extern void pushragdoll(dynent* d, const vec &dir);
 extern void cleanragdoll(dynent *d);
 
 // server

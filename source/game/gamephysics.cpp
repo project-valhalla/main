@@ -1242,7 +1242,7 @@ namespace physics
 
     void pushragdolls(const vec& position, const int margin)
     {
-        if (!ragdollpush)
+        if (!ragdollpush || !ragdolls.length())
         {
             return;
         }
@@ -1257,5 +1257,15 @@ namespace physics
             vec delta = vec(ragdoll->o).sub(position).normalize();
             pushragdoll(ragdoll, delta);
         }
+    }
+
+    void pushRagdoll(dynent *d, const vec &direction)
+    {
+        if (!ragdollpush)
+        {
+            return;
+        }
+
+        pushragdoll(d, direction);
     }
 }

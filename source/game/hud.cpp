@@ -84,10 +84,10 @@ namespace game
     int damageblendmillis = 0;
 
     VARFP(damagescreen, 0, 1, 1, { if (!damagescreen) damageblendmillis = 0; });
-    VARP(damagescreenfactor, 1, 10, 100);
-    VARP(damagescreenalpha, 1, 90, 100);
+    VARP(damagescreenfactor, 1, 11, 100);
+    VARP(damagescreenalpha, 1, 60, 100);
     VARP(damagescreenfade, 0, 500, 1000);
-    VARP(damagescreenmin, 1, 50, 1000);
+    VARP(damagescreenmin, 1, 15, 1000);
     VARP(damagescreenmax, 1, 100, 1000);
 
     void damageblend(const int amount, const int factor)
@@ -108,7 +108,7 @@ namespace game
         static Texture* damagetex = NULL;
         if (!damagetex)
         {
-            damagetex = textureload("data/interface/hud/damage.png", 3);
+            damagetex = textureload("data/interface/hud/damage_gradient.png", 3);
         }
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         setusedtexture(damagetex);

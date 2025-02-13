@@ -519,7 +519,7 @@ namespace game
                 {
                     particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH5, 0x74BCF9, 0.2f, d, 3.5f);
                 }
-                up = vec(to).addz(dist / (atk == ATK_GRENADE1 ? 8 : 16));
+                up = vec(to).addz(dist / 8);
                 break;
             }
 

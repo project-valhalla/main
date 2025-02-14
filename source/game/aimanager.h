@@ -247,7 +247,7 @@ namespace aimanager
     void reqadd(clientinfo *ci, int skill)
     {
         if(!botsallowed(ci) || (!ci->local && !ci->privilege)) return;
-        if(!addai(skill, !ci->local && ci->privilege < PRIV_ADMIN ? botlimit : -1)) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to create or assign bot");
+        if(!addai(skill, !ci->local && ci->privilege < PRIV_ADMINISTRATOR ? botlimit : -1)) sendf(ci->clientnum, 1, "ris", N_SERVMSG, "failed to create or assign bot");
     }
 
     void reqdel(clientinfo *ci)
@@ -258,7 +258,7 @@ namespace aimanager
 
     void setbotlimit(clientinfo *ci, int limit)
     {
-        if(ci && !ci->local && ci->privilege < PRIV_ADMIN) return;
+        if(ci && !ci->local && ci->privilege < PRIV_ADMINISTRATOR) return;
         botlimit = clamp(limit, 0, MAXBOTS);
         dorefresh = true;
         defformatstring(msg, "bot limit is now %d", botlimit);

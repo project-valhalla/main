@@ -225,6 +225,7 @@ struct ragdolldata
     }
 
     void move(dynent *pl, float ts);
+    void push(const vec &dir);
     void constrain();
     void constraindist();
     void applyrotlimit(ragdollskel::tri &t1, ragdollskel::tri &t2, float angle, const vec &axis);
@@ -528,6 +529,23 @@ void moveragdoll(dynent *d)
 
     vec eye = d->ragdoll->skel->eye >= 0 ? d->ragdoll->verts[d->ragdoll->skel->eye].pos : d->ragdoll->center;
     physics::updateragdolleye(d, eye, d->ragdoll->offset);
+}
+
+void ragdolldata::push(const vec &dir)
+{
+    lastmove = lastmillis;
+    loopv(skel->verts)
+    {
+        vert& v = verts[i];
+        v.pos.add(dir);
+    }
+    collidemillis = 0;
+}
+
+void pushragdoll(dynent* d, const vec &dir)
+{
+    if (!d->ragdoll) return;
+    d->ragdoll->push(dir);
 }
 
 void cleanragdoll(dynent *d)

@@ -428,6 +428,7 @@
     <ClInclude Include="..\engine\texture.h" />
     <ClInclude Include="..\engine\vertmodel.h" />
     <ClInclude Include="..\game\aimanager.h" />
+    <ClInclude Include="..\game\announcer.h" />
     <ClInclude Include="..\game\elimination.h" />
     <ClInclude Include="..\game\entity.h" />
     <ClInclude Include="..\game\gamemode.h" />

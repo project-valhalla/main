@@ -378,7 +378,7 @@ namespace game
             return progress >= 1 && zoom >= 1;
         }
 
-        VARP(camerabob, 0, 0, 1);
+        VARP(camerabob, 0, 1, 1);
         FVAR(camerabobstep, 1, 45.0f, 100);
         FVAR(camerabobside, 0, 0.45f, 1);
         FVAR(camerabobup, -1, 0.9f, 1);

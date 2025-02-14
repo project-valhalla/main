@@ -340,7 +340,7 @@ namespace game
     ICOMMAND(getclientprivilegecolor, "i", (int* cn),
     {
         gameent * d = getclient(*cn);
-        if (d && d->privilege)
+        if (d && validprivilege(d->privilege))
         {
             intret(privilegecolors[d->privilege]);
         }
@@ -349,21 +349,21 @@ namespace game
     bool isprivileged(int cn)
     {
         gameent* d = cn < 0 ? self : getclient(cn);
-        return d && d->privilege >= PRIV_MASTER;
+        return d && d->privilege >= PRIV_HOST;
     }
     ICOMMAND(isprivileged, "b", (int *cn), intret(isprivileged(*cn) ? 1 : 0));
 
     bool isauth(int cn)
     {
         gameent *d = getclient(cn);
-        return d && d->privilege >= PRIV_AUTH;
+        return d && d->privilege >= PRIV_MODERATOR;
     }
     ICOMMAND(isauth, "i", (int *cn), intret(isauth(*cn) ? 1 : 0));
 
     bool isadmin(int cn)
     {
         gameent *d = getclient(cn);
-        return d && d->privilege >= PRIV_ADMIN;
+        return d && d->privilege >= PRIV_ADMINISTRATOR;
     }
     ICOMMAND(isadmin, "i", (int *cn), intret(isadmin(*cn) ? 1 : 0));
 
@@ -1885,8 +1885,7 @@ namespace game
                 if(!target || !actor) break;
                 target->health = health;
                 target->shield = shield;
-                damageentity(damage, target, actor, atk, flags, false);
-                applyhiteffects(damage, target, actor, to.iszero() ? target->o : to, atk, flags, false);
+                dodamage(damage, target, actor, to.iszero() ? target->o : to, atk, flags, false);
                 break;
             }
 
@@ -1990,10 +1989,6 @@ namespace game
                 int i = getint(p), cn = getint(p);
                 gameent *d = getclient(cn);
                 entities::dopickupeffects(i, d);
-                if (d == self)
-                {
-                    game::autoswitchweapon(type);
-                }
                 break;
             }
 
@@ -2324,7 +2319,8 @@ namespace game
                 }
                 if (d == followingplayer(self))
                 {
-                    addscreenflash(ENTITY_TELEPORT_FLASH);
+                    static const int SCREEN_FLASH = 180;
+                    addscreenflash(SCREEN_FLASH);
                 }
                 d->assignrole(role);
                 break;
@@ -2509,7 +2505,7 @@ namespace game
     {
         if(remote)
         {
-            if(self->privilege<PRIV_MASTER) return;
+            if(self->privilege<PRIV_HOST) return;
             addmsg(N_STOPDEMO, "r");
         }
         else server::stopdemo();
@@ -2518,14 +2514,14 @@ namespace game
 
     void recorddemo(int val)
     {
-        if(remote && self->privilege<PRIV_MASTER) return;
+        if(remote && self->privilege<PRIV_HOST) return;
         addmsg(N_RECORDDEMO, "ri", val);
     }
     ICOMMAND(recorddemo, "i", (int *val), recorddemo(*val));
 
     void cleardemos(int val)
     {
-        if(remote && self->privilege<PRIV_MASTER) return;
+        if(remote && self->privilege<PRIV_HOST) return;
         addmsg(N_CLEARDEMOS, "ri", val);
     }
     ICOMMAND(cleardemos, "i", (int *val), cleardemos(*val));

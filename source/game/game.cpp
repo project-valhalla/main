@@ -137,7 +137,11 @@ namespace game
 
     const int getrespawndelay()
     {
-        return cmode ? cmode->respawnwait() : SPAWN_DELAY;
+        if (cmode)
+        {
+            return cmode->respawnwait();
+        }
+        return m_norespawndelay ? 0 : SPAWN_DELAY;
     }
     ICOMMAND(getrespawndelay, "", (), intret(getrespawndelay()));
 
@@ -443,7 +447,7 @@ namespace game
 
     const int getrespawnwait(gameent* d)
     {
-        if (m_edit || self->state != CS_DEAD)
+        if (m_norespawndelay || self->state != CS_DEAD)
         {
             return 0;
         }
@@ -582,6 +586,7 @@ namespace game
         }
         else if (d->deathstate == Death_Shock)
         {
+            static const float GUN_PULSE_SHOCK_IMPULSE = 95.0f; // Funny upward velocity applied to targets dying of electrocution.
             d->vel.z = max(d->vel.z, GUN_PULSE_SHOCK_IMPULSE);
             particle_flare(d->o, d->o, 100, PART_ELECTRICITY, 0xDD88DD, 12.0f);
         }
@@ -683,15 +688,16 @@ namespace game
     };
     Killfeed killFeed;
 
-    void writespecialkillfeed(int announcement)
+    void printkillfeedannouncement(int announcement, gameent* actor)
     {
         if (m_betrayal)
         {
             return;
         }
 
+        conoutf(CON_FRAGINFO, "%s \f2%s", colorname(actor), announcer::announcements[announcement].message);
         killFeed.type = killFeed.Type::MEDAL;
-        killFeed.actor = self->clientnum;
+        killFeed.actor = actor->clientnum;
         killFeed.medal = announcement;
         execident("on_obituary");
     }
@@ -704,8 +710,15 @@ namespace game
         const int weapon = attacks[atk].gun;
         if (actor->type == ENT_AI)
         {
-            conoutf(CON_FRAGINFO, "%s \fs\f2was %s by a\fr %s", teamcolorname(d), act, actor->name);
-            killFeed.type = killFeed.Type::MONSTER;
+            if (d->type == ENT_PLAYER)
+            {
+                conoutf(CON_FRAGINFO, "%s \fs\f2was %s by a\fr %s", teamcolorname(d), act, actor->name);
+                killFeed.type = killFeed.Type::MONSTER;
+            }
+            else
+            {
+                return;
+            }
         }
         else
         {
@@ -1166,27 +1179,24 @@ namespace game
     void hurt(gameent* d)
     {
         // Apply environmental damage locally when inside harmful materials like lava.
-        if (m_mp(gamemode))
+        if (m_mp(gamemode) || (d->type != ENT_PLAYER && d->type != ENT_AI))
         {
             return;
         }
 
-        if (d == self || (d->type == ENT_PLAYER && d->ai))
+        // This is local, so valid only if the entity is a bot or ourselves.
+        if (d->state != CS_ALIVE || d->haspowerup(PU_INVULNERABILITY))
         {
-            // This is local, so valid only if the entity is a bot or ourselves.
-            if (d->state != CS_ALIVE || d->haspowerup(PU_INVULNERABILITY))
-            {
-                // The entity is dead or invulnerable? We stop caring.
-                return;
-            }
-
-            if (d->lasthurt && lastmillis - d->lasthurt >= DAMAGE_ENVIRONMENT_DELAY)
-            {
-                // If the delay has elapsed, apply environmental damage to the entity.
-                damageentity(DAMAGE_ENVIRONMENT, d, d, -1, Hit_Environment, true);
-                d->lasthurt = lastmillis;
-            }
+            // The entity is dead or invulnerable? We stop caring.
+            return;
         }
+
+		if (lastmillis - d->lasthurt >= DAMAGE_ENVIRONMENT_DELAY)
+		{
+			// If the delay has elapsed, apply environmental damage to the entity.
+			dodamage(DAMAGE_ENVIRONMENT, d, d, d->o, -1, Hit_Environment, true);
+			d->lasthurt = lastmillis;
+		}
     }
 
     void suicide(gameent *d)

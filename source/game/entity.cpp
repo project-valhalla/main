@@ -176,6 +176,11 @@ namespace entities
 
     void searchentities()
     {
+        if (m_story)
+        {
+            return;
+        }
+
         gameent* hud = followingplayer(self);
         if (lowhealthscreen && hud->haslowhealth())
         {
@@ -314,6 +319,7 @@ namespace entities
             ents[n]->clearspawned();
         }
         const int type = ents[n]->type;
+        game::autoswitchweapon(d, type);
         d->pickup(type);
         itemstat& is = itemstats[type - I_AMMO_SG];
         gameent* hud = followingplayer(self);
@@ -345,6 +351,7 @@ namespace entities
             return;
         }
 
+        static const int ENTITY_COLLECT_FLASH = 80;
         addscreenflash(ENTITY_COLLECT_FLASH);
         if (shouldCheck)
         {
@@ -391,6 +398,7 @@ namespace entities
                     }
                     else
                     {
+                        static const int ENTITY_TELEPORT_FLASH = 150;
                         addscreenflash(ENTITY_TELEPORT_FLASH);
                         camera::camera.addevent(d, camera::CameraEvent_Teleport, 500);
                     }
@@ -523,7 +531,7 @@ namespace entities
                 int triggertype = ents[n]->attr5;
                 if (triggertype == Trigger_Item)
                 {
-                    dohudpickupeffects(n, d);
+                    dohudpickupeffects(ents[n]->type, d);
                 }
                 else if (triggertype == Trigger_RespawnPoint)
                 {
@@ -772,25 +780,18 @@ namespace entities
         switch (e.type)
         {
             case FLAG:
-            {
                 e.attr5 = e.attr4;
                 e.attr4 = e.attr3;
                 // fall through
-            }
             case TELEDEST:
-            {
                 e.attr3 = e.attr2;
                 e.attr2 = e.attr1;
                 e.attr1 = (int)self->yaw;
                 break;
-            }
 
             case TARGET:
-            {
                 e.attr2 = e.attr1;
                 break;
-            }
-
         }
     }
 

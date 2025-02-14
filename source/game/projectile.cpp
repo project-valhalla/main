@@ -318,16 +318,24 @@ namespace game
 
     void calculatesplashdamage(dynent* o, const vec& position, const vec& velocity, gameent* at, const int atk, const int flags)
     {
-        if (o->state != CS_ALIVE)
+        if (o->state != CS_ALIVE && o->state != CS_DEAD)
         {
             return;
         }
+
         vec dir;
-        float distance = projectiledistance(o, dir, position, velocity, flags);
+        const float distance = projectiledistance(o, dir, position, velocity, flags);
+        int damage = static_cast<int>(attacks[atk].damage * (1 - distance / EXP_DISTSCALE / attacks[atk].exprad));
         if (distance < attacks[atk].exprad)
         {
-            int damage = static_cast<int>(attacks[atk].damage * (1 - distance / EXP_DISTSCALE / attacks[atk].exprad));
-            registerhit(o, at, o->o, dir, damage, atk, distance);
+            if (o->state == CS_ALIVE)
+            {
+                registerhit(o, at, o->o, dir, damage, atk, distance);
+            }
+            else
+            {
+                physics::pushRagdoll(o, dir);
+            }
         }
     }
 
@@ -340,6 +348,7 @@ namespace game
             if (o->o.reject(position, o->radius + attacks[atk].exprad) || (safe && o == safe)) continue;
             calculatesplashdamage(o, position, velocity, owner, atk, flags);
         }
+        physics::pushragdolls(position, attacks[atk].exprad);
     }
 
     void explodeprojectile(projectile& proj, const vec& v, dynent* safe, const bool islocal)

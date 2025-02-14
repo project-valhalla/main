@@ -26,7 +26,8 @@ namespace game
         vec offset;
         do offset = vec(rndscale(1), rndscale(1), rndscale(1)).sub(0.5f);
         while(offset.squaredlen() > 0.5f * 0.5f);
-        offset.mul((to.dist(from) / 1024) * spread / (d->crouched() && d->crouching ? 1.5f : 1));
+        const bool isCrouched = d->physstate >= PHYS_SLOPE && d->crouching && d->crouched();
+        offset.mul((to.dist(from) / 1024) * spread * (isCrouched ? 0.5f : 1.0f));
         offset.z /= 2;
         dest = vec(offset).add(to);
         if(dest != from)
@@ -78,6 +79,46 @@ namespace game
         return true;
     }
 
+    void addrecoil(gameent* d, const vec& dir, const int atk)
+    {
+        int kickAmount = attacks[atk].recoilamount;
+        if (kickAmount)
+        {
+            if (d->haspowerup(PU_DAMAGE))
+            {
+                static const int GUN_RECOIL_POWERUP_MULTIPLIER = 2;
+                kickAmount *= GUN_RECOIL_POWERUP_MULTIPLIER;
+            }
+            const bool isCrouched = d->physstate >= PHYS_SLOPE && d->crouching && d->crouched();
+            if (kickAmount && !isCrouched)
+            {
+                vec kickback = vec(dir).mul(kickAmount * -2.5f);
+                d->vel.add(kickback);
+            }
+            d->recoil = kickAmount;
+        }
+        else
+        {
+            static const int GUN_RECOIL_SHAKE = 40; // Default shake value for weapons with no recoil.
+            kickAmount = GUN_RECOIL_SHAKE;
+        }
+        camera::camera.addevent(d, camera::CameraEvent_Shake, kickAmount);
+    }
+
+    void updaterecoil(gameent* d, int curtime)
+    {
+        if (!d->recoil)
+        {
+            return;
+        }
+
+        const float amount = d->recoil * (curtime / 1000.0f);
+        d->pitch += amount;
+        float friction = 4.0f / curtime * 30.0f;
+        d->recoil = d->recoil * (friction - 2.8f) / friction;
+        camera::fixrange();
+    }
+
     void shoot(gameent *d, const vec &targ)
     {
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
@@ -102,13 +143,7 @@ namespace game
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
-        int kickamount = attacks[atk].kickamount;
-        if(d->haspowerup(PU_DAMAGE)) kickamount *= 2;
-        if(kickamount && !(d->physstate >= PHYS_SLOPE && d->crouching && d->crouched()))
-        {
-            vec kickback = vec(dir).mul(kickamount*-2.5f);
-            d->vel.add(kickback);
-        }
+        addrecoil(d, dir, atk);
         float shorten = attacks[atk].range && dist > attacks[atk].range ? attacks[atk].range : 0,
               barrier = raycube(d->o, dir, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
         if(barrier > 0 && barrier < dist && (!shorten || barrier < shorten))
@@ -149,17 +184,6 @@ namespace game
         d->gunwait = gunwait;
         if(d->gunselect == GUN_PISTOL && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
         d->totalshots += attacks[atk].damage*attacks[atk].rays;
-        d->pitchrecoil = kickamount * 0.10f;
-    }
-
-    void updaterecoil(gameent *d, int curtime)
-    {
-        if(!d->pitchrecoil || !curtime) return;
-        const float amount = d->pitchrecoil * (curtime / 1000.0f) * d->speed * 0.12f;
-        d->pitch += amount;
-        float friction = 4.0f / curtime * 30.0f;
-        d->pitchrecoil = d->pitchrecoil * (friction - 2.8f) / friction;
-        camera::fixrange();
     }
 
     void checkattacksound(gameent *d, bool local)
@@ -774,48 +798,6 @@ namespace game
         }
     }
 
-    void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int attack, float dist, int rays, int flags)
-    {
-        if (betweenrounds || (target->type != ENT_PLAYER && target->type != ENT_AI))
-        {
-            return;
-        }
-
-        gameent* f = (gameent*)target;
-        damage = calculatedamage(damage, f, actor, attack, flags);
-        if (f->type == ENT_PLAYER && (!m_mp(gamemode) || f == actor))
-        {
-            f->hitpush(damage, velocity, actor, attack);
-        }
-        if (!m_mp(gamemode))
-        {
-            // Damage the target locally.
-            if (target->type == ENT_PLAYER)
-            {
-                damageentity(damage, f, actor, attack, flags);
-            }
-            else if (target->type == ENT_AI)
-            {
-                hitmonster(damage, (monster*)f, actor, attack, velocity, flags);
-            }
-        }
-        else
-        {
-            hitmsg& h = hits.add();
-            h.target = f->clientnum;
-            h.lifesequence = f->lifesequence;
-            h.dist = int(dist * DMF);
-            h.rays = rays;
-            h.flags = flags;
-            h.dir = f == actor ? ivec(0, 0, 0) : ivec(vec(velocity).mul(DNF));
-        }
-        // Apply hit effects like blood, shakes, etc.
-        if (target)
-        {
-            applyhiteffects(damage, f, actor, hitposition, attack, flags, true);
-        }
-    }
-
     VARP(blood, 0, 1, 1);
 
     void damageeffect(int damage, dynent* d, vec hit, int atk, bool headshot)
@@ -919,7 +901,7 @@ namespace game
 
     VARP(hitsound, 0, 0, 1);
 
-    void damageentity(int damage, gameent* d, gameent* actor, int atk, int flags, bool local)
+    void damageentity(int damage, gameent* d, gameent* actor, int atk, int flags, bool local = true)
     {
         if (intermission || (d->state != CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING))
         {
@@ -928,7 +910,7 @@ namespace game
 
         if (local)
         {
-            damage = d->dodamage(damage);
+            damage = d->dodamage(damage, flags & Hit_Environment);
         }
         else if (actor == self)
         {
@@ -942,16 +924,16 @@ namespace game
         }
     }
 
-    void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& hitposition, int atk, int flags, bool local)
+    void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& position, int atk, int flags, bool local)
     {
         if (!target || (!local && actor == self && !(flags & Hit_Environment)))
         {
             return;
         }
 
+        gameent* hud = followingplayer(self);
         if (target->type == ENT_PLAYER || target->type == ENT_AI)
         {
-            gameent* hud = followingplayer(self);
             if (actor)
             {
                 if (!isinvulnerable(target, actor))
@@ -969,12 +951,6 @@ namespace game
                         playsound(isally(target, actor) ? S_HIT_ALLY : S_HIT);
                     }
                     actor->lasthit = lastmillis;
-
-                    if (attacks[atk].action == ACT_MELEE)
-                    {
-                        // Simulate a strong impact.
-                        camera::camera.addevent(actor, camera::CameraEvent_Shake, damage * 2);
-                    }
                 }
             }
 
@@ -984,7 +960,63 @@ namespace game
             }
         }
 
-        damageeffect(damage, target, hitposition, atk, flags & Hit_Head);
+        if (attacks[atk].action == ACT_MELEE && (target == hud || (actor && actor == hud)))
+        {
+            // Simulate a strong impact.
+            const int shake = damage * 2;
+            camera::camera.addevent(target, camera::CameraEvent_Shake, shake);
+            camera::camera.addevent(actor, camera::CameraEvent_Shake, shake);
+        }
+
+        damageeffect(damage, target, position, atk, flags & Hit_Head);
+    }
+
+    void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal)
+    {
+        damageentity(damage, target, actor, atk, flags, isLocal);
+        applyhiteffects(damage, target, actor, position, atk, flags, isLocal);
+    }
+
+    void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int attack, float dist, int rays, int flags)
+    {
+        if (betweenrounds || (target->type != ENT_PLAYER && target->type != ENT_AI))
+        {
+            return;
+        }
+
+        gameent* f = (gameent*)target;
+        damage = calculatedamage(damage, f, actor, attack, flags);
+        if (f->type == ENT_PLAYER && (!m_mp(gamemode) || f == actor))
+        {
+            f->hitpush(damage, velocity, actor, attack);
+        }
+        if (!m_mp(gamemode))
+        {
+            // Damage the target locally.
+            if (target->type == ENT_PLAYER)
+            {
+                damageentity(damage, f, actor, attack, flags);
+            }
+            else if (target->type == ENT_AI)
+            {
+                hitmonster(damage, (monster*)f, actor, attack, velocity, flags);
+            }
+        }
+        else
+        {
+            hitmsg& h = hits.add();
+            h.target = f->clientnum;
+            h.lifesequence = f->lifesequence;
+            h.dist = int(dist * DMF);
+            h.rays = rays;
+            h.flags = flags;
+            h.dir = f == actor ? ivec(0, 0, 0) : ivec(vec(velocity).mul(DNF));
+        }
+        // Apply hit effects like blood, shakes, etc.
+        if (target)
+        {
+            applyhiteffects(damage, f, actor, hitposition, attack, flags, true);
+        }
     }
 
     void gunselect(int gun, gameent* d)
@@ -1173,28 +1205,30 @@ namespace game
 
     VARP(autoswitch, 0, 1, 1);
 
-    void autoswitchweapon(int type)
+    void autoswitchweapon(gameent* d, int type)
     {
         /* This function makes our client switch to the weapon we just picked up,
          * meaning the argument is the type of the item.
          * To switch to a specific weapon, we have other specialised functions.
          */
-        if (!autoswitch || type < I_AMMO_SG || type > I_AMMO_GRENADE)
+        if (d != self || !autoswitch || type < I_AMMO_SG || type > I_AMMO_GRENADE)
         {
-            // We stop caring if auto switch is disabled or the item is not a weapon.
+            /* We stop caring if this is not our client,
+             * auto-switch is disabled or the item is not a weapon.
+             */
             return;
         }
 
-        const bool isAttacking = self->attacking || camera::camera.zoomstate.isinprogress();
+        const bool isAttacking = d->attacking || camera::camera.zoomstate.isinprogress();
         if (isAttacking)
         {
             // Do not interrupt someone during a fight.
-            self->lastswitchattempt = lastmillis; // Let the player know we tried to switch (and possibly reflect that on the HUD).
+            d->lastswitchattempt = lastmillis; // Let the player know we tried to switch (and possibly reflect that on the HUD).
             return;
         }
 
         itemstat& is = itemstats[type - I_AMMO_SG];
-        if (self->gunselect != is.info && !self->ammo[is.info])
+        if (d->gunselect != is.info && !d->ammo[is.info])
         {
             gunselect(is.info, self);
         }

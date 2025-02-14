@@ -4551,11 +4551,10 @@ void strsplice(const char *s, const char *vals, int *skip, int *count)
 COMMAND(strsplice, "ssii");
 
 #ifndef STANDALONE
-ICOMMAND(getmillis, "i", (int *total),
-    intret(*total > 0 ? totalmillis : (*total < 0 ? SDL_GetTicks() : lastmillis))
-);
+ICOMMAND(getmillis, "", (), intret(lastmillis));
+ICOMMAND(gettotalmillis, "", (), intret(totalmillis));
 ICOMMAND(getframemillis, "", (), intret(curtime));
-
+ICOMMAND(getticks, "", (), intret(SDL_GetTicks()));
 
 struct sleepcmd
 {
@@ -4641,4 +4640,3 @@ void clearsleep_(const int *clearoverrides)
 COMMANDN(clearsleep, clearsleep_, "i");
 
 #endif
-

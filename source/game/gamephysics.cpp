@@ -839,10 +839,16 @@ namespace physics
                         d->falling = d->vel = vec(0, 0, 0);
                     }
                 }
-                else if (d->climbing) d->climbing = false;
+                else if (d->climbing)
+                {
+                    d->climbing = false;
+                }
             }
         }
-        else if (d->climbing) d->climbing = false;
+        else if (d->climbing)
+        {
+            d->climbing = false;
+        }
 
         return true;
     }
@@ -1230,5 +1236,36 @@ namespace physics
         eye.add(offset);
         float k = pow(ragdolleyesmooth, float(curtime) / ragdolleyesmoothmillis);
         d->o.lerp(eye, 1 - k);
+    }
+
+    VARP(ragdollpush, 0, 1, 1);
+
+    void pushragdolls(const vec& position, const int margin)
+    {
+        if (!ragdollpush || !ragdolls.length())
+        {
+            return;
+        }
+
+        loopv(ragdolls)
+        {
+            gameent* ragdoll = ragdolls[i];
+            if (ragdoll->o.reject(position, ragdoll->radius + margin))
+            {
+                continue;
+            }
+            vec delta = vec(ragdoll->o).sub(position).normalize();
+            pushragdoll(ragdoll, delta);
+        }
+    }
+
+    void pushRagdoll(dynent *d, const vec &direction)
+    {
+        if (!ragdollpush)
+        {
+            return;
+        }
+
+        pushragdoll(d, direction);
     }
 }

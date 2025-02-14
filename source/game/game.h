@@ -65,12 +65,43 @@ static const char * const mastermodenames[] =  { "Default",        "Open",      
 static const char * const mastermodecolors[] = {       "",          "\f0",         "\f2",           "\f4",            "\f3",             "\f6" };
 static const char * const mastermodeicons[] =  { "server",  "server_open", "server_veto", "server_locked", "server_private", "server_password" };
 
-// server privileges
-enum { PRIV_NONE = 0, PRIV_MASTER, PRIV_ADMIN, PRIV_AUTH };
-static const int privilegecolors[4]            = {   0xFFFFFF, 0x40FF80,        0xFF8000, 0xFF00FF };
-static const char * const privilegetextcode[4] = {         "",    "\f0",           "\f6",    "\f5" };
-static const char * const privilegenames[4]    = {  "unknown", "master", "administrator",   "auth" };
-inline bool validprivilege(int privilege) { return privilege > PRIV_NONE && privilege <= PRIV_AUTH; }
+// Server privileges.
+enum
+{ 
+    PRIV_NONE = 0,
+    PRIV_HOST,
+    PRIV_MODERATOR,
+    PRIV_ADMINISTRATOR,
+    PRIV_OWNER
+};
+static const int privilegecolors[5] =
+{
+    0xFFFFFF,
+    0x00FFFF,
+    0x00FF80,
+    0xFFC575,
+    0xF0A4F0
+};
+static const char * const privilegetextcodes[5] =
+{
+    "\ff",
+    "\f8",
+    "\f0",
+    "\f6",
+    "\f5"
+};
+static const char * const privilegenames[5] =
+{
+    "None",
+    "Host",
+    "Moderator",
+    "Administrator",
+    "Owner"
+};
+inline bool validprivilege(int privilege)
+{
+    return privilege > PRIV_NONE && privilege <= PRIV_ADMINISTRATOR;
+}
 
 // round states
 enum
@@ -400,9 +431,9 @@ struct gamestate
     }
 
     // Subtract damage/shield points and apply damage here.
-    int dodamage(int damage, bool environment = false)
+    int dodamage(int damage, bool isEnvironment = false)
     {
-        if(shield && !environment)
+        if(shield && !isEnvironment)
         { // Only if the player has shield points and damage is not caused by the environment.
             int ad = round(damage / 3.0f * 2.0f);
             if(ad > shield) ad = shield;
@@ -472,7 +503,7 @@ struct gameent : dynent, gamestate
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots, lives, holdingflag;
     editinfo *edit;
-    float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, pitchrecoil;
+    float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, recoil;
     int smoothmillis;
 
     int chan[Chan_Num], chansound[Chan_Num];
@@ -495,7 +526,7 @@ struct gameent : dynent, gamestate
                 lastpain(0), lasthurt(0), lastspawn(0),
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastswitchattempt(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
-                edit(NULL), pitchrecoil(0), smoothmillis(-1),
+                edit(NULL), recoil(0), smoothmillis(-1),
                 transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
                 muzzle(-1, -1, -1), eject(-1, -1, -1)
@@ -579,6 +610,7 @@ struct gameent : dynent, gamestate
         {
             stopchannelsound(i);
         }
+        recoil = 0;
     }
 
     void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)
@@ -662,6 +694,8 @@ namespace physics
     extern void physicsframe();
     extern void updatephysstate(gameent* d);
     extern void addroll(gameent* d, float amount);
+    extern void pushragdolls(const vec& position, const int margin);
+    extern void pushRagdoll(dynent* d, const vec& direction);
 
     extern bool canmove(gameent* d);
     extern bool hasbounced(projectile* proj, float secs, float elasticity, float waterfric, float gravity);
@@ -733,7 +767,7 @@ namespace game
     extern void spawneffect(gameent *d);
     extern void respawn();
     extern void setdeathstate(gameent *d, bool restore = false);
-    extern void writespecialkillfeed(int announcement);
+    extern void printkillfeedannouncement(int announcement, gameent* actor);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void updatetimer(int time, int type);
@@ -774,7 +808,7 @@ namespace game
     extern gameent* newclient(int cn);
     extern gameent* self;
 
-    extern vector<gameent*> players, clients;
+    extern vector<gameent*> players, clients, ragdolls;
     extern vector<gameent*> bestplayers;
     extern vector<int> bestteams;
 
@@ -875,9 +909,8 @@ namespace game
     extern void gunselect(int gun, gameent* d);
     extern void doweaponchangeffects(gameent* d, int gun = -1);
     extern void weaponswitch(gameent* d);
-    extern void autoswitchweapon(int type);
-    extern void damageentity(int damage, gameent* d, gameent* actor, int atk, int flags = 0, bool local = true);
-    extern void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& hitposition, int atk, int flags, bool local);
+    extern void autoswitchweapon(gameent* d, int type);
+    extern void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal);
     extern void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int atk, float dist, int rays = 1, int flags = Hit_Torso);
 
     extern float intersectdist;

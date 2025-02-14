@@ -484,7 +484,7 @@ namespace server
         loopvrev(clients)
         {
             clientinfo &c = *clients[i];
-            if(c.state.aitype != AI_NONE || c.privilege >= PRIV_ADMIN || c.local) continue;
+            if(c.state.aitype != AI_NONE || c.privilege >= PRIV_ADMINISTRATOR || c.local) continue;
             if(actor && ((c.privilege > priv && !actor->local) || c.clientnum == actor->clientnum)) continue;
             if(getclientip(c.clientnum) == ip) disconnect_client(c.clientnum, DISC_KICK);
         }
@@ -1005,7 +1005,7 @@ namespace server
         return !((!m_infection && !m_betrayal && betweenrounds) || (m_hunt && hunterchosen && betweenrounds));
     }
 
-    bool pickup(int i, int sender)         // server side item pickup, acknowledge first client that gets it
+    bool pickup(int i, int sender) // Server-side item collection acknowledges the first client to pick it up.
     {
         if(!allowpickup()) return false;
         if((gamelimit && m_timed && gamemillis>=gamelimit) || !sents.inrange(i) || !sents[i].spawned) return false;
@@ -1426,7 +1426,7 @@ namespace server
     {
         if(!gamepaused) return;
         int admins = 0;
-        loopv(clients) if(clients[i]->privilege >= (restrictpausegame ? PRIV_ADMIN : PRIV_MASTER) || clients[i]->local) admins++;
+        loopv(clients) if(clients[i]->privilege >= (restrictpausegame ? PRIV_ADMINISTRATOR : PRIV_HOST) || clients[i]->local) admins++;
         if(!admins) pausegame(false);
     }
 
@@ -1486,8 +1486,8 @@ namespace server
         u.pubkey = parsepubkey(pubkey);
         switch(priv[0])
         {
-            case 'a': case 'A': u.privilege = PRIV_ADMIN; break;
-            case 'm': case 'M': default: u.privilege = PRIV_AUTH; break;
+            case 'a': case 'A': u.privilege = PRIV_ADMINISTRATOR; break;
+            case 'm': case 'M': default: u.privilege = PRIV_MODERATOR; break;
             case 'n': case 'N': u.privilege = PRIV_NONE; break;
         }
     }
@@ -1524,64 +1524,73 @@ namespace server
 
     extern void connected(clientinfo *ci);
 
-    bool setmaster(clientinfo *ci, bool val, const char *pass = "", const char *authname = NULL, const char *authdesc = NULL, int authpriv = PRIV_MASTER, bool force = false, bool trial = false)
+    bool setmaster(clientinfo* ci, bool val, const char* pass = "", const char* authname = NULL, const char* authdesc = NULL, int authpriv = PRIV_HOST, bool force = false, bool trial = false)
     {
-        if(authname && !val) return false;
-        const char *name = "[unknown]";
-        if(val)
+        if (authname && !val) return false;
+        const char* name = "[unknown]";
+        const char* color = "\ff";
+        if (val)
         {
             bool haspass = adminpass[0] && checkpassword(ci, adminpass, pass);
-            int wantpriv = ci->local || haspass ? PRIV_ADMIN : authpriv;
-            if(wantpriv <= ci->privilege) return true;
-            else if(wantpriv <= PRIV_MASTER && !force)
+            int wantpriv = ci->local || haspass ? PRIV_ADMINISTRATOR : authpriv;
+            if (wantpriv <= ci->privilege) return true;
+            else if (wantpriv <= PRIV_HOST && !force)
             {
-                if(ci->state.state==CS_SPECTATOR)
+                if (ci->state.state == CS_SPECTATOR)
                 {
                     sendf(ci->clientnum, 1, "ris", N_SERVMSG, "Spectators may not claim master.");
                     return false;
                 }
-                loopv(clients) if(ci!=clients[i] && clients[i]->privilege)
+                loopv(clients) if (ci != clients[i] && clients[i]->privilege)
                 {
-                    sendf(ci->clientnum, 1, "ris", N_SERVMSG, "Master is already claimed.");
+                    sendf(ci->clientnum, 1, "ris", N_SERVMSG, "Privileges are already claimed.");
                     return false;
                 }
-                if(!authname && !(mastermask&MM_AUTOAPPROVE) && !ci->privilege && !ci->local)
+                if (!authname && !(mastermask & MM_AUTOAPPROVE) && !ci->privilege && !ci->local)
                 {
                     sendf(ci->clientnum, 1, "ris", N_SERVMSG, "This server requires you to use the \"/auth\" command to claim master.");
                     return false;
                 }
             }
-            if(trial) return true;
+            if (trial) return true;
             ci->privilege = wantpriv;
-            if(validprivilege(ci->privilege)) name = privilegenames[ci->privilege];
+            if (validprivilege(ci->privilege))
+            {
+                name = privilegenames[ci->privilege];
+                color = privilegetextcodes[ci->privilege];
+            }
         }
         else
         {
-            if(!ci->privilege) return false;
-            if(trial) return true;
-            if(validprivilege(ci->privilege)) name = privilegenames[ci->privilege];
+            if (!ci->privilege) return false;
+            if (trial) return true;
+            if (validprivilege(ci->privilege))
+            {
+                name = privilegenames[ci->privilege];
+                color = privilegetextcodes[ci->privilege];
+            }
             revokemaster(ci);
         }
         bool hasmaster = false;
-        loopv(clients) if(clients[i]->local || clients[i]->privilege >= PRIV_MASTER) hasmaster = true;
-        if(!hasmaster)
+        loopv(clients) if (clients[i]->local || clients[i]->privilege >= PRIV_HOST) hasmaster = true;
+        if (!hasmaster)
         {
             mastermode = MM_OPEN;
             allowedips.shrink(0);
         }
         string msg;
-        if(val && authname)
+        if (val && authname)
         {
-            if(authdesc && authdesc[0]) formatstring(msg, "%s claimed %s privileges as '\fs\f5%s\fr' [\fs\f0%s\fr]", colorname(ci), name, authname, authdesc);
-            else formatstring(msg, "%s claimed %s privileges as '\fs\f5%s\fr'", colorname(ci), name, authname);
+            if (authdesc && authdesc[0]) formatstring(msg, "%s claimed \fs%s%s\fr privileges as '\fs\f5%s\fr' [\fs\f0%s\fr]", colorname(ci), color, name, authname, authdesc);
+            else formatstring(msg, "%s claimed \fs%s%s\fr privileges as '\fs\f5%s\fr'", colorname(ci), color, name, authname);
         }
-        else formatstring(msg, "%s %s %s privileges", colorname(ci), val ? "claimed" : "relinquished", name);
+        else formatstring(msg, "%s %s \fs%s%s\fr privileges", colorname(ci), val ? "claimed" : "relinquished", color, name);
         packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);
         putint(p, N_SERVMSG);
         sendstring(msg, p);
         putint(p, N_CURRENTMASTER);
         putint(p, mastermode);
-        loopv(clients) if(clients[i]->privilege >= PRIV_MASTER)
+        loopv(clients) if (clients[i]->privilege >= PRIV_HOST)
         {
             putint(p, clients[i]->clientnum);
             putint(p, clients[i]->privilege);
@@ -1603,7 +1612,7 @@ namespace server
         if((priv || ci->local) && ci->clientnum!=victim)
         {
             clientinfo *vinfo = (clientinfo *)getclientinfo(victim);
-            if(vinfo && vinfo->connected && (priv >= vinfo->privilege || ci->local) && vinfo->privilege < PRIV_ADMIN && !vinfo->local)
+            if(vinfo && vinfo->connected && (priv >= vinfo->privilege || ci->local) && vinfo->privilege < PRIV_ADMINISTRATOR && !vinfo->local)
             {
                 if(trial) return true;
                 string kicker;
@@ -1636,7 +1645,7 @@ namespace server
         if((ci->privilege || ci->local) && ci->clientnum!=victim)
         {
             clientinfo *vinfo = (clientinfo *)getclientinfo(victim);
-            if(vinfo && vinfo->connected && (ci->privilege >= vinfo->privilege || ci->local) && vinfo->privilege < PRIV_AUTH && !vinfo->local)
+            if(vinfo && vinfo->connected && (ci->privilege >= vinfo->privilege || ci->local) && vinfo->privilege < PRIV_MODERATOR && !vinfo->local)
             {
                 const char *action = val <= 0 ? "unmuted" : "muted";
                 if(reason && reason[0])
@@ -2035,7 +2044,7 @@ namespace server
             putint(p, mastermode);
             hasmaster = true;
         }
-        loopv(clients) if (clients[i]->privilege >= PRIV_MASTER)
+        loopv(clients) if (clients[i]->privilege >= PRIV_HOST)
         {
             if (!hasmaster)
             {
@@ -2127,7 +2136,7 @@ namespace server
             putint(p, mastermode);
             hasmaster = true;
         }
-        loopv(clients) if (clients[i]->privilege >= PRIV_MASTER)
+        loopv(clients) if (clients[i]->privilege >= PRIV_HOST)
         {
             if (!hasmaster)
             {
@@ -2919,7 +2928,7 @@ namespace server
             if(idx < 0) return;
             map = maprotations[idx].map;
         }
-        if(lockmaprotation && !ci->local && ci->privilege < (lockmaprotation > 1 ? PRIV_ADMIN : PRIV_MASTER) && findmaprotation(reqmode, map) < 0)
+        if(lockmaprotation && !ci->local && ci->privilege < (lockmaprotation > 1 ? PRIV_ADMINISTRATOR : PRIV_HOST) && findmaprotation(reqmode, map) < 0)
         {
             sendf(sender, 1, "ris", N_SERVMSG, "This server has locked the map rotation.");
             return;
@@ -2988,7 +2997,10 @@ namespace server
             case 50:
             {
                 kflags |= KILL_LEGENDARY;
-                if (actor->state.spree >= 50) actor->state.spree = 0; // Reset the spree.
+                if (actor->state.spree >= 50)
+                {
+                    actor->state.spree = 0; // Reset the spree.
+                }
                 break;
             }
         }
@@ -3059,7 +3071,7 @@ namespace server
     {
         if((target == actor && !selfdamage) || (isally(target, actor) && !teamdamage) || (m_round && betweenrounds)) return;
         servstate &ts = target->state;
-        ts.dodamage(damage, flags & Hit_Environment? true : false);
+        ts.dodamage(damage, flags & Hit_Environment);
         target->state.lastpain = lastmillis;
         sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield, int(to.x*DMF), int(to.y*DMF), int(to.z*DMF));
         if(target!=actor && damage > 0)
@@ -3637,7 +3649,7 @@ namespace server
         loopvrev(clients)
         {
             clientinfo *ci = clients[i];
-            if(ci->state.aitype != AI_NONE || ci->local || ci->privilege >= PRIV_ADMIN) continue;
+            if(ci->state.aitype != AI_NONE || ci->local || ci->privilege >= PRIV_ADMINISTRATOR) continue;
             if(checkbans(getclientip(ci->clientnum))) disconnect_client(ci->clientnum, DISC_IPBAN);
         }
     }
@@ -3694,11 +3706,11 @@ namespace server
         if(ci->connectauth) connected(ci);
         if(ci->authkickvictim >= 0)
         {
-            if(setmaster(ci, true, "", ci->authname, NULL, PRIV_AUTH, false, true))
-                trykick(ci, ci->authkickvictim, ci->authkickreason, ci->authname, NULL, PRIV_AUTH);
+            if(setmaster(ci, true, "", ci->authname, NULL, PRIV_MODERATOR, false, true))
+                trykick(ci, ci->authkickvictim, ci->authkickreason, ci->authname, NULL, PRIV_MODERATOR);
             ci->cleanauthkick();
         }
-        else setmaster(ci, true, "", ci->authname, NULL, PRIV_AUTH);
+        else setmaster(ci, true, "", ci->authname, NULL, PRIV_MODERATOR);
     }
 
     void authchallenged(uint id, const char *val, const char *desc = "")
@@ -4101,7 +4113,7 @@ namespace server
                 break;
 
             case N_TRYSPAWN:
-                if (!ci || !cq || cq->state.state != CS_DEAD || cq->state.lastspawn >= 0 || (!m_edit && cq->state.lastdeath && gamemillis + curtime - cq->state.lastdeath <= SPAWN_DELAY)) break;
+                if (!ci || !cq || cq->state.state != CS_DEAD || cq->state.lastspawn >= 0 || (!m_norespawndelay && cq->state.lastdeath && gamemillis + curtime - cq->state.lastdeath <= SPAWN_DELAY)) break;
                 if((smode && !smode->canspawn(cq)) || (((m_hunt && hunterchosen) || (m_round && !m_infection && !m_betrayal)) && numclients(-1, true, false) > 1))
                 {
                     if(m_round && cq->state.aitype == AI_NONE)
@@ -4409,7 +4421,7 @@ namespace server
                 int mm = getint(p);
                 if((ci->privilege || ci->local) && mm>=MM_OPEN && mm<=MM_PRIVATE)
                 {
-                    if((ci->privilege>=PRIV_ADMIN || ci->local) || (mastermask&(1<<mm)))
+                    if((ci->privilege>=PRIV_ADMINISTRATOR || ci->local) || (mastermask&(1<<mm)))
                     {
                         mastermode = mm;
                         allowedips.shrink(0);
@@ -4496,7 +4508,7 @@ namespace server
             case N_RECORDDEMO:
             {
                 int val = getint(p);
-                if(ci->privilege < (restrictdemos ? PRIV_ADMIN : PRIV_MASTER) && !ci->local) break;
+                if(ci->privilege < (restrictdemos ? PRIV_ADMINISTRATOR : PRIV_HOST) && !ci->local) break;
                 if(!maxdemos || !maxdemosize)
                 {
                     sendf(ci->clientnum, 1, "ris", N_SERVMSG, "the server has disabled demo recording");
@@ -4509,7 +4521,7 @@ namespace server
 
             case N_STOPDEMO:
             {
-                if(ci->privilege < (restrictdemos ? PRIV_ADMIN : PRIV_MASTER) && !ci->local) break;
+                if(ci->privilege < (restrictdemos ? PRIV_ADMINISTRATOR : PRIV_HOST) && !ci->local) break;
                 stopdemo();
                 break;
             }
@@ -4517,7 +4529,7 @@ namespace server
             case N_CLEARDEMOS:
             {
                 int demo = getint(p);
-                if(ci->privilege < (restrictdemos ? PRIV_ADMIN : PRIV_MASTER) && !ci->local) break;
+                if(ci->privilege < (restrictdemos ? PRIV_ADMINISTRATOR : PRIV_HOST) && !ci->local) break;
                 cleardemos(demo);
                 break;
             }
@@ -4571,7 +4583,7 @@ namespace server
                     if(!ci->privilege && !ci->local) break;
                     clientinfo *minfo = (clientinfo *)getclientinfo(mn);
                     if(!minfo || !minfo->connected || (!ci->local && minfo->privilege >= ci->privilege) || (val && minfo->privilege)) break;
-                    setmaster(minfo, val!=0, "", NULL, NULL, PRIV_MASTER, true);
+                    setmaster(minfo, val!=0, "", NULL, NULL, PRIV_HOST, true);
                 }
                 else setmaster(ci, val!=0, text);
                 // don't broadcast the master password
@@ -4621,7 +4633,7 @@ namespace server
                 int victim = getint(p);
                 getstring(text, p);
                 filtertext(text, text, T_NEWLINES | T_WHITESPACE);
-                int authpriv = PRIV_AUTH;
+                int authpriv = PRIV_MODERATOR;
                 if(desc[0])
                 {
                     userinfo *u = users.access(userkey(name, desc));
@@ -4649,7 +4661,7 @@ namespace server
             case N_PAUSEGAME:
             {
                 int val = getint(p);
-                if(ci->privilege < (restrictpausegame ? PRIV_ADMIN : PRIV_MASTER) && !ci->local) break;
+                if(ci->privilege < (restrictpausegame ? PRIV_ADMINISTRATOR : PRIV_HOST) && !ci->local) break;
                 pausegame(val > 0, ci);
                 break;
             }
@@ -4657,7 +4669,7 @@ namespace server
             case N_GAMESPEED:
             {
                 int val = getint(p);
-                if(ci->privilege < (restrictgamespeed ? PRIV_ADMIN : PRIV_MASTER) && !ci->local) break;
+                if(ci->privilege < (restrictgamespeed ? PRIV_ADMINISTRATOR : PRIV_HOST) && !ci->local) break;
                 changegamespeed(val, ci);
                 break;
             }

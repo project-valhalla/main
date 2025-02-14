@@ -500,10 +500,10 @@ game/scoreboard.o: game/announcer.h game/monster.h
 game/gameserver.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/gameserver.o: shared/ents.h shared/command.h shared/glexts.h
 game/gameserver.o: shared/glemu.h engine/sound.h shared/iengine.h
-game/gameserver.o: shared/igame.h game/projectile.h game/weapon.h game/ai.h
-game/gameserver.o: game/gamemode.h game/entity.h game/monster.h game/geoip.h
-game/gameserver.o: game/ctf.h game/elimination.h game/extinfo.h
-game/gameserver.o: game/aimanager.h game/announcer.h
+game/gameserver.o: shared/igame.h shared/unicode.h game/projectile.h
+game/gameserver.o: game/weapon.h game/ai.h game/gamemode.h game/entity.h
+game/gameserver.o: game/announcer.h game/monster.h game/geoip.h game/ctf.h
+game/gameserver.o: game/elimination.h game/extinfo.h game/aimanager.h
 game/waypoint.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/waypoint.o: shared/ents.h shared/command.h shared/glexts.h
 game/waypoint.o: shared/glemu.h engine/sound.h shared/iengine.h
@@ -542,8 +542,9 @@ game/projectile.o: game/announcer.h game/monster.h
 game/announcer.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/announcer.o: shared/ents.h shared/command.h shared/glexts.h
 game/announcer.o: shared/glemu.h engine/sound.h shared/iengine.h
-game/announcer.o: shared/igame.h game/projectile.h game/weapon.h game/ai.h
-game/announcer.o: game/gamemode.h game/entity.h game/monster.h game/announcer.h
+game/announcer.o: shared/igame.h shared/unicode.h game/projectile.h
+game/announcer.o: game/weapon.h game/ai.h game/gamemode.h game/entity.h
+game/announcer.o: game/announcer.h game/monster.h
 game/camera.o: engine/engine.h shared/cube.h shared/tools.h shared/geom.h
 game/camera.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/camera.o: engine/sound.h shared/iengine.h shared/igame.h engine/world.h
@@ -563,8 +564,9 @@ engine/engine.h.gch: engine/texture.h engine/bih.h engine/model.h
 game/game.h.gch: shared/cube.h shared/tools.h shared/geom.h shared/ents.h
 game/game.h.gch: shared/command.h shared/glexts.h shared/glemu.h
 game/game.h.gch: engine/sound.h shared/iengine.h shared/igame.h
-game/game.h.gch: game/projectile.h game/game.h game/weapon.h game/ai.h
-game/game.h.gch: game/gamemode.h game/entity.h game/monster.h game/announcer.h
+game/game.h.gch: shared/unicode.h game/projectile.h game/game.h game/weapon.h
+game/game.h.gch: game/ai.h game/gamemode.h game/entity.h game/announcer.h
+game/game.h.gch: game/monster.h
 
 standalone/shared/crypto.o: shared/cube.h shared/tools.h shared/geom.h
 standalone/shared/crypto.o: shared/ents.h shared/command.h engine/sound.h
@@ -600,7 +602,7 @@ standalone/game/gameserver.o: shared/unicode.h game/projectile.h
 standalone/game/gameserver.o: game/weapon.h game/ai.h game/gamemode.h
 standalone/game/gameserver.o: game/entity.h game/announcer.h game/monster.h
 standalone/game/gameserver.o: game/geoip.h game/ctf.h game/elimination.h
-standalone/game/gameserver.o: game/extinfo.h game/aimanager.h game/announcer.h
+standalone/game/gameserver.o: game/extinfo.h game/aimanager.h
 standalone/engine/master.o: shared/cube.h shared/tools.h shared/geom.h
 standalone/engine/master.o: shared/ents.h shared/command.h engine/sound.h
 standalone/engine/master.o: shared/iengine.h shared/igame.h
@@ -614,7 +616,7 @@ standalone/engine/engine.h.gch: shared/iengine.h shared/igame.h
 standalone/engine/engine.h.gch: engine/world.h
 standalone/game/game.h.gch: shared/cube.h shared/tools.h shared/geom.h
 standalone/game/game.h.gch: shared/ents.h shared/command.h engine/sound.h
-standalone/game/game.h.gch: shared/iengine.h shared/igame.h game/projectile.h
-standalone/game/game.h.gch: game/game.h game/weapon.h game/ai.h
-standalone/game/game.h.gch: game/gamemode.h game/entity.h game/monster.h
-standalone/game/game.h.gch: game/announcer.h
+standalone/game/game.h.gch: shared/iengine.h shared/igame.h shared/unicode.h
+standalone/game/game.h.gch: game/projectile.h game/game.h game/weapon.h
+standalone/game/game.h.gch: game/ai.h game/gamemode.h game/entity.h
+standalone/game/game.h.gch: game/announcer.h game/monster.h

@@ -33,38 +33,148 @@ extern int screenw, screenh, renderw, renderh, hudw, hudh;
 extern vector<int> entgroup;
 
 // rendertext
-struct font
-{
-    struct charinfo
-    {
-        float x, y, w, h, offsetx, offsety, advance;
-        int tex;
-    };
-
-    char *name;
-    vector<Texture *> texs;
-    vector<charinfo> chars;
-    int charoffset, defaultw, defaulth, scale;
-    float bordermin, bordermax, outlinemin, outlinemax;
-
-    font() : name(NULL) {}
-    ~font() { DELETEA(name); }
-};
-
-#define FONTH (curfont->scale)
+#define FONTH (fontsize)
 #define FONTW (FONTH/2)
 #define MINRESW 640
 #define MINRESH 480
 
-extern font *curfont;
+// number of text lines to fill the whole screen (higher = smaller text)
+#define CONSOLETEXTROWS 45
+#define LOADSCREENTEXTROWS 45
+#define UITEXTROWS 32
+#define PARTICLETEXTROWS 15 // NOTE: particles use a different scale
+
 extern Shader *textshader;
 extern const matrix4x3 *textmatrix;
 extern float textscale;
+extern double fontsize;
 
-extern font *findfont(const char *name);
+extern bool init_pangocairo();
+extern void done_pangocairo();
+extern int  getcurrentfontid();
+extern bool setfont(const char *name);
+extern void pushfont();
+extern bool popfont();
 extern void reloadfonts();
+static inline void setfontsize(double size) { fontsize = size; }
 
-static inline void setfont(font *f) { if(f) curfont = f; }
+struct _PangoLayout;
+namespace text
+{
+    // A rendered text label, ready to be drawn
+    class Label
+    {
+        int w, h;
+        int ox, oy; // offsets
+        GLuint tex;
+        _PangoLayout *layout;
+        int *map_markup_to_text;
+        int *map_text_to_markup;
+
+    public:
+        Label();
+        ~Label();
+        Label(const Label&) = delete;
+        Label(Label&&) noexcept;
+        Label& operator=(const Label&) = delete;
+        Label& operator=(Label&&) noexcept;
+
+        bool valid()  const { return tex != 0; }
+        int  width()  const { return w; }
+        int  height() const { return h; }
+
+        // empties the text content of the label
+        void clear();
+
+        // draws the label to the screen
+        void draw(
+            double left,       // screen X coordinate
+            double top,        // screen Y coordinate
+            int alpha = 255,   // text opacity (0-255)
+            bool black = false // make it black? (used for shadows)
+        ) const;
+        // like `draw()` but with a shadow
+        void draw_as_console(double left, double top) const;
+        
+        // converts (x,y) pixel coordinates to a character (byte) index
+        // NOTE: do not call if the label was not prepared with `keep_layout=true`
+        int xy_to_index(float x, float y) const;
+
+        friend Label prepare(const char *, int, const bvec&, int, double, const bvec4&, int, int, const char *, bool, bool, bool);
+    };
+
+    // creates a label from a string
+    Label prepare(
+        const char *str,                                // the label text
+        int max_width,                                  // maximum width in pixels
+        const bvec& color = bvec(255, 255, 255),        // initial color of the text
+        int cursor = -1,                                // byte index of the cursor (disabled if <0)
+        double outline = 0,                             // outline thickness
+        const bvec4& outline_color = bvec4(0, 0, 0, 0), // outline color (RGBA)
+        int align = -1,                                 // text alignment: -1 = left, 0 = center, 1 = right
+        int justify = 0,                                // text justification (0 = disable, enable otherwise)
+        const char *lang = nullptr,                     // optional language code of the text (can affect text shaping)
+        bool no_fallback = false,                       // disable fallback fonts for unavailable glyphs?
+        bool keep_layout = false,                       // keep layout in memory? (necessary if you need to call `xy_to_index()` on the label)
+        bool reserve_cursor = false                     // reserve space to the right for the cursor?
+    );
+
+    // same as `prepare()` but with appropriate settings for console text
+    Label prepare_for_console(const char *str, int max_width, int cursor);
+
+    // same as `prepare()` but use a cache so that the same label doesn't have to be recreated every time
+    const Label& prepare_for_particle(const char *str,
+        const bvec& color = bvec(255, 255, 255),
+        double outline = 0,
+        const bvec4& outline_color = bvec4(0, 0, 0, 0),
+        const char *lang = nullptr,
+        bool no_fallback = false
+    );
+
+    // measure text before creating the label
+    void measure(
+        const char *str,            // the string to measure
+        int max_width,              // maximum width in pixels
+        int& width,                 // output: the measured width
+        int& height,                // output: the measured height
+        int align = -1,             // text alignment: -1 = left, 0 = center, 1 = right
+        int justify = 0,            // text justification (0 = disable, enable otherwise)
+        const char *lang = nullptr, // optional language code of the text (can affect text shaping)
+        bool no_fallback = false    // disable fallback fonts for unavailable glyphs?
+    );
+
+    // draw a string directly to the screen
+    void draw(
+        const char *str,                         // the string to draw
+        double left,                             // screen X coordinate
+        double top,                              // screen Y coordinate
+        const bvec& color = bvec(255, 255, 255), // initial color of the text
+        int alpha = 255,                         // text opacity (0-255)
+        int max_width = 0,                       // maximum width in pixels
+        int align = -1,                          // text alignment: -1 = left, 0 = center, 1 = right
+        int justify = 0,                         // text justification (0 = disable, enable otherwise)
+        const char *lang = nullptr,              // optional language code of the text (can affect text shaping)
+        bool no_fallback = false                 // disable fallback fonts for unavailable glyphs?
+    );
+    static inline void draw_fmt(const char *fstr, double left, double top, ...)
+    {
+        defvformatstring(str, top, fstr);
+        draw(str, left, top);
+    }
+
+    // same as `draw()` but with appropriate settings for console text
+    void draw_as_console(const char *str, double left, double top,
+        int max_width = 0,
+        int cursor = -1
+    );
+    static inline void draw_as_console_fmt(const char *fstr, double left, double top, ...)
+    {
+        defvformatstring(str, top, fstr);
+        draw_as_console(str, left, top);
+    }
+    
+    void getres(int& w, int& h);
+}
 
 // texture
 extern int hwtexsize, hwcubetexsize, hwmaxaniso, maxtexsize, hwtexunits, hwvtexunits;
@@ -580,6 +690,7 @@ extern void clearsleep(bool clearoverrides = true);
 
 // console
 extern float conscale;
+extern int inputmillis;
 
 extern void processkey(int code, bool isdown, int modstate = 0);
 extern void binduikey(char* key, char* action, const char* window);
@@ -597,6 +708,7 @@ extern const char *addreleaseaction(char *s);
 extern tagval *addreleaseaction(ident *id, int numargs);
 extern void writebinds(stream *f);
 extern void writecompletions(stream *f);
+extern void clearconsoletextures();
 
 // main
 enum
@@ -734,6 +846,7 @@ namespace UI
     void update();
     void render();
     void cleanup();
+    void clearlabels();
     void resetcursor();
     void getcursorpos(float& x, float& y);
 

@@ -861,7 +861,6 @@ namespace game
             return;
         }
         else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
-        announcer::parseannouncements(d, actor, flags);
         if (actor == followingplayer(self))
         {
             if (actor->role == ROLE_BERSERKER)
@@ -888,8 +887,9 @@ namespace game
         d->deathstate = getdeathstate(d, atk, flags);
         setdeathstate(d);
         ai::kill(d, actor);
-        // Write obituary (console messages, kill feed).
+        // Write obituary (console messages, kill feed) and manage announcements.
         writeobituary(d, actor, atk, flags);
+        announcer::parseannouncements(d, actor, flags);
     }
 
     void updatetimer(int time, int type)

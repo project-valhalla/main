@@ -116,7 +116,11 @@ namespace game
 
         void checkannouncement(const int announcement, const bool shouldPrint = true, gameent* actor = NULL)
         {
-            if (actor && announcement > Announcements::INVALID && shouldPrint)
+            if (!actor)
+            {
+                return;
+            }
+            if (announcement > Announcements::INVALID && shouldPrint)
             {
                 // Avoid confusing players in certain circumstances by triggering console messages.
                 if (announcements[announcement].type == AnnouncementTypes::STREAK || announcements[announcement].announcement == Announcements::FIRST)
@@ -152,7 +156,7 @@ namespace game
 
             if (flags & KILL_HEADSHOT)
             {
-                checkannouncement(Announcements::HEADSHOT);
+                checkannouncement(Announcements::HEADSHOT, false, actor);
             }
 
             if (d->type == ENT_AI)

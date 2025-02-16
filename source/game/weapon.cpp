@@ -86,8 +86,8 @@ namespace game
         {
             if (d->haspowerup(PU_DAMAGE))
             {
-                static const int GUN_RECOIL_POWERUP_MULTIPLIER = 2;
-                kickAmount *= GUN_RECOIL_POWERUP_MULTIPLIER;
+                const int recoilPowerupMultiplier = 2;
+                kickAmount *= recoilPowerupMultiplier;
             }
             const bool isCrouched = d->physstate >= PHYS_SLOPE && d->crouching && d->crouched();
             if (kickAmount && !isCrouched)
@@ -99,8 +99,8 @@ namespace game
         }
         else
         {
-            static const int GUN_RECOIL_SHAKE = 40; // Default shake value for weapons with no recoil.
-            kickAmount = GUN_RECOIL_SHAKE;
+            const int recoilShake = 40; // Default shake value for weapons with no recoil.
+            kickAmount = recoilShake;
         }
         camera::camera.addevent(d, camera::CameraEvent_Shake, kickAmount);
     }

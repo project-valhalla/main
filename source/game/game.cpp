@@ -443,7 +443,7 @@ namespace game
         }
         else
         {
-            static const int color = 0x00e661;
+            const int color = 0x00e661;
             particle_flare(d->o, d->o, 350, PART_EXPLODE1, color, 2.0f, NULL, d->radius + 50.0f);
             particle_flare(d->o, d->o, 280, PART_ELECTRICITY, color, 2.0f, NULL, d->radius + 30.0f);
             adddynlight(d->o, 100, vec::hexcolor(color), 350, 100, DL_EXPAND | L_NOSHADOW);

@@ -187,9 +187,9 @@ namespace entities
             /* If the low-health warning feature is enabled,
              * find the closest health pack to help guide the player.
              */
-            static const int movethreshold = 128;
-            bool shouldsearch = lastposition.dist(hud->o) >= movethreshold;
-            if (shouldsearch)
+            const int moveThreshold = 128;
+            const bool shouldSearch = lastposition.dist(hud->o) >= moveThreshold;
+            if (shouldSearch)
             {
                 lastposition = hud->o;
                 closest = findclosest(I_HEALTH, lastposition);
@@ -351,8 +351,8 @@ namespace entities
             return;
         }
 
-        static const int ENTITY_COLLECT_FLASH = 80;
-        addscreenflash(ENTITY_COLLECT_FLASH);
+        const int collectFlash = 80;
+        addscreenflash(collectFlash);
         if (shouldCheck)
         {
             game::checkentity(type);
@@ -398,8 +398,8 @@ namespace entities
                     }
                     else
                     {
-                        static const int ENTITY_TELEPORT_FLASH = 150;
-                        addscreenflash(ENTITY_TELEPORT_FLASH);
+                        const int teleportFlash = 150;
+                        addscreenflash(teleportFlash);
                         camera::camera.addevent(d, camera::CameraEvent_Teleport, 500);
                     }
                     teleportparticleeffects(d, ents[td]->o);

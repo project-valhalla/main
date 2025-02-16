@@ -423,15 +423,9 @@ struct gamestate
         }
     }
 
-    void instantkill(int extradamage)
-    {
-        shield = 0;
-        health -= health + extradamage;
-    }
-
-    // Subtract damage/shield points and apply damage here.
     int dodamage(int damage, bool isEnvironment = false)
     {
+        // Subtract damage/shield points and apply damage here
         if(shield && !isEnvironment)
         { // Only if the player has shield points and damage is not caused by the environment.
             int ad = round(damage / 3.0f * 2.0f);

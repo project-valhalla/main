@@ -1186,24 +1186,21 @@ namespace game
     void hurt(gameent* d)
     {
         // Apply environmental damage locally when inside harmful materials like lava.
-        if (m_mp(gamemode) || (d->type != ENT_PLAYER && d->type != ENT_AI))
+        const bool isValidEntity = d->type == ENT_PLAYER || d->type == ENT_AI;
+        if (m_mp(gamemode) || !isValidEntity || d->state != CS_ALIVE || d->haspowerup(PU_INVULNERABILITY))
         {
+            /* This is local, so we call this function to hurt a local player or NPC.
+             * Of course, we are going to stop caring if the entity is not alive or invulnerable.
+             */
             return;
         }
 
-        // This is local, so valid only if the entity is a bot or ourselves.
-        if (d->state != CS_ALIVE || d->haspowerup(PU_INVULNERABILITY))
+        if (lastmillis - d->lasthurt >= DAMAGE_ENVIRONMENT_DELAY)
         {
-            // The entity is dead or invulnerable? We stop caring.
-            return;
+            // If the delay has elapsed, apply environmental damage to the entity.
+            dodamage(DAMAGE_ENVIRONMENT, d, d, d->o, -1, Hit_Environment, true);
+            d->lasthurt = lastmillis;
         }
-
-		if (lastmillis - d->lasthurt >= DAMAGE_ENVIRONMENT_DELAY)
-		{
-			// If the delay has elapsed, apply environmental damage to the entity.
-			dodamage(DAMAGE_ENVIRONMENT, d, d, d->o, -1, Hit_Environment, true);
-			d->lasthurt = lastmillis;
-		}
     }
 
     void suicide(gameent *d)

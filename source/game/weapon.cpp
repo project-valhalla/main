@@ -639,12 +639,6 @@ namespace game
         }
     }
 
-    void instantkill(int& damage, int extradamage, gameent* target)
-    {
-        target->instantkill(extradamage);
-        damage = target->health;
-    }
-
     int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags)
     {
         if (target != actor && isinvulnerable(target, actor))
@@ -655,9 +649,8 @@ namespace game
         {
             if (attacks[atk].damage < 0 || (m_insta(mutators) && actor->type == ENT_AI && target->type == ENT_PLAYER))
             {
-                int extradamage = flags & Hit_Head && attacks[atk].headshotdamage ? attacks[atk].headshotdamage : 0;
-                instantkill(damage, extradamage, target);
-                return damage;
+                target->shield = 0;
+                return target->health;
             }
             if (attacks[atk].headshotdamage)
             {
@@ -666,8 +659,8 @@ namespace game
                 {
                     if (m_mayhem(mutators))
                     {
-                        instantkill(damage, attacks[atk].headshotdamage, target);
-                        return damage;
+                        target->shield = 0;
+                        return target->health;
                     }
                     else damage += attacks[atk].headshotdamage;
                 }

@@ -3116,12 +3116,6 @@ namespace server
         suicide(ci);
     }
 
-    void instantkill(int& damage, int extradamage, clientinfo* target, clientinfo* actor, int atk, int flags)
-    {
-        target->state.instantkill(extradamage);
-        damage = target->state.health;
-    }
-
     int calculatedamage(int damage, clientinfo *target, clientinfo *actor, int atk, int flags)
     {
         if(target != actor)
@@ -3135,8 +3129,7 @@ namespace server
         {
             if (attacks[atk].damage < 0)
             {
-                int extradamage = flags & Hit_Head ? attacks[atk].headshotdamage : 0;
-                instantkill(damage, extradamage, target, actor, atk, flags);
+                target->state.shield = 0;
                 return target->state.health;
             }
             if(attacks[atk].headshotdamage)
@@ -3144,10 +3137,10 @@ namespace server
                 // Weapons deal locational damage only if headshot damage is specified.
                 if(flags & Hit_Head)
                 {
-                    if(m_mayhem(mutators)) // force death if it's a blow to the head when the Mayhem mutator is enabled
+                    if(m_mayhem(mutators)) // Force death if it's a blow to the head when the Mayhem mutator is enabled.
                     {
-                        instantkill(damage, attacks[atk].headshotdamage, target, actor, atk, flags);
-                        return damage;
+                        target->state.shield = 0;
+                        return target->state.health;
                     }
                     else damage += attacks[atk].headshotdamage;
                 }

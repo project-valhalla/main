@@ -132,7 +132,7 @@ static const struct attackinfo
     { GUN_PISTOL,  ACT_SECONDARY,   Projectile_Plasma,  600,  15,  0,   0, 5,  400,  0, 2048,  1,  500,  8, 2000, 2,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_PISTOL2,       S_IMPACT_PULSE,    S_HIT_WEAPON,  Death_Explosion },
     { GUN_PISTOL,  ACT_SECONDARY,                  -1, 1000,  80,  0,   0, 0,  400,  0, 2048,  1, -200, 50,    0, 0,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  -1,              S_IMPACT_PISTOL,   S_HIT_RAILGUN, Death_Disrupt   },
     // instagib
-    { GUN_INSTA,   ACT_PRIMARY,                    -1, 1200,  -1, 50,   0, 0,    0, 36, 4096,  1,  200,  0,    0, 0,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_INSTAGUN,      S_IMPACT_RAILGUN,  S_HIT_WEAPON,  Death_Default   },
+    { GUN_INSTA,   ACT_PRIMARY,                    -1, 1200,  -1, 50,   0, 0,    0, 36, 4096,  1,   90,  0,    0, 0,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_INSTAGUN,      S_IMPACT_RAILGUN,  S_HIT_WEAPON,  Death_Default   },
     // zombie
     { GUN_ZOMBIE,  ACT_MELEE,                      -1,  600, 100,  0,   0, 4,    0,  0,   15,  1,   20,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_ZOMBIE,        S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist      }
 };

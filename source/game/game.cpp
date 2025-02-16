@@ -135,22 +135,29 @@ namespace game
     }
     ICOMMAND(canspawn, "", (), intret(canspawn() ? 1 : 0));
 
-    const int getrespawndelay()
+    const int getrespawndelay(gameent* d)
     {
         if (cmode)
         {
             return cmode->respawnwait();
         }
-        return m_norespawndelay ? 0 : SPAWN_DELAY;
+        else if (m_norespawndelay && d->aitype == AI_NONE)
+        {
+            /* Allow immediate respawns in modes where waiting isn't needed,
+             * except for bots.
+             */
+            return 0;
+        }
+        return SPAWN_DELAY;
     }
-    ICOMMAND(getrespawndelay, "", (), intret(getrespawndelay()));
+    ICOMMAND(getrespawndelay, "", (), intret(getrespawndelay(self)));
 
     VARP(queuerespawn, 0, 1, 1);
 
     void respawnself()
     {
         if(ispaused()) return;
-        const int delay = getrespawndelay();
+        const int delay = getrespawndelay(self);
         if(queuerespawn && lastmillis - self->lastpain <= delay)
         {
             self->respawnqueued = true;
@@ -299,7 +306,7 @@ namespace game
                     self->move = self->strafe = 0;
                     physics::moveplayer(self, 10, true);
                 }
-                if(lastmillis - self->lastpain > getrespawndelay())
+                if(lastmillis - self->lastpain > getrespawndelay(self))
                 {
                     if(self->respawnqueued)
                     {

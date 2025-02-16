@@ -774,7 +774,7 @@ namespace game
     extern int smoothmove, smoothdist;
     extern int deathscream;
     extern int getdeathstate(gameent* d, int atk, int flags);
-    extern const int getrespawndelay();
+    extern const int getrespawndelay(gameent* d);
     extern const int getrespawnwait(gameent* d);
 
     extern const char* colorname(gameent* d, const char* name = NULL, const char* alt = NULL, const char* color = "");

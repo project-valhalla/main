@@ -890,13 +890,13 @@ namespace game
             particle_splash(PART_BLOOD2, damage, 300, d->o, getbloodcolor(d), 0.89f, 300, 5, 2.0f);
             addstain(STAIN_BLOOD, d->o, d->vel.neg(), 25, getbloodcolor(d), rnd(4));
         }
-        playsound(S_GIB, d);
         if (blood && (d == self || (goredistance && camera1->o.dist(from) <= goredistance)))
         {
             const int goreDamage = damage * 2;
             camera::camera.addevent(self, camera::CameraEvent_Shake, goreDamage);
             addbloodsplatter(goreDamage, getbloodcolor(d));
         }
+        playsound(S_GIB);
     }
 
     VARP(hitsound, 0, 0, 1);

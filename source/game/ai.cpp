@@ -1381,7 +1381,7 @@ namespace ai
                 c.override = false;
                 cleannext = false;
             }
-            if (d->state == CS_DEAD && d->respawned != d->lifesequence && lastmillis - d->lastpain > getrespawndelay())
+            if (d->state == CS_DEAD && d->respawned != d->lifesequence && lastmillis - d->lastpain > getrespawndelay(d))
             {
                 addmsg(N_TRYSPAWN, "rc", d);
                 d->respawned = d->lifesequence;

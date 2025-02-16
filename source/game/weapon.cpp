@@ -920,7 +920,7 @@ namespace game
         ai::damaged(d, actor);
         if (local && d->health <= 0)
         {
-            kill(d, actor, atk, flags);
+            kill(d, actor, atk);
         }
     }
 

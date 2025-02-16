@@ -835,10 +835,11 @@ namespace game
     });
 
     VARR(mapdeath, 0, Death_Default, Death_Num);
+    VARP(gore, 0, 1, 1);
 
     int getdeathstate(gameent* d, int atk, int flags)
     {
-        if (d->shouldgib())
+        if (gore && d->shouldgib())
         {
             return Death_Gib;
         }

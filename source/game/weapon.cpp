@@ -862,16 +862,10 @@ namespace game
         }
     }
 
-    VARP(gore, 0, 1, 1);
     FVARP(goredistance, 0, 50.0f, 100.0f);
 
     void gibeffect(int damage, const vec& vel, gameent* d)
     {
-        if (!gore)
-        {
-            return;
-        }
-
         const vec from = d->abovehead();
         loopi(min(damage, 8) + 1)
         {

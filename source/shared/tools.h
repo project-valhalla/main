@@ -51,6 +51,13 @@ static inline void swap(T &a, T &b)
     a = b;
     b = t;
 }
+template<class T, class U = T>
+static inline T exchange(T& a, U&& b)
+{
+    T old_value = (T&&)a;
+    a = b; // should be `a = std::forward<U>(b)` or use `std::exchange` directly
+    return old_value;
+}
 #ifdef max
 #undef max
 #endif
@@ -1215,14 +1222,14 @@ template <class T, int SIZE> struct queue
 
     T remove(int offset)
     {
-        T val = removing(offset);
-        if(head+offset >= SIZE) for(int i = head+offset - SIZE + 1; i < tail; i++) data[i-1] = data[i];
-        else if(head < tail) for(int i = head+offset + 1; i < tail; i++) data[i-1] = data[i];
+        T val = (T&&)(removing(offset));
+        if(head+offset >= SIZE) for(int i = head+offset - SIZE + 1; i < tail; i++) data[i-1] = (T&&)(data[i]);
+        else if(head < tail) for(int i = head+offset + 1; i < tail; i++) data[i-1] = (T&&)(data[i]);
         else
         {
-            for(int i = head+offset + 1; i < SIZE; i++) data[i-1] = data[i];
-            data[SIZE-1] = data[0];
-            for(int i = 1; i < tail; i++) data[i-1] = data[i];
+            for(int i = head+offset + 1; i < SIZE; i++) data[i-1] = (T&&)(data[i]);
+            data[SIZE-1] = (T&&)(data[0]);
+            for(int i = 1; i < tail; i++) data[i-1] = (T&&)(data[i]);
         }
         tail--;
         if(tail < 0) tail += SIZE;
@@ -1352,47 +1359,134 @@ struct streambuf
     size_t length() { return s->size(); }
 };
 
+// for `filtertext`
 enum
 {
-    CT_PRINT   = 1<<0,
-    CT_SPACE   = 1<<1,
-    CT_DIGIT   = 1<<2,
-    CT_ALPHA   = 1<<3,
-    CT_LOWER   = 1<<4,
-    CT_UPPER   = 1<<5,
-    CT_UNICODE = 1<<6
+    T_NONE       = 0,
+    T_COLORS     = 1<<0,
+    T_NEWLINES   = 1<<1,
+    T_WHITESPACE = 1<<2,
+    T_FORCESPACE = 1<<3,
+    T_NAME       = 1<<4
 };
-extern const uchar cubectype[256];
-static inline int iscubeprint(uchar c) { return cubectype[c]&CT_PRINT; }
-static inline int iscubespace(uchar c) { return cubectype[c]&CT_SPACE; }
-static inline int iscubealpha(uchar c) { return cubectype[c]&CT_ALPHA; }
-static inline int iscubealnum(uchar c) { return cubectype[c]&(CT_ALPHA|CT_DIGIT); }
-static inline int iscubelower(uchar c) { return cubectype[c]&CT_LOWER; }
-static inline int iscubeupper(uchar c) { return cubectype[c]&CT_UPPER; }
-static inline int iscubepunct(uchar c) { return cubectype[c] == CT_PRINT; }
-static inline int cube2uni(uchar c)
+
+static inline int iscubespace(uint c) { return c == ' ' || c == '\n' || c == '\r' || c == '\t' ? 1 : 0; }
+static inline int iscubealpha(uint c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ? 1 : 0; }
+static inline int iscubealnum(uint c) { return (c >= '0' && c <= '9') || iscubealpha(c) ? 1 : 0; }
+static inline int iscubelower(uint c) { return (c >= 'a' && c <= 'z') ? 1 : 0; }
+static inline int iscubeupper(uint c) { return (c >= 'A' && c <= 'Z') ? 1 : 0; }
+static inline int iscubecntrl(uint c) { return (c <= 0x08 || c == 0x0B || (c >= 0x0E && c <= 0x1F) || (c >= 0x7F && c <= 0x9F)) ? 1 : 0; }
+static inline int iscubepunct(uint c) { return (c >= '!' && c <= '/') || (c >= ':' && c <= '@') || (c >= '[' && c <= '`') || (c >= '{' && c <= '~') ? 1 : 0; }
+// a subset of console characters that are allowed in player names
+// the default font should contain glyphs for all of these
+static inline int iscubenamesafe(uint c)
 {
-    extern const int cube2unichars[256];
-    return cube2unichars[c];
+    return (c >= 0x0021 && c <= 0x007E) // ASCII
+        
+        || (c >= 0x00A1 && c <= 0x00AC)
+        || (c >= 0x00AE && c <= 0x00FF) // Latin-1 Supplement
+
+        || (c >= 0x0100 && c <= 0x0131)
+        || (c >= 0x0134 && c <= 0x0148)
+        || (c >= 0x014A && c <= 0x017E) // Latin Extended-A (exclude 0x131, 0x132, 0x149 and 0x17F)
+
+        || (c >= 0x0218 && c <= 0x021B) // Latin Extended-B: Romanian
+
+        || (c == 0x0386)
+        || (c >= 0x0388 && c <= 0x038A)
+        || (c == 0x038C)
+        || (c >= 0x038E && c <= 0x03A1)
+        || (c >= 0x03A3 && c <= 0x03CE) // Greek and Coptic
+        
+        || (c >= 0x0400 && c <= 0x045F) // Cyrillic
+
+        || (c >= 0x1EA0 && c <= 0x1EF9) // Latin Extended Additional: Vietnamese
+    ;
 }
-static inline uchar uni2cube(int c)
+// used to detect duplicate names
+// source: https://www.unicode.org/Public/security/latest/confusables.txt
+static inline uint homoglyph(uint c)
 {
-    extern const int uni2cubeoffsets[8];
-    extern const uchar uni2cubechars[];
-    return uint(c) <= 0x7FF ? uni2cubechars[uni2cubeoffsets[c>>8] + (c&0xFF)] : 0;
+	switch(c)
+	{
+		case 0x60:
+		case 0xb4: return 0x27;
+		case 0xb8: return 0x2c;
+		case 0x417: return 0x33;
+		case 0x431: return 0x36;
+		case 0x391:
+		case 0x410: return 0x41;
+		case 0x392:
+		case 0x412: return 0x42;
+		case 0x421: return 0x43;
+		case 0x395:
+		case 0x415: return 0x45;
+		case 0x397:
+		case 0x41d: return 0x48;
+		case 0x408: return 0x4a;
+		case 0x39a:
+		case 0x41a: return 0x4b;
+		case 0x39c:
+		case 0x41c: return 0x4d;
+		case 0x39d: return 0x4e;
+		case 0x30:
+		case 0x39f:
+		case 0x41e: return 0x4f;
+		case 0x3a1:
+		case 0x420: return 0x50;
+		case 0x405: return 0x53;
+		case 0x3a4:
+		case 0x422: return 0x54;
+		case 0x3a7:
+		case 0x425: return 0x58;
+		case 0x3a5:
+		case 0x423: return 0x59;
+		case 0x396: return 0x5a;
+		case 0x3b1:
+		case 0x430: return 0x61;
+		case 0x42c: return 0x62;
+		case 0x441: return 0x63;
+		case 0x435: return 0x65;
+		case 0x131:
+		case 0x3b9:
+		case 0x456: return 0x69;
+		case 0x458: return 0x6a;
+		case 0x7c:
+		case 0x31:
+		case 0x49:
+		case 0x399:
+		case 0x406: return 0x6c;
+		case 0x3bf:
+		case 0x3c3:
+		case 0x43e: return 0x6f;
+		case 0x3c1:
+		case 0x440: return 0x70;
+		case 0x433: return 0x72;
+		case 0x455: return 0x73;
+		case 0x3c5: return 0x75;
+		case 0x3bd: return 0x76;
+		case 0xd7:
+		case 0x445: return 0x78;
+		case 0x3b3:
+		case 0x443: return 0x79;
+		case 0x150: return 0xd6;
+		case 0x3b2: return 0xdf;
+		case 0x11a: return 0x114;
+		case 0x11b: return 0x115;
+		case 0x3ba:
+		case 0x43a: return 0x138;
+		case 0x21a: return 0x162;
+		case 0x413: return 0x393;
+		case 0x41f: return 0x3a0;
+		case 0x424: return 0x3a6;
+		case 0xb5: return 0x3bc;
+		case 0x43f: return 0x3c0;
+		case 0x419: return 0x40d;
+		case 0x45d: return 0x439;
+	}
+	return c;
 }
-static inline uchar cubelower(uchar c)
-{
-    extern const uchar cubelowerchars[256];
-    return cubelowerchars[c];
-}
-static inline uchar cubeupper(uchar c)
-{
-    extern const uchar cubeupperchars[256];
-    return cubeupperchars[c];
-}
-extern size_t decodeutf8(uchar *dst, size_t dstlen, const uchar *src, size_t srclen, size_t *carry = NULL);
-extern size_t encodeutf8(uchar *dstbuf, size_t dstlen, const uchar *srcbuf, size_t srclen, size_t *carry = NULL);
+
 extern int cubecasecmp(const char *s1, const char *s2, int n = INT_MAX);
 static inline bool cubecaseequal(const char *s1, const char *s2, int n = INT_MAX) { return !cubecasecmp(s1, s2, n); }
 extern char *cubecasefind(const char *haystack, const char *needle);
@@ -1416,8 +1510,7 @@ extern stream *openzipfile(const char *filename, const char *mode);
 extern stream *openfile(const char *filename, const char *mode);
 extern stream *opentempfile(const char *filename, const char *mode);
 extern stream *opengzfile(const char *filename, const char *mode, stream *file = NULL, int level = Z_BEST_COMPRESSION);
-extern stream *openutf8file(const char *filename, const char *mode, stream *file = NULL);
-extern char *loadfile(const char *fn, size_t *size, bool utf8 = true);
+extern char *loadfile(const char *fn, size_t *size);
 extern bool listdir(const char *dir, bool rel, const char *ext, vector<char *> &files);
 extern int listfiles(const char *dir, const char *ext, vector<char *> &files);
 extern int listzipfiles(const char *dir, const char *ext, vector<char *> &files);
@@ -1441,8 +1534,10 @@ extern void sendstring(const char *t, packetbuf &p);
 extern void sendstring(const char *t, vector<uchar> &p);
 extern void getstring(char *t, ucharbuf &p, size_t len);
 template<size_t N> static inline void getstring(char (&t)[N], ucharbuf &p) { getstring(t, p, N); }
-extern void filtertext(char *dst, const char *src, bool colors, bool newlines, bool whitespace, bool forcespace, size_t len);
-template<size_t N> static inline void filtertext(char (&dst)[N], const char *src, bool colors = false, bool newlines = true, bool whitespace = true, bool forcespace = false) { filtertext(dst, src, colors, newlines, whitespace, forcespace, N-1); }
+extern void filtertext(char *dst, const char *src, uint flags, size_t len, int unilen = -1);
+template<size_t N> static inline void filtertext(char (&dst)[N], const char *src, uint flags) { filtertext(dst, src, flags, N-1, N-1); }
+extern void filteruni(char *dst, const char *src, size_t len);
+template<size_t N> static inline void filteruni(char (&dst)[N], const char *src) { filteruni(dst, src, N-1); }
 
 struct ipmask
 {

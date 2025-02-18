@@ -451,7 +451,7 @@ namespace game
                         particle_flare(d->muzzle, d->muzzle, 300, PART_MUZZLE_SMOKE, 0xFFFFFF, 0.5f, d, 2.0f);
                         particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0xEFE898, 0.1f, d, 4.0f);
                     }
-                    particle_flare(d->muzzle, d->muzzle, 129, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, d, 1.8f);
+                    particle_flare(d->muzzle, d->muzzle, 130, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, d, 1.8f);
                     adddynlight(hudgunorigin(gun, d->o, to, d), 120, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_EXPAND, 0, vec(0, 0, 0), d);
                 }
                 if (atk == ATK_SMG2) particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0xFFC864, 0.95f);
@@ -534,13 +534,19 @@ namespace game
                         {
                             particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0x00FFFF, 0.1f, d, 5.0f);
                         }
-                        particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH3, 0x00FFFF, 2.5f, d);
+                        particle_flare(d->muzzle, d->muzzle, 120, PART_MUZZLE_FLASH3, 0x00FFFF, 0.1f, d, 2.5f);
+                        particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
+                        if (!local)
+                        {
+                            impacteffects(atk, d, from, to, hit);
+                        }
                     }
-                    else particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH2, 0x00FFFF, 0.1f, d, 2.5f);
+                    else
+                    {
+                        particle_flare(d->muzzle, d->muzzle, 280, PART_MUZZLE_FLASH2, 0x00FFFF, 0.1f, d, 3.0f);
+                    }
                     adddynlight(hudgunorigin(attacks[atk].gun, d->o, to, d), 80, vec(0.25f, 1.0f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
-                if (!local) impacteffects(atk, d, from, to, hit);
                 break;
             }
 
@@ -883,7 +889,7 @@ namespace game
             camera::camera.addevent(self, camera::CameraEvent_Shake, goreDamage);
             addbloodsplatter(goreDamage, getbloodcolor(d));
         }
-        playsound(S_GIB);
+        playsound(S_GIB, NULL, &d->o);
     }
 
     VARP(hitsound, 0, 0, 1);

@@ -1085,21 +1085,29 @@ namespace game
         sendmapinfo();
     }
 
-    vector<char *> tips;
-    ICOMMAND(registertip, "s", (char *tip), { tips.add(newstring(tip)); });
+    SVAR(tips, "");
 
-    const char *getmapinfo()
+    const char* getmapinfo()
     {
-        bool hasmodeinfo = !m_story && showmodeinfo && m_valid(gamemode);
+        const bool hasModeInfo = !m_story && showmodeinfo && m_valid(gamemode);
         static char info[1000];
         info[0] = '\0';
-        if(hasmodeinfo) strcat(info, gamemodes[gamemode - STARTGAMEMODE].info);
-        if(!tips.empty())
+        if (hasModeInfo)
         {
-             if(hasmodeinfo) strcat(info, "\n\n");
-             strcat(info, tips[rnd(tips.length())]);
+            strcat(info, gamemodes[gamemode - STARTGAMEMODE].info);
         }
-        return hasmodeinfo ? info : NULL;
+        if (tips[0] != '\0')
+        {
+            vector<char*> tipList;
+            explodelist(tips, tipList);
+            if (!tipList.empty())
+            {
+                strncat(info, "\n\n", sizeof(info) - strlen(info) - 1);
+                strncat(info, tipList[rnd(tipList.length())], sizeof(info) - strlen(info) - 1);
+            }
+            tipList.deletearrays();
+        }
+        return hasModeInfo ? info : NULL;
     }
 
     const char *getscreenshotinfo()

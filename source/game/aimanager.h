@@ -118,11 +118,18 @@ namespace aimanager
         ci->state.lasttimeplayed = lastmillis;
         if(botnames[0] != '\0')
         {
-            vector<char *> names;
+            vector<char*> names;
             explodelist(botnames, names);
-            copystring(ci->name, names[rnd(names.length())], MAXNAMELEN+1);
+            if (!names.empty())
+            {
+                copystring(ci->name, names[rnd(names.length())], MAXNAMELEN + 1);
+            }
+            names.deletearrays();
         }
-        else copystring(ci->name, "bot", MAXNAMELEN+1);
+        else
+        {
+            copystring(ci->name, "bot", MAXNAMELEN + 1);
+        }
         ci->state.state = CS_DEAD;
         ci->team = team;
         ci->playermodel = rnd(128);

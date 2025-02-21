@@ -4238,52 +4238,69 @@ namespace server
             case N_TEXT:
             {
                 getstring(text, p);
-                if(cq->mute) break;
+                if (cq->mute)
+                {
+                    break;
+                }
                 filtertext(text, text, false, false, true, true);
                 loopv(clients)
                 {
-                    clientinfo *c = clients[i];
-                    if(c == cq || c->state.aitype != AI_NONE || !canseemessage(cq, c)) continue;
+                    clientinfo* c = clients[i];
+                    if (c == cq || c->state.aitype != AI_NONE || !canseemessage(cq, c))
+                    {
+                        continue;
+                    }
                     sendf(c->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
                 }
-                bool ghost = cq->state.state==CS_SPECTATOR || (m_round && (cq->ghost || cq->state.state==CS_DEAD));
-                if(isdedicatedserver() && cq) logoutf("%s%s %s", colorname(cq), ghost ? " <spectator>:" : ":", text);
+                const bool isSpectating = cq->state.state == CS_SPECTATOR || (m_round && (cq->ghost || cq->state.state == CS_DEAD));
+                if (cq && isdedicatedserver())
+                {
+                    logoutf("%s%s: %s", colorname(cq), isSpectating ? " <spectator>" : "", text);
+                }
                 break;
             }
 
             case N_SAYTEAM:
             {
                 getstring(text, p);
-                int sound = getint(p);
-                if(!ci || !cq || cq->mute || !m_teammode || !validteam(cq->team) || cq->state.state==CS_SPECTATOR || (m_round && cq->state.state==CS_DEAD)) break;
+                const int sound = getint(p);
+                if (!ci || !cq || cq->mute || !m_teammode || !validteam(cq->team) || cq->state.state == CS_SPECTATOR || (m_round && cq->state.state == CS_DEAD))
+                {
+                    break;
+                }
                 filtertext(text, text, false, false, true, true);
                 loopv(clients)
                 {
-                    clientinfo *t = clients[i];
-                    if(t == cq || t->state.aitype != AI_NONE || cq->team != t->team) continue;
+                    clientinfo* t = clients[i];
+                    if (t == cq || t->state.aitype != AI_NONE || cq->team != t->team)
+                    {
+                        continue;
+                    }
                     sendf(t->clientnum, 1, "riisi", N_SAYTEAM, cq->clientnum, text, sound);
                 }
-                if(isdedicatedserver() && cq) logoutf("%s <%s>: %s", colorname(cq), teamnames[cq->team], text);
+                if (isdedicatedserver() && cq)
+                {
+                    logoutf("%s <team: %s>: %s", colorname(cq), teamnames[cq->team], text);
+                }
                 break;
             }
 
             case N_WHISPER:
             {
-                int rcn = getint(p);
+                const int rcn = getint(p);
                 getstring(text, p);
                 if(!cq || cq->mute) break;
                 filtertext(text, text, false, false);
-                clientinfo *recipient = NULL;
-                loopv(clients)
+                clientinfo *recipient = getinfo(rcn);
+                if (!recipient)
                 {
-                    clientinfo *r = clients[i];
-                    if(r == cq || r->state.aitype != AI_NONE || r->clientnum != rcn) continue;
-                    recipient = r;
                     break;
                 }
-                if(!recipient) break;
                 sendf(recipient->clientnum, 1, "riis", N_WHISPER, cq->clientnum, text);
-                if(isdedicatedserver() && cq) logoutf("%s <whisper to %s>: %s", colorname(cq), colorname(recipient), text);
+                if (isdedicatedserver() && cq)
+                {
+                    logoutf("%s <whisper to %s>: %s", colorname(cq), colorname(recipient), text);
+                }
                 break;
             }
 

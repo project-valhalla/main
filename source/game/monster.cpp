@@ -320,15 +320,20 @@ namespace game
 
             if(move || maymove() || (stacked && (stacked->state!=CS_ALIVE || stackpos != stacked->o)))
             {
-                vec pos = feetpos();
+                const vec pos = feetpos();
                 loopv(teleports) // equivalent of player entity touch, but only teleports are used
                 {
-                    entity &e = *entities::ents[teleports[i]];
-                    float dist = e.o.dist(pos);
-                    if(dist<16) entities::teleport(teleports[i], this);
+                    const entity &e = *entities::ents[teleports[i]];
+                    const float dist = e.o.dist(pos);
+                    if (dist < ENTITY_TELEPORT_RADIUS)
+                    {
+                        entities::teleport(teleports[i], this);
+                    }
                 }
-
-                if(physics::physsteps > 0) stacked = NULL;
+                if (physics::physsteps > 0)
+                {
+                    stacked = NULL;
+                }
                 physics::moveplayer(this, 1, true); // use physics to move monster
                 physics::crouchplayer(this, 1, true);
             }

@@ -211,7 +211,10 @@ namespace ai
         d->playermodel = chooserandomplayermodel(pm);
         d->playercolor = col;
 
-        if(resetthisguy) removeprojectiles(d);
+        if (resetthisguy)
+        {
+            projectiles::remove(d);
+        }
         if(d->ownernum >= 0 && self->clientnum == d->ownernum)
         {
             create(d);
@@ -250,7 +253,10 @@ namespace ai
                 itermillis = totalmillis;
             }
             int count = 0;
-            loopv(players) if(players[i]->ai) think(players[i], ++count == iteration ? true : false);
+            loopv(players) if (players[i]->ai)
+            {
+                think(players[i], ++count == iteration ? true : false);
+            }
             if(++iteration > count) iteration = 0;
         }
     }
@@ -1362,7 +1368,7 @@ namespace ai
         }
         extern avoidset wpavoid;
         obstacles.add(wpavoid);
-        avoidprojectiles(obstacles, guessradius);
+        projectiles::avoid(obstacles, guessradius);
     }
 
     void think(gameent *d, bool run)

@@ -107,7 +107,7 @@ namespace game
 
     void resetgamestate()
     {
-        removeprojectiles();
+        projectiles::remove();
         clearmonsters();
         entities::resettriggers();
     }
@@ -340,7 +340,7 @@ namespace game
 
     void addgamedynamiclights()
     {
-        updateprojectilelights();
+        projectiles::updatelights();
     }
 
     float proximityscore(float x, float lower, float upper)
@@ -992,7 +992,7 @@ namespace game
                 }
                 else conoutf(CON_GAMEINFO, "\fs\f2Bot removed:\fr %s", colorname(d));
             }
-            removeprojectiles(d);
+            projectiles::remove(d);
             removetrackedparticles(d);
             removetrackeddynlights(d);
             if(cmode) cmode->removeplayer(d);
@@ -1024,7 +1024,7 @@ namespace game
 
     void cleargame()
     {
-        removeprojectiles();
+        projectiles::remove();
         clearweapons();
         clearmonsters();
         clearragdolls();
@@ -1145,7 +1145,7 @@ namespace game
         }
         if (flags & DYN_PROJECTILE)
         {
-            length += projectiles.length();
+            length += projectiles::Projectiles.length();
         }
         return length;
     }
@@ -1173,11 +1173,11 @@ namespace game
         }
         if (flags & DYN_PROJECTILE)
         {
-            if (i < projectiles.length())
+            if (i < projectiles::Projectiles.length())
             {
-                return (dynent*)projectiles[i];
+                return (dynent*)projectiles::Projectiles[i];
             }
-            i -= projectiles.length();
+            i -= projectiles::Projectiles.length();
         }
         return NULL;
     }

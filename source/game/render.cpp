@@ -624,7 +624,7 @@ namespace game
             
         booteffect(self);
         entities::renderentities();
-        renderprojectiles();
+        projectiles::render();
         rendermonsters();
         if(cmode) cmode->rendergame();
     }
@@ -737,7 +737,7 @@ namespace game
     void preload()
     {
         preloadweapons();
-        preloadprojectiles();
+        projectiles::preload();
         preloadplayermodel();
         preloadsounds();
         entities::preloadentities();
@@ -745,4 +745,3 @@ namespace game
     }
 
 }
-

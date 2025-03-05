@@ -392,7 +392,7 @@ namespace game
                 int matk = monstertypes[mtype].atk;
                 if (monstertypes[mtype].isexplosive)
                 {
-                    game::explode(this, matk, o, vel);
+                    projectiles::explode(this, matk, o, vel);
                 }
             }
             else if (deathscream && isnoisy)

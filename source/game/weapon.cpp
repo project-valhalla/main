@@ -164,7 +164,7 @@ namespace game
 
         hits.setsize(0);
 
-        if (!isweaponprojectile(attacks[atk].projectile))
+        if (!isattackprojectile(attacks[atk].projectile))
         {
             scanhit(from, to, d, atk);
         }
@@ -251,7 +251,7 @@ namespace game
             shoot(self, worldpos); // Only shoot when connected to a server.
             updaterecoil(self, curtime);
         }
-        updateprojectiles(curtime); // Need to do this after the player shoots so bouncers don't end up inside player's BB next frame.
+        projectiles::update(curtime); // Need to do this after the player shoots so bouncers don't end up inside player's BB next frame.
         gameent* following = followingplayer();
         if (!following) following = self;
         loopv(players)
@@ -572,11 +572,11 @@ namespace game
             if (attackrays <= 1)
             {
                 vec aim = up.iszero() ? to : up;
-                makeprojectile(d, from, aim, local, id, atk, projectile, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
+                projectiles::make(d, from, aim, local, id, atk, projectile, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
             }
             else loopi(attackrays)
             {
-                makeprojectile(d, from, rays[i], local, id, atk, projectile, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
+                projectiles::make(d, from, rays[i], local, id, atk, projectile, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
             }
         }
         if (validgun(gun))
@@ -584,7 +584,7 @@ namespace game
             const int ejectProjectile = guns[gun].ejectprojectile;
             if (isvalidprojectile(ejectProjectile) && shouldeject)
             {
-                spawnbouncer(d->eject, d, ejectProjectile);
+                projectiles::spawnbouncer(d->eject, d, ejectProjectile);
             }
         }
         bool looped = false;
@@ -875,7 +875,7 @@ namespace game
         const vec from = d->abovehead();
         loopi(min(damage, 8) + 1)
         {
-            spawnbouncer(from, d, Projectile_Gib);
+            projectiles::spawnbouncer(from, d, Projectile_Gib);
         }
         if (blood)
         {

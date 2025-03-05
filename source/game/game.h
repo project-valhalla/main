@@ -548,7 +548,7 @@ struct gameent : dynent, gamestate
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
     {
         vec push(dir);
-        bool istrickjump = actor == this && isweaponprojectile(attacks[atk].projectile) && attacks[atk].exprad;
+        bool istrickjump = actor == this && isattackprojectile(attacks[atk].projectile) && attacks[atk].exprad;
         if (istrickjump)
         {
             // Projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further.
@@ -690,8 +690,8 @@ namespace physics
     extern void pushRagdoll(dynent* d, const vec& direction);
 
     extern bool canmove(gameent* d);
-    extern bool hasbounced(projectile* proj, float secs, float elasticity, float waterfric, float gravity);
-    extern bool isbouncing(projectile* proj, float elasticity, float waterfric, float gravity);
+    extern bool hasbounced(ProjEnt* proj, float secs, float elasticity, float waterfric, float gravity);
+    extern bool isbouncing(ProjEnt* proj, float elasticity, float waterfric, float gravity);
     extern bool hascamerapitchmovement(gameent* d);
 
     extern int physsteps;
@@ -816,21 +816,26 @@ namespace game
 
     extern vector<uchar> messages;
 
-    // projectile.cpp
-    extern vector<projectile*> projectiles;
+    namespace projectiles
+    {
+        // projectile.cpp
+        extern vector<ProjEnt*> Projectiles;
 
-    extern void updateprojectiles(int time);
-    extern void updateprojectilelights();
-    extern void removeprojectiles(gameent* owner = NULL);
-    extern void renderprojectiles();
-    extern void preloadprojectiles();
-    extern void makeprojectile(gameent* owner, const vec& from, const vec& to, bool islocal, const int id, const int atk, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0);
-    extern void spawnbouncer(const vec& from, gameent* d, int type);
-    extern void bounce(physent* d, const vec& surface);
-    extern void collidewithentity(physent* bouncer, physent* collideentity);
-    extern void explodeeffects(const int atk, gameent* d, const bool islocal, const int id = 0);
-    extern void avoidprojectiles(ai::avoidset& obstacles, const float radius);
-    extern void explode(gameent* owner, const int atk, const vec& position, const vec& velocity);
+        extern void update(const int time);
+        extern void updatelights();
+        extern void remove(gameent* owner = NULL);
+        extern void render();
+        extern void preload();
+        extern void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0);
+        extern void spawnbouncer(const vec& from, gameent* d, const int type);
+        extern void bounce(physent* d, const vec& surface);
+        extern void collidewithentity(physent* bouncer, physent* collideEntity);
+        extern void destroyserverprojectile(const int attack, gameent* d, const bool isLocal, const int id = 0);
+        extern void avoid(ai::avoidset& obstacles, const float radius);
+        extern void explode(gameent* owner, const int attack, const vec& position, const vec& velocity);
+
+        ProjEnt* getprojectile(const int id, gameent* owner);
+    }
 
     // weapon.cpp
     enum
@@ -899,6 +904,7 @@ namespace game
     extern int getweapon(const char* name);
     extern int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags = Hit_Torso);
     extern int checkweaponzoom();
+    extern int blood;
 
     extern vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d);
 
@@ -1088,4 +1094,3 @@ namespace server
 }
 
 #endif
-

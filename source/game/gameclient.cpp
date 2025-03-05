@@ -759,7 +759,7 @@ namespace game
         if(state & ROUND_RESET)
         {
             if(m_hunt && hunterchosen) hunterchosen = false;
-            removeprojectiles();
+            projectiles::remove();
         }
         if(state & ROUND_WAIT)
         {
@@ -1853,7 +1853,7 @@ namespace game
                 int ecn = getint(p), atk = getint(p), id = getint(p);
                 gameent *e = getclient(ecn);
                 if(!e || !validatk(atk)) break;
-                explodeeffects(atk, e, false, id);
+                projectiles::destroyserverprojectile(atk, e, false, id);
                 break;
             }
 

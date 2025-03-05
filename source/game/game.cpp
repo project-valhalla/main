@@ -1132,17 +1132,53 @@ namespace game
         }
     }
 
-    int numdynents()
+    int numdynents(const int flags)
     {
-        return players.length() + monsters.length();
+        int length = 0;
+        if (flags & DYN_PLAYER)
+        {
+            length += players.length();
+        }
+        if (flags & DYN_AI)
+        {
+            length += monsters.length();
+        }
+        if (flags & DYN_PROJECTILE)
+        {
+            length += projectiles.length();
+        }
+        return length;
     }
 
-    dynent *iterdynents(int i)
+    dynent* iterdynents(int i, const int flags)
     {
-        if(i<players.length()) return players[i];
-        i -= players.length();
-        if(i<monsters.length()) return (dynent *)monsters[i];
-        i -= monsters.length();
+        if (flags & DYN_PLAYER || !flags)
+        {
+            /* Return valid entities when flags are absent to prevent null pointer dereferencing.
+             * Need at least one valid iteration for essential entities like "camera1" or "player".
+             */
+            if (i < players.length())
+            {
+                return players[i];
+            }
+            i -= players.length();
+        }
+        if (flags & DYN_AI)
+        {
+            if (i < monsters.length())
+            {
+                return (dynent*)monsters[i];
+            }
+            i -= monsters.length();
+        }
+        if (flags & DYN_PROJECTILE)
+        {
+            if (i < projectiles.length())
+            {
+                return (dynent*)projectiles[i];
+            }
+            i -= projectiles.length();
+        }
         return NULL;
     }
 

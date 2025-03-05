@@ -129,7 +129,7 @@ namespace game
     extern const char *getmapinfo();
     extern const char *getscreenshotinfo();
 
-    extern int numdynents();
+    extern int numdynents(const int flags = DYN_PLAYER|DYN_AI);
     extern int scaletime(int t);
     extern int numanims();
     extern int maxsoundradius(int n);
@@ -140,7 +140,7 @@ namespace game
     extern float minimapalpha;
     extern float ratespawn(dynent* pl, const extentity& e);
 
-    extern dynent *iterdynents(int i);
+    extern dynent *iterdynents(int i, const int flags = DYN_PLAYER|DYN_AI);
 
     namespace camera
     {

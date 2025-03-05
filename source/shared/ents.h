@@ -67,6 +67,14 @@ enum { ENT_PLAYER = 0, ENT_AI, ENT_CAMERA, ENT_PROJECTILE };
 
 enum { COLLIDE_NONE = 0, COLLIDE_ELLIPSE, COLLIDE_OBB, COLLIDE_TRI };
 
+enum
+{
+    // used to mark dynamic entities for physics interactions
+    DYN_PLAYER = 1 << 0,
+    DYN_AI = 1 << 1,
+    DYN_PROJECTILE = 1 << 2
+};
+
 const float CROUCH_HEIGHT = 0.75f;
 
 struct physent // base entity type, can be affected by physics

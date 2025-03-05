@@ -874,6 +874,7 @@ static partrenderer *parts[] =
     &fireballs,                                                                                                                    // fire ball
     new quadrenderer("data/texture/particle/spark01.png", PT_PART|PT_FLIP|PT_BRIGHT),                                              // sparks
     new trailrenderer("data/texture/particle/spark02.png", PT_TRAIL|PT_BRIGHT),                                                    // spark trail
+    new quadrenderer("<animate:10,4,4,1>data/texture/particle/spark03.png", PT_PART | PT_FLIP | PT_BRIGHT),                        // hit sparks
     new quadrenderer("<animate:10,8,8>data/texture/particle/explosion01.png", PT_PART|PT_FLIP|PT_BRIGHT),                          // explosion sprite
     new quadrenderer("<animate:10,8,8>data/texture/particle/explosion02.png", PT_PART|PT_FLIP|PT_BRIGHT),                          // explosion sprite
     new quadrenderer("<animate:10,8,8>data/texture/particle/explosion03.png", PT_PART|PT_FLIP|PT_BRIGHT),                          // explosion sprite

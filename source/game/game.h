@@ -132,7 +132,7 @@ enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
     N_SHOOT, N_EXPLODE, N_SUICIDE,
-    N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO,
+    N_DIED, N_DAMAGE, N_DAMAGEPROJECTILE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT,
     N_NOTICE, N_ANNOUNCE,
@@ -163,7 +163,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
     N_SHOOT, 0, N_EXPLODE, 0, N_SUICIDE, 1,
-    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3,
+    N_DIED, 7, N_DAMAGE, 11, N_DAMAGEPROJECTILE, 9, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 3, N_REGENERATE, 2, N_REPAMMO, 3,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
     N_NOTICE, 2, N_ANNOUNCE, 1,
@@ -204,7 +204,6 @@ struct demoheader
 };
 
 #include "projectile.h"
-#include "weapon.h"
 #include "ai.h"
 #include "gamemode.h"
 #include "entity.h"
@@ -548,7 +547,7 @@ struct gameent : dynent, gamestate
     void hitpush(int damage, const vec &dir, gameent *actor, int atk)
     {
         vec push(dir);
-        bool istrickjump = actor == this && isweaponprojectile(attacks[atk].projectile) && attacks[atk].exprad;
+        bool istrickjump = actor == this && isattackprojectile(attacks[atk].projectile) && attacks[atk].exprad;
         if (istrickjump)
         {
             // Projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further.
@@ -690,8 +689,8 @@ namespace physics
     extern void pushRagdoll(dynent* d, const vec& direction);
 
     extern bool canmove(gameent* d);
-    extern bool hasbounced(projectile* proj, float secs, float elasticity, float waterfric, float gravity);
-    extern bool isbouncing(projectile* proj, float elasticity, float waterfric, float gravity);
+    extern bool hasbounced(ProjEnt* proj, const float secs, const float elasticity, float waterFriction, const float gravity);
+    extern bool isbouncing(ProjEnt* proj, const float elasticity, const float waterFriction, const float gravity);
     extern bool hascamerapitchmovement(gameent* d);
 
     extern int physsteps;
@@ -746,7 +745,7 @@ namespace game
     extern void spawneffect(gameent *d);
     extern void respawn();
     extern void setdeathstate(gameent *d, bool restore = false);
-    extern void printkillfeedannouncement(int announcement, gameent* actor);
+    extern void printkillfeedannouncement(const int announcement, gameent* actor);
     extern void writeobituary(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void updatetimer(int time, int type);
@@ -816,95 +815,112 @@ namespace game
 
     extern vector<uchar> messages;
 
-    // projectile.cpp
-    extern vector<projectile*> projectiles;
-
-    extern void updateprojectiles(int time);
-    extern void updateprojectilelights();
-    extern void removeprojectiles(gameent* owner = NULL);
-    extern void renderprojectiles();
-    extern void preloadprojectiles();
-    extern void makeprojectile(gameent* owner, const vec& from, const vec& to, bool islocal, const int id, const int atk, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0);
-    extern void spawnbouncer(const vec& from, gameent* d, int type);
-    extern void bounce(physent* d, const vec& surface);
-    extern void collidewithentity(physent* bouncer, physent* collideentity);
-    extern void explodeeffects(const int atk, gameent* d, const bool islocal, const int id = 0);
-    extern void avoidprojectiles(ai::avoidset& obstacles, const float radius);
-    extern void explode(gameent* owner, const int atk, const vec& position, const vec& velocity);
-
-    // weapon.cpp
-    enum
+    namespace projectile
     {
-        SwayEvent_Jump = 0,
-        SwayEvent_Land,
-        SwayEvent_LandHeavy,
-        SwayEvent_Crouch,
-        SwayEvent_Switch
-    };
+        // projectile.cpp
+        extern vector<ProjEnt*> projectiles, attackProjectiles, junkProjectiles;
 
-    struct swayinfo
+        extern void updateprojectiles(const int time);
+        extern void updateprojectilelights();
+        extern void addprojectile(ProjEnt& proj);
+        extern void removeprojectile(ProjEnt& proj);
+        extern void removeprojectiles(gameent* owner = NULL);
+        extern void renderprojectiles();
+        extern void preloadprojectiles();
+        extern void makeprojectile(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0);
+        extern void spawnbouncer(const vec& from, gameent* d, const int type);
+        extern void bounce(physent* d, const vec& surface);
+        extern void collidewithentity(physent* bouncer, physent* collideEntity);
+        extern void explodeeffects(gameent* d, const bool isLocal, const int id = 0);
+        extern void avoidprojectiles(ai::avoidset& obstacles, const float radius);
+        extern void explode(gameent* owner, const int attack, const vec& position, const vec& velocity);
+        extern void hit(const int damage, ProjEnt* proj, const int attack, const vec& velocity = vec(0, 0, 0));
+        extern void kill(ProjEnt* proj, const int attack);
+        extern void registerhit(dynent* target, gameent* actor, const vec& velocity, const int damage, const int attack, const float dist, const int rays, const int flags = 0);
+
+        ProjEnt* getprojectile(const int id, gameent* owner);
+    }
+
+    namespace weapon
     {
-        float fade, speed, dist;
-        float yaw, pitch, pitchadd, roll;
-        vec o, dir;
-
-        struct hudent : dynent
+        // weapon.cpp
+        enum
         {
-            hudent()
-            {
-                type = ENT_CAMERA;
-            }
-        } interpolation;
-
-        struct swayEvent
-        {
-            int type, millis, duration;
-            float factor;
+            SwayEvent_Jump = 0,
+            SwayEvent_Land,
+            SwayEvent_LandHeavy,
+            SwayEvent_Crouch,
+            SwayEvent_Switch
         };
-        vector<swayEvent> events;
 
-        swayinfo() : fade(0), speed(0), dist(0), yaw(0), pitch(0), pitchadd(0), roll(0), o(0, 0, 0), dir(0, 0, 0)
+        struct swayinfo
         {
-        }
-        ~swayinfo()
-        {
-        }
+            float fade, speed, dist;
+            float yaw, pitch, pitchadd, roll;
+            vec o, dir;
 
-        void updatedirection(gameent* owner);
-        void update(gameent* owner);
-        void addevent(gameent* owner, int type, int duration, float factor);
-        void processevents();
-    };
+            struct hudent : dynent
+            {
+                hudent()
+                {
+                    type = ENT_CAMERA;
+                }
+            } interpolation;
 
-    extern swayinfo sway;
+            struct swayEvent
+            {
+                int type, millis, duration;
+                float factor;
+            };
+            vector<swayEvent> events;
 
-    extern void shoot(gameent *d, const vec &targ);
-    extern void updaterecoil(gameent* d, int curtime);
-    extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
-    extern void scanhit(vec& from, vec& to, gameent* d, int atk);
-    extern void gibeffect(int damage, const vec &vel, gameent *d);
-    extern void updateweapons(int curtime);
-    extern void clearweapons();
-    extern void gunselect(int gun, gameent* d);
-    extern void doweaponchangeffects(gameent* d, int gun = -1);
-    extern void weaponswitch(gameent* d);
-    extern void autoswitchweapon(gameent* d, int type);
-    extern void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal);
-    extern void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int atk, float dist, int rays = 1, int flags = Hit_Torso);
+            swayinfo() : fade(0), speed(0), dist(0), yaw(0), pitch(0), pitchadd(0), roll(0), o(0, 0, 0), dir(0, 0, 0)
+            {
+            }
+            ~swayinfo()
+            {
+            }
 
-    extern float intersectdist;
+            void updatedirection(gameent* owner);
+            void update(gameent* owner);
+            void addevent(gameent* owner, int type, int duration, float factor);
+            void processevents();
+        };
 
-    extern bool isintersecting(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);
+        extern swayinfo sway;
 
-    extern int getweapon(const char* name);
-    extern int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags = Hit_Torso);
-    extern int checkweaponzoom();
+        extern void shoot(gameent* d, const vec& targ);
+        extern void updaterecoil(gameent* d, int curtime);
+        extern void shoteffects(int atk, const vec& from, const vec& to, gameent* d, bool local, int id, int prevaction, bool hit = false);
+        extern void scanhit(vec& from, vec& to, gameent* d, int atk);
+        extern void gibeffect(int damage, const vec& vel, gameent* d);
+        extern void updateweapons(int curtime);
+        extern void clearweapons();
+        extern void gunselect(int gun, gameent* d);
+        extern void doweaponchangeffects(gameent* d, int gun = -1);
+        extern void weaponswitch(gameent* d);
+        extern void autoswitchweapon(gameent* d, int type);
+        extern void damageplayer(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal);
+        extern void applyhiteffects(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal);
+        extern void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int atk, float dist, int rays = 1, int flags = 0);
+        extern void trackparticles(physent* owner, vec& o, vec& d);
+        extern void trackdynamiclights(physent* owner, vec& o, vec& hud);
 
-    extern vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d);
+        extern float intersectdist;
 
-    extern dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin = 0, float& dist = intersectdist);
+        extern bool isintersecting(dynent* d, const vec& from, const vec& to, float margin = 0, float& dist = intersectdist);
 
-    extern vector<hitmsg> hits;
+        extern int getweapon(const char* name);
+        extern int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags = 0);
+        extern int checkweaponzoom();
+        extern int blood, hudgun;
+
+        extern vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d);
+
+        extern dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin = 0, float& dist = intersectdist, const int flags = DYN_PLAYER | DYN_AI);
+
+        extern vector<hitmsg> hits;
+    }
 
     // monster.cpp
     struct monster;

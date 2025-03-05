@@ -107,7 +107,7 @@ namespace game
 
     void resetgamestate()
     {
-        removeprojectiles();
+        projectile::removeprojectiles();
         clearmonsters();
         entities::resettriggers();
     }
@@ -192,7 +192,7 @@ namespace game
 
     gameent *pointatplayer()
     {
-        loopv(players) if(players[i] != self && isintersecting(players[i], self->o, worldpos)) return players[i];
+        loopv(players) if(players[i] != self && weapon::isintersecting(players[i], self->o, worldpos)) return players[i];
         return NULL;
     }
 
@@ -287,7 +287,7 @@ namespace game
                 entities::updatepowerups(curtime, self);
             }
         }
-        updateweapons(curtime);
+        weapon::updateweapons(curtime);
         otherplayers(curtime);
         camera::camera.update();
         announcer::update();
@@ -338,9 +338,19 @@ namespace game
         if(self->clientnum>=0) c2sinfo();   // do this last, to reduce the effective frame lag
     }
 
+    void trackparticles(physent* owner, vec& o, vec& d)
+    {
+        weapon::trackparticles(owner, o, d);
+    }
+
+    void trackdynamiclights(physent* owner, vec& o, vec& hud)
+    {
+        weapon::trackdynamiclights(owner, o, hud);
+    }
+
     void addgamedynamiclights()
     {
-        updateprojectilelights();
+        projectile::updateprojectilelights();
     }
 
     float proximityscore(float x, float lower, float upper)
@@ -438,7 +448,7 @@ namespace game
                 camera::camera.addevent(d, camera::CameraEvent_Spawn, 380);
             }
             adddynlight(d->o, 100, vec(1, 1, 1), SPAWN_DURATION, 100, DL_EXPAND | L_NOSHADOW);
-            doweaponchangeffects(d);
+            weapon::doweaponchangeffects(d);
             playsound(S_PLAYER_SPAWN, d);
         }
         else
@@ -490,7 +500,7 @@ namespace game
             return true;
         }
 
-        const int zoomtype = checkweaponzoom();
+        const int zoomtype = weapon::checkweaponzoom();
         if (zoomtype != Zoom_None)
         {   
             if (act == ACT_SECONDARY)
@@ -572,7 +582,7 @@ namespace game
 
         if (d->deathstate == Death_Gib)
         {
-            gibeffect(max(-d->health, 0), d->vel, d);
+            weapon::gibeffect(max(-d->health, 0), d->vel, d);
         }
         if (deathscream && d->type == ENT_PLAYER)
         {
@@ -673,6 +683,10 @@ namespace game
             {
                 crit |= Crit::HEADSHOT;
             }
+            if (flags & KILL_EXPLOSION)
+            {
+                crit |= Crit::EXPLOSION;
+            }
             const int gun = attacks[atk].gun;
             const bool isZoom = attacks[atk].action == ACT_SECONDARY && guns[gun].zoom != Zoom_None;
             if (isZoom)
@@ -695,13 +709,12 @@ namespace game
     };
     Killfeed killFeed;
 
-    void printkillfeedannouncement(int announcement, gameent* actor)
+    void printkillfeedannouncement(const int announcement, gameent* actor)
     {
         if (m_betrayal)
         {
             return;
         }
-
         conoutf(CON_FRAGINFO, "%s \f2%s", colorname(actor), announcer::announcements[announcement].message);
         killFeed.type = killFeed.Type::MEDAL;
         killFeed.actor = actor->clientnum;
@@ -992,7 +1005,7 @@ namespace game
                 }
                 else conoutf(CON_GAMEINFO, "\fs\f2Bot removed:\fr %s", colorname(d));
             }
-            removeprojectiles(d);
+            projectile::removeprojectiles(d);
             removetrackedparticles(d);
             removetrackeddynlights(d);
             if(cmode) cmode->removeplayer(d);
@@ -1024,8 +1037,8 @@ namespace game
 
     void cleargame()
     {
-        removeprojectiles();
-        clearweapons();
+        projectile::removeprojectiles();
+        weapon::clearweapons();
         clearmonsters();
         clearragdolls();
         clearteaminfo();
@@ -1132,17 +1145,53 @@ namespace game
         }
     }
 
-    int numdynents()
+    int numdynents(const int flags)
     {
-        return players.length() + monsters.length();
+        int length = 0;
+        if (flags & DYN_PLAYER)
+        {
+            length += players.length();
+        }
+        if (flags & DYN_AI)
+        {
+            length += monsters.length();
+        }
+        if (flags & DYN_PROJECTILE)
+        {
+            length += projectile::attackProjectiles.length();
+        }
+        return length;
     }
 
-    dynent *iterdynents(int i)
+    dynent *iterdynents(int i, const int flags)
     {
-        if(i<players.length()) return players[i];
-        i -= players.length();
-        if(i<monsters.length()) return (dynent *)monsters[i];
-        i -= monsters.length();
+        if (flags & DYN_PLAYER || !flags)
+        {
+            /* Return valid entities when flags are absent to prevent null pointer dereferencing.
+             * Need at least one valid iteration for essential entities like "camera1" or "player".
+             */
+            if (i < players.length())
+            {
+                return players[i];
+            }
+            i -= players.length();
+        }
+        if (flags & DYN_AI)
+        {
+            if (i < monsters.length())
+            {
+                return (dynent*)monsters[i];
+            }
+            i -= monsters.length();
+        }
+        if (flags & DYN_PROJECTILE)
+        {
+            if (i < projectile::attackProjectiles.length())
+            {
+                return (dynent*)projectile::attackProjectiles[i];
+            }
+            i -= projectile::attackProjectiles.length();
+        }
         return NULL;
     }
 
@@ -1207,7 +1256,7 @@ namespace game
         if (lastmillis - d->lasthurt >= DAMAGE_ENVIRONMENT_DELAY)
         {
             // If the delay has elapsed, apply environmental damage to the entity.
-            dodamage(DAMAGE_ENVIRONMENT, d, d, d->o, -1, Hit_Environment, true);
+            weapon::damageplayer(DAMAGE_ENVIRONMENT, d, d, d->o, -1, Hit_Environment, true);
             d->lasthurt = lastmillis;
         }
     }

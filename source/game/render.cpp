@@ -624,7 +624,7 @@ namespace game
             
         booteffect(self);
         entities::renderentities();
-        renderprojectiles();
+        projectile::renderprojectiles();
         rendermonsters();
         if(cmode) cmode->rendergame();
     }
@@ -634,7 +634,7 @@ namespace game
         const char *file = guns[d->gunselect].model;
         if(!file) return;
 
-        sway.update(d);
+        weapon::sway.update(d);
         const playermodelinfo &playermodel = getplayermodelinfo(d);
         int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
         defformatstring(gunname, "%s/%s", playermodel.armdirectory, file);
@@ -653,7 +653,7 @@ namespace game
         {
             flags |= MDL_FORCETRANSPARENT;
         }
-        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, flags, &sway.interpolation, a, basetime, 0, 1, vec4(vec::hexcolor(color)));
+        rendermodel(gunname, anim, weapon::sway.o, weapon::sway.yaw, weapon::sway.pitch, weapon::sway.roll, flags, &weapon::sway.interpolation, a, basetime, 0, 1, vec4(vec::hexcolor(color)));
 
         if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
     }
@@ -661,8 +661,7 @@ namespace game
     void drawhudgun()
     {
         gameent *d = hudplayer();
-        extern int hudgun;
-        if(d->state == CS_DEAD || d->state == CS_SPECTATOR || d->state == CS_EDITING || !hudgun || editmode)
+        if(d->state == CS_DEAD || d->state == CS_SPECTATOR || d->state == CS_EDITING || !weapon::hudgun || editmode)
         {
             d->muzzle = self->muzzle = d->eject = self->eject = vec(-1, -1, -1);
             return;
@@ -737,7 +736,7 @@ namespace game
     void preload()
     {
         preloadweapons();
-        preloadprojectiles();
+        projectile::preloadprojectiles();
         preloadplayermodel();
         preloadsounds();
         entities::preloadentities();

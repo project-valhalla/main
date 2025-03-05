@@ -510,10 +510,11 @@ const vector<physent *> &checkdynentcache(int x, int y)
     dec.y = y;
     dec.frame = dynentframe;
     dec.dynents.shrink(0);
-    int numdyns = game::numdynents(), dsize = 1<<dynentsize, dx = x<<dynentsize, dy = y<<dynentsize;
+    const int flags = DYN_PLAYER | DYN_AI | DYN_PROJECTILE;
+    int numdyns = game::numdynents(flags), dsize = 1<<dynentsize, dx = x<<dynentsize, dy = y<<dynentsize;
     loopi(numdyns)
     {
-        dynent *d = game::iterdynents(i);
+        dynent *d = game::iterdynents(i, flags);
         if(d->state != CS_ALIVE ||
            d->o.x+d->radius <= dx || d->o.x-d->radius >= dx+dsize ||
            d->o.y+d->radius <= dy || d->o.y-d->radius >= dy+dsize)
@@ -592,7 +593,8 @@ bool plcollide(physent *d, const vec &dir, bool insideplayercol)    // collide w
         loopv(dynents)
         {
             physent *o = dynents[i];
-            if(o==d || d->o.reject(o->o, d->radius+o->radius)) continue;
+            if(o==d || d->o.reject(o->o, d->radius + o->radius)) continue;
+            if (o->type > ENT_AI && o->type != d->type) continue;
             if(plcollide(d, dir, o))
             {
                 collideplayer = o;

@@ -211,7 +211,10 @@ namespace ai
         d->playermodel = chooserandomplayermodel(pm);
         d->playercolor = col;
 
-        if(resetthisguy) removeprojectiles(d);
+        if (resetthisguy)
+        {
+            projectile::removeprojectiles(d);
+        }
         if(d->ownernum >= 0 && self->clientnum == d->ownernum)
         {
             create(d);
@@ -250,7 +253,10 @@ namespace ai
                 itermillis = totalmillis;
             }
             int count = 0;
-            loopv(players) if(players[i]->ai) think(players[i], ++count == iteration ? true : false);
+            loopv(players) if (players[i]->ai)
+            {
+                think(players[i], ++count == iteration ? true : false);
+            }
             if(++iteration > count) iteration = 0;
         }
     }
@@ -1103,7 +1109,7 @@ namespace ai
         bool enemyok = e && targetable(d, e);
         if(!enemyok || d->skill >= 50)
         {
-            gameent *f = (gameent *)intersectclosest(dp, d->ai->target, d);
+            gameent *f = (gameent *)weapon::intersectclosest(dp, d->ai->target, d);
             if(f)
             {
                 if(targetable(d, f))
@@ -1240,7 +1246,7 @@ namespace ai
                     break;
                 }
             }
-            if(gun >= 0 && gun != d->gunselect) gunselect(gun, d);
+            if(gun >= 0 && gun != d->gunselect) weapon::gunselect(gun, d);
         }
         return process(d, b) >= 2;
     }
@@ -1317,8 +1323,8 @@ namespace ai
             if(allowmove)
             {
                 if(!request(d, b)) target(d, b, melee(d) ? 1 : 0, b.idle ? true : false);
-                shoot(d, d->ai->target);
-                updaterecoil(d, curtime);
+                weapon::shoot(d, d->ai->target);
+                weapon::updaterecoil(d, curtime);
             }
             if(!intermission)
             {
@@ -1362,7 +1368,7 @@ namespace ai
         }
         extern avoidset wpavoid;
         obstacles.add(wpavoid);
-        avoidprojectiles(obstacles, guessradius);
+        projectile::avoidprojectiles(obstacles, guessradius);
     }
 
     void think(gameent *d, bool run)

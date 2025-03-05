@@ -294,7 +294,7 @@ namespace game
             return;
         }
 
-        int zoomtype = checkweaponzoom();
+        const int zoomtype = weapon::checkweaponzoom();
         if (!zoomtype)
         {
             return;
@@ -541,7 +541,7 @@ namespace game
 
             if (crosshairscope)
             {
-                const int zoomtype = checkweaponzoom();
+                const int zoomtype = weapon::checkweaponzoom();
                 if (camera::camera.zoomstate.isenabled() && zoomtype == Zoom_Scope)
                 {
                     crosshair = Pointer_Scope;
@@ -550,7 +550,7 @@ namespace game
             }
             if (!betweenrounds && crosshairally)
             {
-                dynent* o = intersectclosest(d->o, worldpos, d);
+                const dynent* o = weapon::intersectclosest(d->o, worldpos, d);
                 if (o && o->type == ENT_PLAYER && isally(((gameent*)o), d) && !m_hideallies)
                 {
                     crosshair = Pointer_Ally;

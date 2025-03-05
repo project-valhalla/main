@@ -954,7 +954,7 @@ namespace physics
                 }
                 if (!d->timeinair) msgsound(S_JUMP1, d);
                 else msgsound(S_JUMP2, d);
-                sway.addevent(d, SwayEvent_Jump, 380, -1.2f);
+                weapon::sway.addevent(d, weapon::SwayEvent_Jump, 380, -1.2f);
                 break;
             }
 
@@ -964,7 +964,7 @@ namespace physics
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
                 if (event == PHYSEVENT_LAND_LIGHT)
                 {
-                    sway.addevent(d, SwayEvent_Land, 360, -2.1f);
+                    weapon::sway.addevent(d, weapon::SwayEvent_Land, 360, -2.1f);
                     camera::camera.addevent(d, camera::CameraEvent_Land, 120, -1.0f);
                     triggerfootsteps(d, true);
                 }
@@ -980,7 +980,7 @@ namespace physics
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
                 msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
-                sway.addevent(d, SwayEvent_LandHeavy, 380, -2);
+                weapon::sway.addevent(d, weapon::SwayEvent_LandHeavy, 380, -2);
                 camera::camera.addevent(d, camera::CameraEvent_Land, 100, -1.5f);
                 addroll(d, rollonland);
                 d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
@@ -1064,12 +1064,12 @@ namespace physics
         if (!down)
         {
             self->crouching = abs(self->crouching);
-            sway.addevent(self, SwayEvent_Crouch, 350, -3);
+            weapon::sway.addevent(self, weapon::SwayEvent_Crouch, 350, -3);
         }
         else if (cancrouch())
         {
             self->crouching = -1;
-            sway.addevent(self, SwayEvent_Crouch, 380, -2);
+            weapon::sway.addevent(self, weapon::SwayEvent_Crouch, 380, -2);
         }
     }
     ICOMMAND(crouch, "D", (int* down),
@@ -1077,20 +1077,38 @@ namespace physics
         docrouch(*down);
     });
 
-    bool hasbounced(projectile* proj, float secs, float elasticity, float waterfric, float gravity)
+    /*
+     * Simulates projectile physics, including the effects of gravity and friction.
+     */
+    void modifyprojectilevelocity(ProjEnt* proj, const float secs, float waterFriction, const float gravity)
     {
-        // Collision checks.
-        if (proj->physstate != PHYS_BOUNCE && collide(proj, vec(0, 0, 0), 0, false)) return true;
-        int mat = lookupmaterial(vec(proj->o.x, proj->o.y, proj->o.z + (proj->aboveeye - proj->eyeheight) / 2));
-        bool isinwater = isliquidmaterial(mat);
-        if (isinwater)
+        const int material = lookupmaterial(vec(proj->o.x, proj->o.y, proj->o.z + (proj->aboveeye - proj->eyeheight) / 2));
+        const bool isInWater = isliquidmaterial(material);
+        if (isInWater)
         {
             proj->vel.z -= gravity * mapgravity / 16 * secs;
-            proj->vel.mul(max(1.0f - secs / waterfric, 0.0f));
+            proj->vel.mul(max(1.0f - secs / waterFriction, 0.0f));
         }
-        else proj->vel.z -= gravity * mapgravity * secs;
-        vec old(proj->o);
-        bool isDetonatingOnImpact = proj->flags & ProjFlag_Impact;
+        else
+        {
+            proj->vel.z -= gravity * mapgravity * secs;
+        }
+    }
+
+    /*
+     * Manages the collision detection and bouncing physics of a projectile.
+     * Returns true when a collision occurs, which typically triggers detonation
+     * or other projectile-specific actions.
+     */
+    bool hasbounced(ProjEnt* proj, const float secs, const float elasticity, float waterFriction, const float gravity)
+    {
+        if (proj->physstate != PHYS_BOUNCE && collide(proj, vec(0, 0, 0), 0, false))
+        {
+            return true;
+        }
+        modifyprojectilevelocity(proj, secs, waterFriction, gravity);
+        const vec old(proj->o);
+        const bool isDetonatingOnImpact = proj->flags & ProjFlag_Impact;
         loopi(2)
         {
             vec dir(proj->vel);
@@ -1100,10 +1118,12 @@ namespace physics
             {
                 if (collideinside)
                 {
+                    // Projectile is rejected in case it enters solid geometry.
                     proj->o = old;
                     proj->vel.mul(-elasticity);
                     if (isDetonatingOnImpact)
                     {
+                        // Detonates on impact.
                         return true;
                     }
                 }
@@ -1111,7 +1131,10 @@ namespace physics
             }
             else if (collideplayer)
             {
-                collidewithentity(proj, collideplayer);
+                /* Projectile collided with a living entity,
+                 * may it be a player, NPC or another projectile.
+                 */
+                projectile::collidewithentity(proj, collideplayer);
                 break;
             }
             if (isDetonatingOnImpact)
@@ -1121,24 +1144,36 @@ namespace physics
             }
             else
             {
+                // Projectile bounces off geometry or entities.
                 proj->o = old;
-                game::bounce(proj, collidewall);
-                float c = collidewall.dot(proj->vel);
-                float k = 1.0f + (1.0f - elasticity) * c / proj->vel.magnitude();
+                game::projectile::bounce(proj, collidewall);
+                const float c = collidewall.dot(proj->vel);
+                const float k = 1.0f + (1.0f - elasticity) * c / proj->vel.magnitude();
                 proj->vel.mul(k);
                 proj->vel.sub(vec(collidewall).mul(elasticity * 2.0f * c));
             }
         }
         if (proj->physstate != PHYS_BOUNCE)
         {
-            // Make sure bouncers don't start inside geometry!
-            if (proj->o == old) return !collideplayer;
+            // Make sure bouncing projectiles don't spawn inside geometry!
+            if (proj->o == old)
+            {
+                return !collideplayer;
+            }
             proj->physstate = PHYS_BOUNCE;
         }
         return collideplayer != NULL && collideplayer != proj;
     }
 
-    bool isbouncing(projectile* proj, float elasticity, float waterfric, float gravity)
+    /*
+     * Updates the position of a bouncing projectile and checks for collision confirmations
+     * to determine the lifespan of a projectile.
+     * If a collision is confirmed, the function decides whether the projectile should detonate
+     * or continue bouncing (or even stick), depending on specific projectile behaviours.
+     * If the projectile impacts geometry or a living entity and should detonate, it returns false.
+     * Otherwise, it returns true, meaning the projectile will continue.
+     */
+    bool isbouncing(ProjEnt* proj, const float elasticity, const float waterFriction, const float gravity)
     {
         if (physsteps <= 0)
         {
@@ -1150,13 +1185,14 @@ namespace physics
         bool hitplayer = false;
         loopi(physsteps - 1)
         {
-            if (hasbounced(proj, physframetime / 1000.0f, elasticity, waterfric, gravity))
+
+            if (hasbounced(proj, physframetime / 1000.0f, elasticity, waterFriction, gravity))
             {
                 hitplayer = true;
             }
         }
         proj->deltapos = proj->o;
-        if (hasbounced(proj, physframetime / 1000.0f, elasticity, waterfric, gravity))
+        if (hasbounced(proj, physframetime / 1000.0f, elasticity, waterFriction, gravity))
         {
             hitplayer = true;
         }

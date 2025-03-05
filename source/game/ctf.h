@@ -742,11 +742,15 @@ struct ctfclientmode : clientmode
                 bool home = f.team == d->team;
                 ai::checkothers(targets, d, home ? ai::AI_S_DEFEND : ai::AI_S_PURSUE, ai::AI_T_AFFINITY, j, true);
                 gameent *e = NULL;
-                loopi(numdynents()) if((e = (gameent *)iterdynents(i)) && !e->ai && e->state == CS_ALIVE && sameteam(d->team, e->team))
-                { // try to guess what non ai are doing
-                    vec ep = e->feetpos();
-                    if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (FLAGRADIUS*FLAGRADIUS*4) || f.owner == e))
-                        targets.add(e->clientnum);
+                loopi(numdynents())
+                {
+                    if ((e = (gameent*)iterdynents(i)) && !e->ai && e->state == CS_ALIVE && sameteam(d->team, e->team))
+                    {
+                        // Try to guess what the non-AIs are doing.
+                        vec ep = e->feetpos();
+                        if (targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (FLAGRADIUS * FLAGRADIUS * 4) || f.owner == e))
+                            targets.add(e->clientnum);
+                    }
                 }
                 if(home)
                 {
@@ -824,11 +828,15 @@ struct ctfclientmode : clientmode
                 targets.setsize(0);
                 ai::checkothers(targets, d, ai::AI_S_DEFEND, ai::AI_T_AFFINITY, b.target, true);
                 gameent *e = NULL;
-                loopi(numdynents()) if((e = (gameent *)iterdynents(i)) && !e->ai && e->state == CS_ALIVE && sameteam(d->team, e->team))
-                { // try to guess what non ai are doing
-                    vec ep = e->feetpos();
-                    if(targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (FLAGRADIUS*FLAGRADIUS*4) || f.owner == e))
-                        targets.add(e->clientnum);
+                loopi(numdynents())
+                {
+                    if ((e = (gameent*)iterdynents(i)) && !e->ai && e->state == CS_ALIVE && sameteam(d->team, e->team))
+                    {
+                        // Try to guess what the non-AIs are doing.
+                        vec ep = e->feetpos();
+                        if (targets.find(e->clientnum) < 0 && (ep.squaredist(f.pos()) <= (FLAGRADIUS * FLAGRADIUS * 4) || f.owner == e))
+                            targets.add(e->clientnum);
+                    }
                 }
                 if(!targets.empty())
                 {

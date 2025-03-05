@@ -319,7 +319,7 @@ namespace entities
             ents[n]->clearspawned();
         }
         const int type = ents[n]->type;
-        game::autoswitchweapon(d, type);
+        game::weapon::autoswitchweapon(d, type);
         d->pickup(type);
         itemstat& is = itemstats[type - I_AMMO_SG];
         gameent* hud = followingplayer(self);
@@ -430,7 +430,7 @@ namespace entities
             {
                  playentitysound(S_JUMPPAD, e.attr4, d == followingplayer(self) ? vec(0, 0, 0) : e.o);
             }
-            sway.addevent(d, SwayEvent_Land, 250, -2);
+            weapon::sway.addevent(d, weapon::SwayEvent_Land, 250, -2);
         }
         if(local && d->clientnum >= 0)
         {

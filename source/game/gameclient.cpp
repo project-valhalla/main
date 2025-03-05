@@ -298,7 +298,7 @@ namespace game
     ICOMMAND(hasammo, "s", (char* gun),
     {
         gameent *d = followingplayer(self);
-        int weapon = getweapon(gun);
+        int weapon = weapon::getweapon(gun);
         intret(validgun(weapon) && d->ammo[weapon] ? 1 : 0);
     });
 
@@ -759,7 +759,7 @@ namespace game
         if(state & ROUND_RESET)
         {
             if(m_hunt && hunterchosen) hunterchosen = false;
-            removeprojectiles();
+            projectile::removeprojectiles();
         }
         if(state & ROUND_WAIT)
         {
@@ -1844,16 +1844,19 @@ namespace game
                 gameent *actor = getclient(acn);
                 if(!actor || !validatk(atk)) break;
                 actor->lastaction = lastmillis;
-                shoteffects(atk, from, to, actor, false, id, actor->lastaction, hit ? 1 : 0);
+                weapon::shoteffects(atk, from, to, actor, false, id, actor->lastaction, hit);
                 break;
             }
 
             case N_EXPLODEFX:
             {
-                int ecn = getint(p), atk = getint(p), id = getint(p);
-                gameent *e = getclient(ecn);
-                if(!e || !validatk(atk)) break;
-                explodeeffects(atk, e, false, id);
+                int ownerClient = getint(p), id = getint(p);
+                gameent *owner = getclient(ownerClient);
+                if (!owner)
+                {
+                    break;
+                }
+                projectile::explodeeffects(owner, false, id);
                 break;
             }
 
@@ -1885,7 +1888,31 @@ namespace game
                 if(!target || !actor) break;
                 target->health = health;
                 target->shield = shield;
-                dodamage(damage, target, actor, to.iszero() ? target->o : to, atk, flags, false);
+                weapon::damageplayer(damage, target, actor, to.iszero() ? target->o : to, atk, flags, false);
+                break;
+            }
+
+            case N_DAMAGEPROJECTILE:
+            {
+                const int id = getint(p);
+                const int actorClient = getint(p);
+                const int ownerClient = getint(p);
+                const int damage = getint(p);
+                const int attack = getint(p);
+                vec push;
+                loopk(3)
+                {
+                    push[k] = getint(p) / DNF;
+                }
+                gameent* actor = getclient(actorClient);
+                gameent* owner = getclient(ownerClient);
+                if (!id || !validatk(attack) || !owner)
+                {
+                    break;
+                }
+                ProjEnt* proj = projectile::getprojectile(id, owner);
+                projectile::hit(damage, proj, attack, push);
+                weapon::applyhiteffects(damage, (gameent*)proj, actor, proj->o, attack, Hit_Projectile, false);
                 break;
             }
 
@@ -1929,7 +1956,7 @@ namespace game
                 if(!validgun(gun)) return;
                 d->gunselect = gun;
                 d->lastswitchattempt = lastmillis;
-                doweaponchangeffects(d, gun);
+                weapon::doweaponchangeffects(d, gun);
                 break;
             }
 
@@ -2313,7 +2340,7 @@ namespace game
                     stopownersounds(d);
                     playsound(S_INFECTED, d);
                     particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
-                    doweaponchangeffects(d, GUN_ZOMBIE);
+                    weapon::doweaponchangeffects(d, GUN_ZOMBIE);
                     d->lastswitchattempt = lastmillis;
                     writeobituary(d, actor, ATK_ZOMBIE);
                 }
@@ -2333,7 +2360,7 @@ namespace game
                 gameent *d = getclient(cn);
                 if(!d) return;
                 d->voosh(gun);
-                doweaponchangeffects(d, gun);
+                weapon::doweaponchangeffects(d, gun);
                 d->lastswitchattempt = lastmillis;
                 if(d == self) playsound(S_VOOSH);
                 break;

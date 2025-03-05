@@ -61,7 +61,7 @@ namespace server
 
     struct hitinfo
     {
-        int target, lifesequence, rays, flags;
+        int target, lifesequence, rays, flags, id;
         float dist;
         vec dir;
     };
@@ -77,7 +77,8 @@ namespace server
 
     struct explodeevent : timedevent
     {
-        int id, atk;
+        int id, atk, flags;
+        clientinfo* actor;
         vector<hitinfo> hits;
 
         bool keepable() const { return true; }
@@ -97,36 +98,145 @@ namespace server
         void process(clientinfo *ci);
     };
 
-    template <int N>
-    struct projectilestate
+    struct Projectile
     {
-        int projs[N];
-        int numprojs;
+        int id;
+        int attack;
+        int projectile;
+        int flags;
+        int health;
 
-        projectilestate() : numprojs(0) {}
+        clientinfo* killer = NULL;
+
+        Projectile(const int id, const int attack) : id(id), attack(attack)
+        {
+            set();
+        }
+        ~Projectile()
+        {
+        }
+
+        void set()
+        {
+            if (!validatk(attack))
+            {
+                return;
+            }
+            const int projectile = attacks[attack].projectile;
+            this->projectile = projectile;
+            this->flags = projs[projectile].flags;
+            this->health = projs[projectile].health;
+        }
+
+        void kill(clientinfo* actor = NULL)
+        {
+            if (actor)
+            {
+                killer = actor;
+            }
+            health = 0;
+            attack = projs[projectile].attack;
+        }
+
+        void dodamage(const int damage, clientinfo* actor)
+        {
+            health -= damage;
+            if (health <= 0)
+            {
+                kill(actor);
+            }
+        }
+        
+    };
+
+    struct ProjectileState
+    {
+        vector<Projectile> projs;
+
+        ProjectileState()
+        {
+            reset();
+        }
 
         void reset()
-        { 
-            numprojs = 0;
+        {
+            projs.shrink(0);
         }
 
-        void add(int val)
+        Projectile* getProjectile(const int id)
         {
-            if (numprojs >= N)
+            if (projs.length())
             {
-                numprojs = 0;
+                loopv(projs)
+                {
+                    if (projs[i].id == id)
+                    {
+                        return &projs[i];
+                    }
+                }
             }
-            projs[numprojs++] = val;
+            return NULL;
         }
 
-        bool remove(int val)
+        void add(const int id, const int attack)
         {
-            loopi(numprojs) if (projs[i] == val)
+            projs.add(Projectile(id, attack));
+        }
+
+        bool remove(const int id)
+        {
+            if (projs.length())
             {
-                projs[i] = projs[--numprojs];
-                return true;
+                loopv(projs)
+                {
+                    if (projs[i].id == id)
+                    {
+                        projs.remove(i);
+                        return true;
+                    }
+                }
             }
             return false;
+        }
+
+        bool find(const int id)
+        {
+            loopv(projs)
+            {
+                if (projs[i].id == id)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void update(const int id, int& attack, int& flags, clientinfo*& owner)
+        {
+            Projectile* proj = getProjectile(id);
+            if (!proj)
+            {
+                return;
+            }
+            if (proj->health <= 0)
+            {
+                /* If the projectile has been killed,
+                /* we need to update its context to reward the actor.
+                 */
+                if (proj->attack != attack)
+                {
+                    attack = proj->attack;
+                }
+                if (proj->killer && proj->killer != owner)
+                {
+                    owner = proj->killer;
+                }
+                const int fixedFlags = Hit_Projectile;
+                if (!(flags & fixedFlags))
+                {
+                    flags |= fixedFlags;
+                }
+            }
         }
     };
 
@@ -137,12 +247,14 @@ namespace server
         int lastdeath, deadflush, lastspawn, lifesequence;
         int lastpain, lastdamage, lastregeneration;
         int lastmove, lastshot, lastatk;
-        projectilestate<8> projectiles;
+        ProjectileState projs;
         int frags, flags, deaths, points, teamkills, shotdamage, damage, spree;
         int lasttimeplayed, timeplayed;
         float effectiveness;
 
-        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastdamage(0), lastregeneration(0), lastmove(0) {}
+        servstate() : state(CS_DEAD), editstate(CS_DEAD), lifesequence(0), lastpain(0), lastdamage(0), lastregeneration(0), lastmove(0)
+        {
+        }
 
         bool isalive(int gamemillis)
         {
@@ -158,7 +270,7 @@ namespace server
         {
             if(state!=CS_SPECTATOR) state = editstate = CS_DEAD;
             maxhealth = 100;
-            projectiles.reset();
+            projs.reset();
 
             timeplayed = 0;
             effectiveness = 0;
@@ -183,7 +295,7 @@ namespace server
         void reassign()
         {
             respawn();
-            projectiles.reset();
+            projs.reset();
         }
     };
 
@@ -1719,7 +1831,7 @@ namespace server
 
         uchar operator[](int msg) const { return msg >= 0 && msg < NUMMSG ? msgmask[msg] : 0; }
     } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVMSG,
-                N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_DIED, 4, N_FORCEDEATH,
+                N_DAMAGE, N_DAMAGEPROJECTILE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO, N_DIED, 4, N_FORCEDEATH,
                 N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP,
                 N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME,
                 N_NOTICE, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP,
@@ -2593,7 +2705,7 @@ namespace server
                 }
                 ci->state.respawn();
                 sendspawn(ci);
-                ci->state.projectiles.reset();
+                ci->state.projs.reset();
             }
         }
     }
@@ -3004,7 +3116,14 @@ namespace server
                 break;
             }
         }
-        if(flags & Hit_Head) kflags |= KILL_HEADSHOT;
+        if (flags & Hit_Head)
+        {
+            kflags |= KILL_HEADSHOT;
+        }
+        if (flags & Hit_Projectile)
+        {
+            kflags |= KILL_EXPLOSION;
+        }
         if(m_berserker)
         {
             checkberserker(target);
@@ -3067,13 +3186,52 @@ namespace server
         shouldcheckround();
     }
 
+    void hitprojectile(const int id, clientinfo* target, clientinfo* actor, int damage, const int attack, const int flags, const vec& velocity = vec(0, 0, 0))
+    {
+        if (!id || !actor || !target || !validatk(attack))
+        {
+            return;
+        }
+        Projectile* proj = target->state.projs.getProjectile(id);
+        if (!proj || !isvalidprojectile(proj->projectile) || proj->flags & ProjFlag_Invincible)
+        {
+            return;
+        }
+        if (validatk(proj->attack) && validatk(attack))
+        {
+            const bool isLoyal = proj->flags & ProjFlag_Loyal;
+            if (isLoyal && attacks[attack].gun != attacks[proj->attack].gun)
+            {
+                return;
+            }
+        }
+        if (flags & Hit_Direct || damage == attacks[attack].damage)
+        {
+            if (isvalidprojectile(attacks[attack].projectile))
+            {
+                damage = proj->health;
+                proj->kill();
+            }
+            else
+            {
+                return;
+            }
+        }
+        else
+        {
+            proj->dodamage(damage, actor);
+        }
+        const ivec push(vec(velocity).rescale(DNF));
+        sendf(-1, 1, "ri9", N_DAMAGEPROJECTILE, id, actor->clientnum, target->clientnum, damage, attack, push.x, push.y, push.z);
+    }
+
     void dodamage(clientinfo *target, clientinfo *actor, int damage, int atk, int flags = 0, const vec &hitpush = vec(0, 0, 0), const vec to = vec(0, 0, 0))
     {
         if((target == actor && !selfdamage) || (isally(target, actor) && !teamdamage) || (m_round && betweenrounds)) return;
         servstate &ts = target->state;
         ts.dodamage(damage, flags & Hit_Environment);
         target->state.lastpain = lastmillis;
-        sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield, int(to.x*DMF), int(to.y*DMF), int(to.z*DMF));
+        sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield, static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF));
         if(target!=actor && damage > 0)
         {
             if(!isally(target, actor))
@@ -3127,66 +3285,133 @@ namespace server
         }
         if(!(flags & Hit_Environment))
         {
-            if (attacks[atk].damage < 0)
+            if (!(flags & Hit_Projectile))
             {
-                target->state.shield = 0;
-                return target->state.health;
-            }
-            if(attacks[atk].headshotdamage)
-            {
-                // Weapons deal locational damage only if headshot damage is specified.
-                if(flags & Hit_Head)
+                if (attacks[atk].damage < 0)
                 {
-                    if(m_mayhem(mutators)) // Force death if it's a blow to the head when the Mayhem mutator is enabled.
-                    {
-                        target->state.shield = 0;
-                        return target->state.health;
-                    }
-                    else damage += attacks[atk].headshotdamage;
+                    target->state.shield = 0;
+                    return target->state.health;
                 }
-                if(flags & Hit_Legs) damage /= 2;
+                if (flags && attacks[atk].headshotdamage)
+                {
+                    // Weapons deal locational damage only if headshot damage is specified.
+                    if (flags & Hit_Head)
+                    {
+                        if (m_mayhem(mutators)) // Force death if it's a blow to the head when the Mayhem mutator is enabled.
+                        {
+                            target->state.shield = 0;
+                            return target->state.health;
+                        }
+                        else damage += attacks[atk].headshotdamage;
+                    }
+                    if (flags & Hit_Legs)
+                    {
+                        damage /= 2;
+                    }
+                }
             }
-            if(actor->state.haspowerup(PU_DAMAGE) || actor->state.role == ROLE_BERSERKER) damage *= 2;
-            if((isally(target, actor) || target == actor) && !m_betrayal) damage /= DAMAGE_ALLYDIV;
+            if (actor->state.haspowerup(PU_DAMAGE) || actor->state.role == ROLE_BERSERKER)
+            {
+                damage *= 2;
+            }
+            if ((isally(target, actor) || target == actor) && !m_betrayal)
+            {
+                damage /= DAMAGE_ALLYDIV;
+            }
         }
-        if (target->state.haspowerup(PU_ARMOR) || target->state.role == ROLE_BERSERKER) damage /= 2;
-        if(!damage) damage = 1;
+        if (target->state.haspowerup(PU_ARMOR) || target->state.role == ROLE_BERSERKER)
+        {
+            damage /= 2;
+        }
+        if (!damage)
+        {
+            damage = 1;
+        }
         return damage;
+    }
+
+    bool isvalidhitinfo(hitinfo& hit, clientinfo* target, const bool isFound = false, const int flags = 0)
+    {
+        const bool hasProjectile = target && hit.id && isFound;
+        const bool hasVictim = !hit.id && target && target->state.state == CS_ALIVE && hit.lifesequence == target->state.lifesequence;
+        const bool isValidTarget = hasProjectile || hasVictim;
+        if (isValidTarget)
+        {
+            if (flags && hit.flags != flags)
+            {
+                // Correct the hit flags if necessary as they are important for damage calculation.
+                hit.flags = flags;
+            }
+            return true;
+        }
+        return false;
     }
 
     void explodeevent::process(clientinfo *ci)
     {
-        servstate &gs = ci->state;
-        if (!gs.projectiles.remove(id))
+        ci->state.projs.update(id, atk, flags, actor);
+        if (!ci->state.projs.remove(id))
         {
             return;
         }
-        sendf(-1, 1, "ri4x", N_EXPLODEFX, ci->clientnum, atk, id, ci->ownernum);
+        sendf(-1, 1, "ri3x", N_EXPLODEFX, ci->clientnum, id, ci->ownernum);
         loopv(hits)
         {
-            hitinfo &h = hits[i];
-            clientinfo *target = getinfo(h.target);
-            if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.dist<0 || h.dist>attacks[atk].exprad) continue;
-
+            hitinfo &hit = hits[i];
+            if (hit.dist < 0 || hit.dist > attacks[atk].exprad)
+            {
+                continue;
+            }
+            clientinfo *target = getinfo(hit.target);
+            if (!isvalidhitinfo(hit, target, true, flags))
+            {
+                continue;
+            }
             bool dup = false;
-            loopj(i) if(hits[j].target==h.target) { dup = true; break; }
-            if(dup) continue;
-            float radiusdamage = attacks[atk].damage*(1-h.dist/EXP_DISTSCALE/attacks[atk].exprad);
-            dodamage(target, ci, calculatedamage(radiusdamage, target, ci, atk, h.flags), atk, 0, h.dir);
+            loopj(i)
+            {
+                if (hits[j].target == hit.target)
+                {
+                    dup = true;
+                    break;
+                }
+            }
+            if (dup)
+            {
+                continue;
+            }
+            const float fDamage = attacks[atk].damage * (1 - hit.dist / EXP_DISTSCALE / attacks[atk].exprad);
+            const int damage = calculatedamage(fDamage, target, actor, atk, hit.flags);
+            if (hit.id)
+            {
+                hitprojectile(hit.id, target, ci, damage, atk, hit.flags, hit.dir);
+            }
+            else
+            {
+                dodamage(target, actor, damage, atk, hit.flags, hit.dir);
+            }
         }
     }
 
     void shotevent::process(clientinfo *ci)
     {
         servstate &gs = ci->state;
-        int wait = millis - gs.lastshot;
-        if(!gs.isalive(gamemillis) || wait<gs.gunwait || !validatk(atk))
+        if (!gs.isalive(gamemillis))
         {
             return;
         }
-        int gun = attacks[atk].gun;
-        if(attacks[atk].action != ACT_MELEE && !gs.ammo[gun]) return;
-        if(attacks[atk].range && from.dist(to) > attacks[atk].range + 1) return;
+        const int wait = millis - gs.lastshot;
+        if(wait < gs.gunwait || !validatk(atk))
+        {
+            return;
+        }
+        const int gun = attacks[atk].gun;
+        const bool isInRange = attacks[atk].range && from.dist(to) <= attacks[atk].range + 1;
+        if (!isInRange || (attacks[atk].use && !gs.ammo[gun]))
+        {
+            // We return if the shot is not in range or the user doesn't have enough ammo.
+            return;
+        }
         if(!gs.haspowerup(PU_AMMO))
         {
             gs.ammo[gun] -= attacks[atk].use;
@@ -3194,39 +3419,55 @@ namespace server
         gs.lastshot = millis;
         gs.lastmove = lastmillis;
         gs.lastatk = atk;
-        int gunwait = attacks[atk].attackdelay;
+        int attackDelay = attacks[atk].attackdelay;
         if(gs.haspowerup(PU_HASTE) || gs.role == ROLE_BERSERKER)
         {
-            gunwait /= 2;
+            attackDelay /= 2;
         }
-        gs.gunwait = gunwait;
+        gs.gunwait = attackDelay;
         sendf(-1, 1, "ri3x", N_SHOTEVENT, ci->clientnum, atk, ci->ownernum);
-        gs.shotdamage += attacks[atk].damage*attacks[atk].rays;
-        bool hit = false;
-        if (isweaponprojectile(attacks[atk].projectile))
+        gs.shotdamage += attacks[atk].damage * attacks[atk].rays;
+        const int projectile = attacks[atk].projectile;
+        if (isvalidprojectile(projectile) && isattackprojectile(projectile))
         {
-            gs.projectiles.add(id);
+            gs.projs.add(id, atk);
         }
-        else
+        bool isHit = false;
+        if (hits.length())
         {
-            int totalrays = 0, maxrays = attacks[atk].rays;
+            int totalRays = 0;
+            const int maxRays = attacks[atk].rays;
             loopv(hits)
             {
-                hitinfo &h = hits[i];
-                clientinfo *target = getinfo(h.target);
-                if(!target || target->state.state!=CS_ALIVE || h.lifesequence!=target->state.lifesequence || h.rays<1 || h.dist > attacks[atk].range + 1) continue;
-
-                totalrays += h.rays;
-                if(totalrays>maxrays) continue;
-                int raydamage = h.rays*attacks[atk].damage, damage = calculatedamage(raydamage, target, ci, atk, h.flags);
-                dodamage(target, ci, damage, atk, h.flags, h.dir, to);
-                hit = true;
-                sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
-
+                hitinfo& hit = hits[i];
+                if (hit.rays < 1 || hit.dist > attacks[atk].range + 1)
+                {
+                    continue;
+                }
+                clientinfo* target = getinfo(hit.target);
+                if (!isvalidhitinfo(hit, target, target->state.projs.find(hit.id)))
+                {
+                    continue;
+                }
+                totalRays += hit.rays;
+                if (totalRays > maxRays)
+                {
+                    continue;
+                }
+                const int rayDamage = hit.rays * attacks[atk].damage;
+                const int damage = calculatedamage(rayDamage, target, ci, atk, hit.flags);
+                if (hit.id)
+                {
+                    hitprojectile(hit.id, target, ci, damage, atk, hit.flags, hit.dir);
+                }
+                else
+                {
+                    dodamage(target, ci, damage, atk, hit.flags, hit.dir, to);
+                }
             }
+            isHit = true;
         }
-        if(hit) return;
-        sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, hit, int(from.x*DMF), int(from.y*DMF), int(from.z*DMF), int(to.x*DMF), int(to.y*DMF), int(to.z*DMF), ci->ownernum);
+        sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, atk, id, static_cast<int>(isHit), static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF), static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF), ci->ownernum);
     }
 
     void pickupevent::process(clientinfo *ci)
@@ -4072,7 +4313,7 @@ namespace server
                     ci->state.editstate = ci->state.state;
                     ci->state.state = CS_EDITING;
                     ci->events.deletecontents();
-                    ci->state.projectiles.reset();
+                    ci->state.projs.reset();
                 }
                 else ci->state.state = ci->state.editstate;
                 QUEUE_MSG;
@@ -4178,50 +4419,80 @@ namespace server
                 shot->id = getint(p);
                 shot->millis = cq ? cq->geteventmillis(gamemillis, shot->id) : 0;
                 shot->atk = getint(p);
-                loopk(3) shot->from[k] = getint(p)/DMF;
-                loopk(3) shot->to[k] = getint(p)/DMF;
-                int hits = getint(p);
+                loopk(3)
+                {
+                    shot->from[k] = getint(p) / DMF;
+                }
+                loopk(3)
+                {
+                    shot->to[k] = getint(p)/DMF;
+                }
+                const int hits = getint(p);
                 loopk(hits)
                 {
-                    if(p.overread()) break;
+                    if (p.overread())
+                    {
+                        break;
+                    }
                     hitinfo &hit = shot->hits.add();
                     hit.target = getint(p);
                     hit.lifesequence = getint(p);
-                    hit.dist = getint(p)/DMF;
+                    hit.dist = getint(p) / DMF;
                     hit.rays = getint(p);
                     hit.flags = getint(p);
-                    loopk(3) hit.dir[k] = getint(p)/DNF;
+                    hit.id = getint(p);
+                    loopk(3)
+                    {
+                        hit.dir[k] = getint(p) / DNF;
+                    }
                 }
                 if(cq)
                 {
                     cq->addevent(shot);
                     cq->setpushed();
                 }
-                else delete shot;
+                else
+                {
+                    delete shot;
+                }
                 break;
             }
 
             case N_EXPLODE:
             {
                 explodeevent *exp = new explodeevent;
-                int cmillis = getint(p);
-                exp->millis = cq ? cq->geteventmillis(gamemillis, cmillis) : 0;
+                const int millis = getint(p);
+                exp->millis = cq ? cq->geteventmillis(gamemillis, millis) : 0;
                 exp->atk = getint(p);
                 exp->id = getint(p);
-                int hits = getint(p);
+                const int hits = getint(p);
                 loopk(hits)
                 {
-                    if(p.overread()) break;
+                    if (p.overread())
+                    {
+                        break;
+                    }
                     hitinfo &hit = exp->hits.add();
                     hit.target = getint(p);
                     hit.lifesequence = getint(p);
-                    hit.dist = getint(p)/DMF;
+                    hit.dist = getint(p) / DMF;
                     hit.rays = getint(p);
-                    hit.flags = getint(p);
-                    loopk(3) hit.dir[k] = getint(p)/DNF;
+                    hit.flags = exp->flags = getint(p);
+                    hit.id = getint(p);
+                    loopk(3)
+                    {
+                        hit.dir[k] = getint(p) / DNF;
+                    }
                 }
-                if(cq) cq->addevent(exp);
-                else delete exp;
+                if (cq)
+                {
+                    exp->actor = cq;
+                    cq->addevent(exp);
+                }
+                else
+                {
+                    delete exp;
+                }
                 break;
             }
 

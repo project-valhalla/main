@@ -256,7 +256,7 @@ namespace game
                                 isUsingMelee = true;
                             }
                             attacking = attacks[atk].action;
-                            shoot(this, attacktarget);
+                            weapon::shoot(this, attacktarget);
 
                             if(burstfire) shots++;
                             bool burstcomplete = shots >= monstertypes[mtype].burstshots;
@@ -383,11 +383,11 @@ namespace game
             managedeatheffects(this);
             if (deathstate == Death_Gib)
             {
-                gibeffect(max(-health, 0), vel, this);
+                weapon::gibeffect(max(-health, 0), vel, this);
                 int matk = monstertypes[mtype].atk;
                 if (monstertypes[mtype].isexplosive)
                 {
-                    game::explode(this, matk, o, vel);
+                    game::projectile::explode(this, matk, o, vel);
                 }
             }
             else if (deathscream && isnoisy)

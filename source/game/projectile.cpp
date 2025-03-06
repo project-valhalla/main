@@ -184,7 +184,7 @@ namespace game
              */
         }
 
-        float projectiledistance(dynent* o, vec& dir, const vec& v, const vec& velocity, const int flags)
+        float calculatedistance(dynent* o, vec& dir, const vec& v, const vec& velocity, const int flags)
         {
             vec middle = o->o;
             middle.z += (o->aboveeye - o->eyeheight) / 2;
@@ -224,7 +224,7 @@ namespace game
             }
         }
 
-        bool candealdamage(dynent* o, ProjEnt& proj, const vec& v)
+        bool ishit(dynent* o, ProjEnt& proj, const vec& v)
         {
             if (betweenrounds || o->state != CS_ALIVE)
             {
@@ -233,7 +233,7 @@ namespace game
             if (isattackprojectile(proj.projectile) && isintersecting(o, proj.o, v, attacks[proj.attack].margin))
             {
                 vec dir;
-                projectiledistance(o, dir, v, proj.vel, proj.flags);
+                calculatedistance(o, dir, v, proj.vel, proj.flags);
                 game::registerhit(o, proj.owner, o->o, dir, attacks[proj.attack].damage, proj.attack, 0);
                 return true;
             }
@@ -349,7 +349,7 @@ namespace game
                 return;
             }
             vec dir;
-            const float distance = projectiledistance(o, dir, position, velocity, flags);
+            const float distance = calculatedistance(o, dir, position, velocity, flags);
             const int damage = static_cast<int>(attacks[attack].damage * (1 - distance / EXP_DISTSCALE / attacks[attack].exprad));
             if (distance < attacks[attack].exprad)
             {
@@ -646,7 +646,7 @@ namespace game
                             {
                                 dynent* o = iterdynents(j);
                                 if (proj.owner == o || o == &proj || o->o.reject(bo, o->radius + br)) continue;
-                                if (candealdamage(o, proj, pos))
+                                if (ishit(o, proj, pos))
                                 {
                                     proj.state = CS_DEAD;
                                     break;

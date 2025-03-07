@@ -70,9 +70,10 @@ enum { COLLIDE_NONE = 0, COLLIDE_ELLIPSE, COLLIDE_OBB, COLLIDE_TRI };
 enum
 {
     // used to mark dynamic entities for physics interactions
-    DYN_PLAYER = 1 << 0,
-    DYN_AI = 1 << 1,
-    DYN_PROJECTILE = 1 << 2
+    DYN_PLAYER     = 1<<0,
+    DYN_AI         = 1<<1,
+    DYN_PROJECTILE = 1<<2,
+    DYN_RAGDOLL    = 1<<3
 };
 
 const float CROUCH_HEIGHT = 0.75f;

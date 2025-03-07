@@ -1257,51 +1257,54 @@ namespace physics
     void updateragdolleye(dynent* pl, vec eye, const vec offset)
     {
         gameent* d = (gameent*)pl;
-        bool isfirstperson = camera::isfirstpersondeath();
-        if (!isfirstperson && (d->deathstate == Death_Fall || d->deathstate == Death_Gib))
+        const bool isFirstPerson = camera::isfirstpersondeath();
+        if (!isFirstPerson && (d->deathstate == Death_Fall || d->deathstate == Death_Gib))
         {
             return;
         }
-
-        if (d == self && isfirstperson)
+        if (d == self && isFirstPerson)
         {
             camera1->o = eye;
             return;
         }
-
         eye.add(offset);
-        float k = pow(ragdolleyesmooth, float(curtime) / ragdolleyesmoothmillis);
+        const float k = pow(ragdolleyesmooth, float(curtime) / ragdolleyesmoothmillis);
         d->o.lerp(eye, 1 - k);
     }
 
     VARP(ragdollpush, 0, 1, 1);
 
-    void pushragdolls(const vec& position, const int margin)
+    void pushRagdoll(dynent *d, const vec &position, const int damage)
     {
-        if (!ragdollpush || !ragdolls.length())
+        if (!ragdollpush || !d->ragdoll)
         {
             return;
         }
-
-        loopv(ragdolls)
+        gameent* ragdoll = (gameent*)d;
+        if (ragdoll->deathstate == Death_Gib)
         {
-            gameent* ragdoll = ragdolls[i];
-            if (ragdoll->o.reject(position, ragdoll->radius + margin))
+            return;
+        }
+        if (damage)
+        {
+            if (ragdoll->health <= 0)
             {
-                continue;
+                /* Reset ragdoll's health with zero consequences,
+                /* just to make sure it explodes with heavy damage only.
+                 */
+                ragdoll->health = ragdoll->maxhealth;
             }
-            vec delta = vec(ragdoll->o).sub(position).normalize();
-            pushragdoll(ragdoll, delta);
+            ragdoll->health -= damage;
         }
-    }
-
-    void pushRagdoll(dynent *d, const vec &direction)
-    {
-        if (!ragdollpush)
+        if (ragdoll->shouldgib())
         {
-            return;
+            ragdoll->deathstate = Death_Gib;
+            gibeffect(damage, ragdoll->vel, ragdoll);
         }
-
-        pushragdoll(d, direction);
+        else
+        {
+            pushragdoll(ragdoll, position);
+        }
+        pushragdoll(d, position);
     }
 }

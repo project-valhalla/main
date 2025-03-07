@@ -21,7 +21,10 @@ namespace game
         r->lastupdate = ragdollfade && lastmillis > d->lastpain + max(ragdollmillis - ragdollfade, 0) ? lastmillis - max(ragdollmillis - ragdollfade, 0) : d->lastpain;
         r->edit = NULL;
         r->ai = NULL;
-        if(d==self) r->playermodel = playermodel;
+        if (d == self)
+        {
+            r->playermodel = playermodel;
+        }
         ragdolls.add(r);
         d->ragdoll = NULL;
     }
@@ -743,5 +746,4 @@ namespace game
         entities::preloadentities();
         preloadmonsters();
     }
-
 }

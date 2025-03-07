@@ -365,35 +365,35 @@ namespace game
             {
                 return;
             }
-            vec dir;
-            const float distance = calculatedistance(o, dir, position, velocity, flags);
+            vec direction;
+            const float distance = calculatedistance(o, direction, position, velocity, flags);
             const int damage = static_cast<int>(attacks[attack].damage * (1 - distance / EXP_DISTSCALE / attacks[attack].exprad));
             if (distance < attacks[attack].exprad)
             {
                 if (o->state == CS_ALIVE)
                 {
-                    game::hit(o, at, o->o, dir, damage, attack, distance, 1);
+                    game::hit(o, at, o->o, direction, damage, attack, distance, 1);
                 }
                 else
                 {
-                    physics::pushRagdoll(o, dir);
+                    physics::pushRagdoll(o, position, damage);
                 }
             }
         }
 
         void applyradialeffect(const vec& position, const vec& velocity, gameent* owner, dynent* safe, const int attack, const int flags)
         {
-            const int numdyn = numdynents();
+            const int entityFlags = DYN_PLAYER | DYN_AI | DYN_RAGDOLL;
+            const int numdyn = numdynents(entityFlags);
             loopi(numdyn)
             {
-                dynent* o = iterdynents(i);
+                dynent* o = iterdynents(i, entityFlags);
                 if (o->o.reject(position, o->radius + attacks[attack].exprad) || (safe && o == safe))
                 {
                     continue;
                 }
                 calculatesplashdamage(o, position, velocity, owner, attack, flags);
             }
-            physics::pushragdolls(position, attacks[attack].exprad);
         }
 
         void explodeprojectile(ProjEnt& proj, const vec& v, const bool isLocal)

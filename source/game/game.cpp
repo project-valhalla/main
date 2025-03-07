@@ -1151,6 +1151,10 @@ namespace game
         {
             length += projectiles::AttackProjectiles.length();
         }
+        if (flags & DYN_RAGDOLL)
+        {
+            length += ragdolls.length();
+        }
         return length;
     }
 
@@ -1182,6 +1186,14 @@ namespace game
                 return (dynent*)projectiles::AttackProjectiles[i];
             }
             i -= projectiles::AttackProjectiles.length();
+        }
+        if (flags & DYN_RAGDOLL)
+        {
+            if (i < ragdolls.length())
+            {
+                return ragdolls[i];
+            }
+            i -= ragdolls.length();
         }
         return NULL;
     }

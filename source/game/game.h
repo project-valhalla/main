@@ -685,8 +685,7 @@ namespace physics
     extern void physicsframe();
     extern void updatephysstate(gameent* d);
     extern void addroll(gameent* d, float amount);
-    extern void pushragdolls(const vec& position, const int margin);
-    extern void pushRagdoll(dynent* d, const vec& direction);
+    extern void pushRagdoll(dynent* d, const vec& position, const int damage);
 
     extern bool canmove(gameent* d);
     extern bool hasbounced(ProjEnt* proj, float secs, float elasticity, float waterfric, float gravity);

@@ -1,6 +1,7 @@
 // hardcoded sounds, defined in sound.cfg
 enum
 {
+    S_INVALID = -1,
     // player
     S_JUMP1 = 0, S_JUMP2, S_LAND, S_LAND_WATER,
     S_FOOTSTEP, S_FOOTSTEP_DIRT, S_FOOTSTEP_METAL, S_FOOTSTEP_WOOD,

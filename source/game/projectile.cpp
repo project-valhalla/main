@@ -535,7 +535,7 @@ namespace game
             {
                 return;
             }
-            if (!proj->state != CS_DEAD)
+            if (proj->state != CS_DEAD)
             {
                 proj->loopChannel = playsound(proj->loopSound, NULL, &proj->o, NULL, 0, -1, 100, proj->loopChannel);
             }

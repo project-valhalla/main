@@ -131,7 +131,7 @@ enum
 enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
-    N_SHOOT, N_EXPLODE, N_SUICIDE,
+    N_SHOOT, N_EXPLODE, N_DAMAGEPROJECTILE, N_SUICIDE,
     N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT,
@@ -162,8 +162,8 @@ enum
 static const int msgsizes[] =               // size inclusive message token, 0 for variable or not-checked sizes
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
-    N_SHOOT, 0, N_EXPLODE, 0, N_SUICIDE, 1,
-    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 6, N_REGENERATE, 2, N_REPAMMO, 3,
+    N_SHOOT, 0, N_EXPLODE, 0, N_DAMAGEPROJECTILE, 5, N_SUICIDE, 1,
+    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2, N_REPAMMO, 3,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
     N_NOTICE, 2, N_ANNOUNCE, 1,
@@ -204,7 +204,6 @@ struct demoheader
 };
 
 #include "projectile.h"
-#include "weapon.h"
 #include "ai.h"
 #include "gamemode.h"
 #include "entity.h"
@@ -819,20 +818,24 @@ namespace game
     namespace projectiles
     {
         // projectile.cpp
-        extern vector<ProjEnt*> Projectiles;
+        extern vector<ProjEnt*> Projectiles, AttackProjectiles;
 
         extern void update(const int time);
         extern void updatelights();
-        extern void remove(gameent* owner = NULL);
+        extern void add(ProjEnt& proj);
+        extern void remove(ProjEnt& proj);
+        extern void reset(gameent* owner = NULL);
         extern void render();
         extern void preload();
         extern void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0);
         extern void spawnbouncer(const vec& from, gameent* d, const int type);
         extern void bounce(physent* d, const vec& surface);
         extern void collidewithentity(physent* bouncer, physent* collideEntity);
-        extern void destroyserverprojectile(const int attack, gameent* d, const bool isLocal, const int id = 0);
+        extern void destroyserverprojectile(gameent* d, const int id, const int attack = ATK_INVALID);
         extern void avoid(ai::avoidset& obstacles, const float radius);
         extern void explode(gameent* owner, const int attack, const vec& position, const vec& velocity);
+        extern void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays);
+        extern void damage(ProjEnt* proj, gameent* actor, const int attack);
 
         ProjEnt* getprojectile(const int id, gameent* owner);
     }
@@ -895,7 +898,7 @@ namespace game
     extern void weaponswitch(gameent* d);
     extern void autoswitchweapon(gameent* d, int type);
     extern void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal);
-    extern void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int atk, float dist, int rays = 1, int flags = Hit_Torso);
+    extern void hit(dynent* target, gameent* actor, const vec& hitPosition, const vec& velocity, int damage, const int atk, const float dist, const int rays = 1, const int flags = Hit_Torso);
 
     extern float intersectdist;
 
@@ -908,7 +911,7 @@ namespace game
 
     extern vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d);
 
-    extern dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin = 0, float& dist = intersectdist);
+    extern dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin = 0, float& dist = intersectdist, const int flags = DYN_PLAYER | DYN_AI);
 
     extern vector<hitmsg> hits;
 

@@ -29,7 +29,7 @@ namespace game
 {
     namespace projectiles
     {
-        vector<ProjEnt*> Projectiles;
+        vector<ProjEnt*> Projectiles, AttackProjectiles;
 
         ProjEnt* getprojectile(const int id, gameent* owner)
         {
@@ -67,6 +67,7 @@ namespace game
         {
             ProjEnt& proj = *Projectiles.add(new ProjEnt);
             proj.set(type);
+            add(proj);
 
             proj.owner = owner;
             proj.o = from;
@@ -224,7 +225,7 @@ namespace game
             }
         }
 
-        bool ishit(dynent* o, ProjEnt& proj, const vec& v)
+        bool hastarget(ProjEnt& proj, dynent* o, const vec& v)
         {
             if (betweenrounds || o->state != CS_ALIVE)
             {
@@ -234,13 +235,13 @@ namespace game
             {
                 vec dir;
                 calculatedistance(o, dir, v, proj.vel, proj.flags);
-                game::registerhit(o, proj.owner, o->o, dir, attacks[proj.attack].damage, proj.attack, 0);
+                game::hit(o, proj.owner, o->o, dir, attacks[proj.attack].damage, proj.attack, 0);
                 return true;
             }
             return false;
         }
 
-        VARP(maxdebris, 10, 60, 1000);
+        VARP(maxdebris, 10, 30, 1000);
 
         void addexplosioneffects(gameent* owner, const int attack, const vec& v)
         {
@@ -253,17 +254,20 @@ namespace game
             {
                 case ATK_ROCKET1:
                 case ATK_ROCKET2:
+                case ATK_ROCKET3:
                 {
                     explosioncolor = 0xD47F00;
                     explosionlightcolor = vec(0.831f, 0.498f, 0.0f);
+                    fade = 250;
                     if (isInWater)
                     {
                         return;
                     }
                     explosiontype = PART_EXPLOSION3;
-                    particle_flare(v, v, 280, PART_EXPLODE1 + rnd(3), 0xFFC864, 35.0f, NULL, 56.0f);
-                    particle_splash(PART_SPARK2, 100, 250, v, explosioncolor, 0.10f + rndscale(0.50f), 600, 1);
-                    particle_splash(PART_SMOKE, 100, 280, v, 0x222222, 10.0f, 250, 200);
+                    particle_splash(PART_SPARK2, 100, 250, v, 0xFFC864, 0.10f + rndscale(0.50f), 600, 1);
+                    particle_splash(PART_SMOKE, 100, 280, v, 0x222222, 1.0f, 250, 200, 20.0f);
+                    particle_flare(v, v, 280, PART_EXPLODE1 + rnd(3), 0xFFC864, 0.0f, NULL, 80.0f);
+                    particle_splash(PART_EXPLODE4, 20, 120, v, explosioncolor, 5.0f, 500, 50, 0.0f);
                     break;
                 }
 
@@ -286,17 +290,26 @@ namespace game
 
                 case ATK_GRENADE1:
                 case ATK_GRENADE2:
+                case ATK_GRENADE3:
                 {
                     explosioncolor = 0x74BCF9;
                     explosionlightcolor = vec(0.455f, 0.737f, 0.976f);
                     explosiontype = PART_EXPLOSION2;
-                    fade = 200;
+                    if (attack == ATK_GRENADE3)
+                    {
+                        fade = 400;
+                        particle_splash(PART_SMOKE, 60, 500, v, 0x02448F, 30.0f, 180, 60, 0.1f);
+                    }
+                    else
+                    {
+                        fade = 200;
+                    }
                     particle_flare(v, v, 280, PART_ELECTRICITY, 0x49A7F7, 30.0f);
                     break;
                 }
 
                 case ATK_PISTOL2:
-                case ATK_PISTOL_COMBO:
+                case ATK_PISTOL3:
                 {
                     explosioncolor = 0x00FFFF;
                     explosionlightcolor = vec(0.0f, 1.0f, 1.0f);
@@ -309,6 +322,10 @@ namespace game
                     }
                     particle_fireball(v, 1.0f, PART_EXPLOSION2, attack == ATK_PISTOL2 ? 200 : 500, 0x00FFFF, attacks[attack].exprad);
                     particle_splash(PART_SPARK2, 50, 180, v, 0x00FFFF, 0.18f, 500);
+                    if (attack == ATK_PISTOL3)
+                    {
+                        particle_flare(v, v, 600, PART_EXPLODE1, explosioncolor, 50.0f, NULL, 40.0f);
+                    }
                     break;
                 }
                 default: break;
@@ -355,7 +372,7 @@ namespace game
             {
                 if (o->state == CS_ALIVE)
                 {
-                    game::registerhit(o, at, o->o, dir, damage, attack, distance, 1);
+                    game::hit(o, at, o->o, dir, damage, attack, distance, 1);
                 }
                 else
                 {
@@ -397,12 +414,8 @@ namespace game
             applyradialeffect(position, velocity, owner, NULL, attack, 0);
         }
 
-        void destroyserverprojectile(const int attack, gameent* d, const bool isLocal, const int id)
+        void destroyserverprojectile(gameent* d, const int id, const int attack)
         {
-            if (isLocal)
-            {
-                return;
-            }
             if (Projectiles.length())
             {
                 loopv(Projectiles)
@@ -412,17 +425,66 @@ namespace game
                     {
                         continue;
                     }
+                    if (proj.attack != attack)
+                    {
+                        proj.attack = attack;
+                    }
                     if (proj.owner == d && proj.id == id)
                     {
                         const vec pos = proj.flags & ProjFlag_Bounce ?
                                         proj.offsetposition() :
                                         vec(proj.offset).mul(proj.offsetMillis / float(OFFSET_MILLIS)).add(proj.o);
                         explodeprojectile(proj, pos, proj.isLocal);
+                        remove(proj);
                         delete Projectiles.remove(i);
                         break;
                     }
                 }
             }
+        }
+
+        void damage(ProjEnt* proj, gameent* actor, const int attack)
+        {
+            if (!proj || !actor || proj->flags & ProjFlag_Invincible)
+            {
+                return;
+            }
+            if (isattackprojectile(proj->projectile) && validatk(attack))
+            {
+                if (proj->flags & ProjFlag_Loyal && attacks[proj->attack].gun != attacks[attack].gun)
+                {
+                    return;
+                }
+                if (!m_mp(gamemode))
+                {
+                    proj->owner = actor;
+                }
+                proj->attack = projs[proj->projectile].attack;
+                proj->kill();
+            }
+        }
+
+        void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays)
+        {
+            ProjEnt* proj = (ProjEnt*)target;
+            if (!proj)
+            {
+                return;
+            }
+            if (proj->isLocal || !m_mp(gamemode))
+            {
+                // Damage the projectile locally.
+                damage(proj, actor, attack);
+                return;
+            }
+            hitmsg& hit = hits.add();
+            hit.target = proj->owner->clientnum;
+            hit.lifesequence = -1;
+            hit.dist = int(dist * DMF);
+            hit.rays = rays;
+            hit.flags = Hit_Projectile;
+            hit.id = proj->id;
+            hit.dir = ivec(0, 0, 0);
         }
 
         void handleliquidtransitions(ProjEnt& proj)
@@ -431,7 +493,7 @@ namespace game
             const bool hasWaterTransitions = proj.projectile != Projectile_Debris;
             if (isInWater && projs[proj.projectile].flags & ProjFlag_Quench)
             {
-                proj.state = CS_DEAD;
+                proj.kill();
                 if (!hasWaterTransitions)
                 {
                     return;
@@ -489,7 +551,7 @@ namespace game
             {
                 if ((proj.lifetime -= time) < 0)
                 {
-                    proj.state = CS_DEAD;
+                    proj.kill();
                 }
             }
             else if (proj.flags & ProjFlag_Junk)
@@ -501,7 +563,7 @@ namespace game
                     rtime -= qtime;
                     if ((proj.lifetime -= qtime) < 0 || (proj.flags & ProjFlag_Bounce && physics::hasbounced(&proj, qtime / 1000.0f, 0.5f, 0.4f, 0.7f)))
                     {
-                        proj.state = CS_DEAD;
+                        proj.kill();
                     }
                 }
             }
@@ -646,9 +708,9 @@ namespace game
                             {
                                 dynent* o = iterdynents(j);
                                 if (proj.owner == o || o == &proj || o->o.reject(bo, o->radius + br)) continue;
-                                if (ishit(o, proj, pos))
+                                if (hastarget(proj, o, pos))
                                 {
-                                    proj.state = CS_DEAD;
+                                    proj.kill();
                                     break;
                                 }
                             }
@@ -660,7 +722,7 @@ namespace game
                     checklifetime(proj, time);
                     if ((lookupmaterial(proj.o) & MATF_VOLUME) == MAT_LAVA)
                     {
-                        proj.state = CS_DEAD;
+                        proj.kill();
                     }
                     else
                     {
@@ -675,7 +737,7 @@ namespace game
                                         continue;
                                     }
                                 }
-                                proj.state = CS_DEAD;
+                                proj.kill();
                             }
                         }
                         if (isattackprojectile(proj.projectile))
@@ -686,7 +748,7 @@ namespace game
                                 const bool hasBounced = projs[proj.projectile].maxbounces && proj.bounces >= projs[proj.projectile].maxbounces;
                                 if (!isBouncing || hasBounced)
                                 {
-                                    proj.state = CS_DEAD;
+                                    proj.kill();
                                 }
                             }
                         }
@@ -704,6 +766,7 @@ namespace game
                             addmsg(N_EXPLODE, "rci3iv", proj.owner, lastmillis - maptime, proj.attack, proj.id, hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf());
                         }
                     }
+                    remove(proj);
                     delete Projectiles.remove(i--);
                 }
                 else
@@ -866,10 +929,27 @@ namespace game
             }
         }
 
-        void remove(gameent* owner)
+        void add(ProjEnt& proj)
+        {
+            if (isattackprojectile(proj.projectile))
+            {
+                AttackProjectiles.add(&proj);
+            }
+        }
+
+        void remove(ProjEnt& proj)
+        {
+            if (isattackprojectile(proj.projectile))
+            {
+                AttackProjectiles.removeobj(&proj);
+            }
+        }
+
+        void reset(gameent* owner)
         {
             if (!owner)
             {
+                AttackProjectiles.setsize(0);
                 Projectiles.deletecontents();
             }
             else
@@ -881,6 +961,7 @@ namespace game
                     {
                         continue;
                     }
+                    remove(proj);
                     delete Projectiles[i];
                     Projectiles.remove(i--);
                 }

@@ -213,7 +213,7 @@ namespace ai
 
         if (resetthisguy)
         {
-            projectiles::remove(d);
+            projectiles::reset(d);
         }
         if(d->ownernum >= 0 && self->clientnum == d->ownernum)
         {

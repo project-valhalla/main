@@ -759,7 +759,7 @@ namespace game
         if(state & ROUND_RESET)
         {
             if(m_hunt && hunterchosen) hunterchosen = false;
-            projectiles::remove();
+            projectiles::reset();
         }
         if(state & ROUND_WAIT)
         {
@@ -1850,10 +1850,15 @@ namespace game
 
             case N_EXPLODEFX:
             {
-                int ecn = getint(p), atk = getint(p), id = getint(p);
-                gameent *e = getclient(ecn);
-                if(!e || !validatk(atk)) break;
-                projectiles::destroyserverprojectile(atk, e, false, id);
+                const int ownerClient = getint(p);
+                const int id = getint(p);
+                const int attack = getint(p);
+                gameent* owner = getclient(ownerClient);
+                if (!owner || !validatk(attack))
+                {
+                    break;
+                }
+                projectiles::destroyserverprojectile(owner, id, attack);
                 break;
             }
 
@@ -1911,6 +1916,28 @@ namespace game
                 if(m_teammode) setteaminfo(actor->team, tfrags);
                 if(!victim) break;
                 kill(victim, actor, atk, flags);
+                break;
+            }
+
+            case N_DAMAGEPROJECTILE:
+            {
+                const int id = getint(p);
+                const int actorClient = getint(p);
+                const int ownerClient = getint(p);
+                const int attack = getint(p);
+                if (!id)
+                {
+                    break;
+                }
+                gameent* owner = getclient(ownerClient);
+                if (!owner)
+                {
+                    break;
+                }
+                ProjEnt* proj = projectiles::getprojectile(id, owner);
+                gameent* actor = getclient(actorClient);
+                projectiles::damage(proj, actor, attack);
+                dodamage(0, (gameent*)proj, actor, proj->o, attack, Hit_Projectile, false);
                 break;
             }
 

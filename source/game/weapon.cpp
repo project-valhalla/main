@@ -169,14 +169,15 @@ namespace game
             scanhit(from, to, d, atk);
         }
 
-        shoteffects(atk, from, to, d, true, 0, prevaction);
+        const int id = lastmillis - maptime;
+        shoteffects(atk, from, to, d, true, id, prevaction);
 
         if(d==self || d->ai)
         {
-            addmsg(N_SHOOT, "rci2i6iv", d, lastmillis-maptime, atk,
-                   (int)(from.x*DMF), (int)(from.y*DMF), (int)(from.z*DMF),
-                   (int)(to.x*DMF), (int)(to.y*DMF), (int)(to.z*DMF),
-                   hits.length(), hits.length()*sizeof(hitmsg)/sizeof(int), hits.getbuf());
+            addmsg(N_SHOOT, "rci2i6iv", d, id, atk,
+                   static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
+                   static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF),
+                   hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf());
         }
         if(!attacks[atk].isfullauto) d->attacking = ACT_IDLE;
         int gunwait = attacks[atk].attackdelay;
@@ -705,13 +706,13 @@ namespace game
         return linecylinderintersect(from, to, bottom, top, d->radius + margin, dist);
     }
 
-    dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin, float& bestdist)
+    dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin, float& bestdist, const int flags)
     {
         dynent* best = NULL;
         bestdist = 1e16f;
-        loopi(numdynents())
+        loopi(numdynents(flags))
         {
-            dynent* o = iterdynents(i);
+            dynent* o = iterdynents(i, flags);
             if (o == at || o->state != CS_ALIVE)
             {
                 continue;
@@ -730,6 +731,37 @@ namespace game
         return best;
     }
 
+    void applyhitflags(dynent* target, const vec& from, const vec& to, const int attack, const float dist, int& flags)
+    {
+        if (!target)
+        {
+            return;
+        }
+        if (target->type == ENT_PLAYER || target->type == ENT_AI)
+        {
+            if (attacks[attack].headshotdamage)
+            {
+                /* If a target is an inanimate object, we don't care about locational damage.
+                 * If an attack has no headshot damage, it means locational damage is not applied.
+                 * In other words, the attack deals the same damage regardless of where it hits the target.
+                 * Example: melee attacks.
+                 */
+                if (isheadhitbox(target, from, to, dist))
+                {
+                    flags = Hit_Head;
+                }
+                if (islegshitbox(target, from, to, dist))
+                {
+                    flags = Hit_Legs;
+                }
+            }
+        }
+        else if (target->type == ENT_PROJECTILE)
+        {
+            flags = Hit_Projectile;
+        }
+    }
+
     void shorten(const vec& from, vec& target, float dist)
     {
         target.sub(from).mul(min(1.0f, dist)).add(from);
@@ -737,63 +769,52 @@ namespace game
 
     void scanhit(vec& from, vec& to, gameent* d, int atk)
     {
-        int maxrays = attacks[atk].rays;
         dynent* o;
         float dist;
-        int margin = attacks[atk].margin, flags = Hit_Torso;
-        bool hitlegs = false, hithead = false;
+        const int scanFlags = DYN_PLAYER | DYN_AI | DYN_PROJECTILE;
+        int hitFlags = Hit_Torso;
         if (attacks[atk].rays > 1)
         {
+            const int attackRays = attacks[atk].rays;
             dynent* hits[GUN_MAXRAYS];
-            loopi(maxrays)
+            loopi(attackRays)
             {
-                if (!betweenrounds && (hits[i] = intersectclosest(from, rays[i], d, margin, dist)))
+                bool isHit = false;
+                if ((hits[i] = intersectclosest(from, rays[i], d, attacks[atk].margin, dist, scanFlags)))
                 {
-                    hitlegs = islegshitbox(hits[i], from, rays[i], dist);
-                    hithead = isheadhitbox(hits[i], from, rays[i], dist);
+                    applyhitflags(hits[i], from, rays[i], atk, dist, hitFlags);
                     shorten(from, rays[i], dist);
-                    impacteffects(atk, d, from, rays[i], true);
+                    isHit = true;
                 }
-                else impacteffects(atk, d, from, rays[i]);
+                impacteffects(atk, d, from, rays[i], isHit);
             }
-            if (betweenrounds) return;
-            loopi(maxrays) if (hits[i])
+            loopi(attackRays)
             {
-                o = hits[i];
-                hits[i] = NULL;
-                int numhits = 1;
-                for (int j = i + 1; j < maxrays; j++) if (hits[j] == o)
+                if (hits[i])
                 {
-                    hits[j] = NULL;
-                    numhits++;
+                    o = hits[i];
+                    hits[i] = NULL;
+                    int numhits = 1;
+                    for (int j = i + 1; j < attackRays; j++) if (hits[j] == o)
+                    {
+                        hits[j] = NULL;
+                        numhits++;
+                    }
+                    hit(o, d, rays[i], vec(to).sub(from).safenormalize(), attacks[atk].damage * numhits, atk, from.dist(to), numhits, hitFlags);
                 }
-                if (attacks[atk].headshotdamage) // if an attack does not have headshot damage, then it does not deal locational damage
-                {
-                    if (hithead) flags |= Hit_Head;
-                    if (hitlegs) flags |= Hit_Legs;
-                }
-                registerhit(o, d, rays[i], vec(to).sub(from).safenormalize(), attacks[atk].damage * numhits, atk, from.dist(to), numhits, flags);
             }
         }
         else
         {
-            if (!betweenrounds && (o = intersectclosest(from, to, d, margin, dist)))
+            bool isHit = false;
+            if ((o = intersectclosest(from, to, d, attacks[atk].margin, dist, scanFlags)))
             {
-                hitlegs = islegshitbox(o, from, to, dist);
-                hithead = isheadhitbox(o, from, to, dist);
+                applyhitflags(o, from, to, atk, dist, hitFlags);
                 shorten(from, to, dist);
-                impacteffects(atk, d, from, to, true);
-                if (attacks[atk].headshotdamage) // if an attack does not have headshot damage, then it does not deal locational damage
-                {
-                    if (hithead) flags = Hit_Head;
-                    else if (hitlegs) flags = Hit_Legs;
-                }
-                registerhit(o, d, to, vec(to).sub(from).safenormalize(), attacks[atk].damage, atk, from.dist(to), 1, flags);
+                hit(o, d, to, vec(to).sub(from).safenormalize(), attacks[atk].damage, atk, from.dist(to), 1, hitFlags);
+                isHit = true;
             }
-            else
-            {
-                impacteffects(atk, d, from, to);
-            }
+            impacteffects(atk, d, from, to, isHit);
         }
     }
 
@@ -826,8 +847,8 @@ namespace game
             }
             else
             {
-                particle_flare(hit, hit, 280, PART_MUZZLE_FLASH3, 0xFFFF66, 0.1f, NULL, 3.5f);
-                particle_splash(PART_SPARK2, damage / 5, 500, hit, 0xFFFF66, 0.5f, 300, 2, 0.001f);
+                particle_flare(hit, hit, 350, PART_SPARK3, 0xFFFF66, 0.1f, NULL, 16.0f);
+                particle_splash(PART_SPARK2, damage / 2, 200, hit, 0xFFFF66, 0.5f, 300, 2, 0.001f);
             }
             if (f->health > 0 && lastmillis - f->lastyelp > 600)
             {
@@ -862,8 +883,7 @@ namespace game
         }
         else if (d->type == ENT_PROJECTILE)
         {
-            particle_flare(hit, hit, 100, PART_MUZZLE_FLASH3, 0xFFFF66, 3.5f);
-            particle_splash(PART_SPARK2, damage / 5, 500, hit, 0xFFFF66, 0.5f, 300);
+            particle_flare(hit, hit, 250, PART_SPARK3, 0xFFFF66, 0.1f, NULL, 15.0f);
             playsound(S_BOUNCE_ROCKET, NULL, &hit);
         }
     }
@@ -900,7 +920,6 @@ namespace game
         {
             return;
         }
-
         if (local)
         {
             damage = d->dodamage(damage, flags & Hit_Environment);
@@ -909,7 +928,6 @@ namespace game
         {
             return;
         }
-
         ai::damaged(d, actor);
         if (local && d->health <= 0)
         {
@@ -923,7 +941,6 @@ namespace game
         {
             return;
         }
-
         gameent* hud = followingplayer(self);
         if (target->type == ENT_PLAYER || target->type == ENT_AI)
         {
@@ -946,13 +963,11 @@ namespace game
                     actor->lasthit = lastmillis;
                 }
             }
-
             if (target == hud)
             {
                 setdamagehud(damage, target, actor);
             }
         }
-
         if (attacks[atk].action == ACT_MELEE && (target == hud || (actor && actor == hud)))
         {
             // Simulate a strong impact.
@@ -960,55 +975,82 @@ namespace game
             camera::camera.addevent(target, camera::CameraEvent_Shake, shake);
             camera::camera.addevent(actor, camera::CameraEvent_Shake, shake);
         }
-
         damageeffect(damage, target, position, atk, flags & Hit_Head);
     }
 
     void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal)
     {
-        damageentity(damage, target, actor, atk, flags, isLocal);
+        if (target->type == ENT_PLAYER || target->type == ENT_AI)
+        {
+            damageentity(damage, target, actor, atk, flags, isLocal);
+        }
         applyhiteffects(damage, target, actor, position, atk, flags, isLocal);
     }
 
-    void registerhit(dynent* target, gameent* actor, const vec& hitposition, const vec& velocity, int damage, int attack, float dist, int rays, int flags)
+    void registerhit(gameent* target, gameent* actor, const vec& hitPosition, const vec& velocity, int damage, int attack, float dist, int rays, int flags)
     {
-        if (betweenrounds || (target->type != ENT_PLAYER && target->type != ENT_AI))
+        if (!m_mp(gamemode) || target == actor)
         {
-            return;
-        }
-
-        gameent* f = (gameent*)target;
-        damage = calculatedamage(damage, f, actor, attack, flags);
-        if (f->type == ENT_PLAYER && (!m_mp(gamemode) || f == actor))
-        {
-            f->hitpush(damage, velocity, actor, attack);
+            target->hitpush(damage, velocity, actor, attack);
         }
         if (!m_mp(gamemode))
         {
-            // Damage the target locally.
-            if (target->type == ENT_PLAYER)
-            {
-                damageentity(damage, f, actor, attack, flags);
-            }
-            else if (target->type == ENT_AI)
-            {
-                hitmonster(damage, (monster*)f, actor, attack, velocity, flags);
-            }
+            damageentity(damage, target, actor, attack, flags);
         }
         else
         {
-            hitmsg& h = hits.add();
-            h.target = f->clientnum;
-            h.lifesequence = f->lifesequence;
-            h.dist = int(dist * DMF);
-            h.rays = rays;
-            h.flags = flags;
-            h.dir = f == actor ? ivec(0, 0, 0) : ivec(vec(velocity).mul(DNF));
+            hitmsg& hit = hits.add();
+            hit.target = target->clientnum;
+            hit.lifesequence = target->lifesequence;
+            hit.dist = int(dist * DMF);
+            hit.rays = rays;
+            hit.flags = flags;
+            hit.id = 0;
+            if (target == actor)
+            {
+                hit.dir = ivec(0, 0, 0);
+            }
+            else
+            {
+                hit.dir = ivec(vec(velocity).mul(DNF));
+            }
+        }
+    }
+
+    void hit(dynent* target, gameent* actor, const vec& hitPosition, const vec& velocity, int damage, const int attack, const float dist, const int rays, const int flags)
+    {
+        if (!target)
+        {
+            return;
+        }
+        gameent* f = (gameent*)target;
+        damage = calculatedamage(damage, f, actor, attack, flags);
+        switch (target->type)
+        {
+            case ENT_PLAYER:
+            {
+                registerhit(f, actor, hitPosition, velocity, damage, attack, dist, rays, flags);
+                break;
+            }
+            case ENT_AI:
+            {
+                hitmonster(damage, (monster*)f, actor, attack, velocity, flags);
+                break;
+            }
+            case ENT_PROJECTILE:
+            {
+                projectiles::registerhit(target, actor, attack, dist, rays);
+                break;
+            }
+            default:
+            {
+                break;
+            }
         }
         // Apply hit effects like blood, shakes, etc.
         if (target)
         {
-            applyhiteffects(damage, f, actor, hitposition, attack, flags, true);
+            applyhiteffects(damage, f, actor, hitPosition, attack, flags, true);
         }
     }
 

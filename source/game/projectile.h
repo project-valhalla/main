@@ -6,19 +6,6 @@ static const int OFFSET_MILLIS = 500;
 
 enum
 {
-    ProjFlag_Weapon     = 1 << 0, // Related to a weapon.
-    ProjFlag_Junk       = 1 << 1, // Lightweight projectiles for cosmetic effects.
-    ProjFlag_Bounce     = 1 << 2, // Bounces off surfaces.
-    ProjFlag_Linear     = 1 << 3, // Follows a linear trajectory.
-    ProjFlag_Impact     = 1 << 4, // Detonates on collision with geometry or entities.
-    ProjFlag_Quench     = 1 << 5, // Destroyed upon contact with water.
-    ProjFlag_Eject      = 1 << 6, // Can be ejected as a spent casing by weapons.
-    ProjFlag_Loyal      = 1 << 7, // Only responds to the weapon that fired it.
-    ProjFlag_Invincible = 1 << 8  // Cannot be destroyed.
-};
-
-enum
-{
     Projectile_Invalid = -1,
     Projectile_Grenade,
     Projectile_Grenade2,
@@ -39,10 +26,25 @@ inline bool isvalidprojectile(int type)
     return type >= 0 && type < Projectile_Max;
 }
 
+#include "weapon.h"
+
+enum
+{
+    ProjFlag_Weapon     = 1 << 0, // Related to a weapon.
+    ProjFlag_Junk       = 1 << 1, // Lightweight projectiles for cosmetic effects.
+    ProjFlag_Bounce     = 1 << 2, // Bounces off surfaces.
+    ProjFlag_Linear     = 1 << 3, // Follows a linear trajectory.
+    ProjFlag_Impact     = 1 << 4, // Detonates on collision with geometry or entities.
+    ProjFlag_Quench     = 1 << 5, // Destroyed upon contact with water.
+    ProjFlag_Eject      = 1 << 6, // Can be ejected as a spent casing by weapons.
+    ProjFlag_Loyal      = 1 << 7, // Only responds to the weapon that fired it.
+    ProjFlag_Invincible = 1 << 8  // Cannot be destroyed.
+};
+
 static const struct projectileinfo
 {
-    int type, flags, bounceSound, loopsound;
-    int maxbounces, variants;
+    int type, flags, attack;
+    int bounceSound, loopsound, maxbounces, variants;
     float radius;
     const char* directory;
 }
@@ -51,6 +53,7 @@ projs[Projectile_Max] =
     {
         Projectile_Grenade,
         ProjFlag_Weapon | ProjFlag_Bounce,
+        ATK_GRENADE3,
         S_BOUNCE_GRENADE,
         -1,
         0,
@@ -61,6 +64,7 @@ projs[Projectile_Max] =
     {
         Projectile_Grenade2,
         ProjFlag_Weapon | ProjFlag_Bounce | ProjFlag_Impact,
+        ATK_GRENADE3,
         S_BOUNCE_GRENADE,
         -1,
         0,
@@ -71,26 +75,29 @@ projs[Projectile_Max] =
     {
         Projectile_Rocket,
         ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Impact,
+        ATK_ROCKET3,
         -1,
         S_ROCKET_LOOP,
         0,
         0,
-        2.0f,
+        1.4f,
         "projectile/rocket/00",
     },
     {
         Projectile_Rocket2,
         ProjFlag_Weapon | ProjFlag_Bounce,
+        ATK_ROCKET3,
         S_BOUNCE_ROCKET,
         -1,
         2,
         0,
-        2.0f,
+        1.4f,
         "projectile/rocket/01"
     },
     {
         Projectile_Pulse,
         ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Quench | ProjFlag_Impact | ProjFlag_Invincible,
+        ATK_INVALID,
         -1,
         S_PULSE_LOOP,
         0,
@@ -101,6 +108,7 @@ projs[Projectile_Max] =
     {
         Projectile_Plasma,
         ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Quench | ProjFlag_Impact | ProjFlag_Loyal,
+        ATK_PISTOL3,
         -1,
         S_PISTOL_LOOP,
         0,
@@ -111,6 +119,7 @@ projs[Projectile_Max] =
     {
         Projectile_Gib,
         ProjFlag_Junk | ProjFlag_Bounce,
+        ATK_INVALID,
         -1,
         -1,
         2,
@@ -121,6 +130,7 @@ projs[Projectile_Max] =
     {
         Projectile_Debris,
         ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Quench,
+        ATK_INVALID,
         -1,
         -1,
         0,
@@ -131,6 +141,7 @@ projs[Projectile_Max] =
     {
         Projectile_Casing,
         ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Eject,
+        ATK_INVALID,
         S_BOUNCE_EJECT1,
         -1,
         2,
@@ -141,6 +152,7 @@ projs[Projectile_Max] =
     {
         Projectile_Casing2,
         ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Eject,
+        ATK_INVALID,
         S_BOUNCE_EJECT2,
         -1,
         2,
@@ -151,6 +163,7 @@ projs[Projectile_Max] =
     {
         Projectile_Casing3,
         ProjFlag_Junk | ProjFlag_Bounce | ProjFlag_Eject,
+        ATK_INVALID,
         S_BOUNCE_EJECT3,
         -1,
         2,
@@ -161,6 +174,7 @@ projs[Projectile_Max] =
     {
         Projectile_Bullet,
         ProjFlag_Weapon | ProjFlag_Junk | ProjFlag_Linear,
+        ATK_INVALID,
         -1,
         -1,
         0,
@@ -263,6 +277,15 @@ struct ProjEnt : dynent
         const int material = lookupmaterial(o);
         const bool isinwater = isliquidmaterial(material & MATF_VOLUME);
         inwater = isinwater ? material & MATF_VOLUME : MAT_AIR;
+    }
+
+    void kill()
+    {
+        if (!isLocal)
+        {
+            return;
+        }
+        state = CS_DEAD;
     }
 
     vec offsetposition()

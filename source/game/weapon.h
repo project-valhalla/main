@@ -1,7 +1,7 @@
 // Hit information to send to the server for hit registration.
 struct hitmsg
 {
-    int target, lifesequence, dist, rays, flags;
+    int target, lifesequence, dist, rays, flags, id;
     ivec dir;
 };
 
@@ -11,7 +11,8 @@ enum
     Hit_Torso       = 1 << 0,
     Hit_Head        = 1 << 1,
     Hit_Legs        = 1 << 2,
-    Hit_Environment = 1 << 3
+    Hit_Projectile  = 1 << 3,
+    Hit_Environment = 1 << 4
 };
 
 // Kill flags: information on how the player has been killed.
@@ -24,7 +25,8 @@ enum
     KILL_LEGENDARY   = 1 << 4,
     KILL_HEADSHOT    = 1 << 5,
     KILL_BERSERKER   = 1 << 6,
-    KILL_TRAITOR     = 1 << 7
+    KILL_TRAITOR     = 1 << 7,
+    KILL_EXPLOSION   = 1 << 8
 };
 
 // Death states: information on the logic to apply for each death.
@@ -69,18 +71,16 @@ inline bool validact(int act) { return act >= 0 && act < NUMACTS; }
 // Weapon attacks: multiple attacks may be contained in a single weapon.
 enum
 {
-    ATK_MELEE = 0, ATK_MELEE2,
-
+    ATK_INVALID = -1,
+    ATK_MELEE, ATK_MELEE2,
     ATK_SCATTER1, ATK_SCATTER2,
     ATK_SMG1, ATK_SMG2,
     ATK_PULSE1, ATK_PULSE2,
-    ATK_ROCKET1, ATK_ROCKET2,
+    ATK_ROCKET1, ATK_ROCKET2, ATK_ROCKET3,
     ATK_RAIL1, ATK_RAIL2,
-    ATK_GRENADE1, ATK_GRENADE2,
-    ATK_PISTOL1, ATK_PISTOL2, ATK_PISTOL_COMBO,
-
+    ATK_GRENADE1, ATK_GRENADE2, ATK_GRENADE3,
+    ATK_PISTOL1, ATK_PISTOL2, ATK_PISTOL3,
     ATK_INSTA, ATK_ZOMBIE,
-
     NUMATKS
 };
 inline bool validatk(int atk) { return atk >= 0 && atk < NUMATKS; }
@@ -121,16 +121,18 @@ static const struct attackinfo
     // rocket
     { GUN_ROCKET,  ACT_PRIMARY,     Projectile_Rocket,  920, 110,  0,   0, 0,  300,  0, 2048,  1,  120, 33, 5000, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_ROCKET1,       S_ROCKET_EXPLODE,  S_HIT_WEAPON,  Death_Explosion },
     { GUN_ROCKET,  ACT_SECONDARY,  Projectile_Rocket2,  920, 110,  0,   0, 0,  300,  0, 2048,  1,  120, 33, 2000, 1, 0.6f, 0.7f, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_ROCKET2,       S_ROCKET_EXPLODE,  S_HIT_WEAPON,  Death_Explosion },
+    { GUN_ROCKET,  ACT_IDLE,       Projectile_Invalid,    0, 120,  0,   0, 0,    0,  0, 2048,  1,  140, 36,    0, 0,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_ROCKET2,       S_ROCKET_EXPLODE,  S_HIT_WEAPON,  Death_Explosion },
     // railgun
     { GUN_RAIL,    ACT_PRIMARY,     Projectile_Bullet, 1200,  70, 30,   0, 0, 2000, 30, 4096,  1,  100,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN, Death_Default   },
     { GUN_RAIL,    ACT_SECONDARY,   Projectile_Bullet, 1500, 100, 10,   0, 0, 2000, 50, 4096,  1,  100,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN, Death_Default   },
     // grenade launcher
     { GUN_GRENADE, ACT_PRIMARY,    Projectile_Grenade,  650,  90,  0,   0, 0,  200,  0, 2048,  1,  120, 45, 1500, 1, 0.7f, 0.8f, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_GRENADE,       S_GRENADE_EXPLODE, S_HIT_WEAPON,  Death_Explosion },
     { GUN_GRENADE, ACT_SECONDARY, Projectile_Grenade2,  750,  90,  0,   0, 0,  190,  0, 2048,  1,  120, 35, 2000, 1, 0.7f,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_GRENADE,       S_GRENADE_EXPLODE, S_HIT_WEAPON,  Death_Explosion },
+    { GUN_GRENADE, ACT_IDLE,       Projectile_Invalid,    0, 100,  0,   0, 0,    0,  0, 2048,  1,  140, 38,    0, 0,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_GRENADE,       S_GRENADE_EXPLODE, S_HIT_WEAPON,  Death_Explosion },
     // pistol
     { GUN_PISTOL,  ACT_PRIMARY,     Projectile_Bullet,  300,  18, 17,  60, 0, 1800, 12, 1024,  1,  180,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_PISTOL1,       S_IMPACT_PULSE,    S_HIT_WEAPON,  Death_Default   },
     { GUN_PISTOL,  ACT_SECONDARY,   Projectile_Plasma,  600,  15,  0,   0, 5,  400,  0, 2048,  1,  500,  8, 2000, 2,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_PISTOL2,       S_IMPACT_PULSE,    S_HIT_WEAPON,  Death_Explosion },
-    { GUN_PISTOL,  ACT_SECONDARY,  Projectile_Invalid, 1000,  80,  0,   0, 0,  400,  0, 2048,  1, -200, 50,    0, 0,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  -1,              S_IMPACT_PISTOL,   S_HIT_RAILGUN, Death_Disrupt   },
+    { GUN_PISTOL,  ACT_IDLE,       Projectile_Invalid,    0,  80,  0,   0, 0,    0,  0, 2048,  1, -200, 50,    0, 0,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  -1,              S_IMPACT_PISTOL,   S_HIT_RAILGUN, Death_Disrupt   },
     // instagib
     { GUN_INSTA,   ACT_PRIMARY,    Projectile_Invalid, 1200,  -1, 50,   0, 0,    0, 36, 4096,  1,   90,  0,    0, 0,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SHOOT,  S_INSTAGUN,      S_IMPACT_RAILGUN,  S_HIT_WEAPON,  Death_Default   },
     // zombie
@@ -145,12 +147,12 @@ static const struct guninfo
 {
     { "scattergun", "scattergun", "weapon/scattergun/world", { -1, ATK_MELEE,  ATK_SCATTER1, ATK_SCATTER2 }, S_SG_SWITCH,      Zoom_None,   Projectile_Casing3 },
     { "smg",        "smg",        "weapon/smg/world",        { -1, ATK_MELEE,  ATK_SMG1,     ATK_SMG2     }, S_SG_SWITCH,      Zoom_Shadow, Projectile_Casing  },
-    { "pulse",      "pulserifle", "weapon/pulserifle/world", { -1, ATK_MELEE,  ATK_PULSE1,   ATK_PULSE2   }, S_PULSE_SWITCH,   Zoom_None,   -1                 },
-    { "rocket",     "rocket",     "weapon/rocket/world",     { -1, ATK_MELEE,  ATK_ROCKET1,  ATK_ROCKET2  }, S_ROCKET_SWITCH,  Zoom_None,   -1                 },
+    { "pulse",      "pulserifle", "weapon/pulserifle/world", { -1, ATK_MELEE,  ATK_PULSE1,   ATK_PULSE2   }, S_PULSE_SWITCH,   Zoom_None,   Projectile_Invalid },
+    { "rocket",     "rocket",     "weapon/rocket/world",     { -1, ATK_MELEE,  ATK_ROCKET1,  ATK_ROCKET2  }, S_ROCKET_SWITCH,  Zoom_None,   Projectile_Invalid },
     { "railgun",    "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_RAIL1,    ATK_RAIL2    }, S_RAIL_SWITCH,    Zoom_Scope,  Projectile_Casing2 },
-    { "grenade",    "grenade",    "weapon/grenade/world",    { -1, ATK_MELEE,  ATK_GRENADE1, ATK_GRENADE2 }, S_GRENADE_SWITCH, Zoom_None,   -1                 },
-    { "pistol",     "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1,  ATK_PISTOL2  }, S_PISTOL_SWITCH,  Zoom_None,   -1                 },
-    { "instagun",   "instagun",   "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,    ATK_INSTA    }, S_RAIL_SWITCH,    Zoom_Scope,  -1                 },
-    { "zombie",     "zombie",     NULL,                      { -1, ATK_ZOMBIE, ATK_ZOMBIE,   ATK_ZOMBIE   }, -1,               Zoom_Shadow, -1                 },
-    { "melee",      NULL,         NULL,                      { -1, ATK_MELEE2, ATK_MELEE2,   ATK_MELEE2   }, -1,               Zoom_None,   -1                 }
+    { "grenade",    "grenade",    "weapon/grenade/world",    { -1, ATK_MELEE,  ATK_GRENADE1, ATK_GRENADE2 }, S_GRENADE_SWITCH, Zoom_None,   Projectile_Invalid },
+    { "pistol",     "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1,  ATK_PISTOL2  }, S_PISTOL_SWITCH,  Zoom_None,   Projectile_Invalid },
+    { "instagun",   "instagun",   "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,    ATK_INSTA    }, S_RAIL_SWITCH,    Zoom_Scope,  Projectile_Invalid },
+    { "zombie",     "zombie",     NULL,                      { -1, ATK_ZOMBIE, ATK_ZOMBIE,   ATK_ZOMBIE   }, -1,               Zoom_Shadow, Projectile_Invalid },
+    { "melee",      NULL,         NULL,                      { -1, ATK_MELEE2, ATK_MELEE2,   ATK_MELEE2   }, -1,               Zoom_None,   Projectile_Invalid }
 };

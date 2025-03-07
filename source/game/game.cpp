@@ -107,7 +107,7 @@ namespace game
 
     void resetgamestate()
     {
-        projectiles::remove();
+        projectiles::reset();
         clearmonsters();
         entities::resettriggers();
     }
@@ -673,6 +673,10 @@ namespace game
             {
                 crit |= Crit::HEADSHOT;
             }
+            if (flags & KILL_EXPLOSION)
+            {
+                crit |= Crit::EXPLOSION;
+            }
             const int gun = attacks[atk].gun;
             const bool isZoom = attacks[atk].action == ACT_SECONDARY && guns[gun].zoom != Zoom_None;
             if (isZoom)
@@ -992,7 +996,7 @@ namespace game
                 }
                 else conoutf(CON_GAMEINFO, "\fs\f2Bot removed:\fr %s", colorname(d));
             }
-            projectiles::remove(d);
+            projectiles::reset(d);
             removetrackedparticles(d);
             removetrackeddynlights(d);
             if(cmode) cmode->removeplayer(d);
@@ -1024,7 +1028,7 @@ namespace game
 
     void cleargame()
     {
-        projectiles::remove();
+        projectiles::reset();
         clearweapons();
         clearmonsters();
         clearragdolls();
@@ -1145,7 +1149,7 @@ namespace game
         }
         if (flags & DYN_PROJECTILE)
         {
-            length += projectiles::Projectiles.length();
+            length += projectiles::AttackProjectiles.length();
         }
         return length;
     }
@@ -1173,11 +1177,11 @@ namespace game
         }
         if (flags & DYN_PROJECTILE)
         {
-            if (i < projectiles::Projectiles.length())
+            if (i < projectiles::AttackProjectiles.length())
             {
-                return (dynent*)projectiles::Projectiles[i];
+                return (dynent*)projectiles::AttackProjectiles[i];
             }
-            i -= projectiles::Projectiles.length();
+            i -= projectiles::AttackProjectiles.length();
         }
         return NULL;
     }

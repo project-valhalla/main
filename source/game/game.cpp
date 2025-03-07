@@ -713,7 +713,7 @@ namespace game
         execident("on_obituary");
     }
 
-    void writeobituary(gameent *d, gameent *actor, int atk, int flags)
+    void writeobituary(gameent *d, gameent *actor, int atk, const int flags)
     {
         // Console messages and killfeed updates.
         gameent* hud = followingplayer(self);

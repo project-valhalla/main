@@ -194,21 +194,16 @@ inline bool isejectedprojectile(const int projectile)
 
 struct ProjEnt : dynent
 {
-    bool isLocal;
-
     int id, attack, projectile, flags, lifetime, health, weight;
     int variant, bounces, offsetMillis;
-    int millis, lastBounce, bounceSound, loopChannel, loopSound;
-
+    int millis, lastBounce, bounceSound, loopChannel, loopSound, hitFlags;
     float lastYaw, gravity, elasticity, offsetHeight, dist;
-
+    bool isLocal;
     string model;
-
     vec offset, lastPosition, dv, from, to;
-
     gameent* owner;
 
-    ProjEnt() : variant(0), bounces(0), millis(0), lastBounce(0), bounceSound(-1), loopChannel(-1), loopSound(-1)
+    ProjEnt() : variant(0), bounces(0), millis(0), lastBounce(0), bounceSound(-1), loopChannel(-1), loopSound(-1), hitFlags(0)
     {
         state = CS_ALIVE;
         type = ENT_PROJECTILE;
@@ -279,11 +274,15 @@ struct ProjEnt : dynent
         inwater = isinwater ? material & MATF_VOLUME : MAT_AIR;
     }
 
-    void kill()
+    void kill(const bool isDestroyed = false)
     {
         if (!isLocal)
         {
             return;
+        }
+        if (isDestroyed)
+        {
+            hitFlags |= Hit_Projectile;
         }
         state = CS_DEAD;
     }

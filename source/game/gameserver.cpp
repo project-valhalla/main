@@ -223,7 +223,7 @@ namespace server
                 {
                     attack = ATK_INVALID;
                 }
-                flags |= Hit_Projectile;
+                flags = Hit_Projectile;
             }
         }
     };
@@ -3282,7 +3282,7 @@ namespace server
         return damage;
     }
 
-    bool isvalidtarget(hitinfo& hit, clientinfo* target, const bool isFound = false, const int flags = 0)
+    bool isvalidtarget(hitinfo& hit, clientinfo* target, const bool isFound = false)
     {
         const bool hasProjectile = target && hit.id && isFound;
         const bool hasVictim = !hit.id && target && target->state.state == CS_ALIVE && hit.lifesequence == target->state.lifesequence;
@@ -3310,7 +3310,7 @@ namespace server
                 continue;
             }
             clientinfo* target = getinfo(hit.target);
-            if (!isvalidtarget(hit, target, true, flags))
+            if (!isvalidtarget(hit, target, true))
             {
                 continue;
             }
@@ -3334,9 +3334,9 @@ namespace server
             else
             {
                 const float damage = attacks[attack].damage * (1 - hit.dist / EXP_DISTSCALE / attacks[attack].exprad);
-                if (flags != hit.flags)
+                if (!(hit.flags & flags))
                 {
-                    hit.flags = flags;
+                    hit.flags |= flags;
                 }
                 dodamage(target, actor, calculatedamage(damage, target, actor, attack, hit.flags), attack, hit.flags, hit.dir);
             }
@@ -4410,6 +4410,7 @@ namespace server
                 exp->millis = cq ? cq->geteventmillis(gamemillis, millis) : 0;
                 exp->attack = getint(p);
                 exp->id = getint(p);
+                exp->flags = 0;
                 const int hits = getint(p);
                 loopk(hits)
                 {
@@ -4422,7 +4423,7 @@ namespace server
                     hit.lifesequence = getint(p);
                     hit.dist = getint(p) / DMF;
                     hit.rays = getint(p);
-                    hit.flags = exp->flags = getint(p);
+                    hit.flags = getint(p);
                     hit.id = getint(p);
                     loopk(3)
                     {

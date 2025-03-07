@@ -359,7 +359,7 @@ namespace game
             }
         }
 
-        void calculatesplashdamage(dynent* o, const vec& position, const vec& velocity, gameent* at, const int attack, const int flags)
+        void calculatesplashdamage(dynent* o, const vec& position, const vec& velocity, gameent* at, const int attack, const int flags, const int hitFlags)
         {
             if (o->state != CS_ALIVE && o->state != CS_DEAD)
             {
@@ -372,7 +372,7 @@ namespace game
             {
                 if (o->state == CS_ALIVE)
                 {
-                    game::hit(o, at, o->o, direction, damage, attack, distance, 1);
+                    game::hit(o, at, o->o, direction, damage, attack, distance, 1, hitFlags);
                 }
                 else
                 {
@@ -381,7 +381,7 @@ namespace game
             }
         }
 
-        void applyradialeffect(const vec& position, const vec& velocity, gameent* owner, dynent* safe, const int attack, const int flags)
+        void applyradialeffect(const vec& position, const vec& velocity, gameent* owner, dynent* safe, const int attack, const int flags, const int hitFlags = 0)
         {
             const int entityFlags = DYN_PLAYER | DYN_AI | DYN_RAGDOLL;
             const int numdyn = numdynents(entityFlags);
@@ -392,7 +392,7 @@ namespace game
                 {
                     continue;
                 }
-                calculatesplashdamage(o, position, velocity, owner, attack, flags);
+                calculatesplashdamage(o, position, velocity, owner, attack, flags, hitFlags);
             }
         }
 
@@ -405,7 +405,7 @@ namespace game
             {
                 return;
             }
-            applyradialeffect(pos, proj.vel, proj.owner, &proj, proj.attack, proj.flags);
+            applyradialeffect(pos, proj.vel, proj.owner, &proj, proj.attack, proj.flags, proj.hitFlags);
         }
 
         void explode(gameent* owner, const int attack, const vec& position, const vec& velocity)
@@ -460,7 +460,7 @@ namespace game
                     proj->owner = actor;
                 }
                 proj->attack = projs[proj->projectile].attack;
-                proj->kill();
+                proj->kill(true);
             }
         }
 

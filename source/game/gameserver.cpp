@@ -213,7 +213,7 @@ namespace server
             if (proj->isDestroyed)
             {
                 /* If the projectile has been killed,
-                /* we need to update its context to reward the actor.
+                 * we need to update its context to reward the actor.
                  */
                 if (proj->killer != owner)
                 {

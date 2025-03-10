@@ -1854,10 +1854,6 @@ namespace game
                 const int id = getint(p);
                 const int attack = getint(p);
                 gameent* owner = getclient(ownerClient);
-                if (!owner || !validatk(attack))
-                {
-                    break;
-                }
                 projectiles::destroyserverprojectile(owner, id, attack);
                 break;
             }
@@ -1930,10 +1926,6 @@ namespace game
                     break;
                 }
                 gameent* owner = getclient(ownerClient);
-                if (!owner)
-                {
-                    break;
-                }
                 ProjEnt* proj = projectiles::getprojectile(id, owner);
                 gameent* actor = getclient(actorClient);
                 projectiles::damage(proj, actor, attack);

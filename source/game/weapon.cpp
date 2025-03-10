@@ -980,6 +980,10 @@ namespace game
 
     void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal)
     {
+        if (!target)
+        {
+            return;
+        }
         if (target->type == ENT_PLAYER || target->type == ENT_AI)
         {
             damageentity(damage, target, actor, atk, flags, isLocal);

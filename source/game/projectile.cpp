@@ -33,12 +33,15 @@ namespace game
 
         ProjEnt* getprojectile(const int id, gameent* owner)
         {
-            loopv(Projectiles)
+            if (owner)
             {
-                ProjEnt* proj = Projectiles[i];
-                if (proj->id == id && (!owner || proj->owner == owner))
+                loopv(Projectiles)
                 {
-                    return proj;
+                    ProjEnt* proj = Projectiles[i];
+                    if (proj->id == id && proj->owner == owner)
+                    {
+                        return proj;
+                    }
                 }
             }
             return NULL;
@@ -416,12 +419,16 @@ namespace game
 
         void destroyserverprojectile(gameent* d, const int id, const int attack)
         {
+            if (!d || !validatk(attack))
+            {
+                return;
+            }
             if (Projectiles.length())
             {
                 loopv(Projectiles)
                 {
                     ProjEnt& proj = *Projectiles[i];
-                    if (!validatk(proj.attack) || !proj.owner || !d || proj.isLocal)
+                    if (!validatk(proj.attack) || proj.isLocal)
                     {
                         continue;
                     }
@@ -445,7 +452,7 @@ namespace game
 
         void damage(ProjEnt* proj, gameent* actor, const int attack)
         {
-            if (!proj || !actor || proj->flags & ProjFlag_Invincible)
+            if (!proj || proj->flags & ProjFlag_Invincible)
             {
                 return;
             }
@@ -455,7 +462,7 @@ namespace game
                 {
                     return;
                 }
-                if (!m_mp(gamemode))
+                if (!m_mp(gamemode) && actor)
                 {
                     proj->owner = actor;
                 }

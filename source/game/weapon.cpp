@@ -1439,11 +1439,11 @@ namespace game
 
     void swayinfo::addevent(gameent* owner, int type, int duration, float factor)
     {
-        if (owner != followingplayer(self)) // The first-person weapon sway is rendered only for ourselves or the player being spectated.
+        if (!hudgunsway || !owner || owner != followingplayer(self))
         {
+            // The first-person weapon sway is rendered only for ourselves or the player being spectated.
             return;
         }
-
         swayEvent& swayevent = events.add();
         swayevent.type = type;
         swayevent.millis = lastmillis;

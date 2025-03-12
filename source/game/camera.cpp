@@ -445,7 +445,6 @@ namespace game
             {
                 return;
             }
-
             ShakeEvent& shake = shakes.add();
             shake.millis = lastmillis;
             shake.duration = factor;
@@ -454,17 +453,14 @@ namespace game
 
         void camerainfo::updateshake()
         {
-            if (shakes.empty())
+            if (shakes.empty() || !camerashake)
             {
+				if (shakes.length())
+				{
+					shakes.shrink(0);
+				}
                 return;
             }
-
-            if (!camerashake)
-            {
-                shakes.shrink(0);
-                return;
-            }
-
             loopv(shakes)
             {
                 ShakeEvent& shake = shakes[i];
@@ -490,17 +486,11 @@ namespace game
 
         void camerainfo::addevent(gameent* owner, int type, int duration, float factor)
         {
-            if (!cameramovement)
-            {
-                return;
-            }
-
-            if (owner != followingplayer(self))
+            if (!cameramovement || !owner || owner != followingplayer(self))
             {
                 // Camera effects are rendered only for ourselves or the player being spectated.
                 return;
             }
-
             CameraEvent& event = events.add();
             event.type = type;
             event.millis = lastmillis;

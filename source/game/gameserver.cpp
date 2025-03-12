@@ -1679,8 +1679,8 @@ namespace server
         string msg;
         if (val && authname)
         {
-            if (authdesc && authdesc[0]) formatstring(msg, "%s claimed \fs%s%s\fr privileges as '\fs\f5%s\fr' [\fs\f0%s\fr]", colorname(ci), color, name, authname, authdesc);
-            else formatstring(msg, "%s claimed \fs%s%s\fr privileges as '\fs\f5%s\fr'", colorname(ci), color, name, authname);
+            if (authdesc && authdesc[0]) formatstring(msg, "%s claimed \fs%s%s\fr privileges as \"\fs%s%s\fr\" [\fs%s%s\fr]", colorname(ci), color, name, color, authname, color, authdesc);
+            else formatstring(msg, "%s claimed \fs%s%s\fr privileges as \"\fs%s%s\fr\"", colorname(ci), color, name, color, authname);
         }
         else formatstring(msg, "%s %s \fs%s%s\fr privileges", colorname(ci), val ? "claimed" : "relinquished", color, name);
         packetbuf p(MAXTRANS, ENET_PACKET_FLAG_RELIABLE);

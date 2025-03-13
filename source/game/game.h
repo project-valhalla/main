@@ -893,7 +893,7 @@ namespace game
     extern void updateweapons(int curtime);
     extern void clearweapons();
     extern void gunselect(int gun, gameent* d);
-    extern void doweaponchangeffects(gameent* d, int gun = -1);
+    extern void doweaponchangeffects(gameent* d, int gun = GUN_INVALID);
     extern void weaponswitch(gameent* d);
     extern void autoswitchweapon(gameent* d, int type);
     extern void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal);

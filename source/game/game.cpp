@@ -660,8 +660,8 @@ namespace game
         int type = Type::REGULAR;
         int actor = -1;
         int victim = -1;
-        int weapon = -1;
-        int attack = -1;
+        int weapon = GUN_INVALID;
+        int attack = ATK_INVALID;
         int crit = 0;
         int deathState = Death_Default;
         int medal = 0;
@@ -688,11 +688,11 @@ namespace game
         struct Hud
         {
             int lastKillVictim = -1;
-            int lastKillWeapon = -1;
-            int lastKillAttack = -1;
+            int lastKillWeapon = GUN_INVALID;
+            int lastKillAttack = ATK_INVALID;
             int lastKillDeathState = Death_Default;
-            int lastKillerWeapon = -1;
-            int lastKillerAttack = -1;
+            int lastKillerWeapon = GUN_INVALID;
+            int lastKillerAttack = ATK_INVALID;
             int lastDeathState = Death_Default;
         };
         Hud hud;

@@ -509,7 +509,7 @@ namespace game
             const int transition = physics::liquidtransition(&proj, lookupmaterial(proj.o), isInWater);
             if (transition > 0)
             {
-                int impactsound = -1;
+                int impactsound = S_INVALID;
                 if (proj.radius >= 1.0f)
                 {
                     particle_splash(PART_WATER, 200, 250, proj.o, 0xFFFFFF, 0.09f, 500, 1);

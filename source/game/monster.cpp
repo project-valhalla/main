@@ -360,7 +360,7 @@ namespace game
             playsound(S_WEAPON_DETONATE, this);
         }
 
-        void monsterdeath(int forcestate = -1, int atk = -1, int flags = 0)
+        void monsterdeath(int forcestate = -1, int atk = ATK_INVALID, int flags = 0)
         {
             state = CS_DEAD;
             int killflags = 0;

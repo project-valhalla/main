@@ -1107,7 +1107,7 @@ namespace game
     }
     COMMANDN(say, toserver, "C");
 
-    void sayteam(char *text, int sound = -1)
+    void sayteam(char *text, int sound = S_INVALID)
     {
         if(!m_teammode || !validteam(self->team) || (m_round && self->state == CS_DEAD) || self->state == CS_SPECTATOR) return;
         conoutf(CON_TEAMCHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", teamcolorname(self), teamtextcode[self->team], teamtextcode[self->team], text);

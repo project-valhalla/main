@@ -563,7 +563,7 @@ namespace entities
     }
 
     FVARP(itemhoverdistance, 0, 100.0f, 500.0f);
-    int hoveredweapon = -1;
+    int hoveredweapon = GUN_INVALID;
 
     void checkhovereditem(gameent* d)
     {
@@ -599,7 +599,7 @@ namespace entities
         // Remove valid hover information.
         if (validgun(hoveredweapon))
         {
-            hoveredweapon = -1;
+            hoveredweapon = GUN_INVALID;
         }
     }
     ICOMMAND(gethoverweapon, "", (), intret(hoveredweapon));
@@ -914,7 +914,7 @@ namespace entities
     ICOMMAND(triggertoggle, "i", (int* id), triggertoggle(*id));
     ICOMMAND(triggerswap, "ii", (int* id, int* id2), triggertoggle(*id, *id2));
 
-    void triggermapmodel(int id, int state, int sound = -1)
+    void triggermapmodel(int id, int state, int sound = S_INVALID)
     {
         extentity* entity = NULL;
         if (ents.inrange(id))

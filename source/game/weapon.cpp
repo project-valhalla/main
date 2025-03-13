@@ -124,7 +124,7 @@ namespace game
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
         if(attacktime<d->gunwait) return;
         d->gunwait = 0;
-        if(!d->attacking || !validgun(d->gunselect)) return;
+        if(!validact(d->attacking) || !validgun(d->gunselect)) return;
         int gun = d->gunselect, act = d->attacking, atk = guns[gun].attacks[act], projectile = attacks[atk].projectile;
         d->lastaction = lastmillis;
         d->lastattack = atk;
@@ -134,7 +134,7 @@ namespace game
             {
                 msgsound(S_WEAPON_NOAMMO, d);
                 d->gunwait = 600;
-                d->lastattack = -1;
+                d->lastattack = ATK_INVALID;
                 if(!d->ammo[gun]) weaponswitch(d);
             }
             return;
@@ -189,14 +189,22 @@ namespace game
 
     void checkattacksound(gameent *d, bool local)
     {
-        int atk = guns[d->gunselect].attacks[d->attacking];
+        int attack = ATK_INVALID;
+        if (validact(d->attacking))
+        {
+            attack = guns[d->gunselect].attacks[d->attacking];
+        }
         switch(d->chansound[Chan_Attack])
         {
-            case S_PULSE2_A: atk = ATK_PULSE2; break;
+            case S_PULSE2_A:
+            {
+                attack = ATK_PULSE2;
+                break;
+            }
             default: return;
         }
-        if(atk >= 0 && atk < NUMATKS && d->clientnum >= 0 && d->state == CS_ALIVE &&
-           d->lastattack == atk && lastmillis - d->lastaction < attacks[atk].attackdelay + 50)
+        const bool isValidClient = d->clientnum >= 0 && d->state == CS_ALIVE;
+        if(validatk(attack) && d->lastattack == attack && lastmillis - d->lastaction < attacks[attack].attackdelay + 50 && isValidClient)
         {
             const int channel = Chan_Attack;
             d->chan[channel] = playsound(d->chansound[channel], NULL, local ? NULL : &d->o, NULL, 0, -1, -1, d->chan[channel]);
@@ -214,7 +222,7 @@ namespace game
 
     void checkidlesound(gameent *d, bool local)
     {
-        int sound = -1;
+        int sound = S_INVALID;
         if(d->clientnum >= 0 && d->state == CS_ALIVE && !validsound(d->chansound[Chan_Attack])) switch(d->gunselect)
         {
             case GUN_ZOMBIE:
@@ -1067,7 +1075,7 @@ namespace game
         }
         addmsg(N_GUNSELECT, "rci", d, gun);
         d->gunselect = gun;
-        d->lastattack = -1;
+        d->lastattack = ATK_INVALID;
         doweaponchangeffects(d, gun);
     }
     ICOMMAND(getweapon, "", (), intret(self->gunselect));

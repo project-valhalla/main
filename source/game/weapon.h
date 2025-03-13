@@ -47,26 +47,23 @@ inline bool validdeathstate(int state) { return state >= 0 && state < Death_Num;
 // Weapons.
 enum
 {
-    // Main weapons.
-    GUN_SCATTER = 0, GUN_SMG, GUN_PULSE, GUN_ROCKET, GUN_RAIL, GUN_GRENADE, GUN_PISTOL,
-
-    // Special weapons.
-    GUN_INSTA, GUN_ZOMBIE, GUN_MELEE,
-
+    GUN_INVALID	= -1,
+    GUN_SCATTER, GUN_SMG, GUN_PULSE, GUN_ROCKET, GUN_RAIL, GUN_GRENADE, GUN_PISTOL, // Main weapons.
+    GUN_INSTA, GUN_ZOMBIE, GUN_MELEE, // Special weapons.
     NUMGUNS
 };
-inline bool validgun(int gun) { return gun >= 0 && gun < NUMGUNS; }
+inline bool validgun(int gun) { return gun > GUN_INVALID && gun < NUMGUNS; }
 
 // Attack types depend on player actions.
 enum
 {
-    ACT_IDLE = 0,
+    ACT_IDLE = -1,
     ACT_MELEE,     // Use melee attack, currently the same for all weapons.
     ACT_PRIMARY,   // Either use the weapon primary fire,
     ACT_SECONDARY, // or use the secondary fire.
     NUMACTS
 };
-inline bool validact(int act) { return act >= 0 && act < NUMACTS; }
+inline bool validact(int act) { return act > ACT_IDLE && act < NUMACTS; }
 
 // Weapon attacks: multiple attacks may be contained in a single weapon.
 enum
@@ -83,7 +80,7 @@ enum
     ATK_INSTA, ATK_ZOMBIE,
     NUMATKS
 };
-inline bool validatk(int atk) { return atk >= 0 && atk < NUMATKS; }
+inline bool validatk(int atk) { return atk > ATK_INVALID && atk < NUMATKS; }
 
 const int THRESHOLD_GIB = -50; // If health equals or falls below this threshold, the player bursts into a bloody mist.
 
@@ -145,14 +142,14 @@ static const struct guninfo
     int attacks[NUMACTS], switchsound, zoom, ejectprojectile;
 } guns[NUMGUNS] =
 {
-    { "scattergun", "scattergun", "weapon/scattergun/world", { -1, ATK_MELEE,  ATK_SCATTER1, ATK_SCATTER2 }, S_SG_SWITCH,      Zoom_None,   Projectile_Casing3 },
-    { "smg",        "smg",        "weapon/smg/world",        { -1, ATK_MELEE,  ATK_SMG1,     ATK_SMG2     }, S_SG_SWITCH,      Zoom_Shadow, Projectile_Casing  },
-    { "pulse",      "pulserifle", "weapon/pulserifle/world", { -1, ATK_MELEE,  ATK_PULSE1,   ATK_PULSE2   }, S_PULSE_SWITCH,   Zoom_None,   Projectile_Invalid },
-    { "rocket",     "rocket",     "weapon/rocket/world",     { -1, ATK_MELEE,  ATK_ROCKET1,  ATK_ROCKET2  }, S_ROCKET_SWITCH,  Zoom_None,   Projectile_Invalid },
-    { "railgun",    "railgun",    "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_RAIL1,    ATK_RAIL2    }, S_RAIL_SWITCH,    Zoom_Scope,  Projectile_Casing2 },
-    { "grenade",    "grenade",    "weapon/grenade/world",    { -1, ATK_MELEE,  ATK_GRENADE1, ATK_GRENADE2 }, S_GRENADE_SWITCH, Zoom_None,   Projectile_Invalid },
-    { "pistol",     "pistol",     "weapon/pistol/world",     { -1, ATK_MELEE,  ATK_PISTOL1,  ATK_PISTOL2  }, S_PISTOL_SWITCH,  Zoom_None,   Projectile_Invalid },
-    { "instagun",   "instagun",   "weapon/railgun/world",    { -1, ATK_MELEE,  ATK_INSTA,    ATK_INSTA    }, S_RAIL_SWITCH,    Zoom_Scope,  Projectile_Invalid },
-    { "zombie",     "zombie",     NULL,                      { -1, ATK_ZOMBIE, ATK_ZOMBIE,   ATK_ZOMBIE   }, -1,               Zoom_Shadow, Projectile_Invalid },
-    { "melee",      NULL,         NULL,                      { -1, ATK_MELEE2, ATK_MELEE2,   ATK_MELEE2   }, -1,               Zoom_None,   Projectile_Invalid }
+    { "scattergun", "scattergun", "weapon/scattergun/world", { ATK_MELEE,  ATK_SCATTER1, ATK_SCATTER2 }, S_SG_SWITCH,      Zoom_None,   Projectile_Casing3 },
+    { "smg",        "smg",        "weapon/smg/world",        { ATK_MELEE,  ATK_SMG1,     ATK_SMG2     }, S_SG_SWITCH,      Zoom_Shadow, Projectile_Casing  },
+    { "pulse",      "pulserifle", "weapon/pulserifle/world", { ATK_MELEE,  ATK_PULSE1,   ATK_PULSE2   }, S_PULSE_SWITCH,   Zoom_None,   Projectile_Invalid },
+    { "rocket",     "rocket",     "weapon/rocket/world",     { ATK_MELEE,  ATK_ROCKET1,  ATK_ROCKET2  }, S_ROCKET_SWITCH,  Zoom_None,   Projectile_Invalid },
+    { "railgun",    "railgun",    "weapon/railgun/world",    { ATK_MELEE,  ATK_RAIL1,    ATK_RAIL2    }, S_RAIL_SWITCH,    Zoom_Scope,  Projectile_Casing2 },
+    { "grenade",    "grenade",    "weapon/grenade/world",    { ATK_MELEE,  ATK_GRENADE1, ATK_GRENADE2 }, S_GRENADE_SWITCH, Zoom_None,   Projectile_Invalid },
+    { "pistol",     "pistol",     "weapon/pistol/world",     { ATK_MELEE,  ATK_PISTOL1,  ATK_PISTOL2  }, S_PISTOL_SWITCH,  Zoom_None,   Projectile_Invalid },
+    { "instagun",   "instagun",   "weapon/railgun/world",    { ATK_MELEE,  ATK_INSTA,    ATK_INSTA    }, S_RAIL_SWITCH,    Zoom_Scope,  Projectile_Invalid },
+    { "zombie",     "zombie",     NULL,                      { ATK_ZOMBIE, ATK_ZOMBIE,   ATK_ZOMBIE   }, S_INVALID,        Zoom_Shadow, Projectile_Invalid },
+    { "melee",      NULL,         NULL,                      { ATK_MELEE2, ATK_MELEE2,   ATK_MELEE2   }, S_INVALID,        Zoom_None,   Projectile_Invalid }
 };

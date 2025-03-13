@@ -11,8 +11,8 @@ namespace game
 
             struct Queue
             {
-                int sound = -1;
-                int type = -1;
+                int sound = S_INVALID;
+                int type = Announcements::INVALID;
             };
             vector<Queue> queueItems;
 

@@ -7,7 +7,7 @@ namespace ai
     using namespace game;
 
     avoidset obstacles;
-    int updatemillis = 0, iteration = 0, itermillis = 0, forcegun = -1;
+    int updatemillis = 0, iteration = 0, itermillis = 0, forcegun = GUN_INVALID;
     vec aitarget(0, 0, 0);
 
     VAR(debugbots, 0, 0, 6);
@@ -98,8 +98,9 @@ namespace ai
 
     bool melee(gameent *d)
     {
-        int atk = guns[d->gunselect].attacks[d->attacking];
-        if((validatk(atk) && attacks[atk].action == ACT_MELEE) || d->gunselect == GUN_ZOMBIE)
+        const int attack = validact(d->attacking) ? guns[d->gunselect].attacks[d->attacking] : ATK_INVALID;
+        const bool isMeleeGun = d->gunselect == GUN_ZOMBIE || d->gunselect == GUN_MELEE;
+        if ((validatk(attack) && attacks[attack].action == ACT_MELEE) || isMeleeGun)
         {
             return true;
         }
@@ -1236,7 +1237,7 @@ namespace ai
         if(!d->hasammo(d->gunselect) || !hasrange(d, e, d->gunselect) || (d->gunselect != d->ai->weappref && (!isgoodammo(d->gunselect) || d->hasammo(d->ai->weappref))))
         {
             static const int gunprefs[] = { GUN_SMG, GUN_ROCKET, GUN_SCATTER, GUN_RAIL, GUN_GRENADE, GUN_PISTOL };
-            int gun = -1;
+            int gun = GUN_INVALID;
             if(d->hasammo(d->ai->weappref) && hasrange(d, e, d->ai->weappref)) gun = d->ai->weappref;
             else
             {

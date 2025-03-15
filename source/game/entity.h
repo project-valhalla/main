@@ -93,8 +93,8 @@ static struct itemstat
     { 25,    100,   25,  -1,                 false, S_HEALTH,          -1,                          "Health"             }, // Regular health.
     { 50,    200,   35,  -1,                 true,  S_SHIELD_LIGHT,    -1,                          "Shield"             }, // Small shield.
     { 100,   200,   35,  -1,                 true,  S_SHIELD_HEAVY,    -1,                          "Shield"             }, // Big shield.
-    { 50,    200,   60,  -1,                 true,  S_SUPERHEALTH,     -1,                          "Health"             }, // Mega Health.
-    { 100,   200,   80,  -1,                 true,  S_MEGAHEALTH,      -1,                          "Health"             }, // Ultra health.
+    { 50,    200,   60,  -1,                 true,  S_MEGAHEALTH,      -1,                          "Health"             }, // Mega Health.
+    { 100,   200,   80,  -1,                 true,  S_ULTRAHEALTH,     -1,                          "Health"             }, // Ultra health.
     { 30000, 60000, 100, PU_DAMAGE,          true,  S_DAMAGE,          S_ANNOUNCER_DAMAGE,          "Power-up"           }, // Double damage power-up.
     { 30000, 60000, 100, PU_HASTE,           true,  S_HASTE,           S_ANNOUNCER_HASTE,           "Power-up"           }, // Haste power-up.
     { 30000, 60000, 100, PU_ARMOR,           true,  S_ARMOR,           S_ANNOUNCER_ARMOR,           "Power-up"           }, // Armor power-up.

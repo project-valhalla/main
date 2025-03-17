@@ -70,12 +70,12 @@ struct eliminationclientmode : clientmode
             if(checkovertime()) return;
             startintermission();
             defformatstring(win, "%s%s \fs\f2team reached the score limit\fr", teamtextcode[winner], teamnames[winner]);
-            sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, win);
+            sendf(-1, 1, "ri2s", N_NOTICE, S_INVALID, win);
         }
         else
         {
             defformatstring(win, "%s%s \f2team won the round", teamtextcode[winner], teamnames[winner]);
-            sendf(-1, 1, "ri2s", N_ANNOUNCE, S_ROUND, win);
+            sendf(-1, 1, "ri2s", N_NOTICE, S_ROUND, win);
         }
     }
 

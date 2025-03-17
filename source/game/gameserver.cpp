@@ -2531,7 +2531,7 @@ namespace server
             if(checkovertime()) return;
             startintermission();
             defformatstring(winner, "%s%s \fs\f2reached the score limit\fr", team ? teamtextcode[ci->team] : "", team ? teamnames[ci->team] : colorname(ci));
-            sendf(-1, 1, "ri2s", N_NOTICE, NULL, winner);
+            sendf(-1, 1, "ri2s", N_NOTICE, S_INVALID, winner);
         }
     }
 
@@ -2721,7 +2721,7 @@ namespace server
         {
             if(checkovertime()) return false;
             startintermission();
-            if(rounds == gameroundlimit) sendf(-1, 1, "ri2s", N_NOTICE, NULL, "\f2Maximum number of rounds has been reached");
+            if(rounds == gameroundlimit) sendf(-1, 1, "ri2s", N_NOTICE, S_INVALID, "\f2Maximum number of rounds has been reached");
             return true;
         }
         return false;
@@ -3479,7 +3479,7 @@ namespace server
                     {
                         extern void forcespectator(clientinfo *ci);
                         forcespectator(ci);
-                        sendf(ci->clientnum, 1, "ri2s", N_NOTICE, NULL, "\f0You entered spectator mode due to inactivity");
+                        sendf(ci->clientnum, 1, "ri2s", N_NOTICE, S_INVALID, "\f0You entered spectator mode due to inactivity");
                     }
                     else if(m_round) suicide(ci);
                 }

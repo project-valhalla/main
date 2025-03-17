@@ -886,7 +886,7 @@ namespace physics
         if (d->move || d->strafe)
         {
             if (lastmillis - d->lastfootstep < (footstepdelay / fmax(d->vel.magnitude(), 1))) return;
-            playsound(sound, d);
+            msgsound(sound, d);
         }
         d->lastfootstep = lastmillis;
     }

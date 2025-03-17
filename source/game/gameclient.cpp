@@ -488,7 +488,7 @@ namespace game
             if(numclients++) buf.add(' ');
             buf.put(cn, strlen(cn));
         }
-        buf.add('\0');
+        buf.add('\0'); // Null-terminated.
         result(buf.getbuf());
     }
     ICOMMAND(listclients, "bb", (int *local, int *bots), listclients(*local>0, *bots!=0));

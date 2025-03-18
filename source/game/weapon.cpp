@@ -623,7 +623,7 @@ namespace game
                     looped = true;
                 }
                 d->playchannelsound(Chan_Attack, sound, 100, true);
-                if (previousaction > 200 && !looped)
+                if (!looped)
                 {
                     d->playchannelsound(Chan_Weapon, S_PULSE2_B);
                 }

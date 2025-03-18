@@ -191,12 +191,6 @@ namespace game
     }
     ICOMMAND(getclientteam, "i", (int *cn), intret(getclientteam(*cn)));
 
-    ICOMMAND(getclientteamtextcolor, "i", (int* cn),
-    {
-        gameent* d = getclient(*cn);
-        intret(teamtextcolor[d && m_teammode ? d->team : 0]);
-    });
-
     int getclientmodel(int cn)
     {
         gameent *d = cn < 0 ? self : getclient(cn);

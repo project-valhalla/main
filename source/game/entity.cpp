@@ -296,7 +296,7 @@ namespace entities
         itemstat& is = itemstats[type - I_AMMO_SG];
         v += is.add;
         if (v > is.max) v = is.max;
-        if (local) msgsound(is.sound);
+        if (local) sendsound(is.sound);
     }
 
     void repammo(gameent* d, int type, bool local)

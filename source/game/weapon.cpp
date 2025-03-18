@@ -132,7 +132,7 @@ namespace game
         {
             if(d == self)
             {
-                msgsound(S_WEAPON_NOAMMO, d);
+                sendsound(S_WEAPON_NOAMMO, d);
                 d->gunwait = 600;
                 d->lastattack = ATK_INVALID;
                 if(!d->ammo[gun]) weaponswitch(d);

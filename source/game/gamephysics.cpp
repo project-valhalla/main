@@ -886,7 +886,7 @@ namespace physics
         if (d->move || d->strafe)
         {
             if (lastmillis - d->lastfootstep < (footstepdelay / fmax(d->vel.magnitude(), 1))) return;
-            msgsound(sound, d);
+            sendsound(sound, d);
         }
         d->lastfootstep = lastmillis;
     }
@@ -925,7 +925,7 @@ namespace physics
         if (islanding)
         {
             // just send the landing sound effect (single footstep)
-            msgsound(foot.sound, d);
+            sendsound(foot.sound, d);
         }
         else
         {
@@ -952,8 +952,8 @@ namespace physics
                 {
                     break;
                 }
-                if (!d->timeinair) msgsound(S_JUMP1, d);
-                else msgsound(S_JUMP2, d);
+                if (!d->timeinair) sendsound(S_JUMP1, d);
+                else sendsound(S_JUMP2, d);
                 sway.addevent(d, SwayEvent_Jump, 380, -1.2f);
                 break;
             }
@@ -979,7 +979,7 @@ namespace physics
             case PHYSEVENT_LAND_HEAVY:
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
-                msgsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
+                sendsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
                 sway.addevent(d, SwayEvent_LandHeavy, 380, -2);
                 camera::camera.addevent(d, camera::CameraEvent_Land, 100, -1.5f);
                 addroll(d, rollonland);

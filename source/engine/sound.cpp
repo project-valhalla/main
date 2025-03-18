@@ -836,7 +836,7 @@ int playsoundname(const char *s, physent *owner, const vec *loc, int vol, int fl
 ICOMMAND(uisound, "si", (const char *s, int *vol), if(uivol) playsoundname(s, NULL, NULL, *vol, SND_UI));
 ICOMMAND(gamesound, "si", (const char* s, int* vol), if(gamevol) playsoundname(s, NULL, NULL, *vol));
 ICOMMAND(playsound, "i", (int *n), if(gamevol) playsound(*n));
-ICOMMAND(voicecom, "ssi", (const char *sound, char *text, int *team),
+ICOMMAND(voicecom, "ssi", (const char *sound, char *text, const int *team),
 {
     int id = gamesounds.findsound(sound, 0);
     game::voicecom(id, text, *team);

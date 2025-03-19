@@ -1265,15 +1265,13 @@ namespace game
              */
             return;
         }
-
-        const bool isAttacking = d->attacking || camera::camera.zoomstate.isinprogress();
+        const bool isAttacking = validact(d->attacking) || camera::camera.zoomstate.isinprogress();
         if (isAttacking)
         {
             // Do not interrupt someone during a fight.
             d->lastswitchattempt = lastmillis; // Let the player know we tried to switch (and possibly reflect that on the HUD).
             return;
         }
-
         itemstat& is = itemstats[type - I_AMMO_SG];
         if (d->gunselect != is.info && !d->ammo[is.info])
         {

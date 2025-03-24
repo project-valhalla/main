@@ -522,17 +522,15 @@ namespace game
 
     int selectcrosshair(vec& color, const int type)
     {
-        gameent* d = hudplayer();
-        if (d->state == CS_SPECTATOR || d->state == CS_DEAD || intermission)
+        gameent* hud = followingplayer(self);
+        if (hud->state == CS_SPECTATOR || hud->state == CS_DEAD || intermission)
         {
             return Pointer_Null;
         }
-
         int crosshair = Pointer_Default;
-
         if (type == Pointer_Crosshair)
         {
-            if (d->state != CS_ALIVE && d->state != CS_LAGGED)
+            if (hud->state != CS_ALIVE && hud->state != CS_LAGGED)
             {
                 return crosshair;
             }
@@ -541,8 +539,8 @@ namespace game
 
             if (crosshairscope)
             {
-                const int zoomtype = checkweaponzoom();
-                if (camera::camera.zoomstate.isenabled() && zoomtype == Zoom_Scope)
+                const int zoomType = checkweaponzoom();
+                if (camera::camera.zoomstate.isenabled() && zoomType == Zoom_Scope)
                 {
                     crosshair = Pointer_Scope;
                     color = vec(1, 0, 0);
@@ -550,20 +548,31 @@ namespace game
             }
             if (!betweenrounds && crosshairally)
             {
-                dynent* o = intersectclosest(d->o, worldpos, d);
-                if (o && o->type == ENT_PLAYER && isally(((gameent*)o), d) && !m_hideallies)
+                dynent* o = intersectclosest(hud->o, worldpos, hud);
+                if (o && o->type == ENT_PLAYER && isally(((gameent*)o), hud) && !m_hideallies)
                 {
                     crosshair = Pointer_Ally;
-                    color = vec::hexcolor(teamtextcolor[d->team]);
+                    color = vec::hexcolor(teamtextcolor[hud->team]);
                 }
             }
-            if (d->gunwait) color.mul(0.5f);
+            if (hud->gunwait)
+            {
+                color.mul(0.5f);
+            }
         }
         else if (type == Pointer_Hit)
         {
             crosshair = type;
+            if (hud->lastkill && lastmillis - hud->lastkill <= crosshairhit)
+            {
+                color = vec(1, 0.5f, 0.5f);
+            }
+            else
+            {
+                color = vec(1, 1, 1);
+            }
         }
-        if (!crosshairfx || !crosshaircolors || type == Pointer_Hit)
+        if (!crosshairfx || !crosshaircolors)
         {
             color = vec(1, 1, 1);
         }
@@ -593,23 +602,27 @@ namespace game
         return true;
     }
 
-    const float center = 0.5f;
+    const float CROSSHAIR_CENTER = 0.5f;
 
     inline float getpointercenter(float dimension, float size)
     {
-        return center * dimension - size / 2.0f;
+        return CROSSHAIR_CENTER * dimension - size / 2.0f;
     }
 
-    static inline void calculatecrosshairsize(float& size)
+    static inline float calculatecrosshairsize(float size)
     {
-        const float crouchprogress = self->eyeheight / self->maxheight;
-        float zoomprogress = 1.0f;
+        // Crouching.
+        const float crouchProgress = self->eyeheight / self->maxheight;
+        // Zooming in.
+        float zoomProgress = 1.0f;
         if (camera::camera.zoomstate.progress < 1)
         {
-            zoomprogress = 1.0f - camera::camera.zoomstate.progress;
+            zoomProgress = 1.0f - camera::camera.zoomstate.progress;
         }
-        const float spawnprogress = clamp((lastmillis - self->lastspawn) / float(SPAWN_DURATION), 0.0f, 1.0f);
-        size *= crouchprogress * zoomprogress * spawnprogress;
+        // Spawning.
+        const float spawnProgress = clamp((lastmillis - self->lastspawn) / float(SPAWN_DURATION), 0.0f, 1.0f);
+        size *= crouchProgress * zoomProgress * spawnProgress;
+        return size;
     }
 
     static void drawcrosshair(const int w, const int h, float x, float y, float size)
@@ -618,32 +631,31 @@ namespace game
         Texture* crosshair = NULL;
         if (isvalidpointer(crosshair, color))
         {
-            calculatecrosshairsize(size);
-            x = getpointercenter(w, size);
-            y = getpointercenter(h, size);
-            drawpointerquad(x, y, size, color, crosshair);
+            const float crosshairSize = calculatecrosshairsize(size);
+            x = getpointercenter(w, crosshairSize);
+            y = getpointercenter(h, crosshairSize);
+            drawpointerquad(x, y, crosshairSize, color, crosshair);
         }
         if (!crosshairfx || !crosshairhit)
         {
             return;
         }
-
         static Texture* hit = NULL;
-        if (!hit)
+        if (!hit && !isvalidpointer(hit, color, Pointer_Hit))
         {
-            if (!isvalidpointer(hit, color, Pointer_Hit))
-            {
-                return;
-            }
+            return;
         }
-        else
-        {
-            color = vec(1, 1, 1);
-        }
-
         gameent* hud = followingplayer(self);
         if (hud->lasthit && lastmillis - hud->lasthit <= crosshairhit)
         {
+            if (hud->lastkill && lastmillis - hud->lastkill <= crosshairhit)
+            {
+                color = vec(1, 0.5f, 0.5f);
+            }
+            else
+            {
+                color = vec(1, 1, 1);
+            }
             float progress = min((lastmillis - hud->lasthit) / static_cast<float>(crosshairhit), 1.0f);
             size *= sin(progress * M_PI) * 1.5f;
             x = getpointercenter(w, size);
@@ -663,7 +675,7 @@ namespace game
         {
             const float scale = UI::uiscale * w / 900.0f;
             float size = cursorsize * scale;
-            drawcursor(w, h, center, center, size);
+            drawcursor(w, h, CROSSHAIR_CENTER, CROSSHAIR_CENTER, size);
         }
         else
         {

@@ -879,20 +879,27 @@ namespace game
             {
                 playsound(S_BERSERKER);
             }
-            else if (killsound)
+            else
             {
-                if (actor == d)
+                if (killsound)
                 {
-                    if (validatk(atk))
+                    if (actor == d)
                     {
-                        playsound(S_KILL_SELF);
+                        if (validatk(atk))
+                        {
+                            playsound(S_KILL_SELF);
+                        }
+                    }
+                    else if (isally(actor, d) && !m_hideallies)
+                    {
+                        playsound(S_KILL_ALLY);
+                    }
+                    else
+                    {
+                        playsound(S_KILL);
                     }
                 }
-                else if (isally(actor, d) && !m_hideallies)
-                {
-                    playsound(S_KILL_ALLY);
-                }
-                else playsound(S_KILL);
+                actor->lastkill = lastmillis;
             }
         }
         // Update player state and reset AI.

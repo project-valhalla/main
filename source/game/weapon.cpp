@@ -838,14 +838,18 @@ namespace game
             {
                 hit.z += 0.6f * (d->eyeheight + d->aboveeye) - d->eyeheight;
             }
-            if (f->haspowerup(PU_INVULNERABILITY) || f->shield)
+            if (f->haspowerup(PU_INVULNERABILITY))
             {
-                particle_splash(PART_SPARK2, 100, 150, hit, f->haspowerup(PU_INVULNERABILITY) ? getplayercolor(f, f->team) : 0xFFFF66, 0.50f);
+                particle_splash(PART_SPARK2, 100, 150, hit, getplayercolor(f, f->team), 0.50f);
                 if (f->haspowerup(PU_INVULNERABILITY))
                 {
                     playsound(S_ACTION_INVULNERABILITY, f);
                     return;
                 }
+            }
+            if (f->shield)
+            {
+                particle_flare(hit, hit, 180, PART_SPARK3, 0xFFFF66, 0.0f, NULL, 15.0f);
             }
             if (blood && color != -1)
             {
@@ -860,7 +864,10 @@ namespace game
             }
             if (f->health > 0 && lastmillis - f->lastyelp > 600)
             {
-                if (f != hud && f->shield) playsound(S_SHIELD_HIT, f);
+                if (f != hud && f->shield)
+                {
+                    playsound(S_SHIELD_HIT, f);
+                }
                 if (f->type == ENT_PLAYER)
                 {
                     int painsound = getplayermodelinfo(f).painsound;

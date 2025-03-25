@@ -1,12 +1,12 @@
 @ECHO OFF
 
-set TESS_BIN=bin\bin32
+set VAL_BIN=bin\bin32
 
 IF /I "%PROCESSOR_ARCHITECTURE%" == "amd64" (
-    set TESS_BIN=bin\bin64
+    set VAL_BIN=bin\bin64
 )
 IF /I "%PROCESSOR_ARCHITEW6432%" == "amd64" (
-    set TESS_BIN=bin\bin64
+    set VAL_BIN=bin\bin64
 )
 
-start %TESS_BIN%\tesseract.exe "-u$HOME\My Games\ValhallaProject" -gserver-log.txt -d %*
+start %VAL_BIN%\valhalla.exe "-u$HOME\My Games\VALHALLA\v1.0.0-beta.2" -gserver-log.txt -d %*

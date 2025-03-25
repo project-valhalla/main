@@ -384,7 +384,7 @@ struct aviwriter
         endlistchunk(); // LIST odml
 
         listchunk("LIST", "INFO");
-        const char *software = "Valhalla";
+        const char *software = "VALHALLA";
         writechunk("ISFT", software, strlen(software)+1);
         endlistchunk(); // LIST INFO
 

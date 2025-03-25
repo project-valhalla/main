@@ -1,15 +1,15 @@
 #!/bin/sh
-# TESS_DATA should refer to the directory in which Tesseract data files are placed.
-#TESS_DATA=~/tesseract
-#TESS_DATA=/usr/local/tesseract
-TESS_DATA=.
+# VAL_DATA should refer to the directory in which VALHALLA data files are placed.
+#VAL_DATA=~/valhalla
+#VAL_DATA=/usr/local/valhalla
+VAL_DATA=.
 
-# TESS_BIN should refer to the directory in which Tesseract executable files are placed.
-TESS_BIN=${TESS_DATA}/bin/bin_unix
+# VAL_BIN should refer to the directory in which VALHALLA executable files are placed.
+VAL_BIN=${VAL_DATA}/bin/bin_unix
 
-# TESS_OPTIONS contains any command line options you would like to start Tesseract with.
-#TESS_OPTIONS=""
-TESS_OPTIONS="-u${HOME}/.valhalla"
+# VAL_OPTIONS contains any command line options you would like to start VALHALLA with.
+#VAL_OPTIONS=""
+VAL_OPTIONS="-u${HOME}/.valhalla/v1.0.0-beta.2"
 
 # SYSTEM_NAME should be set to the name of your operating system.
 #SYSTEM_NAME=Linux
@@ -44,16 +44,16 @@ x86_64|amd64)
   ;;
 esac
 
-if [ -x ${TESS_BIN}/native_client ]
+if [ -x ${VAL_BIN}/native_client ]
 then
   SYSTEM_NAME=native_
   MACHINE_NAME=
 fi
 
-if [ -x ${TESS_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ]
+if [ -x ${VAL_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ]
 then
-  cd ${TESS_DATA}
-  exec ${TESS_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ${TESS_OPTIONS} "$@"
+  cd ${VAL_DATA}
+  exec ${VAL_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ${VAL_OPTIONS} "$@"
 else
   echo "Your platform does not have a pre-compiled Valhalla client."
   echo "Please follow the following steps to build a native client:"

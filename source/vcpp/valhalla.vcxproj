@@ -35,7 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectName>valhalla</ProjectName>
+    <ProjectName>VALHALLA</ProjectName>
     <ProjectGuid>{06594C6D-6DA9-49DC-9A91-8F47221DDCFD}</ProjectGuid>
     <RootNamespace>tesseract</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
@@ -131,12 +131,12 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Profile64\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">false</LinkIncremental>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">tesseract_debug</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">tesseract_debug</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">tesseract</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">tesseract</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">tesseract</TargetName>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">tesseract</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">valhalla_debug</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">valhalla_debug</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">valhalla</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">valhalla</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">valhalla</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">valhalla</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

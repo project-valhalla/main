@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="valhalla-project" />
+		<Option title="VALHALLA" />
 		<Option default_target="client64" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="client64">
-				<Option output="../../bin/bin64/tesseract.exe" prefix_auto="0" extension_auto="0" />
+				<Option output="../../bin/bin64/valhalla.exe" prefix_auto="0" extension_auto="0" />
 				<Option working_dir="../../" />
 				<Option object_output=".objs/client64" />
 				<Option type="0" />
@@ -52,7 +52,7 @@
 				</Environment>
 			</Target>
 			<Target title="client32">
-				<Option output="../../bin/bin32/tesseract.exe" prefix_auto="0" extension_auto="0" />
+				<Option output="../../bin/bin32/valhalla.exe" prefix_auto="0" extension_auto="0" />
 				<Option working_dir="../../" />
 				<Option object_output=".objs/client32" />
 				<Option type="0" />

@@ -500,7 +500,7 @@ void ragdolldata::move(dynent *pl, float ts)
             collidemillis = lastmillis + (water ? ragdollwaterexpireoffset : ragdollexpireoffset);
             if(!water && lastmillis - pl->ragdoll->lastcollision > 500)
             {
-                physics::triggerphysicsevent(pl, PHYSEVENT_RAGDOLL_COLLIDE, 0, pl->ragdoll->center);
+                physics::triggerphysicsevent(pl, PHYSEVENT_RAGDOLL_COLLIDE, MAT_AIR, pl->ragdoll->center);
                 pl->ragdoll->lastcollision = lastmillis;
             }
         }

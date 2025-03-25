@@ -4282,11 +4282,13 @@ ICOMMAND(easeoutelastic, "f", (float *a),
     floatret(ease::outelastic(*a));
 });
 
+#ifndef STANDALONE
 ICOMMAND(getstepmillis, "ii", (int *ts, int* ms),
 {
     const float progress = clamp((lastmillis - *ts) / (float)*ms, 0.0f, 1.0f);
     floatret(progress);
 });
+#endif
 
 #define MINMAXCMD(name, fmt, type, op) \
     ICOMMAND(name, #fmt "1V", (tagval *args, int numargs), \

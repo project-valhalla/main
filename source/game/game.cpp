@@ -326,7 +326,7 @@ namespace game
             else if(self->state == CS_SPECTATOR) physics::moveplayer(self, 10, true);
         }
         int mat = lookupmaterial(camera1->o);
-        if(self->state!=CS_EDITING && mat&MAT_WATER) waterchan = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterchan);
+        if(self->state!=CS_EDITING && (mat&MATF_VOLUME) == MAT_WATER) waterchan = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterchan);
         else
         {
             if(waterchan >= 0)

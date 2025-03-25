@@ -1298,7 +1298,7 @@ namespace game
             if(fall > 0xFF) flags |= 1<<5;
             if(d->falling.x || d->falling.y || d->falling.z > 0) flags |= 1<<6;
         }
-        if (lookupmaterial(d->o) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_LAVA)
+        if (lookupmaterial(d->o) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_DAMAGE || (lookupmaterial(d->feetpos()) & MATF_VOLUME) == MAT_LAVA)
         {
             flags |= 1 << 7;
         }

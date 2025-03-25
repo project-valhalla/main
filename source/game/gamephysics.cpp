@@ -792,13 +792,13 @@ namespace physics
                 d->doublejumping = false; // Now that we landed, we can double jump again.
                 if (timeinair > SHORT_JUMP_THRESHOLD && timeinair < LONG_JUMP_THRESHOLD)
                 {
-                    triggerphysicsevent(d, PHYSEVENT_LAND_LIGHT, material); // Short jump.
+                    triggerphysicsevent(d, PHYSEVENT_LAND_LIGHT, material & MATF_VOLUME); // Short jump.
                 }
                 else if (timeinair >= LONG_JUMP_THRESHOLD) // If we land after a long time, it must have been a high jump.
                 {
-                    triggerphysicsevent(d, PHYSEVENT_LAND_HEAVY, material); // Make a heavy landing sound.
+                    triggerphysicsevent(d, PHYSEVENT_LAND_HEAVY, material & MATF_VOLUME); // Make a heavy landing sound.
                 }
-                triggerphysicsevent(d, PHYSEVENT_FOOTSTEP, material);
+                triggerphysicsevent(d, PHYSEVENT_FOOTSTEP, material & MATF_VOLUME);
             }
         }
 
@@ -826,7 +826,7 @@ namespace physics
             }
             else
             {
-                if (material & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_LAVA)
+                if (material & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_DAMAGE || (lookupmaterial(d->feetpos()) & MATF_VOLUME) == MAT_LAVA)
                 {
                     game::hurt(d); // Harm the player if their feet or body are inside harmful materials.
                 }
@@ -905,7 +905,7 @@ namespace physics
             foot.sound = S_FOOTSTEP_GLASS;
             foot.hascrouchfootsteps = false;
         }
-        else if (lookupmaterial(d->feetpos()) & MAT_WATER)
+        else if ((lookupmaterial(d->feetpos()) & MATF_VOLUME) == MAT_WATER)
         {
             foot.sound = S_FOOTSTEP_WATER;
             foot.hascrouchfootsteps = true;
@@ -948,7 +948,7 @@ namespace physics
         {
             case PHYSEVENT_JUMP:
             {
-                if (material & MAT_WATER || !(d == self || d->type != ENT_PLAYER || d->ai))
+                if (material == MAT_WATER || !(d == self || d->type != ENT_PLAYER || d->ai))
                 {
                     break;
                 }
@@ -979,7 +979,7 @@ namespace physics
             case PHYSEVENT_LAND_HEAVY:
             {
                 if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
-                sendsound(material & MAT_WATER ? S_LAND_WATER : S_LAND, d);
+                sendsound(material == MAT_WATER ? S_LAND_WATER : S_LAND, d);
                 sway.addevent(d, SwayEvent_LandHeavy, 380, -2);
                 camera::camera.addevent(d, camera::CameraEvent_Land, 100, -1.5f);
                 addroll(d, rollonland);
@@ -1290,7 +1290,7 @@ namespace physics
             if (ragdoll->health <= 0)
             {
                 /* Reset ragdoll's health with zero consequences,
-                /* just to make sure it explodes with heavy damage only.
+                 * just to make sure it explodes with heavy damage only.
                  */
                 ragdoll->health = ragdoll->maxhealth;
             }

@@ -87,23 +87,23 @@ namespace game
     {
         { 
             "player/bones", "player/bones/arm", { "cosmetic/skull", "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true,
-            0x60FFFFF, S_PAIN_MALE, { S_DIE_MALE1, -1, S_DIE_MALE2, -1, -1, S_DIE_MALE3, -1, S_DIE_MALE4 }, S_TAUNT_MALE
+            0x60FFFFF, S_PAIN_MALE, { S_DIE_MALE1, S_INVALID, S_DIE_MALE2, S_INVALID, S_INVALID, S_DIE_MALE3, S_INVALID, S_DIE_MALE4 }, S_TAUNT_MALE
         },
         { 
             "player/bonnie", "player/bones/arm", { "cosmetic/skull", "cosmetic/cowboy", "cosmetic/helmet",  "cosmetic/wizard", "cosmetic/wings" }, true,
-            0x60FFFFF, S_PAIN_FEMALE, { S_DIE_FEMALE1, -1, S_DIE_FEMALE2, -1, -1, S_DIE_FEMALE3, -1, S_DIE_MALE4 }, S_TAUNT_FEMALE
+            0x60FFFFF, S_PAIN_FEMALE, { S_DIE_FEMALE1, S_INVALID, S_DIE_FEMALE2, S_INVALID, S_INVALID, S_DIE_FEMALE3, S_INVALID, S_DIE_FEMALE4 }, S_TAUNT_FEMALE
         },
         {
             "player/bones/zombie",  "player/bones/arm", { NULL, NULL, NULL, NULL, NULL }, true,
-            0xFF90FF, S_PAIN_ZOMBIE_MALE, { S_DIE_ZOMBIE_MALE, -1, S_DIE_ZOMBIE_MALE, -1, -1, S_DIE_ZOMBIE_MALE, -1,  S_DIE_ZOMBIE_MALE }, S_TAUNT_ZOMBIE_MALE
+            0xFF90FF, S_PAIN_ZOMBIE_MALE, { S_DIE_ZOMBIE_MALE, S_INVALID, S_DIE_ZOMBIE_MALE, S_INVALID, S_INVALID, S_DIE_ZOMBIE_MALE, S_INVALID,  S_DIE_ZOMBIE_MALE }, S_TAUNT_ZOMBIE_MALE
         },
         { 
             "player/bonnie/zombie", "player/bones/arm", { NULL, NULL, NULL, NULL, NULL }, true,
-            0xFF90FF, S_PAIN_ZOMBIE_FEMALE, { S_DIE_ZOMBIE_FEMALE, -1, S_DIE_ZOMBIE_FEMALE, -1, -1, S_DIE_ZOMBIE_FEMALE, -1, S_DIE_ZOMBIE_FEMALE }, S_TAUNT_ZOMBIE_FEMALE
+            0xFF90FF, S_PAIN_ZOMBIE_FEMALE, { S_DIE_ZOMBIE_FEMALE, S_INVALID, S_DIE_ZOMBIE_FEMALE, S_INVALID, S_INVALID, S_DIE_ZOMBIE_FEMALE, S_INVALID, S_DIE_ZOMBIE_FEMALE }, S_TAUNT_ZOMBIE_FEMALE
         },
         { 
             "player/berserker", NULL, { "player/berserker/helmet",  NULL, NULL, NULL, NULL }, true,
-            0x60FFFFF, S_PAIN_MALE, { S_DIE_MALE1, -1, S_DIE_MALE2, -1, -1, S_DIE_MALE3, -1, S_DIE_MALE4 }, S_TAUNT_MALE
+            0x60FFFFF, S_PAIN_MALE, { S_DIE_MALE1, S_INVALID, S_DIE_MALE2, S_INVALID, S_INVALID, S_DIE_MALE3, S_INVALID, S_DIE_MALE4 }, S_TAUNT_MALE
         }
     };
 

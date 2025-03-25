@@ -1083,7 +1083,7 @@ namespace physics
     void modifyprojectilevelocity(ProjEnt* proj, const float secs, float waterFriction, const float gravity)
     {
         const int material = lookupmaterial(vec(proj->o.x, proj->o.y, proj->o.z + (proj->aboveeye - proj->eyeheight) / 2));
-        const bool isInWater = isliquidmaterial(material);
+        const bool isInWater = isliquidmaterial(material & MATF_VOLUME);
         if (isInWater)
         {
             proj->vel.z -= gravity * mapgravity / 16 * secs;
@@ -1180,7 +1180,6 @@ namespace physics
             interpolateposition(proj);
             return true;
         }
-
         proj->o = proj->newpos;
         bool hitplayer = false;
         loopi(physsteps - 1)
@@ -1224,7 +1223,7 @@ namespace physics
         gameent* d = (gameent*)pl;
         if (d->deathstate == Death_Shock && lastmillis - d->lastpain <= 2000)
         {
-            float scale = 1.0f + rndscale(12.0f);
+            const float scale = 1.0f + rndscale(12.0f);
             particle_flare(center, center, 1, PART_ELECTRICITY, 0xEE88EE, scale);
             addgamelight(center, vec(238.0f, 136.0f, 238.0f), scale * 2);
         }

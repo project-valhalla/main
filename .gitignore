@@ -15,10 +15,10 @@
 Thumbs.db
 ehthumbs.db
 mingw.res
-bin_unix/
-source/tess_client
-source/tess_master
-source/tess_server
+bin/bin_unix/
+source/valhalla_client
+source/valhalla_master
+source/valhalla_server
 source/vcpp/x64/
 source/vcpp/x86/
 .objs/
@@ -27,7 +27,7 @@ source/vcpp/x86/
 Debug*/
 Release*/
 Profile*/
-config/autoexec.cfg
+autoexec.cfg
 master.cfg
 master.log
 *.mmdb

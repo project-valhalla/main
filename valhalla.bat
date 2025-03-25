@@ -1,14 +1,14 @@
 @ECHO OFF
 
-set VAL_BIN=bin\bin32
+set VALHALLA_BIN=bin\bin32
 
 IF EXIST bin\bin64\valhalla.exe (
     IF /I "%PROCESSOR_ARCHITECTURE%" == "amd64" (
-        set VAL_BIN=bin\bin64
+        set VALHALLA_BIN=bin\bin64
     )
     IF /I "%PROCESSOR_ARCHITEW6432%" == "amd64" (
-        set VAL_BIN=bin\bin64
+        set VALHALLA_BIN=bin\bin64
     )
 )
 
-start %VAL_BIN%\valhalla.exe "-u$HOME\My Games\VALHALLA\v1.0.0-beta.2" -glog.txt %*
+start %VALHALLA_BIN%\valhalla.exe "-u$HOME\My Games\VALHALLA\v1.0.0-beta.2" -glog.txt %*

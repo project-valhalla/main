@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# VALHALLA_OPTIONS contains any command line options you would like to start Valhalla with.
+# VALHALLA_OPTIONS contains any command line options you would like to start VALHALLA with.
 VALHALLA_OPTIONS=""
 
-# VALHALLA_HOME is where Valhalla should store user files.
-VALHALLA_HOME="${HOME}/Library/Application Support/Valhalla"
+# VALHALLA_HOME is where VALHALLA should store user files.
+VALHALLA_HOME="${HOME}/Library/Application Support/VALHALLA/v1.0.0-beta.2"
 VALHALLA_APPDIR=$(dirname "$0")
 
 cd "${VALHALLA_APPDIR}"

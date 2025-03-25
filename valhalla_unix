@@ -1,15 +1,15 @@
 #!/bin/sh
-# VAL_DATA should refer to the directory in which VALHALLA data files are placed.
-#VAL_DATA=~/valhalla
-#VAL_DATA=/usr/local/valhalla
-VAL_DATA=.
+# VALHALLA_DATA should refer to the directory in which VALHALLA data files are placed.
+#VALHALLA_DATA=~/VALHALLA
+#VALHALLA_DATA=/usr/local/VALHALLA
+VALHALLA_DATA=.
 
-# VAL_BIN should refer to the directory in which VALHALLA executable files are placed.
-VAL_BIN=${VAL_DATA}/bin/bin_unix
+# VALHALLA_BIN should refer to the directory in which VALHALLA executable files are placed.
+VALHALLA_BIN=${VALHALLA_DATA}/bin/bin_unix
 
-# VAL_OPTIONS contains any command line options you would like to start VALHALLA with.
-#VAL_OPTIONS=""
-VAL_OPTIONS="-u${HOME}/.valhalla/v1.0.0-beta.2"
+# VALHALLA_OPTIONS contains any command line options you would like to start VALHALLA with.
+#VALHALLA_OPTIONS=""
+VALHALLA_OPTIONS="-u${HOME}/.VALHALLA/v1.0.0-beta.2"
 
 # SYSTEM_NAME should be set to the name of your operating system.
 #SYSTEM_NAME=Linux
@@ -44,18 +44,18 @@ x86_64|amd64)
   ;;
 esac
 
-if [ -x ${VAL_BIN}/native_client ]
+if [ -x ${VALHALLA_BIN}/native_client ]
 then
   SYSTEM_NAME=native_
   MACHINE_NAME=
 fi
 
-if [ -x ${VAL_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ]
+if [ -x ${VALHALLA_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ]
 then
-  cd ${VAL_DATA}
-  exec ${VAL_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ${VAL_OPTIONS} "$@"
+  cd ${VALHALLA_DATA}
+  exec ${VALHALLA_BIN}/${SYSTEM_NAME}${MACHINE_NAME}client ${VALHALLA_OPTIONS} "$@"
 else
-  echo "Your platform does not have a pre-compiled Valhalla client."
+  echo "Your platform does not have a pre-compiled VALHALLA client."
   echo "Please follow the following steps to build a native client:"
   echo "1) Ensure you have the SDL2, SDL2-image, SDL2-mixer, and OpenGL libraries installed."
   echo "2) Type \"make -C source install\"."

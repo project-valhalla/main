@@ -261,9 +261,25 @@ namespace game
         }
     }
 
-    int waterchan = -1;
+    void updategamesounds()
+    {
+        static int waterChannel = S_INVALID;
+        const int material = lookupmaterial(camera1->o);
+        if (self->state != CS_EDITING && isliquidmaterial(material & MATF_VOLUME))
+        {
+            waterChannel = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterChannel);
+        }
+        else
+        {
+            if (waterChannel >= 0)
+            {
+                stopsound(S_UNDERWATER, waterChannel, 500);
+                waterChannel = S_INVALID;
+            }
+        }
+    }
 
-    void updateworld()        // main game update loop
+    void updateworld() // Main game update loop.
     {
         if(!maptime)
         {
@@ -277,7 +293,6 @@ namespace game
             if(self->clientnum>=0) c2sinfo();
             return;
         }
-
         physics::physicsframe();
         ai::navigate();
         if(self->state == CS_ALIVE && !intermission)
@@ -296,17 +311,21 @@ namespace game
         gets2c();
         updatemonsters(curtime);
         managelowhealthscreen();
+        updategamesounds();
         if(connected)
         {
             if(self->state == CS_DEAD)
             {
-                if(self->ragdoll) moveragdoll(self);
-                else if(lastmillis-self->lastpain<2000)
+                if (self->ragdoll)
+                {
+                    moveragdoll(self);
+                }
+                else if (lastmillis - self->lastpain < 2000)
                 {
                     self->move = self->strafe = 0;
                     physics::moveplayer(self, 10, true);
                 }
-                if(lastmillis - self->lastpain > getrespawndelay(self))
+                if (lastmillis - self->lastpain > getrespawndelay(self))
                 {
                     if(self->respawnqueued)
                     {
@@ -315,7 +334,7 @@ namespace game
                     }
                 }
             }
-            else if(!intermission)
+            else if (!intermission)
             {
                 if(self->ragdoll) cleanragdoll(self);
                 physics::crouchplayer(self, 10, true);
@@ -323,19 +342,17 @@ namespace game
                 entities::checkitems(self);
                 if(cmode) cmode->checkitems(self);
             }
-            else if(self->state == CS_SPECTATOR) physics::moveplayer(self, 10, true);
-        }
-        int mat = lookupmaterial(camera1->o);
-        if(self->state!=CS_EDITING && (mat&MATF_VOLUME) == MAT_WATER) waterchan = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterchan);
-        else
-        {
-            if(waterchan >= 0)
+            else if (self->state == CS_SPECTATOR)
             {
-                stopsound(S_UNDERWATER, waterchan, 500);
-                waterchan = -1;
+                // Extra step to allow spectators to move during intermission.
+                physics::moveplayer(self, 10, true);
             }
         }
-        if(self->clientnum>=0) c2sinfo();   // do this last, to reduce the effective frame lag
+        if (self->clientnum >= 0)
+        {
+            // Do this last, to reduce the effective frame lag!
+            c2sinfo(); 
+        }
     }
 
     void addgamedynamiclights()

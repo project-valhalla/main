@@ -949,6 +949,8 @@ namespace game
             kill(d, actor, atk);
         }
     }
+    
+    VARP(damageindicator, 0, 0, 1);
 
     void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& position, int atk, int flags, bool local)
     {
@@ -976,6 +978,12 @@ namespace game
                         playsound(isally(target, actor) ? S_HIT_ALLY : S_HIT);
                     }
                     actor->lasthit = lastmillis;
+                }
+                if (damageindicator && actor == self && target != self)
+                {
+                    defformatstring(damageString, "%d", damage);
+                    const int color = damage >= 50 && damage < 75 ? 0xFFA500 : (damage >= 75 ? 0xFF0000 : 0xFFFF00);
+                    particle_textcopy(position, damageString, PART_TEXT, 2000, color, 2.5f, -0.5f, 6.0f);
                 }
             }
             if (target == hud)

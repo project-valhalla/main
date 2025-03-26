@@ -1107,19 +1107,19 @@ void particle_trail(int type, int fade, const vec &s, const vec &e, int color, f
 VARP(particletext, 0, 1, 1);
 VARP(maxparticletextdistance, 0, 64, 10000);
 
-void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
+void particle_text(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, float maxsize)
 {
     if(!canaddparticles()) return;
     if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
-    particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
+    particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity, maxsize);
     p->text = t;
 }
 
-void particle_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int gravity)
+void particle_textcopy(const vec &s, const char *t, int type, int fade, int color, float size, int gravity, float maxsize)
 {
     if(!canaddparticles()) return;
     if(!particletext || camera1->o.dist(s) > maxparticletextdistance) return;
-    particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity);
+    particle *p = newparticle(s, vec(0, 0, 1), fade, type, color, size, gravity, maxsize);
     p->text = newstring(t);
     p->flags = 1;
 }

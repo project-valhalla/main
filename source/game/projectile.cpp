@@ -478,7 +478,7 @@ namespace game
             {
                 return;
             }
-            if (proj->isLocal || !m_mp(gamemode))
+            if ((actor == self && proj->owner == self) || !m_mp(gamemode))
             {
                 // Damage the projectile locally.
                 damage(proj, actor, attack);

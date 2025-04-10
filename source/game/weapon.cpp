@@ -1448,6 +1448,9 @@ namespace game
         rotationpitch += cameravelocity.y * -0.3f;
         rotationroll += cameravelocity.x * -0.5f;
 
+        camera::camera.velocity.x = cameravelocity.x * -0.3f + (camera::camera.direction.x * 0.5f);
+        camera::camera.velocity.y = cameravelocity.y * -0.3f + (camera::camera.direction.y * 0.5f) + (camera::camera.direction.z * 0.25f);
+
         o.add(trans);
 
         yaw += rotationyaw;

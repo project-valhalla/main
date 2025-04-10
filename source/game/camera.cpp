@@ -549,5 +549,8 @@ namespace game
                 }
             }
         }
+
+        ICOMMAND(getcamvelocityx, "", (), floatret(camera.velocity.x));
+        ICOMMAND(getcamvelocityy, "", (), floatret(camera.velocity.y));
     }
 }

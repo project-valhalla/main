@@ -987,6 +987,7 @@ namespace game
             float yaw, pitch, roll, fov;
             float bobfade, bobspeed, bobdist;
             vec direction;
+            vec2 velocity;
 
             struct CameraEvent
             {
@@ -1025,9 +1026,8 @@ namespace game
             };
             zoominfo zoomstate;
 
-            camerainfo() : isdetached(false), yaw(0), pitch(0), roll(0), fov(1), bobfade(0), bobspeed(0), bobdist(0)
+            camerainfo() : isdetached(false), yaw(0), pitch(0), roll(0), fov(1), bobfade(0), bobspeed(0), bobdist(0), direction(0, 0, 0), velocity(0, 0)
             {
-                direction = vec(0, 0, 0);
             }
             ~camerainfo()
             {

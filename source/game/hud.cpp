@@ -487,7 +487,7 @@ namespace game
         f->printf("\n");
     }
 
-    static void drawpointerquad(const float x, const float y, const float size, const vec &color, Texture* texture)
+    static void drawpointerquad(const float x, const float y, const float size, const vec4& color, Texture* texture)
     {
         if (texture)
         {
@@ -500,7 +500,7 @@ namespace game
                 glBlendFunc(GL_ONE, GL_ONE);
             }
             hudshader->set();
-            gle::color(color);
+            gle::colorf(color.x, color.y, color.z, color.a);
             setusedtexture(texture);
             hudquad(x, y, size, size);
         }
@@ -513,14 +513,14 @@ namespace game
         UI::getcursorpos(x, y);
         x *= w;
         y *= h;
-        drawpointerquad(x, y, size, vec(1, 1, 1), pointer);
+        drawpointerquad(x, y, size, vec4(1, 1, 1, 1), pointer);
     }
 
     VARP(crosshairally, 0, 1, 1);
     VARP(crosshairscope, 0, 1, 1);
     VARP(crosshairhit, 0, 300, 1000);
 
-    int selectcrosshair(vec& color, const int type)
+    int selectcrosshair(vec4& color, const int type)
     {
         gameent* hud = followingplayer(self);
         if (hud->state == CS_SPECTATOR || hud->state == CS_DEAD || intermission)
@@ -543,7 +543,7 @@ namespace game
                 if (camera::camera.zoomstate.isenabled() && zoomType == Zoom_Scope)
                 {
                     crosshair = Pointer_Scope;
-                    color = vec(1, 0, 0);
+                    color = vec4(1, 0, 0, 1);
                 }
             }
             if (!betweenrounds && crosshairally)
@@ -552,12 +552,12 @@ namespace game
                 if (o && o->type == ENT_PLAYER && isally(((gameent*)o), hud) && !m_hideallies)
                 {
                     crosshair = Pointer_Ally;
-                    color = vec::hexcolor(teamtextcolor[hud->team]);
+                    color = vec4(vec::hexcolor(teamtextcolor[hud->team]), 1);
                 }
             }
             if (hud->gunwait)
             {
-                color.mul(0.5f);
+                color.mul(0.75f);
             }
         }
         else if (type == Pointer_Hit)
@@ -565,16 +565,16 @@ namespace game
             crosshair = type;
             if (hud->lastkill && lastmillis - hud->lastkill <= crosshairhit)
             {
-                color = vec(1, 0.5f, 0.5f);
+                color = vec4(1, 0.5f, 0.5f, 1);
             }
             else
             {
-                color = vec(1, 1, 1);
+                color = vec4(1, 1, 1, 1);
             }
         }
         if (!crosshairfx || !crosshaircolors)
         {
-            color = vec(1, 1, 1);
+            color = vec4(1, 1, 1, 1);
         }
         if (type == Pointer_Crosshair && crosshair != Pointer_Crosshair && !crosshairfx)
         {
@@ -583,7 +583,7 @@ namespace game
         return crosshair;
     }
 
-    bool isvalidpointer(Texture*& texture, vec& color, const int type = Pointer_Crosshair)
+    bool isvalidpointer(Texture*& texture, vec4& color, const int type = Pointer_Crosshair)
     {
         int index = selectcrosshair(color, type);
         if (index < 0)
@@ -627,7 +627,7 @@ namespace game
 
     static void drawcrosshair(const int w, const int h, float x, float y, float size)
     {
-        vec color(1, 1, 1);
+        vec4 color(1, 1, 1, 1);
         Texture* crosshair = NULL;
         if (isvalidpointer(crosshair, color))
         {
@@ -648,16 +648,25 @@ namespace game
         gameent* hud = followingplayer(self);
         if (hud->lasthit && lastmillis - hud->lasthit <= crosshairhit)
         {
+            float alpha = 1;
+            const float progress = min((lastmillis - hud->lasthit) / static_cast<float>(crosshairhit), 1.0f);
             if (hud->lastkill && lastmillis - hud->lastkill <= crosshairhit)
             {
-                color = vec(1, 0.5f, 0.5f);
+                const float start = 0.75f;
+                const float remaining = 0.25f;
+                if (progress >= start)
+                {
+                    const float fadeProgress = (progress - start) / remaining;
+                    alpha = 1.0f - fadeProgress;
+                }
+                color = vec4(1, 0.5f, 0.5f, alpha);
+                size *= progress * 3.5f;
             }
             else
             {
-                color = vec(1, 1, 1);
+                color = vec4(1, 1, 1, 1);
+                size *= sin(progress * M_PI) * 1.5f;
             }
-            float progress = min((lastmillis - hud->lasthit) / static_cast<float>(crosshairhit), 1.0f);
-            size *= sin(progress * M_PI) * 1.5f;
             x = getpointercenter(w, size);
             y = getpointercenter(h, size);
             drawpointerquad(x, y, size, color, hit);

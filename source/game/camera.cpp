@@ -106,6 +106,7 @@ namespace game
                 {
                     lastUpdate = lastmillis;
                     lastFollow = 0;
+                    clearscreeneffects();
                 }
                 const float progress = clamp((lastmillis - lastUpdate) / killcameramillis, 0.0f, 1.0f);
                 vec startPoint = hud->o;
@@ -455,10 +456,10 @@ namespace game
         {
             if (shakes.empty() || !camerashake)
             {
-				if (shakes.length())
-				{
-					shakes.shrink(0);
-				}
+                if (shakes.length())
+                {
+                    shakes.shrink(0);
+                }
                 return;
             }
             loopv(shakes)

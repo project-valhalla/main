@@ -589,10 +589,10 @@ void setupscreen()
     desktopw = desktop.w;
     desktoph = desktop.h;
 
-    if(scr_h < 0) scr_h = SCR_DEFAULTH;
-    if(scr_w < 0) scr_w = (scr_h*desktopw)/desktoph;
-    scr_w = min(scr_w, desktopw);
-    scr_h = min(scr_h, desktoph);
+    if(scr_h < 0) scr_h = fullscreen ? desktoph : SCR_DEFAULTH;
+    if(scr_w < 0) scr_w = (scr_h * desktopw) / desktoph;
+    scr_w = clamp(scr_w, SCR_MINW, SCR_MAXW);
+    scr_h = clamp(scr_h, SCR_MINH, SCR_MAXH);
 
     int winx = SDL_WINDOWPOS_UNDEFINED, winy = SDL_WINDOWPOS_UNDEFINED, winw = scr_w, winh = scr_h, flags = SDL_WINDOW_RESIZABLE;
     if(fullscreen)

@@ -428,7 +428,7 @@ struct hline
             alias("commandbuf", buf);
             execute(action);
         }
-        else game::say(buf);
+        else game::toserver(buf);
     }
 };
 vector<hline *> history;

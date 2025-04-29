@@ -161,7 +161,7 @@ enum
 
 static const int msgsizes[] =               // size inclusive message token, 0 for variable or not-checked sizes
 {
-    N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 3, N_CDIS, 2,
+    N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 2, N_CDIS, 2,
     N_SHOOT, 0, N_EXPLODE, 0, N_DAMAGEPROJECTILE, 5, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2, N_REPAMMO, 3,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
@@ -748,7 +748,7 @@ namespace game
     extern void writeobituary(gameent *d, gameent *actor, int atk, const int flags = 0);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = 0);
     extern void updatetimer(int time, int type);
-    extern void sendsound(const int sound, physent *d = NULL, const int team = 0);
+    extern void msgsound(int n, physent *d = NULL);
     extern void doaction(int act);
     extern void hurt(gameent* d);
     extern void suicide(gameent* d);
@@ -772,6 +772,7 @@ namespace game
     extern const char* colorname(gameent* d, const char* name = NULL, const char* alt = NULL, const char* color = "");
     extern const char* teamcolorname(gameent* d, const char* alt = NULL);
     extern const char* teamcolor(const char* prefix, const char* suffix, int team, const char* alt);
+    extern const char* chatcolor(gameent* d);
     const char *mastermodecolor(int n, const char *unknown);
     const char *mastermodeicon(int n, const char *unknown);
 

@@ -3150,7 +3150,7 @@ namespace server
 
     void suicide(clientinfo *ci)
     {
-        ServerState& gs = ci->state;
+        ServerState&  gs = ci->state;
         if(gs.state!=CS_ALIVE) return;
         checkberserker(ci);
         teaminfo *t = NULL;
@@ -4064,6 +4064,13 @@ namespace server
 
     VAR(spectatorchat, 0, 0, 1);
 
+    bool canseemessage(clientinfo *a, clientinfo *b)
+    {
+        if(spectatorchat && a->state.state == CS_SPECTATOR && b->state.state != CS_SPECTATOR) return false;
+        if(m_round && a->state.state == CS_DEAD && b->state.state != CS_DEAD) return false;
+        return true;
+    }
+
     void parsepacket(int sender, int chan, packetbuf &p)     // has to parse exactly each byte of the packet
     {
         if(sender<0 || p.packet->flags&ENET_PACKET_FLAG_UNSEQUENCED || chan > 2) return;
@@ -4455,22 +4462,12 @@ namespace server
                 filtertext(text, text, false, false, true, true);
                 loopv(clients)
                 {
-                    clientinfo* client = clients[i];
-                    if (client == cq || client->state.aitype != AI_NONE)
+                    clientinfo* c = clients[i];
+                    if (c == cq || c->state.aitype != AI_NONE || !canseemessage(cq, c))
                     {
                         continue;
                     }
-                    if (spectatorchat && cq->state.state == CS_SPECTATOR && client->state.state != CS_SPECTATOR)
-                    {
-                        // Spectator chat.
-                        continue;
-                    }
-                    if (m_round && cq->ghost && !client->ghost)
-                    {
-                        // Prevent ghost players from interfering.
-                        continue;
-                    }
-                    sendf(client->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
+                    sendf(c->clientnum, 1, "riis", N_TEXT, cq->clientnum, text);
                 }
                 const bool isSpectating = cq->state.state == CS_SPECTATOR || (m_round && (cq->ghost || cq->state.state == CS_DEAD));
                 if (cq && isdedicatedserver())
@@ -4483,19 +4480,20 @@ namespace server
             case N_SAYTEAM:
             {
                 getstring(text, p);
-                if (!ci || !cq || cq->mute || !m_teammode || !validteam(cq->team) || cq->state.state == CS_SPECTATOR)
+                const int sound = getint(p);
+                if (!ci || !cq || cq->mute || !m_teammode || !validteam(cq->team) || cq->state.state == CS_SPECTATOR || (m_round && cq->state.state == CS_DEAD))
                 {
                     break;
                 }
                 filtertext(text, text, false, false, true, true);
                 loopv(clients)
                 {
-                    clientinfo* client = clients[i];
-                    if (client == cq || client->state.aitype != AI_NONE || client->state.state == CS_SPECTATOR || cq->team != client->team)
+                    clientinfo* t = clients[i];
+                    if (t == cq || t->state.aitype != AI_NONE || cq->team != t->team)
                     {
                         continue;
                     }
-                    sendf(client->clientnum, 1, "riis", N_SAYTEAM, cq->clientnum, text);
+                    sendf(t->clientnum, 1, "riisi", N_SAYTEAM, cq->clientnum, text, sound);
                 }
                 if (isdedicatedserver() && cq)
                 {
@@ -4508,10 +4506,7 @@ namespace server
             {
                 const int rcn = getint(p);
                 getstring(text, p);
-                if (!cq || cq->mute)
-                {
-                    break;
-                }
+                if(!cq || cq->mute) break;
                 filtertext(text, text, false, false);
                 clientinfo *recipient = getinfo(rcn);
                 if (!recipient)

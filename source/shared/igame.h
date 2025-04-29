@@ -85,7 +85,7 @@ namespace game
     extern void gameconnect(bool _remote);
     extern void edittoggled(bool on);
     extern void writeclientinfo(stream *f);
-    extern void toserver(char *text);
+    extern void say(char *text);
     extern void changemap(const char *name);
     extern void forceedit(const char *name);
     extern void loadconfigs();
@@ -106,7 +106,7 @@ namespace game
     extern void readgamedata(vector<char> &extras);
     extern void trackparticles(physent *owner, vec &o, vec &d);
     extern void trackdynamiclights(physent *owner, vec &o, vec &hud);
-    extern void voicecom(int sound, char *text, bool isteam);
+    extern void voicecom(const int sound, char *text, const bool team);
     extern void addgamedynamiclights();
     extern void drawhud(int w, int h);
     extern void drawpointers(int w, int h);

@@ -374,7 +374,7 @@ namespace game
     bool isghost(int cn)
     {
         gameent *d = cn < 0 ? self : getclient(cn);
-        return d && d->state==CS_SPECTATOR && d->ghost;
+        return d && d->state == CS_SPECTATOR && d->ghost;
     }
     ICOMMAND(isghost, "b", (int *cn), intret(isghost(*cn) ? 1 : 0));
 
@@ -1092,55 +1092,186 @@ namespace game
         execident("on_disconnect");
     }
 
-    VARP(chatsound, 0, 1, 2); // 0 = no chat sound, 1 = always plays, 2 = only for whispers
+    VARP(chatsound, 0, 1, 2); // 0 = No chat sound, 1 = always plays, 2 = only for mentions and whispers.
 
-    void toserver(char *text)
+    void playchatsound(gameent* d, const bool alwaysPlay = false)
     {
-        conoutf(CON_CHAT, "%s: \fs%s%s\fr", teamcolorname(self), chatcolor(self), text);
-        addmsg(N_TEXT, "rcs", self, text);
+        if (!chatsound || d == self)
+        {
+            return;
+        }
+        if (alwaysPlay || (!alwaysPlay && chatsound == 1))
+        {
+            playsound(S_CHAT, NULL, NULL, NULL, SND_UI);
+        }
     }
-    COMMANDN(say, toserver, "C");
 
-    void sayteam(char *text, int sound = S_INVALID)
+    VARP(chatmentions, 0, 1, 1);
+
+    bool ischatmention(const char* text)
     {
-        if(!m_teammode || !validteam(self->team) || (m_round && self->state == CS_DEAD) || self->state == CS_SPECTATOR) return;
-        conoutf(CON_TEAMCHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", teamcolorname(self), teamtextcode[self->team], teamtextcode[self->team], text);
-        if(sound >= 0 && self->state != CS_DEAD && self->state != CS_SPECTATOR) playsound(sound);
-        addmsg(N_SAYTEAM, "rcsi", self, text, sound);
+        if (!chatmentions)
+        {
+            return false;
+        }
+        const char* mention = strstr(text, self->name);
+        if (mention && mention > text && *(mention - 1) == '@')
+        {
+            // Checking if a chat message mentions our user name.
+            const char next = *(mention + strlen(self->name));
+            if (next == '\0' || isspace(next))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void printchat(gameent* d, const char* text)
+    {
+        const char* textColor = "\f8";
+        bool isMention = false;
+        if (ischatmention(text))
+        {
+            textColor = "\f2";
+            isMention = true;
+        }
+        else if (d->state == CS_SPECTATOR && d->ghost)
+        {
+            /* Chat color becomes grey to signify player is in a waiting state,
+             * meaning they can't communicate with other "living" players.
+             */
+            textColor = "\f4";
+        }
+        conoutf(CON_CHAT, "%s: %s%s", d->name, textColor, text);
+        playchatsound(d, isMention);
+    }
+    
+    void printteamchat(gameent* d, const char* text)
+    {
+        // This is a team chat text.
+        const char* textColor = "";
+        bool isMention = false;
+        const int team = m_teammode && validteam(d->team) ? d->team : 0;
+        if (ischatmention(text))
+        {
+            textColor = "\f2";
+            isMention = true;
+        }
+        else if (d->state == CS_SPECTATOR && d->ghost)
+        {
+            /* If the player is in a waiting state keep the grey color,
+             * to signify the message will only be visible to waiting players in the same team.
+             */
+            textColor = "\f4";
+        }
+        else
+        {
+            textColor = teamtextcode[team];
+        }
+        conoutf(CON_CHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", d->name, teamtextcode[team], textColor, text);
+        playchatsound(d, isMention);
+    }
+
+    void printchatwhisper(gameent* d, const char* text, gameent* recipient)
+    {
+        // This is a whisper (private message).
+        if (d == self && recipient)
+        {
+            // We sent the message: specify who the recipient is.
+            conoutf(CON_CHAT, "%s \fs\f5(whisper to \fr%s\fs\f5)\fr: \fs\f5%s\fr", d->name, recipient->name, text);
+        }
+        else
+        {
+            conoutf(CON_CHAT, "%s \fs\f5(whisper)\fr: \fs\f5%s\fr", d->name, text);
+        }
+        playchatsound(d, true);
+    }
+
+    void printchattext(gameent* d, const char* text, const int type, gameent* recipient = NULL)
+    {
+        switch (type)
+        {
+            case N_TEXT:
+            {
+                printchat(d, text);
+                break;
+            }
+            case N_SAYTEAM:
+            {
+                printteamchat(d, text);
+                break;
+            }
+            case N_WHISPER:
+            {
+                printchatwhisper(d, text, recipient);
+                break;
+            }
+            default: break;
+        }
+        if (d != self && d->state != CS_DEAD && d->state != CS_SPECTATOR)
+        {
+            particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0xFFFFFF, 4.0f, -8);
+        }
+    }
+
+    void say(char *text)
+    {
+        const int message = N_TEXT;
+        printchattext(self, text, message);
+        addmsg(message, "rcs", self, text);
+    }
+    COMMAND(say, "C");
+
+    void sayteam(const char *text)
+    {
+        if (!m_teammode || !validteam(self->team) || (m_round && self->ghost) || self->state == CS_SPECTATOR)
+        {
+            return;
+        }
+        const int message = N_SAYTEAM;
+        printchattext(self, text, message);
+        addmsg(message, "rcs", self, text);
     }
     COMMAND(sayteam, "C");
 
-    void whisper(const char *recipient, const char *text)
+    void saywhisper(const char *id, const char *text)
     {
-        int rcn = parseplayer(recipient);
-        gameent *rec = getclient(rcn);
-        if(!rec || rec->clientnum < 0 || rec == self || rec->aitype == AI_BOT)
+        const int recipientClient = parseplayer(id);
+        gameent *recipient = getclient(recipientClient);
+        if(!recipient || recipient->clientnum < 0 || recipient == self || recipient->aitype == AI_BOT)
         {
             conoutf(CON_CHAT, "\f5Invalid recipient");
             return;
         }
-        addmsg(N_WHISPER, "rcis", self, rec->clientnum, text);
-        conoutf(CON_CHAT, "%s \fs\f5(whisper to \fr%s\fs\f5)\fr: \fs\f5%s\fr", teamcolorname(self), colorname(rec), text);
+        const int message = N_WHISPER;
+        printchattext(self, text, message, recipient);
+        addmsg(message, "rcis", self, recipient->clientnum, text);
     }
-    COMMAND(whisper, "ss");
+    COMMAND(saywhisper, "ss");
 
     ICOMMAND(servcmd, "C", (char *cmd), addmsg(N_SERVCMD, "rs", cmd));
 
     int lastvoicecom = 0;
 
-    void voicecom(int sound, char *text, bool isteam)
+    void voicecom(const int sound, char *text, const bool team)
     {
         if(!text || !text[0] || (self->role >= ROLE_BERSERKER && self->role <= ROLE_ZOMBIE)) return;
         if(!lastvoicecom || lastmillis - lastvoicecom > VOICECOM_DELAY)
         {
-            if(!isteam || (isteam && !m_teammode))
+            const bool hasTeam = m_teammode && team;
+            if (hasTeam)
             {
-                if(sound >= 0) msgsound(sound, self);
-                toserver(text);
+                sayteam(text);
             }
             else
             {
-                sayteam(text, sound >= 0 ? sound : -1);
+                say(text);
+            }
+            if (validsound(sound))
+            {
+                const int team = hasTeam ? self->team : 0;
+                sendsound(sound, self, team);
             }
             lastvoicecom = lastmillis;
         }
@@ -1589,9 +1720,23 @@ namespace game
             }
 
             case N_SOUND:
-                if(!d || d->state == CS_DEAD || d->state == CS_SPECTATOR) return;
-                playsound(getint(p), d);
+            {
+                const int sound = getint(p);
+                const int team = getint(p);
+                if (!d)
+                {
+                    break;
+                }
+                if (validteam(team) && m_teammode)
+                {
+                    if (self->team != team || self->state == CS_SPECTATOR)
+                    {
+                        break;
+                    }
+                }
+                playsound(sound, d);
                 break;
+            }
 
             case N_SCORE:
             {
@@ -1603,44 +1748,43 @@ namespace game
 
             case N_TEXT:
             {
-                int cn = getint(p);
-                gameent *d = getclient(cn);
+                int client = getint(p);
+                gameent* d = getclient(client);
                 getstring(text, p);
                 filtertext(text, text, false, false, true, true);
-                if(!d || isignored(d->clientnum)) break;
-                if(d->state!=CS_DEAD && d->state!=CS_SPECTATOR)
-                    particle_textcopy(d->abovehead(), text, PART_TEXT, 2000, 0x32FF64, 4.0f, -8);
-                conoutf(CON_CHAT, "%s: \fs%s%s\fr", teamcolorname(d), chatcolor(d), text);
-                if(chatsound == 1) playsound(S_CHAT);
+                if (!d || isignored(d->clientnum))
+                {
+                    break;
+                }
+                printchattext(d, text, type);
                 break;
             }
 
             case N_SAYTEAM:
             {
-                int tcn = getint(p);
-                gameent *t = getclient(tcn);
+                int teamClient = getint(p);
+                gameent *teammate = getclient(teamClient);
                 getstring(text, p);
                 filtertext(text, text, false, false, true, true);
-                int sound = getint(p);
-                if(!t || isignored(t->clientnum)) break;
-                if(sound >= 0 && (t->state != CS_DEAD || t->state != CS_SPECTATOR)) playsound(sound, t);
-                int team = validteam(t->team) ? t->team : 0;
-                if(t->state!=CS_DEAD)
-                    particle_textcopy(t->abovehead(), text, PART_TEXT, 2000, teamtextcolor[team], 4.0f, -8);
-                conoutf(CON_TEAMCHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", teamcolorname(t), teamtextcode[t->team], teamtextcode[t->team], text);
-                if(chatsound == 1) playsound(S_CHAT);
+                if (!teammate || isignored(teammate->clientnum))
+                {
+                    break;
+                }
+                printchattext(teammate, text, type);
                 break;
             }
 
             case N_WHISPER:
             {
-                int scn = getint(p);
-                gameent *s = getclient(scn);
+                int senderClient = getint(p);
+                gameent *sender = getclient(senderClient);
                 getstring(text, p);
                 filtertext(text, text, false, false, true, true);
-                if(!s || isignored(s->clientnum)) break;
-                conoutf(CON_CHAT, "%s \fs\f5(whisper)\fr: \fs\f5%s\fr", teamcolorname(s), text);
-                if(chatsound) playsound(S_CHAT);
+                if (!sender || isignored(sender->clientnum))
+                {
+                    break;
+                }
+                printchattext(sender, text, type);
                 break;
             }
 
@@ -1727,7 +1871,6 @@ namespace game
                 getstring(text, p);
                 filtertext(text, text, false, false, true, false, MAXSTRLEN);
                 copystring(d->country_name, text);
-
                 break;
             }
 

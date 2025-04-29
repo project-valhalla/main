@@ -512,7 +512,7 @@ namespace game
         {   
             if (act == ACT_SECONDARY)
             {
-                msgsound(S_WEAPON_ZOOM, self);
+                sendsound(S_WEAPON_ZOOM, self);
                 if (identexists("dozoom"))
                 {
                     execident("dozoom");
@@ -1143,20 +1143,24 @@ namespace game
         return server::modename(gamemode, NULL);
     }
 
-    void msgsound(int n, physent *d)
+    void sendsound(const int sound, physent *d, const int team)
     {
-        if(d->state == CS_DEAD || d->state == CS_SPECTATOR) return;
-        if(!d || d == self)
+        if (d->state == CS_DEAD || d->state == CS_SPECTATOR)
         {
-            addmsg(N_SOUND, "ci", d, n);
-            playsound(n, NULL, NULL);
+            return;
+        }
+        if (!d || d == self)
+        {
+            addmsg(N_SOUND, "cii", d, sound, team);
+            playsound(sound, NULL, NULL);
         }
         else
         {
-            if(d->type==ENT_PLAYER && ((gameent *)d)->ai) {
-                addmsg(N_SOUND, "ci", d, n);
+            if (d->type == ENT_PLAYER && ((gameent *)d)->ai)
+            {
+                addmsg(N_SOUND, "cii", d, sound, team);
             }
-            playsound(n, d);
+            playsound(sound, d);
         }
     }
 
@@ -1254,18 +1258,6 @@ namespace game
     {
         if(!teamcolortext || !m_teammode || !validteam(team)) return alt;
         return tempformatstring("\fs%s%s%s%s\fr", teamtextcode[team], prefix, teamnames[team], suffix);
-    }
-
-    bool isghost(gameent *d)
-    {
-        return m_round && (d->state==CS_DEAD || (d->state==CS_SPECTATOR && d->ghost));
-    }
-
-    const char *chatcolor(gameent *d)
-    {
-        if(isghost(d)) return "\f4";
-        else if(d->state==CS_SPECTATOR) return "\f8";
-        else return "\ff";
     }
 
     void hurt(gameent* d)

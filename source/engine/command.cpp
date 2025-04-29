@@ -4535,13 +4535,13 @@ int findsleepcmd(const char *id)
 }
 ICOMMAND(findsleep, "s", (char *id), intret(findsleepcmd(id)));
 
-void addsleep(const int *msec, const char *cmd, const char *id)
+void addsleep(const int *delay, const char *cmd, const char *id)
 {
     if(!*cmd) return;
     if(*id) loopv(sleepcmds) if(!strcmp(sleepcmds[i].id, id)) return;
 
     sleepcmd &s = sleepcmds.add();
-    s.delay     = max(*msec, 1);
+    s.delay     = max(*delay, 1);
     s.millis    = lastmillis;
     s.command   = newstring(cmd);
     s.id        = newstring(id);

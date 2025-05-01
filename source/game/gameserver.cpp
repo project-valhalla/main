@@ -5050,7 +5050,7 @@ namespace server
         }
         sendstring(smapname, p);
         sendstring(servername, p);
-        putint(p, currentversion);
+        sendstring(currentversion, p);
         sendserverinforeply(p);
     }
 

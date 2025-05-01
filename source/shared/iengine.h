@@ -243,7 +243,7 @@ extern void renderentring(const extentity &e, float radius, int axis = 0);
 // main
 extern void fatal(const char *s, ...) PRINTFARGS(1, 2);
 extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1, bool flipx = false, bool flipy = false);
-extern int currentversion;
+extern char *currentversion;
 
 // rendertext
 extern bool setfont(const char *name);
@@ -482,13 +482,13 @@ extern bool isdedicatedserver();
 
 struct servinfo
 {
-    string name, map, desc;
-    int protocol, numplayers, maxplayers, gameversion, ping;
+    string name, map, description, gameversion;
+    int protocol, numplayers, maxplayers, ping;
     vector<int> attr;
 
-    servinfo() : protocol(INT_MIN), numplayers(0), maxplayers(0), gameversion(0)
+    servinfo() : protocol(INT_MIN), numplayers(0), maxplayers(0)
     {
-        name[0] = map[0] = desc[0] = '\0';
+        name[0] = map[0] = description[0] = gameversion[0] = '\0';
     }
 };
 

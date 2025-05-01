@@ -1215,7 +1215,7 @@ int main(int argc, char **argv)
     logoutf("init: sound");
     initsound();
 
-    conoutf(CON_INIT, "Current version: %s", currentversionstring);
+    conoutf(CON_INIT, "Current version: %s", currentversion);
 
     logoutf("init: cfg");
     initing = INIT_LOAD;

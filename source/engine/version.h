@@ -4,17 +4,25 @@
 #define VERSION_MAJOR 1
 #define VERSION_MINOR 0
 #define VERSION_PATCH 0
-#define VERSION_EDITION "Ymir"
 
-VAR(currentversion, 1, VERSION_MAJOR << 16 | VERSION_MINOR << 8 | VERSION_PATCH, 0);
-SVARRO(currentversionstring, tempformatstring("v%d.%d.%d (%s Edition)", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH, VERSION_EDITION));
+// optional
+// #define VERSION_TAG ""
+// #define VERSION_NAME ""
 
-const char *formatversion(int version)
+const char *getversionstring(const bool name)
 {
-    static string s;
-    formatstring(s, "v%d.%d.%d", version >> 16, version >> 8 & 0xFF, version & 0xFF);
-    return s;
+    static string version;
+    formatstring(version, "v%d.%d.%d", VERSION_MAJOR, VERSION_MINOR, VERSION_PATCH);
+#ifdef VERSION_TAG
+    concformatstring(version, "-%s", VERSION_TAG);
+#endif
+#ifdef VERSION_NAME
+    if(name) concformatstring(version, " (%s)", VERSION_NAME);
+#endif
+    return version;
 }
-ICOMMAND(formatversion, "i", (int *version), result(formatversion(*version)));
+
+SVARRO(currentversion, getversionstring(false));
+SVARRO(currentversionname, getversionstring(true));
 
 #endif

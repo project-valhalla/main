@@ -300,7 +300,6 @@ struct serverinfo : servinfo, pingattempts
         clearpings();
         protocol = -1;
         numplayers = maxplayers = 0;
-        gameversion = 0;
         attr.setsize(0);
     }
 
@@ -540,19 +539,25 @@ void checkpings()
         si->maxplayers = getint(p);
         int numattr = getint(p);
         si->attr.setsize(0);
-        loopj(numattr) { int attr = getint(p); if(p.overread()) break; si->attr.add(attr); }
+        loopj(numattr)
+        { 
+            int attr = getint(p);
+            if(p.overread()) break;
+            si->attr.add(attr);
+        }
         getstring(text, p);
         filtertext(si->map, text, false, false, false);
         getstring(text, p);
-        filtertext(si->desc, text, true, false);
+        filtertext(si->description, text, true, false);
         if(p.remaining())
         {
-            si->gameversion = getint(p);
+            getstring(text, p);
+            filtertext(si->gameversion, text, false, false, false);
         }
         else
         {
             // if no game version is reported, the server must be running 1.0.0
-            si->gameversion = 1 << 16;
+            filtertext(si->gameversion, "v1.0.0", false, false, false);
         }
     }
 }
@@ -593,11 +598,11 @@ COMMAND(refreshservers, "");
 #define GETSERVERINFO(idx, si, body) GETSERVERINFO_(idx, si, if(si.valid()) { body; })
 
 ICOMMAND(servinfovalid, "i", (int *i), GETSERVERINFO_(*i, si, intret(si.valid() ? 1 : 0)));
-ICOMMAND(servinfodesc, "i", (int *i),
+ICOMMAND(servinfodescription, "i", (int *i),
     GETSERVERINFO_(*i, si,
     {
         const char *status = si.status();
-        result(status ? status : si.desc);
+        result(status ? status : si.description);
     }));
 ICOMMAND(servinfoname, "i", (int *i), GETSERVERINFO_(*i, si, result(si.name)));
 ICOMMAND(servinfoport, "i", (int *i), GETSERVERINFO_(*i, si, intret(si.address.port)));
@@ -607,7 +612,7 @@ ICOMMAND(servinfomap, "i", (int *i), GETSERVERINFO(*i, si, result(si.map)));
 ICOMMAND(servinfoping, "i", (int *i), GETSERVERINFO(*i, si, intret(si.ping)));
 ICOMMAND(servinfonumplayers, "i", (int *i), GETSERVERINFO(*i, si, intret(si.numplayers)));
 ICOMMAND(servinfomaxplayers, "i", (int *i), GETSERVERINFO(*i, si, intret(si.maxplayers)));
-ICOMMAND(servinfogameversion, "i", (int *i), GETSERVERINFO(*i, si, intret(si.gameversion)));
+ICOMMAND(servinfogameversion, "i", (int *i), GETSERVERINFO(*i, si, result(si.gameversion)));
 ICOMMAND(servinfoplayers, "i", (int *i),
     GETSERVERINFO(*i, si,
     {

@@ -6,8 +6,8 @@
 #define VERSION_PATCH 0
 
 // optional
-// #define VERSION_TAG ""
-// #define VERSION_NAME ""
+#define VERSION_TAG "beta.2"
+#define VERSION_NAME "\"Isa\""
 
 const char *getversionstring(const bool name)
 {

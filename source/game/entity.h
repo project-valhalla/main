@@ -103,18 +103,49 @@ static struct itemstat
     { 15000, 30000, 100, PU_INVULNERABILITY, true,  S_INVULNERABILITY, S_ANNOUNCER_INVULNERABILITY, "Power-up"           }  // Invulnerability power-up.
 };
 
-enum
+enum TriggerType
 {
-    Trigger_Item = 0,
-    Trigger_Interest,
-    Trigger_RespawnPoint
+    Item = 0,   // an item that can be picked up
+    UsableItem, // an item that can be used by pressing a button
+    Marker      // a location marked on the HUD
 };
 
-enum
+// mapmodel trigger states
+enum TriggerState
 {
-    TriggerState_Null = -1,
-    TriggerState_Reset,
-    TriggerState_Triggering,
-    TriggerState_Triggered,
-    TriggerState_Resetting
+    Null = -1,
+    Reset,
+    Triggering,
+    Triggered,
+    Resetting
+};
+
+enum TriggerEvent
+{
+    Use = 0,   // fires when the player is close and presses the "Use" button
+    Proximity, // fires when the player is close
+    Distance,  // fires then the player was close and moves away or dies
+    Manual,    // can only be fired manually with the `emittriggerevent` command
+    NUMTRIGGEREVENTS
+};
+
+static const struct TriggerEventInfo { const char *name; } triggerevents[NUMTRIGGEREVENTS] = {
+    { "use" }, { "proximity" }, { "distance" }, { "manual" }
+};
+
+struct TriggerEventHandler
+{
+    char *query; // listen for events on these items
+    int event;   // listen for this type of event
+    uint *code;  // cubescript code to run
+    
+    TriggerEventHandler(const char *query_, int event_, uint *code_) : event(event_), code(code_)
+    {
+        query = newstring(query_);
+    };
+    ~TriggerEventHandler()
+    {
+        if(query) delete[] query;
+        if(code)  delete[] code;
+    }
 };

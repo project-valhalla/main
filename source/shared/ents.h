@@ -23,7 +23,32 @@ struct entity                                   // persistent map entity
     short attr1, attr2, attr3, attr4, attr5;
     uchar type;                                 // type is one of the above
     uchar reserved;
+    char *label;
+    entity() : label(nullptr) {};
+    entity(const entity& other): o(other.o), attr1(other.attr1), attr2(other.attr2), attr3(other.attr3), attr4(other.attr4), attr5(other.attr5), type(other.type), reserved(other.reserved)
+    {
+        label = other.label ? newstring(other.label) : nullptr;
+    }
+    entity& operator=(const entity& other)
+    {
+        if(this != &other)
+        {
+            o = other.o;
+            attr1 = other.attr1; attr2 = other.attr2; attr3 = other.attr3; attr4 = other.attr4; attr5 = other.attr5;
+            type = other.type;
+            reserved = other.reserved;
+            if(label) delete[] label;
+            label = other.label ? newstring(other.label) : nullptr;
+        }
+        return *this;
+    }
+    ~entity()
+    {
+        if(label) delete[] label;
+    }
 };
+
+
 
 enum
 {

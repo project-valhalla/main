@@ -4,6 +4,7 @@
 namespace entities
 {
     extern void editent(int i, bool local);
+    extern void editentlabel(int i, bool local);
     extern void writeent(entity &e, char *buf);
     extern void readent(entity &e, char *buf, int ver);
     extern void fixentity(extentity &e);

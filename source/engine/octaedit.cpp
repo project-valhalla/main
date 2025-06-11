@@ -1123,6 +1123,7 @@ bool packundo(undoblock *u, int &inlen, uchar *&outbuf, int &outlen)
         {
             *(ushort *)buf.pad(2) = lilswap(ushort(ue[i].i));
             entity &e = *(entity *)buf.pad(sizeof(entity));
+            e.label = nullptr; // zero-initialize
             e = ue[i].e;
             lilswap(&e.o.x, 3);
             lilswap(&e.attr1, 5);

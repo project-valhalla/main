@@ -168,7 +168,7 @@ namespace entities
         }
     }
 
-    // attempt to use a "UsableItem" trigger
+    // attempt to use a "Usable" trigger
     bool using_item = false;
     ICOMMAND(useitem, "D", (int *down), { using_item = *down ? true : false; });
 
@@ -715,7 +715,7 @@ namespace entities
                 emitTriggerEvent(n, TriggerEvent::Proximity);
                 int triggertype = ents[n]->attr5;
                 
-                if (triggertype == TriggerType::UsableItem && using_item)
+                if (triggertype == TriggerType::Usable && using_item)
                 {
                     emitTriggerEvent(n, TriggerEvent::Use);
                     ents[n]->setactivity(false);

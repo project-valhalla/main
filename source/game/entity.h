@@ -106,7 +106,7 @@ static struct itemstat
 enum TriggerType
 {
     Item = 0,   // an item that can be picked up
-    UsableItem, // an item that can be used by pressing a button
+    Usable, // an item that can be used by pressing a button
     Marker      // a location marked on the HUD
 };
 

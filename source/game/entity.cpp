@@ -717,8 +717,8 @@ namespace entities
                 
                 if (triggertype == TriggerType::Usable && using_item)
                 {
-                    emitTriggerEvent(n, TriggerEvent::Use);
                     ents[n]->setactivity(false);
+                    emitTriggerEvent(n, TriggerEvent::Use);
                 }
                 else if (triggertype == TriggerType::Item || triggertype == TriggerType::Marker)
                 {

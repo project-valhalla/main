@@ -31,7 +31,7 @@ namespace event
     {
         event_handlers.deletecontents();
     }
-    ICOMMAND(cleareventhandlers, "", (), clearEventHandlers());
+    ICOMMAND(eventhandlerreset, "", (), clearEventHandlers());
 
     // execute all the event handlers that match the label
     void executeEventHandlers(Emitter emitter, Type event, const char *label)
@@ -66,7 +66,7 @@ namespace event
         if(event_i == Invalid) return;
         emit<T>(id, event_i);
     }
-    ICOMMAND(emittriggerevent, "is", (int *id, char *event), emit<Trigger>(*id, event)); // fire trigger manually
+    ICOMMAND(triggeremit, "is", (int *id, char *event), emit<Trigger>(*id, event)); // fire trigger manually
 
     // register a new event handler for triggers
     ICOMMAND(trigger, "sss", (char *query, char *event, char *code),

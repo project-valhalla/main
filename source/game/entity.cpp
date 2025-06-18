@@ -456,7 +456,7 @@ namespace entities
             d->lastpickupmillis = lastmillis;
         }
     }
-    ICOMMAND(dotriggerpickupeffects, "b", (int *cn), {
+    ICOMMAND(triggerpickupeffects, "b", (int *cn), {
         gameent *d = *cn < 0 ? self : getclient(*cn);
         if(!d) return;
         dohudpickupeffects(TRIGGER, d);
@@ -474,7 +474,7 @@ namespace entities
         }
         playsound(sound, NULL, o.iszero() ? NULL : &o, NULL, flags);
     }
-    ICOMMAND(playtriggersound, "iiiN", (int *ent_id, int *sound_id, int *cn, int *numargs),
+    ICOMMAND(triggersound, "iiiN", (int *ent_id, int *sound_id, int *cn, int *numargs),
     {
         if(!ents.inrange(*ent_id) || ents[*ent_id]->type != TRIGGER) return;
         gameent *hud = followingplayer(self);

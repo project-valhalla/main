@@ -1,4 +1,5 @@
 #include "game.h"
+#include "event.h"
 
 namespace game
 {
@@ -882,10 +883,7 @@ namespace game
 
     void kill(gameent *d, gameent *actor, int atk, int flags)
     {
-        if(d == self)
-        {
-            entities::emitDistanceEvents();
-        }
+        event::onPlayerDeath(d, actor);
         if(d->state==CS_EDITING)
         {
             d->editstate = CS_DEAD;

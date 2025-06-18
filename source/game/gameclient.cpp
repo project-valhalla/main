@@ -1,4 +1,5 @@
 #include "game.h"
+#include "event.h"
 
 namespace game
 {
@@ -635,8 +636,7 @@ namespace game
         scorelimit = _scorelimit;
         if(editmode) toggleedit();
         if(m_demo) { entities::resetspawns(); return; }
-        entities::clearTriggerEventHandlers();
-        entities::clearProximityTriggers();
+        event::onMapStart();
         if((m_edit && !name[0]) || !load_world(name))
         {
             emptymap(0, true, name);
@@ -2417,6 +2417,7 @@ namespace game
                     saveragdoll(s);
                     s->state = CS_SPECTATOR;
                     execident("on_spectate");
+                    event::onPlayerSpectate(s);
                     if (s == self)
                     {
                         camera::restore();
@@ -2427,6 +2428,7 @@ namespace game
                     setdeathstate(s, true);
                     conoutf("%s \fs\f0has left spectator mode\fr", colorname(s));
                     execident("on_unspectate");
+                    event::onPlayerUnspectate(s);
                 }
                 s->ghost = waiting;
                 checkfollow();

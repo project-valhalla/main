@@ -1,4 +1,6 @@
 #include "game.h"
+#include "event.h"
+#include "query.h"
 
 namespace entities
 {
@@ -18,50 +20,7 @@ namespace entities
     vector<extentity*> ents;
     vector<extentity*>& getents() { return ents; }
 
-    vector<TriggerEventHandler*> trigger_event_handlers; // registered event handlers for the current map
     vector<int> proximity_triggers; // triggers in proximity of the player, used for "Distance" events
-
-    // check if a label matches a query string
-    bool matchEntQuery(const char *query, const char *label)
-    {
-        static string qs, ls;
-        if(!strlen(query)) return true;  // empty query matches everything
-        if(!strlen(label)) return false; // empty label only matches empty query
-        for(const char *qp = query; *qp;)
-        {
-            // find the next word in the query
-            while(*qp && *qp == ' ') ++qp;
-            if(!*qp) break;
-            const char *qword = qp;
-            while(*qp && *qp != ' ') ++qp;
-            int qlen = qp - qword;
-            copystring(qs, qword, qlen+1);
-
-            bool found = false;
-
-            for(const char *lp = label; *lp;)
-            {
-                // find the next word in the label
-                while(*lp && *lp == ' ') ++lp;
-                if(!*lp) break;
-                const char *lword = lp;
-                while(*lp && *lp != ' ') ++lp;
-                int llen = lp - lword;
-                copystring(ls, lword, llen+1);
-
-                // check if the words match
-                if(!strcmp(qs, ls))
-                {
-                    found = true;
-                    break;
-                }
-            }
-            if(!found) return false; // this query word was not found: the entity does not match
-        }
-        return true; // all query words were found
-    }
-    // (for testing)
-    ICOMMAND(matchentquery, "ss", (char *query, char *label), intret(matchEntQuery(query, label) ? 1 : 0));
 
     // search ents by type and label and returns a list of ids
     ICOMMAND(entquery, "ss", (char *type, char *query),
@@ -84,7 +43,7 @@ namespace entities
         {
             if(
                 (type_i < 0 || type_i == ents[i]->type) &&
-                (matchEntQuery(query, ents[i]->label))
+                (query::match(query, ents[i]->label))
             )
             {
                 if(num_ids++) buf.add(' ');
@@ -96,63 +55,6 @@ namespace entities
         result(buf.getbuf());
     })
 
-    // convert trigger event names to enum values
-    int findTriggerEvent(const char *name)
-    {
-        for(int i = 0; i < NUMTRIGGEREVENTS; ++i) if(!strcmp(name, triggerevents[i].name)) return i;
-        conoutf(CON_ERROR, "unknown trigger event type \"%s\"", name);
-        return -1;
-    }
-
-    // register a new trigger event handler
-    ICOMMAND(trigger, "sss", (char *query, char *event, char *code), {
-        if(!m_story) return;
-        const int event_i = findTriggerEvent(event);
-        if(event_i < 0) return;
-        TriggerEventHandler *handler = new TriggerEventHandler(query, event_i, compilecode(code));
-        trigger_event_handlers.add(handler);
-    })
-
-    // inside a trigger event handler, the id of the trigger that emitted the event
-    VAR(curtrigger, 0, 0, -1);
-
-    // execute all trigger event handlers that match the ent label and event type
-    void execTriggerEventHandlers(const char *label, int event)
-    {
-        if(!label) return;
-        loopv(trigger_event_handlers)
-        {
-            TriggerEventHandler *handler = trigger_event_handlers[i];
-            if(handler->event == event && handler->query && handler->code && matchEntQuery(handler->query, label))
-            {
-                executeret(handler->code);
-            }
-        }
-    }
-
-    // emit an event from the specified trigger ent
-    void emitTriggerEvent(int id, int event)
-    {
-        if(!ents.inrange(id)) return;
-        curtrigger = id;
-        extentity *ent = ents[id];
-        execTriggerEventHandlers(ent->label, event);
-    }
-    void emitTriggerEvent(int id, char *event)
-    {
-        int event_i = findTriggerEvent(event);
-        if(event_i < 0) return;
-        emitTriggerEvent(id, event_i);
-    }
-    ICOMMAND(emittriggerevent, "is", (int *id, char *event), emitTriggerEvent(*id, event)); // fire trigger manually
-
-    // remove all registered trigger event handlers
-    void clearTriggerEventHandlers()
-    {
-        trigger_event_handlers.deletecontents();
-    }
-    ICOMMAND(cleartriggereventhandlers, "", (), clearTriggerEventHandlers());
-
     // clear the list of triggers in proximity (when starting a new map)
     void clearProximityTriggers()
     {
@@ -163,9 +65,23 @@ namespace entities
     {
         loopvrev(proximity_triggers)
         {
-            emitTriggerEvent(proximity_triggers[i], TriggerEvent::Distance);
+            event::emit<event::Trigger>(proximity_triggers[i], event::Distance);
             proximity_triggers.remove(i);
         }
+    }
+
+    void onPlayerDeath(gameent *d, gameent *actor)
+    {
+        if(d == self) emitDistanceEvents();
+    }
+    void onPlayerSpectate(gameent *d)
+    {
+        if(d == self) emitDistanceEvents();
+    }
+    void onPlayerUnspectate(gameent *d) {}
+    void onMapStart()
+    {
+        clearProximityTriggers();
     }
 
     // attempt to use a "Usable" trigger
@@ -712,14 +628,14 @@ namespace entities
                 {
                     break;
                 }
-                emitTriggerEvent(n, TriggerEvent::Proximity);
+                event::emit<event::Trigger>(n, event::Proximity);
                 int triggertype = ents[n]->attr5;
                 
                 if (triggertype == TriggerType::Usable && using_item)
                 {
                     ents[n]->setactivity(false);
                     using_item = false;
-                    emitTriggerEvent(n, TriggerEvent::Use);
+                    event::emit<event::Trigger>(n, event::Use);
                 }
                 else if (triggertype == TriggerType::Item || triggertype == TriggerType::Marker)
                 {
@@ -851,7 +767,7 @@ namespace entities
             const int exit_radius = max(0, max(radius, e.attr4 ? e.attr4 : ENTITY_COLLECT_RADIUS));
             if(dist > exit_radius)
             {
-                emitTriggerEvent(id, TriggerEvent::Distance);
+                event::emit<event::Trigger>(id, event::Distance);
                 proximity_triggers.remove(i);
             }
         }

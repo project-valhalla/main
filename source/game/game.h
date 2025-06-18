@@ -672,9 +672,10 @@ namespace entities
     extern void teleporteffects(gameent *d, int tp, int td, bool local = true);
     extern void jumppadeffects(gameent *d, int jp, bool local = true);
     extern void resettriggers();
-    extern void clearTriggerEventHandlers();
-    extern void clearProximityTriggers();
-    extern void emitDistanceEvents();
+    extern void onMapStart();
+    extern void onPlayerDeath(gameent *d, gameent *actor);
+    extern void onPlayerSpectate(gameent *d);
+    extern void onPlayerUnspectate(gameent *d);
 
     extern int respawnent;
 

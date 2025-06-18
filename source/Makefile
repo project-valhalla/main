@@ -125,7 +125,9 @@ CLIENT_OBJS= \
 	game/hud.o \
 	game/projectile.o \
 	game/announcer.o \
-	game/camera.o
+	game/camera.o \
+	game/event.o \
+	game/query.o
 
 CLIENT_PCH= shared/cube.h.gch engine/engine.h.gch game/game.h.gch
 
@@ -476,17 +478,18 @@ game/gameclient.o: shared/ents.h shared/command.h shared/glexts.h
 game/gameclient.o: shared/glemu.h engine/sound.h shared/iengine.h
 game/gameclient.o: shared/igame.h game/projectile.h game/weapon.h game/ai.h
 game/gameclient.o: game/gamemode.h game/entity.h game/announcer.h
-game/gameclient.o: game/monster.h game/ctf.h game/elimination.h
+game/gameclient.o: game/monster.h game/event.h game/ctf.h game/elimination.h
 game/entity.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/entity.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/entity.o: engine/sound.h shared/iengine.h shared/igame.h
 game/entity.o: game/projectile.h game/weapon.h game/ai.h game/gamemode.h
-game/entity.o: game/entity.h game/announcer.h game/monster.h
+game/entity.o: game/entity.h game/announcer.h game/monster.h game/event.h
+game/entity.o: game/query.h
 game/game.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/game.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/game.o: engine/sound.h shared/iengine.h shared/igame.h game/projectile.h
 game/game.o: game/weapon.h game/ai.h game/gamemode.h game/entity.h
-game/game.o: game/announcer.h game/monster.h
+game/game.o: game/announcer.h game/monster.h game/event.h
 game/render.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/render.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/render.o: engine/sound.h shared/iengine.h shared/igame.h
@@ -553,6 +556,14 @@ game/camera.o: engine/octa.h engine/light.h engine/texture.h engine/bih.h
 game/camera.o: engine/model.h game/game.h game/projectile.h game/weapon.h
 game/camera.o: game/ai.h game/gamemode.h game/entity.h game/announcer.h
 game/camera.o: game/monster.h
+game/event.o: game/event.h game/game.h shared/cube.h shared/tools.h
+game/event.o: shared/geom.h shared/ents.h shared/command.h shared/glexts.h
+game/event.o: shared/glemu.h engine/sound.h shared/iengine.h shared/igame.h
+game/event.o: game/projectile.h game/weapon.h game/ai.h game/gamemode.h
+game/event.o: game/entity.h game/announcer.h game/monster.h game/query.h
+game/query.o: game/query.h shared/cube.h shared/tools.h shared/geom.h
+game/query.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
+game/query.o: engine/sound.h shared/iengine.h shared/igame.h
 
 shared/cube.h.gch: shared/tools.h shared/geom.h shared/ents.h
 shared/cube.h.gch: shared/command.h shared/glexts.h shared/glemu.h
@@ -595,7 +606,7 @@ standalone/game/entity.o: shared/geom.h shared/ents.h shared/command.h
 standalone/game/entity.o: engine/sound.h shared/iengine.h shared/igame.h
 standalone/game/entity.o: game/projectile.h game/weapon.h game/ai.h
 standalone/game/entity.o: game/gamemode.h game/entity.h game/announcer.h
-standalone/game/entity.o: game/monster.h
+standalone/game/entity.o: game/monster.h game/event.h game/query.h
 standalone/game/gameserver.o: game/game.h shared/cube.h shared/tools.h
 standalone/game/gameserver.o: shared/geom.h shared/ents.h shared/command.h
 standalone/game/gameserver.o: engine/sound.h shared/iengine.h shared/igame.h

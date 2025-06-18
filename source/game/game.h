@@ -510,6 +510,7 @@ struct gameent : dynent, gamestate
     string country_name;
 
     vec muzzle, eject;
+    bool interacting;
 
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
@@ -520,7 +521,7 @@ struct gameent : dynent, gamestate
                 edit(NULL), recoil(0), smoothmillis(-1),
                 transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
-                muzzle(-1, -1, -1), eject(-1, -1, -1)
+                muzzle(-1, -1, -1), eject(-1, -1, -1), interacting(false)
     {
         loopi(Chan_Num)
         {
@@ -579,6 +580,7 @@ struct gameent : dynent, gamestate
         respawned = suicided = -2;
         lasthit = lastkill = 0;
         ghost = false;
+        interacting = false;
     }
 
     void respawn()
@@ -602,6 +604,7 @@ struct gameent : dynent, gamestate
             stopchannelsound(i);
         }
         recoil = 0;
+        interacting = false;
     }
 
     void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)

@@ -84,10 +84,6 @@ namespace entities
         clearProximityTriggers();
     }
 
-    // attempt to use a "Usable" trigger
-    bool using_item = false;
-    ICOMMAND(useitem, "D", (int *down), { using_item = *down ? true : false; });
-
     int respawnent = -1;
 
     void setRespawnPoint(int id)
@@ -631,10 +627,10 @@ namespace entities
                 event::emit<event::Trigger>(n, event::Proximity);
                 int triggertype = ents[n]->attr5;
                 
-                if (triggertype == TriggerType::Usable && using_item)
+                if (triggertype == TriggerType::Usable && self->interacting)
                 {
                     ents[n]->setactivity(false);
-                    using_item = false;
+                    self->interacting = false;
                     event::emit<event::Trigger>(n, event::Use);
                 }
                 else if (triggertype == TriggerType::Item || triggertype == TriggerType::Marker)

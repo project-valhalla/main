@@ -254,6 +254,8 @@
 		<Unit filename="../game/elimination.h" />
 		<Unit filename="../game/entity.cpp" />
 		<Unit filename="../game/entity.h" />
+		<Unit filename="../game/event.cpp" />
+		<Unit filename="../game/event.h" />
 		<Unit filename="../game/extinfo.h" />
 		<Unit filename="../game/game.cpp" />
 		<Unit filename="../game/game.h">
@@ -270,6 +272,8 @@
 		<Unit filename="../game/monster.h" />
 		<Unit filename="../game/projectile.cpp" />
 		<Unit filename="../game/projectile.h" />
+		<Unit filename="../game/query.cpp" />
+		<Unit filename="../game/query.h" />
 		<Unit filename="../game/render.cpp" />
 		<Unit filename="../game/scoreboard.cpp" />
 		<Unit filename="../game/waypoint.cpp" />

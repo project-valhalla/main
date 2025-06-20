@@ -324,6 +324,12 @@
     <ClInclude Include="..\game\announcer.h">
       <Filter>Header\game</Filter>
     </ClInclude>
+    <ClInclude Include="..\game\event.h">
+      <Filter>Header\game</Filter>
+    </ClInclude>
+    <ClInclude Include="..\game\query.h">
+      <Filter>Header\game</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Resource">

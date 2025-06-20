@@ -14,7 +14,7 @@ namespace event
         Invalid = -1,
         Use = 0,      // fires when the player is close and presses the "Use" button
         Proximity,    // fires when the player is close
-        Distance,     // fires then the player was close and moves away or dies
+        Distance,     // fires when the player was close and moves away or dies
         Manual,       // can only be fired manually with the `emittriggerevent` command
         NUMEVENTTYPES
     };

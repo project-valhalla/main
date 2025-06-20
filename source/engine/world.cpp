@@ -383,6 +383,7 @@ undoblock *newundoent()
     loopv(entgroup)
     {
         e->i = entgroup[i];
+        e->e.label = nullptr; // zero-initialize
         e->e = *entities::getents()[entgroup[i]];
         e++;
     }
@@ -472,6 +473,7 @@ void attachentities()
         if(oldtype!=e.type) detachentity(e); \
         if(e.type!=ET_EMPTY) { addentityedit(n); if(oldtype!=e.type) attachentity(e); } \
         entities::editent(n, true); \
+        entities::editentlabel(n, true); \
         clearshadowcache(); \
     }, v); \
 }
@@ -983,7 +985,7 @@ void delent()
     entcancel();
 }
 
-int findtype(char *what)
+int findenttype(char *what)
 {
     for(int i = 0; *entities::entname(i); i++) if(strcmp(what, entities::entname(i))==0) return i;
     conoutf(CON_ERROR, "unknown entity type \"%s\"", what);
@@ -1105,13 +1107,18 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
     return &e;
 }
 
-void newentity(int type, int a1, int a2, int a3, int a4, int a5, bool fix = true)
+void newentity(int type, int a1, int a2, int a3, int a4, int a5, bool fix = true, const char *label = nullptr)
 {
     int idx;
     extentity *t = newentity(true, player->o, type, a1, a2, a3, a4, a5, idx, fix);
     if(!t) return;
     dropentity(*t);
     t->type = ET_EMPTY;
+    if(t->label)
+    {
+        delete[] t->label;
+    }
+    t->label = label ? newstring(label) : nullptr;
     enttoggle(idx);
     makeundoent();
     entedit(idx, e.type = type);
@@ -1121,7 +1128,7 @@ void newentity(int type, int a1, int a2, int a3, int a4, int a5, bool fix = true
 void newent(char *what, int *a1, int *a2, int *a3, int *a4, int *a5)
 {
     if(noentedit()) return;
-    int type = findtype(what);
+    int type = findenttype(what);
     if(type != ET_EMPTY)
         newentity(type, *a1, *a2, *a3, *a4, *a5);
 }
@@ -1135,7 +1142,9 @@ void entcopy()
     entcopygrid = sel.grid;
     entcopybuf.shrink(0);
     addimplicit({
-        loopv(entgroup) entfocus(entgroup[i], entcopybuf.add(e).o.sub(vec(sel.o)));
+        loopv(entgroup) entfocus(entgroup[i], {
+            entcopybuf.add(e).o.sub(vec(sel.o));
+        });
     });
 }
 
@@ -1151,6 +1160,8 @@ void entpaste()
         int idx;
         extentity *e = newentity(true, o, ET_EMPTY, c.attr1, c.attr2, c.attr3, c.attr4, c.attr5, idx);
         if(!e) continue;
+        if(e->label) delete[] e->label;
+        e->label = c.label ? newstring(c.label) : nullptr;
         entadd(idx);
         keepents = max(keepents, idx+1);
     }
@@ -1172,11 +1183,13 @@ void entreplace()
             e.attr3 = c.attr3;
             e.attr4 = c.attr4;
             e.attr5 = c.attr5;
+            if(e.label) delete[] e.label;
+            e.label = c.label ? newstring(c.label) : nullptr;
         });
     }
     else
     {
-        newentity(c.type, c.attr1, c.attr2, c.attr3, c.attr4, c.attr5, false);
+        newentity(c.type, c.attr1, c.attr2, c.attr3, c.attr4, c.attr5, false, c.label);
     }
 }
 
@@ -1190,7 +1203,7 @@ COMMAND(entreplace, "");
 void entset(char *what, int *a1, int *a2, int *a3, int *a4, int *a5)
 {
     if(noentedit()) return;
-    int type = findtype(what);
+    int type = findenttype(what);
     if(type != ET_EMPTY)
         groupedit(e.type=type;
                   e.attr1=*a1;
@@ -1248,7 +1261,7 @@ void enttype(char *type, int *numargs)
 {
     if(*numargs >= 1)
     {
-        int typeidx = findtype(type);
+        int typeidx = findenttype(type);
         if(typeidx != ET_EMPTY) groupedit(e.type = typeidx);
     }
     else entfocus(efocus,
@@ -1286,8 +1299,25 @@ void entattr(int *attr, int *val, int *numargs)
     });
 }
 
+void entlabel(char *label, int *numargs)
+{
+    if(*numargs >= 1)
+    {
+        groupedit({
+            if(e.label) delete[] e.label;
+            e.label = newstring(label);
+            entities::editentlabel(n, true);
+        });
+    }
+    else entfocus(efocus,
+    {
+        result(e.label ? e.label : "");
+    })
+}
+
 COMMAND(enttype, "sN");
 COMMAND(entattr, "iiN");
+COMMAND(entlabel, "sN");
 
 int findentity(int type, int index, int attr1, int attr2)
 {
@@ -1569,6 +1599,20 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
         if(oldtype!=type) attachentity(e);
     }
     entities::editent(i, local);
+    clearshadowcache();
+    commitchanges();
+}
+void mpeditentlabel(int i, const char *label, bool local)
+{
+    vector<extentity *> &ents = entities::getents();
+    if(!ents.inrange(i)) return;
+    extentity* entity = ents[i];
+    if(entity->label)
+    {
+        delete[] entity->label;
+    }
+    entity->label = label && label[0] ? newstring(label) : nullptr;
+    entities::editentlabel(i, local);
     clearshadowcache();
     commitchanges();
 }

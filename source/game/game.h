@@ -140,7 +140,7 @@ enum
     N_PING, N_PONG, N_CLIENTPING,
     N_TIMEUP, N_FORCEINTERMISSION,
     N_SERVMSG, N_ITEMLIST, N_RESUME,
-    N_EDITMODE, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_CALCLIGHT, N_REMIP, N_EDITVSLOT, N_UNDO, N_REDO, N_NEWMAP, N_GETMAP, N_SENDMAP, N_CLIPBOARD, N_EDITVAR,
+    N_EDITMODE, N_EDITENT, N_EDITENTLABEL, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_CALCLIGHT, N_REMIP, N_EDITVSLOT, N_UNDO, N_REDO, N_NEWMAP, N_GETMAP, N_SENDMAP, N_CLIPBOARD, N_EDITVAR,
     N_MASTERMODE, N_MUTE, N_KICK, N_CLEARBANS, N_CURRENTMASTER, N_SPECTATOR, N_SETMASTER, N_SETTEAM,
     N_LISTDEMOS, N_SENDDEMOLIST, N_GETDEMO, N_SENDDEMO,
     N_DEMOPLAYBACK, N_RECORDDEMO, N_STOPDEMO, N_CLEARDEMOS,
@@ -171,7 +171,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_PING, 2, N_PONG, 2, N_CLIENTPING, 2,
     N_TIMEUP, 3, N_FORCEINTERMISSION, 1,
     N_SERVMSG, 0, N_ITEMLIST, 0, N_RESUME, 0,
-    N_EDITMODE, 2, N_EDITENT, 11, N_EDITF, 16, N_EDITT, 16, N_EDITM, 16, N_FLIP, 14, N_COPY, 14, N_PASTE, 14, N_ROTATE, 15, N_REPLACE, 17, N_DELCUBE, 14, N_CALCLIGHT, 1, N_REMIP, 1, N_EDITVSLOT, 16, N_UNDO, 0, N_REDO, 0, N_NEWMAP, 2, N_GETMAP, 1, N_SENDMAP, 0, N_EDITVAR, 0,
+    N_EDITMODE, 2, N_EDITENT, 11, N_EDITENTLABEL, 0, N_EDITF, 16, N_EDITT, 16, N_EDITM, 16, N_FLIP, 14, N_COPY, 14, N_PASTE, 14, N_ROTATE, 15, N_REPLACE, 17, N_DELCUBE, 14, N_CALCLIGHT, 1, N_REMIP, 1, N_EDITVSLOT, 16, N_UNDO, 0, N_REDO, 0, N_NEWMAP, 2, N_GETMAP, 1, N_SENDMAP, 0, N_EDITVAR, 0,
     N_MASTERMODE, 2, N_MUTE, 0, N_KICK, 0, N_CLEARBANS, 1, N_CURRENTMASTER, 0, N_SPECTATOR, 4, N_SETMASTER, 0, N_SETTEAM, 0,
     N_LISTDEMOS, 1, N_SENDDEMOLIST, 0, N_GETDEMO, 3, N_SENDDEMO, 0,
     N_DEMOPLAYBACK, 3, N_RECORDDEMO, 2, N_STOPDEMO, 1, N_CLEARDEMOS, 2,
@@ -193,7 +193,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 #define VALHALLA_SERVER_PORT 21217
 #define VALHALLA_LANINFO_PORT 21216
 #define VALHALLA_MASTER_PORT 21215
-#define PROTOCOL_VERSION 2 // bump when protocol changes
+#define PROTOCOL_VERSION 3 // bump when protocol changes
 #define DEMO_VERSION 1  // bump when demo format changes
 #define DEMO_MAGIC "VALHALLA_DEMO\0\0"
 
@@ -510,6 +510,7 @@ struct gameent : dynent, gamestate
     string country_name;
 
     vec muzzle, eject;
+    bool interacting;
 
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
@@ -520,7 +521,7 @@ struct gameent : dynent, gamestate
                 edit(NULL), recoil(0), smoothmillis(-1),
                 transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
-                muzzle(-1, -1, -1), eject(-1, -1, -1)
+                muzzle(-1, -1, -1), eject(-1, -1, -1), interacting(false)
     {
         loopi(Chan_Num)
         {
@@ -579,6 +580,7 @@ struct gameent : dynent, gamestate
         respawned = suicided = -2;
         lasthit = lastkill = 0;
         ghost = false;
+        interacting = false;
     }
 
     void respawn()
@@ -602,6 +604,7 @@ struct gameent : dynent, gamestate
             stopchannelsound(i);
         }
         recoil = 0;
+        interacting = false;
     }
 
     void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)
@@ -672,6 +675,10 @@ namespace entities
     extern void teleporteffects(gameent *d, int tp, int td, bool local = true);
     extern void jumppadeffects(gameent *d, int jp, bool local = true);
     extern void resettriggers();
+    extern void onMapStart();
+    extern void onPlayerDeath(gameent *d, gameent *actor);
+    extern void onPlayerSpectate(gameent *d);
+    extern void onPlayerUnspectate(gameent *d);
 
     extern int respawnent;
 

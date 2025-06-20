@@ -104,12 +104,28 @@ bool loadents(const char *fname, vector<entity> &ents, uint *crc)
     ushort nummru = f->getlil<ushort>();
     f->seek(nummru*sizeof(ushort), SEEK_CUR);
 
+    bool hasentlabels = hdr.version >= 2;
+
     loopi(min(hdr.numents, MAXENTS))
     {
         entity &e = ents.add();
-        f->read(&e, sizeof(entity));
+        f->read(&e, sizeof(entity) - sizeof(char *));
         lilswap(&e.o.x, 3);
         lilswap(&e.attr1, 5);
+        if(e.label)
+        {
+            delete[] e.label;
+            e.label = nullptr;
+        }
+        if(hasentlabels)
+        {
+            // read ent label
+            int slen = f->getlil<ushort>();
+            e.label = newstring(min(slen, MAXSTRLEN-1));
+            f->read(e.label, min(slen, MAXSTRLEN-1));
+            e.label[min(slen, MAXSTRLEN-1)] = '\0';
+            if(slen >= MAXSTRLEN) f->seek(slen - (MAXSTRLEN-1), SEEK_CUR);
+        }
         fixent(e, hdr.version);
         if(eif > 0) f->seek(eif, SEEK_CUR);
         if(samegame)
@@ -682,10 +698,16 @@ bool save_world(const char *mname, bool nolms)
     {
         if(ents[i]->type!=ET_EMPTY || nolms)
         {
-            entity tmp = *ents[i];
+            const entity& tmp = *ents[i];
             lilswap(&tmp.o.x, 3);
             lilswap(&tmp.attr1, 5);
-            f->write(&tmp, sizeof(entity));
+
+            // write ent label
+            f->write(&tmp, sizeof(entity) - sizeof(char *));
+            int slen = tmp.label ? strlen(tmp.label) : 0;
+            f->putlil<ushort>(slen);
+            if(slen) f->write(tmp.label, slen);
+
             entities::writeent(*ents[i], ebuf);
             if(entities::extraentinfosize()) f->write(ebuf, entities::extraentinfosize());
         }
@@ -824,13 +846,28 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     vector<extentity *> &ents = entities::getents();
     int einfosize = entities::extraentinfosize();
     char *ebuf = einfosize > 0 ? new char[einfosize] : NULL;
+    bool hasentlabels = hdr.version >= 2;
     loopi(min(hdr.numents, MAXENTS))
     {
         extentity &e = *entities::newentity();
         ents.add(&e);
-        f->read(&e, sizeof(entity));
+        f->read(&e, sizeof(entity) - sizeof(char *));
         lilswap(&e.o.x, 3);
         lilswap(&e.attr1, 5);
+        if(e.label)
+        {
+            delete[] e.label;
+            e.label = nullptr;
+        }
+        if(hasentlabels)
+        {
+            // read ent label
+            int slen = f->getlil<ushort>();
+            e.label = newstring(min(slen, MAXSTRLEN-1));
+            f->read(e.label, min(slen, MAXSTRLEN-1));
+            e.label[min(slen, MAXSTRLEN-1)] = '\0';
+            if(slen >= MAXSTRLEN) f->seek(slen - (MAXSTRLEN-1), SEEK_CUR);
+        }
         fixent(e, hdr.version);
         if(samegame)
         {
@@ -859,7 +896,16 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     if(hdr.numents > MAXENTS)
     {
         conoutf(CON_WARN, "warning: map has %d entities", hdr.numents);
-        f->seek((hdr.numents-MAXENTS)*(samegame ? sizeof(entity) + einfosize : eif), SEEK_CUR);
+        if(!hasentlabels || !samegame)
+        {
+            f->seek((hdr.numents-MAXENTS)*(samegame ? sizeof(entity) - sizeof(char *) + einfosize : eif), SEEK_CUR);
+        }
+        else loopi(hdr.numents - MAXENTS)
+        {
+            f->seek(sizeof(entity) - sizeof(char *), SEEK_CUR);
+            int slen = f->getlil<ushort>();
+            f->seek(slen + einfosize, SEEK_CUR);
+        }
     }
 
     renderprogress(0, "Opening up the slots...");

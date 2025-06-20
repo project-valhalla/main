@@ -1,4 +1,5 @@
 #include "game.h"
+#include "event.h"
 
 namespace game
 {
@@ -556,6 +557,7 @@ namespace game
     ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
+    ICOMMAND(interact, "D", (int *down), { self->interacting = *down ? true : false; });
 
     bool isally(const gameent *a, const gameent *b)
     {
@@ -882,6 +884,7 @@ namespace game
 
     void kill(gameent *d, gameent *actor, int atk, int flags)
     {
+        event::onPlayerDeath(d, actor);
         if(d->state==CS_EDITING)
         {
             d->editstate = CS_DEAD;

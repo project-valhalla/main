@@ -1,4 +1,6 @@
 #include "game.h"
+#include "event.h"
+#include "query.h"
 
 namespace entities
 {
@@ -16,8 +18,103 @@ namespace entities
 
 #ifndef STANDALONE
     vector<extentity*> ents;
-
     vector<extentity*>& getents() { return ents; }
+
+    vector<int> proximity_triggers; // triggers in proximity of the player, used for "Distance" events
+
+    // search ents by type and label and returns a list of ids
+    ICOMMAND(entquery, "ss", (char *type, char *query),
+    {
+        vector<extentity *>& ents = entities::getents();
+        int type_i = -1;
+        if(type[0])
+        {
+            if((type_i = findenttype(type)) == ET_EMPTY)
+            {
+                result("");
+                return;
+            }
+        }
+
+        vector<char> buf;
+        string id;
+        int num_ids = 0;
+        loopv(ents)
+        {
+            if(
+                (type_i < 0 || type_i == ents[i]->type) &&
+                (query::match(query, ents[i]->label))
+            )
+            {
+                if(num_ids++) buf.add(' ');
+                formatstring(id, "%d", i);
+                buf.put(id, strlen(id));
+            }
+        }
+        buf.add('\0');
+        result(buf.getbuf());
+    })
+
+    // clear the list of triggers in proximity (when starting a new map)
+    void clearProximityTriggers()
+    {
+        proximity_triggers.setsize(0);
+    }
+    // emit "Distance" events for all triggers in proximity (called when the player dies)
+    void emitDistanceEvents()
+    {
+        loopvrev(proximity_triggers)
+        {
+            event::emit<event::Trigger>(proximity_triggers[i], event::Distance);
+            proximity_triggers.remove(i);
+        }
+    }
+
+    void onPlayerDeath(gameent *d, gameent *actor)
+    {
+        if(d == self) emitDistanceEvents();
+    }
+    void onPlayerSpectate(gameent *d)
+    {
+        if(d == self) emitDistanceEvents();
+    }
+    void onPlayerUnspectate(gameent *d) {}
+    void onMapStart()
+    {
+        clearProximityTriggers();
+    }
+
+    int respawnent = -1;
+
+    void setRespawnPoint(int id)
+    {
+        respawnent = ents.inrange(id) ? id : -1;
+    }
+    ICOMMAND(setrespawnpoint, "i", (int *id), setRespawnPoint(*id));
+
+    // returns whether or not a trigger is enabled
+    int getTriggerState(int id)
+    {
+        if(!ents.inrange(id)) return 0;
+        return ents[id]->isactive() ? 1 : 0;
+    }
+    // enables or disables a trigger
+    void setTriggerState(int id, int state)
+    {
+        if(!ents.inrange(id)) return;
+        ents[id]->setactivity(state != 0 ? true : false);
+    }
+    ICOMMAND(triggerstate, "iiN", (int *id, int *state, int *numargs),
+    {
+        if(*numargs > 1)
+        {
+            setTriggerState(*id, *state);
+        }
+        else
+        {
+            intret(getTriggerState(*id));
+        }
+    });
 
     bool mayattach(extentity& e) { return false; }
     bool attachent(extentity& e, extentity& a) { return false; }
@@ -214,7 +311,7 @@ namespace entities
 
         if (m_story)
         {
-            if (entity.type == TRIGGER && entity.isactive() && entity.attr5 == Trigger_Interest)
+            if (entity.type == TRIGGER && entity.isactive() && entity.attr5 == TriggerType::Marker)
             {
                 particle_hud_mark(entity.o, 1, 2, PART_GAME_ICONS, 1, 0x00FF3F, 4.0f);
             }
@@ -359,6 +456,11 @@ namespace entities
             d->lastpickupmillis = lastmillis;
         }
     }
+    ICOMMAND(triggerpickupeffects, "b", (int *cn), {
+        gameent *d = *cn < 0 ? self : getclient(*cn);
+        if(!d) return;
+        dohudpickupeffects(TRIGGER, d);
+    });
 
     // These following functions are called when the client touches the entity.
 
@@ -372,6 +474,13 @@ namespace entities
         }
         playsound(sound, NULL, o.iszero() ? NULL : &o, NULL, flags);
     }
+    ICOMMAND(triggersound, "iiiN", (int *ent_id, int *sound_id, int *cn, int *numargs),
+    {
+        if(!ents.inrange(*ent_id) || ents[*ent_id]->type != TRIGGER) return;
+        gameent *hud = followingplayer(self);
+        gameent *d = *numargs < 3 ? hud : getclient(*cn);
+        playentitysound(S_TRIGGER, *sound_id, d && d == hud ? vec(0, 0, 0) : ents[*ent_id]->o);
+    });
 
     void teleportparticleeffects(gameent *d, vec p)
     {
@@ -476,8 +585,6 @@ namespace entities
 
     VARR(teleteam, 0, 1, 1);
 
-    int respawnent = -1;
-
     void trypickup(int n, gameent *d)
     {
         switch(ents[n]->type)
@@ -517,27 +624,24 @@ namespace entities
                 {
                     break;
                 }
-                //if(ents[n]->attr5 && lastmillis - ents[n]->lasttrigger <= ents[n]->attr5) break;
-                defformatstring(hookname, "trigger_%d", ents[n]->attr1);
-                if (identexists(hookname))
-                {
-                    execident(hookname);
-                }
-                gameent* hud = followingplayer(self);
-                if (ents[n]->attr4 >= 0)
-                {
-                    playentitysound(S_TRIGGER, ents[n]->attr4, d == hud ? vec(0, 0, 0) : ents[n]->o);
-                }
+                event::emit<event::Trigger>(n, event::Proximity);
                 int triggertype = ents[n]->attr5;
-                if (triggertype == Trigger_Item)
+                
+                if (triggertype == TriggerType::Usable && self->interacting)
                 {
-                    dohudpickupeffects(ents[n]->type, d);
+                    ents[n]->setactivity(false);
+                    self->interacting = false;
+                    event::emit<event::Trigger>(n, event::Use);
                 }
-                else if (triggertype == Trigger_RespawnPoint)
+                else if (triggertype == TriggerType::Item || triggertype == TriggerType::Marker)
                 {
-                    respawnent = n;
+                    // disable the item once the player reaches it
+                    ents[n]->setactivity(false);
                 }
-                ents[n]->setactivity(false);
+
+                // add ent id to the list of triggers in proximity
+                if(proximity_triggers.find(n) < 0) proximity_triggers.add(n);
+
                 d->lastpickup = ents[n]->type;
                 break;
             }
@@ -648,6 +752,21 @@ namespace entities
                 trypickup(i, d);
             }
         }
+        // check if the player moved away from a trigger in proximity
+        if(m_story && d == self) loopvrev(proximity_triggers)
+        {
+            const int id = proximity_triggers[i];
+            if(!ents.inrange(id) || ents[id]->type != TRIGGER) continue;
+            const extentity& e = *ents[id];
+            const float dist = e.o.dist(o);
+            const int radius = e.attr3 ? e.attr3 : ENTITY_COLLECT_RADIUS;
+            const int exit_radius = max(0, max(radius, e.attr4 ? e.attr4 : ENTITY_COLLECT_RADIUS));
+            if(dist > exit_radius)
+            {
+                event::emit<event::Trigger>(id, event::Distance);
+                proximity_triggers.remove(i);
+            }
+        }
     }
 
     void updatepowerups(int time, gameent* d)
@@ -688,7 +807,7 @@ namespace entities
         loopv(ents)
         {
             ents[i]->clearspawned();
-            if (ents[i]->type == TRIGGER && ents[i]->attr5 == Trigger_Interest)
+            if (ents[i]->type == TRIGGER && ents[i]->attr5 == TriggerType::Marker)
             {
                 continue;
             }
@@ -745,26 +864,26 @@ namespace entities
     {
         switch (e.triggerstate)
         {
-            case TriggerState_Reset:
+            case TriggerState::Reset:
             {
                 anim = ANIM_TRIGGER | ANIM_START;
                 break;
             }
 
-            case TriggerState_Triggering:
+            case TriggerState::Triggering:
             {
                 anim = ANIM_TRIGGER;
                 basetime = e.lasttrigger;
                 break;
             }
 
-            case TriggerState_Triggered:
+            case TriggerState::Triggered:
             {
                 anim = ANIM_TRIGGER | ANIM_END;
                 break;
             }
 
-            case TriggerState_Resetting:
+            case TriggerState::Resetting:
             {
                 anim = ANIM_TRIGGER | ANIM_REVERSE;
                 basetime = e.lasttrigger;
@@ -826,7 +945,17 @@ namespace entities
 
             case TRIGGER:
             {
+                vec dir;
+                vecfromyawpitch(e.attr1, 0, 1, 0, dir);
+                renderentarrow(e, dir, 4);
+                gle::color(bvec4(0x7F, 0xFF, 0xD4, 0xFF));
                 renderentsphere(e, e.attr3);
+                if(e.attr3 > 0 && e.attr4 > e.attr3)
+                {
+                    gle::color(bvec4(0xFF, 0xA0, 0x7A, 0xFF));
+                    renderentsphere(e, e.attr4);
+                }
+                gle::color(bvec4(0xFF, 0xFF, 0xFF, 0xFF));
                 break;
             }
 
@@ -861,7 +990,7 @@ namespace entities
         {
             entity->flags &= ~(EF_ANIM | EF_NOVIS | EF_NOSHADOW | EF_NOCOLLIDE);
             entity->lasttrigger = 0;
-            entity->triggerstate = TriggerState_Null;
+            entity->triggerstate = TriggerState::Null;
         }
     }
 
@@ -889,6 +1018,14 @@ namespace entities
             e.lastspawn = lastmillis;
         }
     }
+    void editentlabel(int i, bool local)
+    {
+        extentity& e = *ents[i];
+        if(local)
+        {
+            addmsg(N_EDITENTLABEL, "ris", i, e.label ? e.label : "");
+        }
+    }
 
     float dropheight(entity &e)
     {
@@ -896,24 +1033,7 @@ namespace entities
         return 4.0f;
     }
 
-    void triggertoggle(int id, int id2 = -1)
-    {
-        loopv(ents)
-        {
-            extentity* entity = ents[i];
-            if (entity->type != TRIGGER)
-            {
-                continue;
-            }
-            if (entity->attr1 == id || (id2 >= 0 && entity->attr1 == id2))
-            {
-                entity->setactivity(entity->isactive() ? false : true);
-            }
-        }
-    }
-    ICOMMAND(triggertoggle, "i", (int* id), triggertoggle(*id));
-    ICOMMAND(triggerswap, "ii", (int* id, int* id2), triggertoggle(*id, *id2));
-
+    // sets the trigger state of a map model
     void triggermapmodel(int id, int state, int sound = S_INVALID)
     {
         extentity* entity = NULL;
@@ -927,11 +1047,11 @@ namespace entities
         }
 
         cleartriggerflags(entity);
-        if (state > TriggerState_Null)
+        if (state > TriggerState::Null)
         {
             entity->flags |= EF_ANIM;
         }
-        if (state == TriggerState_Triggering || state == TriggerState_Triggered)
+        if (state == TriggerState::Triggering || state == TriggerState::Triggered)
         {
             entity->flags |= EF_NOCOLLIDE;
         }
@@ -943,6 +1063,11 @@ namespace entities
         }
     }
     ICOMMAND(triggermapmodel, "iib", (int* id, int* state, int* sound), triggermapmodel(*id, *state, *sound));
+    ICOMMAND(mapmodeltriggerstate, "i", (int *id),
+    {
+        extentity* entity = ents.inrange(*id) ? ents[*id] : nullptr;
+        intret(entity && entity->type == ET_MAPMODEL ? entity->triggerstate : 0);
+    });
 #endif
 }
 

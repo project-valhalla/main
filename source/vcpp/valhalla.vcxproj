@@ -982,10 +982,12 @@
     </ClCompile>
     <ClCompile Include="..\game\announcer.cpp" />
     <ClCompile Include="..\game\camera.cpp" />
+    <ClCompile Include="..\game\event.cpp" />
     <ClCompile Include="..\game\gamephysics.cpp" />
     <ClCompile Include="..\game\hud.cpp" />
     <ClCompile Include="..\game\monster.cpp" />
     <ClCompile Include="..\game\projectile.cpp" />
+    <ClCompile Include="..\game\query.cpp" />
     <ClCompile Include="..\shared\crypto.cpp" />
     <ClCompile Include="..\shared\geom.cpp" />
     <ClCompile Include="..\shared\glemu.cpp" />

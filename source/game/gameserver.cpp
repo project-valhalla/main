@@ -1824,7 +1824,7 @@ namespace server
                 N_NOTICE, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP,
                 N_DROPFLAG, N_SCOREFLAG, N_RETURNFLAG, N_RESETFLAG, N_ROUND, N_ROUNDSCORE, N_ASSIGNROLE, N_SCORE, N_VOOSH,
                 N_CLIENT, N_AUTHCHAL, N_INITAI, N_DEMOPACKET, -2, N_CALCLIGHT, N_REMIP, N_NEWMAP, N_GETMAP, N_SENDMAP,
-                N_CLIPBOARD, -3, N_EDITENT, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_EDITVAR,
+                N_CLIPBOARD, -3, N_EDITENT, N_EDITENTLABEL, N_EDITF, N_EDITT, N_EDITM, N_FLIP, N_COPY, N_PASTE, N_ROTATE, N_REPLACE, N_DELCUBE, N_EDITVAR,
                 N_EDITVSLOT, N_UNDO, N_REDO, -4, N_POS, NUMMSG),
       connectfilter(-1, N_CONNECT, -2, N_AUTHANS, -3, N_PING, NUMMSG);
 
@@ -4615,6 +4615,14 @@ namespace server
                         sents[i].spawned = false;
                     }
                 }
+                break;
+            }
+
+            case N_EDITENTLABEL:
+            {
+                getint(p);
+                getstring(text, p);
+                QUEUE_MSG;
                 break;
             }
 

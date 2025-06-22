@@ -119,6 +119,8 @@ namespace game
         camera::fixrange();
     }
 
+    VARP(autoswitch, 0, 1, 1);
+
     void shoot(gameent *d, const vec &targ)
     {
         int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
@@ -130,12 +132,15 @@ namespace game
         d->lastattack = atk;
         if (!canshoot(d, atk, gun, projectile))
         {
-            if(d == self)
+            if (d == self)
             {
                 sendsound(S_WEAPON_NOAMMO, d);
                 d->gunwait = 600;
                 d->lastattack = ATK_INVALID;
-                if(!d->ammo[gun]) weaponswitch(d);
+                if (autoswitch && !d->ammo[gun])
+                {
+                    weaponswitch(d);
+                }
             }
             return;
         }
@@ -1264,8 +1269,6 @@ namespace game
         self->lastswitchattempt = lastmillis;
         playsound(S_WEAPON_NOAMMO);
     });
-
-    VARP(autoswitch, 0, 1, 1);
 
     void autoswitchweapon(gameent* d, int type)
     {

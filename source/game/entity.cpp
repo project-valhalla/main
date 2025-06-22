@@ -70,15 +70,27 @@ namespace entities
         }
     }
 
-    void onPlayerDeath(gameent *d, gameent *actor)
+    // Events.
+    void onPlayerDeath(const gameent *d, const gameent *actor)
     {
-        if(d == self) emitDistanceEvents();
+        if (d != self)
+        {
+            return;
+        }
+        emitDistanceEvents();
     }
-    void onPlayerSpectate(gameent *d)
+
+    void onPlayerSpectate(const gameent *d)
     {
-        if(d == self) emitDistanceEvents();
+        if (d != self)
+        {
+            return;
+        }
+        emitDistanceEvents();
     }
-    void onPlayerUnspectate(gameent *d) {}
+
+    void onPlayerUnspectate(const gameent *d) {}
+
     void onMapStart()
     {
         clearProximityTriggers();

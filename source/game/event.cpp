@@ -66,7 +66,7 @@ namespace game
         // event emitter for triggers
         template<>
 
-        void emit<Trigger>(int id, Type event)
+        void emit<Trigger>(const int id, Type event)
         {
             if (!entities::ents.inrange(id) || entities::ents[id]->type != TRIGGER)
             {
@@ -79,7 +79,7 @@ namespace game
         // fire events manually
         template<Emitter T>
 
-        void emit(int id, char* event)
+        void emit(const int id, const char* event)
         {
             Type event_i = findEventType(event);
             if (event_i == Invalid)
@@ -104,17 +104,17 @@ namespace game
             clearEventHandlers();
         }
 
-        void onPlayerDeath(gameent* d, gameent* actor)
+        void onPlayerDeath(const gameent* d, const gameent* actor)
         { 
             entities::onPlayerDeath(d, actor);
         }
 
-        void onPlayerSpectate(gameent* d)
+        void onPlayerSpectate(const gameent* d)
         { 
             entities::onPlayerSpectate(d);
         }
 
-        void onPlayerUnspectate(gameent* d)
+        void onPlayerUnspectate(const gameent* d)
         { 
             entities::onPlayerUnspectate(d);
         }

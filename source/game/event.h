@@ -29,21 +29,21 @@ namespace game
 
         struct EventHandler
         {
-            Emitter source;      // type of object that emits the event
-            char* query;         // listen for events on these items
-            int event;           // listen for this type of event
-            unsigned int* code;  // cubescript code to run
+            const Emitter source; // type of object that emits the event
+            const char* query;    // listen for events on these items
+            const int event;      // listen for this type of event
+            unsigned int* code;   // CubeScript code to run
 
             EventHandler(Emitter source_, const char* query_, int event_, unsigned int* code_);
             ~EventHandler();
         };
 
         void clearEventHandlers();
-        template<Emitter t> void emit(int id, Type event);
+        template<Emitter t> void emit(const int id, const Type event);
 
         void onMapStart();
-        void onPlayerDeath(gameent* d, gameent* actor);
-        void onPlayerSpectate(gameent* d);
-        void onPlayerUnspectate(gameent* d);
+        void onPlayerDeath(const gameent* d, const gameent* actor);
+        void onPlayerSpectate(const gameent* d);
+        void onPlayerUnspectate(const gameent* d);
     } // namespace event
 }

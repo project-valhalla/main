@@ -676,9 +676,9 @@ namespace entities
     extern void jumppadeffects(gameent *d, int jp, bool local = true);
     extern void resettriggers();
     extern void onMapStart();
-    extern void onPlayerDeath(gameent *d, gameent *actor);
-    extern void onPlayerSpectate(gameent *d);
-    extern void onPlayerUnspectate(gameent *d);
+    extern void onPlayerDeath(const gameent *d, const gameent *actor);
+    extern void onPlayerSpectate(const gameent *d);
+    extern void onPlayerUnspectate(const gameent *d);
 
     extern int respawnent;
 

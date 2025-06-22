@@ -1,47 +1,76 @@
 #include "query.h"
 #include "cube.h"
 
-namespace query
+namespace game
 {
-    // check if a label matches a query string
-    bool match(const char *query, const char *label)
+    namespace query
     {
-        static string qs, ls;
-        if(!query || !strlen(query)) return true;  // empty query matches everything
-        if(!label || !strlen(label)) return false; // empty label only matches empty query
-        for(const char *qp = query; *qp;)
+        // check if a label matches a query string
+        bool match(const char* query, const char* label)
         {
-            // find the next word in the query
-            while(*qp && *qp == ' ') ++qp;
-            if(!*qp) break;
-            const char *qword = qp;
-            while(*qp && *qp != ' ') ++qp;
-            int qlen = qp - qword;
-            copystring(qs, qword, qlen+1);
-
-            bool found = false;
-
-            for(const char *lp = label; *lp;)
+            static string qs, ls;
+            if (!query || !strlen(query))
             {
-                // find the next word in the label
-                while(*lp && *lp == ' ') ++lp;
-                if(!*lp) break;
-                const char *lword = lp;
-                while(*lp && *lp != ' ') ++lp;
-                int llen = lp - lword;
-                copystring(ls, lword, llen+1);
-
-                // check if the words match
-                if(!strcmp(qs, ls))
+                // empty query matches everything
+                return true;
+            }
+            if (!label || !strlen(label))
+            {
+                // empty label only matches empty query
+                return false;
+            }
+            for (const char* qp = query; *qp;)
+            {
+                // find the next word in the query
+                while (*qp && *qp == ' ')
                 {
-                    found = true;
+                    ++qp;
+                }
+                if (!*qp)
+                {
                     break;
                 }
+                const char* qword = qp;
+                while (*qp && *qp != ' ')
+                {
+                    ++qp;
+                }
+                int qlen = qp - qword;
+                copystring(qs, qword, qlen + 1);
+                bool found = false;
+                for (const char* lp = label; *lp;)
+                {
+                    // find the next word in the label
+                    while (*lp && *lp == ' ')
+                    {
+                        ++lp;
+                    }
+                    if (!*lp)
+                    {
+                        break;
+                    }
+                    const char* lword = lp;
+                    while (*lp && *lp != ' ')
+                    {
+                        ++lp;
+                    }
+                    int llen = lp - lword;
+                    copystring(ls, lword, llen + 1);
+                    if (!strcmp(qs, ls)) // check if the words match
+                    {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                {
+                    // this query word was not found: the entity does not match
+                    return false;
+                }
             }
-            if(!found) return false; // this query word was not found: the entity does not match
+            return true; // all query words were found
         }
-        return true; // all query words were found
-    }
-    // (for testing)
-    ICOMMAND(matchlabel, "ss", (char *query, char *label), intret(match(query, label) ? 1 : 0));
-} // namespace query
+        // (for testing)
+        ICOMMAND(matchlabel, "ss", (char* query, char* label), intret(match(query, label) ? 1 : 0));
+    } // namespace query
+}

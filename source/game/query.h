@@ -1,4 +1,7 @@
-namespace query
+namespace game
 {
-    bool match(const char *query, const char *label);
+    namespace query
+    {
+        bool match(const char* query, const char* label);
+    }
 }

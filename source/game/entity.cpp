@@ -17,6 +17,49 @@ namespace entities
     }
 
 #ifndef STANDALONE
+
+    void preloadEntities()
+    {
+        loopi(MAXENTTYPES)
+        {
+            const char* mdl = gentities[i].file;
+            if (!mdl)
+            {
+                continue;
+            }
+            preloadmodel(mdl);
+        }
+    }
+
+    void preloadWorld()
+    {
+        loopv(ents)
+        {
+            extentity& e = *ents[i];
+            switch (e.type)
+            {
+                case TELEPORT:
+                case TRIGGER:
+                {
+                    if (e.attr2 > 0)
+                    {
+                        preloadmodel(mapmodelname(e.attr2));
+                    }
+                    break;
+                }
+
+                case JUMPPAD:
+                {
+                    if (e.attr4 > 0)
+                    {
+                        preloadmapsound(e.attr4);
+                    }
+                    break;
+                }
+            }
+        }
+    }
+
     vector<extentity*> ents;
     vector<extentity*>& getents() { return ents; }
 
@@ -212,48 +255,6 @@ namespace entities
     bool allowpickup()
     {
         return !((!m_infection && !m_betrayal && betweenrounds) || (m_hunt && hunterchosen && betweenrounds));
-    }
-
-    void preloadentities()
-    {
-        loopi(MAXENTTYPES)
-        {
-            if (!canspawnitem(i))
-            {
-                continue;
-            }
-            const char* mdl = gentities[i].file;
-            if (!mdl)
-            {
-                continue;
-            }
-            preloadmodel(mdl);
-        }
-        loopv(ents)
-        {
-            extentity& e = *ents[i];
-            switch (e.type)
-            {
-                case TELEPORT:
-                case TRIGGER:
-                {
-                    if (e.attr2 > 0)
-                    {
-                        preloadmodel(mapmodelname(e.attr2));
-                    }
-                    break;
-                }
-
-                case JUMPPAD:
-                {
-                    if (e.attr4 > 0)
-                    {
-                        preloadmapsound(e.attr4);
-                    }
-                    break;
-                }
-            }
-        }
     }
 
     extentity* findclosest(int type, const vec position)
@@ -638,7 +639,6 @@ namespace entities
                 }
                 event::emit<event::Trigger>(n, event::Proximity);
                 int triggertype = ents[n]->attr5;
-                
                 if (triggertype == TriggerType::Usable && self->interacting)
                 {
                     ents[n]->setactivity(false);

@@ -99,6 +99,7 @@ namespace game
     extern void newmap(int size);
     extern void startmap(const char *name);
     extern void preload();
+    extern void preloadworld();
     extern void rendergame();
     extern void renderavatar();
     extern void renderplayerpreview(int model, int color, int team, int weap);

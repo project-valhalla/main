@@ -661,8 +661,8 @@ struct teaminfo
 
 namespace entities
 {
-    extern void preloadentities();
-    extern void renderentities();
+    extern void preloadEntities();
+    extern void preloadWorld();
     extern void checkitems(gameent *d);
     extern void updatepowerups(int time, gameent *d);
     extern void resetspawns();

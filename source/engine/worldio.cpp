@@ -735,6 +735,13 @@ static uint mapcrc = 0;
 uint getmapcrc() { return mapcrc; }
 void clearmapcrc() { mapcrc = 0; }
 
+static void preload_world()
+{
+    preloadusedmapmodels(true);
+    game::preloadworld();
+    preloadmapsounds();
+}
+
 bool load_world(const char *mname, const char *cname)        // still supports all map formats that have existed since the earliest cube betas!
 {
     int loadingstart = SDL_GetTicks();
@@ -950,8 +957,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     execfile(cfgname, false);
     identflags &= ~IDF_OVERRIDDEN;
 
-    preloadusedmapmodels(true);
-    preloadmapsounds();
+    preload_world();
 
     entitiesinoctanodes();
     attachentities();

@@ -743,7 +743,12 @@ namespace game
         projectiles::preload();
         preloadplayermodel();
         preloadsounds();
-        entities::preloadentities();
+        entities::preloadEntities();
         preloadmonsters();
+    }
+
+    void preloadworld()
+    {
+        entities::preloadWorld();
     }
 }

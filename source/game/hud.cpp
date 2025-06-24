@@ -435,12 +435,13 @@ namespace game
         Pointer_Crosshair,
         Pointer_Scope,
         Pointer_Hit,
-        Pointer_Ally
+        Pointer_Ally,
+        Pointer_Interact
     };
 
-    static const int MAX_CROSSHAIRS = 6;
+    static const int MAX_CROSSHAIRS = 7;
 
-    static Texture* crosshairs[MAX_CROSSHAIRS] = { NULL, NULL, NULL, NULL, NULL, NULL };
+    static Texture* crosshairs[MAX_CROSSHAIRS] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
 
     static const char* getdefaultpointer(int index)
     {
@@ -451,6 +452,7 @@ namespace game
             case Pointer_Scope:     return "data/interface/crosshair/dot.png";
             case Pointer_Hit:       return "data/interface/crosshair/hit.png";
             case Pointer_Ally:      return "data/interface/crosshair/ally.png";
+            case Pointer_Interact:  return "data/interface/crosshair/interact.png";
             default:                return "data/interface/crosshair/default.png";
         }
     }
@@ -534,9 +536,7 @@ namespace game
             {
                 return crosshair;
             }
-
             crosshair = Pointer_Crosshair;
-
             if (crosshairscope)
             {
                 const int zoomType = checkweaponzoom();

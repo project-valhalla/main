@@ -6,9 +6,34 @@ namespace game
 {
     namespace event
     {
+        // use binary search to find instances of objects by their id
+        // `T` must have an `id` field such that if `i < j` then `v[i]->id < v[j]->id`
+        template<class T>
+        T *findInstance(vector<T*> v, int val)
+        {
+            int low = 0, high = v.length() - 1;
+            while(low <= high)
+            {
+                const int mid = low + (high - low) / 2;
+                const int inst = v[mid]->id;
+                if(inst < val)
+                {
+                    low = mid + 1;
+                }
+                else if(inst > val)
+                {
+                    high = mid - 1;
+                }
+                else return v[mid];
+            }
+            return nullptr;
+        }
+
         static const struct EventTypeInfo { const char* name; } eventtypes[NUMEVENTTYPES] =
         {
-            { "use" }, { "proximity" }, { "distance" }, { "manual" }
+            { "use" }, { "proximity" }, { "distance" },
+            { "notice" }, { "pain" }, { "death" },
+            { "manual" }
         };
 
         struct EventHandler
@@ -78,10 +103,12 @@ namespace game
 
         VAR(eventsource, 0, 0, -1); // the id of the object that emitted the event
 
-        template<Emitter t> void emit(int, Type) = delete; // emitters must be explicitly defined for each emitter type
+        // emitters must be explicitly defined for each emitter type
+        template<class T> void emit(T*, Type)    = delete; // for structs that contain an `id` field
+        template<Emitter t> void emit(int, Type) = delete; // for `extentity`'s
+        
         // event emitter for triggers
         template<>
-
         void emit<Trigger>(const int id, Type event)
         {
             if (!entities::ents.inrange(id) || entities::ents[id]->type != TRIGGER)
@@ -92,9 +119,22 @@ namespace game
             executeEventHandlers(Trigger, event, entities::ents[id]->label);
         }
 
+        // event emitters for monsters
+        template<>
+        void emit(monster *m, Type event)
+        {
+            if(!m) return;
+            eventsource = m->id;
+            executeEventHandlers(Monster, event, m->label);
+        }
+        template<>
+        void emit<Monster>(int id, Type event)
+        {
+            emit(findInstance(monsters, id), event);
+        }
+
         // fire events manually
         template<Emitter T>
-
         void emit(const int id, const char* event)
         {
             Type event_i = findEventType(event);
@@ -105,6 +145,7 @@ namespace game
             emit<T>(id, event_i);
         }
         ICOMMAND(triggeremit, "is", (int* id, char* event), emit<Trigger>(*id, event)); // fire trigger manually
+        ICOMMAND(monsteremit, "is", (int* id, char* event), emit<Monster>(*id, event));
 
         // register a new event handler for triggers
         ICOMMAND(trigger, "sss", (char* query, char* event, char* code),
@@ -112,6 +153,12 @@ namespace game
             const Type type = findEventType(event);
             if (type == Invalid) return;
             registerEventHandler(new EventHandler(Trigger, query, type, compilecode(code)));
+        });
+        ICOMMAND(monster, "sss", (char* query, char* event, char* code),
+        {
+            const Type type = findEventType(event);
+            if (type == Invalid) return;
+            registerEventHandler(new EventHandler(Monster, query, type, compilecode(code)));
         });
 
         void onMapStart()
@@ -135,4 +182,4 @@ namespace game
             entities::onPlayerUnspectate(d);
         }
     } // namespace event
-}
+} // namespace game

@@ -518,7 +518,8 @@ game/monster.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/monster.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/monster.o: engine/sound.h shared/iengine.h shared/igame.h
 game/monster.o: game/projectile.h game/weapon.h game/ai.h game/gamemode.h
-game/monster.o: game/entity.h game/announcer.h game/monster.h
+game/monster.o: game/entity.h game/announcer.h game/monster.h game/event.h
+game/monster.o: game/query.h
 game/weapon.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
 game/weapon.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/weapon.o: engine/sound.h shared/iengine.h shared/igame.h

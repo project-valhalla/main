@@ -626,7 +626,7 @@ namespace game
         }
             
         booteffect(self);
-        entities::renderentities();
+        entities::preloadWorld();
         projectiles::render();
         rendermonsters();
         if(cmode) cmode->rendergame();

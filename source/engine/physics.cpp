@@ -1195,7 +1195,7 @@ float dropheight(entity &e)
         case ET_PARTICLES:
         case ET_MAPMODEL: return 0.0f;
         default:
-            if(e.type >= ET_GAMESPECIFIC) return entities::dropheight(e);
+            if(e.type >= ET_GAMESPECIFIC) return entities::dropHeight(e);
             return 4.0f;
     }
 }

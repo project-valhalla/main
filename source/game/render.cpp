@@ -151,7 +151,7 @@ namespace game
 
     ICOMMAND(getplayercolor, "ii", (int *color, int *team), intret(getplayercolor(*team, *color)));
 
-    int getplayercolor(gameent *d, int team)
+    int getplayercolor(const gameent *d, const int team)
     {
         if(d==self) switch(team)
         {
@@ -626,7 +626,7 @@ namespace game
         }
             
         booteffect(self);
-        entities::renderentities();
+        entities::render();
         projectiles::render();
         rendermonsters();
         if(cmode) cmode->rendergame();
@@ -743,7 +743,7 @@ namespace game
         projectiles::preload();
         preloadplayermodel();
         preloadsounds();
-        entities::preloadEntities();
+        entities::preload();
         preloadmonsters();
     }
 

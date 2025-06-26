@@ -1424,13 +1424,13 @@ bool printparticles(extentity &e, char *buf, int len)
     switch(e.attr1)
     {
         case 0: case 4: case 7: case 8: case 9: case 10: case 11: case 12: case 13:
-            nformatstring(buf, len, "%s %d %d %d 0x%.3hX %d", entities::entname(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+            nformatstring(buf, len, "%s %d %d %d 0x%.3hX %d", entities::getName(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
             return true;
         case 3:
-            nformatstring(buf, len, "%s %d %d 0x%.3hX %d %d", entities::entname(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+            nformatstring(buf, len, "%s %d %d 0x%.3hX %d %d", entities::getName(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
             return true;
         case 5: case 6:
-            nformatstring(buf, len, "%s %d %d 0x%.3hX 0x%.3hX %d", entities::entname(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+            nformatstring(buf, len, "%s %d %d 0x%.3hX 0x%.3hX %d", entities::getName(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
             return true;
     }
     return false;
@@ -1512,7 +1512,7 @@ void updateparticles()
         loopv(entgroup)
         {
             entity &e = *ents[entgroup[i]];
-            particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, 0xA9A9A9, 2.0f);
+            particle_textcopy(e.o, entities::getName(e.type, true), PART_TEXT, 1, 0xA9A9A9, 2.0f);
         }
         loopv(ents)
         {
@@ -1520,12 +1520,12 @@ void updateparticles()
             if(e.type==ET_EMPTY) continue;
             if(e.type >= ET_LIGHT && e.type <= ET_DECAL)
             {
-                particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, entcolor[e.type], 2.0f);
+                particle_textcopy(e.o, entities::getName(e.type, true), PART_TEXT, 1, entcolor[e.type], 2.0f);
                 if(entityicons) particle_icon(e.o, e.type%4, e.type/4, PART_EDITOR_ICONS, 1, entityiconscolor ? entcolor[e.type] : 0xFFFFFF, 2.0f, 0);
             }
             else
             {
-                particle_textcopy(e.o, entities::entnameinfo(e), PART_TEXT, 1, 0x00FFFF, 2.0f);
+                particle_textcopy(e.o, entities::getName(e.type, true), PART_TEXT, 1, 0x00FFFF, 2.0f);
                 regular_particle_splash(PART_EDIT, 2, 80, e.o, 0x00FFFF, 0.16f*particlesize/100.0f);
             }
         }

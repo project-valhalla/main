@@ -3,29 +3,28 @@
 // entities
 namespace entities
 {
-    extern void editent(int i, bool local);
-    extern void editentlabel(int i, bool local);
-    extern void writeent(entity &e, char *buf);
-    extern void readent(entity &e, char *buf, int ver);
-    extern void fixentity(extentity &e);
-    extern void entradius(extentity &e, bool color);
-    extern void deleteentity(extentity *e);
-    extern void clearents();
-    extern void animatemapmodel(const extentity &e, int &anim, int &basetime);
+    extern void edit(const int i, const bool isLocal);
+    extern void editLabel(const int i, const bool isLocal);
+    extern void write(const entity& entity, const char* buf);
+    extern void read(const entity& entity, const char *buf, const int version);
+    extern void fix(extentity& entity);
+    extern void renderRadius(const extentity& entity);
+    extern void remove(extentity* entity);
+    extern void clear();
+    extern void animateMapModel(const extentity& entity, int &animation, int &baseTime);
 
-    extern bool mayattach(extentity &e);
-    extern bool attachent(extentity &e, extentity &a);
-    extern bool printent(extentity &e, char *buf, int len);
+    extern bool isAttachable(const extentity& entity);
+    extern bool shouldAttach(const extentity& entity, const extentity& attached);
+    extern bool shouldPrint(const extentity& entity, const char *buf, const int len);
 
-    extern const char *entnameinfo(entity &e);
-    extern const char *entname(int type);
-    extern const char *entmodel(const entity &e);
+    extern const char *getName(const int type, const bool isPretty = false);
+    extern const char *getModel(const entity& entity);
 
-    extern int extraentinfosize();
+    extern int getExtraInfoSize();
 
-    extern float dropheight(entity &e);
+    extern float dropHeight(const entity& entity);
 
-    extern extentity *newentity();
+    extern extentity *make();
     extern vector<extentity *> &getents();
 }
 

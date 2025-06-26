@@ -132,7 +132,7 @@ enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
     N_SHOOT, N_EXPLODE, N_DAMAGEPROJECTILE, N_SUICIDE,
-    N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO,
+    N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT,
     N_NOTICE, N_ANNOUNCE,
@@ -163,7 +163,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 3, N_CDIS, 2,
     N_SHOOT, 0, N_EXPLODE, 0, N_DAMAGEPROJECTILE, 5, N_SUICIDE, 1,
-    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2, N_REPAMMO, 3,
+    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
     N_NOTICE, 2, N_ANNOUNCE, 1,
@@ -496,6 +496,7 @@ struct gameent : dynent, gamestate
     editinfo *edit;
     float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, recoil;
     int smoothmillis;
+    int respawnPoint;
 
     int chan[Chan_Num], chansound[Chan_Num];
 
@@ -518,7 +519,7 @@ struct gameent : dynent, gamestate
                 lastpain(0), lasthurt(0), lastspawn(0),
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastswitchattempt(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
-                edit(NULL), recoil(0), smoothmillis(-1),
+                edit(NULL), recoil(0), smoothmillis(-1), respawnPoint(-1),
                 transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
                 muzzle(-1, -1, -1), eject(-1, -1, -1), interacting(false)
@@ -661,26 +662,24 @@ struct teaminfo
 
 namespace entities
 {
-    extern void preloadEntities();
+    extern void preload();
     extern void preloadWorld();
-    extern void checkitems(gameent *d);
-    extern void updatepowerups(int time, gameent *d);
-    extern void resetspawns();
-    extern void spawnitems(bool force = false);
-    extern void putitems(packetbuf &p);
-    extern void setspawn(int i, bool shouldspawn, bool isforced = false);
+    extern void render();
+    extern void checkItems(gameent *d);
+    extern void updatePowerups(int time, gameent *d);
+    extern void resetSpawn();
+    extern void spawnItems(bool force = false);
+    extern void sendItems(packetbuf &p);
+    extern void setSpawn(int i, bool shouldspawn, bool isforced = false);
     extern void teleport(int n, gameent *d);
-    extern void dopickupeffects(const int n, gameent *d);
-    extern void dohudpickupeffects(const int type, gameent* d, const bool shouldCheck = true);
-    extern void teleporteffects(gameent *d, int tp, int td, bool local = true);
-    extern void jumppadeffects(gameent *d, int jp, bool local = true);
-    extern void resettriggers();
+    extern void doPickupEffects(const int n, gameent *d);
+    extern void doHudPickupEffects(const int type, gameent* d, const bool shouldCheck = true);
+    extern void doEntityEffects(const gameent *d, const int sourceEntityId, const bool local, const int targetEntityId = -1);
+    extern void resetTriggers();
     extern void onMapStart();
     extern void onPlayerDeath(const gameent *d, const gameent *actor);
     extern void onPlayerSpectate(const gameent *d);
     extern void onPlayerUnspectate(const gameent *d);
-
-    extern int respawnent;
 
     extern vector<extentity*> ents;
 }
@@ -806,7 +805,7 @@ namespace game
     extern void stopdemo();
     extern void changemap(const char *name, int mode, int muts);
     extern void c2sinfo(bool force = false);
-    extern void sendposition(gameent *d, bool reliable = false);
+    extern void sendposition(const gameent *d, const bool reliable = false);
     extern void forceintermission();
 
     extern bool connected, remote, demoplayback;
@@ -885,7 +884,7 @@ namespace game
 
         void updatedirection(gameent* owner);
         void update(gameent* owner);
-        void addevent(gameent* owner, int type, int duration, float factor);
+        void addevent(const gameent* owner, int type, int duration, float factor);
         void processevents();
     };
 
@@ -960,7 +959,7 @@ namespace game
     extern void syncplayer();
     extern void rendermonster(dynent* d, const char* mdlname, modelattach* attachments, const int attack, const int attackdelay, const int lastaction, const int lastpain, const float fade = 1, const bool ragdoll = false);
 
-    extern int getplayercolor(gameent* d, int team);
+    extern int getplayercolor(const gameent* d, const int team);
     extern int chooserandomplayermodel(int seed);
     extern int getplayermodel(gameent* d);
 
@@ -1041,7 +1040,7 @@ namespace game
             }
 
             void update();
-            void addevent(gameent* owner, int type, int duration, float factor = 0);
+            void addevent(const gameent* owner, int type, int duration, float factor = 0);
             void processevents();
             void addshake(int factor);
             void updateshake();

@@ -130,7 +130,7 @@ bool loadents(const char *fname, vector<entity> &ents, uint *crc)
         if(eif > 0) f->seek(eif, SEEK_CUR);
         if(samegame)
         {
-            entities::readent(e, NULL, hdr.version);
+            entities::read(e, NULL, hdr.version);
         }
         else if(e.type>=ET_GAMESPECIFIC)
         {
@@ -685,7 +685,7 @@ bool save_world(const char *mname, bool nolms)
 
     f->putchar((int)strlen(game::gameident()));
     f->write(game::gameident(), (int)strlen(game::gameident())+1);
-    f->putlil<ushort>(entities::extraentinfosize());
+    f->putlil<ushort>(entities::getExtraInfoSize());
     vector<char> extras;
     game::writegamedata(extras);
     f->putlil<ushort>(extras.length());
@@ -693,7 +693,7 @@ bool save_world(const char *mname, bool nolms)
 
     f->putlil<ushort>(texmru.length());
     loopv(texmru) f->putlil<ushort>(texmru[i]);
-    char *ebuf = new char[entities::extraentinfosize()];
+    char *ebuf = new char[entities::getExtraInfoSize()];
     loopv(ents)
     {
         if(ents[i]->type!=ET_EMPTY || nolms)
@@ -708,8 +708,8 @@ bool save_world(const char *mname, bool nolms)
             f->putlil<ushort>(slen);
             if(slen) f->write(tmp.label, slen);
 
-            entities::writeent(*ents[i], ebuf);
-            if(entities::extraentinfosize()) f->write(ebuf, entities::extraentinfosize());
+            entities::write(*ents[i], ebuf);
+            if(entities::getExtraInfoSize()) f->write(ebuf, entities::getExtraInfoSize());
         }
     }
     delete[] ebuf;
@@ -851,12 +851,12 @@ bool load_world(const char *mname, const char *cname)        // still supports a
     renderprogress(0, "Summoning the entities...");
 
     vector<extentity *> &ents = entities::getents();
-    int einfosize = entities::extraentinfosize();
+    int einfosize = entities::getExtraInfoSize();
     char *ebuf = einfosize > 0 ? new char[einfosize] : NULL;
     bool hasentlabels = hdr.version >= 2;
     loopi(min(hdr.numents, MAXENTS))
     {
-        extentity &e = *entities::newentity();
+        extentity &e = *entities::make();
         ents.add(&e);
         f->read(&e, sizeof(entity) - sizeof(char *));
         lilswap(&e.o.x, 3);
@@ -879,14 +879,14 @@ bool load_world(const char *mname, const char *cname)        // still supports a
         if(samegame)
         {
             if(einfosize > 0) f->read(ebuf, einfosize);
-            entities::readent(e, ebuf, mapversion);
+            entities::read(e, ebuf, mapversion);
         }
         else
         {
             if(eif > 0) f->seek(eif, SEEK_CUR);
             if(e.type>=ET_GAMESPECIFIC)
             {
-                entities::deleteentity(ents.pop());
+                entities::remove(ents.pop());
                 continue;
             }
         }
@@ -894,7 +894,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
         {
             if(e.type != ET_LIGHT && e.type != ET_SPOTLIGHT)
             {
-                conoutf(CON_WARN, "warning: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::entname(e.type), i, e.o.x, e.o.y, e.o.z);
+                conoutf(CON_WARN, "warning: ent outside of world: enttype[%s] index %d (%f, %f, %f)", entities::getName(e.type), i, e.o.x, e.o.y, e.o.z);
             }
         }
     }

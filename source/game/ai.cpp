@@ -1336,10 +1336,10 @@ namespace ai
                 {
                     if(d->powerupmillis || d->role == ROLE_BERSERKER)
                     {
-                        entities::updatepowerups(curtime, d);
+                        entities::updatePowerups(curtime, d);
                     }
                 }
-                entities::checkitems(d);
+                entities::checkItems(d);
                 if(cmode) cmode->checkitems(d);
             }
         }

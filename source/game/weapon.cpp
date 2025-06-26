@@ -1464,7 +1464,7 @@ namespace game
         if (!hudgunsway) o = owner->o;
     }
 
-    void swayinfo::addevent(gameent* owner, int type, int duration, float factor)
+    void swayinfo::addevent(const gameent* owner, int type, int duration, float factor)
     {
         if (!hudgunsway || !owner || owner != followingplayer(self))
         {

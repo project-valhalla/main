@@ -416,7 +416,7 @@ void attachentity(extentity &e)
             break;
 
         default:
-            if(e.type<ET_GAMESPECIFIC || !entities::mayattach(e)) return;
+            if(e.type<ET_GAMESPECIFIC || !entities::isAttachable(e)) return;
             break;
     }
 
@@ -436,7 +436,7 @@ void attachentity(extentity &e)
                 break;
 
             default:
-                if(e.type<ET_GAMESPECIFIC || !entities::attachent(e, *a)) continue;
+                if(e.type<ET_GAMESPECIFIC || !entities::shouldAttach(e, *a)) continue;
                 break;
         }
         float dist = e.o.dist(a->o);
@@ -472,8 +472,8 @@ void attachentities()
         f; \
         if(oldtype!=e.type) detachentity(e); \
         if(e.type!=ET_EMPTY) { addentityedit(n); if(oldtype!=e.type) attachentity(e); } \
-        entities::editent(n, true); \
-        entities::editentlabel(n, true); \
+        entities::edit(n, true); \
+        entities::editLabel(n, true); \
         clearshadowcache(); \
     }, v); \
 }
@@ -509,7 +509,7 @@ void pasteundoent(int idx, const entity &ue)
 {
     if(idx < 0 || idx >= MAXENTS) return;
     vector<extentity *> &ents = entities::getents();
-    while(ents.length() < idx) ents.add(entities::newentity())->type = ET_EMPTY;
+    while(ents.length() < idx) ents.add(entities::make())->type = ET_EMPTY;
     int efocus = -1;
     entedit(idx, (entity &)e = ue);
 }
@@ -546,7 +546,7 @@ void entrotate(int *cw)
 void entselectionbox(const entity &e, vec &eo, vec &es)
 {
     model *m = NULL;
-    const char *mname = entities::entmodel(e);
+    const char *mname = entities::getModel(e);
     if(mname && (m = loadmodel(mname)))
     {
         m->collisionbox(eo, es);
@@ -777,7 +777,7 @@ void renderentradius(extentity &e, bool color)
         case ET_MAPMODEL:
         {
             if(color) gle::colorf(0, 1, 1);
-            entities::entradius(e, color);
+            entities::renderRadius(e);
             vec dir;
             vecfromyawpitch(e.attr2, e.attr3, 1, 0, dir);
             renderentarrow(e, dir, 4);
@@ -787,7 +787,7 @@ void renderentradius(extentity &e, bool color)
         case ET_PLAYERSTART:
         {
             if(color) gle::colorf(0, 1, 1);
-            entities::entradius(e, color);
+            entities::renderRadius(e);
             vec dir;
             vecfromyawpitch(e.attr1, 0, 1, 0, dir);
             renderentarrow(e, dir, 4);
@@ -807,7 +807,7 @@ void renderentradius(extentity &e, bool color)
             if(e.type>=ET_GAMESPECIFIC)
             {
                 if(color) gle::colorf(0, 1, 1);
-                entities::entradius(e, color);
+                entities::renderRadius(e);
             }
             break;
     }
@@ -987,7 +987,7 @@ void delent()
 
 int findenttype(char *what)
 {
-    for(int i = 0; *entities::entname(i); i++) if(strcmp(what, entities::entname(i))==0) return i;
+    for(int i = 0; *entities::getName(i); i++) if(strcmp(what, entities::getName(i))==0) return i;
     conoutf(CON_ERROR, "unknown entity type \"%s\"", what);
     return ET_EMPTY;
 }
@@ -1067,8 +1067,8 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
         for(int i = keepents; i < ents.length(); i++) if(ents[i]->type == ET_EMPTY) { idx = i; break; }
         if(idx < 0 && ents.length() >= MAXENTS) { conoutf(CON_ERROR, "too many entities"); return NULL; }
     }
-    else while(ents.length() < idx) ents.add(entities::newentity())->type = ET_EMPTY;
-    extentity &e = *entities::newentity();
+    else while(ents.length() < idx) ents.add(entities::make())->type = ET_EMPTY;
+    extentity &e = *entities::make();
     e.o = o;
     e.attr1 = v1;
     e.attr2 = v2;
@@ -1100,9 +1100,9 @@ extentity *newentity(bool local, const vec &o, int type, int v1, int v2, int v3,
                 e.attr1 = (int)camera1->yaw;
                 break;
         }
-        entities::fixentity(e);
+        entities::fix(e);
     }
-    if(ents.inrange(idx)) { entities::deleteentity(ents[idx]); ents[idx] = &e; }
+    if(ents.inrange(idx)) { entities::remove(ents[idx]); ents[idx] = &e; }
     else { idx = ents.length(); ents.add(&e); }
     return &e;
 }
@@ -1222,10 +1222,10 @@ void printent(extentity &e, char *buf, int len)
             break;
 
         default:
-            if(e.type >= ET_GAMESPECIFIC && entities::printent(e, buf, len)) return;
+            if(e.type >= ET_GAMESPECIFIC && entities::shouldPrint(e, buf, len)) return;
             break;
     }
-    nformatstring(buf, len, "%s %d %d %d %d %d", entities::entname(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+    nformatstring(buf, len, "%s %d %d %d %d %d", entities::getName(e.type), e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
 }
 
 void nearestent()
@@ -1266,7 +1266,7 @@ void enttype(char *type, int *numargs)
     }
     else entfocus(efocus,
     {
-        result(entities::entname(e.type));
+        result(entities::getName(e.type));
     })
 }
 
@@ -1306,7 +1306,7 @@ void entlabel(char *label, int *numargs)
         groupedit({
             if(e.label) delete[] e.label;
             e.label = newstring(label);
-            entities::editentlabel(n, true);
+            entities::editLabel(n, true);
         });
     }
     else entfocus(efocus,
@@ -1439,7 +1439,7 @@ void resetmap()
     pruneundos();
     clearmapcrc();
 
-    entities::clearents();
+    entities::clear();
     outsideents.setsize(0);
     numoctaents = 0;
     spotlights = 0;
@@ -1598,7 +1598,7 @@ void mpeditent(int i, const vec &o, int type, int attr1, int attr2, int attr3, i
         addentityedit(i);
         if(oldtype!=type) attachentity(e);
     }
-    entities::editent(i, local);
+    entities::edit(i, local);
     clearshadowcache();
     commitchanges();
 }
@@ -1612,7 +1612,7 @@ void mpeditentlabel(int i, const char *label, bool local)
         delete[] entity->label;
     }
     entity->label = label && label[0] ? newstring(label) : nullptr;
-    entities::editentlabel(i, local);
+    entities::editLabel(i, local);
     clearshadowcache();
     commitchanges();
 }

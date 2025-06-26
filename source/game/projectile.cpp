@@ -81,7 +81,7 @@ namespace game
             proj.id = id;
             proj.attack = attack;
             proj.lifetime = lifetime;
-            proj.speed = speed;
+            proj.setSpeed(speed);
             proj.gravity = gravity;
             proj.elasticity = elasticity;
 

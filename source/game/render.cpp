@@ -241,7 +241,7 @@ namespace game
         {
             case CS_ALIVE:
             {
-                if (camera1->o.dist(d->o) <= d->radius)
+                if (camera::isthirdperson() && camera1->o.dist(d->o) <= d->radius)
                 {
                     transparency = 0.1f;
                 }
@@ -281,6 +281,8 @@ namespace game
     VAR(animoverride, -1, 0, NUMANIMS-1);
     VAR(testanims, 0, 0, 1);
     VAR(testpitch, -90, 0, 90);
+
+    VARP(firstpersonlegs, 0, 1, 1);
 
     void renderplayer(gameent *d, const playermodelinfo &playermodel, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
@@ -414,7 +416,13 @@ namespace game
         if(!mainpass) flags &= ~(MDL_FULLBRIGHT | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY | MDL_CULL_DIST);
         d->transparency = updatetransparency(d, fade);
         rendermodel(playermodel.directory, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), d->transparency));
-    }
+        if (firstpersonlegs && d == followingplayer(self) && !camera::isthirdperson())
+        {
+            const vec legsPosition = vec(o).addz(1.0f);
+            defformatstring(legsDirectory, "%s/leg", playermodel.directory);
+            rendermodel(legsDirectory, anim, legsPosition, yaw, 0, 0, MDL_NOSHADOW, d, NULL, basetime, 0, 1, vec4(vec::hexcolor(color), d->transparency));
+        }
+}
 
     void rendermonster(dynent *d, const char *mdlname, modelattach *attachments, const int attack, const int attackdelay, const int lastaction, const int lastpain, const float fade, const bool ragdoll)
     {

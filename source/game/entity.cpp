@@ -561,6 +561,23 @@ namespace entities
     // Triggers in proximity of the player, used for "Distance" events.
     vector<int> proximityTriggers;
 
+    struct HoverInfo
+    {
+        int hoveredWeapon = GUN_INVALID;
+
+        void resetInteraction()
+        {
+            self->interacting[Interaction::Available] = false;
+        }
+
+        void reset()
+        {
+            hoveredWeapon = GUN_INVALID;
+            resetInteraction();
+        }
+    };
+    HoverInfo hover;
+
     VARR(teleteam, 0, 1, 1);
 
     // The client tries to pick up the entity (item) and lets the server know.
@@ -620,11 +637,14 @@ namespace entities
                 }
                 event::emit<event::Trigger>(id, event::Proximity);
                 const int triggerType = ents[id]->attr5;
-                if (triggerType == TriggerType::Usable && self->interacting)
+                if (triggerType == TriggerType::Usable)
                 {
-                    ents[id]->setactivity(false);
-                    self->interacting = false;
-                    event::emit<event::Trigger>(id, event::Use);
+                    if (self->interacting[Interaction::Active])
+                    {
+                        ents[id]->setactivity(false);
+                        self->interacting[Interaction::Active] = false;
+                        event::emit<event::Trigger>(id, event::Use);
+                    }
                 }
                 else if (triggerType == TriggerType::Item || triggerType == TriggerType::Marker)
                 {
@@ -670,7 +690,6 @@ namespace entities
     }
 
     FVARP(itemhoverdistance, 0, 100.0f, 500.0f);
-    int hoveredweapon = GUN_INVALID;
 
    /*
         Checks if the player is currently hovering over a valid item entity.
@@ -685,42 +704,59 @@ namespace entities
     */
     void checkHovered(const gameent* player)
     {
-        if (!itemhoverdistance || m_noitems(mutators) || player->state != CS_ALIVE || player != followingplayer(self))
+        if (player->state != CS_ALIVE || player != followingplayer(self))
         {
+            hover.reset();
             return;
         }
         int id = -1;
-        if (isHovered(id))
+        if (isHovered(id) && ents.inrange(id))
         {
-            extentity* entity = nullptr;
-            if (ents.inrange(id))
+            extentity* entity = ents[id];
+            if (!entity)
             {
-                entity = ents[id];
+                hover.reset();
+                return;
             }
-            if (entity && entity->spawned() && validitem(entity->type))
+            if (!m_noitems(mutators) && validitem(entity->type) && entity->spawned())
             {
-                const bool isClose = camera1->o.dist(entity->o) <= itemhoverdistance;
+                const bool isClose = itemhoverdistance && camera1->o.dist(entity->o) <= itemhoverdistance;
                 if (isClose)
                 {
                     if (entity->type >= I_AMMO_SG && entity->type <= I_AMMO_GRENADE)
                     {
-                        if (!validgun(hoveredweapon))
-                        {
-                            hoveredweapon = itemstats[entity->type - I_AMMO_SG].info;
-                        }
+                        hover.hoveredWeapon = itemstats[entity->type - I_AMMO_SG].info;
+                        hover.resetInteraction();
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                loopv(proximityTriggers)
+                {
+                    const int triggerId = proximityTriggers[i];
+                    extentity* trigger = ents[triggerId];
+                    if
+                    (
+                        !trigger || !trigger->isactive() ||
+                        !ents.inrange(i) || trigger->type != TRIGGER)
+                    {
+                        continue;
+                    }
+                    const bool isClose = entity->o.dist(trigger->o) <= trigger->attr3;
+                    if (isClose && query::match(entity->label, trigger->label))
+                    {
+                        self->interacting[Interaction::Available] = true;
                         return;
                     }
                 }
             }
         }
-
         // Remove valid hover information.
-        if (validgun(hoveredweapon))
-        {
-            hoveredweapon = GUN_INVALID;
-        }
+        hover.reset();
     }
-    ICOMMAND(gethoverweapon, "", (), intret(hoveredweapon));
+    ICOMMAND(gethoverweapon, "", (), intret(hover.hoveredWeapon));
 
     /*
         Checks various entity-related interactions for the specified game entity.
@@ -788,6 +824,7 @@ namespace entities
                 {
                     event::emit<event::Trigger>(id, event::Distance);
                     proximityTriggers.remove(i);
+                    hover.resetInteraction();
                 }
             }
         }

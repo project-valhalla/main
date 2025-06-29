@@ -557,7 +557,7 @@ namespace game
     ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
-    ICOMMAND(interact, "D", (int *down), { self->interacting = *down ? true : false; });
+    ICOMMAND(interact, "D", (int *down), { self->interacting[Interaction::Active] = *down ? true : false;});
 
     bool isally(const gameent *a, const gameent *b)
     {

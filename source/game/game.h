@@ -480,6 +480,13 @@ enum
     Chan_Num
 };
 
+enum Interaction
+{
+    Available = 0,
+    Active,
+    Count
+};
+
 struct gameent : dynent, gamestate
 {
     int weight;                         // affects the effectiveness of hitpush
@@ -511,7 +518,7 @@ struct gameent : dynent, gamestate
     string country_name;
 
     vec muzzle, eject;
-    bool interacting;
+    bool interacting[Interaction::Count];
 
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
@@ -522,12 +529,13 @@ struct gameent : dynent, gamestate
                 edit(NULL), recoil(0), smoothmillis(-1), respawnPoint(-1),
                 transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
-                muzzle(-1, -1, -1), eject(-1, -1, -1), interacting(false)
+                muzzle(-1, -1, -1), eject(-1, -1, -1)
     {
         loopi(Chan_Num)
         {
             chan[i] = chansound[i] = -1;
         }
+        resetInteractions();
         name[0] = info[0] = 0;
         ghost = false;
         country_code[0] = country_name[0] = preferred_flag[0] = 0;
@@ -581,7 +589,7 @@ struct gameent : dynent, gamestate
         respawned = suicided = -2;
         lasthit = lastkill = 0;
         ghost = false;
-        interacting = false;
+        resetInteractions();
     }
 
     void respawn()
@@ -600,12 +608,12 @@ struct gameent : dynent, gamestate
         lastnode = -1;
         lasthit = lastkill = 0;
         respawnqueued = false;
+        recoil = 0;
         loopi(Chan_Num)
         {
             stopchannelsound(i);
         }
-        recoil = 0;
-        interacting = false;
+        resetInteractions();
     }
 
     void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)
@@ -631,6 +639,14 @@ struct gameent : dynent, gamestate
     bool shouldgib()
     {
         return health <= THRESHOLD_GIB;
+    }
+
+    void resetInteractions()
+    {
+        loopi(Interaction::Count)
+        {
+            interacting[i] = false;
+        }
     }
 };
 

@@ -537,19 +537,17 @@ namespace game
                 return crosshair;
             }
             crosshair = Pointer_Crosshair;
-            if (crosshairscope)
+            const int zoomType = checkweaponzoom();
+            const bool isScoped = camera::camera.zoomstate.isenabled() && zoomType == Zoom_Scope;
+            if (crosshairscope && isScoped)
             {
-                const int zoomType = checkweaponzoom();
-                if (camera::camera.zoomstate.isenabled() && zoomType == Zoom_Scope)
-                {
-                    crosshair = Pointer_Scope;
-                    color = vec4(1, 0, 0, 1);
-                }
+                crosshair = Pointer_Scope;
+                color = vec4(1, 0, 0, 1);
             }
+            const dynent* hovered = intersectclosest(hud->o, worldpos, hud);
             if (!betweenrounds && crosshairally)
             {
-                dynent* o = intersectclosest(hud->o, worldpos, hud);
-                if (o && o->type == ENT_PLAYER && isally(((gameent*)o), hud) && !m_hideallies)
+                if (hovered && hovered->type == ENT_PLAYER && isally(((gameent*)hovered), hud) && !m_hideallies)
                 {
                     crosshair = Pointer_Ally;
                     color = vec4(vec::hexcolor(teamtextcolor[hud->team]), 1);
@@ -558,6 +556,11 @@ namespace game
             if (hud->gunwait)
             {
                 color.mul(0.75f);
+            }
+            if (self->interacting[Interaction::Available] && !isScoped && !hovered && !self->gunwait)
+            {
+                crosshair = Pointer_Interact;
+                color = vec4(1, 1, 1, 1);
             }
         }
         else if (type == Pointer_Hit)

@@ -936,7 +936,39 @@ namespace game
     extern vector<hitmsg> hits;
 
     // monster.cpp
-    struct monster;
+    struct monster : gameent
+    {
+        int monsterstate; // one of MS_*, MS_NONE means it's not an NPC
+
+        int mtype; // see monstertypes table
+        gameent *enemy; // monster wants to kill this entity
+        float targetyaw; // monster wants to look in this direction
+        int trigger; // millis at which transition to another monsterstate takes place
+        vec attacktarget;
+        int anger; // how many times already hit by fellow monster
+        physent *stacked;
+        vec stackpos, orient;
+        bool halted, canmove, exploding;
+        int lastunblocked, detonating;
+        int bursting, shots;
+
+        int id;
+        char *label;
+
+        monster(int _type, int _yaw, int _canmove, int _state, int _trigger, int _move, const char *_label);
+        ~monster();
+        void normalize_yaw(float angle);
+        void transition(int _state, int _moving, int n, int r);
+        void burst(bool on);
+        void emitattacksound();
+        void alert(bool on);
+        void monsteraction(int curtime);
+        void preparedetonation();
+        void detonate();
+        void monsterdeath(int forcestate = -1, int atk = ATK_INVALID, int flags = 0);
+        void heal();
+        void monsterpain(int damage, gameent *d, int atk, int flags);
+    };
     extern vector<monster *> monsters;
 
     extern void clearmonsters();
@@ -947,7 +979,7 @@ namespace game
     extern void suicidemonster(monster *m);
     extern void healmonsters();
     extern void hitmonster(int damage, monster *m, gameent *at, int atk, const vec& velocity, int flags = 0);
-    extern void monsterkilled(gameent* monster, int id, int flags = 0);
+    extern void monsterkilled(gameent* monster, int flags = 0);
     extern void checkmonsterinfight(monster *that, gameent *enemy);
     extern void endsp(bool allkilled);
     extern void spsummary(int accuracy);

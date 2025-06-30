@@ -55,7 +55,7 @@ namespace entities
     // Preload all the default entity models.
     void preload()
     {
-        loopi(MAXENTTYPES)
+        for (int i = 0; i < MAXENTTYPES; i++)
         {
             const char* model = gentities[i].file;
             if (!model)
@@ -131,7 +131,7 @@ namespace entities
     }
 
     // Checks whether a pickable entity (item) can spawn in a certain game mode.
-    bool canSpawnItem(const int type)
+    static bool canSpawnItem(const int type)
     {
         if (!validitem(type) || m_noitems(mutators))
         {
@@ -188,7 +188,7 @@ namespace entities
     }
 
     // Determines whether the game currently allows item entities to be picked up.
-    bool isPickupAllowed()
+    static bool isPickupAllowed()
     {
         if
         (
@@ -202,7 +202,7 @@ namespace entities
     }
 
     // Find the closest entity by type.
-    extentity* findClosest(const int type, const vec position)
+    static extentity* findClosest(const int type, const vec position)
     {
         extentity* closest = nullptr;
         if (!ents.empty() && canSpawnItem(type))
@@ -227,7 +227,7 @@ namespace entities
     }
 
     // Search entities based on need.
-    void search()
+    static void search()
     {
         if (m_story)
         {
@@ -262,7 +262,7 @@ namespace entities
     }
 
     // Mark entities on the HUD based on need.
-    void mark(const extentity& entity)
+    static void mark(const extentity& entity)
     {
         if (m_noitems(mutators) || (!validitem(entity.type) && entity.type != TRIGGER))
         {
@@ -436,7 +436,7 @@ namespace entities
         playSound(S_TRIGGER, *soundId, player && player == hudPlayer ? vec(0, 0, 0) : ents[*entityId]->o);
     });
 
-    void doTeleportParticleEffects(const gameent* player, const vec p)
+    static void doTeleportParticleEffects(const gameent* player, const vec p)
     {
         if (player == followingplayer(self))
         {
@@ -561,6 +561,7 @@ namespace entities
     // Triggers in proximity of the player, used for "Distance" events.
     vector<int> proximityTriggers;
 
+    // Contains information to display when hovering over items and entities.
     struct HoverInfo
     {
         int hoveredWeapon = GUN_INVALID;
@@ -576,12 +577,13 @@ namespace entities
             resetInteraction();
         }
     };
-    HoverInfo hover;
+
+    static HoverInfo hover;
 
     VARR(teleteam, 0, 1, 1);
 
     // The client tries to pick up the entity (item) and lets the server know.
-    void trypickup(const int id, gameent* player)
+    static void tryPickup(const int id, gameent* player)
     {
         switch(ents[id]->type)
         {
@@ -677,16 +679,14 @@ namespace entities
     }
 
     /*
-        Performs a raycast to check whether the cursor is hovering over an entity.
-        The hovered entity's ID is assigned to the function parameter.
-        Returns `true` if an entity is hovered, `false` otherwise.
+        Performs a "raycast" to check whether the cursor is hovering over an entity.
+        The hovered entity's ID is returned.
     */
-    bool isHovered(int& id)
+    static int findHovered()
     {
-        int orient = 0;
-        const float maxDistance = 1e16f;
-        const float distance = rayent(camera1->o, camdir, maxDistance, RAY_ENTS | RAY_SKIPFIRST, 0, orient, id);
-        return distance < maxDistance && id > -1;
+        int id, orient = 0;
+        rayent(camera1->o, camdir, 1e16f, RAY_ENTS | RAY_SKIPFIRST, 0, orient, id);
+        return id;
     }
 
     FVARP(itemhoverdistance, 0, 100.0f, 500.0f);
@@ -702,15 +702,15 @@ namespace entities
         If the item is ammo (within ammo type range), update `hoveredweapon` accordingly.
         If no valid hover item is found or conditions fail, reset `hoveredweapon` to invalid if it was previously valid.
     */
-    void checkHovered(const gameent* player)
+    static void checkHovered(const gameent* player)
     {
         if (player->state != CS_ALIVE || player != followingplayer(self))
         {
             hover.reset();
             return;
         }
-        int id = -1;
-        if (isHovered(id) && ents.inrange(id))
+        const int id = findHovered();
+        if (ents.inrange(id))
         {
             extentity* entity = ents[id];
             if (!entity)
@@ -787,7 +787,7 @@ namespace entities
                 const int radius = entity.attr3 ? entity.attr3 : ENTITY_COLLECT_RADIUS;
                 if (distance < radius)
                 {
-                    trypickup(id, player);
+                    tryPickup(id, player);
                 }
                 continue;
             }
@@ -802,7 +802,7 @@ namespace entities
             const int radius = entity.type == TELEPORT ? ENTITY_TELEPORT_RADIUS : ENTITY_COLLECT_RADIUS;
             if (distance < radius)
             {
-                trypickup(id, player);
+                tryPickup(id, player);
             }
         }
 
@@ -839,6 +839,8 @@ namespace entities
         {
             return;
         }
+
+        // Client-side power-up timer.
         if ((player->powerupmillis -= time) <= 0)
         {
             player->powerupmillis = 0;
@@ -1167,13 +1169,13 @@ namespace entities
     })
 
     // Clear the list of triggers in proximity (when starting a new map).
-    void clearProximityTriggers()
+    static void clearProximityTriggers()
     {
         proximityTriggers.setsize(0);
     }
 
     // Emit "Distance" events for all triggers in proximity (also called when the player dies).
-    void emitDistanceEvents()
+    static void emitDistanceEvents()
     {
         loopvrev(proximityTriggers)
         {
@@ -1217,14 +1219,14 @@ namespace entities
         Sets the ID of the last respawn point.
         Mostly used by triggers.
     */
-    void setRespawnPoint(const int id)
+    static void setRespawnPoint(const int id)
     {
         self->respawnPoint = ents.inrange(id) ? id : -1;
     }
     ICOMMAND(setrespawnpoint, "i", (int* id), setRespawnPoint(*id));
 
     // Returns whether or not a trigger is enabled.
-    int getTriggerState(const int id)
+    static int getTriggerState(const int id)
     {
         if (!ents.inrange(id))
         {
@@ -1234,7 +1236,7 @@ namespace entities
     }
 
     // Enables or disables a trigger.
-    void setTriggerState(const int id, const int state)
+    static void setTriggerState(const int id, const int state)
     {
         if (!ents.inrange(id))
         {
@@ -1255,7 +1257,7 @@ namespace entities
     });
 
     // Sets the trigger state of a map model.
-    void triggerMapModel(const int id, const int state, const int sound = S_INVALID)
+    static void triggerMapModel(const int id, const int state, const int sound = S_INVALID)
     {
         extentity* entity = nullptr;
         if (ents.inrange(id))

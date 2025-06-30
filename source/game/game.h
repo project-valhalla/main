@@ -132,7 +132,7 @@ enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
     N_SHOOT, N_EXPLODE, N_DAMAGEPROJECTILE, N_SUICIDE,
-    N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE, N_REPAMMO,
+    N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT,
     N_NOTICE, N_ANNOUNCE,
@@ -163,7 +163,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 3, N_CDIS, 2,
     N_SHOOT, 0, N_EXPLODE, 0, N_DAMAGEPROJECTILE, 5, N_SUICIDE, 1,
-    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2, N_REPAMMO, 3,
+    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
     N_NOTICE, 2, N_ANNOUNCE, 1,
@@ -480,6 +480,13 @@ enum
     Chan_Num
 };
 
+enum Interaction
+{
+    Available = 0,
+    Active,
+    Count
+};
+
 struct gameent : dynent, gamestate
 {
     int weight;                         // affects the effectiveness of hitpush
@@ -496,6 +503,7 @@ struct gameent : dynent, gamestate
     editinfo *edit;
     float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, recoil;
     int smoothmillis;
+    int respawnPoint;
 
     int chan[Chan_Num], chansound[Chan_Num];
 
@@ -510,7 +518,7 @@ struct gameent : dynent, gamestate
     string country_name;
 
     vec muzzle, eject;
-    bool interacting;
+    bool interacting[Interaction::Count];
 
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
@@ -518,15 +526,16 @@ struct gameent : dynent, gamestate
                 lastpain(0), lasthurt(0), lastspawn(0),
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastswitchattempt(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
-                edit(NULL), recoil(0), smoothmillis(-1),
+                edit(NULL), recoil(0), smoothmillis(-1), respawnPoint(-1),
                 transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
-                muzzle(-1, -1, -1), eject(-1, -1, -1), interacting(false)
+                muzzle(-1, -1, -1), eject(-1, -1, -1)
     {
         loopi(Chan_Num)
         {
             chan[i] = chansound[i] = -1;
         }
+        resetInteractions();
         name[0] = info[0] = 0;
         ghost = false;
         country_code[0] = country_name[0] = preferred_flag[0] = 0;
@@ -580,7 +589,7 @@ struct gameent : dynent, gamestate
         respawned = suicided = -2;
         lasthit = lastkill = 0;
         ghost = false;
-        interacting = false;
+        resetInteractions();
     }
 
     void respawn()
@@ -599,12 +608,12 @@ struct gameent : dynent, gamestate
         lastnode = -1;
         lasthit = lastkill = 0;
         respawnqueued = false;
+        recoil = 0;
         loopi(Chan_Num)
         {
             stopchannelsound(i);
         }
-        recoil = 0;
-        interacting = false;
+        resetInteractions();
     }
 
     void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)
@@ -630,6 +639,14 @@ struct gameent : dynent, gamestate
     bool shouldgib()
     {
         return health <= THRESHOLD_GIB;
+    }
+
+    void resetInteractions()
+    {
+        loopi(Interaction::Count)
+        {
+            interacting[i] = false;
+        }
     }
 };
 
@@ -661,27 +678,24 @@ struct teaminfo
 
 namespace entities
 {
-    extern void preloadEntities();
-    extern void renderentities();
+    extern void preload();
     extern void preloadWorld();
-    extern void checkitems(gameent *d);
-    extern void updatepowerups(int time, gameent *d);
-    extern void resetspawns();
-    extern void spawnitems(bool force = false);
-    extern void putitems(packetbuf &p);
-    extern void setspawn(int i, bool shouldspawn, bool isforced = false);
+    extern void render();
+    extern void checkItems(gameent *d);
+    extern void updatePowerups(int time, gameent *d);
+    extern void resetSpawn();
+    extern void spawnItems(bool force = false);
+    extern void sendItems(packetbuf &p);
+    extern void setSpawn(int i, bool shouldspawn, bool isforced = false);
     extern void teleport(int n, gameent *d);
-    extern void dopickupeffects(const int n, gameent *d);
-    extern void dohudpickupeffects(const int type, gameent* d, const bool shouldCheck = true);
-    extern void teleporteffects(gameent *d, int tp, int td, bool local = true);
-    extern void jumppadeffects(gameent *d, int jp, bool local = true);
-    extern void resettriggers();
+    extern void doPickupEffects(const int n, gameent *d);
+    extern void doHudPickupEffects(const int type, gameent* d, const bool shouldCheck = true);
+    extern void doEntityEffects(const gameent *d, const int sourceEntityId, const bool local, const int targetEntityId = -1);
+    extern void resetTriggers();
     extern void onMapStart();
     extern void onPlayerDeath(const gameent *d, const gameent *actor);
     extern void onPlayerSpectate(const gameent *d);
     extern void onPlayerUnspectate(const gameent *d);
-
-    extern int respawnent;
 
     extern vector<extentity*> ents;
 }
@@ -807,7 +821,7 @@ namespace game
     extern void stopdemo();
     extern void changemap(const char *name, int mode, int muts);
     extern void c2sinfo(bool force = false);
-    extern void sendposition(gameent *d, bool reliable = false);
+    extern void sendposition(const gameent *d, const bool reliable = false);
     extern void forceintermission();
 
     extern bool connected, remote, demoplayback;
@@ -886,7 +900,7 @@ namespace game
 
         void updatedirection(gameent* owner);
         void update(gameent* owner);
-        void addevent(gameent* owner, int type, int duration, float factor);
+        void addevent(const gameent* owner, int type, int duration, float factor);
         void processevents();
     };
 
@@ -993,7 +1007,7 @@ namespace game
     extern void syncplayer();
     extern void rendermonster(dynent* d, const char* mdlname, modelattach* attachments, const int attack, const int attackdelay, const int lastaction, const int lastpain, const float fade = 1, const bool ragdoll = false);
 
-    extern int getplayercolor(gameent* d, int team);
+    extern int getplayercolor(const gameent* d, const int team);
     extern int chooserandomplayermodel(int seed);
     extern int getplayermodel(gameent* d);
 
@@ -1074,7 +1088,7 @@ namespace game
             }
 
             void update();
-            void addevent(gameent* owner, int type, int duration, float factor = 0);
+            void addevent(const gameent* owner, int type, int duration, float factor = 0);
             void processevents();
             void addshake(int factor);
             void updateshake();

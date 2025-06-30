@@ -485,7 +485,7 @@ namespace game
 
         VARP(cameramovement, 0, 1, 1);
 
-        void camerainfo::addevent(gameent* owner, int type, int duration, float factor)
+        void camerainfo::addevent(const gameent* owner, int type, int duration, float factor)
         {
             if (!cameramovement || !owner || owner != followingplayer(self))
             {

@@ -635,7 +635,7 @@ namespace game
         mutators = nextmutators = mut;
         scorelimit = _scorelimit;
         if(editmode) toggleedit();
-        if(m_demo) { entities::resetspawns(); return; }
+        if(m_demo) { entities::resetSpawn(); return; }
         event::onMapStart();
         if((m_edit && !name[0]) || !load_world(name))
         {
@@ -1279,7 +1279,7 @@ namespace game
         }
     }
 
-    static void sendposition(gameent *d, packetbuf &q)
+    static void sendposition(const gameent *d, packetbuf &q)
     {
         putint(q, N_POS);
         putuint(q, d->clientnum);
@@ -1338,7 +1338,7 @@ namespace game
         }
     }
 
-    void sendposition(gameent *d, bool reliable)
+    void sendposition(const gameent *d, const bool reliable)
     {
         if(d->state != CS_ALIVE && d->state != CS_EDITING) return;
         packetbuf q(100, reliable ? ENET_PACKET_FLAG_RELIABLE : 0);
@@ -1382,7 +1382,7 @@ namespace game
         if(senditemstoserver)
         {
             p.reliable();
-            entities::putitems(p);
+            entities::sendItems(p);
             if(cmode) cmode->senditems(p);
             senditemstoserver = false;
         }
@@ -1557,7 +1557,7 @@ namespace game
                 int cn = getint(p), tp = getint(p), td = getint(p);
                 gameent *d = getclient(cn);
                 if(!d || d->lifesequence < 0 || d->state==CS_DEAD) continue;
-                entities::teleporteffects(d, tp, td, false);
+                entities::doEntityEffects(d, tp, true, td);
                 break;
             }
 
@@ -1566,7 +1566,7 @@ namespace game
                 int cn = getint(p), jp = getint(p);
                 gameent *d = getclient(cn);
                 if(!d || d->lifesequence < 0 || d->state==CS_DEAD) continue;
-                entities::jumppadeffects(d, jp, false);
+                entities::doEntityEffects(d, jp, false);
                 break;
             }
 
@@ -1796,7 +1796,7 @@ namespace game
                 int mode = getint(p), muts = getint(p), scorelimit = getint(p), items = getint(p);
                 changemapserv(text, mode, muts, scorelimit);
                 mapchanged = true;
-                if(items) entities::spawnitems();
+                if(items) entities::spawnItems();
                 else senditemstoserver = false;
                 break;
             }
@@ -1821,7 +1821,7 @@ namespace game
                 int n;
                 while((n = getint(p))>=0 && !p.overread())
                 {
-                    if(mapchanged) entities::setspawn(n, true, true);
+                    if(mapchanged) entities::setSpawn(n, true, true);
                     getint(p); // type
                 }
                 break;
@@ -2005,14 +2005,6 @@ namespace game
                 break;
             }
 
-            case N_REPAMMO:
-            {
-                int cn = getint(p), gun = getint(p), ammo = getint(p);
-                gameent *d = cn==self->clientnum ? self : getclient(cn);
-                if(d) d->ammo[gun] = ammo;
-                break;
-            }
-
             case N_DAMAGE:
             {
                 int tcn = getint(p), acn = getint(p),
@@ -2137,7 +2129,7 @@ namespace game
             {
                 int i = getint(p);
                 if(!entities::ents.inrange(i)) break;
-                entities::setspawn(i, true);
+                entities::setSpawn(i, true);
                 ai::itemspawned(i);
                 break;
             }
@@ -2146,7 +2138,7 @@ namespace game
             {
                 int i = getint(p), cn = getint(p);
                 gameent *d = getclient(cn);
-                entities::dopickupeffects(i, d);
+                entities::doPickupEffects(i, d);
                 break;
             }
 
@@ -2635,7 +2627,7 @@ namespace game
                 map->write(b.buf, b.maxlen);
                 delete map;
                 if(load_world(mname, oldname[0] ? oldname : NULL))
-                    entities::spawnitems(true);
+                    entities::spawnItems(true);
                 remove(findfile(fname, "rb"));
                 break;
             }

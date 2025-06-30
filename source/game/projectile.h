@@ -30,22 +30,23 @@ inline bool isvalidprojectile(int type)
 
 enum
 {
-    ProjFlag_Weapon     = 1 << 0, // Related to a weapon.
-    ProjFlag_Junk       = 1 << 1, // Lightweight projectiles for cosmetic effects.
-    ProjFlag_Bounce     = 1 << 2, // Bounces off surfaces.
-    ProjFlag_Linear     = 1 << 3, // Follows a linear trajectory.
-    ProjFlag_Impact     = 1 << 4, // Detonates on collision with geometry or entities.
-    ProjFlag_Quench     = 1 << 5, // Destroyed upon contact with water.
-    ProjFlag_Eject      = 1 << 6, // Can be ejected as a spent casing by weapons.
-    ProjFlag_Loyal      = 1 << 7, // Only responds to the weapon that fired it.
-    ProjFlag_Invincible = 1 << 8  // Cannot be destroyed.
+    ProjFlag_Weapon      = 1 << 0, // Related to a weapon.
+    ProjFlag_Junk        = 1 << 1, // Lightweight projectiles for cosmetic effects.
+    ProjFlag_Bounce      = 1 << 2, // Bounces off surfaces.
+    ProjFlag_Linear      = 1 << 3, // Follows a linear trajectory.
+    ProjFlag_Impact      = 1 << 4, // Detonates on collision with geometry or entities.
+    ProjFlag_Quench      = 1 << 5, // Destroyed upon contact with water.
+    ProjFlag_Eject       = 1 << 6, // Can be ejected as a spent casing by weapons.
+    ProjFlag_Loyal       = 1 << 7, // Only responds to the weapon that fired it.
+    ProjFlag_Invincible  = 1 << 8, // Cannot be destroyed.
+    ProjFlag_AdjustSpeed = 1 << 9  // Adjusts speed based on distance.
 };
 
 static const struct projectileinfo
 {
     int type, flags, attack;
     int bounceSound, loopsound, maxbounces, variants;
-    float radius;
+    float maxSpeed, radius;
     const char* directory;
 }
 projs[Projectile_Max] =
@@ -56,6 +57,7 @@ projs[Projectile_Max] =
         ATK_GRENADE3,
         S_BOUNCE_GRENADE,
         S_INVALID,
+        0,
         0,
         0,
         1.4f,
@@ -69,6 +71,7 @@ projs[Projectile_Max] =
         S_INVALID,
         0,
         0,
+        0,
         1.4f,
         "projectile/grenade",
     },
@@ -78,6 +81,7 @@ projs[Projectile_Max] =
         ATK_ROCKET3,
         S_INVALID,
         S_ROCKET_LOOP,
+        0,
         0,
         0,
         1.4f,
@@ -91,6 +95,7 @@ projs[Projectile_Max] =
         S_INVALID,
         2,
         0,
+        0,
         1.4f,
         "projectile/rocket/01"
     },
@@ -100,6 +105,7 @@ projs[Projectile_Max] =
         ATK_INVALID,
         S_INVALID,
         S_PULSE_LOOP,
+        0,
         0,
         0,
         1.0f,
@@ -113,6 +119,7 @@ projs[Projectile_Max] =
         S_PISTOL_LOOP,
         0,
         0,
+        0,
         5.0f,
         NULL
     },
@@ -124,6 +131,7 @@ projs[Projectile_Max] =
         S_INVALID,
         2,
         5,
+        0,
         1.5f,
         "projectile/gib",
     },
@@ -133,6 +141,7 @@ projs[Projectile_Max] =
         ATK_INVALID,
         S_INVALID,
         S_INVALID,
+        0,
         0,
         0,
         1.8f,
@@ -146,6 +155,7 @@ projs[Projectile_Max] =
         S_INVALID,
         2,
         0,
+        0,
         0.3f,
         "projectile/eject/00"
     },
@@ -156,6 +166,7 @@ projs[Projectile_Max] =
         S_BOUNCE_EJECT2,
         S_INVALID,
         2,
+        0,
         0,
         0.4f,
         "projectile/eject/01"
@@ -168,17 +179,19 @@ projs[Projectile_Max] =
         S_INVALID,
         2,
         0,
+        0,
         0.5f,
         "projectile/eject/02"
     },
     {
         Projectile_Bullet,
-        ProjFlag_Weapon | ProjFlag_Junk | ProjFlag_Linear,
+        ProjFlag_Weapon | ProjFlag_Junk | ProjFlag_Linear | ProjFlag_AdjustSpeed,
         ATK_INVALID,
         S_INVALID,
         S_INVALID,
         0,
         0,
+        0.25f,
         0.4f,
         NULL
     }
@@ -265,6 +278,20 @@ struct ProjEnt : dynent
     {
         projectile = type;
         this->flags = projs[projectile].flags;
+    }
+
+    void setSpeed(const float baseSpeed)
+    {
+        const float maxSpeed = projs[projectile].maxSpeed;
+        if (maxSpeed > 0.0f && flags & ProjFlag_AdjustSpeed)
+        {
+            const float distance = to.dist(from);
+            speed = max(baseSpeed, distance / maxSpeed);
+        }
+        else
+        {
+            speed = baseSpeed;
+        }
     }
 
     void checkliquid()

@@ -1818,7 +1818,7 @@ namespace server
         uchar operator[](int msg) const { return msg >= 0 && msg < NUMMSG ? msgmask[msg] : 0; }
     } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVMSG,
                 N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_DAMAGEPROJECTILE, N_REGENERATE,
-                N_REPAMMO, N_DIED, N_SPAWNSTATE, N_FORCEDEATH,
+                N_DIED, N_SPAWNSTATE, N_FORCEDEATH,
                 N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP,
                 N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME,
                 N_NOTICE, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP,

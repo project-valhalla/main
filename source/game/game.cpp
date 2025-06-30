@@ -110,7 +110,7 @@ namespace game
     {
         projectiles::reset();
         clearmonsters();
-        entities::resettriggers();
+        entities::resetTriggers();
     }
 
     int vooshgun;
@@ -242,7 +242,7 @@ namespace game
                 if(lastmillis - d->lastaction >= d->gunwait) d->gunwait = 0;
                 if(d->powerupmillis || d->role == ROLE_BERSERKER)
                 {
-                    entities::updatepowerups(curtime, d);
+                    entities::updatePowerups(curtime, d);
                 }
             }
             const int lagtime = totalmillis-d->lastupdate;
@@ -300,7 +300,7 @@ namespace game
         {
             if(self->powerupmillis || self->role == ROLE_BERSERKER)
             {
-                entities::updatepowerups(curtime, self);
+                entities::updatePowerups(curtime, self);
             }
         }
         updateweapons(curtime);
@@ -340,7 +340,7 @@ namespace game
                 if(self->ragdoll) cleanragdoll(self);
                 physics::crouchplayer(self, 10, true);
                 physics::moveplayer(self, 10, true);
-                entities::checkitems(self);
+                entities::checkItems(self);
                 if(cmode) cmode->checkitems(self);
             }
             else if (self->state == CS_SPECTATOR)
@@ -409,7 +409,7 @@ namespace game
 
     void pickgamespawn(gameent* d)
     {
-        int forcedentity = m_story && d == self && entities::respawnent >= 0 ? entities::respawnent : -1;
+        int forcedentity = m_story && d == self && d->respawnPoint >= 0 ? d->respawnPoint : -1;
         int tag = m_teammode ? d->team : 0;
         if (cmode)
         {
@@ -557,7 +557,7 @@ namespace game
     ICOMMAND(primary, "D", (int *down), doaction(*down ? ACT_PRIMARY : ACT_IDLE));
     ICOMMAND(secondary, "D", (int *down), doaction(*down ? ACT_SECONDARY : ACT_IDLE));
     ICOMMAND(melee, "D", (int *down), doaction(*down ? ACT_MELEE : ACT_IDLE));
-    ICOMMAND(interact, "D", (int *down), { self->interacting = *down ? true : false; });
+    ICOMMAND(interact, "D", (int *down), { self->interacting[Interaction::Active] = *down ? true : false;});
 
     bool isally(const gameent *a, const gameent *b)
     {
@@ -1107,10 +1107,10 @@ namespace game
         ai::savewaypoints();
         ai::clearwaypoints(true);
 
-        entities::respawnent = -1;
+        self->respawnPoint = -1;
         if(!m_mp(gamemode)) spawnplayer(self);
         else findplayerspawn(self, -1, m_teammode ? self->team : 0);
-        entities::resetspawns();
+        entities::resetSpawn();
         copystring(clientmap, name ? name : "");
 
         sendmapinfo();

@@ -1,3 +1,25 @@
+/*
+ * =====================================================================
+ * entity.cpp
+ * Handles game entities and their effects.
+ * =====================================================================
+ *
+ * This file handles game entity logic:
+ * - Collision detection with game-specific entities:
+ *     - Players touching pickups.
+ *     - Actors using teleporters or jump pads.
+ * - Trigger event handling and activation.
+ * - Pickup/use effects.
+ * - Rendering and preloading the entity models.
+ * - Communication with the server:
+ *     - Reporting available pickups.
+ *     - Sending information about clients attempting pickups.
+ *     - Tracking spawn states and timers for pickups.
+ * - Other game-specific entity behaviours.
+ *
+ * =====================================================================
+ */
+
 #include "game.h"
 #include "event.h"
 #include "query.h"
@@ -6,261 +28,184 @@ namespace entities
 {
     using namespace game;
 
-    int extraentinfosize() { return 0; }       // size in bytes of what the 2 methods below read/write... so it can be skipped by other games
+    /*
+        Size in bytes of what the 2 methods below read/write.
+        Can be skipped by other games.
+    */
+    int getExtraInfoSize()
+    {
+        return 0;
+    }
 
-    void writeent(entity& e, char* buf)   // write any additional data to disk (except for ET_ ents)
+    /*
+        Write any additional data to disk.
+        Note: currently, entities with the "ET_" prefix (engine entities) are ignored.
+    */
+    void write(const entity& entity, const char* buf)
     {
     }
 
-    void readent(entity& e, char* buf, int ver)     // read from disk, and init
+    // Read from disk, and initialise the entity.
+    void read(const entity& entity, const char* buf, const int version)
     {
     }
 
 #ifndef STANDALONE
 
-    void preloadEntities()
+    // Preload all the default entity models.
+    void preload()
     {
-        loopi(MAXENTTYPES)
+        for (int i = 0; i < MAXENTTYPES; i++)
         {
-            const char* mdl = gentities[i].file;
-            if (!mdl)
+            const char* model = gentities[i].file;
+            if (!model)
             {
                 continue;
             }
-            preloadmodel(mdl);
+            preloadmodel(model);
         }
     }
 
+    // Preload the map models used by the game entities.
     void preloadWorld()
     {
         loopv(ents)
         {
-            extentity& e = *ents[i];
-            switch (e.type)
+            const extentity& entity = *ents[i];
+            switch (entity.type)
             {
                 case TELEPORT:
                 case TRIGGER:
-                {
-                    if (e.attr2 > 0)
+                    if (entity.attr2 > 0)
                     {
-                        preloadmodel(mapmodelname(e.attr2));
+                        preloadmodel(mapmodelname(entity.attr2));
                     }
                     break;
-                }
 
                 case JUMPPAD:
-                {
-                    if (e.attr4 > 0)
+                    if (entity.attr4 > 0)
                     {
-                        preloadmapsound(e.attr4);
+                        preloadmapsound(entity.attr4);
                     }
                     break;
-                }
             }
         }
     }
 
     vector<extentity*> ents;
-    vector<extentity*>& getents() { return ents; }
 
-    vector<int> proximity_triggers; // triggers in proximity of the player, used for "Distance" events
-
-    // search ents by type and label and returns a list of ids
-    ICOMMAND(entquery, "ss", (char *type, char *query),
+    vector<extentity*>& getents()
     {
-        vector<extentity *>& ents = entities::getents();
-        int type_i = -1;
-        if(type[0])
-        {
-            if((type_i = findenttype(type)) == ET_EMPTY)
-            {
-                result("");
-                return;
-            }
-        }
-
-        vector<char> buf;
-        string id;
-        int num_ids = 0;
-        loopv(ents)
-        {
-            if(
-                (type_i < 0 || type_i == ents[i]->type) &&
-                (query::match(query, ents[i]->label))
-            )
-            {
-                if(num_ids++) buf.add(' ');
-                formatstring(id, "%d", i);
-                buf.put(id, strlen(id));
-            }
-        }
-        buf.add('\0');
-        result(buf.getbuf());
-    })
-
-    // clear the list of triggers in proximity (when starting a new map)
-    void clearProximityTriggers()
-    {
-        proximity_triggers.setsize(0);
-    }
-    // emit "Distance" events for all triggers in proximity (called when the player dies)
-    void emitDistanceEvents()
-    {
-        loopvrev(proximity_triggers)
-        {
-            event::emit<event::Trigger>(proximity_triggers[i], event::Distance);
-            proximity_triggers.remove(i);
-        }
+        return ents;
     }
 
-    // Events.
-    void onPlayerDeath(const gameent *d, const gameent *actor)
-    {
-        if (d != self)
-        {
-            return;
-        }
-        emitDistanceEvents();
+    bool isAttachable(const extentity& e)
+    { 
+        return false;
     }
 
-    void onPlayerSpectate(const gameent *d)
+    bool shouldAttach(const extentity& entity, const extentity& attached)
     {
-        if (d != self)
-        {
-            return;
-        }
-        emitDistanceEvents();
+        return false;
     }
 
-    void onPlayerUnspectate(const gameent *d) {}
-
-    void onMapStart()
-    {
-        clearProximityTriggers();
-    }
-
-    int respawnent = -1;
-
-    void setRespawnPoint(int id)
-    {
-        respawnent = ents.inrange(id) ? id : -1;
-    }
-    ICOMMAND(setrespawnpoint, "i", (int *id), setRespawnPoint(*id));
-
-    // returns whether or not a trigger is enabled
-    int getTriggerState(int id)
-    {
-        if(!ents.inrange(id)) return 0;
-        return ents[id]->isactive() ? 1 : 0;
-    }
-    // enables or disables a trigger
-    void setTriggerState(int id, int state)
-    {
-        if(!ents.inrange(id)) return;
-        ents[id]->setactivity(state != 0 ? true : false);
-    }
-    ICOMMAND(triggerstate, "iiN", (int *id, int *state, int *numargs),
-    {
-        if(*numargs > 1)
-        {
-            setTriggerState(*id, *state);
-        }
-        else
-        {
-            intret(getTriggerState(*id));
-        }
-    });
-
-    bool mayattach(extentity& e) { return false; }
-    bool attachent(extentity& e, extentity& a) { return false; }
-
-    const char* entmodel(const entity& e)
+    /*
+        Returns the model name associated with an entity.
+        For certain entity types, a map model is used when the second attribute (`attr2`) is greater than 0.
+        If `attr2` is less than 0, the entity returns no model.
+    */
+    const char* getModel(const entity& e)
     {
         if (e.type == TELEPORT || e.type == TRIGGER)
         {
-            if (e.attr2 > 0) return mapmodelname(e.attr2);
-            if (e.attr2 < 0) return NULL;
+            if (e.attr2 > 0)
+            {
+                return mapmodelname(e.attr2);
+            }
+            if (e.attr2 < 0)
+            {
+                return nullptr;
+            }
         }
-        return e.type < MAXENTTYPES ? gentities[e.type].file : NULL;
+        return e.type < MAXENTTYPES ? gentities[e.type].file : nullptr;
     }
 
-    bool canspawnitem(int type)
+    // Checks whether a pickable entity (item) can spawn in a certain game mode.
+    static bool canSpawnItem(const int type)
     {
         if (!validitem(type) || m_noitems(mutators))
         {
             return false;
         }
-
         switch (type)
         {
             case I_AMMO_SG: case I_AMMO_SMG: case I_AMMO_PULSE: case I_AMMO_RL: case I_AMMO_RAIL: case I_AMMO_GRENADE:
-            {
                 if (m_insta(mutators) || m_tactics(mutators) || m_voosh(mutators))
                 {
                     return false;
                 }
                 break;
-            }
 
             case I_YELLOWSHIELD: case I_REDSHIELD:
-            {
                 if (m_insta(mutators) || m_effic(mutators))
                 {
                     return false;
                 }
                 break;
-            }
 
             case I_HEALTH:
-            {
                 if (m_insta(mutators) || m_effic(mutators) || m_vampire(mutators))
                 {
                     return false;
                 }
                 break;
-            }
 
             case I_MEGAHEALTH: case I_ULTRAHEALTH:
-            {
                 if (m_insta(mutators) || m_vampire(mutators))
                 {
                     return false;
                 }
                 break;
-            }
 
             case I_DDAMAGE: case I_ARMOR: case I_INFINITEAMMO:
-            {
                 if (m_insta(mutators) || m_nopowerups(mutators))
                 {
                     return false;
                 }
                 break;
-            }
 
             case I_HASTE: case I_AGILITY: case I_INVULNERABILITY:
-            {
                 if (m_nopowerups(mutators))
                 {
                     return false;
                 }
                 break;
-            }
 
-            default: break;
+            default:
+                break;
         }
         return true;
     }
 
-    bool allowpickup()
+    // Determines whether the game currently allows item entities to be picked up.
+    static bool isPickupAllowed()
     {
-        return !((!m_infection && !m_betrayal && betweenrounds) || (m_hunt && hunterchosen && betweenrounds));
+        if
+        (
+            !((!m_infection && !m_betrayal && betweenrounds) ||
+            (m_hunt && hunterchosen && betweenrounds))
+        )
+        {
+            return true;
+        }
+        return false;
     }
 
-    extentity* findclosest(int type, const vec position)
+    // Find the closest entity by type.
+    static extentity* findClosest(const int type, const vec position)
     {
-        extentity* closest = NULL;
-        if (!ents.empty() && canspawnitem(type))
+        extentity* closest = nullptr;
+        if (!ents.empty() && canSpawnItem(type))
         {
             float distance = 1e16f;
             loopv(ents)
@@ -270,10 +215,10 @@ namespace entities
                 {
                     continue;
                 }
-                float entitydistance = entity->o.dist(position);
-                if (entitydistance < distance)
+                float entityDistance = entity->o.dist(position);
+                if (entityDistance < distance)
                 {
-                    distance = entitydistance;
+                    distance = entityDistance;
                     closest = entity;
                 }
             }
@@ -281,28 +226,29 @@ namespace entities
         return closest;
     }
 
-    extentity* closest = NULL;
-    vec lastposition;
-
-    void searchentities()
+    // Search entities based on need.
+    static void search()
     {
         if (m_story)
         {
             return;
         }
+        gameent* hudPlayer = followingplayer(self);
 
-        gameent* hud = followingplayer(self);
-        if (lowhealthscreen && hud->haslowhealth())
+        /*
+            If the low-health warning feature is enabled,
+            find the closest health pack to help guide the player.
+        */
+        static extentity* closest = nullptr;
+        if (lowhealthscreen && hudPlayer->haslowhealth())
         {
-            /* If the low-health warning feature is enabled,
-             * find the closest health pack to help guide the player.
-             */
+            static vec lastPosition;
             const int moveThreshold = 128;
-            const bool shouldSearch = lastposition.dist(hud->o) >= moveThreshold;
+            const bool shouldSearch = lastPosition.dist(hudPlayer->o) >= moveThreshold;
             if (shouldSearch)
             {
-                lastposition = hud->o;
-                closest = findclosest(I_HEALTH, lastposition);
+                lastPosition = hudPlayer->o;
+                closest = findClosest(I_HEALTH, lastPosition);
             }
             if (closest)
             {
@@ -311,17 +257,17 @@ namespace entities
         }
         else if (closest)
         {
-            closest = NULL;
+            closest = nullptr;
         }
     }
 
-    void markentity(extentity& entity)
+    // Mark entities on the HUD based on need.
+    static void mark(const extentity& entity)
     {
         if (m_noitems(mutators) || (!validitem(entity.type) && entity.type != TRIGGER))
         {
             return;
         }
-
         if (m_story)
         {
             if (entity.type == TRIGGER && entity.isactive() && entity.attr5 == TriggerType::Marker)
@@ -331,7 +277,7 @@ namespace entities
         }
         else
         {
-            if (canspawnitem(entity.type) && entity.spawned())
+            if (canSpawnItem(entity.type) && entity.spawned())
             {
                 if (entity.type >= I_DDAMAGE && entity.type <= I_INVULNERABILITY)
                 {
@@ -345,468 +291,573 @@ namespace entities
         }
     }
 
-    void renderentities()
+    // Render game entity models and manage simple effects.
+    void render()
     {
         if (ents.empty())
         {
             return;
         }
-
-        searchentities();
-        gameent* hud = followingplayer(self);
+        search();
+        gameent* hudPlayer = followingplayer(self);
         loopv(ents)
         {
-            extentity& e = *ents[i];
-            if (!e.isactive())
+            const extentity& entity = *ents[i];
+            if (!entity.isactive())
             {
                 continue;
             }
-            markentity(e);
-            const int revs = 10;
-            switch (e.type)
+            mark(entity);
+            const int revolutions = 10;
+            switch (entity.type)
             {
                 case TELEPORT:
                 case TRIGGER:
-                {
-                    if (e.attr2 < 0 || (e.type == TRIGGER && !m_story))
+                    if (entity.attr2 < 0 || (entity.type == TRIGGER && !m_story))
                     {
                         continue;
                     }
                     break;
-                }
 
                 default:
-                {
-                    if ((!editmode && !e.spawned()) || !validitem(e.type))
+                    if ((!editmode && !entity.spawned()) || !validitem(entity.type))
                     {
                         continue;
                     }
                     break;
-                }
             }
-            const char* mdlname = entmodel(e);
-            if (mdlname)
+            const char* modelName = getModel(entity);
+            if (modelName)
             {
-                vec p = e.o;
-                p.z += 1 + sinf(lastmillis / 100.0 + e.o.x + e.o.y) / 20;
+                const vec position = vec(entity.o).addz(1 + sinf(lastmillis / 100.0 + entity.o.x + entity.o.y) / 20);
                 float trans = 1;
-                if (validitem(e.type) && (!e.spawned() || !hud->canpickup(e.type)))
+                if
+                    (validitem(entity.type) &&
+                    (!entity.spawned() || !hudPlayer->canpickup(entity.type))
+                )
                 {
                     trans = 0.5f;
                 }
-                float progress = min((lastmillis - e.lastspawn) / 1000.0f, 1.0f);
-                float size = ease::outelastic(progress);
-                rendermodel(mdlname, ANIM_MAPMODEL | ANIM_LOOP, p, lastmillis / (float)revs, 0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, NULL, NULL, 0, 0, size, vec4(1, 1, 1, trans));
+                const float progress = min((lastmillis - entity.lastspawn) / 1000.0f, 1.0f);
+                const float size = ease::outelastic(progress);
+                rendermodel
+                (
+                    modelName, ANIM_MAPMODEL | ANIM_LOOP, position, lastmillis / static_cast<float>(revolutions),
+                    0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, nullptr, nullptr, 0, 0, size, vec4(1, 1, 1, trans)
+                );
             }
         }
     }
 
-    void addammo(int type, int& v, bool local)
+    /*
+        This function is called once the server acknowledges that you really
+        picked up the item (in multiplayer someone may grab it before you).
+    */
+    void doPickupEffects(const int id, gameent* player)
     {
-        itemstat& is = itemstats[type - I_AMMO_SG];
-        v += is.add;
-        if (v > is.max) v = is.max;
-        if (local) sendsound(is.sound);
-    }
-
-    void repammo(gameent* d, int type, bool local)
-    {
-        addammo(type, d->ammo[type - I_AMMO_SG + GUN_SCATTER], local);
-    }
-
-    /* This function is called once the server acknowledges that you really
-     * picked up the item (in multiplayer someone may grab it before you).
-     */
-    void dopickupeffects(const int n, gameent* d)
-    {
-        if (!d || !ents.inrange(n) || !validitem(ents[n]->type))
+        if (!player || !ents.inrange(id) || !validitem(ents[id]->type))
         {
             return;
         }
-
-        if (ents[n]->spawned())
+        if (ents[id]->spawned())
         {
-            ents[n]->clearspawned();
+            ents[id]->clearspawned();
         }
-        const int type = ents[n]->type;
-        game::autoswitchweapon(d, type);
-        d->pickup(type);
-        itemstat& is = itemstats[type - I_AMMO_SG];
+        const int type = ents[id]->type;
+        game::autoswitchweapon(player, type);
+        player->pickup(type);
+        itemstat& itemInfo = itemstats[type - I_AMMO_SG];
         gameent* hud = followingplayer(self);
-        playsound(is.sound, NULL, d == hud ? NULL : &d->o, NULL, 0, 0, 0, -1, 0, 1800);
+        playsound(itemInfo.sound, nullptr, player == hud ? nullptr : &player->o, nullptr, 0, 0, 0, -1, 0, 1800);
         if (type >= I_DDAMAGE && type <= I_INVULNERABILITY)
         {
-            if (d == hud)
+            if (player == hud)
             {
                 conoutf(CON_GAMEINFO, "\f2%s power-up obtained", gentities[type].prettyname);
-                if (validsound(is.announcersound))
+                if (validsound(itemInfo.announcersound))
                 {
-                    announcer::playannouncement(is.announcersound);
+                    announcer::playannouncement(itemInfo.announcersound);
                 }
             }
             else
             {
-                conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(d), gentities[type].prettyname);
+                conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(player), gentities[type].prettyname);
                 playsound(S_POWERUP);
             }
         }
-        dohudpickupeffects(type, d);
+        doHudPickupEffects(type, player);
     }
 
-    void dohudpickupeffects(const int type, gameent* d, bool shouldCheck)
+    // Manage effects when you pick a pickable entity (item) up. 
+    void doHudPickupEffects(const int type, gameent* player, const bool shouldCheck)
     {
         gameent* hud = followingplayer(self);
-        if (d != hud)
+        if (player != hud)
         {
             return;
         }
-
         const int collectFlash = 80;
         addscreenflash(collectFlash);
         if (shouldCheck)
         {
             game::checkentity(type);
-            d->lastpickupmillis = lastmillis;
+            player->lastpickupmillis = lastmillis;
         }
     }
-    ICOMMAND(triggerpickupeffects, "b", (int *cn), {
-        gameent *d = *cn < 0 ? self : getclient(*cn);
-        if(!d) return;
-        dohudpickupeffects(TRIGGER, d);
+    ICOMMAND(triggerpickupeffects, "b", (int *cn),
+    {
+        gameent* player = *cn < 0 ? self : getclient(*cn);
+        if (!player)
+        {
+            return;
+        }
+        doHudPickupEffects(TRIGGER, player);
     });
 
     // These following functions are called when the client touches the entity.
-
-    void playentitysound(const int fallback, const int mapsound, const vec &o)
+    static void playSound(const int fallback, const int mapSound, const vec& o)
     {
         int sound = fallback, flags = 0;
-        if(mapsound > 0)
+        if (mapSound > 0)
         {
-            sound = mapsound;
+            sound = mapSound;
             flags = SND_MAP;
         }
-        playsound(sound, NULL, o.iszero() ? NULL : &o, NULL, flags);
+        playsound(sound, nullptr, o.iszero() ? nullptr : &o, nullptr, flags);
     }
-    ICOMMAND(triggersound, "iiiN", (int *ent_id, int *sound_id, int *cn, int *numargs),
+    ICOMMAND(triggersound, "iiiN", (int* entityId, int* soundId, int* cn, int* numargs),
     {
-        if(!ents.inrange(*ent_id) || ents[*ent_id]->type != TRIGGER) return;
-        gameent *hud = followingplayer(self);
-        gameent *d = *numargs < 3 ? hud : getclient(*cn);
-        playentitysound(S_TRIGGER, *sound_id, d && d == hud ? vec(0, 0, 0) : ents[*ent_id]->o);
+        if (!ents.inrange(*entityId) || ents[*entityId]->type != TRIGGER)
+        {
+            return;
+        }
+        const gameent* hudPlayer = followingplayer(self);
+        const gameent* player = *numargs < 3 ? hudPlayer : getclient(*cn);
+        playSound(S_TRIGGER, *soundId, player && player == hudPlayer ? vec(0, 0, 0) : ents[*entityId]->o);
     });
 
-    void teleportparticleeffects(gameent *d, vec p)
+    static void doTeleportParticleEffects(const gameent* player, const vec p)
     {
-        if(d==followingplayer(self)) particle_splash(PART_SPARK2, 250, 500, p, getplayercolor(d, d->team), 0.50f, 800, -5);
-        else particle_splash(PART_SPARK2, 250, 200, p, getplayercolor(d, d->team), 0.50f, 250, 5);
+        if (player == followingplayer(self))
+        {
+            particle_splash(PART_SPARK2, 250, 500, p, getplayercolor(player, player->team), 0.50f, 800, -5);
+        }
+        else
+        {
+            particle_splash(PART_SPARK2, 250, 200, p, getplayercolor(player, player->team), 0.50f, 250, 5);
+        }
         adddynlight(p, 100, vec(0.50f, 1.0f, 1.5f), 500, 100);
     }
 
-    void teleporteffects(gameent *d, int tp, int td, bool local)
+    void doEntityEffects(const gameent* player, const int sourceEntityId, const bool isLocal, const int targetEntityId)
     {
-        if(d->state!=CS_ALIVE) return;
-        if(ents.inrange(tp) && ents[tp]->type == TELEPORT)
+        if (player->state != CS_ALIVE || !ents.inrange(sourceEntityId))
         {
-            extentity &e = *ents[tp];
-            if(e.attr4 >= 0)
-            {
-                gameent* hud = followingplayer(self);
-                playentitysound(S_TELEPORT, e.attr4, d == hud ? vec(0, 0, 0) : e.o);
-                if(ents.inrange(td) && ents[td]->type == TELEDEST)
+            return;
+        }
+        extentity& entity = *ents[sourceEntityId];
+        switch (entity.type)
+        {
+            case TELEPORT:
+                if (entity.attr4 >= 0)
                 {
-                    if (d != hud)
+                    const gameent* hud = followingplayer(self);
+                    playSound(S_TELEPORT, entity.attr4, player == hud ? vec(0, 0, 0) : entity.o);
+                    if (ents.inrange(targetEntityId) && ents[targetEntityId]->type == TELEDEST)
                     {
-                        playsound(S_TELEDEST, NULL, &ents[td]->o);
+                        if (player != hud)
+                        {
+                            playsound(S_TELEDEST, nullptr, &ents[targetEntityId]->o);
+                        }
+                        else
+                        {
+                            const int teleportFlash = 150;
+                            addscreenflash(teleportFlash);
+                            camera::camera.addevent(player, camera::CameraEvent_Teleport, 500);
+                        }
+                        doTeleportParticleEffects(player, ents[targetEntityId]->o);
                     }
-                    else
-                    {
-                        const int teleportFlash = 150;
-                        addscreenflash(teleportFlash);
-                        camera::camera.addevent(d, camera::CameraEvent_Teleport, 500);
-                    }
-                    teleportparticleeffects(d, ents[td]->o);
+                    doTeleportParticleEffects(player, player->o);
                 }
-                teleportparticleeffects(d, d->o);
-            }
-        }
-        if(local && d->clientnum >= 0)
-        {
-            sendposition(d);
-            packetbuf p(32, ENET_PACKET_FLAG_RELIABLE);
-            putint(p, N_TELEPORT);
-            putint(p, d->clientnum);
-            putint(p, tp);
-            putint(p, td);
-            sendclientpacket(p.finalize(), 0);
-            flushclient();
+                if (isLocal && player->clientnum >= 0)
+                {
+                    sendposition(player);
+                    packetbuf p(32, ENET_PACKET_FLAG_RELIABLE);
+                    putint(p, N_TELEPORT);
+                    putint(p, player->clientnum);
+                    putint(p, sourceEntityId);
+                    putint(p, targetEntityId);
+                    sendclientpacket(p.finalize(), 0);
+                    flushclient();
+                }
+                break;
+
+            case JUMPPAD:
+                if (entity.attr4 >= 0)
+                {
+                    playSound(S_JUMPPAD, entity.attr4, player == followingplayer(self) ? vec(0, 0, 0) : entity.o);
+                }
+                sway.addevent(player, SwayEvent_Land, 250, -2);
+                if (isLocal && player->clientnum >= 0)
+                {
+                    sendposition(player);
+                    packetbuf p(16, ENET_PACKET_FLAG_RELIABLE);
+                    putint(p, N_JUMPPAD);
+                    putint(p, player->clientnum);
+                    putint(p, sourceEntityId);
+                    sendclientpacket(p.finalize(), 0);
+                    flushclient();
+                }
+                break;
+
+            default:
+                break;
         }
     }
 
-    void jumppadeffects(gameent *d, int jp, bool local)
+    // Teleporting a game entity (player, NPC, prop, etc.).
+    void teleport(const int teleportId, gameent* player)
     {
-        if(d->state!=CS_ALIVE) return;
-        if(ents.inrange(jp) && ents[jp]->type == JUMPPAD)
-        {
-            extentity &e = *ents[jp];
-            if(e.attr4 >= 0)
-            {
-                 playentitysound(S_JUMPPAD, e.attr4, d == followingplayer(self) ? vec(0, 0, 0) : e.o);
-            }
-            sway.addevent(d, SwayEvent_Land, 250, -2);
-        }
-        if(local && d->clientnum >= 0)
-        {
-            sendposition(d);
-            packetbuf p(16, ENET_PACKET_FLAG_RELIABLE);
-            putint(p, N_JUMPPAD);
-            putint(p, d->clientnum);
-            putint(p, jp);
-            sendclientpacket(p.finalize(), 0);
-            flushclient();
-        }
-    }
-
-    void teleport(int n, gameent *d)     // also used by monsters
-    {
-        int e = -1, tag = ents[n]->attr1, beenhere = -1;
+        int destinationId = -1;
+        const int tag = ents[teleportId]->attr1;
+        int previous = -1;
         for(;;)
         {
-            e = findentity(TELEDEST, e+1);
-            if(e==beenhere || e<0) { conoutf(CON_WARN, "no teleport destination for tag %d", tag); return; }
-            if(beenhere<0) beenhere = e;
-            if(ents[e]->attr2==tag)
+            destinationId = findentity(TELEDEST, destinationId + 1);
+            if (destinationId == previous || destinationId < 0)
             {
-                teleporteffects(d, n, e, true);
-                d->o = ents[e]->o;
-                d->yaw = ents[e]->attr1;
-                if(ents[e]->attr3 > 0)
+                conoutf(CON_WARN, "no teleport destination for tag %d", tag);
+                return;
+            }
+            if (previous < 0)
+            {
+                previous = destinationId;
+            }
+            if (ents[destinationId]->attr2 == tag)
+            {
+                doEntityEffects(player, teleportId, true, destinationId);
+                player->o = ents[destinationId]->o;
+                player->yaw = ents[destinationId]->attr1;
+                if (ents[destinationId]->attr3 > 0)
                 {
-                    vec dir;
-                    vecfromyawpitch(d->yaw, 0, 1, 0, dir);
-                    float speed = d->vel.magnitude2();
-                    d->vel.x = dir.x*speed;
-                    d->vel.y = dir.y*speed;
+                    vec direction;
+                    vecfromyawpitch(player->yaw, 0, 1, 0, direction);
+                    const float speed = player->vel.magnitude2();
+                    player->vel.x = direction.x * speed;
+                    player->vel.y = direction.y * speed;
                 }
-                else d->vel = vec(0, 0, 0);
-                entinmap(d);
-                updatedynentcache(d);
-                ai::inferwaypoints(d, ents[n]->o, ents[e]->o, 16.f);
+                else
+                {
+                    player->vel = vec(0, 0, 0);
+                }
+                entinmap(player);
+                updatedynentcache(player);
+                ai::inferwaypoints(player, ents[teleportId]->o, ents[destinationId]->o, 16.f);
                 break;
             }
         }
     }
 
+    // Triggers in proximity of the player, used for "Distance" events.
+    vector<int> proximityTriggers;
+
+    // Contains information to display when hovering over items and entities.
+    struct HoverInfo
+    {
+        int hoveredWeapon = GUN_INVALID;
+
+        void resetInteraction()
+        {
+            self->interacting[Interaction::Available] = false;
+        }
+
+        void reset()
+        {
+            hoveredWeapon = GUN_INVALID;
+            resetInteraction();
+        }
+    };
+
+    static HoverInfo hover;
+
     VARR(teleteam, 0, 1, 1);
 
-    void trypickup(int n, gameent *d)
+    // The client tries to pick up the entity (item) and lets the server know.
+    static void tryPickup(const int id, gameent* player)
     {
-        switch(ents[n]->type)
+        switch(ents[id]->type)
         {
             case TELEPORT:
             {
-                if(d->lastpickup==ents[n]->type && lastmillis-d->lastpickupmillis<500) break;
-                if(!teleteam && m_teammode) break;
-                if(ents[n]->attr3 > 0)
+                if
+                (
+                    (player->lastpickup == ents[id]->type && lastmillis - player->lastpickupmillis < 500) ||
+                    (!teleteam && m_teammode)
+                )
                 {
-                    defformatstring(hookname, "can_teleport_%d", ents[n]->attr3);
-                    if(!execidentbool(hookname, true)) break;
+                    break;
                 }
-                d->lastpickup = ents[n]->type;
-                d->lastpickupmillis = lastmillis;
-                teleport(n, d);
+                if (ents[id]->attr3 > 0)
+                {
+                    defformatstring(hookname, "can_teleport_%d", ents[id]->attr3);
+                    if (!execidentbool(hookname, true))
+                    {
+                        break;
+                    }
+                }
+                player->lastpickup = ents[id]->type;
+                player->lastpickupmillis = lastmillis;
+                teleport(id, player);
                 break;
             }
 
             case JUMPPAD:
             {
-                if(d->lastpickup==ents[n]->type && lastmillis-d->lastpickupmillis<300) break;
-                d->lastpickup = ents[n]->type;
-                d->lastpickupmillis = lastmillis;
-                jumppadeffects(d, n, true);
-                if(d->ai) d->ai->becareful = true;
-                d->falling = vec(0, 0, 0);
-                d->physstate = PHYS_FALL;
-                d->timeinair = 1;
-                d->vel = vec(ents[n]->attr3*10.0f, ents[n]->attr2*10.0f, ents[n]->attr1*12.5f);
+                if (player->lastpickup == ents[id]->type && lastmillis - player->lastpickupmillis < 300)
+                {
+                    break;
+                }
+                player->lastpickup = ents[id]->type;
+                player->lastpickupmillis = lastmillis;
+                doEntityEffects(player, id, true);
+                if (player->ai)
+                {
+                    player->ai->becareful = true;
+                }
+                player->falling = vec(0, 0, 0);
+                player->physstate = PHYS_FALL;
+                player->timeinair = 1;
+                player->vel = vec(ents[id]->attr3 * 10.0f, ents[id]->attr2 * 10.0f, ents[id]->attr1 * 12.5f);
                 break;
             }
 
             case TRIGGER:
             {
-                if (d->lastpickup == ents[n]->type && lastmillis - d->lastpickupmillis < 100)
+                if (player->lastpickup == ents[id]->type && lastmillis - player->lastpickupmillis < 100)
                 {
                     break;
                 }
-                event::emit<event::Trigger>(n, event::Proximity);
-                int triggertype = ents[n]->attr5;
-                if (triggertype == TriggerType::Usable && self->interacting)
+                event::emit<event::Trigger>(id, event::Proximity);
+                const int triggerType = ents[id]->attr5;
+                if (triggerType == TriggerType::Usable)
                 {
-                    ents[n]->setactivity(false);
-                    self->interacting = false;
-                    event::emit<event::Trigger>(n, event::Use);
+                    if (self->interacting[Interaction::Active])
+                    {
+                        ents[id]->setactivity(false);
+                        self->interacting[Interaction::Active] = false;
+                        event::emit<event::Trigger>(id, event::Use);
+                    }
                 }
-                else if (triggertype == TriggerType::Item || triggertype == TriggerType::Marker)
+                else if (triggerType == TriggerType::Item || triggerType == TriggerType::Marker)
                 {
-                    // disable the item once the player reaches it
-                    ents[n]->setactivity(false);
+                    // Disable the item trigger once the player reaches it.
+                    ents[id]->setactivity(false);
                 }
 
-                // add ent id to the list of triggers in proximity
-                if(proximity_triggers.find(n) < 0) proximity_triggers.add(n);
+                // Add the entity's ID to the list of triggers in proximity.
+                if (proximityTriggers.find(id) < 0)
+                {
+                    proximityTriggers.add(id);
+                }
 
-                d->lastpickup = ents[n]->type;
+                player->lastpickup = ents[id]->type;
                 break;
             }
 
             default:
             {
-                if (d->canpickup(ents[n]->type) && allowpickup())
+                if (player->canpickup(ents[id]->type) && isPickupAllowed())
                 {
-                    addmsg(N_ITEMPICKUP, "rci", d, n);
-                    ents[n]->clearspawned(); // Even if someone else gets it first.
+                    addmsg(N_ITEMPICKUP, "rci", player, id);
+
+                    // Clear the item regardless of who picked it up, as it will be no longer available.
+                    ents[id]->clearspawned();
                 }
                 break;
             }
         }
     }
 
-    bool ishovered(int& entity)
+    /*
+        Performs a "raycast" to check whether the cursor is hovering over an entity.
+        The hovered entity's ID is returned.
+    */
+    static int findHovered()
     {
-        int orient = 0;
-        const float maxDistance = 1e16f;
-        const float distance = rayent(camera1->o, camdir, maxDistance, RAY_ENTS | RAY_SKIPFIRST, 0, orient, entity);
-        return distance < maxDistance && entity > -1;
+        int id, orient = 0;
+        rayent(camera1->o, camdir, 1e16f, RAY_ENTS | RAY_SKIPFIRST, 0, orient, id);
+        return id;
     }
 
     FVARP(itemhoverdistance, 0, 100.0f, 500.0f);
-    int hoveredweapon = GUN_INVALID;
 
-    void checkhovereditem(gameent* d)
+   /*
+        Checks if the player is currently hovering over a valid item entity.
+        Conditions to perform the check:
+            - Item hover distance must be enabled (non-zero).
+            - Items must be allowed in the current mutator settings.
+            - The player must be alive.
+            - The player must be the one currently being followed (e.g., in spectate mode).
+        If hovering over a valid item within the hover distance:
+        If the item is ammo (within ammo type range), update `hoveredweapon` accordingly.
+        If no valid hover item is found or conditions fail, reset `hoveredweapon` to invalid if it was previously valid.
+    */
+    static void checkHovered(const gameent* player)
     {
-        if (!itemhoverdistance || m_noitems(mutators) || d->state != CS_ALIVE || d != followingplayer(self))
+        if (player->state != CS_ALIVE || player != followingplayer(self))
         {
+            hover.reset();
             return;
         }
-
-        int id = -1;
-        if (ishovered(id))
+        const int id = findHovered();
+        if (ents.inrange(id))
         {
-            extentity* entity = NULL;
-            if (ents.inrange(id))
+            extentity* entity = ents[id];
+            if (!entity)
             {
-                entity = ents[id];
+                hover.reset();
+                return;
             }
-            if (entity && entity->spawned() && validitem(entity->type))
+            if (!m_noitems(mutators) && validitem(entity->type) && entity->spawned())
             {
-                const bool isClose = camera1->o.dist(entity->o) <= itemhoverdistance;
+                const bool isClose = itemhoverdistance && camera1->o.dist(entity->o) <= itemhoverdistance;
                 if (isClose)
                 {
                     if (entity->type >= I_AMMO_SG && entity->type <= I_AMMO_GRENADE)
                     {
-                        if (!validgun(hoveredweapon))
-                        {
-                            hoveredweapon = itemstats[entity->type - I_AMMO_SG].info;
-                        }
+                        hover.hoveredWeapon = itemstats[entity->type - I_AMMO_SG].info;
+                        hover.resetInteraction();
+                        return;
+                    }
+                }
+            }
+            else
+            {
+                loopv(proximityTriggers)
+                {
+                    const int triggerId = proximityTriggers[i];
+                    extentity* trigger = ents[triggerId];
+                    if
+                    (
+                        !trigger || !trigger->isactive() ||
+                        !ents.inrange(i) || trigger->type != TRIGGER)
+                    {
+                        continue;
+                    }
+                    const bool isClose = entity->o.dist(trigger->o) <= trigger->attr3;
+                    if (isClose && query::match(entity->label, trigger->label))
+                    {
+                        self->interacting[Interaction::Available] = true;
                         return;
                     }
                 }
             }
         }
         // Remove valid hover information.
-        if (validgun(hoveredweapon))
-        {
-            hoveredweapon = GUN_INVALID;
-        }
+        hover.reset();
     }
-    ICOMMAND(gethoverweapon, "", (), intret(hoveredweapon));
+    ICOMMAND(gethoverweapon, "", (), intret(hover.hoveredWeapon));
 
-    void checkitems(gameent *d)
+    /*
+        Checks various entity-related interactions for the specified game entity.
+        This includes:
+            - Updating hovered items.
+            - Checking proximity or distance to active entities (items, teleports, triggers).
+            - Attempting to pick up items or trigger events if within relevant radii.
+    */
+    void checkItems(gameent* player)
     {
-        if (d->state != CS_ALIVE && d->state != CS_SPECTATOR)
+        if (player->state != CS_ALIVE && player->state != CS_SPECTATOR)
         {
             return;
         }
-
-        checkhovereditem(d);
-        vec o = d->feetpos();
+        checkHovered(player);
+        const vec origin = player->feetpos();
         loopv(ents)
         {
-            extentity &e = *ents[i];
-            if (e.type == NOTUSED)
+            extentity& entity = *ents[i];
+            const int id = i;
+            if (entity.type == NOTUSED || !entity.isactive())
             {
                 continue;
             }
-            if (!e.isactive())
+            const float distance = entity.o.dist(origin);
+            if (entity.type == TRIGGER && m_story)
             {
-                continue;
-            }
-            float dist = e.o.dist(o);
-            if(e.type == TRIGGER && m_story)
-            {
-                const int radius = e.attr3 ? e.attr3 : ENTITY_COLLECT_RADIUS;
-                if (dist < radius)
+                const int radius = entity.attr3 ? entity.attr3 : ENTITY_COLLECT_RADIUS;
+                if (distance < radius)
                 {
-                    trypickup(i, d);
+                    tryPickup(id, player);
                 }
                 continue;
             }
-            if (d->state == CS_SPECTATOR && e.type != TELEPORT)
+            if
+            (
+                (player->state == CS_SPECTATOR && entity.type != TELEPORT) ||
+                (!entity.spawned() && entity.type != TELEPORT && entity.type != JUMPPAD)
+            )
             {
                 continue;
             }
-            if (!e.spawned() && e.type != TELEPORT && e.type != JUMPPAD)
+            const int radius = entity.type == TELEPORT ? ENTITY_TELEPORT_RADIUS : ENTITY_COLLECT_RADIUS;
+            if (distance < radius)
             {
-                continue;
-            }
-            const int radius = e.type == TELEPORT ? ENTITY_TELEPORT_RADIUS : ENTITY_COLLECT_RADIUS;
-            if (dist < radius)
-            {
-                trypickup(i, d);
+                tryPickup(id, player);
             }
         }
-        // check if the player moved away from a trigger in proximity
-        if(m_story && d == self) loopvrev(proximity_triggers)
+
+        // Check if the player moved away from a trigger in proximity.
+        if (m_story && player == self)
         {
-            const int id = proximity_triggers[i];
-            if(!ents.inrange(id) || ents[id]->type != TRIGGER) continue;
-            const extentity& e = *ents[id];
-            const float dist = e.o.dist(o);
-            const int radius = e.attr3 ? e.attr3 : ENTITY_COLLECT_RADIUS;
-            const int exit_radius = max(0, max(radius, e.attr4 ? e.attr4 : ENTITY_COLLECT_RADIUS));
-            if(dist > exit_radius)
+            loopvrev(proximityTriggers)
             {
-                event::emit<event::Trigger>(id, event::Distance);
-                proximity_triggers.remove(i);
+                const int id = proximityTriggers[i];
+                if (!ents.inrange(id) || ents[id]->type != TRIGGER)
+                {
+                    continue;
+                }
+                const extentity& e = *ents[id];
+                const float distance = e.o.dist(origin);
+                const int radius = e.attr3 ? e.attr3 : ENTITY_COLLECT_RADIUS;
+                const int exitRadius = max(0, max(radius, e.attr4 ? e.attr4 : ENTITY_COLLECT_RADIUS));
+                if (distance > exitRadius)
+                {
+                    event::emit<event::Trigger>(id, event::Distance);
+                    proximityTriggers.remove(i);
+                    hover.resetInteraction();
+                }
             }
         }
     }
 
-    void updatepowerups(int time, gameent* d)
+    // Update power-up effects and client-side timer.
+    void updatePowerups(const int time, gameent* player)
     {
-        const int sound = d->role == ROLE_BERSERKER ? S_BERSERKER_LOOP : (S_LOOP_DAMAGE + d->poweruptype - 1);
-        d->playchannelsound(Chan_PowerUp, sound, 200, true);
-
-        if (m_berserker && d->role == ROLE_BERSERKER && !d->powerupmillis)
+        const int sound = player->role == ROLE_BERSERKER ? S_BERSERKER_LOOP : (S_LOOP_DAMAGE + player->poweruptype - 1);
+        player->playchannelsound(Chan_PowerUp, sound, 200, true);
+        if (m_berserker && player->role == ROLE_BERSERKER && !player->powerupmillis)
         {
             return;
         }
 
-        if ((d->powerupmillis -= time) <= 0)
+        // Client-side power-up timer.
+        if ((player->powerupmillis -= time) <= 0)
         {
-            d->powerupmillis = 0;
-            playsound(S_TIMEOUT_DAMAGE + d->poweruptype - 1, d);
-            d->poweruptype = PU_NONE;
-            if (d->role != ROLE_BERSERKER)
+            player->powerupmillis = 0;
+            playsound(S_TIMEOUT_DAMAGE + player->poweruptype - 1, player);
+            player->poweruptype = PU_NONE;
+            if (player->role != ROLE_BERSERKER)
             {
-                d->stopchannelsound(Chan_PowerUp, 500);
+                player->stopchannelsound(Chan_PowerUp, 500);
             }
         }
     }
 
-    void putitems(packetbuf &p)            // puts items in network stream and also spawns them locally
+    // Spawns items locally and puts them in the network stream.
+    void sendItems(packetbuf& p)
     {
         putint(p, N_ITEMLIST);
-        loopv(ents) if(canspawnitem(ents[i]->type))
+        loopv(ents) if (canSpawnItem(ents[i]->type))
         {
             putint(p, i);
             putint(p, ents[i]->type);
@@ -814,7 +865,8 @@ namespace entities
         putint(p, -1);
     }
 
-    void resetspawns()
+    // Resets the items' spawn state on map load/reset.
+    void resetSpawn()
     { 
         loopv(ents)
         {
@@ -827,78 +879,92 @@ namespace entities
         }
     }
 
-    void spawnitems(bool force)
+    // Spawns all items immediately (if forced by the server) or delay them.
+    void spawnItems(const bool isForced)
     {
-        loopv(ents) if(canspawnitem(ents[i]->type))
+        loopv(ents) if (canSpawnItem(ents[i]->type))
         {
-            ents[i]->setspawned(force || !server::delayspawn(ents[i]->type));
+            ents[i]->setspawned(isForced || !server::delayspawn(ents[i]->type));
             ents[i]->lastspawn = lastmillis;
         }
     }
 
-    static void spawneffect(extentity *e)
+    // Items' spawn effect.
+    static void doSpawnEffect(const extentity* entity)
     {
-        int spawncolor = 0x00E463;
-        particle_splash(PART_SPARK, 20, 100, e->o, spawncolor, 1.0f, 100, 60);
-        particle_flare(e->o, e->o, 500, PART_EXPLODE1, 0x83E550, 1.0f, NULL, 16.0f);
-        adddynlight(e->o, 116, vec::hexcolor(spawncolor), 500, 75, DL_EXPAND | L_NOSHADOW);
-        playsound(S_ITEM_SPAWN, NULL, &e->o, NULL, 0, 0, 0, -1, 0, 1500);
-        if (e->type >= I_DDAMAGE && e->type <= I_INVULNERABILITY)
+        const int spawnColor = 0x00E463;
+        particle_splash(PART_SPARK, 20, 100, entity->o, spawnColor, 1.0f, 100, 60);
+        particle_flare(entity->o, entity->o, 500, PART_EXPLODE1, 0x83E550, 1.0f, nullptr, 16.0f);
+        adddynlight(entity->o, 116, vec::hexcolor(spawnColor), 500, 75, DL_EXPAND | L_NOSHADOW);
+        playsound(S_ITEM_SPAWN, nullptr, &entity->o, nullptr, 0, 0, 0, -1, 0, 1500);
+        if (entity->type >= I_DDAMAGE && entity->type <= I_INVULNERABILITY)
         {  
-            conoutf(CON_GAMEINFO, "\f2%s power-up available!", gentities[e->type].prettyname);
+            conoutf(CON_GAMEINFO, "\f2%s power-up available!", gentities[entity->type].prettyname);
             playsound(S_POWERUP_SPAWN);
         }
     }
 
-    void setspawn(int i, bool shouldspawn, bool isforced)
+    // Spawn an item based on its ID.
+    void setSpawn(const int id, const bool shouldSpawn, const bool isForced)
     {
-        if (ents.inrange(i))
+        if (ents.inrange(id))
         {
-            extentity* e = ents[i];
-            e->setspawned(shouldspawn);
-            if (!isforced)
+            extentity* entity = ents[id];
+            entity->setspawned(shouldSpawn);
+            if (!isForced)
             {
-                spawneffect(e);
+                doSpawnEffect(entity);
             }
-            e->lastspawn = lastmillis;
+            entity->lastspawn = lastmillis;
         }
     }
 
-    extentity *newentity() { return new gameentity(); }
-    void deleteentity(extentity *e) { delete (gameentity *)e; }
-
-    void clearents()
-    {
-        while(ents.length()) deleteentity(ents.pop());
+    // Create a new game entity.
+    extentity *make()
+    { 
+        return new gameentity();
+    }
+    
+    // Delete a game entity.
+    void remove(extentity* e)
+    { 
+        delete (gameentity*) e;
     }
 
-    void animatemapmodel(const extentity &e, int &anim, int &basetime)
+    // Clear all game entities.
+    void clear()
     {
-        switch (e.triggerstate)
+        while(ents.length()) remove(ents.pop());
+    }
+
+    // Animate an entity based on its trigger state.
+    void animateMapModel(const extentity& entity, int& animation, int& baseTime)
+    {
+        switch (entity.triggerstate)
         {
             case TriggerState::Reset:
             {
-                anim = ANIM_TRIGGER | ANIM_START;
+                animation = ANIM_TRIGGER | ANIM_START;
                 break;
             }
 
             case TriggerState::Triggering:
             {
-                anim = ANIM_TRIGGER;
-                basetime = e.lasttrigger;
+                animation = ANIM_TRIGGER;
+                baseTime = entity.lasttrigger;
                 break;
             }
 
             case TriggerState::Triggered:
             {
-                anim = ANIM_TRIGGER | ANIM_END;
+                animation = ANIM_TRIGGER | ANIM_END;
                 break;
             }
 
             case TriggerState::Resetting:
             {
-                anim = ANIM_TRIGGER | ANIM_REVERSE;
-                basetime = e.lasttrigger;
+                animation = ANIM_TRIGGER | ANIM_REVERSE;
+                baseTime = entity.lasttrigger;
                 break;
             }
 
@@ -906,97 +972,103 @@ namespace entities
         }
     }
 
-    void fixentity(extentity &e)
+    // Fix an entity's parameters if necessary (older map versions).
+    void fix(extentity& entity)
     {
-        switch (e.type)
+        switch (entity.type)
         {
             case FLAG:
-                e.attr5 = e.attr4;
-                e.attr4 = e.attr3;
-                // fall through
+                entity.attr5 = entity.attr4;
+                entity.attr4 = entity.attr3;
+                // Fall through.
             case TELEDEST:
-                e.attr3 = e.attr2;
-                e.attr2 = e.attr1;
-                e.attr1 = (int)self->yaw;
+                entity.attr3 = entity.attr2;
+                entity.attr2 = entity.attr1;
+                entity.attr1 = static_cast<int>(self->yaw);
                 break;
 
             case TARGET:
-                e.attr2 = e.attr1;
+                entity.attr2 = entity.attr1;
                 break;
         }
     }
 
-    void entradius(extentity &e, bool color)
+    // Renders the radius, arrows and other visual indicators for game entities.
+    void renderRadius(const extentity& entity)
     {
-        switch (e.type)
+        const float arrowRadius = 4;
+        switch (entity.type)
         {
             case TELEPORT:
             {
-                loopv(ents) if (ents[i]->type == TELEDEST && e.attr1 == ents[i]->attr2)
+                loopv(ents) if (ents[i]->type == TELEDEST && entity.attr1 == ents[i]->attr2)
                 {
-                    renderentarrow(e, vec(ents[i]->o).sub(e.o).normalize(), e.o.dist(ents[i]->o));
+                    renderentarrow(entity, vec(ents[i]->o).sub(entity.o).normalize(), entity.o.dist(ents[i]->o));
                     break;
                 }
                 break;
             }
-
             case JUMPPAD:
             {
-                renderentarrow(e, vec((int)(char)e.attr3 * 10.0f, (int)(char)e.attr2 * 10.0f, e.attr1 * 12.5f).normalize(), 4);
+                const vec direction = vec
+                (
+                    static_cast<int>(static_cast<char>(entity.attr3) * 10.0f),
+                    static_cast<int>(static_cast<char>(entity.attr2) * 10.0f),
+                    entity.attr1 * 12.5f
+                ).normalize();
+                renderentarrow(entity, direction, arrowRadius);
                 break;
             }
-
             case FLAG:
             case TELEDEST:
             {
-                vec dir;
-                vecfromyawpitch(e.attr1, 0, 1, 0, dir);
-                renderentarrow(e, dir, 4);
+                vec direction;
+                vecfromyawpitch(entity.attr1, 0, 1, 0, direction);
+                renderentarrow(entity, direction, arrowRadius);
                 break;
             }
-
             case TRIGGER:
             {
-                vec dir;
-                vecfromyawpitch(e.attr1, 0, 1, 0, dir);
-                renderentarrow(e, dir, 4);
+                vec direction;
+                vecfromyawpitch(entity.attr1, 0, 1, 0, direction);
+                renderentarrow(entity, direction, arrowRadius);
                 gle::color(bvec4(0x7F, 0xFF, 0xD4, 0xFF));
-                renderentsphere(e, e.attr3);
-                if(e.attr3 > 0 && e.attr4 > e.attr3)
+                renderentsphere(entity, entity.attr3);
+                if (entity.attr3 > 0 && entity.attr4 > entity.attr3)
                 {
                     gle::color(bvec4(0xFF, 0xA0, 0x7A, 0xFF));
-                    renderentsphere(e, e.attr4);
+                    renderentsphere(entity, entity.attr4);
                 }
                 gle::color(bvec4(0xFF, 0xFF, 0xFF, 0xFF));
                 break;
             }
-
             case TARGET:
             {
-                vec dir;
-                vecfromyawpitch(e.attr2, 0, 1, 0, dir);
-                renderentarrow(e, dir, 4);
+                vec direction;
+                vecfromyawpitch(entity.attr2, 0, 1, 0, direction);
+                renderentarrow(entity, direction, arrowRadius);
                 break;
             }
         }
     }
 
-    bool printent(extentity &e, char *buf, int len)
+    bool shouldPrint(const extentity& entity, const char* buffer, const int len)
     {
         return false;
     }
 
-    const char *entnameinfo(entity &e)
+    // Returns the simple or pretty name of an entity.
+    const char* getName(const int type, const bool isPretty)
     {
-        return e.type < MAXENTTYPES ? gentities[e.type].prettyname : "";
+        if (type >= 0 && type < MAXENTTYPES)
+        {
+            return isPretty ? gentities[type].prettyname : gentities[type].name;
+        }
+        return "";
     }
 
-    const char *entname(int type)
-    {
-        return type >= 0 && type < MAXENTTYPES ? gentities[type].name : "";
-    }
-
-    static inline void cleartriggerflags(extentity* entity)
+    // Clear the trigger state of an entity.
+    static inline void clearTriggerFlags(extentity* entity)
     {
         if (entity)
         {
@@ -1006,49 +1078,188 @@ namespace entities
         }
     }
 
-    void resettriggers()
+    // Clear the trigger state of each entity.
+    void resetTriggers()
     {
         loopv(ents)
         {
             extentity* e = ents[i];
-            if (e->type != ET_MAPMODEL) continue;
-            cleartriggerflags(e);
+            if (e->type != ET_MAPMODEL)
+            {
+                continue;
+            }
+            clearTriggerFlags(e);
         }
     }
 
-    void editent(int i, bool local)
+    // Edits an entity locally and sends the changes to the server.
+    void edit(const int id, const bool isLocal)
     {
-        extentity &e = *ents[i];
-        cleartriggerflags(&e);
-        e.setactivity(true);
-        if (local)
+        extentity& entity = *ents[id];
+        clearTriggerFlags(&entity);
+        entity.setactivity(true);
+        if (isLocal)
         {
-            addmsg(N_EDITENT, "rii3ii5", i, (int)(e.o.x * DMF), (int)(e.o.y * DMF), (int)(e.o.z * DMF), e.type, e.attr1, e.attr2, e.attr3, e.attr4, e.attr5);
+            addmsg
+            (
+                N_EDITENT, "rii3ii5", id, static_cast<int>(entity.o.x * DMF), static_cast<int>(entity.o.y * DMF), static_cast<int>(entity.o.z * DMF),
+                entity.type, entity.attr1, entity.attr2, entity.attr3, entity.attr4, entity.attr5
+            );
         }
-        if (canspawnitem(e.type) && !e.spawned())
+        if (canSpawnItem(entity.type) && !entity.spawned())
         {
-            e.lastspawn = lastmillis;
-        }
-    }
-    void editentlabel(int i, bool local)
-    {
-        extentity& e = *ents[i];
-        if(local)
-        {
-            addmsg(N_EDITENTLABEL, "ris", i, e.label ? e.label : "");
+            entity.lastspawn = lastmillis;
         }
     }
 
-    float dropheight(entity &e)
+    // Edits an entity's label locally and sends the updated label to the server.
+    void editLabel(const int id, const bool isLocal)
     {
-        if(e.type==FLAG) return 0.0f;
+        const extentity& entity = *ents[id];
+        if (isLocal)
+        {
+            addmsg(N_EDITENTLABEL, "ris", id, entity.label ? entity.label : "");
+        }
+    }
+
+    // Returns the drop height of an entity based on its type (e.g. player drops a flag).
+    float dropHeight(const entity& entity)
+    {
+        if (entity.type == FLAG)
+        {
+            return 0.0f;
+        }
         return 4.0f;
     }
 
-    // sets the trigger state of a map model
-    void triggermapmodel(int id, int state, int sound = S_INVALID)
+    // Search entities by type and label and returns a list of IDs.
+    ICOMMAND(entquery, "ss", (char* type, char* query),
     {
-        extentity* entity = NULL;
+        vector<extentity*>&ents = entities::getents();
+        int typeIndex = -1;
+        if (type[0])
+        {
+            if ((typeIndex = findenttype(type)) == ET_EMPTY)
+            {
+                result("");
+                return;
+            }
+        }
+        vector<char> buffer;
+        string id;
+        int ids = 0;
+        loopv(ents)
+        {
+            if
+            (
+                (typeIndex < 0 || typeIndex == ents[i]->type) &&
+                (query::match(query, ents[i]->label))
+            )
+            {
+                if (ids++)
+                {
+                    buffer.add(' ');
+                }
+                formatstring(id, "%d", i);
+                buffer.put(id, strlen(id));
+            }
+        }
+        buffer.add('\0');
+        result(buffer.getbuf());
+    })
+
+    // Clear the list of triggers in proximity (when starting a new map).
+    static void clearProximityTriggers()
+    {
+        proximityTriggers.setsize(0);
+    }
+
+    // Emit "Distance" events for all triggers in proximity (also called when the player dies).
+    static void emitDistanceEvents()
+    {
+        loopvrev(proximityTriggers)
+        {
+            event::emit<event::Trigger>(proximityTriggers[i], event::Distance);
+            proximityTriggers.remove(i);
+        }
+    }
+
+    // Events: player death.
+    void onPlayerDeath(const gameent* player, const gameent* actor)
+    {
+        if (player != self)
+        {
+            return;
+        }
+        emitDistanceEvents();
+    }
+
+    // Events: player enters spectator mode.
+    void onPlayerSpectate(const gameent* player)
+    {
+        if (player != self)
+        {
+            return;
+        }
+        emitDistanceEvents();
+    }
+
+    // Events: player exits spectator mode.
+    void onPlayerUnspectate(const gameent* player)
+    {
+    }
+
+    // Events: world loaded.
+    void onMapStart()
+    {
+        clearProximityTriggers();
+    }
+
+    /*
+        Sets the ID of the last respawn point.
+        Mostly used by triggers.
+    */
+    static void setRespawnPoint(const int id)
+    {
+        self->respawnPoint = ents.inrange(id) ? id : -1;
+    }
+    ICOMMAND(setrespawnpoint, "i", (int* id), setRespawnPoint(*id));
+
+    // Returns whether or not a trigger is enabled.
+    static int getTriggerState(const int id)
+    {
+        if (!ents.inrange(id))
+        {
+            return 0;
+        }
+        return ents[id]->isactive() ? 1 : 0;
+    }
+
+    // Enables or disables a trigger.
+    static void setTriggerState(const int id, const int state)
+    {
+        if (!ents.inrange(id))
+        {
+            return;
+        }
+        ents[id]->setactivity(state != 0 ? true : false);
+    }
+    ICOMMAND(triggerstate, "iiN", (int* id, int* state, int* numargs),
+    {
+        if (*numargs > 1)
+        {
+            setTriggerState(*id, *state);
+        }
+        else
+        {
+            intret(getTriggerState(*id));
+        }
+    });
+
+    // Sets the trigger state of a map model.
+    static void triggerMapModel(const int id, const int state, const int sound = S_INVALID)
+    {
+        extentity* entity = nullptr;
         if (ents.inrange(id))
         {
             entity = ents[id];
@@ -1057,8 +1268,7 @@ namespace entities
         {
             return;
         }
-
-        cleartriggerflags(entity);
+        clearTriggerFlags(entity);
         if (state > TriggerState::Null)
         {
             entity->flags |= EF_ANIM;
@@ -1071,15 +1281,14 @@ namespace entities
         entity->lasttrigger = lastmillis;
         if (validsound(sound))
         {
-            playentitysound(S_TRIGGER, sound, entity->o);
+            playSound(S_TRIGGER, sound, entity->o);
         }
     }
-    ICOMMAND(triggermapmodel, "iib", (int* id, int* state, int* sound), triggermapmodel(*id, *state, *sound));
-    ICOMMAND(mapmodeltriggerstate, "i", (int *id),
+    ICOMMAND(triggermapmodel, "iib", (int* id, int* state, int* sound), triggerMapModel(*id, *state, *sound));
+    ICOMMAND(mapmodeltriggerstate, "i", (int* id),
     {
-        extentity* entity = ents.inrange(*id) ? ents[*id] : nullptr;
+        const extentity* entity = ents.inrange(*id) ? ents[*id] : nullptr;
         intret(entity && entity->type == ET_MAPMODEL ? entity->triggerstate : 0);
     });
 #endif
 }
-

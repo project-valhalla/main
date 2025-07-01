@@ -79,9 +79,41 @@ namespace game
         return true;
     }
 
-    void addrecoil(gameent* d, const vec& dir, const int atk)
+    void push(gameent* d, const vec& direction, const int amount, const float factor)
     {
-        int kickAmount = attacks[atk].recoilamount;
+        if (!amount)
+        {
+            return;
+        }
+        const bool isCrouched = d->physstate >= PHYS_SLOPE && d->crouching && d->crouched();
+        if (isCrouched)
+        {
+            return;
+        }
+        vec push = vec(direction).mul(amount * factor);
+        d->vel.add(push);
+    }
+
+    void applyMeleePush(gameent* d, const vec& direction, const int attack)
+    {
+        const int amount = attacks[attack].recoilamount;
+        gameent* target = pointatplayer();
+        if (target)
+        {
+            const float distance = d->o.dist(target->o);
+            const int range = attacks[attack].range;
+            const int meleeRangeMultiplier = 3;
+            if (distance > range && distance <= range * meleeRangeMultiplier)
+            {
+                push(d, direction, amount, 2.5f);
+            }
+        }
+        camera::camera.addevent(d, camera::CameraEvent_Shake, amount);
+    }
+
+    void addRecoil(gameent* d, const vec& direction, const int attack)
+    {
+        int kickAmount = attacks[attack].recoilamount;
         if (kickAmount)
         {
             if (d->haspowerup(PU_DAMAGE))
@@ -89,12 +121,7 @@ namespace game
                 const int recoilPowerupMultiplier = 2;
                 kickAmount *= recoilPowerupMultiplier;
             }
-            const bool isCrouched = d->physstate >= PHYS_SLOPE && d->crouching && d->crouched();
-            if (kickAmount && !isCrouched)
-            {
-                vec kickback = vec(dir).mul(kickAmount * -2.5f);
-                d->vel.add(kickback);
-            }
+            push(d, direction, kickAmount, -2.5f);
             d->recoil = kickAmount;
         }
         else
@@ -148,7 +175,14 @@ namespace game
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
-        addrecoil(d, dir, atk);
+        if (attacks[atk].action == ACT_MELEE)
+        {
+            applyMeleePush(d, dir, atk);
+        }
+        else
+        {
+            addRecoil(d, dir, atk);
+        }
         float shorten = attacks[atk].range && dist > attacks[atk].range ? attacks[atk].range : 0,
               barrier = raycube(d->o, dir, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
         if(barrier > 0 && barrier < dist && (!shorten || barrier < shorten))

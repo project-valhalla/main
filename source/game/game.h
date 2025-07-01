@@ -520,6 +520,15 @@ struct gameent : dynent, gamestate
     vec muzzle, eject;
     bool interacting[Interaction::Count];
 
+    enum Ability
+    {
+        lastAttempt = 0,
+        lastUse,
+        Count
+    };
+
+    int lastAbility[Ability::Count];
+
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
@@ -612,6 +621,10 @@ struct gameent : dynent, gamestate
         loopi(Chan_Num)
         {
             stopchannelsound(i);
+        }
+        for (int i = 0; i < Ability::Count; i++)
+        {
+            lastAbility[i] = 0;
         }
         resetInteractions();
     }
@@ -852,6 +865,7 @@ namespace game
         extern void bounce(physent* d, const vec& surface);
         extern void collidewithentity(physent* bouncer, physent* collideEntity);
         extern void destroyserverprojectile(gameent* d, const int id, const int attack = ATK_INVALID);
+        extern void tryDetonate(gameent* d, const int gun);
         extern void avoid(ai::avoidset& obstacles, const float radius);
         extern void explode(gameent* owner, const int attack, const vec& position, const vec& velocity);
         extern void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays);

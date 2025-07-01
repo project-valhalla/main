@@ -145,11 +145,6 @@ namespace game
             }
             switch (proj->projectile)
             {
-                case Projectile_Rocket2:
-                {
-                    particle_splash(PART_SPARK2, 20, 150, proj->o, 0xFFC864, 0.3f, 250, 1);
-                    break;
-                }
                 case Projectile_Gib:
                 {
                     if (blood)
@@ -257,7 +252,6 @@ namespace game
             {
                 case ATK_ROCKET1:
                 case ATK_ROCKET2:
-                case ATK_ROCKET3:
                 {
                     explosioncolor = 0xD47F00;
                     explosionlightcolor = vec(0.831f, 0.498f, 0.0f);
@@ -450,6 +444,37 @@ namespace game
             }
         }
 
+        void tryDetonate(gameent* d, const int gun)
+        {
+            loopvrev(Projectiles)
+            {
+                ProjEnt& proj = *Projectiles[i];
+                if (proj.owner != self)
+                {
+                    continue;
+                }
+                const attackinfo attack = attacks[proj.attack];
+                if (proj.isLocal && attack.gun == gun)
+                {
+                    proj.kill();
+                    if (d == self || d->ai)
+                    {
+                        d->gunwait = attack.attackdelay;
+                        d->lastaction = lastmillis;
+                        d->lastattack = proj.attack;
+                        sendsound(guns[gun].abilitySound, d);
+                        d->lastAbility[d->Ability::lastUse] = lastmillis;
+                        return;
+                    }
+                }
+            }
+
+            // We didn't detonate anything.
+            sendsound(guns[gun].abilityFailSound, d);
+            d->gunwait = 500;
+            d->lastAbility[d->Ability::lastAttempt] = lastmillis;
+        }
+
         void damage(ProjEnt* proj, gameent* actor, const int attack)
         {
             if (!proj || proj->flags & ProjFlag_Invincible)
@@ -594,13 +619,25 @@ namespace game
             else switch (proj.projectile)
             {
                 case Projectile_Grenade:
-                case Projectile_Grenade2:
                 {
                     if (hasEnoughVelocity)
                     {
                         regular_particle_splash(PART_RING, 1, 200, position, 0x74BCF9, 1.0f, 1, 500);
                     }
                     if (proj.projectile == Projectile_Grenade2 && proj.lifetime < attacks[proj.attack].lifetime - 100)
+                    {
+                        particle_flare(proj.lastPosition, position, 500, PART_TRAIL_STRAIGHT, 0x74BCF9, 0.4f);
+                    }
+                    proj.lastPosition = position;
+                    break;
+                }
+                case Projectile_Grenade2:
+                {
+                    if (hasEnoughVelocity)
+                    {
+                        regular_particle_splash(PART_SMOKE, 5, 200, position, 0x555555, 1.60f, 10, 500);
+                    }
+                    if (proj.lifetime < attacks[proj.attack].lifetime - 100)
                     {
                         particle_flare(proj.lastPosition, position, 500, PART_TRAIL_STRAIGHT, 0x74BCF9, 0.4f);
                     }
@@ -621,19 +658,6 @@ namespace game
                         regular_particle_splash(PART_SMOKE, 3, 300, position, 0x303030, 2.4f, 50, -20);
                     }
                     particle_flare(position, position, 1, PART_MUZZLE_FLASH3, tailColor, 1.0f + rndscale(tailSize * 2));
-                    break;
-                }
-                case Projectile_Rocket2:
-                {
-                    if (hasEnoughVelocity)
-                    {
-                        regular_particle_splash(PART_SMOKE, 5, 200, position, 0x555555, 1.60f, 10, 500);
-                    }
-                    if (proj.lifetime < attacks[proj.attack].lifetime - 100)
-                    {
-                        particle_flare(proj.lastPosition, position, 500, PART_TRAIL_STRAIGHT, 0xFFC864, 0.4f);
-                    }
-                    proj.lastPosition = position;
                     break;
                 }
                 case Projectile_Pulse:
@@ -812,7 +836,6 @@ namespace game
                         break;
                     }
                     case Projectile_Rocket:
-                    case Projectile_Rocket2:
                     {
                         lightColor = vec(1, 0.75f, 0.5f);
                         break;

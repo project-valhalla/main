@@ -143,7 +143,6 @@ namespace ai
                     case ATK_PULSE2: aiskew = 8; break;
 
                     case ATK_ROCKET1: aiskew = 5; break;
-                    case ATK_ROCKET2: aiskew = 1; break;
 
                     case ATK_RAIL1:
                     case ATK_RAIL2:

@@ -3,6 +3,21 @@
 
 namespace game
 {
+    namespace
+    {
+        const int ABILITY_FEEDBACK_TIME = 250;
+        const int MAX_CROSSHAIRS = 7;
+        int screenflashmillis = 0;
+        int damagescreenmillis = 0;
+        int damageblendmillis = 0;
+        int lastheartbeat = 0;
+        
+        const float CROSSHAIR_CENTER = 0.5f;
+        float damagedirs[8] = { };
+
+        Texture* crosshairs[MAX_CROSSHAIRS] = { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+    }
+
     float clipconsole(const float w, const float h)
     {
         if (cmode)
@@ -18,8 +33,6 @@ namespace game
     VARP(damagecompassalpha, 1, 25, 100);
     VARP(damagecompassmin, 1, 25, 1000);
     VARP(damagecompassmax, 1, 200, 1000);
-
-    float damagedirs[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
     void damagecompass(const int amount, const vec& loc)
     {
@@ -81,8 +94,6 @@ namespace game
         if (dirs) gle::end();
     }
 
-    int damageblendmillis = 0;
-
     VARFP(damagescreen, 0, 1, 1, { if (!damagescreen) damageblendmillis = 0; });
     VARP(damagescreenfactor, 1, 11, 100);
     VARP(damagescreenalpha, 1, 60, 100);
@@ -125,8 +136,6 @@ namespace game
     VARP(lowhealthscreenmillis, 500, 1000, 2000);
     VARP(lowhealthscreenamount, 50, 200, 1000);
     VARP(lowhealthscreenfactor, 1, 5, 100);
-
-    int lastheartbeat = 0;
 
     void managelowhealthscreen()
     {
@@ -236,8 +245,6 @@ namespace game
             }
         }
     }
-
-    int screenflashmillis = 0;
 
     VARFP(screenflash, 0, 1, 1,
     {
@@ -439,10 +446,6 @@ namespace game
         Pointer_Interact
     };
 
-    static const int MAX_CROSSHAIRS = 7;
-
-    static Texture* crosshairs[MAX_CROSSHAIRS] = { NULL, NULL, NULL, NULL, NULL, NULL, NULL };
-
     static const char* getdefaultpointer(int index)
     {
         switch (index)
@@ -557,7 +560,11 @@ namespace game
             {
                 color.mul(0.75f);
             }
-            if (self->interacting[Interaction::Available] && !isScoped && !hovered && !self->gunwait)
+            if (lastmillis - hud->lastAbility[hud->Ability::lastAttempt] <= ABILITY_FEEDBACK_TIME)
+            {
+                color = vec4(1, 0, 0, 1);
+            }
+            if (hud->interacting[Interaction::Available] && !isScoped && !hovered && !hud->gunwait)
             {
                 crosshair = Pointer_Interact;
                 color = vec4(1, 1, 1, 1);
@@ -605,8 +612,6 @@ namespace game
         return true;
     }
 
-    const float CROSSHAIR_CENTER = 0.5f;
-
     inline float getpointercenter(float dimension, float size)
     {
         return CROSSHAIR_CENTER * dimension - size / 2.0f;
@@ -624,7 +629,12 @@ namespace game
         }
         // Spawning.
         const float spawnProgress = clamp((lastmillis - self->lastspawn) / float(SPAWN_DURATION), 0.0f, 1.0f);
-        size *= crouchProgress * zoomProgress * spawnProgress;
+
+        // Special ability feedback.
+        const float abilityProgress = clamp((lastmillis - self->lastAbility[self->Ability::lastUse]) / float(ABILITY_FEEDBACK_TIME), 0.0f, 1.0f);
+        const float abilityScale = 1.0f + 0.5f * sin(abilityProgress * M_PI);
+
+        size *= crouchProgress * zoomProgress * spawnProgress * abilityScale;
         return size;
     }
 

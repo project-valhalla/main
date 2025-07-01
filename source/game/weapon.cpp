@@ -146,15 +146,47 @@ namespace game
         camera::fixrange();
     }
 
+    /*
+        If an invalid attack is triggered via shooting, check if it is a special case.
+        Otherwise simply do nothing (and effectively prevent the player from firing).
+    */
+    void checkAttack(gameent* d, const int gun)
+    {
+        switch (gun)
+        {
+            case GUN_ROCKET:
+                projectiles::tryDetonate(d, gun);
+                break;
+
+            // Nothing to do here.
+            default:
+                return;
+        }
+
+        // If we reach this point, we've just performed an ability.
+        d->attacking = ACT_IDLE;
+    }
+
     VARP(autoswitch, 0, 1, 1);
 
     void shoot(gameent *d, const vec &targ)
     {
-        int prevaction = d->lastaction, attacktime = lastmillis-prevaction;
+        const int gun = d->gunselect;
+        const int act = d->attacking;
+        const int atk = guns[gun].attacks[act];
+        if (!validact(act) || !validgun(gun))
+        {
+            return;
+        }
+        if (!validatk(atk))
+        {
+            checkAttack(d, gun);
+            return;
+        }
+        int prevaction = d->lastaction, attacktime = lastmillis - prevaction;
         if(attacktime<d->gunwait) return;
         d->gunwait = 0;
-        if(!validact(d->attacking) || !validgun(d->gunselect)) return;
-        int gun = d->gunselect, act = d->attacking, atk = guns[gun].attacks[act], projectile = attacks[atk].projectile;
+        const int projectile = attacks[atk].projectile;
         d->lastaction = lastmillis;
         d->lastattack = atk;
         if (!canshoot(d, atk, gun, projectile))

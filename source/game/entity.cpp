@@ -427,7 +427,7 @@ namespace entities
     }
     ICOMMAND(triggersound, "iiiN", (int* entityId, int* soundId, int* cn, int* numargs),
     {
-        if (!ents.inrange(*entityId) || ents[*entityId]->type != TRIGGER)
+        if (!ents.inrange(*entityId))
         {
             return;
         }

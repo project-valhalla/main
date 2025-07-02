@@ -1234,6 +1234,7 @@
     <None Include="..\..\config\ui\hud\mapmodel_browser.cfg" />
     <None Include="..\..\config\ui\hud\material.cfg" />
     <None Include="..\..\config\ui\hud\postfx.cfg" />
+    <None Include="..\..\config\ui\hud\story.cfg" />
     <None Include="..\..\config\ui\hud\taskbar.cfg" />
     <None Include="..\..\config\ui\hud\texture_browser.cfg" />
     <None Include="..\..\config\ui\langdb.cfg" />

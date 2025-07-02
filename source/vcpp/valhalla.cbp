@@ -160,6 +160,7 @@
 		<Unit filename="../../config/ui/hud/mapmodel_browser.cfg" />
 		<Unit filename="../../config/ui/hud/material.cfg" />
 		<Unit filename="../../config/ui/hud/postfx.cfg" />
+		<Unit filename="../../config/ui/hud/story.cfg" />
 		<Unit filename="../../config/ui/hud/taskbar.cfg" />
 		<Unit filename="../../config/ui/hud/texture_browser.cfg" />
 		<Unit filename="../../config/ui/langdb.cfg" />

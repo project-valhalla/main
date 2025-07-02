@@ -633,5 +633,8 @@
     <None Include="..\..\config\ui\menus\voicecom.cfg">
       <Filter>Configuration\ui\menus</Filter>
     </None>
+    <None Include="..\..\config\ui\hud\story.cfg">
+      <Filter>Configuration\ui\hud</Filter>
+    </None>
   </ItemGroup>
 </Project>

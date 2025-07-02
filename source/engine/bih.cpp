@@ -312,7 +312,7 @@ bool mmintersect(const extentity &e, const vec &o, const vec &ray, float maxdist
 {
     model *m = loadmapmodel(e.attr1);
     if(!m) return false;
-    if((mode&RAY_ENTS)!=RAY_ENTS && (!m->collide || e.flags&EF_NOCOLLIDE)) return false;
+    if((mode&RAY_ENTS)!=RAY_ENTS && (!m->collide || e.flags&EF_NOCOLLIDE || !e.isactive())) return false;
     if(!m->bih && !m->setBIH()) return false;
     float scale = e.attr5 ? 100.0f/e.attr5 : 1.0f;
     vec mo = vec(o).sub(e.o).mul(scale), mray(ray);

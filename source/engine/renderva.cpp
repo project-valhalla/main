@@ -528,7 +528,7 @@ void rendermapmodels()
         loopv(oe->mapmodels)
         {
             extentity &e = *ents[oe->mapmodels[i]];
-            if(!(e.flags&EF_RENDER)) continue;
+            if(!(e.flags&EF_RENDER) || !e.isactive()) continue;
             if(!rendered)
             {
                 rendered = true;
@@ -1135,7 +1135,7 @@ void batchshadowmapmodels(bool skipmesh)
     for(octaentities *oe = shadowmms; oe; oe = oe->rnext) loopvj(oe->mapmodels)
     {
         extentity &e = *ents[oe->mapmodels[j]];
-        if(!(e.flags&EF_RENDER)) continue;
+        if(!(e.flags&EF_RENDER) || !e.isactive()) continue;
         rendermapmodel(e);
         e.flags &= ~EF_RENDER;
     }
@@ -2706,7 +2706,7 @@ static void genshadowmeshmapmodels(shadowmesh &m, int sides, shadowdrawinfo draw
     for(octaentities *oe = shadowmms; oe; oe = oe->rnext) loopvj(oe->mapmodels)
     {
         extentity &e = *ents[oe->mapmodels[j]];
-        if(!(e.flags&EF_RENDER)) continue;
+        if(!(e.flags&EF_RENDER) || !e.isactive()) continue;
         e.flags &= ~EF_RENDER;
 
 

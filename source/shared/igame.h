@@ -3,8 +3,8 @@
 // entities
 namespace entities
 {
-    extern void edit(const int i, const bool isLocal);
-    extern void editLabel(const int i, const bool isLocal);
+    extern void edit(const int id, const bool isLocal);
+    extern void editLabel(const int id, const bool isLocal);
     extern void write(const entity& entity, const char* buf);
     extern void read(const entity& entity, const char *buf, const int version);
     extern void fix(extentity& entity);

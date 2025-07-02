@@ -557,7 +557,7 @@ void checkmapsounds()
     {
         extentity &e = *ents[i];
         if(e.type!=ET_SOUND) continue;
-        if(camera1->o.dist(e.o) < e.attr2) // if inside entity radius (attr2)
+        if(camera1->o.dist(e.o) < e.attr2 && e.isactive()) // if inside entity radius (attr2)
         {
             if(!(e.flags&EF_SOUND))
             {
@@ -569,7 +569,10 @@ void checkmapsounds()
                 }
             }
         }
-        else if(e.flags&EF_SOUND) stopmapsound(&e);
+        else if(e.flags & EF_SOUND || !e.isactive())
+        {
+            stopmapsound(&e);
+        }
     }
 }
 

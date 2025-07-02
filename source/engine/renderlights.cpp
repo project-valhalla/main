@@ -1608,7 +1608,7 @@ struct lightinfo
         o(e.o), color(vec(e.attr2, e.attr3, e.attr4).max(0)), radius(e.attr1), dist(camera1->o.dist(e.o)),
         dir(0, 0, 0), spot(0), query(NULL)
     {
-        if(e.attached && e.attached->type == ET_SPOTLIGHT)
+        if(e.attached && e.attached->type == ET_SPOTLIGHT && e.attached->isactive())
         {
             dir = vec(e.attached->o).sub(e.o).normalize();
             spot = clamp(int(e.attached->attr1), 1, 89);
@@ -3596,7 +3596,7 @@ void collectlights()
     if(!editmode || !fullbright) loopv(ents)
     {
         const extentity *e = ents[i];
-        if(e->type != ET_LIGHT || e->attr1 <= 0) continue;
+        if(e->type != ET_LIGHT || e->attr1 <= 0 || !e->isactive()) continue;
 
         if(smviscull)
         {
@@ -4522,7 +4522,7 @@ int calcshadowinfo(const extentity &e, vec &origin, float &radius, vec &spotloc,
     radius = e.attr1;
     int type, w, border;
     float lod;
-    if(e.attached && e.attached->type == ET_SPOTLIGHT)
+    if(e.attached && e.attached->type == ET_SPOTLIGHT && e.attached->isactive())
     {
         type = SM_SPOT;
         w = 1;

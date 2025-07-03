@@ -598,6 +598,10 @@ namespace game
         if(!m_invasion && !m_story) return;
         numkilled++;
         self->frags = numkilled;
+        if (!spkillsend)
+        {
+            return;
+        }
         remain = monstertotal-numkilled;
         if (remain > 0 && remain <= 5) conoutf(CON_GAMEINFO, "\f2%d kill%s remaining", remain, remain == 1 ? "" : "s");
         if(remain == 5 || remain == 1)

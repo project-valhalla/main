@@ -1111,6 +1111,7 @@ namespace game
         if(!m_mp(gamemode)) spawnplayer(self);
         else findplayerspawn(self, -1, m_teammode ? self->team : 0);
         entities::resetSpawn();
+        postWorldLoad();
         copystring(clientmap, name ? name : "");
 
         sendmapinfo();
@@ -1385,10 +1386,6 @@ namespace game
                 result(tempformatstring("%d:%02d", mins, secs));
             }
         }));
-
-    // any data written into this vector will get saved with the map data. Must take care to do own versioning, and endianess if applicable. Will not get called when loading maps from other games, so provide defaults.
-    void writegamedata(vector<char> &extras) {}
-    void readgamedata(vector<char> &extras) {}
 
     const char *gameconfig() { return "config/game.cfg"; }
     const char *savedconfig() { return "config/saved.cfg"; }

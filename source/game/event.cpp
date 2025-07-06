@@ -103,9 +103,6 @@ namespace game
 
         VAR(eventsource, 0, 0, -1); // the id of the object that emitted the event
 
-        // emitters must be explicitly defined for each emitter type
-        template<class T> void emit(T*, Type)    = delete; // for structs that contain an `id` field
-        template<Emitter t> void emit(int, Type) = delete; // for `extentity`'s
         
         // event emitter for triggers
         template<>

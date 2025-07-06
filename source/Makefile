@@ -127,7 +127,8 @@ CLIENT_OBJS= \
 	game/announcer.o \
 	game/camera.o \
 	game/event.o \
-	game/query.o
+	game/query.o \
+	game/worlddata.o
 
 CLIENT_PCH= shared/cube.h.gch engine/engine.h.gch game/game.h.gch
 
@@ -565,6 +566,12 @@ game/event.o: game/entity.h game/announcer.h game/monster.h game/query.h
 game/query.o: game/query.h shared/cube.h shared/tools.h shared/geom.h
 game/query.o: shared/ents.h shared/command.h shared/glexts.h shared/glemu.h
 game/query.o: engine/sound.h shared/iengine.h shared/igame.h
+game/worlddata.o: game/game.h shared/cube.h shared/tools.h shared/geom.h
+game/worlddata.o: shared/ents.h shared/command.h shared/glexts.h
+game/worlddata.o: shared/glemu.h engine/sound.h shared/iengine.h
+game/worlddata.o: shared/igame.h game/projectile.h game/weapon.h game/ai.h
+game/worlddata.o: game/gamemode.h game/entity.h game/announcer.h
+game/worlddata.o: game/monster.h
 
 shared/cube.h.gch: shared/tools.h shared/geom.h shared/ents.h
 shared/cube.h.gch: shared/command.h shared/glexts.h shared/glemu.h

@@ -1037,6 +1037,9 @@ namespace game
     extern void addscreenflash(const int amount);
     extern void checkentity(int type);
 
+    // worlddata.cpp
+    extern void postWorldLoad();
+
     extern int lowhealthscreen;
 
     namespace camera

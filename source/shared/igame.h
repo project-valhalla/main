@@ -103,8 +103,8 @@ namespace game
     extern void renderavatar();
     extern void renderplayerpreview(int model, int color, int team, int weap);
     extern void findanims(const char *pattern, vector<int> &anims);
-    extern void writegamedata(vector<char> &extras);
-    extern void readgamedata(vector<char> &extras);
+    extern void writeGameData(vector<uchar> &extras, bool nolms);
+    extern void readGameData(vector<uchar> &extras);
     extern void trackparticles(physent *owner, vec &o, vec &d);
     extern void trackdynamiclights(physent *owner, vec &o, vec &hud);
     extern void voicecom(const int sound, char *text, const bool team);

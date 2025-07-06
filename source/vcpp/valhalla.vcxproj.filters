@@ -187,6 +187,9 @@
     <ClCompile Include="..\game\query.cpp">
       <Filter>Source\game</Filter>
     </ClCompile>
+    <ClCompile Include="..\game\worlddata.cpp">
+      <Filter>Source\game</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\game\ai.h">

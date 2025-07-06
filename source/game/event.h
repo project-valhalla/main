@@ -27,8 +27,9 @@ namespace game
             NUMEVENTTYPES
         };
 
-        template<class T> void emit(T* source, Type event);
-        template<Emitter t> void emit(const int id, const Type event);
+        // emitters must be explicitly defined for each emitter type
+        template<class T> void emit(T* source, Type event); // for structs that contain an `id` field
+        template<Emitter t> void emit(const int id, const Type event); // for `extentity`'s
 
         void onMapStart();
         void onPlayerDeath(const gameent* d, const gameent* actor);

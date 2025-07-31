@@ -77,7 +77,7 @@ projs[Projectile_Max] =
     {
         Projectile_Rocket,
         ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Impact,
-        ATK_ROCKET1,
+        ATK_ROCKET2,
         S_INVALID,
         S_ROCKET_LOOP,
         0,

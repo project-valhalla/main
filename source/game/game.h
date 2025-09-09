@@ -12,13 +12,14 @@ enum
     ANIM_JUMP, ANIM_JUMP_N, ANIM_JUMP_NE, ANIM_JUMP_E, ANIM_JUMP_SE, ANIM_JUMP_S, ANIM_JUMP_SW, ANIM_JUMP_W, ANIM_JUMP_NW,
     ANIM_SINK, ANIM_SWIM,
     ANIM_CROUCH, ANIM_CROUCH_N, ANIM_CROUCH_NE, ANIM_CROUCH_E, ANIM_CROUCH_SE, ANIM_CROUCH_S, ANIM_CROUCH_SW, ANIM_CROUCH_W, ANIM_CROUCH_NW,
-    ANIM_CROUCH_JUMP, ANIM_CROUCH_JUMP_N, ANIM_CROUCH_JUMP_NE, ANIM_CROUCH_JUMP_E, ANIM_CROUCH_JUMP_SE, ANIM_CROUCH_JUMP_S, ANIM_CROUCH_JUMP_SW, ANIM_CROUCH_JUMP_W, ANIM_CROUCH_JUMP_NW,
+    ANIM_CROUCH_JUMP, ANIM_CROUCH_JUMP_N, ANIM_CROUCH_JUMP_NE, ANIM_CROUCH_JUMP_E,
+    ANIM_CROUCH_JUMP_SE, ANIM_CROUCH_JUMP_S, ANIM_CROUCH_JUMP_SW, ANIM_CROUCH_JUMP_W, ANIM_CROUCH_JUMP_NW,
     ANIM_CROUCH_SINK, ANIM_CROUCH_SWIM,
-    ANIM_SHOOT, ANIM_MELEE, ANIM_SWITCH,
+    ANIM_SHOOT, ANIM_MELEE, ANIM_THROW, ANIM_SWITCH,
     ANIM_PAIN,
     ANIM_EDIT, ANIM_LAG, ANIM_TAUNT, ANIM_WIN, ANIM_LOSE,
-    ANIM_GUN_IDLE, ANIM_GUN_SHOOT, ANIM_GUN_SHOOT2, ANIM_GUN_MELEE, ANIM_GUN_SWITCH, ANIM_GUN_TAUNT,
-    ANIM_VWEP_IDLE, ANIM_VWEP_SHOOT, ANIM_VWEP_MELEE,
+    ANIM_GUN_IDLE, ANIM_GUN_PRIMARY, ANIM_GUN_SECONDARY, ANIM_GUN_MELEE, ANIM_GUN_THROW, ANIM_GUN_SWITCH, ANIM_GUN_TAUNT,
+    ANIM_VWEP_IDLE, ANIM_VWEP_SHOOT, ANIM_VWEP_MELEE, ANIM_VWEP_THROW,
     ANIM_TRIGGER,
     NUMANIMS
 };
@@ -33,11 +34,11 @@ static const char * const animnames[] =
     "crouch", "crouch N", "crouch NE", "crouch E", "crouch SE", "crouch S", "crouch SW", "crouch W", "crouch NW",
     "crouch jump", "crouch jump N", "crouch jump NE", "crouch jump E", "crouch jump SE", "crouch jump S", "crouch jump SW", "crouch jump W", "crouch jump NW",
     "crouch sink", "crouch swim",
-    "shoot", "melee", "switch",
+    "shoot", "melee", "throw", "switch",
     "pain",
     "edit", "lag", "taunt", "win", "lose",
-    "gun idle", "gun shoot", "gun shoot 2", "gun melee", "gun switch", "gun taunt",
-    "vwep idle", "vwep shoot", "vwep melee",
+    "gun idle", "gun primary", "gun secondary", "gun melee","gun throw", "gun switch", "gun taunt",
+    "vwep idle", "vwep shoot", "vwep melee", "vwep throw"
     "trigger",
 };
 
@@ -497,7 +498,7 @@ struct gameent : dynent, gamestate
     int clientnum, privilege, lastupdate, plag, ping;
     int lifesequence;                   // sequence id for each respawn, used in damage test
     int respawned, suicided;
-    int lastpain, lasthurt, lastspawn;
+	int lastpain, lasthurt, lastspawn, lastthrow;
     int lastaction[NUMGUNS];
     int lastattack, lastattacker, lasthit, lastkill;
     int deathstate;
@@ -522,7 +523,7 @@ struct gameent : dynent, gamestate
     char country_code[MAXCOUNTRYCODELEN+1], preferred_flag[MAXCOUNTRYCODELEN+1];
     string country_name;
 
-    vec muzzle, eject;
+    vec muzzle, eject, hand;
     bool interacting[Interaction::Count];
 
     enum Ability
@@ -537,13 +538,13 @@ struct gameent : dynent, gamestate
     gameent() : weight(100),
                 clientnum(-1), privilege(PRIV_NONE), lastupdate(0), plag(0), ping(0),
                 lifesequence(0), respawned(-1), suicided(-1),
-                lastpain(0), lasthurt(0), lastspawn(0),
+                lastpain(0), lasthurt(0), lastspawn(0), lastthrow(0),
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastswitchattempt(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
                 edit(NULL), recoil(0), smoothmillis(-1), respawnPoint(-1),
                 transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
-                muzzle(-1, -1, -1), eject(-1, -1, -1)
+                muzzle(-1, -1, -1), eject(-1, -1, -1), hand(-1, -1, -1)
     {
         loopi(Chan_Num)
         {
@@ -930,7 +931,7 @@ namespace game
 
     extern void shoot(gameent *d, const vec &targ);
     extern void updaterecoil(gameent* d, int curtime);
-    extern void shoteffects(int atk, const vec &from, const vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
+    extern void shoteffects(int atk, vec &from, vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
     extern void scanhit(vec& from, vec& to, gameent* d, int atk);
     extern void gibeffect(int damage, const vec &vel, gameent *d);
     extern void updateweapons(int curtime);
@@ -951,7 +952,7 @@ namespace game
     extern int checkweaponzoom();
     extern int blood;
 
-    extern vec hudgunorigin(int gun, const vec& from, const vec& to, gameent* d);
+    extern vec hudgunorigin(int attack, const vec& from, const vec& to, gameent* d);
 
     extern dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin = 0, float& dist = intersectdist, const int flags = DYN_PLAYER | DYN_AI);
 

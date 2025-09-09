@@ -327,11 +327,12 @@ namespace game
         }
         if(mainpass && !(flags&MDL_ONLYSHADOW))
         {
-            d->muzzle = d->eject = vec(-1, -1, -1);
+            d->muzzle = d->eject = d->hand = vec(-1, -1, -1);
             if(guns[d->gunselect].worldmodel)
             {
                 a[ai++] = modelattach("tag_muzzle", &d->muzzle);
                 a[ai++] = modelattach("tag_eject", &d->eject);
+                a[ai++] = modelattach("tag_hand", &d->hand);
             }
         }
         if(d->state == CS_ALIVE)
@@ -650,11 +651,12 @@ namespace game
         const playermodelinfo &playermodel = getplayermodelinfo(d);
         int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
         defformatstring(gunname, "%s/%s", playermodel.armdirectory, file);
-        d->muzzle = d->eject = vec(-1, -1, -1);
-        modelattach a[3];
+        d->muzzle = d->eject = d->hand = vec(-1, -1, -1);
+        modelattach a[4];
         int ai = 0;
         a[ai++] = modelattach("tag_muzzle", &d->muzzle);
         a[ai++] = modelattach("tag_eject", &d->eject);
+        a[ai++] = modelattach("tag_hand", &d->hand);
         if (d->attacking == ACT_SECONDARY && d->gunselect == GUN_PULSE)
         {
             anim |= ANIM_LOOP;
@@ -676,7 +678,9 @@ namespace game
         extern int hudgun;
         if(d->state == CS_DEAD || d->state == CS_SPECTATOR || d->state == CS_EDITING || !hudgun || editmode)
         {
-            d->muzzle = self->muzzle = d->eject = self->eject = vec(-1, -1, -1);
+            d->muzzle = self->muzzle = vec(-1, -1, -1);
+            d->eject = self->eject = vec(-1, -1, -1);
+            d->hand = self->hand = vec(-1, -1, -1);
             return;
         }
 
@@ -687,6 +691,7 @@ namespace game
             if
             (
                 attacks[d->lastattack].action == ACT_MELEE ||
+                attacks[d->lastattack].action == ACT_THROW ||
                 attacks[d->lastattack].gun == d->gunselect
             )
             {

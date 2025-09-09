@@ -99,7 +99,7 @@ namespace game
 
             if (proj.flags & ProjFlag_Weapon)
             {
-                proj.offset = hudgunorigin(attacks[proj.attack].gun, from, to, owner);
+                proj.offset = hudgunorigin(proj.attack, from, to, owner);
             }
             if (proj.flags & ProjFlag_Bounce)
             {
@@ -291,7 +291,7 @@ namespace game
                     explosioncolor = 0x74BCF9;
                     explosionlightcolor = vec(0.455f, 0.737f, 0.976f);
                     explosiontype = PART_EXPLOSION2;
-                    if (attack == ATK_GRENADE3)
+                    if (attack == ATK_GRENADE2)
                     {
                         fade = 400;
                         particle_splash(PART_SMOKE, 60, 500, v, 0x02448F, 30.0f, 180, 60, 0.1f);
@@ -619,23 +619,6 @@ namespace game
             {
                 case Projectile_Grenade:
                 {
-                    if (hasEnoughVelocity)
-                    {
-                        regular_particle_splash(PART_RING, 1, 200, position, 0x74BCF9, 1.0f, 1, 500);
-                    }
-                    if (proj.projectile == Projectile_Grenade2 && proj.lifetime < attacks[proj.attack].lifetime - 100)
-                    {
-                        particle_flare(proj.lastPosition, position, 500, PART_TRAIL_STRAIGHT, 0x74BCF9, 0.4f);
-                    }
-                    proj.lastPosition = position;
-                    break;
-                }
-                case Projectile_Grenade2:
-                {
-                    if (hasEnoughVelocity)
-                    {
-                        regular_particle_splash(PART_SMOKE, 5, 200, position, 0x555555, 1.60f, 10, 500);
-                    }
                     if (proj.lifetime < attacks[proj.attack].lifetime - 100)
                     {
                         particle_flare(proj.lastPosition, position, 500, PART_TRAIL_STRAIGHT, 0x74BCF9, 0.4f);
@@ -840,7 +823,6 @@ namespace game
                         break;
                     }
                     case Projectile_Grenade:
-                    case Projectile_Grenade2:
                     {
                         lightColor = vec(0.25f, 0.25f, 1);
                         break;

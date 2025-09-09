@@ -46,7 +46,7 @@ enum
     S_TRIGGER,
 
     // weapon
-    S_MELEE,
+    S_MELEE, S_THROW,
     S_SG_A, S_SG_B, S_SG_SWITCH,
     S_SMG,
     S_PULSE1, S_PULSE2_A, S_PULSE2_B, S_PULSE_LOOP, S_PULSE_EXPLODE, S_PULSE_SWITCH,

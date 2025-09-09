@@ -229,6 +229,25 @@ namespace game
         }
     }
 
+    void updatePlayer(gameent* d)
+    {
+        if ((d == self && d->state != CS_ALIVE) || intermission)
+        {
+            return;
+        }
+        for (int i = 0; i < NUMGUNS; i++)
+        {
+            if (lastmillis - d->lastaction[i] >= d->delay[i])
+            {
+                d->delay[i] = 0;
+            }
+        }
+        if (d->powerupmillis || d->role == ROLE_BERSERKER)
+        {
+            entities::updatePowerups(curtime, d);
+        }
+    }
+
     void otherplayers(int curtime)
     {
         loopv(players)
@@ -237,14 +256,7 @@ namespace game
             if(d == self || d->ai) continue;
 
             if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d);
-            else if(!intermission && d->state==CS_ALIVE)
-            {
-                if(lastmillis - d->lastaction >= d->gunwait) d->gunwait = 0;
-                if(d->powerupmillis || d->role == ROLE_BERSERKER)
-                {
-                    entities::updatePowerups(curtime, d);
-                }
-            }
+            updatePlayer(d);
             const int lagtime = totalmillis-d->lastupdate;
             if(!lagtime || intermission) continue;
             else if(lagtime>1000 && d->state==CS_ALIVE)
@@ -296,13 +308,7 @@ namespace game
         }
         physics::physicsframe();
         ai::navigate();
-        if(self->state == CS_ALIVE && !intermission)
-        {
-            if(self->powerupmillis || self->role == ROLE_BERSERKER)
-            {
-                entities::updatePowerups(curtime, self);
-            }
-        }
+        updatePlayer(self);
         updateweapons(curtime);
         otherplayers(curtime);
         camera::camera.update();

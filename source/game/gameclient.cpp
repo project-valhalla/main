@@ -1607,13 +1607,19 @@ namespace game
         if(resume && d==self)
         {
             getint(p); // gunselect
-            loopi(NUMGUNS) getint(p);
+            for (int i = 0; i < NUMGUNS; i++)
+            {
+                getint(p);
+            }
         }
         else
         {
             int gun = getint(p);
             d->gunselect = clamp(gun, 0, NUMGUNS-1);
-            loopi(NUMGUNS) d->ammo[i] = getint(p);
+            for (int i = 0; i < NUMGUNS; i++)
+            {
+                d->ammo[i] = getint(p);
+            }
         }
     }
 
@@ -1960,30 +1966,42 @@ namespace game
                 int scn = getint(p), atk = getint(p);
                 gameent *s = getclient(scn);
                 if(!s || !validatk(atk)) break;
-                int gun = attacks[atk].gun;
+                const int gun = attacks[atk].gun;
+                const int delay = attacks[atk].attackdelay;
                 if (validgun(gun))
                 {
+                    s->delay[gun] = delay;
                     s->gunselect = gun;
+                }
+                else
+                {
+                    for (int i = 0; i < NUMGUNS; i++)
+                    {
+                        s->delay[i] = delay;
+                    }
                 }
                 if(!s->haspowerup(PU_AMMO) && s->role != ROLE_BERSERKER)
                 {
                     s->ammo[gun] -= attacks[atk].use;
                 }
-                s->gunwait = attacks[atk].attackdelay;
                 s->lastattack = atk;
                 break;
             }
 
             case N_SHOTFX:
             {
-                int acn = getint(p), atk = getint(p), id = getint(p), hit = getint(p);
+                int acn = getint(p), attack = getint(p), id = getint(p), hit = getint(p);
                 vec from, to;
                 loopk(3) from[k] = getint(p)/DMF;
                 loopk(3) to[k] = getint(p)/DMF;
                 gameent *actor = getclient(acn);
-                if(!actor || !validatk(atk)) break;
-                actor->lastaction = lastmillis;
-                shoteffects(atk, from, to, actor, false, id, actor->lastaction, hit ? 1 : 0);
+                if (!actor || !validatk(attack))
+                {
+                    break;
+                }
+                const int gun = attacks[attack].gun;
+                actor->lastaction[gun] = lastmillis;
+                shoteffects(attack, from, to, actor, false, id, actor->lastaction[gun], hit ? true : false);
                 break;
             }
 

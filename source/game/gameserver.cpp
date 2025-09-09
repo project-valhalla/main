@@ -234,7 +234,8 @@ namespace server
         int state, editstate;
         int lastdeath, deadflush, lastspawn, lifesequence;
         int lastpain, lastdamage, lastregeneration;
-        int lastmove, lastshot, lastattack;
+        int lastmove, lastattack;
+        int lastshot[NUMGUNS];
         ProjectileState projectiles;
         int frags, flags, deaths, points, teamkills, shotdamage, damage, spree;
         int lasttimeplayed, timeplayed;
@@ -249,7 +250,7 @@ namespace server
 
         bool waitexpired(int gamemillis)
         {
-            return gamemillis - lastshot >= gunwait;
+            return gamemillis - lastshot[gunselect] >= delay[gunselect];
         }
 
         void reset()
@@ -273,9 +274,12 @@ namespace server
             o = oldpos = vec(-1e10f, -1e10f, -1e10f);
             deadflush = 0;
             lastspawn = -1;
-            lastshot = 0;
             role = ROLE_NONE;
             spree = 0;
+            for (int i = 0; i < NUMGUNS; i++)
+            {
+                lastshot[i] = 0;
+            }
         }
 
         void reassign()
@@ -2032,7 +2036,10 @@ namespace server
         putint(p, gs.maxhealth);
         putint(p, gs.shield);
         putint(p, gs.gunselect);
-        loopi(NUMGUNS) putint(p, gs.ammo[i]);
+        for (int i = 0; i < NUMGUNS; i++)
+        {
+            putint(p, gs.ammo[i]);
+        }
     }
 
     int vooshgun = GUN_INVALID;
@@ -3350,12 +3357,12 @@ namespace server
         {
             return;
         }
-        const int wait = millis - gs.lastshot;
-        if (wait < gs.gunwait || !validatk(attack))
+        const int gun = attacks[attack].gun;
+        const int wait = millis - gs.lastshot[gun];
+        if (wait < gs.delay[gun] || !validatk(attack))
         {
             return;
         }
-        const int gun = attacks[attack].gun;
         const bool isInRange = attacks[attack].range && from.dist(to) <= attacks[attack].range + 1;
         if (!isInRange || (attacks[attack].use && !gs.ammo[gun]))
         {
@@ -3366,7 +3373,7 @@ namespace server
         {
             gs.ammo[gun] -= attacks[attack].use;
         }
-        gs.lastshot = millis;
+        gs.lastshot[gun] = millis;
         gs.lastmove = lastmillis;
         gs.lastattack = attack;
         int attackDelay = attacks[attack].attackdelay;
@@ -3374,7 +3381,14 @@ namespace server
         {
             attackDelay /= 2;
         }
-        gs.gunwait = attackDelay;
+        if (validgun(gun))
+        {
+            gs.delay[gun] = attackDelay;
+        }
+        else for (int i = 0; i < NUMGUNS; i++)
+        {
+            gs.delay[i] = attackDelay;
+        }
         sendf(-1, 1, "ri3x", N_SHOTEVENT, ci->clientnum, attack, ci->ownernum);
         gs.shotdamage += attacks[attack].damage * attacks[attack].rays;
         gs.projectiles.add(id, attacks[attack].projectile, attack);

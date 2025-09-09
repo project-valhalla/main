@@ -213,17 +213,17 @@ struct demoheader
 struct gamestate
 {
     int health, maxhealth, shield;
-    int gunselect, gunwait;
+    int gunselect;
     int aitype, skill;
     int poweruptype, powerupmillis;
     int role;
-    int ammo[NUMGUNS];
+    int ammo[NUMGUNS], delay[NUMGUNS];
 
-    gamestate() : health(100), maxhealth(100), shield(0), gunselect(GUN_PISTOL), gunwait(0), aitype(AI_NONE), skill(0), poweruptype(PU_NONE), powerupmillis(0), role(ROLE_NONE)
+    gamestate() : health(100), maxhealth(100), shield(0), gunselect(GUN_PISTOL), aitype(AI_NONE), skill(0), poweruptype(PU_NONE), powerupmillis(0), role(ROLE_NONE)
     {
-        loopi(NUMGUNS)
+        for (int i = 0; i < NUMGUNS; i++)
         {
-            ammo[i] = 0;
+            ammo[i] = delay[i] = 0;
         }
     }
 
@@ -335,8 +335,10 @@ struct gamestate
 
     void resetweapons()
     {
-        loopi(NUMGUNS) ammo[i] = 0;
-        gunwait = 0;
+        for (int i = 0; i < NUMGUNS; i++)
+        {
+            ammo[i] = delay[i] = 0;
+        }
     }
 
     void respawn()
@@ -363,7 +365,7 @@ struct gamestate
         else if (role == ROLE_BERSERKER)
         {
             maxhealth = health = maxhealth * 2;
-            loopi(NUMGUNS)
+            for (int i = 0; i < NUMGUNS; i++)
             {
                 if (!ammo[i] || i == GUN_INSTA || i == GUN_ZOMBIE) continue;
                 if (i == GUN_PISTOL) ammo[i] = 100;
@@ -374,7 +376,7 @@ struct gamestate
 
     void voosh(int gun)
     {
-        loopi(NUMGUNS)
+        for (int i = 0; i < NUMGUNS; i++)
         {
             ammo[i] = 0;
         }
@@ -392,7 +394,9 @@ struct gamestate
         else if(m_effic(mutators))
         {
             maxhealth = health = 200;
-            loopi(NUMGUNS - 3) // Exclude the pistol and special weapons (last three).
+
+            // Exclude the pistol and special weapons (last three).
+            for (int i = 0; i < NUMGUNS - 3; i++)
             {
                 baseammo(i);
             }
@@ -494,7 +498,8 @@ struct gameent : dynent, gamestate
     int lifesequence;                   // sequence id for each respawn, used in damage test
     int respawned, suicided;
     int lastpain, lasthurt, lastspawn;
-    int lastaction, lastattack, lastattacker, lasthit, lastkill;
+    int lastaction[NUMGUNS];
+    int lastattack, lastattacker, lasthit, lastkill;
     int deathstate;
     int attacking;
     int lasttaunt, lastfootstep, lastyelp, lastswitch, lastswitchattempt, lastroll;
@@ -606,7 +611,6 @@ struct gameent : dynent, gamestate
         dynent::reset();
         gamestate::respawn();
         respawned = suicided = -1;
-        lastaction = 0;
         lastattack = lastattacker = -1;
         deathstate = Death_Default;
         attacking = ACT_IDLE;
@@ -618,13 +622,17 @@ struct gameent : dynent, gamestate
         lasthit = lastkill = 0;
         respawnqueued = false;
         recoil = 0;
-        loopi(Chan_Num)
+        for (int i = 0; i < NUMGUNS; i++)
         {
-            stopchannelsound(i);
+            lastaction[i] = 0;
         }
         for (int i = 0; i < Ability::Count; i++)
         {
             lastAbility[i] = 0;
+        }
+        for (int i = 0; i < Chan_Num; i++)
+        {
+            stopchannelsound(i);
         }
         resetInteractions();
     }

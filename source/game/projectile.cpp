@@ -287,7 +287,6 @@ namespace game
 
                 case ATK_GRENADE1:
                 case ATK_GRENADE2:
-                case ATK_GRENADE3:
                 {
                     explosioncolor = 0x74BCF9;
                     explosionlightcolor = vec(0.455f, 0.737f, 0.976f);
@@ -459,8 +458,8 @@ namespace game
                     proj.kill();
                     if (d == self || d->ai)
                     {
-                        d->gunwait = attack.attackdelay;
-                        d->lastaction = lastmillis;
+                        d->delay[gun] = attack.attackdelay;
+                        d->lastaction[gun] = lastmillis;
                         d->lastattack = proj.attack;
                         sendsound(guns[gun].abilitySound, d);
                         d->lastAbility[d->Ability::lastUse] = lastmillis;
@@ -471,7 +470,7 @@ namespace game
 
             // We didn't detonate anything.
             sendsound(guns[gun].abilityFailSound, d);
-            d->gunwait = 500;
+            d->delay[d->gunselect] = GUN_EMPTY_DELAY;
             d->lastAbility[d->Ability::lastAttempt] = lastmillis;
         }
 

@@ -64,7 +64,10 @@ namespace game
         speed = (float)t.speed*4;
         health = t.health;
         shield = 0;
-        loopi(NUMGUNS) ammo[i] = 10000;
+        for (int i = 0; i < NUMGUNS; i++)
+        {
+            ammo[i] = 10000;
+        }
         pitch = 0;
         roll = 0;
         state = CS_ALIVE;
@@ -227,7 +230,7 @@ namespace game
                 if(burstfire)
                 {
                     if(raycubelos(o, enemy->o, target)) targetyaw = enemyyaw;
-                    if(gunwait) break;
+                    if(delay) break;
                     if(!bursting)
                     {
                         burst(true);
@@ -244,7 +247,7 @@ namespace game
                     {
                         ai::findorientation(orient, yaw, pitch, attacktarget);
                         if(attacktarget.dist(o) <= attacks[atk].exprad) goto stopfiring;
-                        lastaction = 0;
+                        lastaction[gunselect] = 0;
                         if (meleerange && attacks[atk].action != ACT_MELEE)
                         {
                             atk = meleeatk;
@@ -657,7 +660,10 @@ namespace game
             if(m->state==CS_ALIVE)
             {
                 m->monsteraction(curtime);
-                if(lastmillis - m->lastaction >= m->gunwait) m->gunwait = 0;
+                if (lastmillis - m->lastaction[m->gunselect] >= m->delay[m->gunselect])
+                {
+                    m->delay[m->gunselect] = 0;
+                }
                 if(m->exploding)
                 {
                     regular_particle_flame(PART_FLAME, m->o, 6.5f, 1.5f, 0x903020, 1, 2.0f);
@@ -697,7 +703,7 @@ namespace game
         {
             monster &m = *monsters[i];
             if(m.deathstate == Death_Gib) continue;
-            if(m.state != CS_DEAD || lastmillis-m.lastpain<10000)
+            if(m.state != CS_DEAD || lastmillis - m.lastpain < 10000)
             {
                 modelattach a[4];
                 int ai = 0;
@@ -710,16 +716,16 @@ namespace game
                 float fade = 1;
                 if (m.state == CS_DEAD)
                 {
-                    const int millis = m.deathstate == Death_Fall ? 1000 : 9000;
-                    fade -= clamp(float(lastmillis - (m.lastpain + millis)) / 1000, 0.0f, 1.0f);
+                    const int delay = m.deathstate == Death_Fall ? 1000 : 9000;
+                    fade -= clamp(float(lastmillis - (m.lastpain + delay)) / 1000, 0.0f, 1.0f);
                 }
-                int attackanimation = 0;
+                int attackAnimation = 0;
                 if(m.monsterstate == MS_ATTACKING || m.bursting)
                 {
-                    if(m.attacking > ACT_MELEE) attackanimation = ANIM_SHOOT;
-                    else attackanimation = ANIM_MELEE;
+                    if(m.attacking > ACT_MELEE) attackAnimation = ANIM_SHOOT;
+                    else attackAnimation = ANIM_MELEE;
                 }
-                rendermonster(&m, monstertypes[m.mtype].mdlname, a, -attackanimation, 300, m.lastaction, m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
+                rendermonster(&m, monstertypes[m.mtype].mdlname, a, -attackAnimation, 300, m.lastaction[m.gunselect], m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
             }
         }
     }

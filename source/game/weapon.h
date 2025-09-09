@@ -87,6 +87,7 @@ const int THRESHOLD_GIB = -50; // If health equals or falls below this threshold
 const int GUN_MAXRAYS = 20; // Maximum rays a player can shoot, we can't change that.
 const int GUN_AIR_PUSH = 2; // Hit push multiplier for the mid-air friends.
 const int GUN_ZOMBIE_PUSH = 3; // Hit push multiplier for zombies.
+const int GUN_EMPTY_DELAY = 600;
 
 const int DAMAGE_ALLYDIV = 2; // Divide damage dealt to self or allies.
 const int DAMAGE_ENVIRONMENT = 5; // Environmental damage like lava, damage material and fall damage.

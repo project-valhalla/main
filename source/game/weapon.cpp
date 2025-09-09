@@ -172,29 +172,33 @@ namespace game
     void shoot(gameent *d, const vec &targ)
     {
         const int gun = d->gunselect;
-        const int act = d->attacking;
-        const int atk = guns[gun].attacks[act];
-        if (!validact(act) || !validgun(gun))
+        const int action = d->attacking;
+        const int attack = guns[gun].attacks[action];
+        if (!validact(action) || !validgun(gun))
         {
             return;
         }
-        if (!validatk(atk))
+        if (!validatk(attack))
         {
             checkAttack(d, gun);
             return;
         }
-        int prevaction = d->lastaction, attacktime = lastmillis - prevaction;
-        if(attacktime<d->gunwait) return;
-        d->gunwait = 0;
-        const int projectile = attacks[atk].projectile;
-        d->lastaction = lastmillis;
-        d->lastattack = atk;
-        if (!canshoot(d, atk, gun, projectile))
+        const int previousAction = d->lastaction[gun];
+        const int attackTime = lastmillis - previousAction;
+        if (attackTime < d->delay[d->gunselect])
+        {
+            return;
+        }
+        d->delay[gun] = 0;
+        const int projectile = attacks[attack].projectile;
+        d->lastaction[gun] = lastmillis;
+        d->lastattack = attack;
+        if (!canshoot(d, attack, gun, projectile))
         {
             if (d == self)
             {
                 sendsound(S_WEAPON_NOAMMO, d);
-                d->gunwait = 600;
+                d->delay[d->gunselect] = GUN_EMPTY_DELAY;
                 d->lastattack = ATK_INVALID;
                 if (autoswitch && !d->ammo[gun])
                 {
@@ -203,67 +207,87 @@ namespace game
             }
             return;
         }
-        if (!d->haspowerup(PU_AMMO)) d->ammo[gun] -= attacks[atk].use;
+        if (!d->haspowerup(PU_AMMO)) d->ammo[gun] -= attacks[attack].use;
 
         vec from = d->o, to = targ, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
-        if (attacks[atk].action == ACT_MELEE)
+        if (attacks[attack].action == ACT_MELEE)
         {
-            applyMeleePush(d, dir, atk);
+            applyMeleePush(d, dir, attack);
         }
         else
         {
-            addRecoil(d, dir, atk);
+            addRecoil(d, dir, attack);
         }
-        float shorten = attacks[atk].range && dist > attacks[atk].range ? attacks[atk].range : 0,
+        float shorten = attacks[attack].range && dist > attacks[attack].range ? attacks[attack].range : 0,
               barrier = raycube(d->o, dir, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
         if(barrier > 0 && barrier < dist && (!shorten || barrier < shorten))
             shorten = barrier;
         if(shorten) to = vec(dir).mul(shorten).add(from);
 
-        if(attacks[atk].rays > 1)
+        if(attacks[attack].rays > 1)
         {
-            loopi(attacks[atk].rays)
+            loopi(attacks[attack].rays)
             {
-                offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i], d);
+                offsetray(from, to, attacks[attack].spread, attacks[attack].range, rays[i], d);
             }
         }
-        else if(attacks[atk].spread)
+        else if(attacks[attack].spread)
         {
-            offsetray(from, to, attacks[atk].spread, attacks[atk].range, to, d);
+            offsetray(from, to, attacks[attack].spread, attacks[attack].range, to, d);
         }
 
         hits.setsize(0);
 
-        if (!isattackprojectile(attacks[atk].projectile))
+        if (!isattackprojectile(attacks[attack].projectile))
         {
-            scanhit(from, to, d, atk);
+            scanhit(from, to, d, attack);
         }
 
         const int id = lastmillis - maptime;
-        shoteffects(atk, from, to, d, true, id, prevaction);
+        shoteffects(attack, from, to, d, true, id, previousAction);
 
-        if(d==self || d->ai)
+        if(d == self || d->ai)
         {
-            addmsg(N_SHOOT, "rci2i6iv", d, id, atk,
+            addmsg(N_SHOOT, "rci2i6iv", d, id, attack,
                    static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
                    static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF),
                    hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf());
         }
-        if(!attacks[atk].isfullauto) d->attacking = ACT_IDLE;
-        int gunwait = attacks[atk].attackdelay;
-        if(d->haspowerup(PU_HASTE) || d->role == ROLE_BERSERKER) gunwait /= 2;
-        d->gunwait = gunwait;
-        if(d->gunselect == GUN_PISTOL && d->ai) d->gunwait += int(d->gunwait*(((101-d->skill)+rnd(111-d->skill))/100.f));
-        d->totalshots += attacks[atk].damage*attacks[atk].rays;
+        if (!attacks[attack].isfullauto)
+        {
+            d->attacking = ACT_IDLE;
+        }
+        int weaponDelay = attacks[attack].attackdelay;
+        if (d->haspowerup(PU_HASTE) || d->role == ROLE_BERSERKER)
+        {
+            weaponDelay /= 2;
+        }
+        if (!validgun(gun))
+        {
+            for (int i = 0; i < NUMGUNS; i++)
+            {
+                d->delay[i] = weaponDelay;
+            }
+        }
+        else
+        {
+            d->delay[gun] = weaponDelay;
+        }
+        if (d->gunselect == GUN_PISTOL && d->ai)
+        {
+            d->delay[gun] += int(d->delay[gun] * (((101 - d->skill) + rnd(111 - d->skill)) / 100.f));
+        }
+        d->totalshots += attacks[attack].damage * attacks[attack].rays;
     }
 
     void checkattacksound(gameent *d, bool local)
     {
+        const int gun = d->gunselect;
         int attack = ATK_INVALID;
         if (validact(d->attacking))
         {
-            attack = guns[d->gunselect].attacks[d->attacking];
+            attack = guns[gun].attacks[d->attacking];
         }
         switch(d->chansound[Chan_Attack])
         {
@@ -275,7 +299,7 @@ namespace game
             default: return;
         }
         const bool isValidClient = d->clientnum >= 0 && d->state == CS_ALIVE;
-        if(validatk(attack) && d->lastattack == attack && lastmillis - d->lastaction < attacks[attack].attackdelay + 50 && isValidClient)
+        if(validatk(attack) && d->lastattack == attack && lastmillis - d->lastaction[gun] < attacks[attack].attackdelay + 50 && isValidClient)
         {
             const int channel = Chan_Attack;
             d->chan[channel] = playsound(d->chansound[channel], NULL, local ? NULL : &d->o, NULL, 0, -1, -1, d->chan[channel]);
@@ -593,7 +617,6 @@ namespace game
             }
 
             case ATK_GRENADE1:
-            case ATK_GRENADE2:
             {
                 if (d->muzzle.x >= 0 && muzzleflash)
                 {
@@ -1212,10 +1235,13 @@ namespace game
         {
             dir = (dir < 0 ? NUMGUNS - 1 : 1);
             int gun = self->gunselect;
-            loopi(NUMGUNS)
+            for (int i = 0; i < NUMGUNS; i++)
             {
                 gun = (gun + dir) % NUMGUNS;
-                if (force || self->ammo[gun]) break;
+                if (force || self->ammo[gun])
+                {
+                    break;
+                }
             }
             if (gun != self->gunselect)
             {
@@ -1265,14 +1291,17 @@ namespace game
             return;
         }
         int offset = 0;
-        loopi(numguns) if (guns[i] == self->gunselect)
+        for (int i = 0; i < NUMGUNS; i++)
         {
-            offset = i + 1;
-            break;
+            if (guns[i] == self->gunselect)
+            {
+                offset = i + 1;
+                break;
+            }
         }
-        loopi(numguns)
+        for (int i = 0; i < numguns; i++)
         {
-            int gun = guns[(i + offset) % numguns];
+            const int gun = guns[(i + offset) % numguns];
             if (gun >= 0 && gun < NUMGUNS && (force || self->ammo[gun]))
             {
                 gunselect(gun, self);
@@ -1286,7 +1315,10 @@ namespace game
     {
          int numguns = min(numargs, 3);
          int guns[3];
-         loopi(numguns) guns[i] = getweapon(args[i].getstr());
+         for (int i = 0; i < numguns; i++)
+         {
+             guns[i] = getweapon(args[i].getstr());
+         }
          cycleweapon(numguns, guns);
     });
 

@@ -291,7 +291,8 @@ namespace game
             return;
         }
 
-        int lastaction = d->lastaction, anim = ANIM_IDLE|ANIM_LOOP, attack = ANIM_SHOOT, delay = 0;
+        const int gun = d->gunselect;
+        int lastaction = d->lastaction[gun], anim = ANIM_IDLE | ANIM_LOOP, attack = ANIM_SHOOT, delay = 0;
         if(d->state==CS_ALIVE)
         {
             if(d->lastattack >= 0)
@@ -299,7 +300,7 @@ namespace game
                 attack = attacks[d->lastattack].anim;
                 delay = attacks[d->lastattack].attackdelay+50;
             }
-            if(d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis-d->lastaction>delay)
+            if(d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis - d->lastaction[gun] > delay)
             {
                 lastaction = d->lasttaunt;
                 anim = attack = ANIM_TAUNT;
@@ -679,28 +680,46 @@ namespace game
             return;
         }
 
-        int anim = ANIM_GUN_IDLE|ANIM_LOOP, basetime = 0;
+        int animation = ANIM_GUN_IDLE|ANIM_LOOP, basetime = 0;
         if(validatk(d->lastattack))
         {
-            bool animateattack = d->lastattack == ATK_MELEE || attacks[d->lastattack].gun == d->gunselect;
-            if(animateattack && d->lastaction && lastmillis - d->lastaction < attacks[d->lastattack].attackdelay)
+            bool shouldAnimate = false;
+            if
+            (
+                attacks[d->lastattack].action == ACT_MELEE ||
+                attacks[d->lastattack].gun == d->gunselect
+            )
             {
-                if(anim >= 0) anim = attacks[d->lastattack].hudanim;
-                basetime = d->lastaction;
+                shouldAnimate = true;
+            }
+            const int gun = d->gunselect;
+            if(shouldAnimate && d->lastaction[gun] && lastmillis - d->lastaction[gun] < attacks[d->lastattack].attackdelay)
+            {
+                if (animation >= 0)
+                {
+                    animation = attacks[d->lastattack].hudanim;
+                }
+                basetime = d->lastaction[gun];
                 d->lastswitch = 0;
             }
         }
         if(d->lastswitch && lastmillis - d->lastswitch <= 600)
         {
-            if(anim >= 0) anim = ANIM_GUN_SWITCH;
+            if (animation >= 0)
+            {
+                animation = ANIM_GUN_SWITCH;
+            }
             basetime = d->lastswitch;
         }
         if(d->lasttaunt && lastmillis-d->lasttaunt < 1000)
         {
-            if(anim >= 0) anim = ANIM_GUN_TAUNT;
+            if (animation >= 0)
+            {
+                animation = ANIM_GUN_TAUNT;
+            }
             basetime = d->lasttaunt;
         }
-        drawhudmodel(d, anim, basetime);
+        drawhudmodel(d, animation, basetime);
     }
 
     void renderavatar()
@@ -714,7 +733,10 @@ namespace game
         if(!previewent)
         {
             previewent = new gameent;
-            loopi(NUMGUNS) previewent->ammo[i] = 1;
+            for (int i = 0; i < NUMGUNS; i++)
+            {
+                previewent->ammo[i] = 1;
+            }
         }
         float height = previewent->eyeheight + previewent->aboveeye,
               zrad = height/2;
@@ -729,7 +751,7 @@ namespace game
     void preloadweapons()
     {
         const playermodelinfo &playermodel = getplayermodelinfo(self);
-        loopi(NUMGUNS)
+        for (int i = 0; i < NUMGUNS; i++)
         {
             const char *file = guns[i].model;
             if(!file) continue;

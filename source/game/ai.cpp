@@ -92,7 +92,7 @@ namespace ai
     bool canshoot(gameent *d, int atk, gameent *e)
     {
         if(attackrange(d, atk, e->o.squaredist(d->o)) && targetable(d, e))
-            return !d->ai->becareful && d->ammo[attacks[atk].gun] > 0 && lastmillis - d->lastaction >= d->gunwait;
+            return !d->ai->becareful && d->ammo[attacks[atk].gun] > 0 && lastmillis - d->lastaction[d->gunselect] >= d->delay[d->gunselect];
         return false;
     }
 

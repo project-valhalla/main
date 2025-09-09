@@ -556,18 +556,18 @@ namespace game
                     color = vec4(vec::hexcolor(teamtextcolor[hud->team]), 1);
                 }
             }
-            if (hud->gunwait)
+            if (hud->delay[hud->gunselect])
             {
                 color.mul(0.75f);
+            }
+            else if (hud->interacting[Interaction::Available] && !isScoped && !hovered)
+            {
+                crosshair = Pointer_Interact;
+                color = vec4(1, 1, 1, 1);
             }
             if (lastmillis - hud->lastAbility[hud->Ability::lastAttempt] <= ABILITY_FEEDBACK_TIME)
             {
                 color = vec4(1, 0, 0, 1);
-            }
-            if (hud->interacting[Interaction::Available] && !isScoped && !hovered && !hud->gunwait)
-            {
-                crosshair = Pointer_Interact;
-                color = vec4(1, 1, 1, 1);
             }
         }
         else if (type == Pointer_Hit)

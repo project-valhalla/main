@@ -609,6 +609,8 @@ namespace game
         if (d->deathstate == Death_Headshot)
         {
             d->vel.x = d->vel.y = 0;
+            const float velocity = d->vel.z;
+            d->vel.z = -velocity;
         }
         else if (d->deathstate == Death_Shock)
         {

@@ -107,16 +107,29 @@ namespace ai
         return false;
     }
 
+    // Add margins of error.
     bool hastarget(gameent *d, int atk, aistate &b, gameent *e, float yaw, float pitch, float dist)
-    { // add margins of error
+    {
         if(attackrange(d, atk, dist) || (d->skill <= 100 && !rnd(d->skill)))
         {
             if(melee(d)) return true;
-            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*attacks[atk].attackdelay/200.f)), 0.f, attacks[atk].projspeed ? 0.25f : 1e16f),
-                offy = yaw-d->yaw, offp = pitch-d->pitch;
-            if(offy > 180) offy -= 360;
-            else if(offy < -180) offy += 360;
-            if(fabs(offy) <= d->ai->views[0]*skew && fabs(offp) <= d->ai->views[1]*skew) return true;
+            const attackinfo attack = attacks[atk];
+            const projectileinfo projectile = projs[attack.projectile];
+            const float skew = clamp(float(lastmillis - d->ai->enemymillis) / float((d->skill * attack.delay / 200.0f)), 0.f, projectile.speed ? 0.25f : 1e16f);
+            float offY = yaw - d->yaw;
+            const float offPitch = pitch - d->pitch;
+            if (offY > 180)
+            {
+                offY -= 360;
+            }
+            else if (offY < -180)
+            {
+                offY += 360;
+            }
+            if (fabs(offY) <= d->ai->views[0] * skew && fabs(offPitch) <= d->ai->views[1] * skew)
+            {
+                return true;
+            }
         }
         return false;
     }
@@ -124,8 +137,16 @@ namespace ai
     vec getaimpos(gameent *d, int atk, gameent *e)
     {
         vec o = e->o;
-        if(attacks[atk].projspeed) o.z += (e->aboveeye*0.2f)-(0.8f*d->eyeheight);
-        else if(!attacks[atk].gravity) o.z += (e->aboveeye-e->eyeheight)*0.5f; // it's probably a grenade
+        const int projectile = attacks[atk].projectile;
+        if (projs[projectile].speed)
+        {
+            o.z += (e->aboveeye * 0.2f) - (0.8f * d->eyeheight);
+        }
+        else if (!projs[projectile].gravity)
+        {
+            // It's probably a grenade.
+            o.z += (e->aboveeye - e->eyeheight) * 0.5f;
+        }
         if(d->skill <= 100)
         {
             if(lastmillis >= d->ai->lastaimrnd)

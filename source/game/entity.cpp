@@ -805,6 +805,17 @@ namespace entities
                 tryPickup(id, player);
             }
         }
+        loopv(projectiles::items)
+        {
+            ProjEnt& proj = *projectiles::items[i];
+            const int id = i;
+            const float distance = proj.o.dist(origin);
+            const int radius = ENTITY_COLLECT_RADIUS;
+            if (distance < radius)
+            {
+                projectiles::pick(&proj, proj.item, player);
+            }
+        }
 
         // Check if the player moved away from a trigger in proximity.
         if (m_story && player == self)

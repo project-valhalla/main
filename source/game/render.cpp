@@ -298,7 +298,7 @@ namespace game
             if(d->lastattack >= 0)
             {
                 attack = attacks[d->lastattack].anim;
-                delay = attacks[d->lastattack].attackdelay+50;
+                delay = attacks[d->lastattack].delay + 50;
             }
             if(d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis - d->lastaction[gun] > delay)
             {
@@ -698,7 +698,7 @@ namespace game
                 shouldAnimate = true;
             }
             const int gun = d->gunselect;
-            if(shouldAnimate && d->lastaction[gun] && lastmillis - d->lastaction[gun] < attacks[d->lastattack].attackdelay)
+            if(shouldAnimate && d->lastaction[gun] && lastmillis - d->lastaction[gun] < attacks[d->lastattack].delay)
             {
                 if (animation >= 0)
                 {

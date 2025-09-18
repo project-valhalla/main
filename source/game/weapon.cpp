@@ -197,7 +197,7 @@ namespace game
 
     void applyDelay(gameent* d, const int attack)
     {
-        int weaponDelay = attacks[attack].attackdelay;
+        int weaponDelay = attacks[attack].delay;
         if (d->haspowerup(PU_HASTE) || d->role == ROLE_BERSERKER)
         {
             weaponDelay /= 2;
@@ -346,7 +346,7 @@ namespace game
             default: return;
         }
         const bool isValidClient = d->clientnum >= 0 && d->state == CS_ALIVE;
-        if(validatk(attack) && d->lastattack == attack && lastmillis - d->lastaction[gun] < attacks[attack].attackdelay + 50 && isValidClient)
+        if(validatk(attack) && d->lastattack == attack && lastmillis - d->lastaction[gun] < attacks[attack].delay + 50 && isValidClient)
         {
             const int channel = Chan_Attack;
             d->chan[channel] = playsound(d->chansound[channel], NULL, local ? NULL : &d->o, NULL, 0, -1, -1, d->chan[channel]);
@@ -730,14 +730,14 @@ namespace game
         const int projectile = attacks[atk].projectile;
         if (isvalidprojectile(projectile))
         {
-            int attackrays = attacks[atk].rays;
-            if (attackrays <= 1)
+            const int attackRays = attacks[atk].rays;
+            if (attackRays <= 1)
             {
-                projectiles::make(d, from, to, local, id, atk, projectile, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
+                projectiles::makeWeapon(d, from, to, local, id, projectile, atk);
             }
-            else loopi(attackrays)
+            else for(int i = 0; i < attackRays; i++)
             {
-                projectiles::make(d, from, rays[i], local, id, atk, projectile, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
+                projectiles::makeWeapon(d, from, rays[i], local, id, projectile, atk);
             }
         }
         if (validgun(gun))
@@ -745,7 +745,7 @@ namespace game
             const int ejectProjectile = guns[gun].ejectprojectile;
             if (isvalidprojectile(ejectProjectile) && shouldeject)
             {
-                projectiles::spawnbouncer(d->eject, d, ejectProjectile);
+                projectiles::makeJunk(d, d->eject, ejectProjectile);
             }
         }
         bool looped = false;
@@ -1062,7 +1062,7 @@ namespace game
         const vec from = d->abovehead();
         loopi(min(damage, 8) + 1)
         {
-            projectiles::spawnbouncer(from, d, Projectile_Gib);
+            projectiles::makeJunk(d, from, Projectile_Gib);
         }
         if (blood)
         {
@@ -1081,24 +1081,25 @@ namespace game
 
     VARP(hitsound, 0, 0, 1);
 
-    void damageentity(int damage, gameent* d, gameent* actor, int atk, int flags, bool local = true)
+    void damageEntity(int damage, gameent* target, gameent* actor, int attack, int flags, bool local = true)
     {
-        if (intermission || (d->state != CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING))
+        if (intermission || (target->state != CS_ALIVE && target->state != CS_LAGGED && target->state != CS_SPAWNING))
         {
             return;
         }
         if (local)
         {
-            damage = d->dodamage(damage, flags & Hit_Environment);
+            damage = target->dodamage(damage, flags & Hit_Environment);
         }
         else if (actor == self)
         {
+            // We don't need to update ourselves as we already have the correct state.
             return;
         }
-        ai::damaged(d, actor);
-        if (local && d->health <= 0)
+        ai::damaged(target, actor);
+        if (local && target->health <= 0)
         {
-            kill(d, actor, atk);
+            kill(target, actor, attack);
         }
     }
     
@@ -1161,7 +1162,7 @@ namespace game
         }
         if (target->type == ENT_PLAYER || target->type == ENT_AI)
         {
-            damageentity(damage, target, actor, atk, flags, isLocal);
+            damageEntity(damage, target, actor, atk, flags, isLocal);
         }
         applyhiteffects(damage, target, actor, position, atk, flags, isLocal);
     }
@@ -1174,7 +1175,7 @@ namespace game
         }
         if (!m_mp(gamemode))
         {
-            damageentity(damage, target, actor, attack, flags);
+            damageEntity(damage, target, actor, attack, flags);
         }
         else
         {
@@ -1450,6 +1451,110 @@ namespace game
         if (d->gunselect != is.info && !d->ammo[is.info])
         {
             gunselect(is.info, self);
+        }
+    }
+
+    void drop()
+    {
+        if (intermission)
+        {
+            return;
+        }
+        const int weapon = self->gunselect;
+        if (!self->ammo[weapon])
+        {
+            return;
+        }
+        int item = I_AMMO_GRENADE;
+        if (validgun(weapon))
+        {
+            switch (weapon)
+            {
+                case GUN_SCATTER:
+                    item = I_AMMO_SG;
+                    break;
+
+                case GUN_SMG:
+                    item = I_AMMO_SMG;
+                    break;
+
+                case GUN_PULSE:
+                    item = I_AMMO_PULSE;
+                    break;
+
+                case GUN_RAIL:
+                    item = I_AMMO_RAIL;
+                    break;
+
+                case GUN_ROCKET:
+                    item = I_AMMO_RL;
+                    break;
+
+                default:
+                    return;
+            }
+        }
+        self->ammo[weapon] = 0;
+        weaponswitch(self);
+        vec to = worldpos;
+        const float distance = self->o.dist(to);
+        to.z += distance / 4;
+        projectiles::makeItem(self, self->o, to, true, 0, item);
+    }
+    ICOMMAND(drop, "", (), drop());
+
+    void dropItems(gameent* d)
+    {
+        if (intermission)
+        {
+            return;
+        }
+        const int weapon = d->gunselect;
+        if (!d->ammo[weapon])
+        {
+            return;
+        }
+        int item = -1;
+        if (validgun(weapon))
+        {
+            switch (weapon)
+            {
+                case GUN_SCATTER:
+                    item = I_AMMO_SG;
+                    break;
+
+                case GUN_SMG:
+                    item = I_AMMO_SMG;
+                    break;
+
+                case GUN_PULSE:
+                    item = I_AMMO_PULSE;
+                    break;
+
+                case GUN_RAIL:
+                    item = I_AMMO_RAIL;
+                    break;
+
+                case GUN_ROCKET:
+                    item = I_AMMO_RL;
+                    break;
+
+                default:
+                    break;
+                }
+        }
+        vec to = vec(rnd(100) - 50, rnd(100) - 50, rnd(100) - 50);
+        if (to.iszero()) to.z += 1;
+        to.normalize();
+        to.add(d->o);
+        projectiles::makeItem(d, d->o, to, true, 0, I_AMMO_GRENADE);
+        if (validitem(item))
+        {
+            to = vec(rnd(100) - 50, rnd(100) - 50, rnd(100) - 50);
+            if (to.iszero()) to.z += 1;
+            to.normalize();
+            to.add(d->o);
+            projectiles::makeItem(d, d->o, to, true, 0, item);
         }
     }
 

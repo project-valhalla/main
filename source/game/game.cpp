@@ -938,6 +938,7 @@ namespace game
         // Write obituary (console messages, kill feed) and manage announcements.
         writeobituary(d, actor, atk, flags);
         announcer::parseannouncements(d, actor, flags);
+        dropItems(d);
     }
 
     void updatetimer(int time, int type)
@@ -1190,7 +1191,7 @@ namespace game
         }
         if (flags & DYN_PROJECTILE)
         {
-            length += projectiles::AttackProjectiles.length();
+            length += projectiles::weapons.length();
         }
         if (flags & DYN_RAGDOLL)
         {
@@ -1222,11 +1223,11 @@ namespace game
         }
         if (flags & DYN_PROJECTILE)
         {
-            if (i < projectiles::AttackProjectiles.length())
+            if (i < projectiles::weapons.length())
             {
-                return (dynent*)projectiles::AttackProjectiles[i];
+                return (dynent*)projectiles::weapons[i];
             }
-            i -= projectiles::AttackProjectiles.length();
+            i -= projectiles::weapons.length();
         }
         if (flags & DYN_RAGDOLL)
         {

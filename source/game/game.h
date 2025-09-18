@@ -474,9 +474,9 @@ const int VOICECOM_DELAY = 2800;
 const int SPAWN_DURATION = 1000; // Spawn effect/shield duration.
 const int SPAWN_DELAY = 1500; // Spawn is possible after a specific number of milliseconds has elapsed.
 
+// Reserved sound channels.
 enum
 {
-    // Reserved sound channels.
     Chan_Idle = 0,
     Chan_Attack,
     Chan_Weapon,
@@ -498,7 +498,7 @@ struct gameent : dynent, gamestate
     int clientnum, privilege, lastupdate, plag, ping;
     int lifesequence;                   // sequence id for each respawn, used in damage test
     int respawned, suicided;
-	int lastpain, lasthurt, lastspawn, lastthrow;
+    int lastpain, lasthurt, lastspawn, lastthrow;
     int lastaction[NUMGUNS];
     int lastattack, lastattacker, lasthit, lastkill;
     int deathstate;
@@ -569,16 +569,15 @@ struct gameent : dynent, gamestate
         }
     }
 
-    void hitpush(int damage, const vec &dir, gameent *actor, int atk)
+    void hitpush(int damage, const vec &direction, gameent *actor, const int attack)
     {
-        vec push(dir);
-        bool istrickjump = actor == this && isattackprojectile(attacks[atk].projectile) && attacks[atk].exprad;
-        if (istrickjump)
+        const bool isTrickJump = actor == this && isattackprojectile(attacks[attack].projectile) && attacks[attack].exprad;
+        if (isTrickJump)
         {
             // Projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further.
             falling.z = 1;
         }
-        if (actor != this && physstate < PHYS_SLOPE)
+        else if (physstate < PHYS_SLOPE)
         {
             // While in mid-air, push is stronger.
             damage *= GUN_AIR_PUSH;
@@ -588,7 +587,8 @@ struct gameent : dynent, gamestate
             // Zombies are pushed "a bit" more.
             damage *= GUN_ZOMBIE_PUSH;
         }
-        push.mul((istrickjump ? EXP_SELFPUSH : 1.0f) * attacks[atk].hitpush * damage / weight);
+        vec push(direction);
+        push.mul((isTrickJump ? EXP_SELFPUSH : 1.0f) * attacks[attack].hitpush * damage / weight);
         vel.add(push);
     }
 
@@ -860,7 +860,7 @@ namespace game
     namespace projectiles
     {
         // projectile.cpp
-        extern vector<ProjEnt*> Projectiles, AttackProjectiles;
+        extern vector<ProjEnt*> all, weapons, items;
 
         extern void update(const int time);
         extern void updatelights();
@@ -869,8 +869,9 @@ namespace game
         extern void reset(gameent* owner = NULL);
         extern void render();
         extern void preload();
-        extern void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0);
-        extern void spawnbouncer(const vec& from, gameent* d, const int type);
+        extern void makeJunk(gameent* owner, const vec& from, const int type);
+        extern void makeWeapon(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int type, const int attack);
+        extern void makeItem(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int item);
         extern void bounce(physent* d, const vec& surface);
         extern void collidewithentity(physent* bouncer, physent* collideEntity);
         extern void destroyserverprojectile(gameent* d, const int id, const int attack = ATK_INVALID);
@@ -879,8 +880,9 @@ namespace game
         extern void explode(gameent* owner, const int attack, const vec& position, const vec& velocity);
         extern void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays);
         extern void damage(ProjEnt* proj, gameent* actor, const int attack);
+        extern void pick(ProjEnt* proj, const int type, gameent* player);
 
-        ProjEnt* getprojectile(const int id, gameent* owner);
+        extern ProjEnt* getprojectile(const int id, gameent* owner);
     }
 
     // weapon.cpp
@@ -940,6 +942,7 @@ namespace game
     extern void doweaponchangeffects(gameent* d, int gun = GUN_INVALID);
     extern void weaponswitch(gameent* d);
     extern void autoswitchweapon(gameent* d, int type);
+    extern void dropItems(gameent* d);
     extern void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal);
     extern void hit(dynent* target, gameent* actor, const vec& hitPosition, const vec& velocity, int damage, const int atk, const float dist, const int rays = 1, const int flags = Hit_Torso);
 

@@ -1967,7 +1967,7 @@ namespace game
                 gameent *s = getclient(scn);
                 if(!s || !validatk(atk)) break;
                 const int gun = attacks[atk].gun;
-                const int delay = attacks[atk].attackdelay;
+                const int delay = attacks[atk].delay;
                 if (validgun(gun))
                 {
                     s->delay[gun] = delay;
@@ -2041,12 +2041,20 @@ namespace game
 
             case N_HITPUSH:
             {
-                int tcn = getint(p), atk = getint(p), damage = getint(p);
-                gameent *target = getclient(tcn);
-                vec dir;
-                loopk(3) dir[k] = getint(p)/DNF;
-                if(!target || !validatk(atk)) break;
-                target->hitpush(damage * (target->health <= 0 ? deadpush : 1), dir, NULL, atk);
+                int targetClient = getint(p),
+                    attack = getint(p),
+                    damage = getint(p);
+                gameent* target = getclient(targetClient);
+                vec direction;
+                loopk(3)
+                {
+                    direction[k] = getint(p) / DNF;
+                }
+                if (!target || !validatk(attack))
+                {
+                    break;
+                }
+                target->hitpush(damage * (target->health <= 0 ? deadpush : 1), direction, NULL, attack);
                 break;
             }
 

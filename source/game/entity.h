@@ -49,7 +49,7 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "pulse",           "Pulse Rifle",        "item/ammo/pulse"      },
     { "rocket",          "Rocket Launcher",    "item/ammo/rocket"     },
     { "railgun",         "Railgun",            "item/ammo/railgun"    },
-    { "grenade",         "Grenade",            "item/ammo/grenade"    },
+    { "grenade",         "Grenade",            "projectile/grenade"   },
     { "health",          "Health",             "item/health"          },
     { "light_shield",    "Light Shield",       "item/shield/yellow"   },
     { "heavy_shield",    "Heavy Shield",       "item/shield/red"      },

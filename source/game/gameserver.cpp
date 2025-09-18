@@ -3222,8 +3222,7 @@ namespace server
             }
             else if (!m_teammode && !m_betrayal) dodamage(actor, actor, damage, atk, flags);
         }
-        if (target == actor) target->setpushed();
-        else if (!hitpush.iszero())
+        if (!hitpush.iszero())
         {
             ivec v(vec(hitpush).rescale(DNF));
             sendf(ts.health <= 0 ? -1 : target->ownernum, 1, "ri7", N_HITPUSH, target->clientnum, atk, damage, v.x, v.y, v.z);
@@ -3376,7 +3375,7 @@ namespace server
         gs.lastshot[gun] = millis;
         gs.lastmove = lastmillis;
         gs.lastattack = attack;
-        int attackDelay = attacks[attack].attackdelay;
+        int attackDelay = attacks[attack].delay;
         if (gs.haspowerup(PU_HASTE) || gs.role == ROLE_BERSERKER)
         {
             attackDelay /= 2;

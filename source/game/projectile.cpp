@@ -1,4 +1,4 @@
-/*
+﻿/*
  * =====================================================================
  * projectile.cpp
  * Manages the creation and behavior of Projectiles in the game.
@@ -29,15 +29,15 @@ namespace game
 {
     namespace projectiles
     {
-        vector<ProjEnt*> Projectiles, AttackProjectiles;
+        vector<ProjEnt*> all, weapons, items;
 
         ProjEnt* getprojectile(const int id, gameent* owner)
         {
             if (owner)
             {
-                loopv(Projectiles)
+                loopv(all)
                 {
-                    ProjEnt* proj = Projectiles[i];
+                    ProjEnt* proj = all[i];
                     if (proj->id == id && proj->owner == owner)
                     {
                         return proj;
@@ -47,87 +47,148 @@ namespace game
             return NULL;
         }
 
+        void adjustPosition(ProjEnt& proj, const vec& from, const vec& direction, gameent* owner)
+        {
+            avoidcollision(&proj, direction, owner, 0.1f);
+            const vec o = proj.flags & ProjFlag_Bounce ? proj.o : from;
+            proj.offset.sub(o);
+            proj.offsetMillis = OFFSET_MILLIS;
+            if (proj.flags & ProjFlag_Bounce)
+            {
+                proj.resetinterp();
+            }
+            proj.lastPosition = owner->o;
+            proj.checkLiquid();
+        }
+
         void setmodel(ProjEnt& proj)
         {
             if (!projs[proj.projectile].directory)
             {
                 return;
             }
-
             proj.setVariant();
-            if (proj.variant)
+            if (proj.flags & ProjFlag_Item)
             {
-                defformatstring(variantname, "%s/%02d", projs[proj.projectile].directory, proj.variant);
-                copystring(proj.model, variantname);
+                // Items use their own model names.
+                copystring(proj.model, gentities[proj.item].file);
             }
             else
             {
-                copystring(proj.model, projs[proj.projectile].directory);
+                // Use the projectile model/variant.
+                if (proj.variant)
+                {
+                    defformatstring(variantname, "%s/%02d", projs[proj.projectile].directory, proj.variant);
+                    copystring(proj.model, variantname);
+                }
+                else
+                {
+                    copystring(proj.model, projs[proj.projectile].directory);
+                }
             }
         }
 
-        void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity, const float elasticity)
+        ProjEnt& make(gameent* owner, const vec& from, const vec& to, vec& direction, const bool isLocal, const int id, const int type)
         {
-            ProjEnt& proj = *Projectiles.add(new ProjEnt);
+            // Create the new projectile.
+            ProjEnt& proj = *all.add(new ProjEnt);
             proj.set(type);
-            add(proj);
 
+            // Set information.
             proj.owner = owner;
             proj.o = from;
             proj.from = from;
             proj.to = to;
-            proj.setradius();
+            proj.setRadius();
             proj.isLocal = isLocal;
             proj.id = id;
-            proj.attack = attack;
-            proj.lifetime = lifetime;
-            proj.setSpeed(speed);
-            proj.gravity = gravity;
-            proj.elasticity = elasticity;
-
-            setmodel(proj);
-
-            vec dir(to);
-            dir.sub(from).safenormalize();
-            proj.vel = dir;
-            if (proj.flags & ProjFlag_Bounce)
-            {
-                proj.vel.mul(speed);
-            }
-
-            avoidcollision(&proj, dir, owner, 0.1f);
-
-            if (proj.flags & ProjFlag_Weapon)
-            {
-                proj.offset = hudgunorigin(proj.attack, from, to, owner);
-            }
-            if (proj.flags & ProjFlag_Bounce)
-            {
-                if (proj.flags & ProjFlag_Weapon)
-                {
-                    if (owner == hudplayer() && !camera::isthirdperson())
-                    {
-                        proj.offset.sub(owner->o).rescale(16).add(owner->o);
-                    }
-                }
-                else proj.offset = from;
-            }
-
-            const vec o = proj.flags & ProjFlag_Bounce ? proj.o : from;
-            proj.offset.sub(o);
-
-            proj.offsetMillis = OFFSET_MILLIS;
-
-            if (proj.flags & ProjFlag_Bounce)
-            {
-                proj.resetinterp();
-            }
-
-            proj.lastPosition = owner->o;
-
-            proj.checkliquid();
-            proj.setsounds();
             proj.millis = lastmillis;
+
+            // Adjust position.
+            direction = to;
+            direction.sub(from).safenormalize();
+            proj.vel = direction;
+            if (proj.flags & ProjFlag_Bounce)
+            {
+                proj.vel.mul(proj.speed);
+            }
+            if (proj.flags & ProjFlag_Bounce)
+            {
+                proj.offset = from;
+            }
+
+            // Return the new projectile.
+            return proj;
+        }
+
+        void makeJunk(gameent* owner, const vec& from, const int type)
+        {
+            if (!isvalidprojectile(type))
+            {
+                return;
+            }
+
+            // Prepare information.
+            vec to(rnd(100) - 50, rnd(100) - 50, rnd(100) - 50);
+            if (projs[type].flags & ProjFlag_Eject)
+            {
+                to = vec(-50, 1, rnd(30) - 15);
+                to.rotate_around_z(owner->yaw * RAD);
+            }
+            if (to.iszero())
+            {
+                to.z += 1;
+            }
+            to.normalize();
+            to.add(from);
+
+            // Make the projectile.
+            vec direction = vec(0, 0, 0);
+            ProjEnt& proj = make(owner, from, to, direction, true, 0, type);
+
+            // Finalise.
+            adjustPosition(proj, from, direction, owner);
+            setmodel(proj);
+        }
+
+        void makeWeapon(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int type, const int attack)
+        {
+            if (!isvalidprojectile(type))
+            {
+                return;
+            }
+
+            // Make the projectile.
+            vec direction = vec(0, 0, 0);
+            ProjEnt& proj = make(owner, from, to, direction, isLocal, id, type);
+            weapons.add(&proj);
+
+            // Set information.
+            proj.attack = attack;
+            proj.offset = hudgunorigin(proj.attack, from, to, owner);
+            if (proj.flags & ProjFlag_Bounce && owner == hudplayer() && !camera::isthirdperson())
+            {
+                proj.offset.sub(owner->o).rescale(16).add(owner->o);
+            }
+
+            // Finalise.
+            adjustPosition(proj, from, direction, owner);
+            setmodel(proj);
+        }
+
+        void makeItem(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int item)
+        {
+            // Make the projectile.
+            vec direction = vec(0, 0, 0);
+            ProjEnt& proj = make(owner, from, to, direction, isLocal, id, Projectile_Item);
+            items.add(&proj);
+
+            // Set information.
+            proj.item = item;
+
+            // Finalise.
+            adjustPosition(proj, from, direction, owner);
+            setmodel(proj);
         }
 
         void applybounceeffects(ProjEnt* proj, const vec& surface)
@@ -166,7 +227,7 @@ namespace game
             }
             ProjEnt* proj = (ProjEnt*)d;
             proj->bounces++;
-            const int maxBounces = projs[proj->projectile].maxbounces;
+            const int maxBounces = projs[proj->projectile].maxBounces;
             if ((maxBounces && proj->bounces > maxBounces) || lastmillis - proj->lastBounce < 100)
             {
                 return;
@@ -309,7 +370,8 @@ namespace game
                 {
                     explosioncolor = 0x00FFFF;
                     explosionlightcolor = vec(0.0f, 1.0f, 1.0f);
-                    minsize = attacks[attack].exprad * 1.15f;
+                    const int radius = attacks[attack].exprad;
+                    minsize = radius * 1.15f;
                     maxsize = 0;
                     if (attack == ATK_PISTOL2 && isInWater)
                     {
@@ -321,6 +383,10 @@ namespace game
                     if (attack == ATK_PISTOL3)
                     {
                         particle_flare(v, v, 600, PART_EXPLODE1, explosioncolor, 50.0f, NULL, 40.0f);
+                    }
+                    else
+                    {
+                        particle_flare(v, v, 200, PART_RING, explosioncolor, 0.0f, NULL, 18.0f);
                     }
                     break;
                 }
@@ -343,7 +409,7 @@ namespace game
                 {
                     loopi(numdebris)
                     {
-                        spawnbouncer(debrisorigin, owner, Projectile_Debris);
+                        makeJunk(owner, debrisorigin, Projectile_Debris);
                     }
                 }
             }
@@ -394,7 +460,7 @@ namespace game
 
         void explodeprojectile(ProjEnt& proj, const vec& v, const bool isLocal)
         {
-            stain(proj.vel, proj.flags & ProjFlag_Linear ? v : proj.offsetposition(), proj.attack);
+            stain(proj.vel, proj.flags & ProjFlag_Linear ? v : proj.offsetPosition(), proj.attack);
             const vec pos = proj.flags & ProjFlag_Linear ? v : proj.o;
             addexplosioneffects(proj.owner, proj.attack, pos);
             if (betweenrounds || !isLocal)
@@ -416,11 +482,11 @@ namespace game
             {
                 return;
             }
-            if (Projectiles.length())
+            if (all.length())
             {
-                loopv(Projectiles)
+                loopv(all)
                 {
-                    ProjEnt& proj = *Projectiles[i];
+                    ProjEnt& proj = *all[i];
                     if (!validatk(proj.attack) || proj.isLocal)
                     {
                         continue;
@@ -432,11 +498,11 @@ namespace game
                     if (proj.owner == d && proj.id == id)
                     {
                         const vec pos = proj.flags & ProjFlag_Bounce ?
-                                        proj.offsetposition() :
+                                        proj.offsetPosition() :
                                         vec(proj.offset).mul(proj.offsetMillis / float(OFFSET_MILLIS)).add(proj.o);
                         explodeprojectile(proj, pos, proj.isLocal);
                         remove(proj);
-                        delete Projectiles.remove(i);
+                        delete all.remove(i);
                         break;
                     }
                 }
@@ -445,9 +511,9 @@ namespace game
 
         void tryDetonate(gameent* d, const int gun)
         {
-            loopvrev(Projectiles)
+            loopvrev(all)
             {
-                ProjEnt& proj = *Projectiles[i];
+                ProjEnt& proj = *all[i];
                 if (proj.owner != self)
                 {
                     continue;
@@ -458,7 +524,7 @@ namespace game
                     proj.kill();
                     if (d == self || d->ai)
                     {
-                        d->delay[gun] = attack.attackdelay;
+                        d->delay[gun] = attack.delay;
                         d->lastaction[gun] = lastmillis;
                         d->lastattack = proj.attack;
                         sendsound(guns[gun].abilitySound, d);
@@ -578,9 +644,9 @@ namespace game
 
         void checklifetime(ProjEnt& proj, const int time)
         {
-            if (isattackprojectile(proj.projectile))
+            if (isattackprojectile(proj.projectile) || proj.flags & ProjFlag_Item)
             {
-                if ((proj.lifetime -= time) < 0)
+                if ((proj.lifespan -= time) < 0)
                 {
                     proj.kill();
                 }
@@ -592,7 +658,7 @@ namespace game
                 {
                     int qtime = min(80, rtime);
                     rtime -= qtime;
-                    if ((proj.lifetime -= qtime) < 0 || (proj.flags & ProjFlag_Bounce && physics::hasbounced(&proj, qtime / 1000.0f, 0.5f, 0.4f, 0.7f)))
+                    if ((proj.lifespan -= qtime) < 0 || (proj.flags & ProjFlag_Bounce && physics::hasbounced(&proj, qtime / 1000.0f, 0.5f, 0.4f, 0.7f)))
                     {
                         proj.kill();
                     }
@@ -619,7 +685,7 @@ namespace game
             {
                 case Projectile_Grenade:
                 {
-                    if (proj.lifetime < attacks[proj.attack].lifetime - 100)
+                    if (proj.lifespan < projs[proj.projectile].lifespan - 100)
                     {
                         particle_flare(proj.lastPosition, position, 500, PART_TRAIL_STRAIGHT, 0x74BCF9, 0.4f);
                     }
@@ -630,7 +696,7 @@ namespace game
                 {
                     tailColor = 0xFFC864;
                     tailMinLength = 90.0f;
-                    if (proj.lifetime <= attacks[proj.attack].lifetime / 2)
+                    if (proj.lifespan <= projs[proj.projectile].lifespan / 2)
                     {
                         tailSize *= 2;
                     }
@@ -698,14 +764,14 @@ namespace game
 
         void update(const int time)
         {
-            if (Projectiles.empty())
+            if (all.empty())
             {
                 return;
             }
-            loopv(Projectiles)
+            loopv(all)
             {
-                ProjEnt& proj = *Projectiles[i];
-                const vec pos = proj.updateposition(time);
+                ProjEnt& proj = *all[i];
+                const vec pos = proj.updatePosition(time);
                 vec old(proj.o);
                 if (proj.flags & ProjFlag_Linear)
                 {
@@ -753,12 +819,12 @@ namespace game
                                 proj.kill();
                             }
                         }
-                        if (isattackprojectile(proj.projectile))
+                        if (isattackprojectile(proj.projectile) || proj.flags & ProjFlag_Item)
                         {
                             if (proj.flags & ProjFlag_Bounce)
                             {
                                 const bool isBouncing = physics::isbouncing(&proj, proj.elasticity, 0.5f, proj.gravity);
-                                const bool hasBounced = projs[proj.projectile].maxbounces && proj.bounces >= projs[proj.projectile].maxbounces;
+                                const bool hasBounced = projs[proj.projectile].maxBounces && proj.bounces >= projs[proj.projectile].maxBounces;
                                 if (!isBouncing || hasBounced)
                                 {
                                     proj.kill();
@@ -780,7 +846,7 @@ namespace game
                         }
                     }
                     remove(proj);
-                    delete Projectiles.remove(i--);
+                    delete all.remove(i--);
                 }
                 else
                 {
@@ -800,9 +866,9 @@ namespace game
 
         void updatelights()
         {
-            loopv(Projectiles)
+            loopv(all)
             {
-                ProjEnt& proj = *Projectiles[i];
+                ProjEnt& proj = *all[i];
                 if (proj.flags & ProjFlag_Junk)
                 {
                     continue;
@@ -838,27 +904,36 @@ namespace game
                         break;
                     }
                 }
-                adddynlight(pos, 35, lightColor);
+                float radius = 35.0f;
+                if (proj.flags & ProjFlag_Item && proj.lifespan < 400)
+                {
+                    const float initialRadius = 35.0f;
+                    const float finalRadius = 0.0f;
+                    const float progress = clamp(1.0f - proj.lifespan / 400.0f, 0.0f, 1.0f);
+                    radius = lerp(initialRadius, finalRadius, progress);
+                }
+                adddynlight(pos, radius, lightColor);
             }
         }
 
-        void spawnbouncer(const vec& from, gameent* d, const int type)
+        void pick(ProjEnt* proj, const int type, gameent* player)
         {
-            vec to(rnd(100) - 50, rnd(100) - 50, rnd(100) - 50);
-            float elasticity = 0.6f;
-            if (isejectedprojectile(type))
+            proj->state = CS_DEAD;
+            game::autoswitchweapon(player, type);
+            player->pickup(type);
+            itemstat& itemInfo = itemstats[type - I_AMMO_SG];
+            gameent* hud = followingplayer(self);
+            playsound(itemInfo.sound, nullptr, player == hud ? nullptr : &player->o, nullptr, 0, 0, 0, -1, 0, 1800);
+            entities::doHudPickupEffects(type, player);
+        }
+
+        void avoid(ai::avoidset& obstacles, const float radius)
+        {
+            loopv(all)
             {
-                to = vec(-50, 1, rnd(30) - 15);
-                to.rotate_around_z(d->yaw * RAD);
-                elasticity = 0.4f;
+                ProjEnt& proj = *all[i];
+                obstacles.avoidnear(NULL, proj.o.z + attacks[proj.attack].exprad + 1, proj.o, radius + attacks[proj.attack].exprad);
             }
-            if (to.iszero())
-            {
-                to.z += 1;
-            }
-            to.normalize();
-            to.add(from);
-            make(d, from, to, true, 0, -1, type, type == Projectile_Debris ? 400 : rnd(1000) + 1000, rnd(100) + 20, 0.3f + rndscale(0.8f), elasticity);
         }
 
         void preload()
@@ -888,40 +963,61 @@ namespace game
 
         vec manipulatemodel(ProjEnt& proj, float& yaw, float& pitch)
         {
-            if (proj.flags & ProjFlag_Bounce)
+            const vec position = proj.offsetPosition();
+            if (proj.flags & ProjFlag_Linear)
             {
-                const vec pos = proj.offsetposition();
-                const vec vel(proj.vel);
-                if (vel.magnitude() <= 25.0f)
+                // Linear projectiles need to be manipulated differently to look right (rockets).
+                const float dist = min(proj.o.dist(proj.to) / 32.0f, 1.0f);
+                const vec pos = vec(proj.o).add(vec(proj.offset).mul(dist * proj.offsetMillis / float(OFFSET_MILLIS)));
+                vec v = dist < 1e-6f ? proj.vel : vec(proj.to).sub(pos).normalize();
+
+                // The amount of distance in front of the smoke trail needs to change if the model does.
+                vectoyawpitch(v, yaw, pitch);
+                v.mul(3);
+                v.add(pos);
+
+                return v;
+            }
+            else if (proj.flags & ProjFlag_Item)
+            {
+                // Item projectiles behave similarly to items.
+                proj.o.z += (1 + sinf(lastmillis / 100.0f + proj.o.x + proj.o.y) / 20);
+                float blend = 0.0f;
+                if (proj.lifespan <= 1000)
+                {
+                    blend = 1.0f - (proj.lifespan / 1000.0f);
+                }
+                const float spin = (1.0f - blend) + blend * -1.25f;
+                const int revolutions = 10;
+                yaw = (projs[proj.type].lifespan - proj.lifespan) / revolutions * spin;
+                pitch = proj.roll = 0;
+                return position;
+            }
+            else
+            {
+                // Bouncing projectiles behaviour.
+                const vec position = proj.offsetPosition();
+                const vec velocity(proj.vel);
+                if (velocity.magnitude() <= 25.0f)
                 {
                     yaw = proj.lastYaw;
                 }
                 else
                 {
-                    vectoyawpitch(vel, yaw, pitch);
+                    vectoyawpitch(velocity, yaw, pitch);
                     yaw += 90;
                     proj.lastYaw = yaw;
                 }
-                return pos;
-            }
-            else
-            {
-                const float dist = min(proj.o.dist(proj.to) / 32.0f, 1.0f);
-                const vec pos = vec(proj.o).add(vec(proj.offset).mul(dist * proj.offsetMillis / float(OFFSET_MILLIS)));
-                vec v = dist < 1e-6f ? proj.vel : vec(proj.to).sub(pos).normalize();
-                vectoyawpitch(v, yaw, pitch); // The amount of distance in front of the smoke trail needs to change if the model does.
-                v.mul(3);
-                v.add(pos);
-                return v;
+                return position;
             }
         }
 
         void render()
         {
             float yaw, pitch;
-            loopv(Projectiles)
+            loopv(all)
             {
-                ProjEnt& proj = *Projectiles[i];
+                ProjEnt& proj = *all[i];
                 if (!proj.model[0])
                 {
                     continue;
@@ -929,11 +1025,11 @@ namespace game
                 const vec pos = manipulatemodel(proj, yaw, pitch);
                 int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED;
                 float fade = 1;
-                if (proj.flags & ProjFlag_Junk)
+                if (proj.flags & ProjFlag_Junk || proj.flags & ProjFlag_Item)
                 {
-                    if (proj.lifetime < 400)
+                    if (proj.lifespan < 400)
                     {
-                        fade = proj.lifetime / 400.0f;
+                        fade = proj.lifespan / 400.0f;
                     }
                 }
                 rendermodel(proj.model, ANIM_MAPMODEL | ANIM_LOOP, pos, yaw, pitch, proj.roll, cull, NULL, NULL, 0, 0, fade);
@@ -944,7 +1040,11 @@ namespace game
         {
             if (isattackprojectile(proj.projectile))
             {
-                AttackProjectiles.add(&proj);
+                weapons.add(&proj);
+            }
+            else if (proj.flags & ProjFlag_Item)
+            {
+                items.add(&proj);
             }
         }
 
@@ -952,7 +1052,11 @@ namespace game
         {
             if (isattackprojectile(proj.projectile))
             {
-                AttackProjectiles.removeobj(&proj);
+                weapons.removeobj(&proj);
+            }
+            else if (proj.flags & ProjFlag_Item)
+            {
+                items.removeobj(&proj);
             }
         }
 
@@ -960,31 +1064,23 @@ namespace game
         {
             if (!owner)
             {
-                AttackProjectiles.setsize(0);
-                Projectiles.deletecontents();
+                weapons.setsize(0);
+                items.setsize(0);
+                all.deletecontents();
             }
             else
             {
-                loopv(Projectiles)
+                loopv(all)
                 {
-                    ProjEnt& proj = *Projectiles[i];
+                    ProjEnt& proj = *all[i];
                     if (proj.owner != owner)
                     {
                         continue;
                     }
                     remove(proj);
-                    delete Projectiles[i];
-                    Projectiles.remove(i--);
+                    delete all[i];
+                    all.remove(i--);
                 }
-            }
-        }
-
-        void avoid(ai::avoidset& obstacles, const float radius)
-        {
-            loopv(Projectiles)
-            {
-                ProjEnt& proj = *Projectiles[i];
-                obstacles.avoidnear(NULL, proj.o.z + attacks[proj.attack].exprad + 1, proj.o, radius + attacks[proj.attack].exprad);
             }
         }
     }

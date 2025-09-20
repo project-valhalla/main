@@ -353,27 +353,22 @@ namespace entities
         This function is called once the server acknowledges that you really
         picked up the item (in multiplayer someone may grab it before you).
     */
-    void doPickupEffects(const int id, gameent* player)
+    void doPickupEffects(const int item, gameent* player)
     {
-        if (!player || !ents.inrange(id) || !validitem(ents[id]->type))
+        if (!player || !validitem(item))
         {
             return;
         }
-        if (ents[id]->spawned())
-        {
-            ents[id]->clearspawned();
-        }
-        const int type = ents[id]->type;
-        game::autoswitchweapon(player, type);
-        player->pickup(type);
-        itemstat& itemInfo = itemstats[type - I_AMMO_SG];
+        game::autoswitchweapon(player, item);
+        player->pickup(item);
+        itemstat& itemInfo = itemstats[item - I_AMMO_SG];
         gameent* hud = followingplayer(self);
         playsound(itemInfo.sound, nullptr, player == hud ? nullptr : &player->o, nullptr, 0, 0, 0, -1, 0, 1800);
-        if (type >= I_DDAMAGE && type <= I_INVULNERABILITY)
+        if (item >= I_DDAMAGE && item <= I_INVULNERABILITY)
         {
             if (player == hud)
             {
-                conoutf(CON_GAMEINFO, "\f2%s power-up obtained", gentities[type].prettyname);
+                conoutf(CON_GAMEINFO, "\f2%s power-up obtained", gentities[item].prettyname);
                 if (validsound(itemInfo.announcersound))
                 {
                     announcer::playannouncement(itemInfo.announcersound);
@@ -381,11 +376,11 @@ namespace entities
             }
             else
             {
-                conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(player), gentities[type].prettyname);
+                conoutf(CON_GAMEINFO, "%s \fs\f2obtained the %s power-up\fr", colorname(player), gentities[item].prettyname);
                 playsound(S_POWERUP);
             }
         }
-        doHudPickupEffects(type, player);
+        doHudPickupEffects(item, player);
     }
 
     // Manage effects when you pick a pickable entity (item) up. 
@@ -773,6 +768,7 @@ namespace entities
         }
         checkHovered(player);
         const vec origin = player->feetpos();
+		const int pickupRadius = 12;
         loopv(ents)
         {
             extentity& entity = *ents[i];
@@ -782,15 +778,19 @@ namespace entities
                 continue;
             }
             const float distance = entity.o.dist(origin);
+
+			// Check for trigger items in proximity.
             if (entity.type == TRIGGER && m_story)
             {
-                const int radius = entity.attr3 ? entity.attr3 : ENTITY_COLLECT_RADIUS;
+                const int radius = entity.attr3 ? entity.attr3 : pickupRadius;
                 if (distance < radius)
                 {
                     tryPickup(id, player);
                 }
                 continue;
             }
+
+			// Allow spectators to use teleports only and prevent players from picking up unavailable items.
             if
             (
                 (player->state == CS_SPECTATOR && entity.type != TELEPORT) ||
@@ -799,23 +799,16 @@ namespace entities
             {
                 continue;
             }
-            const int radius = entity.type == TELEPORT ? ENTITY_TELEPORT_RADIUS : ENTITY_COLLECT_RADIUS;
+
+            const int radius = entity.type == TELEPORT ? ENTITY_TELEPORT_RADIUS : pickupRadius;
             if (distance < radius)
             {
                 tryPickup(id, player);
             }
         }
-        loopv(projectiles::items)
-        {
-            ProjEnt& proj = *projectiles::items[i];
-            const int id = i;
-            const float distance = proj.o.dist(origin);
-            const int radius = ENTITY_COLLECT_RADIUS;
-            if (distance < radius)
-            {
-                projectiles::pick(&proj, proj.item, player);
-            }
-        }
+
+		// Check for projectile items.
+		projectiles::checkItems(player, origin, pickupRadius);
 
         // Check if the player moved away from a trigger in proximity.
         if (m_story && player == self)
@@ -829,8 +822,8 @@ namespace entities
                 }
                 const extentity& e = *ents[id];
                 const float distance = e.o.dist(origin);
-                const int radius = e.attr3 ? e.attr3 : ENTITY_COLLECT_RADIUS;
-                const int exitRadius = max(0, max(radius, e.attr4 ? e.attr4 : ENTITY_COLLECT_RADIUS));
+                const int radius = e.attr3 ? e.attr3 : pickupRadius;
+                const int exitRadius = max(0, max(radius, e.attr4 ? e.attr4 : pickupRadius));
                 if (distance > exitRadius)
                 {
                     event::emit<event::Trigger>(id, event::Distance);

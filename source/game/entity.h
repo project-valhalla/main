@@ -26,7 +26,6 @@ enum                            // static entity types
 
 #define validitem(n) (((n) >= I_AMMO_SG && (n) <= I_INVULNERABILITY))
 
-const int ENTITY_COLLECT_RADIUS = 12;
 const int ENTITY_TELEPORT_RADIUS = 16;
 
 static const struct gentityinfo { const char *name, *prettyname, *file; } gentities[MAXENTTYPES] =

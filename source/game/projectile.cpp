@@ -559,6 +559,10 @@ namespace game
                 proj->attack = projs[proj->projectile].attack;
                 proj->kill(true);
             }
+			else
+			{
+				proj->kill();
+			}
         }
 
         void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays)
@@ -916,16 +920,23 @@ namespace game
             }
         }
 
-        void pick(ProjEnt* proj, const int type, gameent* player)
+        void tryPickup(ProjEnt& proj, gameent* player)
         {
-            proj->state = CS_DEAD;
-            game::autoswitchweapon(player, type);
-            player->pickup(type);
-            itemstat& itemInfo = itemstats[type - I_AMMO_SG];
-            gameent* hud = followingplayer(self);
-            playsound(itemInfo.sound, nullptr, player == hud ? nullptr : &player->o, nullptr, 0, 0, 0, -1, 0, 1800);
-            entities::doHudPickupEffects(type, player);
+			addmsg(N_PICKUP, "rci3", player, proj.id, proj.item, proj.owner->clientnum);
         }
+
+		void checkItems(gameent* player, const vec& origin, const int radius)
+		{
+			loopv(items)
+			{
+				ProjEnt& proj = *projectiles::items[i];
+				const float distance = proj.o.dist(origin);
+				if (distance < radius)
+				{
+					tryPickup(proj, player);
+				}
+			}
+		}
 
         void avoid(ai::avoidset& obstacles, const float radius)
         {
@@ -1033,18 +1044,6 @@ namespace game
                     }
                 }
                 rendermodel(proj.model, ANIM_MAPMODEL | ANIM_LOOP, pos, yaw, pitch, proj.roll, cull, NULL, NULL, 0, 0, fade);
-            }
-        }
-
-        void add(ProjEnt& proj)
-        {
-            if (isattackprojectile(proj.projectile))
-            {
-                weapons.add(&proj);
-            }
-            else if (proj.flags & ProjFlag_Item)
-            {
-                items.add(&proj);
             }
         }
 

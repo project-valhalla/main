@@ -134,6 +134,7 @@ enum
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
     N_SHOOT, N_EXPLODE, N_DAMAGEPROJECTILE, N_SUICIDE,
     N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE,
+	N_DROP, N_DROPEVENT, N_PICKUP, N_PICKUPEVENT,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT,
     N_NOTICE, N_ANNOUNCE,
@@ -165,6 +166,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 3, N_CDIS, 2,
     N_SHOOT, 0, N_EXPLODE, 0, N_DAMAGEPROJECTILE, 5, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2,
+	N_DROP, 0, N_DROPEVENT, 10, N_PICKUP, 4, N_PICKUPEVENT, 5,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
     N_NOTICE, 2, N_ANNOUNCE, 1,
@@ -710,7 +712,7 @@ namespace entities
     extern void sendItems(packetbuf &p);
     extern void setSpawn(int i, bool shouldspawn, bool isforced = false);
     extern void teleport(int n, gameent *d);
-    extern void doPickupEffects(const int n, gameent *d);
+    extern void doPickupEffects(const int item, gameent *d);
     extern void doHudPickupEffects(const int type, gameent* d, const bool shouldCheck = true);
     extern void doEntityEffects(const gameent *d, const int sourceEntityId, const bool local, const int targetEntityId = -1);
     extern void resetTriggers();
@@ -864,7 +866,7 @@ namespace game
 
         extern void update(const int time);
         extern void updatelights();
-        extern void add(ProjEnt& proj);
+		extern void checkItems(gameent* player, const vec& origin, const int radius);
         extern void remove(ProjEnt& proj);
         extern void reset(gameent* owner = NULL);
         extern void render();
@@ -879,8 +881,7 @@ namespace game
         extern void avoid(ai::avoidset& obstacles, const float radius);
         extern void explode(gameent* owner, const int attack, const vec& position, const vec& velocity);
         extern void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays);
-        extern void damage(ProjEnt* proj, gameent* actor, const int attack);
-        extern void pick(ProjEnt* proj, const int type, gameent* player);
+        extern void damage(ProjEnt* proj, gameent* actor = nullptr, const int attack = ATK_INVALID);
 
         extern ProjEnt* getprojectile(const int id, gameent* owner);
     }
@@ -945,6 +946,7 @@ namespace game
     extern void dropItems(gameent* d);
     extern void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal);
     extern void hit(dynent* target, gameent* actor, const vec& hitPosition, const vec& velocity, int damage, const int atk, const float dist, const int rays = 1, const int flags = Hit_Torso);
+	extern void drop(gameent* owner, const int item, const int id = -1, vec from = vec(0, 0, 0), vec to = vec(0, 0, 0), const bool isLocal = true);
 
     extern float intersectdist;
 

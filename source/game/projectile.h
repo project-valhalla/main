@@ -22,7 +22,7 @@ enum
 };
 inline bool isvalidprojectile(int type)
 { 
-    return type >= 0 && type < Projectile_Max;
+    return type > Projectile_Invalid && type < Projectile_Max;
 }
 
 #include "weapon.h"

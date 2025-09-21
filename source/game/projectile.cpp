@@ -476,9 +476,9 @@ namespace game
             applyradialeffect(position, velocity, owner, NULL, attack, 0);
         }
 
-        void destroyserverprojectile(gameent* d, const int id, const int attack)
+        void destroyserverprojectile(gameent* owner, const int id, const int attack)
         {
-            if (!d || !validatk(attack))
+            if (!owner)
             {
                 return;
             }
@@ -487,23 +487,39 @@ namespace game
                 loopv(all)
                 {
                     ProjEnt& proj = *all[i];
-                    if (!validatk(proj.attack) || proj.isLocal)
+                    if (isattackprojectile(proj.projectile) && validatk(attack))
                     {
-                        continue;
+                        if (!validatk(proj.attack) || proj.isLocal)
+                        {
+                            continue;
+                        }
+                        if (proj.attack != attack)
+                        {
+                            proj.attack = attack;
+                        }
+                        if (proj.owner == owner && proj.id == id)
+                        {
+                            const vec pos = proj.flags & ProjFlag_Bounce ?
+                                proj.offsetPosition() :
+                                vec(proj.offset).mul(proj.offsetMillis / float(OFFSET_MILLIS)).add(proj.o);
+                            explodeprojectile(proj, pos, proj.isLocal);
+                            remove(proj);
+                            delete all.remove(i);
+                            break;
+                        }
                     }
-                    if (proj.attack != attack)
+                    else if (proj.flags & ProjFlag_Item)
                     {
-                        proj.attack = attack;
-                    }
-                    if (proj.owner == d && proj.id == id)
-                    {
-                        const vec pos = proj.flags & ProjFlag_Bounce ?
-                                        proj.offsetPosition() :
-                                        vec(proj.offset).mul(proj.offsetMillis / float(OFFSET_MILLIS)).add(proj.o);
-                        explodeprojectile(proj, pos, proj.isLocal);
-                        remove(proj);
-                        delete all.remove(i);
-                        break;
+                        if (proj.isLocal)
+                        {
+                            continue;
+                        }
+                        if (proj.owner == owner && proj.id == id)
+                        {
+                            remove(proj);
+                            delete all.remove(i);
+                            break;
+                        }
                     }
                 }
             }
@@ -559,10 +575,11 @@ namespace game
                 proj->attack = projs[proj->projectile].attack;
                 proj->kill(true);
             }
-			else
-			{
-				proj->kill();
-			}
+            else
+            {
+                proj->isActive = false;
+                proj->kill();
+            }
         }
 
         void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays)
@@ -846,8 +863,16 @@ namespace game
                         explodeprojectile(proj, pos, proj.isLocal);
                         if (proj.isLocal)
                         {
-                            addmsg(N_EXPLODE, "rci3iv", proj.owner, lastmillis - maptime, proj.attack, proj.id, hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf());
+                            addmsg
+                            (
+                                N_EXPLODE, "rci3iv", proj.owner, lastmillis - maptime, proj.attack, proj.id,
+                                hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf()
+                            );
                         }
+                    }
+                    else if (proj.flags & ProjFlag_Item)
+                    {
+                        addmsg(N_DESTROY, "rci2", proj.owner, lastmillis - maptime, proj.id);
                     }
                     remove(proj);
                     delete all.remove(i--);
@@ -873,7 +898,7 @@ namespace game
             loopv(all)
             {
                 ProjEnt& proj = *all[i];
-                if (proj.flags & ProjFlag_Junk)
+                if (proj.flags & ProjFlag_Junk || !proj.isActive)
                 {
                     continue;
                 }
@@ -922,21 +947,25 @@ namespace game
 
         void tryPickup(ProjEnt& proj, gameent* player)
         {
-			addmsg(N_PICKUP, "rci3", player, proj.id, proj.item, proj.owner->clientnum);
+            addmsg(N_PICKUP, "rci3", player, proj.id, proj.item, proj.owner->clientnum);
         }
 
-		void checkItems(gameent* player, const vec& origin, const int radius)
-		{
-			loopv(items)
-			{
-				ProjEnt& proj = *projectiles::items[i];
-				const float distance = proj.o.dist(origin);
-				if (distance < radius)
-				{
-					tryPickup(proj, player);
-				}
-			}
-		}
+        void checkItems(gameent* player, const vec& origin, const int radius)
+        {
+            loopv(items)
+            {
+                ProjEnt& proj = *projectiles::items[i];
+                if (!proj.isActive)
+                {
+                    continue;
+                }
+                const float distance = proj.o.dist(origin);
+                if (distance < radius)
+                {
+                    tryPickup(proj, player);
+                }
+            }
+        }
 
         void avoid(ai::avoidset& obstacles, const float radius)
         {
@@ -1029,7 +1058,7 @@ namespace game
             loopv(all)
             {
                 ProjEnt& proj = *all[i];
-                if (!proj.model[0])
+                if (!proj.model[0] || !proj.isActive)
                 {
                     continue;
                 }

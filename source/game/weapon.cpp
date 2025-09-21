@@ -1454,73 +1454,73 @@ namespace game
         }
     }
 
-	int getItem(const int weapon)
-	{
-		int item = I_AMMO_GRENADE;
-		if (validgun(weapon))
-		{
-			switch (weapon)
-			{
-				case GUN_SCATTER:
-					item = I_AMMO_SG;
-					break;
+    int getItem(const int weapon)
+    {
+        int item = I_AMMO_GRENADE;
+        if (validgun(weapon))
+        {
+            switch (weapon)
+            {
+                case GUN_SCATTER:
+                    item = I_AMMO_SG;
+                    break;
 
-				case GUN_SMG:
-					item = I_AMMO_SMG;
-					break;
+                case GUN_SMG:
+                    item = I_AMMO_SMG;
+                    break;
 
-				case GUN_PULSE:
-					item = I_AMMO_PULSE;
-					break;
+                case GUN_PULSE:
+                    item = I_AMMO_PULSE;
+                    break;
 
-				case GUN_RAIL:
-					item = I_AMMO_RAIL;
-					break;
+                case GUN_RAIL:
+                    item = I_AMMO_RAIL;
+                    break;
 
-				case GUN_ROCKET:
-					item = I_AMMO_RL;
-					break;
+                case GUN_ROCKET:
+                    item = I_AMMO_RL;
+                    break;
 
-				default:
-					return -1;
-			}
-		}
-		return item;
-	}
+                default:
+                    return -1;
+            }
+        }
+        return item;
+    }
 
     void drop(gameent* owner, const int item, const int id, vec from, vec to, const bool isLocal)
     {
-        if (intermission || !validitem(item))
+        if (intermission || !owner || !validitem(item))
         {
             return;
         }
-		if (isLocal)
-		{
-			const int weapon = owner->gunselect;
-			if (!owner->ammo[weapon] || owner->delay[weapon])
-			{
-				return;
-			}
-			to = worldpos;
-			const float distance = owner->o.dist(to);
-			to.z += distance / 4;
-			const vec from = owner->hand.x >= 0 ? owner->hand : owner->o;
-			const int id = lastmillis - maptime;
-			projectiles::makeItem(owner, from, to, isLocal, id, item);
-			addmsg
-			(
-				N_DROP, "rci8", self, id, item,
-				static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
-				static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF)
-			);
-			owner->ammo[weapon] = 0;
-			weaponswitch(owner);
-		}
-		else
-		{
-			projectiles::makeItem(owner, from, to, isLocal, id, item);
-			//owner->ammo[WEAPON] = 0;
-		}
+        if (isLocal)
+        {
+            const int weapon = owner->gunselect;
+            if (!owner->ammo[weapon] || owner->delay[weapon])
+            {
+                return;
+            }
+            to = worldpos;
+            const float distance = owner->o.dist(to);
+            to.z += distance / 4;
+            const vec from = owner->hand.x >= 0 ? owner->hand : owner->o;
+            const int id = lastmillis - maptime;
+            projectiles::makeItem(owner, from, to, isLocal, id, item);
+            addmsg
+            (
+                N_DROP, "rci8", self, id, item,
+                static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
+                static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF)
+            );
+            owner->ammo[weapon] = 0;
+            weaponswitch(owner);
+        }
+        else
+        {
+            projectiles::makeItem(owner, from, to, isLocal, id, item);
+            //owner->ammo[WEAPON] = 0;
+        }
     }
     ICOMMAND(drop, "", (), drop(self, getItem(self->gunselect)));
 

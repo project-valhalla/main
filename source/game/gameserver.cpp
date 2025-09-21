@@ -91,21 +91,30 @@ namespace server
         void process(clientinfo *ci);
     };
 
-	struct dropevent : timedevent
-	{
-		int id, item;
-		vec from, to;
+    struct destroyevent : timedevent
+    {
+        int id;
 
-		void process(clientinfo* ci);
-	};
+        bool keepable() const { return true; }
 
-	struct pickevent: timedevent
-	{
-		int item, id;
-		clientinfo* owner;
+        void process(clientinfo* ci);
+    };
 
-		void process(clientinfo* ci);
-	};
+    struct dropevent : timedevent
+    {
+        int id, item;
+        vec from, to;
+
+        void process(clientinfo* ci);
+    };
+
+    struct pickevent: timedevent
+    {
+        int item, id;
+        clientinfo* owner;
+
+        void process(clientinfo* ci);
+    };
 
     struct pickupevent : gameevent
     {
@@ -118,38 +127,33 @@ namespace server
     {
         int id;
         int projectile;
-		int attack, item;
+        int attack, item;
         int flags;
-        bool isDestroyed;
+        bool isActive;
 
         clientinfo* killer = NULL;
 
-        Projectile(const int id, const int projectile, const int attack = ATK_INVALID, const int item = ET_EMPTY) : id(id), projectile(projectile), attack(attack)
+        Projectile(const int id, const int projectile, const int attack = ATK_INVALID, const int item = ET_EMPTY) : id(id), projectile(projectile), attack(attack), item(item)
         {
-            set();
+            this->flags = projs[projectile].flags;
+            isActive = false;
         }
         ~Projectile()
         {
         }
 
-        void set()
-        {
-            this->flags = projs[projectile].flags;
-            isDestroyed = false;
-        }
-
         void kill(clientinfo* actor = NULL)
         {
-            if (isDestroyed)
+            if (!isActive)
             {
                 return;
             }
             if (actor)
             {
                 killer = actor;
-				attack = projs[projectile].attack;
+                attack = projs[projectile].attack;
             }
-            isDestroyed = true;
+            isActive = false;
         }
     };
 
@@ -188,13 +192,13 @@ namespace server
             {
                 return;
             }
-            projectiles.add(Projectile(id, projectile, attack));
+            projectiles.add(Projectile(id, projectile, attack, ET_EMPTY));
         }
 
-		void addItem(const int id, const int item)
-		{
-			projectiles.add(Projectile(id, Projectile_Item, ATK_INVALID, item));
-		}
+        void addItem(const int id, const int item)
+        {
+            projectiles.add(Projectile(id, Projectile_Item, ATK_INVALID, item));
+        }
 
         bool remove(const int id)
         {
@@ -231,7 +235,7 @@ namespace server
             {
                 return;
             }
-            if (proj->isDestroyed)
+            if (!proj->isActive)
             {
                 /* If the projectile has been killed,
                  * we need to update its context to reward the actor.
@@ -1844,7 +1848,7 @@ namespace server
     } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVMSG,
                 N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_DAMAGEPROJECTILE, N_REGENERATE,
                 N_DIED, N_SPAWNSTATE, N_FORCEDEATH,
-				N_DROPEVENT, N_PICKUPEVENT,
+                N_DROPEVENT, N_PICKUPEVENT,
                 N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP,
                 N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME,
                 N_NOTICE, N_ANNOUNCE, N_SENDDEMOLIST, N_SENDDEMO, N_DEMOPLAYBACK, N_SENDMAP,
@@ -3209,7 +3213,7 @@ namespace server
             return;
         }
         Projectile* proj = target->state.projectiles.get(id);
-        if (!proj || !isvalidprojectile(proj->projectile) || proj->isDestroyed || proj->flags & ProjFlag_Invincible)
+        if (!proj || !isvalidprojectile(proj->projectile) || !proj->isActive || proj->flags & ProjFlag_Invincible)
         {
             return;
         }
@@ -3448,62 +3452,71 @@ namespace server
             isHit = true;
         }
         sendf
-		(
-			-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, attack, id,
-			static_cast<int>(isHit), static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
-			static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF),
-			ci->ownernum
-		);
+        (
+            -1, 1, "rii9ix", N_SHOTFX, ci->clientnum, attack, id,
+            static_cast<int>(isHit), static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
+            static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF),
+            ci->ownernum
+        );
     }
 
-	void dropevent::process(clientinfo* ci)
-	{
-		if (!ci->state.isalive(gamemillis) || !validitem(item))
-		{
-			return;
-		}
-		itemstat& itemInfo = itemstats[item - I_AMMO_SG];
-		const int weapon = itemInfo.info;
-		if (!ci->state.ammo[weapon])
-		{
-			return;
-		}
-		else
-		{
-			ci->state.ammo[weapon] = 0;
-		}
-		ci->state.projectiles.addItem(id, item);
-		sendf
-		(
-			-1, 1, "ri4i6x", N_DROPEVENT, ci->clientnum, id, item,
-			static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
-			static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF),
-			ci->ownernum
-		);
-	}
+    void destroyevent::process(clientinfo* ci)
+    {
+        if (!ci->state.projectiles.remove(id))
+        {
+            return;
+        }
+        sendf(-1, 1, "ri3x", N_EXPLODEFX, ci->clientnum, id, ATK_INVALID, ci->ownernum);
+    }
 
-	void pickevent::process(clientinfo* ci)
-	{
-		if
-		(
-			!ci->state.isalive(gamemillis) || !validitem(item) || !allowpickup() ||
-			(gamelimit && m_timed && gamemillis >= gamelimit) || !owner
-		)
-		{
-			return;
-		}
-		Projectile* proj = owner->state.projectiles.get(id);
-		if
-		(
-			!proj || !isvalidprojectile(proj->projectile) || proj->isDestroyed // || proj->item != item
-		)
-		{
-			return;
-		}
-		proj->kill();
-		ci->state.pickup(item);
-		sendf(-1, 1, "ri5", N_PICKUPEVENT, id, ci->clientnum, owner->clientnum, item);
-	}
+    void dropevent::process(clientinfo* ci)
+    {
+        if (!ci->state.isalive(gamemillis) || !validitem(item))
+        {
+            return;
+        }
+        itemstat& itemInfo = itemstats[item - I_AMMO_SG];
+        const int weapon = itemInfo.info;
+        if (!ci->state.ammo[weapon])
+        {
+            return;
+        }
+        else
+        {
+            ci->state.ammo[weapon] = 0;
+        }
+        ci->state.projectiles.addItem(id, item);
+        sendf
+        (
+            -1, 1, "ri4i6x", N_DROPEVENT, ci->clientnum, id, item,
+            static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
+            static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF),
+            ci->ownernum
+        );
+    }
+
+    void pickevent::process(clientinfo* ci)
+    {
+        if
+        (
+            !ci->state.isalive(gamemillis) || !validitem(item) || !allowpickup() ||
+            (gamelimit && m_timed && gamemillis >= gamelimit) || !owner
+        )
+        {
+            return;
+        }
+        Projectile* proj = owner->state.projectiles.get(id);
+        if
+        (
+            !proj || !isvalidprojectile(proj->projectile) || proj->item != item || !proj->isActive
+        )
+        {
+            return;
+        }
+        proj->kill();
+        ci->state.pickup(item);
+        sendf(-1, 1, "ri5", N_PICKUPEVENT, id, ci->clientnum, owner->clientnum, item);
+    }
 
     void pickupevent::process(clientinfo *ci)
     {
@@ -4525,19 +4538,36 @@ namespace server
                 break;
             }
 
-			case N_DROP:
-			{
-				dropevent* drop = new dropevent;
+            case N_DESTROY:
+            {
+                destroyevent* destroy = new destroyevent;
+                const int millis = getint(p);
+                destroy->millis = cq ? cq->geteventmillis(gamemillis, millis) : 0;
+                destroy->id = getint(p);
+                if (cq)
+                {
+                    cq->addevent(destroy);
+                }
+                else
+                {
+                    delete destroy;
+                }
+                break;
+            }
+
+            case N_DROP:
+            {
+                dropevent* drop = new dropevent;
                 drop->id = getint(p);
-				drop->millis = cq ? cq->geteventmillis(gamemillis, drop->id) : 0;
-				drop->item = getint(p);
+                drop->millis = cq ? cq->geteventmillis(gamemillis, drop->id) : 0;
+                drop->item = getint(p);
                 loopk(3)
                 {
                     drop->from[k] = getint(p) / DMF;
                 }
                 loopk(3)
                 {
-					drop->to[k] = getint(p) / DMF;
+                    drop->to[k] = getint(p) / DMF;
                 }
                 if (cq)
                 {
@@ -4548,25 +4578,25 @@ namespace server
                     delete drop;
                 }
                 break;
-			}
+            }
 
-			case N_PICKUP:
-			{
-				const int id = getint(p);
-				const int item = getint(p);
-				const int ownerClient = getint(p);
-				if (!cq)
-				{
-					break;
-				}
-				pickevent* pick = new pickevent;
-				pick->id = id;
-				pick->millis = cq ? cq->geteventmillis(gamemillis, pick->id) : 0;
-				pick->item = item;
-				pick->owner = getinfo(ownerClient);
-				cq->addevent(pick);
-				break;
-			}
+            case N_PICKUP:
+            {
+                const int id = getint(p);
+                const int item = getint(p);
+                const int ownerClient = getint(p);
+                if (!cq)
+                {
+                    break;
+                }
+                pickevent* pick = new pickevent;
+                pick->id = id;
+                pick->millis = cq ? cq->geteventmillis(gamemillis, pick->id) : 0;
+                pick->item = item;
+                pick->owner = getinfo(ownerClient);
+                cq->addevent(pick);
+                break;
+            }
 
             case N_ITEMPICKUP:
             {

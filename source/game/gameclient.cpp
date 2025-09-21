@@ -2072,42 +2072,38 @@ namespace game
                 break;
             }
 
-			case N_DROPEVENT:
-			{
-				const int ownerClient = getint(p);
-				const int id = getint(p);
-				const int item = getint(p);
-				vec from, to;
-				loopk(3)
-				{
-					from[k] = getint(p) / DMF;
-				}
-				loopk(3)
-				{
-					to[k] = getint(p) / DMF;
-				}
-				gameent* owner = getclient(ownerClient);
-				if (!owner || !validitem(item))
-				{
-					break;
-				}
-				drop(owner, item, id, from, to, false);
-				break;
-			}
+            case N_DROPEVENT:
+            {
+                const int ownerClient = getint(p);
+                const int id = getint(p);
+                const int item = getint(p);
+                vec from, to;
+                loopk(3)
+                {
+                    from[k] = getint(p) / DMF;
+                }
+                loopk(3)
+                {
+                    to[k] = getint(p) / DMF;
+                }
+                gameent* owner = getclient(ownerClient);
+                drop(owner, item, id, from, to, false);
+                break;
+            }
 
-			case N_PICKUPEVENT:
-			{
-				const int id = getint(p);
-				const int client = getint(p);
-				const int ownerClient = getint(p);
-				const int item = getint(p);
-				gameent* player = getclient(client);
-				gameent* owner = getclient(ownerClient);
-				ProjEnt* proj = projectiles::getprojectile(id, owner);
-				projectiles::damage(proj);
-				entities::doPickupEffects(item, player);
-				break;
-			}
+            case N_PICKUPEVENT:
+            {
+                const int id = getint(p);
+                const int client = getint(p);
+                const int ownerClient = getint(p);
+                const int item = getint(p);
+                gameent* player = getclient(client);
+                gameent* owner = getclient(ownerClient);
+                ProjEnt* proj = projectiles::getprojectile(id, owner);
+                projectiles::damage(proj);
+                entities::doPickupEffects(item, player);
+                break;
+            }
 
             case N_DAMAGEPROJECTILE:
             {
@@ -2201,14 +2197,14 @@ namespace game
             {
                 int id = getint(p), cn = getint(p);
                 gameent *d = getclient(cn);
-				if (!entities::ents.inrange(id))
-				{
-					break;
-				}
-				if (entities::ents[id]->spawned())
-				{
-					entities::ents[id]->clearspawned();
-				}
+                if (!entities::ents.inrange(id))
+                {
+                    break;
+                }
+                if (entities::ents[id]->spawned())
+                {
+                    entities::ents[id]->clearspawned();
+                }
                 entities::doPickupEffects(entities::ents[id]->type, d);
                 break;
             }

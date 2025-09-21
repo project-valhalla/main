@@ -243,7 +243,7 @@ struct ProjEnt : dynent
     int attack, hitFlags, item;
 
     float lastYaw, gravity, elasticity, offsetHeight, dist;
-    bool isLocal;
+    bool isLocal, isActive;
     string model;
     vec offset, lastPosition, dv, from, to;
     gameent* owner;
@@ -257,6 +257,7 @@ struct ProjEnt : dynent
         model[0] = 0;
         offset = lastPosition = dv = from = to = vec(0, 0, 0);
         owner = NULL;
+        isActive = true;
     }
     ~ProjEnt()
     {
@@ -265,15 +266,6 @@ struct ProjEnt : dynent
             stopsound(loopSound, loopChannel);
         }
         loopSound = loopChannel = -1;
-    }
-
-    void setVariant()
-    {
-        const int variants = projs[projectile].variants;
-        if (variants > 0)
-        {
-            variant = rnd(variants);
-        }
     }
 
     void limitOffset()
@@ -357,6 +349,15 @@ struct ProjEnt : dynent
         const float radius = projs[projectile].radius;
         this->radius = radius;
         xradius = yradius = eyeheight = aboveeye = this->radius;
+    }
+
+    void setVariant()
+    {
+        const int variants = projs[projectile].variants;
+        if (variants > 0)
+        {
+            variant = rnd(variants);
+        }
     }
 
     void checkLiquid()

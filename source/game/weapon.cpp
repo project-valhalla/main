@@ -312,6 +312,7 @@ namespace game
                 if (autoswitch && !d->ammo[gun])
                 {
                     weaponswitch(d);
+                    d->attacking = ACT_IDLE; // Cancel the attack since we are switching weapons.
                 }
             }
             return;

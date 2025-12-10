@@ -512,7 +512,7 @@ namespace physics
         {
             speed += ((float)d->powerupmillis) / 1000.0f;
         }
-        else if (d->role == ROLE_ZOMBIE || d->role == ROLE_BERSERKER)
+        else if (d->role == ROLE_BERSERKER)
         {
             speed += 10.0f; // Speed bonus.
         }

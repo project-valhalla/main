@@ -2509,11 +2509,20 @@ namespace game
                 int cn = getint(p), gun = getint(p);
                 vooshgun = gun;
                 gameent *d = getclient(cn);
-                if(!d) return;
-                d->voosh(gun);
-                doweaponchangeffects(d, gun);
-                d->lastswitchattempt = lastmillis;
-                if(d == self) playsound(S_VOOSH);
+                if (!d)
+                {
+                    return;
+                }
+                if (d->role != ROLE_ZOMBIE)
+                {
+                    d->voosh(gun);
+                    doweaponchangeffects(d, gun);
+                    d->lastswitchattempt = lastmillis;
+                }
+                if (d == self)
+                {
+                    playsound(S_VOOSH);
+                }
                 break;
             }
 

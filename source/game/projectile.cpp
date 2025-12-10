@@ -322,6 +322,10 @@ namespace game
                     {
                         particle_flare(v, v, 600, PART_EXPLODE1, explosioncolor, 50.0f, NULL, 40.0f);
                     }
+                    else
+                    {
+                        particle_flare(v, v, 200, PART_RING, explosioncolor, 0.0f, NULL, 18.0f);
+                    }
                     break;
                 }
                 default: break;

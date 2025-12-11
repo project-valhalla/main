@@ -498,9 +498,10 @@ struct gameent : dynent, gamestate
     int clientnum, privilege, lastupdate, plag, ping;
     int lifesequence;                   // sequence id for each respawn, used in damage test
     int respawned, suicided;
-	int lastpain, lasthurt, lastspawn, lastthrow;
+    int lastpain, lasthurt, lastspawn, lastthrow;
     int lastaction[NUMGUNS];
     int lastattack, lastattacker, lasthit, lastkill;
+    int lastWeaponUsed;
     int deathstate;
     int attacking;
     int lasttaunt, lastfootstep, lastyelp, lastswitch, lastswitchattempt, lastroll;
@@ -621,6 +622,7 @@ struct gameent : dynent, gamestate
         flagpickup = 0;
         lastnode = -1;
         lasthit = lastkill = 0;
+        lastWeaponUsed = GUN_INVALID;
         respawnqueued = false;
         recoil = 0;
         for (int i = 0; i < NUMGUNS; i++)

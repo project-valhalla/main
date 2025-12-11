@@ -1241,6 +1241,7 @@ namespace game
         {
             return;
         }
+        d->lastWeaponUsed = d->gunselect;
         addmsg(N_GUNSELECT, "rci", d, gun);
         d->gunselect = gun;
         d->lastattack = ATK_INVALID;
@@ -1313,6 +1314,27 @@ namespace game
         }
     }
     ICOMMAND(nextweapon, "ii", (int* dir, int* force), nextweapon(*dir, *force != 0));
+
+    // Select the last weapon used, or the previous weapon in the wheel if no ammo for last weapon.
+    void selectPreviousWeapon()
+    {
+        if (self->state != CS_ALIVE)
+        {
+            return;
+        }
+        const int weapon = self->lastWeaponUsed; // Try to select the last weapon used first.
+        if (!validgun(self->lastWeaponUsed) || !self->ammo[weapon])
+        {
+            // Select a weapon in the wheel.
+            const int direction = -1; // -1 for previous weapon in the wheel.
+            nextweapon(direction);
+        }
+        else
+        {
+            gunselect(weapon, self);
+        }
+    }
+    ICOMMAND(previousweapon, "", (), selectPreviousWeapon());
 
     int getweapon(const char* name)
     {

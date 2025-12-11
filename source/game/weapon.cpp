@@ -1338,7 +1338,7 @@ namespace game
             gunselect(weapon, self);
         }
     }
-    ICOMMAND(previousweapon, "", (), selectPreviousWeapon());
+    ICOMMAND(lastweapon, "", (), selectPreviousWeapon());
 
     void selectRelatedWeapon()
     {

@@ -1323,6 +1323,10 @@ namespace game
             return;
         }
         const int weapon = self->lastWeaponUsed; // Try to select the last weapon used first.
+        if (weapon == self->gunselect)
+        {
+            return;
+        }
         if (!validgun(self->lastWeaponUsed) || !self->ammo[weapon])
         {
             // Select a weapon in the wheel.
@@ -1335,6 +1339,44 @@ namespace game
         }
     }
     ICOMMAND(previousweapon, "", (), selectPreviousWeapon());
+
+    void selectRelatedWeapon()
+    {
+        if (self->state != CS_ALIVE)
+        {
+            return;
+        }
+        struct RelatedWeapon
+        {
+            const int from;
+            const int to;
+        };
+        static const RelatedWeapon related[] =
+        {
+            { GUN_SMG,     GUN_SCATTER },
+            { GUN_SCATTER, GUN_SMG     },
+            { GUN_PULSE,   GUN_ROCKET  },
+            { GUN_PISTOL,  GUN_RAIL    },
+            { GUN_ROCKET,  GUN_PULSE   },
+            { GUN_RAIL,    GUN_SCATTER }
+        };
+        const size_t relatedSize = sizeof(related) / sizeof(related[0]);
+        int weapon = GUN_INVALID;
+        for (size_t i = 0; i < relatedSize; ++i)
+        {
+            if (related[i].from == self->gunselect)
+            {
+                weapon = related[i].to;
+                break;
+            }
+        }
+        if (!validgun(weapon) || weapon == self->gunselect)
+        {
+            return;
+        }
+        gunselect(weapon, self);
+    }
+    ICOMMAND(relatedweapon, "", (), selectRelatedWeapon());
 
     int getweapon(const char* name)
     {

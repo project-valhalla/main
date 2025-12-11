@@ -258,8 +258,7 @@ struct ctfclientmode : clientmode
         {
             if(checkovertime()) return;
             startintermission();
-            defformatstring(win, "%s%s \fs\f2team reached the score limit\fr", teamtextcode[team], teamnames[team]);
-            sendf(-1, 1, "ri2s", N_ANNOUNCE, NULL, win);
+            sendservmsgf("%s%s \fs\f2team reached the score limit\fr", teamtextcode[team], teamnames[team]);
         }
     }
 

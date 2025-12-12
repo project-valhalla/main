@@ -125,7 +125,7 @@ static const struct attackinfo
     { GUN_RAIL,    ACT_PRIMARY,     Projectile_Bullet, 1200,  70, 30,   0, 0, 2000, 30, 4096,  1,  100,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN, Death_Default   },
     { GUN_RAIL,    ACT_SECONDARY,   Projectile_Bullet, 1500, 100, 10,   0, 0, 2000, 50, 4096,  1,  100,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN, Death_Default   },
     // grenade launcher
-    { GUN_INVALID, ACT_THROW,      Projectile_Grenade, 1000,  90,  0,   0, 0,  200,  0, 2048,  1,  140, 45, 1500, 0, 0.6f, 0.9f, false, ANIM_THROW, ANIM_VWEP_THROW, ANIM_GUN_THROW,     S_THROW,         S_GRENADE_EXPLODE, S_HIT_WEAPON,  Death_Explosion },
+    { GUN_INVALID, ACT_THROW,      Projectile_Grenade, 1000,  90,  0,   0, 0,  200,  0, 2048,  1,  140, 45, 1500, 0, 0.6f, 0.8f, false, ANIM_THROW, ANIM_VWEP_THROW, ANIM_GUN_THROW,     S_THROW,         S_GRENADE_EXPLODE, S_HIT_WEAPON,  Death_Explosion },
     { GUN_INVALID, ACT_IDLE,       Projectile_Invalid,    0, 100,  0,   0, 0,    0,  0, 2048,  1,  160, 50,    0, 0,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_INVALID,       S_GRENADE_EXPLODE, S_HIT_WEAPON,  Death_Explosion },
     // pistol
     { GUN_PISTOL,  ACT_PRIMARY,     Projectile_Bullet,  300,  18, 17,  60, 0, 1800, 12, 1024,  1,  180,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_PISTOL1,       S_IMPACT_PULSE,    S_HIT_WEAPON,  Death_Default   },

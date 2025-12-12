@@ -260,10 +260,15 @@ namespace game
 
     VARP(autoswitch, 0, 1, 1);
 
-    void shoot(gameent *d, const vec &targ)
+    void shoot(gameent* d, const vec& targ)
     {
-        if (d->lastthrow && lastmillis - d->lastthrow <= GUN_THROW_DELAY)
+        if
+        (
+            lastmillis - d->lastswitch < 500 ||
+            (d->lastthrow && lastmillis - d->lastthrow <= GUN_THROW_DELAY)
+        )
         {
+            // Add a small delay after switching weapons before allowing shooting.
             // If we are throwing, then prevent the user from firing or throwing again.
             return;
         }

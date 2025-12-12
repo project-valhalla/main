@@ -521,7 +521,8 @@ namespace physics
 
     inline bool canjump(gameent* d)
     {
-        return d->physstate >= PHYS_SLOPE || ((d->haspowerup(PU_AGILITY) || d->role == ROLE_ZOMBIE || d->role == ROLE_BERSERKER) && !d->doublejumping);
+        return d->physstate >= PHYS_SLOPE || d->climbing ||
+               ((d->haspowerup(PU_AGILITY) || d->role == ROLE_ZOMBIE || d->role == ROLE_BERSERKER) && !d->doublejumping);
     }
 
     const float VELOCITY_JUMP = 135.0f;

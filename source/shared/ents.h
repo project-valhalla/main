@@ -119,7 +119,7 @@ struct physent // base entity type, can be affected by physics
 
     int inwater;
     bool jumping, doublejumping, climbing;
-    char move, strafe, crouching;
+    char move, strafe, crouching, zooming;
 
     uchar physstate;                            // one of PHYS_* above
     uchar state, editstate;                     // one of CS_* above
@@ -149,7 +149,7 @@ struct physent // base entity type, can be affected by physics
         timeinair = 0;
         eyeheight = maxheight;
         jumping = doublejumping = climbing = false;
-        strafe = move = crouching = 0;
+        strafe = move = crouching = zooming = 0;
         physstate = PHYS_FALL;
         vel = falling = vec(0, 0, 0);
         floor = vec(0, 0, 1);

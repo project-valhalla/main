@@ -358,11 +358,18 @@ namespace game
             if (zoom > 0)
             {
                 progress = zoominvel ? min(progress + float(elapsedtime) / zoominvel, 1.0f) : 1;
+                if (progress >= 1)
+                {
+                    self->zooming = 1;
+                }
             }
             else
             {
                 progress = zoomoutvel ? max(progress - float(elapsedtime) / zoomoutvel, 0.0f) : 0;
-                if (progress <= 0) zoom = 0;
+                if (progress <= 0)
+                {
+                    zoom = self->zooming = 0;
+                }
             }
             curfov = (zoomfov * progress + camerafov * (1 - progress)) * camera.fov;
             curavatarfov = (avatarzoomfov * progress + avatarfov * (1 - progress)) * camera.fov;

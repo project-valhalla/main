@@ -526,7 +526,8 @@ namespace physics
 
     const float VELOCITY_JUMP = 135.0f;
     const float VELOCITY_CROUCH = 0.4f;
-    const float VELOCITY_LADDER = 0.7f;
+    const float VELOCITY_ZOOM = 0.5f;
+    const float VELOCITY_CLIMB = 0.7f;
     const float VELOCITY_WATER_DAMP = 8.0f;
 
     VAR(floatspeed, 1, 100, 10000);
@@ -631,9 +632,13 @@ namespace physics
             {
                 dir.mul(VELOCITY_CROUCH);
             }
+            else if (d->zooming)
+            {
+                dir.mul(VELOCITY_ZOOM);
+            }
             else if (d->climbing)
             {
-                dir.mul(VELOCITY_LADDER);
+                dir.mul(VELOCITY_CLIMB);
             }
             else if (!isinwater)
             {

@@ -114,7 +114,7 @@ static const struct attackinfo
     { GUN_SCATTER, ACT_SECONDARY,  Projectile_Invalid, 1000,   6,  5, 120, 0,    0, 28, 1024, 10,   60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
     // smg
     { GUN_SMG,     ACT_PRIMARY,     Projectile_Bullet,  110,  16, 14,  85, 0, 2000,  7, 1024,  1,   60,  0,  500, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
-    { GUN_SMG,     ACT_SECONDARY,  Projectile_Invalid,  160,  17, 15,  30, 0,    0, 14, 1024,  1,   80,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
+    { GUN_SMG,     ACT_SECONDARY,  Projectile_Invalid,  125,  20, 15,  30, 0,    0, 14, 1024,  1,   80,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
     // pulse
     { GUN_PULSE,   ACT_PRIMARY,      Projectile_Pulse,  180,  22,  0,   0, 1, 1000,  8, 2048,  1,   80, 18, 3000, 2,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_PULSE1,        S_PULSE_EXPLODE,   S_HIT_WEAPON,  Death_Explosion },
     { GUN_PULSE,   ACT_SECONDARY,  Projectile_Invalid,   80,  14,  0,   0, 0,    0,  0,  200,  1,  150,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_PULSE2_A,      S_IMPACT_PULSE,    S_HIT_WEAPON,  Death_Shock     },

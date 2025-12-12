@@ -925,7 +925,14 @@ namespace game
                     }
                     else
                     {
-                        playsound(S_KILL);
+                        if (flags)
+                        {
+                            playsound(S_KILL_SPECIAL);
+                        }
+                        else
+                        {
+                            playsound(S_KILL);
+                        }
                     }
                 }
                 actor->lastkill = lastmillis;

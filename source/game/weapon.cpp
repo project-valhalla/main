@@ -30,8 +30,8 @@ namespace game
         {
             if (shots)
             {
-                const float t = float(shots) / d->recoil.maxShots;
-                const float newSpread = spread + int(recoils[attack].maxSpread * t);
+                const float progress = float(shots) / d->recoil.maxShots;
+                const float newSpread = spread + int(recoils[attack].maxSpread * progress);
                 spread = newSpread;
             }
             if (d->physstate < PHYS_SLOPE)
@@ -162,9 +162,9 @@ namespace game
             const float multiplier = d->crouching && d->crouched() ? 0.75f : 1.0f;
             float pitchKick = pattern.x * recoilScale * multiplier;
             float yawKick = pattern.y * recoilScale * multiplier;
-			const float random = clamp(d->recoil.index / float(patternSize), 0.f, 1.f);
-			yawKick += -0.25f + rndscale(0.25f) * random;
-			pitchKick += -0.1f + rndscale(0.1f) * random;
+            const float random = clamp(d->recoil.index / float(patternSize), 0.f, 1.f);
+            yawKick += -0.25f + rndscale(0.25f) * random;
+            pitchKick += -0.1f + rndscale(0.1f) * random;
 
             // Add the visual Kick directly for responsiveness.
             d->recoil.kick.x += pitchKick;
@@ -173,7 +173,7 @@ namespace game
             d->yaw += yawKick;
         }
         d->recoil.time = lastmillis;
-		d->recoil.recovery = recoils[attack].recoilRecovery;
+        d->recoil.recovery = recoils[attack].recoilRecovery;
 
         // Apply push and camera shake.
         int pushAmount = recoils[attack].push;

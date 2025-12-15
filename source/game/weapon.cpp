@@ -21,6 +21,33 @@ namespace game
 
     vec rays[GUN_MAXRAYS];
 
+    // Calculate the current recoil spread based on player state and weapon.
+    const int getSpread(gameent* d, const int attack)
+    {
+        const int shots = d->recoil.shots;
+        int spread = attacks[attack].spread;
+        if (spread)
+        {
+            if (shots)
+            {
+                const float t = float(shots) / d->recoil.maxShots;
+                const float newSpread = spread + int(recoils[attack].maxSpread * t);
+                spread = newSpread;
+            }
+            if (d->physstate < PHYS_SLOPE)
+            {
+                // Accuracy decreases while in air.
+                spread = int(spread * 1.25f);
+            }
+            else if (d->crouching && d->crouched())
+            {
+                // Accuracy increases while crouched.
+                spread = int(spread * 0.75f);
+            }
+        }
+        return spread;
+    }
+
     void offsetray(const vec &from, const vec &to, int spread, float range, vec &dest, gameent *d)
     {
         vec offset;
@@ -85,8 +112,8 @@ namespace game
         {
             return;
         }
-        const bool isCrouched = d->physstate >= PHYS_SLOPE && d->crouching && d->crouched();
-        if (isCrouched)
+        const bool isCrouched = d->crouching && d->crouched();
+        if (d->physstate >= PHYS_SLOPE || isCrouched)
         {
             return;
         }
@@ -96,7 +123,7 @@ namespace game
 
     void applyMeleePush(gameent* d, const vec& direction, const int attack)
     {
-        const int amount = attacks[attack].recoilamount;
+        const int amount = recoils[attack].push;
         gameent* target = pointatplayer();
         if (target)
         {
@@ -111,39 +138,111 @@ namespace game
         camera::camera.addevent(d, camera::CameraEvent_Shake, amount);
     }
 
+    // Apply recoil effects to the player when firing a weapon.
     void addRecoil(gameent* d, const vec& direction, const int attack)
     {
-        int kickAmount = attacks[attack].recoilamount;
-        if (kickAmount)
+        const int recoilAmount = recoils[attack].recoil;
+        if (recoilAmount)
         {
-            if (d->haspowerup(PU_DAMAGE))
+            // Reset recoil index if enough time has passed since the last shot.
+            const int recoilTime = attacks[attack].attackdelay + GUN_RECOIL_DELAY;
+            if (lastmillis - d->recoil.time > recoilTime)
             {
-                const int recoilPowerupMultiplier = 2;
-                kickAmount *= recoilPowerupMultiplier;
+                d->recoil.index = 0;
             }
-            push(d, direction, kickAmount, -2.5f);
-            d->recoil = kickAmount;
+
+            // Increment shot index, pick pattern entry.
+            const int patternSize = sizeof(recoils[attack].recoilPattern) / sizeof(recoils[attack].recoilPattern[0]);
+            d->recoil.index = min(d->recoil.index + 1, patternSize);
+            const int index = max(0, d->recoil.index - 1);
+            const vec2& pattern = recoils[attack].recoilPattern[min(index, patternSize - 1)];
+
+            // Scale pattern.
+            const float recoilScale = recoilAmount * recoils[attack].recoilScale;
+            const float multiplier = d->crouching && d->crouched() ? 0.75f : 1.0f;
+            float pitchKick = pattern.x * recoilScale * multiplier;
+            float yawKick = pattern.y * recoilScale * multiplier;
+			const float random = clamp(d->recoil.index / float(patternSize), 0.f, 1.f);
+			yawKick += -0.25f + rndscale(0.25f) * random;
+			pitchKick += -0.1f + rndscale(0.1f) * random;
+
+            // Add the visual Kick directly for responsiveness.
+            d->recoil.kick.x += pitchKick;
+            d->recoil.kick.y += yawKick;
+            d->pitch += pitchKick;
+            d->yaw += yawKick;
         }
-        else
+        d->recoil.time = lastmillis;
+		d->recoil.recovery = recoils[attack].recoilRecovery;
+
+        // Apply push and camera shake.
+        int pushAmount = recoils[attack].push;
+        int shakeAmount = recoils[attack].shake;
+        if (d->haspowerup(PU_DAMAGE))
         {
-            const int recoilShake = 40; // Default shake value for weapons with no recoil.
-            kickAmount = recoilShake;
+            const int powerupMultiplier = 2;
+            shakeAmount *= powerupMultiplier;
+            pushAmount *= powerupMultiplier;
         }
-        camera::camera.addevent(d, camera::CameraEvent_Shake, kickAmount);
+        if (shakeAmount)
+        {
+            camera::camera.addevent(d, camera::CameraEvent_Shake, shakeAmount);
+        }
+        if (pushAmount)
+        {
+            push(d, direction, pushAmount, -2.5f);
+        }
     }
 
-    void updaterecoil(gameent* d, int curtime)
+    // Update the player's recoil recovery.
+    void updateRecoil(gameent* d, const int curtime)
     {
-        if (!d->recoil)
+        const float time = curtime / 1000.0f;
+        const vec2 oldKick = d->recoil.kick;
+        const float decay = expf(-d->recoil.recovery * time);
+        d->recoil.kick.mul(decay);
+
+        // Remove recovered portion from actual pitch/yaw.
+        vec2 deltaKick = oldKick;
+        deltaKick.sub(d->recoil.kick);
+        d->pitch -= deltaKick.x;
+        d->yaw -= deltaKick.y;
+
+        // Once the Kick is near zero, reset it (together with the index if necessary).
+        if (fabs(d->recoil.kick.x) < 0.001f && fabs(d->recoil.kick.y) < 0.001f)
+        {
+            d->recoil.kick = vec2(0, 0);
+            const int recoilTime = attacks[d->lastattack].attackdelay + GUN_RECOIL_DELAY;
+            if (lastmillis - d->recoil.time > recoilTime)
+            {
+                // Reset the index, so the next shot restarts the pattern.
+                d->recoil.index = 0;
+            }
+        }
+
+        // Clamp pitch/yaw to valid ranges. 
+        camera::fixrange();
+    }
+
+    // Update the spread based on burst shots.
+    void addSpread(gameent* d, const int attack)
+    {
+        if (!attacks[attack].spread)
         {
             return;
         }
-
-        const float amount = d->recoil * (curtime / 1000.0f);
-        d->pitch += amount;
-        float friction = 4.0f / curtime * 30.0f;
-        d->recoil = d->recoil * (friction - 2.8f) / friction;
-        camera::fixrange();
+        const int recoilTime = attacks[attack].attackdelay + GUN_RECOIL_DELAY;
+        if (lastmillis - d->recoil.lastShot > recoilTime)
+        {
+            // Reset shot count if enough time has passed since the last shot.
+            d->recoil.shots = 0;
+        }
+        else
+        {
+            // Increment shot count up to the maximum.
+            d->recoil.shots = min(d->recoil.shots + 1, d->recoil.maxShots);
+        }
+        d->recoil.lastShot = lastmillis;
     }
 
     void doAttack(gameent* d, const vec& target, const int attack, const int previousAction)
@@ -163,29 +262,25 @@ namespace game
         if (barrier > 0 && barrier < dist && (!shorten || barrier < shorten))
             shorten = barrier;
         if (shorten) to = vec(dir).mul(shorten).add(from);
-
+        const int spread = getSpread(d, attack);
         if (attacks[attack].rays > 1)
         {
             loopi(attacks[attack].rays)
             {
-                offsetray(from, to, attacks[attack].spread, attacks[attack].range, rays[i], d);
+                offsetray(from, to, spread, attacks[attack].range, rays[i], d);
             }
         }
         else if (attacks[attack].spread)
         {
-            offsetray(from, to, attacks[attack].spread, attacks[attack].range, to, d);
+            offsetray(from, to, spread, attacks[attack].range, to, d);
         }
-
         hits.setsize(0);
-
         if (!isattackprojectile(attacks[attack].projectile))
         {
             scanhit(from, to, d, attack);
         }
-
         const int id = lastmillis - maptime;
         shoteffects(attack, from, to, d, true, id, previousAction);
-
         if (d == self || d->ai)
         {
             addmsg(N_SHOOT, "rci2i6iv", d, id, attack,
@@ -193,6 +288,7 @@ namespace game
                 static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF),
                 hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf());
         }
+        addSpread(d, attack);
     }
 
     void applyDelay(gameent* d, const int attack)
@@ -420,7 +516,7 @@ namespace game
         if (self->clientnum >= 0 && self->state == CS_ALIVE)
         {
             shoot(self, worldpos); // Only shoot when connected to a server.
-            updaterecoil(self, curtime);
+            updateRecoil(self, curtime);
             updateThrow();
         }
         projectiles::update(curtime); // Need to do this after the player shoots so bouncers don't end up inside player's BB next frame.

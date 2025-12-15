@@ -508,11 +508,41 @@ struct gameent : dynent, gamestate
     int lastpickup, lastpickupmillis, flagpickup;
     int frags, flags, deaths, points, totaldamage, totalshots, lives, holdingflag;
     editinfo *edit;
-    float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll, recoil;
+    float deltayaw, deltapitch, deltaroll, newyaw, newpitch, newroll;
     int smoothmillis;
     int respawnPoint;
 
     int chan[Chan_Num], chansound[Chan_Num];
+
+    struct Recoil
+    {
+        // Maximum number of shots to apply recoil for (available patterns).
+        const int maxShots = 8;
+
+        int amount = 0;
+        int index = 0;
+        int time = 0;
+        int lastShot = 0;
+        int shots = 0;
+
+        float recoilPitch = 0.0f;
+        float recoilYaw = 0.0f;
+        float recovery = 0.0f;
+
+        vec2 kick = vec2(0, 0);
+
+        void reset()
+        {
+            amount = 0;
+            index = 0;
+            time = lastShot = 0;
+            shots = 0;
+            recoilPitch = recoilYaw = 0.0f;
+            recovery = 0.0f;
+            kick = vec2(0, 0);
+        }
+    };
+    Recoil recoil;
 
     float transparency;
 
@@ -542,7 +572,7 @@ struct gameent : dynent, gamestate
                 lastpain(0), lasthurt(0), lastspawn(0), lastthrow(0),
                 lastfootstep(0), lastyelp(0), lastswitch(0), lastswitchattempt(0), lastroll(0),
                 frags(0), flags(0), deaths(0), points(0), totaldamage(0), totalshots(0), lives(3), holdingflag(0),
-                edit(NULL), recoil(0), smoothmillis(-1), respawnPoint(-1),
+                edit(NULL), smoothmillis(-1), respawnPoint(-1),
                 transparency(1),
                 team(0), playermodel(-1), playercolor(0), ai(NULL), ownernum(-1),
                 muzzle(-1, -1, -1), eject(-1, -1, -1), hand(-1, -1, -1)
@@ -624,7 +654,6 @@ struct gameent : dynent, gamestate
         lasthit = lastkill = 0;
         lastWeaponUsed = GUN_INVALID;
         respawnqueued = false;
-        recoil = 0;
         for (int i = 0; i < NUMGUNS; i++)
         {
             lastaction[i] = 0;
@@ -638,6 +667,7 @@ struct gameent : dynent, gamestate
             stopchannelsound(i);
         }
         resetInteractions();
+        recoil.reset();
     }
 
     void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)
@@ -932,7 +962,7 @@ namespace game
     extern swayinfo sway;
 
     extern void shoot(gameent *d, const vec &targ);
-    extern void updaterecoil(gameent* d, int curtime);
+    extern void updateRecoil(gameent* d, const int curtime);
     extern void shoteffects(int atk, vec &from, vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
     extern void scanhit(vec& from, vec& to, gameent* d, int atk);
     extern void gibeffect(int damage, const vec &vel, gameent *d);

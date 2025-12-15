@@ -753,6 +753,7 @@ namespace entities
                 }
             }
         }
+
         // Remove valid hover information.
         hover.reset();
     }

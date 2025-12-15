@@ -1324,7 +1324,7 @@ namespace ai
             {
                 if(!request(d, b)) target(d, b, melee(d) ? 1 : 0, b.idle ? true : false);
                 shoot(d, d->ai->target);
-                updaterecoil(d, curtime);
+                updateRecoil(d, curtime);
             }
             if(!intermission)
             {

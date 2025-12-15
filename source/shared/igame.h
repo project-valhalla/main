@@ -129,6 +129,7 @@ namespace game
     extern const char *getclientmap();
     extern const char *getmapinfo();
     extern const char *getscreenshotinfo();
+    extern const char *completename(const char *start, int len, const char *last, const char *next);
 
     extern int numdynents(const int flags = DYN_PLAYER|DYN_AI);
     extern int scaletime(int t);

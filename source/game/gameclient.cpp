@@ -1110,6 +1110,57 @@ namespace game
 
     VARP(chatmentions, 0, 1, 1);
 
+    static const char *lowerstr(const char *s)
+    {
+        char *ret = newstring(s);
+        for(char *p = ret; *p; ++p) *p = (*p == ' ') ? '_' : cubelower(*p);
+        return ret;
+    }
+    static inline void lowername(gameent *pl, char *buf)
+    {
+        int i;
+        for(i = 0; pl->name[i]; ++i) buf[i] = (pl->name[i] == ' ') ? '_' : cubelower(pl->name[i]);
+        buf[i] = '\0';
+    }
+    static bool comparenames(gameent *a, gameent *b)
+    {
+        static char lower_a[MAXNAMELEN+1], lower_b[MAXNAMELEN+1];
+
+        lowername(a, lower_a);
+        lowername(b, lower_b);
+
+        const int val = strcmp(lower_a, lower_b);
+        if(val < 0) return true;
+        if(val > 0) return false;
+        return a < b;
+    }
+    const char *completename(const char *start, int len, const char *last, const char *next)
+    {
+        vector<gameent *> sorted_players = players;
+        sorted_players.sort(comparenames);
+
+        const char *start_lower = lowerstr(start);
+        const char *last_lower = last ? lowerstr(last) : NULL;
+        const char *next_lower = next ? lowerstr(next) : NULL;
+
+        loopv(sorted_players)
+        {
+            gameent *pl = sorted_players[i];
+            char name_lower[MAXNAMELEN+1];
+            lowername(pl, name_lower);
+            if(strncmp(name_lower, start_lower, len) == 0 &&
+                (!last || strcmp(name_lower, last_lower) > 0) && (!next || strcmp(name_lower, next_lower) < 0)
+            )
+            {
+                delete[] start_lower; delete[] last_lower; delete[] next_lower;
+                return pl->name;
+            }
+        }
+
+        delete[] start_lower; delete[] last_lower; delete[] next_lower;
+        return NULL;
+    }
+
     bool ischatmention(const char* text)
     {
         if (!chatmentions)

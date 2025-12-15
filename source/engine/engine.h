@@ -591,7 +591,7 @@ extern float renderconsole(float w, float h, float abovehud);
 extern void conoutf(const char *s, ...) PRINTFARGS(1, 2);
 extern void conoutf(int type, const char *s, ...) PRINTFARGS(2, 3);
 extern void resetcomplete();
-extern void complete(char *s, int maxlen, const char *cmdprefix);
+extern void complete(char *s, int maxlen, const char *cmdprefix, bool names = false);
 const char *getkeyname(int code);
 extern const char *addreleaseaction(char *s);
 extern tagval *addreleaseaction(ident *id, int numargs);

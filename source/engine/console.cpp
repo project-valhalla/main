@@ -9,7 +9,7 @@ reversequeue<cline, MAXCONLINES> conlines;
 int commandmillis = -1;
 string commandbuf;
 char *commandaction = NULL, *commandprompt = NULL;
-enum { CF_COMPLETE = 1<<0, CF_EXECUTE = 1<<1 };
+enum { CF_COMPLETE = 1<<0, CF_EXECUTE = 1<<1, CF_NAMECOMPLETE = 1<<2 };
 int commandflags = 0, commandpos = -1;
 
 VARFP(maxcon, 10, 200, MAXCONLINES, { while(conlines.length() > maxcon) delete[] conlines.pop().line; });
@@ -368,6 +368,7 @@ void inputcommand(char *init, char *action = NULL, char *prompt = NULL, char *fl
         case 'c': commandflags |= CF_COMPLETE; break;
         case 'x': commandflags |= CF_EXECUTE; break;
         case 's': commandflags |= CF_COMPLETE|CF_EXECUTE; break;
+        case 'n': commandflags |= CF_COMPLETE|CF_EXECUTE|CF_NAMECOMPLETE; break;
     }
     else if(init) commandflags |= CF_COMPLETE|CF_EXECUTE;
     if(!isfullconsoletoggled && fullconsolecommand)
@@ -615,6 +616,26 @@ static char *skipwordrev(char *s, int n = -1)
     return e+1;
 }
 
+/* don't try to complete names if:
+    - first character is a slash (already typing a command) or the null character (empty string)
+    - the cursor is at position 0 (there must be a '@' character before the cursor)
+    - there are spaces between the '@' symbol and the cursor (the '@mention' must be a single word)
+*/
+static bool may_complete_names()
+{
+    if(commandbuf[0] == '/' || !commandbuf[0] || commandpos == 0) return false;
+    for(const char *p = &commandbuf[commandpos > 0 ? (commandpos-1) : (strlen(commandbuf)-1)]; p >= commandbuf; --p)
+    {
+        if(isspace(*p)) return false;
+        if(*p == '@')
+        {
+            if(p == commandbuf || isspace(p[-1])) return true;
+            continue; // the '@' symbol is not at the start of the buffer and does not follow a space: it could be part of the name, keep searching
+        }
+    }
+    return false;
+}
+
 bool consolekey(int code, bool isdown)
 {
     if(commandmillis < 0) return false;
@@ -703,9 +724,13 @@ bool consolekey(int code, bool isdown)
                 break;
 
             case SDLK_TAB:
-                if(commandflags&CF_COMPLETE)
+                if(commandflags&CF_NAMECOMPLETE && may_complete_names()) // disable name completion if typing a command
                 {
-                    complete(commandbuf, sizeof(commandbuf), commandflags&CF_EXECUTE ? "/" : NULL);
+                    complete(commandbuf, sizeof(commandbuf), NULL, true);
+                }
+                else if(commandflags&CF_COMPLETE)
+                {
+                    complete(commandbuf, sizeof(commandbuf), commandflags&CF_EXECUTE ? "/" : NULL, false);
                     if(commandpos>=0 && commandpos>=(int)strlen(commandbuf)) commandpos = -1;
                 }
                 break;
@@ -924,7 +949,7 @@ COMMANDN(complete, addfilecomplete, "sss");
 COMMANDN(varcomplete, addvarcomplete, "sss");
 COMMANDN(listcomplete, addlistcomplete, "ss");
 
-void complete(char *s, int maxlen, const char *cmdprefix)
+void complete(char *s, int maxlen, const char *cmdprefix, bool names)
 {
     int cmdlen = 0;
     if(cmdprefix)
@@ -935,34 +960,61 @@ void complete(char *s, int maxlen, const char *cmdprefix)
     if(!s[cmdlen]) return;
     if(!completesize) { completesize = (int)strlen(&s[cmdlen]); DELETEA(lastcomplete); }
 
+    const char *nextcomplete = NULL;
+
+    if(names)
+    {
+        const char *last_at = NULL;
+        for(const char *p = s; *p; ++p)
+        {
+            if(*p == '@' && (p == s || isspace(p[-1]))) last_at = p;
+        }
+        if(last_at) // complete using player names
+        {
+            cmdprefix = s;
+            cmdlen = last_at - s + 1;
+            char *end = strchr(&s[cmdlen], ' ');
+            const char *found = game::completename(&s[last_at - s + 1], completesize-cmdlen-(end ? strlen(end) : 0), lastcomplete, nextcomplete);
+            if(found)
+            {
+                char *found_nospace = newstring(found);
+                for(char *p = found_nospace; *p; ++p) if(*p == ' ') *p = '_';
+                nextcomplete = end ? tempformatstring("%s%s", found_nospace, end) : found_nospace;
+                delete[] found_nospace;
+            }
+        }
+    }
+
     filesval *f = NULL;
-    if(completesize)
+    if(completesize && !names)
     {
         char *end = strchr(&s[cmdlen], ' ');
         if(end) f = completions.find(stringslice(&s[cmdlen], end), NULL);
     }
 
-    const char *nextcomplete = NULL;
-    if(f) // complete using filenames
+    if(!names)
     {
-        int commandsize = strchr(&s[cmdlen], ' ')+1-s;
-        f->update();
-        loopv(f->files)
+        if(f) // complete using filenames
         {
-            if(strncmp(f->files[i], &s[commandsize], completesize+cmdlen-commandsize)==0 &&
-               (!lastcomplete || strcmp(f->files[i], lastcomplete) > 0) && (!nextcomplete || strcmp(f->files[i], nextcomplete) < 0))
-                nextcomplete = f->files[i];
+            int commandsize = strchr(&s[cmdlen], ' ')+1-s;
+            f->update();
+            loopv(f->files)
+            {
+                if(strncmp(f->files[i], &s[commandsize], completesize+cmdlen-commandsize)==0 &&
+                (!lastcomplete || strcmp(f->files[i], lastcomplete) > 0) && (!nextcomplete || strcmp(f->files[i], nextcomplete) < 0))
+                    nextcomplete = f->files[i];
+            }
+            cmdprefix = s;
+            cmdlen = commandsize;
         }
-        cmdprefix = s;
-        cmdlen = commandsize;
-    }
-    else // complete using command names
-    {
-        enumerate(idents, ident, id,
-            if(strncmp(id.name, &s[cmdlen], completesize)==0 &&
-               (!lastcomplete || strcmp(id.name, lastcomplete) > 0) && (!nextcomplete || strcmp(id.name, nextcomplete) < 0))
-                nextcomplete = id.name;
-        );
+        else // complete using command names
+        {
+            enumerate(idents, ident, id,
+                if(strncmp(id.name, &s[cmdlen], completesize)==0 &&
+                (!lastcomplete || strcmp(id.name, lastcomplete) > 0) && (!nextcomplete || strcmp(id.name, nextcomplete) < 0))
+                    nextcomplete = id.name;
+            );
+        }
     }
     DELETEA(lastcomplete);
     if(nextcomplete)

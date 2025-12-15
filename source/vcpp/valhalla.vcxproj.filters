@@ -383,6 +383,9 @@
     <Filter Include="Configuration\ui\menus">
       <UniqueIdentifier>{94719c88-0915-40ce-adeb-c042ccc44e13}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Configuration\ui\editor">
+      <UniqueIdentifier>{d46062ae-db5a-4d55-b587-170e8980e5c9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="valhalla.rc">
@@ -567,37 +570,10 @@
     <None Include="..\..\config\ui\tooltip.cfg">
       <Filter>Configuration\ui</Filter>
     </None>
-    <None Include="..\..\config\ui\hud\editstats.cfg">
-      <Filter>Configuration\ui\hud</Filter>
-    </None>
-    <None Include="..\..\config\ui\hud\editvars.cfg">
-      <Filter>Configuration\ui\hud</Filter>
-    </None>
-    <None Include="..\..\config\ui\hud\entity.cfg">
-      <Filter>Configuration\ui\hud</Filter>
-    </None>
     <None Include="..\..\config\ui\hud\fullconsole.cfg">
       <Filter>Configuration\ui\hud</Filter>
     </None>
     <None Include="..\..\config\ui\hud\gamehud.cfg">
-      <Filter>Configuration\ui\hud</Filter>
-    </None>
-    <None Include="..\..\config\ui\hud\geo_prefab.cfg">
-      <Filter>Configuration\ui\hud</Filter>
-    </None>
-    <None Include="..\..\config\ui\hud\mapmodel_browser.cfg">
-      <Filter>Configuration\ui\hud</Filter>
-    </None>
-    <None Include="..\..\config\ui\hud\material.cfg">
-      <Filter>Configuration\ui\hud</Filter>
-    </None>
-    <None Include="..\..\config\ui\hud\postfx.cfg">
-      <Filter>Configuration\ui\hud</Filter>
-    </None>
-    <None Include="..\..\config\ui\hud\taskbar.cfg">
-      <Filter>Configuration\ui\hud</Filter>
-    </None>
-    <None Include="..\..\config\ui\hud\texture_browser.cfg">
       <Filter>Configuration\ui\hud</Filter>
     </None>
     <None Include="..\..\config\ui\menus\controls.cfg">
@@ -638,6 +614,33 @@
     </None>
     <None Include="..\..\config\ui\hud\story.cfg">
       <Filter>Configuration\ui\hud</Filter>
+    </None>
+    <None Include="..\..\config\ui\editor\ai.cfg">
+      <Filter>Configuration\ui\editor</Filter>
+    </None>
+    <None Include="..\..\config\ui\editor\entities.cfg">
+      <Filter>Configuration\ui\editor</Filter>
+    </None>
+    <None Include="..\..\config\ui\editor\materials.cfg">
+      <Filter>Configuration\ui\editor</Filter>
+    </None>
+    <None Include="..\..\config\ui\editor\models.cfg">
+      <Filter>Configuration\ui\editor</Filter>
+    </None>
+    <None Include="..\..\config\ui\editor\postfx.cfg">
+      <Filter>Configuration\ui\editor</Filter>
+    </None>
+    <None Include="..\..\config\ui\editor\prefabs.cfg">
+      <Filter>Configuration\ui\editor</Filter>
+    </None>
+    <None Include="..\..\config\ui\editor\stats.cfg">
+      <Filter>Configuration\ui\editor</Filter>
+    </None>
+    <None Include="..\..\config\ui\editor\textures.cfg">
+      <Filter>Configuration\ui\editor</Filter>
+    </None>
+    <None Include="..\..\config\ui\editor\variables.cfg">
+      <Filter>Configuration\ui\editor</Filter>
     </None>
   </ItemGroup>
 </Project>

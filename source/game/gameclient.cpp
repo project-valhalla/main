@@ -1116,16 +1116,31 @@ namespace game
         {
             return false;
         }
-        const char* mention = strstr(text, self->name);
-        if (mention && mention > text && *(mention - 1) == '@')
+
+        // convert name and text to lowercase and remove spaces from name
+        static char lowername[MAXNAMELEN+1];
+        int i;
+        for(i = 0; self->name[i+1]; ++i)
+        {
+            lowername[i] = isspace(self->name[i]) ? '_' : cubelower(self->name[i]);
+        }
+        lowername[i] = '\0';
+        char *lowertext = newstring(text);
+        for(const char *p = text; *p; ++p) lowertext[p - text] = cubelower(*p);
+
+        // check against the lowercased name
+        const char* mention = strstr(lowertext, lowername);
+        if (mention && mention > lowertext && *(mention - 1) == '@')
         {
             // Checking if a chat message mentions our user name.
             const char next = *(mention + strlen(self->name));
             if (next == '\0' || isspace(next))
             {
+                delete[] lowertext;
                 return true;
             }
         }
+        delete[] lowertext;
         return false;
     }
 

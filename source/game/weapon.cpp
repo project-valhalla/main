@@ -204,7 +204,13 @@ namespace game
         // Remove recovered portion from actual pitch/yaw.
         vec2 deltaKick = oldKick;
         deltaKick.sub(d->recoil.kick);
-        d->pitch -= deltaKick.x;
+        float scaleFactor = 1.0f;
+        if (d->recoil.maxShots)
+        {
+            scaleFactor = 1.0f - ((0.25f / d->recoil.maxShots) * d->recoil.shots);
+            scaleFactor = clamp(scaleFactor, 0.75f, 1.0f);
+        }
+        d->pitch -= deltaKick.x * scaleFactor;
         d->yaw -= deltaKick.y;
 
         // Once the Kick is near zero, reset it (together with the index if necessary).

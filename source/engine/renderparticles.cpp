@@ -1407,6 +1407,12 @@ static void makeparticles(entity &e)
             }
             break;
         }
+        case 37:
+        {
+            const int color = colorfromattr(e.attr3);
+            regularsplash(PART_SPARK2, color, 150, 4, 280, offsetvec(e.o, e.attr2, rnd(10)), 0.15f, 1);
+            break;
+        }
         default:
         {
             if(!editmode)

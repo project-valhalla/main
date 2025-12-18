@@ -636,3 +636,10 @@ static const struct RecoilInfo
         }
     },
 };
+
+enum Trickjump
+{
+	Timestamp,
+	Weapon,
+	Trickjump_Count
+};

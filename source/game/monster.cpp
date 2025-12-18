@@ -740,7 +740,7 @@ namespace game
     void hitmonster(int damage, monster *m, gameent *at, int atk, const vec& velocity, int flags)
     {
         m->monsterpain(damage, at, atk, flags);
-        m->hitpush(damage * (m->health <= 0 ? monsterdeadpush : 1), velocity, at, atk);
+        m->hitpush(damage * (m->health <= 0 ? monsterdeadpush : 1), velocity, at, atk, true);
     }
 
     void calculatesummary()

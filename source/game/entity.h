@@ -121,3 +121,11 @@ enum TriggerState
     Triggered,
     Resetting
 };
+
+// Interaction states.
+enum Interaction
+{
+	Available = 0,
+	Active,
+	Count
+};

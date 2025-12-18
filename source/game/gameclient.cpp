@@ -2041,12 +2041,23 @@ namespace game
 
             case N_HITPUSH:
             {
-                int tcn = getint(p), atk = getint(p), damage = getint(p);
-                gameent *target = getclient(tcn);
-                vec dir;
-                loopk(3) dir[k] = getint(p)/DNF;
-                if(!target || !validatk(atk)) break;
-                target->hitpush(damage * (target->health <= 0 ? deadpush : 1), dir, NULL, atk);
+				const int targetClient = getint(p);
+				const int actorClient = getint(p);
+				const int attack = getint(p);
+				const int damage = getint(p);
+                gameent* target = getclient(targetClient);
+				gameent* actor = getclient(actorClient);
+                vec direction;
+				loopk(3)
+				{
+					direction[k] = getint(p) / DNF;
+				}
+				if (!target || !validatk(attack))
+				{
+					break;
+				}
+				const int multiplier = target->health <= 0 ? deadpush : 1;
+                target->hitpush(damage * multiplier, direction, actor, attack, false);
                 break;
             }
 

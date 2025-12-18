@@ -114,7 +114,7 @@ struct physent // base entity type, can be affected by physics
     float xradius, yradius, zmargin;
     float headradius, legsradius;
     vec head;
-    vec rfoot, lfoot, lastfootright, lastfootleft;
+	vec rfoot, lfoot, lastfootright, lastfootleft, butt;
     vec floor; // the normal of floor the dynent is on
 
     int inwater;

@@ -3222,11 +3222,18 @@ namespace server
             }
             else if (!m_teammode && !m_betrayal) dodamage(actor, actor, damage, atk, flags);
         }
-        if (target == actor) target->setpushed();
-        else if (!hitpush.iszero())
+        if (!hitpush.iszero())
         {
             ivec v(vec(hitpush).rescale(DNF));
-            sendf(ts.health <= 0 ? -1 : target->ownernum, 1, "ri7", N_HITPUSH, target->clientnum, atk, damage, v.x, v.y, v.z);
+
+			// Send the push to the affected client only, as the position will be updated from there.
+			int client = target->ownernum;
+			if (target->state.health <= 0 || target == actor)
+			{
+				// Send the push to everyone else if the target is dead or self-damaging (trick-jumps indicators).
+				client = -1;
+			}
+            sendf(client, 1, "ri8", N_HITPUSH, target->clientnum, actor->clientnum, atk, damage, v.x, v.y, v.z);
             target->setpushed();
         }
         if (ts.health <= 0)

@@ -1272,7 +1272,7 @@ namespace game
     {
         if (!m_mp(gamemode) || target == actor)
         {
-            target->hitpush(damage, velocity, actor, attack);
+            target->hitpush(damage, velocity, actor, attack, true);
         }
         if (!m_mp(gamemode))
         {

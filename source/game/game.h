@@ -164,7 +164,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 3, N_CDIS, 2,
     N_SHOOT, 0, N_EXPLODE, 0, N_DAMAGEPROJECTILE, 5, N_SUICIDE, 1,
-    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2,
+    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 8, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1,
     N_NOTICE, 2, N_ANNOUNCE, 1,
@@ -485,13 +485,6 @@ enum
     Chan_Num
 };
 
-enum Interaction
-{
-    Available = 0,
-    Active,
-    Count
-};
-
 struct gameent : dynent, gamestate
 {
     int weight;                         // affects the effectiveness of hitpush
@@ -512,7 +505,7 @@ struct gameent : dynent, gamestate
     int smoothmillis;
     int respawnPoint;
 
-    int chan[Chan_Num], chansound[Chan_Num];
+	int chan[Chan_Num], chansound[Chan_Num], lastTrickJump[Trickjump_Count];
 
     struct Recoil
     {
@@ -600,28 +593,40 @@ struct gameent : dynent, gamestate
         }
     }
 
-    void hitpush(int damage, const vec &dir, gameent *actor, int atk)
-    {
-        vec push(dir);
-        bool istrickjump = actor == this && isattackprojectile(attacks[atk].projectile) && attacks[atk].exprad;
-        if (istrickjump)
-        {
-            // Projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further.
-            falling.z = 1;
-        }
-        if (actor != this && physstate < PHYS_SLOPE)
-        {
-            // While in mid-air, push is stronger.
-            damage *= GUN_AIR_PUSH;
-        }
-        if (role == ROLE_ZOMBIE)
-        {
-            // Zombies are pushed "a bit" more.
-            damage *= GUN_ZOMBIE_PUSH;
-        }
-        push.mul((istrickjump ? EXP_SELFPUSH : 1.0f) * attacks[atk].hitpush * damage / weight);
-        vel.add(push);
-    }
+	void hitpush(int damage, const vec& direction, gameent* actor, const int attack, const bool isLocal)
+	{
+		const bool isTrickJump = actor && actor == this && isattackprojectile(attacks[attack].projectile) && attacks[attack].exprad;
+		if (isTrickJump)
+		{
+			lastTrickJump[Timestamp] = lastmillis;
+			lastTrickJump[Weapon] = attacks[attack].gun;
+
+			/* Do not update non-local "self-pushes" as the player's position sent to server already does.
+			 * Use this function only to detect trick-jumps.
+			 */
+			if (!isLocal)
+			{
+				return;
+			}
+
+			// Projectiles reset gravity while falling so trick jumps are more rewarding and players are pushed further.
+			falling.z = 1;
+		}
+		else if (physstate < PHYS_SLOPE)
+		{
+			// While in mid-air, push is stronger.
+			damage *= GUN_AIR_PUSH;
+		}
+		if (role == ROLE_ZOMBIE)
+		{
+			// Zombies are pushed "a bit" more.
+			damage *= GUN_ZOMBIE_PUSH;
+		}
+		vec push(direction);
+		const float multiplier = isTrickJump ? EXP_SELFPUSH : 1.0f;
+		push.mul(multiplier * attacks[attack].hitpush * damage / weight);
+		vel.add(push);
+	}
 
     void startgame()
     {
@@ -666,6 +671,10 @@ struct gameent : dynent, gamestate
         {
             stopchannelsound(i);
         }
+		for (int i = 0; i < Trickjump::Trickjump_Count; i++)
+		{
+			lastTrickJump[i] = 0;
+		}
         resetInteractions();
         recoil.reset();
     }

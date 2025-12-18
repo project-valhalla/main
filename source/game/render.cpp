@@ -340,6 +340,7 @@ namespace game
             a[ai++] = modelattach("tag_head", &d->head);
             a[ai++] = modelattach("tag_rfoot", &d->rfoot);
             a[ai++] = modelattach("tag_lfoot", &d->lfoot);
+			a[ai++] = modelattach("tag_butt", &d->butt);
         }
         if(d->state != CS_SPECTATOR)
         {
@@ -424,7 +425,7 @@ namespace game
             defformatstring(legsDirectory, "%s/leg", playermodel.directory);
             rendermodel(legsDirectory, anim, legsPosition, yaw, 0, 0, MDL_NOSHADOW, d, NULL, basetime, 0, 1, vec4(vec::hexcolor(color), d->transparency));
         }
-}
+	}
 
     void rendermonster(dynent *d, const char *mdlname, modelattach *attachments, const int attack, const int attackdelay, const int lastaction, const int lastpain, const float fade, const bool ragdoll)
     {
@@ -499,16 +500,36 @@ namespace game
         renderplayer(d, getplayermodelinfo(d), getplayercolor(d, team), team, fade, flags);
     }
 
-    void booteffect(gameent *d)
-    {
-        if(d == followingplayer(self) && !camera::isthirdperson()) return;
-        if(d->timeinair > 650 && (d->haspowerup(PU_AGILITY) || d->role == ROLE_BERSERKER || d->role == ROLE_ZOMBIE))
-        {
-            if(d->lastfootright.z >= 0) particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_STRAIGHT, getplayercolor(d, d->team), 0.3f);
-            if(d->lastfootleft.z >= 0) particle_flare(d->lastfootleft, d->lfoot, 220, PART_TRAIL_STRAIGHT, getplayercolor(d, d->team), 0.3f);
-            d->lastfootright = d->rfoot;
-            d->lastfootleft = d->lfoot;
-        }
+	void applyMovementEffects(gameent* d)
+	{
+		const bool isTrickJump = d->lastTrickJump[Timestamp] && lastmillis - d->lastTrickJump[Timestamp] < 500;
+		static vec lastButt = vec(-1, -1, -1);
+		if (d->vel.z > 0 && isTrickJump)
+		{
+			switch (d->lastTrickJump[Weapon])
+			{
+				case GUN_PISTOL:
+					regular_particle_splash(PART_RING, 2, 80, d->butt, 0x00FFFF, 0.75f, 30, 500, 0);
+					particle_flare(lastButt, d->butt, 150, PART_TRAIL_STRAIGHT, 0x00AAAA, 0.25f);
+					regular_particle_splash(PART_SMOKE, 5, 120, d->butt, 0x006666, 1.5f, 30, 500);
+					break;
+
+				case GUN_PULSE:
+					particle_flare(lastButt, d->butt, 220, PART_TRAIL_STRAIGHT, 0xEE88EE, 0.5f);
+					regular_particle_splash(PART_SMOKE, 5, 120, d->butt, 0x222222, 1.50f, 30, 500, 0, 2.5f);
+					break;
+
+				case GUN_ROCKET:
+					regular_particle_splash(PART_SMOKE, 5, 120, d->butt, 0x222222, 1.80f, 30, 500);
+					regular_particle_splash(PART_SPARK, 1, 80, d->butt, 0x903020, 1.25f, 10, 500);
+					particle_flare(d->butt, d->butt, 1, PART_EDIT, 0xF69D19, 0.5 + rndscale(2.0f));
+					break;
+
+				default:
+					break;
+			}
+			lastButt = d->butt;
+		}
     }
 
     VARP(statusbars, 0, 1, 1);
@@ -590,19 +611,27 @@ namespace game
             int team = m_teammode && validteam(d->team) ? d->team : 0;
             particle_text(position, d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
         }
-        booteffect(d);
+		applyMovementEffects(d);
     }
 
     void rendergame()
     {
         ai::render();
 
-        bool isthirdPerson = camera::isthirdperson();
-        gameent *f = followingplayer(), *exclude = isthirdPerson ? NULL : f;
+        const bool isThirdPerson = camera::isthirdperson();
+		gameent* follow = followingplayer();
+		gameent *exclude = isThirdPerson ? NULL : follow;
         loopv(players)
         {
             gameent *d = players[i];
-            if(d == self || d->state==CS_SPECTATOR || d->state==CS_SPAWNING || d->lifesequence < 0 || d == exclude || (d->state==CS_DEAD && !showdeadplayers)) continue;
+			if 
+		    (
+				d == self || d->state == CS_SPECTATOR || d->state == CS_SPAWNING ||
+				(d->state == CS_DEAD && !showdeadplayers) || d->lifesequence < 0 || d == exclude
+			)
+			{
+				continue;
+			}
             renderplayer(d);
             copystring(d->info, colorname(d));
             renderplayereffects(d);
@@ -625,21 +654,27 @@ namespace game
         {
             renderplayer(exclude, 1, MDL_ONLYSHADOW);
         }
-        else if (!f && (self->state == CS_ALIVE || (self->state == CS_EDITING && isthirdPerson) || (self->state == CS_DEAD && showdeadplayers)) && camera::camera.zoomstate.progress < 1)
+        else if
+		(
+			!follow && (self->state == CS_ALIVE || (self->state == CS_EDITING && isThirdPerson) ||
+			(self->state == CS_DEAD && showdeadplayers)) && camera::camera.zoomstate.progress < 1
+		)
         {
             float fade = 1.0f;
             if (self->deathstate == Death_Fall)
             {
                 fade -= clamp(float(lastmillis - self->lastpain) / 1000, 0.0f, 1.0f);
             }
-            renderplayer(self, fade, isthirdPerson ? 0 : MDL_ONLYSHADOW);
+            renderplayer(self, fade, isThirdPerson ? 0 : MDL_ONLYSHADOW);
+			applyMovementEffects(self);
         }
-            
-        booteffect(self);
         entities::render();
         projectiles::render();
         rendermonsters();
-        if(cmode) cmode->rendergame();
+		if (cmode)
+		{
+			cmode->rendergame();
+		}
     }
 
     void drawhudmodel(gameent *d, int anim, int basetime)

@@ -750,8 +750,7 @@ namespace UI
 extern void addchange(const char *desc, int type);
 extern void clearchanges(int type);
 extern void menuprocess();
-extern void clearmainmenu();
-extern int mainmenu;
+extern void clearmainmenu(const char *mapname = NULL);
 
 // sound
 extern void clearmapsounds();

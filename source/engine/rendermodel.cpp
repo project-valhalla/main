@@ -426,7 +426,7 @@ model *loadmodel(const char *name, int i, bool msg)
     else
     {
         if(!name[0] || loadingmodel || failedmodels.find(name, NULL)) return NULL;
-        if(msg)
+        if(!isinit && msg)
         {
             defformatstring(filename, "data/model/%s", name);
             renderprogress(loadprogress, filename);

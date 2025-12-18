@@ -1730,7 +1730,7 @@ static bool texturedata(ImageData &d, const char *tname, bool msg = true, int *c
         else if(matchstring(cmd, len, "stub")) return canloadsurface(file);
     }
 
-    if(msg) renderprogress(loadprogress, file);
+    if(!isinit && msg) renderprogress(loadprogress, file);
 
     if(flen >= 4 && (!strcasecmp(file + flen - 4, ".dds") || (dds && !raw)))
     {

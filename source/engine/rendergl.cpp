@@ -2490,7 +2490,7 @@ void gl_drawframe()
     fovy = 2*atan2(tan(curfov/2*RAD), aspect)/RAD;
     vieww = hudw;
     viewh = hudh;
-    if(mainmenu) gl_drawmainmenu();
+    if(mainmenu == MENU_INTRO) gl_drawmainmenu();
     else
     {
         gl_drawview();

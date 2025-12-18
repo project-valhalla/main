@@ -63,34 +63,66 @@ void menuprocess()
     }
 
     // specific UIs
-    if (!UI::uivisible("permanent"))
+    if(!UI::uivisible("permanent"))
     {
         UI::showui("permanent"); // always force the permanent UI elements
     }
-    if(!isconnected(true))
+    if(mainmenu)
     {
-        if (mainmenu && !UI::hascursor())
-        {
-            UI::showui("main");  // if not connected, force the main menu
-        }
+        // force the main menu UIs
+        if(mainmenu == MENU_MAP) UI::showui("main");
+        else UI::showui("main_welcome");
     }
-    else
+    if(isconnected(true))
     {
-        if (!UI::uivisible("gamehud"))
+        if(mainmenu == MENU_MAP) UI::showui("main");
+        else if(!UI::uivisible("gamehud"))
         {
             UI::showui("gamehud");  // if connected, force the game HUD
         }
     }
 }
 
-VAR(mainmenu, 1, 1, 0);
+VAR(mainmenu, 2, 1, 0);
+SVAR(mainmenumap, "main");
 
-void clearmainmenu()
+void loadmainmenu()
+{
+    if(isconnected()) disconnect();
+    if(mainmenu != MENU_MAP)
+    {
+        mainmenu = MENU_MAP;
+        game::loadMainMenuMap(mainmenumap);
+        if(UI::uivisible("main_welcome"))
+        {
+            UI::hideui("main_welcome");
+        }
+    }
+    else
+    {
+        mainmenu = MENU_INTRO;
+        if(UI::uivisible("main"))
+        {
+            UI::hideui("main");
+        }
+        playintromusic();
+    }
+}
+COMMAND(loadmainmenu, "");
+
+void clearmainmenu(const char* mapname)
 {
     hidechanges = 0;
     if(mainmenu && isconnected())
     {
-        mainmenu = 0;
+        if(!mapname || game::editing() || strcmp(mapname, mainmenumap))
+        {
+            mainmenu = 0;
+        }
+        else
+        {
+            mainmenu = 2;
+        }
         UI::hideui(NULL);
     }
 }

@@ -598,7 +598,7 @@ namespace game
         ai::render();
 
         bool isthirdPerson = camera::isthirdperson();
-        gameent *f = followingplayer(), *exclude = isthirdPerson ? NULL : f;
+        gameent *f = followingplayer(), *exclude = isthirdPerson || mainmenu == MENU_MAP ? NULL : f;
         loopv(players)
         {
             gameent *d = players[i];
@@ -676,7 +676,7 @@ namespace game
     {
         gameent *d = hudplayer();
         extern int hudgun;
-        if(d->state == CS_DEAD || d->state == CS_SPECTATOR || d->state == CS_EDITING || !hudgun || editmode)
+        if(mainmenu || d->state == CS_DEAD || d->state == CS_SPECTATOR || d->state == CS_EDITING || !hudgun || editmode)
         {
             d->muzzle = self->muzzle = vec(-1, -1, -1);
             d->eject = self->eject = vec(-1, -1, -1);

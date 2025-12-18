@@ -711,6 +711,7 @@ namespace game
     {
         if(!remote)
         {
+            execident("on_mapchange");
             server::forcemap(name, mode, muts);
             if(!isconnected()) localconnect();
         }
@@ -724,6 +725,12 @@ namespace game
         changemap(name, m_valid(nextmode) ? nextmode : (remote ? 1 : 0), nextmutators);
     }
     ICOMMAND(map, "s", (char *name), changemap(name));
+
+    void loadMainMenuMap(const char* mapName)
+    {
+        const int storyMode = -2;
+        changemap(mapName, storyMode, 0);
+    }
 
     void forceedit(const char *name)
     {

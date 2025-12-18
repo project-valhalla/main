@@ -123,6 +123,7 @@ extern void stopmapsounds();
 extern void stopownersounds(physent *d);
 extern void initsound();
 extern void pauseaudio(int value);
+extern void playintromusic();
 
 extern bool stopsound(int n, int chanid, int fade = 0);
 extern bool ischannelinuse(int flags);

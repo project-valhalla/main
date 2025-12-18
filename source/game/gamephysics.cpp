@@ -197,8 +197,11 @@ namespace physics
 
     bool canmove(gameent* d)
     {
-        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR) return true;
-        return !intermission && !(d->state == CS_DEAD && d->deathstate == Death_Gib);
+        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR)
+        {
+            return true;
+        }
+        return !mainmenu && !intermission && !(d->state == CS_DEAD && d->deathstate == Death_Gib);
     }
 
     bool trystepdown(gameent* d, vec& dir, bool init = false)
@@ -1039,19 +1042,28 @@ namespace physics
 
 #undef DIR
 
-    bool canjump()
+    bool canJump()
     {
-        if (!connected || intermission) return false;
+        if (!connected || mainmenu || intermission)
+        {
+            return false;
+        }
         respawn();
         return self->state != CS_DEAD;
     }
 
     void dojump(int down)
     {
-        if (!down || canjump())
+        if (!down || canJump())
         {
-            if (self->physstate > PHYS_FLOAT && self->crouched()) self->crouching = 0;
-            else self->jumping = down != 0;
+            if (self->physstate > PHYS_FLOAT && self->crouched())
+            {
+                self->crouching = 0;
+            }
+            else
+            {
+                self->jumping = down != 0;
+            }
         }
     }
     ICOMMAND(jump, "D", (int* down),
@@ -1059,9 +1071,12 @@ namespace physics
         dojump(*down);
     });
 
-    bool cancrouch()
+    bool canCrouch()
     {
-        if (!connected || intermission) return false;
+        if (!connected || mainmenu || intermission)
+        {
+            return false;
+        }
         return self->state != CS_DEAD;
     }
 
@@ -1072,7 +1087,7 @@ namespace physics
             self->crouching = abs(self->crouching);
             sway.addevent(self, SwayEvent_Crouch, 350, -3);
         }
-        else if (cancrouch())
+        else if (canCrouch())
         {
             self->crouching = -1;
             sway.addevent(self, SwayEvent_Crouch, 380, -2);

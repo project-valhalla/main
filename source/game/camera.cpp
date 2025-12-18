@@ -140,7 +140,7 @@ namespace game
             }
         }
 
-        void movemouse(const int dx, const int dy)
+        void moveMouse(const int x, const int y)
         {
             if (!hasfreelook())
             {
@@ -160,9 +160,9 @@ namespace game
                     curaccel = zoomacceleration;
                 }
             }
-            if (curaccel && curtime && (dx || dy)) cursens += curaccel * sqrtf(dx * dx + dy * dy) / curtime;
+            if (curaccel && curtime && (x || y)) cursens += curaccel * sqrtf(x * x + y * y) / curtime;
             cursens /= mousesensitivityscale;
-            updateorientation(dx * cursens, dy * cursens * (mouseinvert ? 1 : -1));
+            updateorientation(x * cursens, y * cursens * (mouseinvert ? 1 : -1));
         }
 
         bool allowthirdperson()
@@ -202,15 +202,100 @@ namespace game
             camera.shakes.shrink(0);
         }
 
+        FVAR(cameraparallaxstrength, 0, 0.01f, 1);
+        FVAR(cameraparallaxsmooth, 0, 0.1f, 1);
+        FVAR(cameraparallaxdecay, 0, 6.0f, 1);
+
+        void updateParallax(const int x, const int y, const bool isClick)
+        {
+            if (!isClick)
+            {
+                camera.parallaxVelocity.x += x * cameraparallaxstrength;
+                camera.parallaxVelocity.y -= y * cameraparallaxstrength;
+                camera.parallaxVelocity.x = clamp(camera.parallaxVelocity.x, -1.f, 1.f);
+                camera.parallaxVelocity.y = clamp(camera.parallaxVelocity.y, -1.f, 1.f);
+            }
+            else if (mainmenu && self)
+            {
+                float& yaw = self->yaw;
+                yaw -= x * cameraparallaxstrength * 10.0f;
+                while (yaw < 0.0f)
+                {
+                    yaw += 360.0f;
+                }
+                while (yaw >= 360.0f)
+                {
+                    yaw -= 360.0f;
+                }
+            }
+        }
+
+        VAR(cameraentityid, 0, 0, MAXENTS);
+        FVAR(cameraentityspeed, 0, 5.0f, 100.0f);
+        FVAR(cameraentitybob, 0, 1.0f, 2.0f);
+
+        void updateParallax()
+        {
+            camera.parallax.x += (camera.parallaxVelocity.x - camera.parallax.x) * cameraparallaxsmooth;
+            camera.parallax.y += (camera.parallaxVelocity.y - camera.parallax.y) * cameraparallaxsmooth;
+            camera1->yaw -= camera.parallax.x;
+            camera1->pitch -= camera.parallax.y;
+            const float decay = cameraparallaxdecay * curtime / 1000.f;
+            camera.parallaxVelocity.x = lerp(camera.parallaxVelocity.x, 0.f, decay);
+            camera.parallaxVelocity.y = lerp(camera.parallaxVelocity.y, 0.f, decay);
+
+            // Add bob to make the "camera point" more dynamic.
+            if (cameraentitybob)
+            {
+                const float progress = 0.001f * totalmillis;
+                const float yaw = sinf(progress * 0.6f);
+                const float pitch = sinf(progress * 1.2f) * 0.5f;
+                camera1->yaw -= yaw * cameraentitybob;
+                camera1->pitch -= pitch * cameraentitybob;
+            }
+        }
+
         void set()
         {
-            gameent* target = followingplayer();
-            if (target)
+            if (mainmenu)
             {
-                self->yaw = target->yaw;
-                self->pitch = target->state == CS_DEAD ? 0 : target->pitch;
-                self->o = target->o;
-                self->resetinterp();
+                static physent temporaryCamera;
+                camera1 = &temporaryCamera;
+                const int cameraEntity = findentity(CAMERA, 0, cameraentityid);
+                if (cameraEntity >= 0)
+                {
+                    const vector<extentity*>& ents = entities::getents();
+                    if (mainmenu)
+                    {
+                        /*
+                            Do not interpolate during a game, only in the menu.
+                            Repeating the condition to ensure this behaviour remains isolated to the menu,
+                            even when other uses of the camera entity are implemented.
+                        */
+                        const vec target = ents[cameraEntity]->o;
+                        const float progress = min(cameraentityspeed * curtime / 1000.0f, 1.0f);
+                        camera1->o.lerp(camera1->o, target, progress);
+                    }
+                    else
+                    {
+                        camera1->o = ents[cameraEntity]->o;
+                    }
+                    camera1->yaw = ents[cameraEntity]->attr2;
+                    camera1->pitch = ents[cameraEntity]->attr3;
+                    camera1->resetinterp();
+                }
+                updateParallax();
+            }
+            else
+            {
+                gameent* target = followingplayer();
+                if (target)
+                {
+                    self->yaw = target->yaw;
+                    self->pitch = target->state == CS_DEAD ? 0 : target->pitch;
+                    self->o = target->o;
+                    self->resetinterp();
+                }
             }
         }
 
@@ -226,9 +311,12 @@ namespace game
         {
             set();
             camera.zoomstate.update();
-
-            bool shoulddetach = (allowthirdperson() && thirdperson > 1) || isdetached();
-            if ((!allowthirdperson() || !thirdperson) && !shoulddetach)
+            if (mainmenu)
+            {
+                return;
+            }
+            const bool shouldDetach = (allowthirdperson() && thirdperson > 1) || isdetached();
+            if ((!allowthirdperson() || !thirdperson) && !shouldDetach)
             {
                 camera1 = self;
                 camera1->o = camera.getposition();
@@ -238,11 +326,14 @@ namespace game
             {
                 static physent tempcamera;
                 camera1 = &tempcamera;
-                if (camera.isdetached && shoulddetach) camera1->o = self->o;
+                if (camera.isdetached && shouldDetach)
+                {
+                    camera1->o = self->o;
+                }
                 else
                 {
                     *camera1 = *self;
-                    camera.isdetached = shoulddetach;
+                    camera.isdetached = shouldDetach;
                 }
                 camera1->reset();
                 camera1->type = ENT_CAMERA;
@@ -255,10 +346,10 @@ namespace game
                 orient.rotate_around_x(camera1->pitch * RAD);
                 orient.rotate_around_y(camera1->roll * -RAD);
                 vec dir = vec(orient.b).neg(), side = vec(orient.a).neg(), up = orient.c;
-                bool isAlive = self->state == CS_ALIVE && !intermission;
-                float upOffset = isAlive ? thirdpersonup : thirdpersonupdead;
-                float sideOffset = isAlive ? thirdpersonside : thirdpersonsidedead;
-                float distance = isAlive ? thirdpersondistance : thirdpersondistancedead;
+                const bool isAlive = self->state == CS_ALIVE && !intermission;
+                const float upOffset = isAlive ? thirdpersonup : thirdpersonupdead;
+                const float sideOffset = isAlive ? thirdpersonside : thirdpersonsidedead;
+                const float distance = isAlive ? thirdpersondistance : thirdpersondistancedead;
                 if (iscolliding())
                 {
                     movecamera(camera1, dir, distance, 1);
@@ -299,7 +390,6 @@ namespace game
                     }
                 }
             }
-
             setviewcell(camera1->o);
         }
 

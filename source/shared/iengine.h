@@ -245,6 +245,7 @@ extern int findenttype(char *what);
 // main
 extern void fatal(const char *s, ...) PRINTFARGS(1, 2);
 extern void drawquad(float x, float y, float w, float h, float tx1 = 0, float ty1 = 0, float tx2 = 1, float ty2 = 1, bool flipx = false, bool flipy = false);
+extern bool isinit;
 extern char *currentversion;
 
 // rendertext
@@ -435,7 +436,6 @@ extern void flushpreloadedmodels(bool msg = true);
 extern bool matchanim(const char *name, const char *pattern);
 
 // UI
-
 namespace UI
 {
     void holdui(const char* name, bool on);
@@ -446,8 +446,17 @@ namespace UI
     bool uivisible(const char *name);
 }
 
-// ragdoll
 
+// menus
+enum
+{
+    MENU_NONE = 0,
+    MENU_INTRO, // welcome UI shown on startup
+    MENU_MAP
+};
+extern int mainmenu;
+
+// ragdoll
 extern void moveragdoll(dynent *d);
 extern void pushragdoll(dynent* d, const vec &position);
 extern void cleanragdoll(dynent *d);

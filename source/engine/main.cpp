@@ -155,6 +155,8 @@ void drawquad(float x, float y, float w, float h, float tx1, float ty1, float tx
     gle::end();
 }
 
+bool isinit = true;
+
 void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, const char *mapname, const char *mapinfo)
 {
     static int lastupdate = -1, lastw = -1, lasth = -1;
@@ -170,41 +172,44 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     resethudmatrix();
     resethudshader();
 
-    Texture *t = textureload("data/interface/background.png", 0, true, false);
-    setusedtexture(t);
-    float offsetx = 0, offsety = 0;
-    float hudratio = h / (float)w, bgratio = t->h / (float)t->w;
+    if(!isinit)
+    {
+        Texture* t = textureload("data/interface/background.png", 0, true, false);
+        setusedtexture(t);
+        float offsetx = 0, offsety = 0;
+        float hudratio = h / (float)w, bgratio = t->h / (float)t->w;
 
-    if(hudratio < bgratio)
-    {
-        float scalex = w / (float)t->w;
-        float scaledh = t->h * scalex;
-        float ratioy = h / scaledh;
-        offsety = (1.0f - ratioy) * 0.5f;
+        if(hudratio < bgratio)
+        {
+            float scalex = w / (float)t->w;
+            float scaledh = t->h * scalex;
+            float ratioy = h / scaledh;
+            offsety = (1.0f - ratioy) * 0.5f;
+        }
+        else
+        {
+            float scaley = h / (float)t->h;
+            float scaledw = t->w * scaley;
+            float ratiox = w / scaledw;
+            offsetx = (1.0f - ratiox) * 0.5f;
+        }
+        drawquad(0, 0, w, h, offsetx, offsety, 1 - offsetx, 1 - offsety);
     }
-    else
-    {
-        float scaley = h / (float)t->h;
-        float scaledw = t->w * scaley;
-        float ratiox = w / scaledw;
-        offsetx = (1.0f - ratiox) * 0.5f;
-    }
-    drawquad(0, 0, w, h, offsetx, offsety, 1-offsetx, 1-offsety);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    settexture("data/interface/shadow.png", 3);
-    drawquad(0, 0, w, h);
-
-    float lw = min(w, h), lh = 0.25f*lw,
-          lx = 0.5f*(w - lw), slice = floor(0.005f*lw);
-    settexture("<mad:0/0/0>data/interface/logo.png", 3);
-    drawquad(lx, slice, lw, lh);
-
-    settexture("data/interface/logo.png", 3);
-    drawquad(lx+slice, 0, lw, lh);
-
+    float lw = min(w, h);
+    float lh = 0.25f * lw;
+    if(isinit)
+    {
+        settexture("data/interface/shadow.png", 3);
+        drawquad(0, 0, w, h);
+        float slice = floor(0.005f * lw);
+        float x = 0.5f * (w - lw);
+        float y = 0.5f * (h - lh);
+        settexture("data/interface/logo.png", 3);
+        drawquad(x + slice, y, lw, lh);
+    }
     if(caption)
     {
         int tw = text_width(caption);
@@ -883,7 +888,14 @@ void checkinput()
                 {
                     int dx = event.motion.xrel, dy = event.motion.yrel;
                     checkmousemotion(dx, dy);
-                    if(!UI::movecursor(dx, dy, screenw, screenh)) game::camera::movemouse(dx, dy);
+                    if(!UI::movecursor(dx, dy, screenw, screenh)) game::camera::moveMouse(dx, dy);
+                    else if(mainmenu == MENU_MAP)
+                    {
+                        int x = 0, y = 0;
+                        Uint32 buttons = SDL_GetMouseState(&x, &y);
+                        const bool isclicking = buttons & SDL_BUTTON(SDL_BUTTON_LEFT);
+                        game::camera::updateParallax(dx, dy, isclicking);
+                    }
                     mousemoved = true;
                 }
                 else if(shouldgrab) inputgrab(grabinput = true);
@@ -1206,7 +1218,7 @@ int main(int argc, char **argv)
     UI::setup();
 
     inbetweenframes = true;
-    renderbackground("Initializing");
+    renderbackground("Powered by Cube Engine 2");
 
     logoutf("init: world");
     camera1 = player = game::iterdynents(0);
@@ -1276,6 +1288,8 @@ int main(int argc, char **argv)
     game::preload();
     flushpreloadedmodels();
 
+    isinit = false;
+
     for(;;)
     {
         static int frames = 0;
@@ -1314,7 +1328,7 @@ int main(int argc, char **argv)
 
         if(minimized) continue;
 
-        gl_setupframe(!mainmenu);
+        gl_setupframe(!mainmenu || mainmenu == MENU_MAP);
 
         inbetweenframes = false;
         gl_drawframe();

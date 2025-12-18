@@ -17,7 +17,7 @@ namespace game
 
     void taunt(gameent *d)
     {
-        if (d->state != CS_ALIVE || lastmillis - d->lasttaunt < 1000)
+        if (d->state != CS_ALIVE || d->respawned <= -2 || lastmillis - d->lasttaunt < 1000)
         {
             return;
         }
@@ -456,7 +456,7 @@ namespace game
     void spawneffect(gameent *d)
     {
         stopownersounds(d);
-        if (d->type == ENT_PLAYER)
+        if (d->type == ENT_PLAYER && !mainmenu)
         {
             if (d == followingplayer(self))
             {
@@ -492,7 +492,7 @@ namespace game
 
     void respawn()
     {
-        if(self->state==CS_DEAD)
+        if(self->state==CS_DEAD || (mainmenu && self->respawned < -1))
         {
             self->attacking = ACT_IDLE;
             const int wait = getrespawnwait(self);
@@ -1127,8 +1127,14 @@ namespace game
         ai::clearwaypoints(true);
 
         self->respawnPoint = -1;
-        if(!m_mp(gamemode)) spawnplayer(self);
-        else findplayerspawn(self, -1, m_teammode ? self->team : 0);
+        if (!mainmenu)
+        {
+            if (!m_mp(gamemode))
+            {
+                spawnplayer(self);
+            }
+            else findplayerspawn(self, -1, m_teammode ? self->team : 0);
+        }
         entities::resetSpawn();
         postWorldLoad();
         copystring(clientmap, name ? name : "");

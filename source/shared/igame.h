@@ -87,6 +87,7 @@ namespace game
     extern void writeclientinfo(stream *f);
     extern void say(char *text);
     extern void changemap(const char *name);
+	extern void loadMainMenuMap(const char* mapName);
     extern void forceedit(const char *name);
     extern void loadconfigs();
     extern void updateworld();
@@ -146,7 +147,8 @@ namespace game
     namespace camera
     {
         extern void compute();
-        extern void movemouse(const int dx, const int dy);
+        extern void moveMouse(const int x, const int y);
+        extern void updateParallax(const int x, const int y, const bool isClick = false);
 
         extern bool isthirdperson();
         extern bool isfirstpersondeath();

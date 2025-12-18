@@ -194,7 +194,6 @@ namespace game
         }
     }
 
-    // Update the player's recoil recovery.
     void updateRecoil(gameent* d, const int curtime)
     {
         const float time = curtime / 1000.0f;
@@ -513,9 +512,10 @@ namespace game
 
     void updateweapons(int curtime)
     {
-        if (self->clientnum >= 0 && self->state == CS_ALIVE)
+        if (!mainmenu && self->clientnum >= 0 && self->state == CS_ALIVE)
         {
-            shoot(self, worldpos); // Only shoot when connected to a server.
+            // Only allow shooting if the player has joined a game.
+            shoot(self, worldpos);
             updateRecoil(self, curtime);
             updateThrow();
         }
@@ -1337,16 +1337,19 @@ namespace game
 
     void gunselect(int gun, gameent* d)
     {
-        d->lastswitchattempt = lastmillis;
-        if (gun == d->gunselect || lastmillis - d->lastswitch < 100)
+        if (!mainmenu)
         {
-            return;
+            d->lastswitchattempt = lastmillis;
+            if (gun == d->gunselect || lastmillis - d->lastswitch < 100)
+            {
+                return;
+            }
+            d->lastWeaponUsed = d->gunselect;
+            addmsg(N_GUNSELECT, "rci", d, gun);
+            d->lastattack = ATK_INVALID;
+            doweaponchangeffects(d, gun);
         }
-        d->lastWeaponUsed = d->gunselect;
-        addmsg(N_GUNSELECT, "rci", d, gun);
         d->gunselect = gun;
-        d->lastattack = ATK_INVALID;
-        doweaponchangeffects(d, gun);
     }
     ICOMMAND(getweapon, "", (), intret(self->gunselect));
     ICOMMAND(isgunselect, "s", (char* gun),
@@ -1443,7 +1446,7 @@ namespace game
 
     void selectRelatedWeapon()
     {
-        if (self->state != CS_ALIVE)
+        if (self->state != CS_ALIVE || mainmenu)
         {
             return;
         }
@@ -1497,7 +1500,7 @@ namespace game
         {
             return;
         }
-        if (force || self->ammo[gun])
+        if (force || self->ammo[gun] || mainmenu)
         {
             gunselect(gun, self);
         }

@@ -1132,8 +1132,11 @@ void shader(int *type, char *name, char *vs, char *ps)
 {
     if(lookupshaderbyname(name)) return;
 
-    defformatstring(info, "Just looking up a shader: %s...", name);
-    renderprogress(loadprogress, info);
+    if(!isinit)
+    {
+        defformatstring(info, "Just looking up a shader: %s...", name);
+        renderprogress(loadprogress, info);
+    }
     vector<char> vsbuf, psbuf, vsbak, psbak;
 #define GENSHADER(cond, body) \
     if(cond) \
@@ -1170,8 +1173,11 @@ void variantshader(int *type, char *name, int *row, char *vs, char *ps, int *max
     defformatstring(varname, "<variant:%d,%d>%s", s->numvariants(*row), *row, name);
     if(*maxvariants > 0)
     {
-        defformatstring(info, "Just looking up a shader: %s...", name);
-        renderprogress(min(s->variants.length() / float(*maxvariants), 1.0f), info);
+        if(!isinit)
+        {
+            defformatstring(info, "Just looking up a shader: %s...", name);
+            renderprogress(min(s->variants.length() / float(*maxvariants), 1.0f), info);
+        }
     }
     vector<char> vsbuf, psbuf, vsbak, psbak;
     GENSHADER(s->defaultparams.length(), genuniformdefs(vsbuf, psbuf, vs, ps, s));

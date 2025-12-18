@@ -950,7 +950,7 @@ bool load_world(const char *mname, const char *cname)        // still supports a
 
     if(game::editing()) conoutf(CON_DEBUG, "read map %s (%.1f seconds)", ogzname, (SDL_GetTicks()-loadingstart)/1000.0f);
 
-    clearmainmenu();
+    clearmainmenu(mname);
 
     identflags |= IDF_OVERRIDDEN;
     execfile("config/default_map_settings.cfg", false);

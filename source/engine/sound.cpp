@@ -265,6 +265,7 @@ void initsound()
     Mix_AllocateChannels(soundchans);
     maxchannels = soundchans;
     nosound = false;
+    if(isinit) playintromusic();
 }
 
 void musicdone()
@@ -298,10 +299,10 @@ Mix_Music *loadmusic(const char *name)
     return music;
 }
 
-void playmusic(const char *name, int *fade, const char *cmd)
+void playmusic(const char *name, const int fade, const char *cmd)
 {
     if(nosound) return;
-    stopmusic(*name ? 0 : *fade);
+    stopmusic(*name ? 0 : fade);
     if(!musicvol || !mastervol || !*name) return;
     string file;
     static const char * const exts[] = { "", ".wav", ".ogg" };
@@ -314,7 +315,7 @@ void playmusic(const char *name, int *fade, const char *cmd)
             DELETEA(musicdonecmd);
             musicfile = newstring(name);
             if(cmd && *cmd) musicdonecmd = newstring(cmd);
-            if(*fade) Mix_FadeInMusic(music, cmd && *cmd ? 0 : -1, *fade);
+            if(fade) Mix_FadeInMusic(music, cmd && *cmd ? 0 : -1, fade);
             else Mix_PlayMusic(music, cmd && *cmd ? 0 : -1);
             Mix_VolumeMusic((musicvol * mastervol * MIX_MAX_VOLUME) / (MAX_VOLUME * MAX_VOLUME));
             intret(1);
@@ -327,7 +328,15 @@ void playmusic(const char *name, int *fade, const char *cmd)
         intret(0);
     }
 }
-COMMANDN(music, playmusic, "sis");
+ICOMMAND(music, "sis", (const char* name, int *fade, const char* cmd), playmusic(name, *fade, cmd));
+
+SVAR(musicintro, "intro");
+
+void playintromusic()
+{
+    if(!musicintro) return;
+    playmusic(musicintro, 1000, NULL);
+}
 
 static Mix_Chunk *loadwav(const char *name)
 {
@@ -357,7 +366,7 @@ bool soundsample::load(const char *dir, bool msg)
     loopi(sizeof(exts)/sizeof(exts[0]))
     {
         formatstring(filename, "data/audio/%s%s%s", dir, name, exts[i]);
-        if(msg && !i) renderprogress(0, filename);
+        if(!isinit && msg && !i) renderprogress(0, filename);
         path(filename);
         chunk = loadwav(filename);
         if(chunk) return true;
@@ -647,7 +656,7 @@ void updatesounds()
         const int material = lookupmaterial(camera1->o);
         const bool inwater = player->state != CS_EDITING && isliquidmaterial(material & MATF_VOLUME);
         const bool firstpersondeath = player->state == CS_DEAD && game::camera::isfirstpersondeath();
-        if(mainmenu || inwater || firstpersondeath)
+        if(mainmenu == MENU_INTRO || inwater || firstpersondeath)
         {
             stopmapsounds();
         }

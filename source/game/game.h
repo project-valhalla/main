@@ -497,7 +497,7 @@ struct gameent : dynent, gamestate
     int weight;                         // affects the effectiveness of hitpush
     int clientnum, privilege, lastupdate, plag, ping;
     int lifesequence;                   // sequence id for each respawn, used in damage test
-    int respawned, suicided;
+	int respawned, suicided, spawned;
     int lastpain, lasthurt, lastspawn, lastthrow;
     int lastaction[NUMGUNS];
     int lastattack, lastattacker, lasthit, lastkill;
@@ -1100,6 +1100,7 @@ namespace game
             float bobfade, bobspeed, bobdist;
             vec direction;
             vec2 velocity;
+            vec2 parallax, parallaxVelocity;
 
             struct CameraEvent
             {
@@ -1138,7 +1139,7 @@ namespace game
             };
             zoominfo zoomstate;
 
-            camerainfo() : isdetached(false), yaw(0), pitch(0), roll(0), fov(1), bobfade(0), bobspeed(0), bobdist(0), direction(0, 0, 0), velocity(0, 0)
+            camerainfo() : isdetached(false), yaw(0), pitch(0), roll(0), fov(1), bobfade(0), bobspeed(0), bobdist(0), direction(0, 0, 0), velocity(0, 0), parallax(0, 0), parallaxVelocity(0, 0)
             {
             }
             ~camerainfo()

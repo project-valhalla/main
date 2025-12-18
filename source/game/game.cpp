@@ -17,11 +17,14 @@ namespace game
 
     void taunt(gameent *d)
     {
-        if(d->state!=CS_ALIVE || lastmillis-d->lasttaunt<1000) return;
-        d->lasttaunt = lastmillis;
+        if (d->state != CS_ALIVE || lastmillis - d->lasttaunt < 1000)
+        {
+            return;
+        }
         addmsg(N_TAUNT, "rc", self);
         playsound(getplayermodelinfo(d).tauntsound, d);
         self->attacking = ACT_IDLE;
+        d->lasttaunt = lastmillis;
     }
     ICOMMAND(taunt, "", (), taunt(self));
 

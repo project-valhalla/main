@@ -20,6 +20,7 @@ enum                            // static entity types
 
     TRIGGER, // attr1 = idx, attr2 = model, attr3 = radius, attr4 = delay
     TARGET, // attr1 = idx, attr2 = hostile, att3 = can move
+    CAMERA, // attr1 = id, attr2 = yaw, attr3 = pitch
 
     MAXENTTYPES
 };
@@ -62,7 +63,8 @@ static const struct gentityinfo { const char *name, *prettyname, *file; } gentit
     { "agility",         "Agility",            "item/agility"         },
     { "invulnerability", "Invulnerability",    "item/invulnerability" },
     { "trigger",         "Trigger",            "item/trigger"         },
-    { "target",          "Target",             NULL                   }
+    { "target",          "Target",             NULL                   },
+    { "camera",          "Camera",             NULL                   }
 };
 
 enum // power-up types

@@ -1022,9 +1022,21 @@ namespace entities
             }
             case FLAG:
             case TELEDEST:
+            case CAMERA:
             {
                 vec direction;
-                vecfromyawpitch(entity.attr1, 0, 1, 0, direction);
+                float yaw = 0;
+                float pitch = 0;
+                if (entity.type == CAMERA)
+                {
+                    yaw = entity.attr2;
+                    pitch = entity.attr3;
+                }
+                else
+                {
+                    yaw = entity.attr1;
+                }
+                vecfromyawpitch(yaw, pitch, 1, 0, direction);
                 renderentarrow(entity, direction, arrowRadius);
                 break;
             }

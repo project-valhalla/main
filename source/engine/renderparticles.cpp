@@ -1331,7 +1331,7 @@ static void makeparticles(entity &e)
         }
         case 1: //steam vent - <dir>
         {
-            regularsplash(PART_STEAM, 0x897661, 50, 1, 200, offsetvec(e.o, e.attr2, rnd(10)), 2.4f, -20);
+            regularsplash(PART_STEAM, 0x897661, 50, 1, 200, offsetvec(e.o, e.attr2, rnd(10)), 2.4f, -20, 0, 4.4f);
             break;
         }
         case 2: //water fountain - <dir>
@@ -1410,7 +1410,7 @@ static void makeparticles(entity &e)
         case 37:
         {
             const int color = colorfromattr(e.attr3);
-            regularsplash(PART_SPARK2, color, 150, 4, 280, offsetvec(e.o, e.attr2, rnd(10)), 0.15f, 1);
+            regularsplash(PART_SPARK2, color, e.attr4 ? e.attr4 : 150, 4, e.attr5 ? e.attr5 : 280, offsetvec(e.o, e.attr2, rnd(10)), 0.15f, 1, 0, 0.01f);
             break;
         }
         default:

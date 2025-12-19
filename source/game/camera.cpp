@@ -469,6 +469,7 @@ namespace game
         {
             zoom = 0;
             progress = 0;
+            self->zooming = 0;
         }
 
         bool camerainfo::zoominfo::isenabled()

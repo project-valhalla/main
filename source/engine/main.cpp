@@ -213,7 +213,7 @@ void renderbackgroundview(int w, int h, const char *caption, Texture *mapshot, c
     if(caption)
     {
         int tw = text_width(caption);
-        float tsz = 0.04f*lw/FONTH,
+        float tsz = 0.025f*lw/FONTH,
               tx = 0.5f*(w - tw*tsz), ty = h - 0.075f*1.5f*lw - FONTH*tsz;
         pushhudtranslate(tx, ty, tsz);
         draw_text(caption, 0, 0);

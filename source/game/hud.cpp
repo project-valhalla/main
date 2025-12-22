@@ -337,26 +337,6 @@ namespace game
         drawquad(x, y, dimension, dimension, 0, 0, 1, 1, false, false);
     }
 
-    void toggleZoomEffects(const int toggle)
-    {
-        if (toggle == 1)
-        {
-            const int type = guns[self->gunselect].zoom;
-            enablepostfx("scope", vec4(static_cast<float>(type), 0, 0, 0));
-        }
-        else if (toggle == 0)
-        {
-            disablepostfx("scope");
-        }
-        
-    }
-
-    void updateZoomEffects(const float progress)
-    {
-        const int type = guns[self->gunselect].zoom;
-        updatepostfx("scope", vec4(static_cast<float>(type), progress, 0, 0));
-    }
-
     FVARP(damagerolldiv, 0, 4.0f, 10);
 
     void setdamagehud(const int damage, gameent* d, gameent* actor)

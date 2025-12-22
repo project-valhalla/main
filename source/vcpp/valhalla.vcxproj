@@ -986,6 +986,7 @@
     <ClCompile Include="..\game\camera.cpp" />
     <ClCompile Include="..\game\event.cpp" />
     <ClCompile Include="..\game\gamephysics.cpp" />
+    <ClCompile Include="..\game\gameshader.cpp" />
     <ClCompile Include="..\game\hud.cpp" />
     <ClCompile Include="..\game\monster.cpp" />
     <ClCompile Include="..\game\projectile.cpp" />

@@ -829,7 +829,7 @@ namespace game
     extern bool isinvulnerable(gameent* target, gameent* actor);
 
     extern int vooshgun;
-    extern int maptime, maprealtime, maplimit;
+    extern int maptime, maprealtime, maplimit, lastmap;
     extern int lastspawnattempt;
     extern int following, specmode;
     extern int smoothmove, smoothdist;
@@ -1071,13 +1071,21 @@ namespace game
     extern void addbloodsplatter(const int amount, const int color);
     extern void addscreenflash(const int amount);
     extern void checkentity(int type);
-    extern void toggleZoomEffects(const int toggle);
-    extern void updateZoomEffects(const float progress);
 
     // worlddata.cpp
     extern void postWorldLoad();
 
     extern int lowhealthscreen;
+
+    namespace announcer
+    {
+        extern void parseannouncements(const gameent* d, gameent* actor, const int flags);
+        extern void update();
+        extern void reset();
+
+        extern bool announce(const int announcement, const bool shouldQueue = true);
+        extern bool playannouncement(const int sound, const bool shouldQueue = true);
+    }
 
     namespace camera
     {
@@ -1165,14 +1173,13 @@ namespace game
         extern int zoom;
     }
 
-    namespace announcer
+    namespace shaders
     {
-        extern void parseannouncements(const gameent* d, gameent* actor, const int flags);
-        extern void update();
-        extern void reset();
-
-        extern bool announce(const int announcement, const bool shouldQueue = true);
-        extern bool playannouncement(const int sound, const bool shouldQueue = true);
+        extern void prepareWorld();
+        extern void updateWorld();
+        extern void cleanUpWorld();
+        extern void toggleZoomEffects(const int toggle);
+        extern void updateZoomEffects(const float progress);
     }
 }
 

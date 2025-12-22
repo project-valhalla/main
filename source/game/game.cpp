@@ -5,7 +5,7 @@ namespace game
 {
     bool intermission = false, gamewaiting = false;
     bool betweenrounds = false, hunterchosen = false;
-    int maptime = 0, maprealtime = 0, maplimit = -1;
+    int maptime = 0, maprealtime = 0, maplimit = -1, lastmap = 0;
     int lastspawnattempt = 0;
 
     gameent *self = NULL; // ourselves (our client)
@@ -357,6 +357,7 @@ namespace game
                 // Extra step to allow spectators to move during intermission.
                 physics::moveplayer(self, 10, true);
             }
+            shaders::updateWorld();
         }
         if (self->clientnum >= 0)
         {
@@ -1078,6 +1079,7 @@ namespace game
         clearteaminfo();
         camera::reset();
         announcer::reset();
+        shaders::cleanUpWorld();
     }
 
     void startgame()
@@ -1112,9 +1114,8 @@ namespace game
         }
 
         syncplayer();
-
         camera::camera.zoomstate.disable();
-
+        shaders::prepareWorld();
         execident("on_mapstart");
     }
 

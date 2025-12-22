@@ -291,9 +291,9 @@ static const struct guninfo
         Zoom_Scope,
         Projectile_Invalid,
         {
-            -2.000f,
+            -1.000f,
             0,
-            -1.350f
+            -1.380f
         }
     },
     {

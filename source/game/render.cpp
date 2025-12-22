@@ -717,7 +717,7 @@ namespace game
                 d->lastswitch = 0;
             }
         }
-        if(d->lastswitch && lastmillis - d->lastswitch <= 600)
+        if(camera::camera.zoomstate.progress <= 0 && d->lastswitch && lastmillis - d->lastswitch <= 600)
         {
             if (animation >= 0)
             {

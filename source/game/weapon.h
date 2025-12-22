@@ -399,7 +399,7 @@ static const struct RecoilInfo
     },
     {
         45,
-        28,
+        20,
         100,
         60,
         4.5f,
@@ -418,7 +418,7 @@ static const struct RecoilInfo
     // smg
     {
         0,
-        10,
+        7,
         100,
         8,
         5.5f,

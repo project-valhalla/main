@@ -107,9 +107,9 @@ struct physent // base entity type, can be affected by physics
 {
     vec o, vel, falling; // origin, velocity
     vec deltapos, newpos; // movement interpolation
+    int inwater, timeinair;
     float yaw, pitch, roll;
     float speed; // cubes per second
-    int timeinair;
     float radius, eyeheight, maxheight, aboveeye; // bounding box size
     float xradius, yradius, zmargin;
     float headradius, legsradius;
@@ -117,7 +117,6 @@ struct physent // base entity type, can be affected by physics
     vec rfoot, lfoot, lastfootright, lastfootleft;
     vec floor; // the normal of floor the dynent is on
 
-    int inwater;
     bool jumping, doublejumping, climbing;
     char move, strafe, crouching, zooming;
 

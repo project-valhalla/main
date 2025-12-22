@@ -920,8 +920,8 @@ namespace game
 
     struct swayinfo
     {
-        float fade, speed, dist;
-        float yaw, pitch, pitchadd, roll;
+        float fade, speed, dist, verticalVelocity;
+        float yaw, pitch, roll;
         vec o, dir;
 
         struct hudent : dynent
@@ -939,7 +939,7 @@ namespace game
         };
         vector<swayEvent> events;
 
-        swayinfo() : fade(0), speed(0), dist(0), yaw(0), pitch(0), pitchadd(0), roll(0), o(0, 0, 0), dir(0, 0, 0)
+        swayinfo() : fade(0), speed(0), dist(0), verticalVelocity(0), yaw(0), pitch(0), roll(0), o(0, 0, 0), dir(0, 0, 0)
         {
         }
         ~swayinfo()

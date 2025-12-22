@@ -1718,6 +1718,9 @@ namespace game
     FVAR(swaydecay, 0.1f, 0.996f, 0.9999f);
     FVAR(swayinertia, 0.0f, 0.04f, 1.0f);
     FVAR(swaymaxinertia, 0.0f, 15.0f, 1000.0f);
+    FVAR(swayfallmin, -200.0f, -80.0f, 0);
+    FVAR(swayfallfactor, 0, 0.035f, 1);
+    FVAR(swayfallsmoothfactor, 0, 0.8f, 1);
 
     swayinfo sway;
 
@@ -1825,8 +1828,12 @@ namespace game
         trans.add(side.mul(cameravelocity.x * 0.06f));
         trans.z += cameravelocity.y * 0.045f;
 
+        verticalVelocity = verticalVelocity * swayfallsmoothfactor + owner->falling.z * (1.0f - swayfallsmoothfactor);
+        verticalVelocity = clamp(verticalVelocity, swayfallmin, 0.0f);
+		const float fallSwayPitch = verticalVelocity * swayfallfactor;
+
         rotationyaw += cameravelocity.x * -0.3f;
-        rotationpitch += cameravelocity.y * -0.3f;
+		rotationpitch += (cameravelocity.y * -0.3f) - fallSwayPitch;
         rotationroll += cameravelocity.x * -0.5f;
 
         camera::camera.velocity.x = cameravelocity.x * -0.3f + (camera::camera.direction.x * 0.5f);

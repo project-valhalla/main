@@ -108,14 +108,14 @@ static const struct attackinfo
 } attacks[NUMATKS] =
 {
     // melee: default melee for all weapons
-    { GUN_INVALID, ACT_MELEE,      Projectile_Invalid,  650,  60,  0,   0, 2,    0,   14,  1,   50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist      },
-    { GUN_MELEE,   ACT_MELEE,      Projectile_Invalid,  420,  25,  0,   0, 1,    0,   16,  1,   50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,  S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist      },
+    { GUN_INVALID, ACT_MELEE,      Projectile_Invalid,  650,  60,  0,   0, 2,    0,   14,  1,   50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,     S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist      },
+    { GUN_MELEE,   ACT_MELEE,      Projectile_Invalid,  420,  25,  0,   0, 1,    0,   16,  1,   50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,     S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist      },
     // shotgun
-    { GUN_SCATTER, ACT_PRIMARY,     Projectile_Bullet,  880,   5,  5, 125, 0, 2000, 1024, 20,   60,  0,  500, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
-    { GUN_SCATTER, ACT_SECONDARY,  Projectile_Invalid, 1000,   6,  5,  80, 0,    0, 1024, 10,   60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
+    { GUN_SCATTER, ACT_PRIMARY,     Projectile_Bullet,  880,   5,  5, 170, 0, 2000, 1024, 20,   60,  0,  500, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
+    { GUN_SCATTER, ACT_SECONDARY,  Projectile_Invalid, 1000,   6,  5,  70, 0,    0, 1024, 10,   60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
     // smg
     { GUN_SMG,     ACT_PRIMARY,     Projectile_Bullet,  110,  16, 14,  40, 0, 2000, 1024,  1,   60,  0,  500, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
-    { GUN_SMG,     ACT_SECONDARY,  Projectile_Invalid,  125,  20, 15,  20, 0,    0, 1024,  1,   80,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
+    { GUN_SMG,     ACT_SECONDARY,  Projectile_Invalid,  125,  20, 15,  20, 0,    0, 1024,  1,   80,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
     // pulse
     { GUN_PULSE,   ACT_PRIMARY,      Projectile_Pulse,  180,  22,  0,   0, 1, 1000, 2048,  1,   80, 18, 3000, 2,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_PULSE1,        S_PULSE_EXPLODE,   S_HIT_WEAPON,  Death_Explosion },
     { GUN_PULSE,   ACT_SECONDARY,  Projectile_Invalid,   80,  14,  0,   0, 0,    0,  200,  1,  150,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_PULSE2_A,      S_IMPACT_PULSE,    S_HIT_WEAPON,  Death_Shock     },
@@ -138,10 +138,18 @@ static const struct attackinfo
     { GUN_ZOMBIE,  ACT_MELEE,      Projectile_Invalid,  600, 100,  0,   0, 4,    0,   15,  1,   20,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,     S_ZOMBIE,        S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist      }
 };
 
+enum
+{
+    Zoom_None = 0,
+    Zoom_Sight,
+    Zoom_Scope
+};
+
 static const struct guninfo
 {
     const char *name, *model, *worldmodel;
     int attacks[NUMACTS], switchsound, abilitySound, abilityFailSound, zoom, ejectprojectile;
+    vec zoomPosition;
 } guns[NUMGUNS] =
 {
     {
@@ -154,8 +162,13 @@ static const struct guninfo
         S_SG_SWITCH,
         S_INVALID,
         S_INVALID,
-        Zoom_None,
-        Projectile_Casing3
+        Zoom_Sight,
+        Projectile_Casing3,
+        {
+            -1.6,
+            -1.2f,
+            -1.3f
+        }
     },
     {
         "smg",
@@ -167,8 +180,13 @@ static const struct guninfo
         S_SG_SWITCH,
         S_INVALID,
         S_INVALID,
-        Zoom_Shadow,
-        Projectile_Casing
+        Zoom_Sight,
+        Projectile_Casing,
+        {
+            -2.500,
+            0,
+            -1.608f
+        }
     },
     {
         "pulse",
@@ -181,7 +199,12 @@ static const struct guninfo
         S_INVALID,
         S_INVALID,
         Zoom_None,
-        Projectile_Invalid
+        Projectile_Invalid,
+        {
+            0,
+            0,
+            0
+        }
     },
     {
         "rocket",
@@ -194,7 +217,12 @@ static const struct guninfo
         S_ROCKET_ABILITY,
         S_ROCKET_ABILITY_FAIL,
         Zoom_None,
-        Projectile_Invalid
+        Projectile_Invalid,
+        {
+            0,
+            0,
+            0
+        }
     },
     {
         "railgun",
@@ -207,7 +235,12 @@ static const struct guninfo
         S_INVALID,
         S_INVALID,
         Zoom_Scope,
-        Projectile_Casing2
+        Projectile_Casing2,
+        {
+            -1.000f,
+            0,
+            -1.380f
+        }
     },
     {
         "grenade",
@@ -220,7 +253,12 @@ static const struct guninfo
         S_INVALID,
         S_INVALID,
         Zoom_None,
-        Projectile_Invalid
+        Projectile_Invalid,
+        {
+            0,
+            0,
+            0
+        }
     },
     {
         "pistol",
@@ -233,7 +271,12 @@ static const struct guninfo
         S_INVALID,
         S_INVALID,
         Zoom_None,
-        Projectile_Invalid
+        Projectile_Invalid,
+        {
+            0,
+            0,
+            0
+        }
     },
     {
         "instagun",
@@ -246,7 +289,12 @@ static const struct guninfo
         S_INVALID,
         S_INVALID,
         Zoom_Scope,
-        Projectile_Invalid
+        Projectile_Invalid,
+        {
+            -2.000f,
+            0,
+            -1.350f
+        }
     },
     {
         "zombie",
@@ -258,8 +306,13 @@ static const struct guninfo
         S_INVALID,
         S_INVALID,
         S_INVALID,
-        Zoom_Shadow,
-        Projectile_Invalid
+        Zoom_Sight,
+        Projectile_Invalid,
+        {
+            0,
+            0,
+            0
+        }
     },
     {
         "melee",
@@ -272,7 +325,12 @@ static const struct guninfo
         S_INVALID,
         S_INVALID,
         Zoom_None,
-        Projectile_Invalid
+        Projectile_Invalid,
+        {
+            0,
+            0,
+            0
+        }
     }
 };
 
@@ -340,7 +398,7 @@ static const struct RecoilInfo
         }
     },
     {
-        0,
+        45,
         28,
         100,
         60,
@@ -377,7 +435,7 @@ static const struct RecoilInfo
         }
     },
     {
-        0,
+        30,
         3,
         80,
         5,
@@ -470,7 +528,7 @@ static const struct RecoilInfo
     },
     // railgun
     {
-        0,
+        00,
         30,
         0,
         30,
@@ -488,7 +546,7 @@ static const struct RecoilInfo
         }
     },
     {
-        0,
+        45,
         30,
         0,
         50,

@@ -555,8 +555,16 @@ namespace game
             {
                 adddynlight(vec(to).madd(dir, 4), 6, vec(0.5f, 0.375f, 0.25f), 140, 10);
                 if (hit || iswater || isglass) break;
-                particle_splash(PART_SPARK2, 10, 80 + rnd(380), to, 0xFFC864, 0.1f, 250, 2, 0.001f);
-                particle_splash(PART_SMOKE, 10, 250, to, 0x555555, 0.1f, 100, 100, 7.0f);
+                if (atk == ATK_SCATTER2)
+                {
+                    particle_splash(PART_SPARK2, 10, 120, to, 0xFFC864, 0.25f, 250, 2, 0.001f);
+                    particle_splash(PART_SMOKE, 10, 250, to, 0x555555, 0.1f, 100, 100, 10.0f);
+                }
+                else
+                {
+                    particle_splash(PART_SPARK2, 10, 80 + rnd(380), to, 0xFFC864, 0.1f, 250, 2, 0.001f);
+                    particle_splash(PART_SMOKE, 10, 250, to, 0x555555, 0.1f, 100, 100, 7.0f);
+                }
                 addstain(STAIN_BULLETHOLE_SMALL, to, vec(from).sub(to).normalize(), 0.50f + rndscale(1.0f), 0xFFFFFF, rnd(4));
                 break;
             }
@@ -568,7 +576,7 @@ namespace game
                 if (hit || iswater || isglass) break;
                 particle_fireball(to, 0.5f, PART_EXPLOSION2, 120, 0xFFC864, 2.0f);
                 particle_splash(PART_EXPLODE4, 50, 40, to, 0xFFC864, 1.0f, 150, 2, 0.1f);
-                particle_splash(PART_SPARK2, 30, 250, to, 0xFFC864, 0.05f + rndscale(0.2f), 250, 2, 0.001f);
+                particle_splash(PART_SPARK2, 30, atk == ATK_SMG2 ? 100 : 250, to, 0xFFC864, 0.05f + rndscale(0.2f), 250, 2, 0.001f);
                 particle_splash(PART_SMOKE, 30, 250, to, 0x555555, 0.2f, 80, 100, 6.0f);
                 addstain(STAIN_BULLETHOLE_SMALL, to, vec(from).sub(to).normalize(), 0.50f + rndscale(1.0f), 0xFFFFFF, rnd(4));
                 break;
@@ -689,13 +697,28 @@ namespace game
             {
                 if (d->muzzle.x >= 0 && muzzleflash)
                 {
-                    if (d == hud)
+                    if (atk == ATK_SCATTER2 && d == hud)
+                    {
+                        particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH, 0xEFE598, 2.0f, d);
+                    }
+                    else
                     {
                         particle_flare(d->muzzle, d->muzzle, 850, PART_MUZZLE_SMOKE, 0x202020, 0.1f, d, 3.0f);
                         particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0xEFE598, 0.1f, d, 3.0f + rndscale(5.0f));
+                        particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH, 0xEFE598, 3.0f, d, 0.1f);
                     }
-                    particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH, 0xEFE598, 3.0f, d, 0.1f);
                     adddynlight(hudgunorigin(atk, d->o, to, d), 200, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
+                    if (atk == ATK_SCATTER2)
+                    {
+                        loopi(attacks[atk].rays)
+                        {
+                            particle_flare(hudgunorigin(atk, from, rays[i], d), rays[i], 50, PART_TRAIL, 0xFFC864, 1.0f);
+                        }
+                    }
+                }
+                if (atk == ATK_SCATTER2)
+                {
+                   
                 }
                 if (!local)
                 {
@@ -703,13 +726,6 @@ namespace game
                     {
                         offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i], d);
                         impacteffects(atk, d, from, rays[i], hit);
-                    }
-                }
-                if (atk == ATK_SCATTER2)
-                {
-                    loopi(attacks[atk].rays)
-                    {
-                        particle_flare(hudgunorigin(atk, from, rays[i], d), rays[i], 80, PART_TRAIL, 0xFFC864, 0.95f);
                     }
                 }
                 break;
@@ -720,15 +736,19 @@ namespace game
             {
                 if (d->muzzle.x >= 0 && muzzleflash)
                 {
-                    if (d == hud)
+                    if (atk == ATK_SMG2 && d == hud)
+                    {
+                        particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, d, 1.8f);
+                        particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 50, PART_TRAIL, 0xFFC864, 1.0f);
+                    }
+                    else
                     {
                         particle_flare(d->muzzle, d->muzzle, 300, PART_MUZZLE_SMOKE, 0xFFFFFF, 0.5f, d, 2.0f);
                         particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0xEFE898, 0.1f, d, 4.0f);
+                        particle_flare(d->muzzle, d->muzzle, 130, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, d, 1.8f);
                     }
-                    particle_flare(d->muzzle, d->muzzle, 130, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, d, 1.8f);
-                    adddynlight(hudgunorigin(atk, d->o, to, d), 120, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_EXPAND, 0, vec(0, 0, 0), d);
+                    adddynlight(hudgunorigin(gun, d->o, to, d), 120, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_EXPAND, 0, vec(0, 0, 0), d);
                 }
-                if (atk == ATK_SMG2) particle_flare(hudgunorigin(atk, from, to, d), to, 80, PART_TRAIL, 0xFFC864, 0.95f);
                 if (!local) impacteffects(atk, d, from, to, hit);
                 break;
             }
@@ -1643,7 +1663,7 @@ namespace game
     vec hudgunorigin(int attack, const vec& from, const vec& to, gameent* d)
     {
         // When zoomed in, originate from the feet position to avoid obstructing view.
-        if (camera::camera.zoomstate.isenabled() && d == self)
+        if (camera::camera.zoomstate.isenabled() && guns[d->gunselect].zoom == Zoom_Scope && d == self)
         {
             return d->feetpos(4);
         }
@@ -1707,14 +1727,28 @@ namespace game
         dir.mul(k);
         vec vel(owner->vel);
         vel.add(owner->falling);
-        dir.add(vec(vel).mul((1 - k) / (8 * max(vel.magnitude(), owner->speed))));
+        const float zoomFactor = 1.0f - camera::camera.zoomstate.progress;
+        dir.add(vec(vel).mul((1 - k) / (8 * max(vel.magnitude(), owner->speed)) * zoomFactor));
 
         yaw = owner->yaw;
         pitch = owner->pitch;
         roll = owner->roll * swayrollfactor;
     }
 
-    void swayinfo::update(gameent* owner)
+    FVAR(weaponoffsetx, -5.0f, -2.955f, 5.0f);
+    FVAR(weaponoffsety, -5.0f, -1.136f, 5.0f);
+    FVAR(weaponoffsetz, -5.0f, -2.120f, 5.0f);
+
+    void swayinfo::updatePosition(const gameent* owner, vec& position)
+    {
+        const vec basePosition = vec(weaponoffsetx, weaponoffsety, weaponoffsetz);
+        position = basePosition;
+        const vec zoomPosition = guns[owner->gunselect].zoomPosition;
+        const float progress = camera::camera.zoomstate.progress;
+        position.lerp(basePosition, zoomPosition, 1.0f - expf(-4.0f * progress));
+    }
+
+    void swayinfo::update(gameent* owner, vec& position)
     {
         if (owner->physstate >= PHYS_SLOPE || owner->climbing)
         {
@@ -1732,12 +1766,13 @@ namespace game
 
         updatedirection(owner);
         processevents();
+        updatePosition(owner, position);
 
         vecfromyawpitch(owner->yaw, 0, 0, 1, o);
 
         float steps = dist / swaystep * M_PI;
-
-        o.mul(swayside * sinf(steps));
+        const float zoomFactor = 1.0f - camera::camera.zoomstate.progress;
+        o.mul(swayside * sinf(steps) * zoomFactor);
 
         vec side = vec((owner->yaw + 90) * RAD, 0.0f), trans = vec(0, 0, 0);
 
@@ -1757,12 +1792,11 @@ namespace game
         // Walk cycle animation.
         vec directionforward = vec(owner->yaw * RAD, 0.0f), directionside = vec((owner->yaw + 90) * RAD, 0.0f);
         float rotationyaw = 0, rotationpitch = 0, rotationroll = 0;
-
-        trans.add(vec(directionforward).mul(swayside * magic4 * 2.0f));
-        trans.add(vec(directionside).mul(swayside * magic5 * 2.0f));
+        trans.add(vec(directionforward).mul(swayside * magic4 * 2.0f * zoomFactor));
+        trans.add(vec(directionside).mul(swayside * magic5 * 2.0f * zoomFactor));
         trans.add(vec(o).mul(-4.0f));
         trans.z += swayup * magic2 * 1.5f;
-        trans.z += swayup * (fabs(sinf(steps)) - 1);
+        trans.z += swayup * (fabs(sinf(steps)) - 1) * zoomFactor;
         trans.z -= speedfactor * 0.15f;
 
         rotationyaw += swayside * magic3 * 24.0f;
@@ -1839,7 +1873,8 @@ namespace game
                     case SwayEvent_Jump:
                     {
                         const float progress = clamp((lastmillis - event.millis) / static_cast<float>(event.duration), 0.0f, 1.0f);
-                        const float curve = sinf(progress * M_PI) * event.factor;
+                        const float zoomFactor = 1.0f - camera::camera.zoomstate.progress;
+                        const float curve = sinf(progress * M_PI) * event.factor * zoomFactor;
                         pitch += curve;
                         dir.z -= curve * 0.012f;
                         break;

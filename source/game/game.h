@@ -121,13 +121,6 @@ enum
     TimeUpdate_Intermission
 };
 
-enum
-{
-    Zoom_None = 0,
-    Zoom_Shadow,
-    Zoom_Scope
-};
-
 // network messages codes, c2s, c2c, s2c
 enum
 {
@@ -497,7 +490,7 @@ struct gameent : dynent, gamestate
     int weight;                         // affects the effectiveness of hitpush
     int clientnum, privilege, lastupdate, plag, ping;
     int lifesequence;                   // sequence id for each respawn, used in damage test
-	int respawned, suicided, spawned;
+    int respawned, suicided, spawned;
     int lastpain, lasthurt, lastspawn, lastthrow;
     int lastaction[NUMGUNS];
     int lastattack, lastattacker, lasthit, lastkill;
@@ -954,7 +947,8 @@ namespace game
         }
 
         void updatedirection(gameent* owner);
-        void update(gameent* owner);
+        void updatePosition(const gameent* owner, vec& position);
+        void update(gameent* owner, vec& position);
         void addevent(const gameent* owner, int type, int duration, float factor);
         void processevents();
     };
@@ -1077,6 +1071,8 @@ namespace game
     extern void addbloodsplatter(const int amount, const int color);
     extern void addscreenflash(const int amount);
     extern void checkentity(int type);
+    extern void toggleZoomEffects(const int toggle);
+    extern void updateZoomEffects(const float progress);
 
     // worlddata.cpp
     extern void postWorldLoad();
@@ -1161,6 +1157,7 @@ namespace game
         extern void reset();
         extern void restore(const bool shouldIgnorePitch = false);
         extern void fixrange();
+        extern void toggleWeaponZoom();
 
         extern bool allowthirdperson();
 

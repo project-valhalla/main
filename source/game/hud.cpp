@@ -300,49 +300,61 @@ namespace game
         {
             return;
         }
-
-        int zoomtype = checkweaponzoom();
-        if (!zoomtype)
+        const int zoomType = checkweaponzoom();
+        if (zoomType != Zoom_Scope)
         {
             return;
         }
-
         hudshader->set();
-        Texture* scopetex = NULL;
-        if (!scopetex)
-        {
-            if (zoomtype == Zoom_Scope) scopetex = textureload("data/interface/hud/scope.png", 3);
-            else if (zoomtype == Zoom_Shadow) scopetex = textureload("data/interface/shadow.png", 3);
-        }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        setusedtexture(scopetex);
-        float alpha = camera::camera.zoomstate.progress;
-        if (zoomtype == Zoom_Scope)
+        const float alpha = camera::camera.zoomstate.progress;
+        static Texture* scopeTexture = NULL;
+        if (!scopeTexture)
         {
-            float x = 0, y = 0, dimension = 0;
-            if (w > h)
-            {
-                dimension = h;
-                x += (w - h) / 2;
-                drawblend(0, 0, x, dimension, 0, 0, 0, alpha);
-                drawblend(x + dimension, 0, x + 1, dimension, 0, 0, 0, alpha);
-            }
-            else if (h > w)
-            {
-                dimension = w;
-                y += (h - w) / 2;
-                drawblend(0, 0, dimension, y, 0, 0, 0, alpha);
-                drawblend(0, y + dimension, dimension, y, 0, 0, 0, alpha);
-            }
-            else dimension = h;
-            gle::colorf(1, 1, 1, alpha);
-            drawquad(x, y, dimension, dimension, 0, 0, 1, 1, false, false);
+            scopeTexture = textureload("data/interface/hud/scope.png", 3);
+        }
+        setusedtexture(scopeTexture);
+        float x = 0, y = 0, dimension = 0;
+        if (w > h)
+        {
+            dimension = h;
+            x += (w - h) / 2;
+            drawblend(0, 0, x, dimension, 0, 0, 0, alpha);
+            drawblend(x + dimension, 0, x + 1, dimension, 0, 0, 0, alpha);
+        }
+        else if (h > w)
+        {
+            dimension = w;
+            y += (h - w) / 2;
+            drawblend(0, 0, dimension, y, 0, 0, 0, alpha);
+            drawblend(0, y + dimension, dimension, y, 0, 0, 0, alpha);
         }
         else
         {
-            gle::colorf(1, 1, 1, alpha);
-            hudquad(0, 0, w, h);
+            dimension = h;
         }
+        gle::colorf(1, 1, 1, alpha);
+        drawquad(x, y, dimension, dimension, 0, 0, 1, 1, false, false);
+    }
+
+    void toggleZoomEffects(const int toggle)
+    {
+        if (toggle == 1)
+        {
+            const int type = guns[self->gunselect].zoom;
+            enablepostfx("scope", vec4(static_cast<float>(type), 0, 0, 0));
+        }
+        else if (toggle == 0)
+        {
+            disablepostfx("scope");
+        }
+        
+    }
+
+    void updateZoomEffects(const float progress)
+    {
+        const int type = guns[self->gunselect].zoom;
+        updatepostfx("scope", vec4(static_cast<float>(type), progress, 0, 0));
     }
 
     FVARP(damagerolldiv, 0, 4.0f, 10);
@@ -528,7 +540,7 @@ namespace game
     int selectcrosshair(vec4& color, const int type)
     {
         gameent* hud = followingplayer(self);
-        if (hud->state == CS_SPECTATOR || hud->state == CS_DEAD || intermission)
+        if (hud->zooming || hud->state == CS_SPECTATOR || hud->state == CS_DEAD || intermission)
         {
             return Pointer_Null;
         }

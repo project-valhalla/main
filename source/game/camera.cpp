@@ -429,11 +429,11 @@ namespace game
         camerainfo camera;
 
         VARP(camerafov, 10, 100, 150);
-        VAR(avatarzoomfov, 1, 1, 60);
+        VAR(avatarzoomfov, 1, 25, 60);
         VAR(avatarfov, 10, 39, 100);
-        VAR(zoom, -1, 0, 1);
-        VARP(zoominvel, 0, 90, 500);
-        VARP(zoomoutvel, 0, 80, 500);
+        VARF(zoom, -1, 0, 1, toggleZoomEffects(zoom));
+        VARP(zoominvel, 110, 110, 500);
+        VARP(zoomoutvel, 0, 150, 500);
         VARP(zoomfov, 10, 42, 90);
 
         void camerainfo::zoominfo::update()
@@ -448,6 +448,7 @@ namespace game
             if (zoom > 0)
             {
                 progress = zoominvel ? min(progress + float(elapsedtime) / zoominvel, 1.0f) : 1;
+                updateZoomEffects(progress);
                 if (progress >= 1)
                 {
                     self->zooming = 1;
@@ -456,9 +457,11 @@ namespace game
             else
             {
                 progress = zoomoutvel ? max(progress - float(elapsedtime) / zoomoutvel, 0.0f) : 0;
+                updateZoomEffects(progress);
                 if (progress <= 0)
                 {
                     zoom = self->zooming = 0;
+                    toggleZoomEffects(zoom);
                 }
             }
             curfov = (zoomfov * progress + camerafov * (1 - progress)) * camera.fov;
@@ -470,11 +473,25 @@ namespace game
             zoom = 0;
             progress = 0;
             self->zooming = 0;
+            toggleZoomEffects(zoom);
         }
 
         bool camerainfo::zoominfo::isenabled()
         {
             return progress >= 1 && zoom >= 1;
+        }
+
+        void toggleWeaponZoom()
+        {
+            if (identexists("dozoom"))
+            {
+                execident("dozoom");
+            }
+            else
+            {
+                camera::zoom = camera::zoom ? -1 : 1;
+                toggleZoomEffects(zoom);
+            }
         }
 
         VARP(camerabob, 0, 1, 1);

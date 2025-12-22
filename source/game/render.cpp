@@ -621,11 +621,12 @@ namespace game
             }
             renderplayer(d, fade);
         }
+        const bool isScoped = isthirdPerson && self->zooming && guns[self->gunselect].zoom == Zoom_Scope;
         if (exclude)
         {
             renderplayer(exclude, 1, MDL_ONLYSHADOW);
         }
-        else if (!f && (self->state == CS_ALIVE || (self->state == CS_EDITING && isthirdPerson) || (self->state == CS_DEAD && showdeadplayers)) && camera::camera.zoomstate.progress < 1)
+        else if (!f && (self->state == CS_ALIVE || (self->state == CS_EDITING && isthirdPerson) || (self->state == CS_DEAD && showdeadplayers)) && !isScoped)
         {
             float fade = 1.0f;
             if (self->deathstate == Death_Fall)
@@ -645,11 +646,15 @@ namespace game
     void drawhudmodel(gameent *d, int anim, int basetime)
     {
         const char *file = guns[d->gunselect].model;
-        if(!file) return;
-
-        sway.update(d);
+        if (!file)
+        {
+            return;
+        }
+        vec position;
+        sway.update(d, position);
         const playermodelinfo &playermodel = getplayermodelinfo(d);
-        int team = m_teammode && validteam(d->team) ? d->team : 0, color = getplayercolor(d, team);
+        const int team = m_teammode && validteam(d->team) ? d->team : 0;
+        const int color = getplayercolor(d, team);
         defformatstring(gunname, "%s/%s", playermodel.armdirectory, file);
         d->muzzle = d->eject = d->hand = vec(-1, -1, -1);
         modelattach a[4];
@@ -663,20 +668,24 @@ namespace game
             basetime = 0;
         }
         int flags = MDL_NOBATCH;
-        if (lastmillis - d->lastspawn <= SPAWN_DURATION)
+        const bool isScoped = guns[d->gunselect].zoom == Zoom_Scope && camera::camera.zoomstate.progress;
+        if (lastmillis - d->lastspawn <= SPAWN_DURATION || isScoped)
         {
             flags |= MDL_FORCETRANSPARENT;
         }
-        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, flags, &sway.interpolation, a, basetime, 0, 1, vec4(vec::hexcolor(color)));
-
-        if(d->muzzle.x >= 0) d->muzzle = calcavatarpos(d->muzzle, 12);
+        rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, flags, &sway.interpolation, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1), position);
+        if (d->muzzle.x >= 0)
+        {
+            d->muzzle = calcavatarpos(d->muzzle, 12);
+        }
     }
 
     void drawhudgun()
     {
         gameent *d = hudplayer();
         extern int hudgun;
-        if(mainmenu || d->state == CS_DEAD || d->state == CS_SPECTATOR || d->state == CS_EDITING || !hudgun || editmode)
+        const bool isScoped = camera::camera.zoomstate.isenabled() && guns[d->gunselect].zoom == Zoom_Scope;
+        if(mainmenu || d->state == CS_DEAD || d->state == CS_SPECTATOR || d->state == CS_EDITING || !hudgun || editmode || isScoped)
         {
             d->muzzle = self->muzzle = vec(-1, -1, -1);
             d->eject = self->eject = vec(-1, -1, -1);

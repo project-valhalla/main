@@ -66,6 +66,14 @@ extern void reloadfonts();
 
 static inline void setfont(font *f) { if(f) curfont = f; }
 
+// shader
+extern GLuint setuppostfx(int w, int h, GLuint outfbo = 0);
+extern void cleanuppostfx(bool fullclean = false);
+extern void renderpostfx(GLuint outfbo = 0);
+extern void enablepostfx(const char* name, const vec4& params = vec4(0, 0, 0, 0));
+extern bool updatepostfx(const char* name, const vec4& params);
+extern void disablepostfx(const char* name);
+
 // texture
 extern int hwtexsize, hwcubetexsize, hwmaxaniso, maxtexsize, hwtexunits, hwvtexunits;
 
@@ -84,9 +92,6 @@ extern void createtexture(int tnum, int w, int h, const void *pixels, int clamp,
 extern void create3dtexture(int tnum, int w, int h, int d, const void *pixels, int clamp, int filter, GLenum component = GL_RGB, GLenum target = GL_TEXTURE_3D, bool swizzle = false);
 extern void blurtexture(int n, int bpp, int w, int h, uchar *dst, const uchar *src, int margin = 0);
 extern void blurnormals(int n, int w, int h, bvec *dst, const bvec *src, int margin = 0);
-extern GLuint setuppostfx(int w, int h, GLuint outfbo = 0);
-extern void cleanuppostfx(bool fullclean = false);
-extern void renderpostfx(GLuint outfbo = 0);
 extern void initenvmaps();
 extern void genenvmaps();
 extern ushort closestenvmap(const vec &o);

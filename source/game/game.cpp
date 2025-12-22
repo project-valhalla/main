@@ -516,21 +516,13 @@ namespace game
             camera::camera.zoomstate.disable();
             return true;
         }
-
-        const int zoomtype = checkweaponzoom();
-        if (zoomtype != Zoom_None)
+        const int zoomType = checkweaponzoom();
+        if (zoomType != Zoom_None)
         {   
             if (act == ACT_SECONDARY)
             {
                 sendsound(S_WEAPON_ZOOM, self);
-                if (identexists("dozoom"))
-                {
-                    execident("dozoom");
-                }
-                else
-                {
-                    camera::zoom = camera::zoom ? -1 : 1;
-                }
+                camera::toggleWeaponZoom();
                 if (self->attacking == ACT_PRIMARY)
                 {
                     /* When zooming in while firing with the primary mode,
@@ -542,7 +534,12 @@ namespace game
             }
             if (act == ACT_PRIMARY)
             {
-                if (camera::camera.zoomstate.isenabled())
+                const int attack = guns[gun].attacks[act];
+
+                // Automatic weapons should always use the zoomed fire mode when zooming in.
+                const bool isAuto = camera::zoom && attacks[attack].isfullauto;
+
+                if (isAuto || camera::camera.zoomstate.isenabled())
                 {
                     act = ACT_SECONDARY;
                 }

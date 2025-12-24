@@ -392,6 +392,10 @@ namespace game
             return;
         }
         d->delay[gun] = 0;
+        if (attacks[attack].action == ACT_THROW || attacks[attack].action == GUN_MELEE)
+        {
+            camera::camera.zoomstate.disable();
+        }
 
         // If the action is a throw and we have no throw timestamp.
         if (attacks[attack].action == ACT_THROW && !d->lastthrow)
@@ -704,7 +708,7 @@ namespace game
                     else
                     {
                         particle_flare(d->muzzle, d->muzzle, 850, PART_MUZZLE_SMOKE, 0x202020, 0.1f, d, 3.0f);
-                        particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0xEFE598, 0.1f, d, 3.0f + rndscale(5.0f));
+                        particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0xEFE598, 0.1f, d, 3.0f);
                         particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH, 0xEFE598, 3.0f, d, 0.1f);
                     }
                     adddynlight(hudgunorigin(atk, d->o, to, d), 200, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
@@ -715,10 +719,6 @@ namespace game
                             particle_flare(hudgunorigin(atk, from, rays[i], d), rays[i], 50, PART_TRAIL, 0xFFC864, 1.0f);
                         }
                     }
-                }
-                if (atk == ATK_SCATTER2)
-                {
-                   
                 }
                 if (!local)
                 {
@@ -744,7 +744,7 @@ namespace game
                     else
                     {
                         particle_flare(d->muzzle, d->muzzle, 300, PART_MUZZLE_SMOKE, 0xFFFFFF, 0.5f, d, 2.0f);
-                        particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0xEFE898, 0.1f, d, 4.0f);
+                        particle_flare(d->muzzle, d->muzzle, 120, PART_SPARKS, 0xEFE898, 0.1f, d, 3.0f);
                         particle_flare(d->muzzle, d->muzzle, 130, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, d, 1.8f);
                     }
                     adddynlight(hudgunorigin(gun, d->o, to, d), 120, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_EXPAND, 0, vec(0, 0, 0), d);
@@ -794,7 +794,7 @@ namespace game
                 {
                     if (d == hud)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0x77DD77, 0.1f, d, 3.0f + rndscale(5.0f));
+                        particle_flare(d->muzzle, d->muzzle, 180, PART_SPARKS, 0x77DD77, 0.1f, d, 3.0f);
                         particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x202020, 3.0f, d);
                     }
                     particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 1.75f, d);
@@ -808,7 +808,9 @@ namespace game
 
             case ATK_GRENADE1:
             {
-                from = d->hand;
+                // Hand is not rendered when fully zoomed in. Use player origin.
+                from = camera::camera.zoomstate.isenabled() ? d->o : d->hand;
+
                 to.addz(dist / 8);
                 break;
             }
@@ -822,7 +824,7 @@ namespace game
                     {
                         if (d == hud)
                         {
-                            particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0x00FFFF, 0.1f, d, 5.0f);
+                            particle_flare(d->muzzle, d->muzzle, 180, PART_SPARKS, 0x00FFFF, 0.1f, d, 3.0f);
                         }
                         particle_flare(d->muzzle, d->muzzle, 120, PART_MUZZLE_FLASH3, 0x00FFFF, 0.1f, d, 2.5f);
                         particle_flare(hudgunorigin(atk, from, to, d), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
@@ -1670,7 +1672,7 @@ namespace game
         }
         else
         {
-            vec position;
+            vec position = d->o;
             if (attacks[attack].action == ACT_THROW && d->hand.x >= 0) // Check if the hand position is useful and defined.
             {
                 // "Thrown" projectiles should originate from the hand position.

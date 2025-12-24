@@ -649,16 +649,18 @@ namespace game
                 case Projectile_Pulse:
                 {
                     tailColor = 0xDD88DD;
-                    const float tailGrowth = clamp(static_cast<float>(lastmillis - proj.millis) / 50.0f, 0.0f, 1.0f);
-                    tailSize = lerp(0.2f, 2.0f, tailGrowth);
+                    const float fade = projs[proj.projectile].fade;
+                    const float progress = clamp(static_cast<float>(lastmillis - proj.millis) / fade, 0.0f, 1.0f);
+                    tailSize = lerp(0.2f, 2.0f, progress);
                     particle_flare(position, position, 1, PART_ORB, tailColor, tailSize);
                     break;
                 }
                 case Projectile_Plasma:
                 {
                     tailColor = 0x00FFFF;
-                    const float tailGrowth = clamp(static_cast<float>(lastmillis - proj.millis) / 1000.0f, 0.0f, 1.0f);
-                    tailSize = 5.0f * ease::outelastic(tailGrowth);
+                    const float fade = projs[proj.projectile].fade;
+                    const float progress = clamp(static_cast<float>(lastmillis - proj.millis) / fade, 0.0f, 1.0f);
+                    tailSize = 5.0f * ease::outelastic(progress);
                     particle_flare(position, position, 1, PART_ORB, tailColor, tailSize);
                     break;
                 }
@@ -666,7 +668,7 @@ namespace game
                 {
                     if (blood && hasEnoughVelocity)
                     {
-                        regular_particle_splash(PART_BLOOD, 0 + rnd(4), 400, position, getbloodcolor(proj.owner), 1.0f, 25);
+                        regular_particle_splash(PART_BLOOD, 1, 200, position, getbloodcolor(proj.owner), 2.5f, 50, 2, 0, 0.1f);
                     }
                     break;
                 }
@@ -790,7 +792,27 @@ namespace game
                 {
                     if (proj.flags & ProjFlag_Bounce)
                     {
-                        proj.roll += old.sub(proj.o).magnitude() / (4 * RAD);
+                        if (proj.vel.magnitude() >= 25.0f)
+                        {
+                            const float displacement = old.sub(proj.o).magnitude() / (4.0f * RAD);
+                            proj.roll += displacement;
+                            float pitch = 0;
+                            vectoyawpitch(proj.vel, proj.yaw, pitch);
+                            if (proj.flags & ProjFlag_Junk)
+                            {
+                                proj.pitch += displacement;
+                            }
+                            else
+                            {
+                                proj.pitch = pitch;
+                            }
+                            proj.yaw += 90;
+                            proj.lastYaw = proj.yaw;
+                        }
+                        else
+                        {
+                            proj.yaw = proj.lastYaw;
+                        }
                         proj.offsetMillis = max(proj.offsetMillis - time, 0);
                         proj.limitOffset();
                     }
@@ -848,7 +870,7 @@ namespace game
 
         void spawnbouncer(const vec& from, gameent* d, const int type)
         {
-            vec to(rnd(100) - 50, rnd(100) - 50, rnd(100) - 50);
+            vec to(rnd(100) - 50, rnd(100) - 50, type == Projectile_Gib ? 50 + rnd(100) : rnd(100) - 50);
             float elasticity = 0.6f;
             if (isejectedprojectile(type))
             {
@@ -862,7 +884,7 @@ namespace game
             }
             to.normalize();
             to.add(from);
-            make(d, from, to, true, 0, -1, type, type == Projectile_Debris ? 400 : rnd(1000) + 1000, rnd(100) + 20, 0.3f + rndscale(0.8f), elasticity);
+            make(d, from, to, true, 0, -1, type, 1000 + rnd(1000), rnd(100) + 20, 0.3f + rndscale(0.8f), elasticity);
         }
 
         void preload()
@@ -892,23 +914,7 @@ namespace game
 
         vec manipulatemodel(ProjEnt& proj, float& yaw, float& pitch)
         {
-            if (proj.flags & ProjFlag_Bounce)
-            {
-                const vec pos = proj.offsetposition();
-                const vec vel(proj.vel);
-                if (vel.magnitude() <= 25.0f)
-                {
-                    yaw = proj.lastYaw;
-                }
-                else
-                {
-                    vectoyawpitch(vel, yaw, pitch);
-                    yaw += 90;
-                    proj.lastYaw = yaw;
-                }
-                return pos;
-            }
-            else
+            if (!(proj.flags & ProjFlag_Bounce))
             {
                 const float dist = min(proj.o.dist(proj.to) / 32.0f, 1.0f);
                 const vec pos = vec(proj.o).add(vec(proj.offset).mul(dist * proj.offsetMillis / float(OFFSET_MILLIS)));
@@ -918,11 +924,12 @@ namespace game
                 v.add(pos);
                 return v;
             }
+            return proj.offsetposition();
         }
 
         void render()
         {
-            float yaw, pitch;
+            float pitch;
             loopv(Projectiles)
             {
                 ProjEnt& proj = *Projectiles[i];
@@ -930,17 +937,19 @@ namespace game
                 {
                     continue;
                 }
-                const vec pos = manipulatemodel(proj, yaw, pitch);
+                const vec pos = manipulatemodel(proj, proj.yaw, proj.pitch);
                 int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED;
-                float fade = 1;
-                if (proj.flags & ProjFlag_Junk)
+                float fade = 1.0f;
+                if (proj.lifetime >= 400)
                 {
-                    if (proj.lifetime < 400)
-                    {
-                        fade = proj.lifetime / 400.0f;
-                    }
+                    const float progress = clamp(static_cast<float>(lastmillis - proj.millis) / fade, 0.0f, 1.0f);
+                    fade *= progress;
                 }
-                rendermodel(proj.model, ANIM_MAPMODEL | ANIM_LOOP, pos, yaw, pitch, proj.roll, cull, NULL, NULL, 0, 0, fade);
+                else if (proj.flags & ProjFlag_Junk)
+                {
+                    fade = proj.lifetime / 400.0f;
+                }
+                rendermodel(proj.model, ANIM_MAPMODEL | ANIM_LOOP, pos, proj.yaw, proj.pitch, proj.roll, cull, NULL, NULL, 0, 0, fade);
             }
         }
 

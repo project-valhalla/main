@@ -44,7 +44,7 @@ static const struct projectileinfo
 {
     int type, flags, attack;
     int bounceSound, loopsound, maxbounces, variants;
-    float maxSpeed, radius;
+    float maxSpeed, radius, fade;
     const char* directory;
 }
 projs[Projectile_Max] =
@@ -59,6 +59,7 @@ projs[Projectile_Max] =
         0,
         0,
         1.4f,
+        0,
         "projectile/grenade",
     },
     {
@@ -71,6 +72,7 @@ projs[Projectile_Max] =
         0,
         0,
         1.4f,
+        0,
         "projectile/rocket",
     },
     {
@@ -83,6 +85,7 @@ projs[Projectile_Max] =
         0,
         0,
         1.0f,
+        50.0f,
         NULL,
     },
     {
@@ -95,6 +98,7 @@ projs[Projectile_Max] =
         0,
         0,
         5.0f,
+        1000.0f,
         NULL
     },
     {
@@ -106,7 +110,8 @@ projs[Projectile_Max] =
         2,
         5,
         0,
-        1.5f,
+        2.5f,
+        150.0f,
         "projectile/gib",
     },
     {
@@ -119,6 +124,7 @@ projs[Projectile_Max] =
         0,
         0,
         1.8f,
+        0,
         NULL
     },
     {
@@ -131,6 +137,7 @@ projs[Projectile_Max] =
         0,
         0,
         0.3f,
+        0,
         "projectile/eject/00"
     },
     {
@@ -143,6 +150,7 @@ projs[Projectile_Max] =
         0,
         0,
         0.4f,
+        0,
         "projectile/eject/01"
     },
     {
@@ -155,6 +163,7 @@ projs[Projectile_Max] =
         0,
         0,
         0.5f,
+        0,
         "projectile/eject/02"
     },
     {
@@ -167,6 +176,7 @@ projs[Projectile_Max] =
         0,
         0.25f,
         0.4f,
+        0,
         NULL
     }
 };

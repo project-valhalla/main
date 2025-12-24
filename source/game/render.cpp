@@ -286,11 +286,6 @@ namespace game
 
     void renderplayer(gameent *d, const playermodelinfo &playermodel, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
-        if (d->deathstate == Death_Gib)
-        {
-            return;
-        }
-
         const int gun = d->gunselect;
         int lastaction = d->lastaction[gun], anim = ANIM_IDLE | ANIM_LOOP, attack = ANIM_SHOOT, delay = 0;
         if(d->state==CS_ALIVE)
@@ -362,8 +357,15 @@ namespace game
         {
             anim = ANIM_DYING|ANIM_NOPITCH;
             basetime = d->lastpain;
-            if(ragdoll && playermodel.ragdoll) anim |= ANIM_RAGDOLL;
-            else if(lastmillis-basetime>1000) anim = ANIM_DEAD|ANIM_LOOP|ANIM_NOPITCH;
+            if (ragdoll && playermodel.ragdoll && d->deathstate != Death_Gib)
+            {
+                anim |= ANIM_RAGDOLL;
+            }
+            else
+            {
+                const float progress = clamp(static_cast<float>(lastmillis - d->lastpain) / 150.0f, 0.0f, 1.0f);
+                fade = fade * (1.0f - progress);
+            }
         }
         else if(d->state==CS_EDITING || d->state==CS_SPECTATOR) anim = ANIM_EDIT|ANIM_LOOP;
         else if(d->state==CS_LAGGED)                            anim = ANIM_LAG|ANIM_NOPITCH|ANIM_LOOP;

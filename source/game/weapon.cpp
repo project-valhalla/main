@@ -1133,9 +1133,8 @@ namespace game
             }
             if (blood && color != -1)
             {
-                particle_flare(hit, hit, 280, PART_BLOOD, color, 0.1f, NULL, 6.5f);
-                particle_splash(PART_BLOOD2, 100, 280, hit, color, 1.4f, 150, 2, 0.001f);
-                particle_splash(PART_BLOOD, damage / 10, 1000, hit, color, 2.60f);
+                particle_flare(hit, hit, 300, PART_BLOOD, color, 0.1f, NULL, 13.0f);
+                particle_splash(PART_BLOOD2, damage, 100 + rnd(400), hit, color, 2.0f, 200, 5, 0.01f);
             }
             else
             {
@@ -1184,21 +1183,23 @@ namespace game
     }
 
     FVARP(goredistance, 0, 50.0f, 100.0f);
+    VARP(goremax, 0, 10, 10);
 
     void gibeffect(int damage, const vec& vel, gameent* d)
     {
-        const vec from = d->abovehead();
-        loopi(min(damage, 8) + 1)
+        for (int i = 0; i < goremax; i++)
         {
-            projectiles::spawnbouncer(from, d, Projectile_Gib);
+            const vec position = d->feetpos(1 + i);
+            projectiles::spawnbouncer(position, d, Projectile_Gib);
         }
         if (blood)
         {
-            particle_flare(d->o, d->o, 320, PART_BLOOD, getbloodcolor(d), 0.5f, NULL, 30.0f);
-            particle_splash(PART_BLOOD2, damage, 300, d->o, getbloodcolor(d), 0.89f, 300, 5, 2.0f);
-            addstain(STAIN_BLOOD, d->o, d->vel.neg(), 25, getbloodcolor(d), rnd(4));
+            const vec from = d->abovehead();
+            particle_flare(from, from, 500, PART_BLOOD, getbloodcolor(d), 0.5f, NULL, 38.0f);
+            particle_splash(PART_BLOOD2, damage, 300, d->o, getbloodcolor(d), 0.1f, 500, 5, 2.0f);
+            addstain(STAIN_BLOOD, d->o, d->vel.neg(), 20, getbloodcolor(d), rnd(4));
         }
-        if (blood && (d == self || (goredistance && camera1->o.dist(from) <= goredistance)))
+        if (blood && (d == self || (goredistance && camera1->o.dist(d->o) <= goredistance)))
         {
             const int goreDamage = damage * 2;
             camera::camera.addevent(self, camera::CameraEvent_Shake, goreDamage);
@@ -1830,10 +1831,10 @@ namespace game
 
         verticalVelocity = verticalVelocity * swayfallsmoothfactor + owner->falling.z * (1.0f - swayfallsmoothfactor);
         verticalVelocity = clamp(verticalVelocity, swayfallmin, 0.0f);
-		const float fallSwayPitch = verticalVelocity * swayfallfactor;
+        const float fallSwayPitch = verticalVelocity * swayfallfactor;
 
         rotationyaw += cameravelocity.x * -0.3f;
-		rotationpitch += (cameravelocity.y * -0.3f) - fallSwayPitch;
+        rotationpitch += (cameravelocity.y * -0.3f) - fallSwayPitch;
         rotationroll += cameravelocity.x * -0.5f;
 
         camera::camera.velocity.x = cameravelocity.x * -0.3f + (camera::camera.direction.x * 0.5f);

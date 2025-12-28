@@ -456,7 +456,7 @@ namespace game
 
     void spawneffect(gameent *d)
     {
-        stopownersounds(d);
+        d->stopSounds();
         if (d->type == ENT_PLAYER && !mainmenu)
         {
             if (d == followingplayer(self))
@@ -628,38 +628,38 @@ namespace game
         }
     }
 
-    void setdeathstate(gameent *d, bool restore)
+    void setdeathstate(gameent *player, bool isRestoringState)
     {
-        d->state = CS_DEAD;
-        d->lastpain = lastmillis;
-        loopi(Chan_Num)
+        player->kill(!isRestoringState);
+        if(!isRestoringState)
         {
-            // Free up sound channels used for player actions.
-            d->stopchannelsound(i);
+            /*
+                Trigger death sounds and other effects only if it's a "new" death,
+                meaning we're not restoring a previous state (e.g. when switching to edit mode and back).
+            */
+            managedeatheffects(player);
         }
-        stopownersounds(d);
-        if(!restore)
+        if(player == self)
         {
-            managedeatheffects(d);
-            d->deaths++;
-        }
-        if(d == self)
-        {
-            camera::restore(restore);
-            d->attacking = ACT_IDLE;
+            camera::restore(isRestoringState);
+            player->cancelAttack();
             if(camera::isfirstpersondeath())
             {
                 stopsounds(SND_UI | SND_ANNOUNCER);
                 playsound(S_DEATH);
             }
-            if(m_invasion) self->lives--;
-            if(camera::thirdperson) camera::thirdperson = 0;
+            if (m_invasion)
+            {
+                self->lives--;
+            }
+            if (camera::thirdperson)
+            {
+                camera::thirdperson = 0;
+            }
         }
         else
         {
-            d->move = d->strafe = 0;
-            d->resetinterp();
-            d->smoothmillis = 0;
+            player->halt();
         }
     }
 

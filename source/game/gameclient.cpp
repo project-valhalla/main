@@ -2495,7 +2495,7 @@ namespace game
                         hunterchosen = true;
                     }
                     d->stopchannelsound(Chan_PowerUp);
-                    stopownersounds(d);
+                    d->stopSounds();
                     playsound(S_INFECTED, d);
                     particle_splash(PART_SPARK, 20, 200, d->o, 0x9BCF0F, 2.0f + rndscale(5.0f), 180, 50);
                     doweaponchangeffects(d, GUN_ZOMBIE);

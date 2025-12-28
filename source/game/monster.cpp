@@ -377,7 +377,7 @@ namespace game
         lastpain = lastmillis;
         exploding = false;
         detonating = 0;
-        stopownersounds(this);
+        stopSounds();
         if (monstertypes[mtype].isexplosive && deathstate == Death_Shock)
         {
             deathstate = Death_Gib;

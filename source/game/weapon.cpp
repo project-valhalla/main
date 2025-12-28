@@ -321,13 +321,6 @@ namespace game
         }
     }
 
-    void prepareThrow(gameent* d, const int attack)
-    {
-        d->lastattack = attack;
-        d->lastaction[d->gunselect] = lastmillis;
-        d->lastthrow = lastmillis;
-    }
-
     void throwAttack()
     {
         const int attack = ATK_GRENADE1;
@@ -400,7 +393,7 @@ namespace game
         // If the action is a throw and we have no throw timestamp.
         if (attacks[attack].action == ACT_THROW && !d->lastthrow)
         {
-            prepareThrow(d, attack);
+            d->prepareThrow(attack);
 
             // Return cause we don't need all the stuff below for now.
             return;

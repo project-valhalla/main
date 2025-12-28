@@ -663,6 +663,13 @@ struct gameent : dynent, gamestate
         recoil.reset();
     }
 
+    void halt()
+    {
+        move = strafe = 0;
+        resetinterp();
+        smoothmillis = 0;
+    }
+
     void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)
     {
         chansound[type] = sound;
@@ -678,6 +685,50 @@ struct gameent : dynent, gamestate
         chansound[type] = chan[type] = -1;
     }
 
+    void stopSounds()
+    {
+        stopownedsounds(this);
+    }
+
+    void kill(const bool shouldCountDeath)
+    {
+        state = CS_DEAD;
+        lastpain = lastmillis;
+        for (int i = 0; i < Chan_Num; i++)
+        {
+            // Free up sound channels used for player actions.
+            stopchannelsound(i);
+        }
+        stopSounds();
+
+        // Add deaths to player stats.
+        if (shouldCountDeath)
+        {
+            deaths++;
+        }
+    }
+
+    void resetInteractions()
+    {
+        for (int i = 0; i < Interaction::Count; i++)
+        {
+            interacting[i] = false;
+        }
+    }
+
+    void prepareThrow(const int attack)
+    {
+        lastattack = attack;
+        lastaction[gunselect] = lastmillis;
+        lastthrow = lastmillis;
+    }
+
+    void cancelAttack()
+    {
+        attacking = ACT_IDLE;
+        lastthrow = 0;
+    }
+
     bool haslowhealth()
     {
         return state == CS_ALIVE && health <= maxhealth / 4;
@@ -686,14 +737,6 @@ struct gameent : dynent, gamestate
     bool shouldgib()
     {
         return health <= THRESHOLD_GIB;
-    }
-
-    void resetInteractions()
-    {
-        loopi(Interaction::Count)
-        {
-            interacting[i] = false;
-        }
     }
 };
 
@@ -812,7 +855,7 @@ namespace game
     extern void spawnplayer(gameent *d);
     extern void spawneffect(gameent *d);
     extern void respawn();
-    extern void setdeathstate(gameent *d, bool restore = false);
+    extern void setdeathstate(gameent *d, bool isRestoringState = false);
     extern void printkillfeedannouncement(int announcement, gameent* actor);
     extern void writeobituary(gameent *d, gameent *actor, int atk, const int flags = 0);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = 0);

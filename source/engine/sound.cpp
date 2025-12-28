@@ -824,7 +824,7 @@ bool stopsound(int n, int chanid, int fade)
     return true;
 }
 
-void stopownersounds(physent *d)
+void stopownedsounds(physent *d)
 {
     loopv(channels)
     {

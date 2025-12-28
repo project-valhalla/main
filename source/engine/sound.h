@@ -120,7 +120,7 @@ extern void preloadsound(int n);
 extern void preloadmapsound(int n);
 extern void stopsounds(int exclude = 0);
 extern void stopmapsounds();
-extern void stopownersounds(physent *d);
+extern void stopownedsounds(physent *d);
 extern void initsound();
 extern void pauseaudio(int value);
 extern void playintromusic();

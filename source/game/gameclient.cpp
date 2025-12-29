@@ -2502,11 +2502,7 @@ namespace game
                     d->lastswitchattempt = lastmillis;
                     writeobituary(d, actor, ATK_ZOMBIE);
                 }
-                if (d == followingplayer(self))
-                {
-                    const int screenFlash = 180;
-                    addscreenflash(screenFlash);
-                }
+                shaders::addPostFxEvent("evt_pickup", 180, shaders::Fade::Out, 0, d);
                 d->assignrole(role);
                 break;
             }

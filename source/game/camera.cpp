@@ -10,6 +10,19 @@ namespace game
             return self != camera1 || camera.isdetached;
         }
 
+        VARP(firstpersondeath, 0, 0, 1);
+
+        bool isfirstpersondeath()
+        {
+            return firstpersondeath || m_story;
+        }
+
+        bool isUnderwater()
+        {
+            const int material = lookupmaterial(camera1->o);
+            return self->state != CS_EDITING && isliquidmaterial(material & MATF_VOLUME);
+        }
+
         void fixrange()
         {
             static const float MAXPITCH = 90.0f;
@@ -29,13 +42,6 @@ namespace game
             {
                 camera1->yaw -= 360.0f;
             }
-        }
-        
-        VARP(firstpersondeath, 0, 0, 1);
-
-        bool isfirstpersondeath()
-        {
-            return firstpersondeath || m_story;
         }
 
         VARP(killcamera, 0, 1, 1);

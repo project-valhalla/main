@@ -70,9 +70,9 @@ static inline void setfont(font *f) { if(f) curfont = f; }
 extern GLuint setuppostfx(int w, int h, GLuint outfbo = 0);
 extern void cleanuppostfx(bool fullclean = false);
 extern void renderpostfx(GLuint outfbo = 0);
-extern void enablepostfx(const char* name, const vec4& params = vec4(0, 0, 0, 0));
-extern bool updatepostfx(const char* name, const vec4& params);
-extern void disablepostfx(const char* name);
+extern bool enablepostfx(const char *name, const vec4 &params = vec4(0, 0, 0, 0));
+extern void updatepostfx(const char *name, const vec4 &params);
+extern void disablepostfx(const char *name);
 
 // texture
 extern int hwtexsize, hwcubetexsize, hwmaxaniso, maxtexsize, hwtexunits, hwvtexunits;

@@ -396,8 +396,7 @@ namespace entities
         {
             return;
         }
-        const int collectFlash = 80;
-        addscreenflash(collectFlash);
+        shaders::addPostFxEvent("evt_pickup", 200, shaders::Fade::Out, 0, hud);
         if (shouldCheck)
         {
             game::checkentity(type);
@@ -471,8 +470,7 @@ namespace entities
                         }
                         else
                         {
-                            const int teleportFlash = 150;
-                            addscreenflash(teleportFlash);
+                            shaders::addPostFxEvent("evt_teleport", 250, shaders::Fade::Out, 0, hud);
                             camera::camera.addevent(player, camera::CameraEvent_Teleport, 500);
                         }
                         doTeleportParticleEffects(player, ents[targetEntityId]->o);

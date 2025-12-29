@@ -670,11 +670,21 @@ namespace game
             basetime = 0;
         }
         int flags = MDL_NOBATCH;
+        
+        /*
+            We don't want the gun model to occlude the view when zooming in with a scope,
+            so we force transparency to combine it with the scope post-fx and texture overlay.
+            "Unbatched" models don't support transparency yet, so we just force it.
+
+
+            TO-DO: Enable transparency gradually based on zoom progress.
+        */
         const bool isScoped = guns[d->gunselect].zoom == Zoom_Scope && camera::camera.zoomstate.progress;
-        if (lastmillis - d->lastspawn <= SPAWN_DURATION || isScoped)
+        if (isScoped)
         {
             flags |= MDL_FORCETRANSPARENT;
         }
+
         rendermodel(gunname, anim, sway.o, sway.yaw, sway.pitch, sway.roll, flags, &sway.interpolation, a, basetime, 0, 1, vec4(vec::hexcolor(color), 1), position);
         if (d->muzzle.x >= 0)
         {

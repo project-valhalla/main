@@ -1211,6 +1211,7 @@ namespace game
         extern void toggleWeaponZoom();
 
         extern bool allowthirdperson();
+        extern bool isUnderwater();
 
         extern int thirdperson;
         extern int zoom;
@@ -1218,11 +1219,28 @@ namespace game
 
     namespace shaders
     {
+        enum Fade
+        {
+            Out = -1,
+            In = 0
+        };
+
+        struct PostFxEvent
+        {
+            const char* name;
+            int time;
+            int duration;
+            int direction;
+            float parameter;
+        };
+        extern vector<PostFxEvent> postFxEvents;
+
         extern void prepareWorld();
-        extern void updateWorld();
-        extern void cleanUpWorld();
+        extern void update();
+        extern void cleanUp();
         extern void toggleZoomEffects(const int toggle);
         extern void updateZoomEffects(const float progress);
+        extern void addPostFxEvent(const char* name, const int duration, const int direction, const float parameter, const gameent* owner);
     }
 }
 

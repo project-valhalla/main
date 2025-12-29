@@ -7,7 +7,6 @@ namespace game
     {
         const int ABILITY_FEEDBACK_TIME = 250;
         const int MAX_CROSSHAIRS = 7;
-        int screenflashmillis = 0;
         int damagescreenmillis = 0;
         int damageblendmillis = 0;
         int lastheartbeat = 0;
@@ -246,42 +245,6 @@ namespace game
         }
     }
 
-    VARFP(screenflash, 0, 1, 1,
-    {
-        if (!screenflash)
-        {
-            screenflashmillis = 0;
-        }
-    });
-    VARP(screenflashfactor, 1, 5, 100);
-    VARP(screenflashalpha, 1, 20, 100);
-    VARP(screenflashfade, 0, 600, 1000);
-    VARP(screenflashmin, 1, 20, 1000);
-    VARP(screenflashmax, 1, 200, 1000);
-
-    void addscreenflash(const int amount)
-    {
-        if (!screenflash) return;
-        if (lastmillis > screenflashmillis) screenflashmillis = lastmillis;
-        screenflashmillis += clamp(amount, screenflashmin, screenflashmax) * screenflashfactor;
-    }
-
-    void drawscreenflash(const int w, const int h)
-    {
-        if (lastmillis >= screenflashmillis) return;
-
-        hudnotextureshader->set();
-
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        float fade = screenflashalpha / 100.0f;
-        if (screenflashmillis - lastmillis < screenflashfade)
-        {
-            fade *= float(screenflashmillis - lastmillis) / screenflashfade;
-        }
-        gle::colorf(1, 1, 1, fade);
-        hudquad(0, 0, w, h);
-    }
-
     void drawblend(const int x, const int y, const int w, const int h, const float r, const float g, const float b, const float a = 1.0f)
     {
         gle::colorf(r, g, b, a);
@@ -363,7 +326,7 @@ namespace game
 
     void clearscreeneffects()
     {
-        damageblendmillis = screenflashmillis = 0;
+        damageblendmillis = 0;
         loopi(8)
         {
             damagedirs[i] = 0;
@@ -378,7 +341,6 @@ namespace game
         {
             // Only render screen effects if there is in fact a screen to render.
             drawzoom(w, h);
-            drawscreenflash(w, h);
             drawdamagescreen(w, h);
             drawdamagecompass(w, h);
             drawsplatters(w, h);

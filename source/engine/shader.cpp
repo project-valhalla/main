@@ -1545,27 +1545,23 @@ bool findusedpostfx(const char *name)
 }
 ICOMMAND(findusedpostfx, "s", (char *name), intret(findusedpostfx(name) ? 1 : 0));
 
-void enablepostfx(const char *name, const vec4 &params)
+bool enablepostfx(const char *name, const vec4 &params)
 {
-    if(findusedpostfx(name)) return;
+    if(findusedpostfx(name)) return false;
     addpostfx(name, 0, 0, 1, 1, params);
+    return true;
 }
 
-bool updatepostfx(const char *name, const vec4 &params)
+void updatepostfx(const char *name, const vec4 &params)
 {
-    if(*name)
+    if(!*name) return;
+    Shader *s = findpostfx(name);
+    if(s) loopv(postfxpasses)
     {
-        Shader *s = findpostfx(name);
-        loopv(postfxpasses)
-        {
-            postfxpass &p = postfxpasses[i];
-            if(p.shader != s) continue;
-            p.params = params;
-            return true;
-        }
+        postfxpass &p = postfxpasses[i];
+        if(p.shader != s) continue;
+        p.params = params;
     }
-    else conoutf(CON_ERROR, "cannot update postfx shader: %s", name);
-    return false;
 }
 ICOMMAND(updatepostfx, "sffff", (char* name, float *x, float *y, float *z, float *w), updatepostfx(name, vec4(*x, *y, *z, *w)));
 

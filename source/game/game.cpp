@@ -280,8 +280,7 @@ namespace game
     void updategamesounds()
     {
         static int waterChannel = S_INVALID;
-        const int material = lookupmaterial(camera1->o);
-        if (self->state != CS_EDITING && isliquidmaterial(material & MATF_VOLUME))
+        if (camera::isUnderwater())
         {
             waterChannel = playsound(S_UNDERWATER, NULL, NULL, NULL, 0, -1, 200, waterChannel);
         }
@@ -322,6 +321,7 @@ namespace game
         updatemonsters(curtime);
         managelowhealthscreen();
         updategamesounds();
+        shaders::update();
         if(connected)
         {
             if(self->state == CS_DEAD)
@@ -357,7 +357,6 @@ namespace game
                 // Extra step to allow spectators to move during intermission.
                 physics::moveplayer(self, 10, true);
             }
-            shaders::updateWorld();
         }
         if (self->clientnum >= 0)
         {
@@ -462,7 +461,7 @@ namespace game
             if (d == followingplayer(self))
             {
                 clearscreeneffects();
-                addscreenflash(SPAWN_DURATION);
+                shaders::addPostFxEvent("evt_spawn", SPAWN_DURATION / 2, shaders::Fade::Out, 0, d);
                 camera::camera.addevent(d, camera::CameraEvent_Spawn, 380);
             }
             adddynlight(d->o, 100, vec(1, 1, 1), SPAWN_DURATION, 100, DL_EXPAND | L_NOSHADOW);
@@ -1079,7 +1078,7 @@ namespace game
         clearteaminfo();
         camera::reset();
         announcer::reset();
-        shaders::cleanUpWorld();
+        shaders::cleanUp();
     }
 
     void startgame()

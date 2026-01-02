@@ -37,6 +37,14 @@ jobs:
       # Build your program with the given configuration
       run: cmake --build ${{runner.workspace}}/build --config ${{env.BUILD_TYPE}}
 
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.BUILD_TYPE}}-msvc-x64-artifact${{github.sha}}
+        path: |
+          bin/bin64
+          !bin/bin64/*.dll
+
     - name: Test
       working-directory: ${{runner.workspace}}/build
       # Execute tests defined by the CMake configuration.  

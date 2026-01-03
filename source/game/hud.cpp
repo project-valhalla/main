@@ -390,7 +390,7 @@ namespace game
 
     enum
     {
-        Pointer_Null = -1,
+        Pointer_None = -1,
         Pointer_Cursor,
         Pointer_Default,
         Pointer_Crosshair,
@@ -485,7 +485,7 @@ namespace game
         const bool isSpectating = camera::isthirdperson() && self->state == CS_SPECTATOR;
         if (isSpectating || hud->zooming || hud->state == CS_DEAD || intermission)
         {
-            return Pointer_Null;
+            return Pointer_None;
         }
         int crosshair = Pointer_Default;
         if (type == Pointer_Crosshair)

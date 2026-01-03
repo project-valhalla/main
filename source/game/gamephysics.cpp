@@ -738,20 +738,24 @@ namespace physics
         }
     }
 
+    static const float ROLL_MAX = 20.0f;
+
     VARP(rolleffect, 0, 1, 1);
-    VARP(rollstrafemax, 0, 1, 20);
+    FVAR(rollstrafemax, 0, 1, ROLL_MAX);
     FVAR(rollstrafe, 0, 0.018f, 90);
     FVAR(rollfade, 0, 0.9f, 1);
-    FVAR(rollonland, 0, 5, 20);
+    FVAR(rollonland, 0, 2.5f, 20);
 
     void addroll(gameent* d, float amount)
     {
-        if (!rolleffect || !d || (d->lastroll && lastmillis - d->lastroll < 500))
+        const int rollDelay = 500;
+        if (!rolleffect || !d || (d->lastroll && lastmillis - d->lastroll < rollDelay))
         {
             return;
         }
-
-        float strafingRollAmount = rollstrafemax ? amount / 2 : amount;
+        float strafingRollAmount = clamp(d->roll + amount, -ROLL_MAX, ROLL_MAX);
+        const float zoomFactor = clamp(2.0f * camera::camera.zoomstate.progress, 1.0f, 2.0f);
+        strafingRollAmount *= zoomFactor;
         d->roll += d->roll > 0 ? -strafingRollAmount : (d->roll < 0 ? strafingRollAmount : (rnd(2) ? amount : -amount));
         d->lastroll = lastmillis;
     }
@@ -814,8 +818,16 @@ namespace physics
         if (rolleffect)
         {
             // Automatically apply smooth roll when strafing.
-            if (d->strafe && rollstrafemax && !isfloating) d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / rollstrafemax, 0.0f, 1.0f), 0.33f) * d->strafe * curtime * rollstrafe, -rollstrafemax, rollstrafemax);
-            else d->roll *= curtime == PHYSFRAMETIME ? rollfade : pow(rollfade, curtime / float(PHYSFRAMETIME));
+            if (d->strafe && rollstrafemax && !isfloating)
+            {
+                const float zoomFactor = clamp(2.0f * camera::camera.zoomstate.progress, 1.0f, 2.0f);
+                const float amount = clamp(rollstrafemax * zoomFactor, -ROLL_MAX, ROLL_MAX);
+                d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / amount, 0.0f, 1.0f), 0.33f) * d->strafe * curtime * rollstrafe, -amount, amount);
+            }
+            else
+            {
+                d->roll *= curtime == PHYSFRAMETIME ? rollfade : pow(rollfade, curtime / float(PHYSFRAMETIME));
+            }
         }
         else if (d->roll)
         {

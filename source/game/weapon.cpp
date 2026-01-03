@@ -385,7 +385,11 @@ namespace game
             return;
         }
         d->delay[gun] = 0;
-        if (attacks[attack].action == ACT_THROW || attacks[attack].action == GUN_MELEE)
+        if
+        (
+            d == followingplayer(self) &&
+            (attacks[attack].action == ACT_THROW || attacks[attack].action == GUN_MELEE)
+        )
         {
             camera::camera.zoomstate.disable();
         }
@@ -1401,7 +1405,7 @@ namespace game
             d->chansound[Chan_Weapon] = switchsound;
             d->chan[Chan_Weapon] = playsound(d->chansound[Chan_Weapon], d, NULL, NULL, 0, 0, 0, d->chan[Chan_Weapon]);
         }
-        if (d == self)
+        if (d == followingplayer(self))
         {
             camera::camera.zoomstate.disable();
         }

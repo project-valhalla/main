@@ -482,7 +482,8 @@ namespace game
     int selectcrosshair(vec4& color, const int type)
     {
         gameent* hud = followingplayer(self);
-        if (hud->zooming || hud->state == CS_SPECTATOR || hud->state == CS_DEAD || intermission)
+        const bool isSpectating = camera::isthirdperson() && self->state == CS_SPECTATOR;
+        if (isSpectating || hud->zooming || hud->state == CS_DEAD || intermission)
         {
             return Pointer_Null;
         }

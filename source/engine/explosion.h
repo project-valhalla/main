@@ -1,5 +1,5 @@
 VARP(softexplosion, 0, 1, 1);
-VARP(softexplosionblend, 1, 12, 64);
+VARP(explosionsoftblend, 1, 32, 64);
 
 namespace sphere
 {
@@ -170,9 +170,9 @@ struct fireballrenderer : listrenderer
 
         LOCALPARAM(center, o);
         LOCALPARAMF(blendparams, inside ? 0.5f : 4, inside ? 0.25f : 0);
-        if(2*(p->size + pmax) * explosionwobble >= softexplosionblend)
+        if(2*(p->size + pmax) * explosionwobble >= explosionsoftblend)
         {
-            LOCALPARAMF(softparams, -1.0f/softexplosionblend, 0, inside ? blend/(2*255.0f) : 0);
+            LOCALPARAMF(softparams, -1.0f/explosionsoftblend, 0, inside ? blend/(2*255.0f) : 0);
         }
         else
         {

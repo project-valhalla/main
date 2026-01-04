@@ -232,48 +232,38 @@ namespace game
         }
     }
 
-    void updatePlayer(gameent* d)
-    {
-        if ((d == self && d->state != CS_ALIVE) || intermission)
-        {
-            return;
-        }
-        for (int i = 0; i < NUMGUNS; i++)
-        {
-            if (lastmillis - d->lastaction[i] >= d->delay[i])
-            {
-                d->delay[i] = 0;
-            }
-        }
-        if (d->powerupmillis || d->role == ROLE_BERSERKER)
-        {
-            entities::updatePowerups(curtime, d);
-        }
-    }
-
-    void otherplayers(int curtime)
+    void updateOtherPlayers(int curtime)
     {
         loopv(players)
         {
-            gameent *d = players[i];
-            if(d == self || d->ai) continue;
-
-            if(d->state==CS_DEAD && d->ragdoll) moveragdoll(d);
-            updatePlayer(d);
-            const int lagtime = totalmillis-d->lastupdate;
-            if(!lagtime || intermission) continue;
-            else if(lagtime>1000 && d->state==CS_ALIVE)
+            gameent* d = players[i];
+            if (!d || d == self || d->ai)
+            {
+                continue;
+            }
+            if (d->state == CS_DEAD && d->ragdoll)
+            {
+                moveragdoll(d);
+            }
+            d->updateWeaponDelay(lastmillis);
+            entities::updatePowerups(curtime, d);
+            const int lagTime = totalmillis - d->lastupdate;
+            if (!lagTime || intermission) continue;
+            else if (lagTime > 1000 && d->state == CS_ALIVE)
             {
                 d->state = CS_LAGGED;
                 continue;
             }
-            if(d->state==CS_ALIVE || d->state==CS_EDITING)
+            if (d->state == CS_ALIVE || d->state == CS_EDITING)
             {
                 physics::crouchplayer(d, 10, false);
-                if(smoothmove && d->smoothmillis>0) predictplayer(d, true);
+                if (smoothmove && d->smoothmillis > 0) predictplayer(d, true);
                 else physics::moveplayer(d, 1, false);
             }
-            else if(d->state==CS_DEAD && !d->ragdoll && lastmillis-d->lastpain<2000) physics::moveplayer(d, 1, true);
+            else if (d->state == CS_DEAD && !d->ragdoll && lastmillis - d->lastpain < 2000)
+            {
+                physics::moveplayer(d, 1, true);
+            }
         }
     }
 
@@ -310,9 +300,9 @@ namespace game
         }
         physics::physicsframe();
         ai::navigate();
-        updatePlayer(self);
+        entities::updatePowerups(curtime, self);
         updateweapons(curtime);
-        otherplayers(curtime);
+        updateOtherPlayers(curtime);
         camera::camera.update();
         announcer::update();
         ai::update();

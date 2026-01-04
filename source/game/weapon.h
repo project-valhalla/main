@@ -88,6 +88,7 @@ const int THRESHOLD_GIB = -50; // If health equals or falls below this threshold
 const int GUN_MAXRAYS = 20; // Maximum rays a player can shoot, we can't change that.
 const int GUN_AIR_PUSH = 2; // Hit push multiplier for the mid-air friends.
 const int GUN_ZOMBIE_PUSH = 3; // Hit push multiplier for zombies.
+const int GUN_SWITCH_DELAY = 500; // Delay when switching weapons.
 const int GUN_THROW_DELAY = 200; // Delay grenade throws.
 const int GUN_EMPTY_DELAY = 600; // Delay when trying to shoot with an empty gun.
 const int GUN_RECOIL_DELAY = 100; // Slight delay for recoil recovery.

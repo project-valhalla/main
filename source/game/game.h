@@ -221,6 +221,28 @@ struct gamestate
         }
     }
 
+    void applyAttackDelay(const int attack)
+    {
+        const int gun = attacks[attack].gun;
+        int attackDelay = attacks[attack].attackdelay;
+        if (attacks[attack].action == ACT_THROW)
+        {
+            attackDelay += GUN_THROW_DELAY;
+        }
+        if (haspowerup(PU_HASTE) || role == ROLE_BERSERKER)
+        {
+            attackDelay /= 2;
+        }
+        if (validgun(gun))
+        {
+            delay[gun] = attackDelay;
+        }
+        else for (int i = 0; i < NUMGUNS; i++)
+        {
+            delay[i] = attackDelay;
+        }
+    }
+
     bool canpickup(int type)
     {
         if(!validitem(type) || role == ROLE_BERSERKER || role == ROLE_ZOMBIE) return false;
@@ -416,7 +438,6 @@ struct gamestate
         {
             gunselect = GUN_PISTOL;
             ammo[GUN_PISTOL] = 100;
-            if(!m_story) ammo[GUN_GRENADE] = 1;
         }
     }
 
@@ -716,11 +737,37 @@ struct gameent : dynent, gamestate
         }
     }
 
-    void prepareThrow(const int attack)
+    void updateWeaponDelay(const int time)
     {
-        lastattack = attack;
-        lastaction[gunselect] = lastmillis;
-        lastthrow = lastmillis;
+        if (state != CS_ALIVE)
+        {
+            return;
+        }
+        for (int i = 0; i < NUMGUNS; i++)
+        {
+            if (lastmillis - lastaction[i] >= delay[i])
+            {
+                delay[i] = 0;
+            }
+        }
+    }
+
+    void setLastAction(const int attack, const int time)
+    {
+        const int gun = attacks[attack].gun;
+        if (validgun(gun))
+        {
+            lastaction[gun] = time;
+        }
+        else for (int i = 0; i < NUMGUNS; i++)
+        {
+            lastaction[i] = time;
+        }
+    }
+
+    void prepareThrow(const int time)
+    {
+        lastthrow = time;
     }
 
     void cancelAttack()
@@ -855,7 +902,7 @@ namespace game
     extern void spawnplayer(gameent *d);
     extern void spawneffect(gameent *d);
     extern void respawn();
-    extern void setdeathstate(gameent *d, bool isRestoringState = false);
+    extern void setdeathstate(gameent *d, const bool isRestoringState = false);
     extern void printkillfeedannouncement(int announcement, gameent* actor);
     extern void writeobituary(gameent *d, gameent *actor, int atk, const int flags = 0);
     extern void kill(gameent *d, gameent *actor, int atk, int flags = 0);
@@ -1000,10 +1047,13 @@ namespace game
 
     extern void shoot(gameent *d, const vec &targ);
     extern void updateRecoil(gameent* d, const int curtime);
+    extern void updateThrow(gameent* player);
     extern void shoteffects(int atk, vec &from, vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
     extern void scanhit(vec& from, vec& to, gameent* d, int atk);
     extern void gibeffect(int damage, const vec &vel, gameent *d);
-    extern void updateweapons(int curtime);
+    extern void updateWeaponDelay(gameent* player);
+    extern void updatePlayerWeapons(gameent* d, const vec& to, const int curtime);
+    extern void updateweapons(const int curtime);
     extern void clearweapons();
     extern void gunselect(int gun, gameent* d);
     extern void doweaponchangeffects(gameent* d, int gun = GUN_INVALID);
@@ -1112,7 +1162,6 @@ namespace game
     extern void damageblend(const int damage, const int factor = 0);
     extern void setdamagehud(const int damage, gameent* d, gameent* actor);
     extern void addbloodsplatter(const int amount, const int color);
-    extern void addscreenflash(const int amount);
     extern void checkentity(int type);
 
     // worlddata.cpp

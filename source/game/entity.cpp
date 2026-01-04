@@ -832,6 +832,11 @@ namespace entities
     // Update power-up effects and client-side timer.
     void updatePowerups(const int time, gameent* player)
     {
+        const bool hasPowerUp = player->powerupmillis > 0 || player->role == ROLE_BERSERKER;
+        if (intermission || !player || player->state == CS_DEAD|| !hasPowerUp)
+        {
+            return;
+        }
         const int sound = player->role == ROLE_BERSERKER ? S_BERSERKER_LOOP : (S_LOOP_DAMAGE + player->poweruptype - 1);
         player->playchannelsound(Chan_PowerUp, sound, 200, true);
         if (m_berserker && player->role == ROLE_BERSERKER && !player->powerupmillis)

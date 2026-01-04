@@ -298,37 +298,25 @@ namespace game
 
     void applyDelay(gameent* d, const int attack)
     {
-        int weaponDelay = attacks[attack].attackdelay;
-        if (d->haspowerup(PU_HASTE) || d->role == ROLE_BERSERKER)
+        d->applyAttackDelay(attack);
+        if (d->ai)
         {
-            weaponDelay /= 2;
-        }
-        const int gun = attacks[attack].gun;
-        if (!validgun(gun))
-        {
-            for (int i = 0; i < NUMGUNS; i++)
+            const int gun = attacks[attack].gun;
+            if (gun == GUN_PISTOL)
             {
-                d->delay[i] = weaponDelay;
+                d->delay[gun] += int(d->delay[gun] * (((101 - d->skill) + rnd(111 - d->skill)) / 100.f));
             }
-        }
-        else
-        {
-            d->delay[gun] = weaponDelay;
-        }
-        if (d->gunselect == GUN_PISTOL && d->ai)
-        {
-            d->delay[gun] += int(d->delay[gun] * (((101 - d->skill) + rnd(111 - d->skill)) / 100.f));
         }
     }
 
-    void throwAttack()
+    void throwAttack(gameent* player, const vec& to)
     {
         const int attack = ATK_GRENADE1;
-        doAttack(self, worldpos, attack, self->lastaction[self->gunselect]);
-        applyDelay(self, attack);
+        doAttack(player, to, attack, player->lastaction[player->gunselect]);
+        applyDelay(player, attack);
 
         // Reset the timestamp so we can throw again.
-        self->lastthrow = 0;
+        player->lastthrow = 0;
     }
 
     /*
@@ -356,16 +344,18 @@ namespace game
 
     void shoot(gameent* d, const vec& targ)
     {
-        if
-        (
-            lastmillis - d->lastswitch < 500 ||
-            (d->lastthrow && lastmillis - d->lastthrow <= GUN_THROW_DELAY)
-        )
+        /*
+            Add a small delay after switching weapons before allowing shooting.
+            If we are throwing, then prevent the user from firing or throwing again.
+        */
+        const bool hasSwitchDelay = d->lastswitch && lastmillis - d->lastswitch < GUN_SWITCH_DELAY;
+        const bool hasThrowDelay = d->lastthrow && lastmillis - d->lastthrow <= GUN_THROW_DELAY;
+        if (hasSwitchDelay || hasThrowDelay)
         {
-            // Add a small delay after switching weapons before allowing shooting.
-            // If we are throwing, then prevent the user from firing or throwing again.
+            
             return;
         }
+
         const int gun = d->gunselect;
         const int action = d->attacking;
         const int attack = guns[gun].attacks[action];
@@ -384,30 +374,30 @@ namespace game
         {
             return;
         }
-        d->delay[gun] = 0;
-        if
-        (
-            d == followingplayer(self) &&
-            (attacks[attack].action == ACT_THROW || attacks[attack].action == GUN_MELEE)
-        )
+        if (d->delay[gun] > 0)
         {
-            camera::camera.zoomstate.disable();
+            d->delay[gun] = 0;
+        }
+        d->lastattack = attack;
+        d->setLastAction(attack, lastmillis);
+        if (attacks[attack].action == ACT_THROW || attacks[attack].action == GUN_MELEE)
+        {
+            // Disable zoom only if we're the shooting player or spectating them.
+            if (d == followingplayer(self))
+            {
+                camera::camera.zoomstate.disable();
+            }
+
+            // If the action is a throw and we have no throw timestamp.
+            if (attacks[attack].action == ACT_THROW && !d->lastthrow)
+            {
+                d->prepareThrow(lastmillis);
+
+                // Return cause we don't need all the stuff below for now.
+                return;
+            }
         }
 
-        // If the action is a throw and we have no throw timestamp.
-        if (attacks[attack].action == ACT_THROW && !d->lastthrow)
-        {
-            d->prepareThrow(attack);
-
-            // Return cause we don't need all the stuff below for now.
-            return;
-        }
-
-        if (attacks[attack].action != ACT_THROW)
-        {
-            d->lastattack = attack;
-            d->lastaction[gun] = lastmillis;
-        }
         const int projectile = attacks[attack].projectile;
         if (!canshoot(d, attack, gun, projectile))
         {
@@ -503,30 +493,48 @@ namespace game
         }
     }
 
-    void updateThrow()
+    void updateThrow(gameent* player)
     {
-        if (!self->lastthrow)
+        if (!player->lastthrow)
         {
             return;
         }
-        int elapsed = lastmillis - self->lastthrow;
-        int delay = GUN_THROW_DELAY;
+        const int elapsed = lastmillis - player->lastthrow;
+        const int delay = GUN_THROW_DELAY;
         if (elapsed >= delay)
         {
-            throwAttack();
+            // If it's a bot, use the bot's target.
+            const vec to = player->ai ? player->ai->target : worldpos;
+
+            throwAttack(player, to);
         }
     }
 
-    void updateweapons(int curtime)
+    void updatePlayerWeapons(gameent* player, const vec& to, const int time)
     {
-        if (!mainmenu && self->clientnum >= 0 && self->state == CS_ALIVE)
+        // Only allow shooting if the player has joined a game.
+        const bool isConnected = !mainmenu && player->clientnum >= 0;
+        if (!(isConnected && player->state == CS_ALIVE))
         {
-            // Only allow shooting if the player has joined a game.
-            shoot(self, worldpos);
-            updateRecoil(self, curtime);
-            updateThrow();
+            return;
         }
-        projectiles::update(curtime); // Need to do this after the player shoots so bouncers don't end up inside player's BB next frame.
+
+        shoot(player, to);
+        updateRecoil(player, time);
+        updateThrow(player);
+    }
+
+    void updateweapons(const int curtime)
+    {
+        self->updateWeaponDelay(lastmillis);
+        updatePlayerWeapons(self, worldpos, curtime);
+
+        /*
+            Need to do this after the player shoots,
+            so bouncing projectiles don't end up inside the player's bounding box next frame.
+        */
+        projectiles::update(curtime);
+
         gameent* following = followingplayer();
         if (!following) following = self;
         loopv(players)

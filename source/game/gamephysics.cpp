@@ -541,14 +541,9 @@ namespace physics
         return lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (3 * d->aboveeye - d->eyeheight) / 4));
     }
 
-    bool isFloating(gameent* d)
-    {
-        return (d->type == ENT_PLAYER && (d->state == CS_EDITING || d->state == CS_SPECTATOR));
-    }
-
     bool allowVerticalMovement(gameent* player)
     {
-        return isFloating(player) || isliquidmaterial(materialcheck(player) & MATF_VOLUME) || player->climbing || player->type == ENT_CAMERA;
+        return player->floating() || isliquidmaterial(materialcheck(player) & MATF_VOLUME) || player->climbing || player->type == ENT_CAMERA;
     }
 
     void modifyvelocity(gameent* d, bool local, bool isinwater, bool isfloating, int curtime)
@@ -767,21 +762,26 @@ namespace physics
         if (!canmove(d)) return false;
         int material = materialcheck(d);
         bool isinwater = isliquidmaterial(material & MATF_VOLUME);
-        bool isfloating = isFloating(d);
         float secs = curtime / 1000.f;
 
 
-        if (!isfloating && !d->climbing) modifygravity(d, isinwater, curtime); // Apply gravity.
-        modifyvelocity(d, local, isinwater, isfloating, curtime); // Apply any player generated changes in velocity.
+        if (!d->floating() && !d->climbing)
+        {
+            modifygravity(d, isinwater, curtime); // Apply gravity.
+        }
+        modifyvelocity(d, local, isinwater, d->floating(), curtime); // Apply any player generated changes in velocity.
 
         vec dir(d->vel);
-        if (!isfloating && isinwater) dir.mul(0.5f);
+		if (!d->floating() && isinwater)
+		{
+			dir.mul(0.5f);
+		}
         dir.add(d->falling);
         dir.mul(secs);
 
         d->blocked = false;
 
-        if (isfloating)
+        if (d->floating())
         {
             if (d->ghost)
             {
@@ -817,7 +817,7 @@ namespace physics
         if (rolleffect)
         {
             // Automatically apply smooth roll when strafing.
-            if (d->strafe && rollstrafemax && !isfloating)
+            if (d->strafe && rollstrafemax && !d->floating())
             {
                 const float zoomFactor = clamp(2.0f * camera::camera.zoomstate.progress, 1.0f, 2.0f);
                 const float amount = clamp(rollstrafemax * zoomFactor, -ROLL_MAX, ROLL_MAX);

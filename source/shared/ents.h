@@ -160,6 +160,7 @@ struct physent // base entity type, can be affected by physics
     bool crouched() const { return fabs(eyeheight - maxheight* CROUCH_HEIGHT) < 1e-4f; }
     bool maymove() const { return timeinair || physstate < PHYS_FLOOR || vel.squaredlen() > 1e-4f || deltapos.squaredlen() > 1e-4f; }
     bool onfloor() const { return physstate >= PHYS_SLOPE || climbing; }
+    bool floating() const { return type == ENT_PLAYER && (state == CS_EDITING || state == CS_SPECTATOR); }
 };
 
 enum

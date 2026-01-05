@@ -546,9 +546,9 @@ namespace physics
         return (d->type == ENT_PLAYER && (d->state == CS_EDITING || d->state == CS_SPECTATOR));
     }
 
-    bool hascamerapitchmovement(gameent* d)
+    bool allowVerticalMovement(gameent* player)
     {
-        return isFloating(d) || isliquidmaterial(materialcheck(d) & MATF_VOLUME) || d->climbing || d->type == ENT_CAMERA;
+        return isFloating(player) || isliquidmaterial(materialcheck(player) & MATF_VOLUME) || player->climbing || player->type == ENT_CAMERA;
     }
 
     void modifyvelocity(gameent* d, bool local, bool isinwater, bool isfloating, int curtime)
@@ -600,7 +600,7 @@ namespace physics
         vec m(0.0f, 0.0f, 0.0f);
         if ((d->move || d->strafe))
         {
-            vecfromyawpitch(d->yaw, hascamerapitchmovement(d) ? d->pitch : 0, d->move, d->strafe, m);
+            vecfromyawpitch(d->yaw, allowVerticalMovement(d) ? d->pitch : 0, d->move, d->strafe, m);
 
             if (!isfloating && d->physstate >= PHYS_SLOPE)
             {

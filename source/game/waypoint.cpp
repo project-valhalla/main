@@ -387,7 +387,7 @@ namespace ai
                             return retry ? n : -1;
                         }
                         vec above(pos.x, pos.y, ob.above);
-                        if (!physics::hascamerapitchmovement(d) && above.z - d->o.z >= ai::JUMPMAX)
+                        if (!physics::allowVerticalMovement(d) && above.z - d->o.z >= ai::JUMPMAX)
                         {
                             return retry ? n : -1; // too much scotty
                         }

@@ -300,6 +300,7 @@ namespace entities
         }
         search();
         gameent* hudPlayer = followingplayer(self);
+        const int revolutions = 10;
         loopv(ents)
         {
             const extentity& entity = *ents[i];
@@ -307,8 +308,6 @@ namespace entities
             {
                 continue;
             }
-            mark(entity);
-            const int revolutions = 10;
             switch (entity.type)
             {
                 case TELEPORT:
@@ -320,25 +319,24 @@ namespace entities
                     break;
 
                 default:
-                    if ((!editmode && !entity.spawned()) || !validitem(entity.type))
+                    if ((!editmode && !entity.spawned() && !entity.hovered) || !validitem(entity.type))
                     {
                         continue;
                     }
                     break;
             }
+            mark(entity);
             const char* modelName = getModel(entity);
             if (modelName)
             {
+                const bool shouldApplyTransparency = !entity.spawned() || (!entity.spawned() && entity.hovered) || !hudPlayer->canpickup(entity.type);
                 const vec position = vec(entity.o).addz(1 + sinf(lastmillis / 100.0 + entity.o.x + entity.o.y) / 20);
                 float trans = 1;
-                if
-                    (validitem(entity.type) &&
-                    (!entity.spawned() || !hudPlayer->canpickup(entity.type))
-                )
+                if (validitem(entity.type) && shouldApplyTransparency)
                 {
-                    trans = 0.5f;
+                    trans = entity.hovered ? 0.3f : 0.5f;
                 }
-                const float progress = min((lastmillis - entity.lastspawn) / 1000.0f, 1.0f);
+                const float progress = clamp((lastmillis - entity.lastspawn) / 1000.0f, 0.0f, 1.0f);
                 const float size = ease::outelastic(progress);
                 rendermodel
                 (
@@ -362,6 +360,7 @@ namespace entities
         if (ents[id]->spawned())
         {
             ents[id]->clearspawned();
+            ents[id]->lasttrigger = lastmillis;
         }
         const int type = ents[id]->type;
         game::autoswitchweapon(player, type);
@@ -562,7 +561,45 @@ namespace entities
     // Contains information to display when hovering over items and entities.
     struct HoverInfo
     {
-        int hoveredWeapon = GUN_INVALID;
+        extentity* entity = nullptr;
+        int lastUse = 0;
+
+        struct HoveredWeapon
+        {
+            int type = GUN_INVALID;
+            int spawnTime = 0;
+
+            void reset()
+            {
+                type = GUN_INVALID;
+                spawnTime = 0;
+            }
+        };
+        HoveredWeapon weapon;
+
+        void update(extentity* hoveredEntity)
+        {
+            entity = hoveredEntity;
+            if (entity != nullptr)
+            {
+                entity->hovered = true;
+                if (validitem(entity->type))
+                {
+                    itemstat& item = itemstats[entity->type - I_AMMO_SG];
+                    weapon.type = item.info;
+                    weapon.spawnTime = item.respawntime;
+                    if (!entity->spawned())
+                    {
+                        lastUse = entity->lasttrigger;
+                    }
+                }
+                else if (entity->isactive())
+                {
+                    lastUse = entity->lasttrigger;
+                }
+            }
+            resetInteraction();
+        }
 
         void resetInteraction()
         {
@@ -571,7 +608,13 @@ namespace entities
 
         void reset()
         {
-            hoveredWeapon = GUN_INVALID;
+            if (entity != nullptr)
+            {
+                entity->hovered = false;
+                entity = nullptr;
+            }
+            lastUse = 0;
+            weapon.reset();
             resetInteraction();
         }
     };
@@ -670,6 +713,7 @@ namespace entities
 
                     // Clear the item regardless of who picked it up, as it will be no longer available.
                     ents[id]->clearspawned();
+                    ents[id]->lasttrigger = lastmillis;
                 }
                 break;
             }
@@ -716,15 +760,14 @@ namespace entities
                 hover.reset();
                 return;
             }
-            if (!m_noitems(mutators) && validitem(entity->type) && entity->spawned())
+            if (!m_noitems(mutators) && validitem(entity->type))
             {
                 const bool isClose = itemhoverdistance && camera1->o.dist(entity->o) <= itemhoverdistance;
                 if (isClose)
                 {
                     if (entity->type >= I_AMMO_SG && entity->type <= I_AMMO_GRENADE)
                     {
-                        hover.hoveredWeapon = itemstats[entity->type - I_AMMO_SG].info;
-                        hover.resetInteraction();
+                        hover.update(entity);
                         return;
                     }
                 }
@@ -755,7 +798,9 @@ namespace entities
         // Remove valid hover information.
         hover.reset();
     }
-    ICOMMAND(gethoverweapon, "", (), intret(hover.hoveredWeapon));
+    ICOMMAND(gethoverweapon, "", (), intret(hover.weapon.type));
+    ICOMMAND(gethoverweaponspawntime, "", (), intret(hover.weapon.spawnTime));
+    ICOMMAND(gethoverlastuse, "", (), intret(hover.lastUse));
 
     /*
         Checks various entity-related interactions for the specified game entity.
@@ -875,6 +920,7 @@ namespace entities
         loopv(ents)
         {
             ents[i]->clearspawned();
+            ents[i]->lasttrigger = lastmillis;
             if (ents[i]->type == TRIGGER && ents[i]->attr5 == TriggerType::Marker)
             {
                 continue;

@@ -531,7 +531,7 @@ namespace game
             const gameent* hud = followingplayer(self);
             if (camerabob)
             {
-                if ((hud->physstate >= PHYS_SLOPE || hud->climbing) && hud->vel.magnitude() > 5.0f)
+                if (hud->onfloor() && hud->vel.magnitude() > 5.0f)
                 {
                     bobspeed = min(sqrtf(hud->vel.x * hud->vel.x + hud->vel.y * hud->vel.y), hud->speed);
                     bobdist += bobspeed * curtime / 1000.0f;

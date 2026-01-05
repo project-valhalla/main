@@ -34,7 +34,7 @@ namespace game
                 const float newSpread = spread + int(recoils[attack].maxSpread * progress);
                 spread = newSpread;
             }
-            if (d->physstate < PHYS_SLOPE)
+            if (!d->onfloor())
             {
                 // Accuracy decreases while in air.
                 spread = int(spread * 1.25f);
@@ -53,7 +53,7 @@ namespace game
         vec offset;
         do offset = vec(rndscale(1), rndscale(1), rndscale(1)).sub(0.5f);
         while(offset.squaredlen() > 0.5f * 0.5f);
-        const bool isCrouched = d->physstate >= PHYS_SLOPE && d->crouching && d->crouched();
+        const bool isCrouched = d->onfloor() && d->crouching && d->crouched();
         offset.mul((to.dist(from) / 1024) * spread * (isCrouched ? 0.5f : 1.0f));
         offset.z /= 2;
         dest = vec(offset).add(to);
@@ -113,7 +113,7 @@ namespace game
             return;
         }
         const bool isCrouched = d->crouching && d->crouched();
-        if (d->physstate >= PHYS_SLOPE || isCrouched)
+        if (d->onfloor() || isCrouched)
         {
             return;
         }
@@ -1761,7 +1761,7 @@ namespace game
 
     void swayinfo::update(gameent* owner, vec& position)
     {
-        if (owner->physstate >= PHYS_SLOPE || owner->climbing)
+        if (owner->onfloor())
         {
             speed = min(sqrtf(owner->vel.x * owner->vel.x + owner->vel.y * owner->vel.y), owner->speed);
             dist += speed * curtime / 1000.0f;

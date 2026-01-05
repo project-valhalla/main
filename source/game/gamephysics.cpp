@@ -524,7 +524,7 @@ namespace physics
 
     inline bool canjump(gameent* d)
     {
-        return d->physstate >= PHYS_SLOPE || d->climbing ||
+        return d->onfloor() ||
                ((d->haspowerup(PU_AGILITY) || d->role == ROLE_ZOMBIE || d->role == ROLE_BERSERKER) && !d->doublejumping);
     }
 
@@ -625,14 +625,13 @@ namespace physics
 
         vec dir(m);
         dir.mul(calculatespeed(d));
-        bool isonfloor = d->physstate >= PHYS_SLOPE || d->climbing;
         if (d->type == ENT_PLAYER)
         {
             if (isfloating)
             {
                 if (d == self) dir.mul(floatspeed / 100.0f);
             }
-            else if (d->crouching && isonfloor)
+            else if (d->crouching && d->onfloor())
             {
                 dir.mul(VELOCITY_CROUCH);
             }
@@ -646,7 +645,7 @@ namespace physics
             }
             else if (!isinwater)
             {
-                dir.mul((d->move && !d->strafe ? 1.3f : 1.0f) * (!isonfloor ? 1.3f : 1.0f));
+                dir.mul((d->move && !d->strafe ? 1.3f : 1.0f) * (!d->onfloor() ? 1.3f : 1.0f));
             }
         }
         // Calculate and apply friction.
@@ -655,7 +654,7 @@ namespace physics
         {
             friction = 20.0f;
         }
-        else if (isonfloor || isfloating)
+        else if (d->onfloor() || isfloating)
         {
             friction = 4.0f;
         }
@@ -899,8 +898,7 @@ namespace physics
 
     void playfootstepsounds(gameent* d, int sound, bool hascrouchfootsteps = true)
     {
-        bool isonfloor = d->physstate >= PHYS_SLOPE || d->climbing;
-        if (!footstepssounds || !isonfloor || (hascrouchfootsteps && d->crouching) || d->blocked)
+        if (!footstepssounds || !d->onfloor() || (hascrouchfootsteps && d->crouching) || d->blocked)
         {
             return;
         }

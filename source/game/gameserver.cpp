@@ -3369,10 +3369,7 @@ namespace server
             // We return if the shot is not in range or the user doesn't have enough ammo.
             return;
         }
-        if (!gs.haspowerup(PU_AMMO))
-        {
-            gs.ammo[gun] -= attacks[attack].use;
-        }
+        gs.useAmmo(attack);
         gs.lastshot[gun] = millis;
         gs.lastmove = lastmillis;
         gs.lastattack = attack;

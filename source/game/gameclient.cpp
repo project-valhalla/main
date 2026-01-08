@@ -1987,10 +1987,7 @@ namespace game
                         s->delay[i] = delay;
                     }
                 }
-                if(!s->haspowerup(PU_AMMO) && s->role != ROLE_BERSERKER)
-                {
-                    s->ammo[gun] -= attacks[atk].use;
-                }
+                s->useAmmo(atk);
                 s->lastattack = atk;
                 break;
             }

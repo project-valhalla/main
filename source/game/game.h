@@ -223,6 +223,16 @@ struct gamestate
         }
     }
 
+    void useAmmo(const int attack)
+    {
+        if (haspowerup(PU_AMMO))
+        {
+            return;
+        }
+        const int weapon = attacks[attack].gun;
+        ammo[weapon] = max(ammo[weapon] - attacks[attack].use, 0);
+    }
+
     void applyAttackDelay(const int attack)
     {
         const int gun = attacks[attack].gun;

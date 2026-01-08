@@ -1258,13 +1258,15 @@ namespace physics
         return self->state != CS_DEAD;
     }
 
+    VARP(crouchtoggle, 0, 0, 1);
+
     static void doCrouch(int down)
     {
         static int lastPress = 0;
         if (!down)
         {
             // Reset the crouching state when the button is released.
-            if (!self->slide.queued)
+            if (!crouchtoggle && !self->slide.queued)
             {
                 self->crouching = abs(self->crouching);
             }
@@ -1285,7 +1287,14 @@ namespace physics
                 self->slide.queued = false; // Reset slide queue if not a double-tap
             }
 
-            self->crouching = -1;
+            if (crouchtoggle)
+            {
+                self->crouching = (self->crouching < 0) ? abs(self->crouching) : -1;
+            }
+            else
+            {
+                self->crouching = -1;
+            }
             sway.addevent(self, SwayEvent_Crouch, 380, -2);
             lastPress = lastmillis;
         }

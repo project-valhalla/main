@@ -1155,7 +1155,7 @@ namespace physics
         }
     }
 
-    void moveBackward(int down)
+    static void moveBackward(int down)
     {
         self->k_down = down != 0;
         self->move = self->k_down ? -1 : (self->k_up ? 1 : 0);
@@ -1165,8 +1165,30 @@ namespace physics
         moveBackward(*down);
     });
 
-    void moveForward(int down)
+    static bool canSlide()
     {
+        return !self->zooming && !validact(self->attacking);
+    }
+
+    static void moveForward(int down)
+    {
+        static int lastPress = 0;
+        if (down)
+        {
+            const int sinceLastPress = lastmillis - lastPress;
+
+            // Check for double-taps.
+            if (sinceLastPress < 250 && canSlide())
+            {
+                self->slide.queued = true; // Mark slide as queued
+                self->slide.yaw = self->yaw;
+            }
+            else
+            {
+                self->slide.queued = false; // Reset slide queue if not a double-tap
+            }
+            lastPress = lastmillis;
+        }
         self->k_up = down != 0;
         self->move = self->k_up ? 1 : (self->k_down ? -1 : 0);
     }
@@ -1175,7 +1197,7 @@ namespace physics
         moveForward(*down);
     });
 
-    void moveLeft(int down)
+    static void moveLeft(int down)
     {
         self->k_left = down != 0;
         self->strafe = self->k_left ? 1 : (self->k_right ? -1 : 0);
@@ -1185,7 +1207,7 @@ namespace physics
         moveLeft(*down);
     });
 
-    void moveRight(int down)
+    static void moveRight(int down)
     {
         self->k_right = down != 0;
         self->strafe = self->k_right ? -1 : (self->k_left ? 1 : 0);
@@ -1195,7 +1217,7 @@ namespace physics
         moveRight(*down);
     });
 
-    bool canJump()
+    static bool canJump()
     {
         if (!connected || mainmenu || intermission)
         {
@@ -1205,7 +1227,7 @@ namespace physics
         return self->state != CS_DEAD;
     }
 
-    void dojump(int down)
+    static void doJump(int down)
     {
         if (!down || canJump())
         {
@@ -1221,7 +1243,7 @@ namespace physics
     }
     ICOMMAND(jump, "D", (int* down),
     {
-        dojump(*down);
+        doJump(*down);
     });
 
     static bool canCrouch()
@@ -1233,16 +1255,9 @@ namespace physics
         return self->state != CS_DEAD;
     }
 
-    static bool canSlide()
-    {
-        return !self->zooming && !validact(self->attacking);
-    }
-
     static void doCrouch(int down)
     {
-        // Last press of the crouch button.
-        static int lastCrouch = 0;
-
+        static int lastPress = 0;
         if (!down)
         {
             // Reset the crouching state when the button is released.
@@ -1254,10 +1269,10 @@ namespace physics
         }
         else if (canCrouch())
         {
-            const int sinceLastCrouch = lastmillis - lastCrouch;
+            const int sinceLastPress = lastmillis - lastPress;
 
             // Check for double-taps.
-            if (sinceLastCrouch < 250 && canSlide())
+            if (sinceLastPress < 250 && canSlide())
             {
                 self->slide.queued = true; // Mark slide as queued
                 self->slide.yaw = self->yaw;
@@ -1269,7 +1284,7 @@ namespace physics
 
             self->crouching = -1;
             sway.addevent(self, SwayEvent_Crouch, 380, -2);
-            lastCrouch = lastmillis;
+            lastPress = lastmillis;
         }
     }
     ICOMMAND(crouch, "D", (int* down),

@@ -87,7 +87,7 @@ struct extentity : entity                       // part of the entity that doesn
 
 enum { CS_ALIVE = 0, CS_DEAD, CS_SPAWNING, CS_LAGGED, CS_EDITING, CS_SPECTATOR };
 
-enum { PHYS_FLOAT = 0, PHYS_FALL, PHYS_SLIDE, PHYS_SLOPE, PHYS_FLOOR, PHYS_STEP_UP, PHYS_STEP_DOWN, PHYS_BOUNCE };
+enum { PHYS_FLOAT = 0, PHYS_FALL, PHYS_SLIDE, PHYS_SLOPE, PHYS_RAMP, PHYS_STEP_UP, PHYS_STEP_DOWN, PHYS_FLOOR, PHYS_BOUNCE };
 
 enum { ENT_PLAYER = 0, ENT_AI, ENT_CAMERA, ENT_PROJECTILE };
 
@@ -158,10 +158,10 @@ struct physent // base entity type, can be affected by physics
     vec feetpos(float offset = 0) const { return vec(o).addz(offset - eyeheight); }
     vec headpos(float offset = 0) const { return vec(o).addz(offset); }
 
-    bool crouched() const { return fabs(eyeheight - maxheight* CROUCH_HEIGHT) < 1e-4f; }
-    bool maymove() const { return timeinair || physstate < PHYS_FLOOR || vel.squaredlen() > 1e-4f || deltapos.squaredlen() > 1e-4f; }
+    bool maymove() const { return timeinair || physstate <= PHYS_SLOPE || vel.squaredlen() > 1e-4f || deltapos.squaredlen() > 1e-4f; }
     bool onfloor() const { return physstate >= PHYS_SLOPE || climbing; }
     bool floating() const { return type == ENT_PLAYER && (state == CS_EDITING || state == CS_SPECTATOR); }
+    bool crouched() const { return fabs(eyeheight - maxheight * CROUCH_HEIGHT) < 1e-4f; }
 };
 
 enum

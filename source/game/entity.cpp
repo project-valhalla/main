@@ -264,13 +264,13 @@ namespace entities
     // Mark entities on the HUD based on need.
     static void mark(const extentity& entity)
     {
-        if (m_noitems(mutators) || (!validitem(entity.type) && entity.type != TRIGGER))
+        if (m_noitems(mutators) || !entity.isactive() || (!validitem(entity.type) && entity.type != TRIGGER))
         {
             return;
         }
         if (m_story)
         {
-            if (entity.type == TRIGGER && entity.isactive() && entity.attr5 == TriggerType::Marker)
+            if (entity.type == TRIGGER && entity.attr5 == TriggerType::Marker)
             {
                 particle_hud_mark(entity.o, 1, 2, PART_GAME_ICONS, 1, 0x00FF3F, 4.0f);
             }

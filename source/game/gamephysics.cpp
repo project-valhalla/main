@@ -1170,10 +1170,13 @@ namespace physics
         return !self->zooming && !validact(self->attacking);
     }
 
+    // Option for double-tap forward to slide.
+    VARP(slideforward, 0, 0, 1);
+
     static void moveForward(int down)
     {
         static int lastPress = 0;
-        if (down)
+        if (slideforward && down)
         {
             const int sinceLastPress = lastmillis - lastPress;
 

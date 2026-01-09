@@ -534,7 +534,9 @@ namespace entities
             {
                 doEntityEffects(player, teleportId, true, destinationId);
                 player->o = ents[destinationId]->o;
-                player->yaw = ents[destinationId]->attr1;
+                const int yaw = ents[destinationId]->attr1;
+                player->yaw = yaw;
+                player->slide.yaw = yaw;
                 if (ents[destinationId]->attr3 > 0)
                 {
                     vec direction;

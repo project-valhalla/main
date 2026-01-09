@@ -531,6 +531,8 @@ void moveragdoll(dynent *d)
     physics::updateragdolleye(d, eye, d->ragdoll->offset);
 }
 
+VARP(ragdollpushweight, 1, 2, 10);
+
 void ragdolldata::push(const vec &position)
 {
     lastmove = lastmillis;
@@ -538,8 +540,7 @@ void ragdolldata::push(const vec &position)
     {
         vert& v = verts[i];
         vec dir = vec(v.pos).sub(position).safenormalize();
-        const int weight = 2;
-        v.oldpos.sub(dir.div(weight));
+        v.oldpos.sub(dir.div(ragdollpushweight));
     }
     collidemillis = 0;
 }

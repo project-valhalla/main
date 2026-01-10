@@ -330,10 +330,17 @@ target_link_libraries(Client
 # Specify that we're linking to a static version of zlib
 target_compile_definitions(Client PRIVATE ZLIB_STATIC=1)
 
+# GNU compatible options
+if (MSYS OR MINGW OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(Client PRIVATE -Wimplicit-fallthrough -fsigned-char -fno-exceptions -fno-rtti)
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+        target_compile_options(Client PRIVATE -fomit-frame-pointer -ffast-math)
+    endif()
+endif()
+
 # Platform speciffic options
 if(MSVC OR MSYS OR MINGW)
     if(MSYS OR MINGW)
-        target_compile_options(Client PRIVATE -fomit-frame-pointer -ffast-math -Wimplicit-fallthrough -fsigned-char -fno-exceptions -fno-rtti)
         target_link_options(Client PRIVATE -mwindows -static-libgcc -static-libstdc++)
         # Configure executable resources post-build (workaround for .rc causing build errors if compiler path includes spaces)
         add_custom_command(
@@ -350,13 +357,27 @@ if(MSVC OR MSYS OR MINGW)
         target_sources(Client PRIVATE source/vcpp/valhalla.rc)
     endif()
     target_link_libraries(Client PRIVATE winmm)
-elseif(UNIX AND NOT APPLE)
+elseif(APPLE)
+    #MacOS...
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if (WIN32)
+        #Windows clang...
+    elseif(UNIX)
+        #Linux clang...
+    endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    #Linux...
+endif()
+
+# X11 deppendencies
+if(UNIX AND NOT APPLE)
     # Find and link X11
     find_package(X11)
     if(X11_FOUND)
         target_link_libraries(Client PRIVATE X11::X11)
     endif()
 endif()
+
 # Put the executable in the bin folder
 add_custom_command(
     TARGET Client POST_BUILD
@@ -442,10 +463,17 @@ if(NOT MSVC)
     target_compile_definitions(Server PRIVATE HAVE_MAXMINDDB=1)
 endif()
 
+# GNU compatible options
+if (MSYS OR MINGW OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(Server PRIVATE -Wimplicit-fallthrough -fsigned-char -fno-exceptions -fno-rtti)
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+        target_compile_options(Server PRIVATE -fomit-frame-pointer -ffast-math)
+    endif()
+endif()
+
 # Platform speciffic options
 if(MSVC OR MSYS OR MINGW)
     if(MSYS OR MINGW)
-        target_compile_options(Server PRIVATE -fomit-frame-pointer -ffast-math -Wimplicit-fallthrough -fsigned-char -fno-exceptions -fno-rtti)
         target_link_options(Server PRIVATE -mwindows -static-libgcc -static-libstdc++)
         # Configure executable resources post-build (workaround for .rc causing build errors if compiler path includes spaces)
         add_custom_command(
@@ -460,6 +488,16 @@ if(MSVC OR MSYS OR MINGW)
         target_sources(Server PRIVATE source/vcpp/valhalla.rc)
     endif()
     target_link_libraries(Server PRIVATE opengl32 winmm)
+elseif(APPLE)
+    #MacOS...
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if (WIN32)
+        #Windows clang...
+    elseif(UNIX)
+        #Linux clang...
+    endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    #Linux...
 endif()
 
 # Put the executable in the bin folder
@@ -530,10 +568,17 @@ if(NOT MSVC)
     target_compile_definitions(Master PRIVATE HAVE_MAXMINDDB=1)
 endif()
 
+# GNU compatible options
+if (MSYS OR MINGW OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    target_compile_options(Master PRIVATE -Wimplicit-fallthrough -fsigned-char -fno-exceptions -fno-rtti)
+    if(CMAKE_BUILD_TYPE STREQUAL "Release")
+        target_compile_options(Master PRIVATE -fomit-frame-pointer -ffast-math)
+    endif()
+endif()
+
 # Platform speciffic options
 if(MSVC OR MSYS OR MINGW)
     if(MSYS OR MINGW)
-        target_compile_options(Master PRIVATE -fomit-frame-pointer -ffast-math -Wimplicit-fallthrough -fsigned-char -fno-exceptions -fno-rtti)
         target_link_options(Master PRIVATE -mwindows -static-libgcc -static-libstdc++)
         # Configure executable resources post-build (workaround for .rc causing build errors if compiler path includes spaces)
         add_custom_command(
@@ -548,6 +593,16 @@ if(MSVC OR MSYS OR MINGW)
         target_sources(Master PRIVATE source/vcpp/valhalla.rc)
     endif()
     target_link_libraries(Master PRIVATE opengl32 winmm)
+elseif(APPLE)
+    #MacOS...
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+    if (WIN32)
+        #Windows clang...
+    elseif(UNIX)
+        #Linux clang...
+    endif()
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    #Linux...
 endif()
 
 # Put the executable in the bin folder

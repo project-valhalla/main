@@ -666,12 +666,6 @@ namespace physics
             }
         }
 
-        // Reset slide if no forward movement input is given.
-        if (!d->sliding(lastmillis) && (d->move <= 0 || (d->strafe && d->move <= 0)))
-        {
-            d->slide.reset();
-        }
-
         vec dir(m);
         dir.mul(calculatespeed(d));
         if (d->type == ENT_PLAYER)
@@ -819,8 +813,9 @@ namespace physics
             return;
         }
 
-        // Ensure the player is moving forward to initiate a slide.
-        if (player->move <= 0 || player->blocked)
+        // Ensure the player is not stuck or strafing/moving backwards.
+        const bool isMovingBackwards = player->move < 0;
+        if (player->strafe != 0 || isMovingBackwards || player->blocked)
         {
             player->slide.reset();
             return;
@@ -844,10 +839,14 @@ namespace physics
             player->slide.queued = false;
             return;
         }
-        const float magnitude = player->vel.magnitude() + slideVelocity;
-        player->vel = vec(player->slide.yaw * RAD, 0.f).mul(magnitude);
+        float velocity = player->vel.magnitude() + slideVelocity;
+        if (velocity <= slideVelocity)
+        {
+            velocity *= 1.5f;
+        }
+        player->vel = vec(player->slide.yaw * RAD, 0.f).mul(velocity);
         player->slide.initiate(lastmillis);
-        triggerphysicsevent(player, PHYSEVENT_SLIDE);
+        triggerphysicsevent(player, PhysEvent_CrouchSlide);
     }
 
     const int SHORT_JUMP_THRESHOLD = 350;

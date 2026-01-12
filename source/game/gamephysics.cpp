@@ -585,14 +585,15 @@ namespace physics
 
     VAR(floatspeed, 1, 100, 10000);
 
-    int materialcheck(gameent* d)
+    static int checkMaterial(gameent* player)
     {
-        return lookupmaterial(vec(d->o.x, d->o.y, d->o.z + (3 * d->aboveeye - d->eyeheight) / 4));
+        const vec playerPosition = vec(player->o.x, player->o.y, player->o.z + (3 * player->aboveeye - player->eyeheight) / 4);
+        return lookupmaterial(playerPosition);
     }
 
     bool allowVerticalMovement(gameent* player)
     {
-        return player->floating() || isliquidmaterial(materialcheck(player) & MATF_VOLUME) || player->climbing || player->type == ENT_CAMERA;
+        return player->floating() || isliquidmaterial(checkMaterial(player) & MATF_VOLUME) || player->climbing || player->type == ENT_CAMERA;
     }
 
     void modifyvelocity(gameent* d, bool local, bool isinwater, bool isfloating, int curtime)
@@ -864,7 +865,7 @@ namespace physics
         {
             return false;
         }
-        int material = materialcheck(d);
+        int material = checkMaterial(d);
         bool isinwater = isliquidmaterial(material & MATF_VOLUME);
         float secs = curtime / 1000.f;
         if (!d->floating() && !d->climbing)
@@ -974,11 +975,12 @@ namespace physics
             }
             else
             {
-                if (material & MAT_DAMAGE || lookupmaterial(d->feetpos()) & MAT_DAMAGE || (lookupmaterial(d->feetpos()) & MATF_VOLUME) == MAT_LAVA)
+                const int checkFeetMaterial = lookupmaterial(d->feetpos());
+                if (material & MAT_DAMAGE || checkFeetMaterial & MAT_DAMAGE || (checkFeetMaterial & MATF_VOLUME) == MAT_LAVA)
                 {
                     game::hurt(d); // Harm the player if their feet or body are inside harmful materials.
                 }
-                if (lookupmaterial(d->feetpos()) & MAT_CLIMB)
+                if (checkFeetMaterial & MAT_CLIMB)
                 {
                     // Enable ladder-like movement.
                     if (!d->climbing)
@@ -1036,7 +1038,7 @@ namespace physics
 
     static void playFootstepSounds(gameent* player, const int sound, const bool shouldPlayCrouchFootsteps = true)
     {
-        // Early exit conditions to reduce unnecessary checks
+        // Conditions to reduce unnecessary checks.
         if (!footstepsounds || player == nullptr || !player->onfloor() || (player == self && player->blocked))
         {
             return;
@@ -1047,6 +1049,7 @@ namespace physics
         {
             return;
         }
+
         const float lowest = min(player->lfoot.z, player->rfoot.z);
         const float velocity = max(player->vel.magnitude(), 1.0f);
         const float delay = (footstepdelay / velocity) * (1.0f + fabs(lowest - player->o.z));
@@ -1058,41 +1061,50 @@ namespace physics
         player->lastfootstep = lastmillis;
     }
 
-    struct footstepinfo
+    struct FootstepInfo
     {
-        int sound;
-        bool hasCrouchFootsteps;
+        int sound = S_FOOTSTEP;
+        bool hasCrouchFootsteps = false;
     };
 
-    static footstepinfo getFootstepSound(const gameent* player)
+    static FootstepInfo getFootstepSound(const gameent* player)
     {
+        const FootstepInfo default = { S_FOOTSTEP, false };
         if (player == nullptr)
         {
-            return;
+            return default;
         }
-        footstepinfo foot;
-        if ((lookupmaterial(player->feetpos(-1)) & MATF_VOLUME) == MAT_GLASS)
-        {
-            foot.sound = S_FOOTSTEP_GLASS;
-            foot.hasCrouchFootsteps = false;
-        }
-        else if ((lookupmaterial(player->feetpos()) & MATF_VOLUME) == MAT_WATER)
+        vec footPosition = player->feetpos();
+        int material = lookupmaterial(footPosition);
+        FootstepInfo foot;
+        if ((material & MATF_VOLUME) == MAT_WATER)
         {
             foot.sound = S_FOOTSTEP_WATER;
             foot.hasCrouchFootsteps = true;
         }
         else
         {
-            const int texture = lookuptextureeffect(player->feetpos(-1));
-            foot.sound = textureeffects[texture].footstepsound;
-            foot.hasCrouchFootsteps = textureeffects[texture].hascrouchfootsteps;
+            // Add offset to check for texture/material properties below feet level.
+            footPosition = player->feetpos(-1);
+            material = lookupmaterial(footPosition);
+            if ((material & MATF_VOLUME) == MAT_GLASS)
+            {
+                foot.sound = S_FOOTSTEP_GLASS;
+                foot.hasCrouchFootsteps = false;
+            }
+            else
+            {
+                const int texture = lookuptextureeffect(footPosition);
+                foot.sound = textureeffects[texture].footstepsound;
+                foot.hasCrouchFootsteps = textureeffects[texture].hascrouchfootsteps;
+            }
         }
         return foot;
     }
 
     static void triggerFootsteps(gameent* player, bool islanding)
     {
-        const footstepinfo foot = getFootstepSound(player);
+        const FootstepInfo foot = getFootstepSound(player);
         if (islanding)
         {
             // Just send the landing sound effect (single footstep).

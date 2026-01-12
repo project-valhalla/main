@@ -372,18 +372,6 @@ extern void clearmapcrc();
 extern bool loadents(const char *fname, vector<entity> &ents, uint *crc = NULL);
 
 // physics
-enum
-{
-    PHYSEVENT_JUMP = 0,
-    PHYSEVENT_LAND_LIGHT,
-    PHYSEVENT_LAND_HEAVY,
-    PHYSEVENT_FOOTSTEP,
-    PHYSEVENT_SLIDE,
-    PHYSEVENT_RAGDOLL_COLLIDE,
-    PHYSEVENT_LIQUID_IN,
-    PHYSEVENT_LIQUID_OUT,
-};
-
 extern vec collidewall;
 extern int collideinside;
 extern physent *collideplayer;

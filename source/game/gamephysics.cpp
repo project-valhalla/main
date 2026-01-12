@@ -444,9 +444,10 @@ namespace physics
             if (!d->climbing)
             {
                 d->blocked = true;
-                if (d->onfloor())
+                if (d->onfloor() && d->slide.isInProgress(lastmillis))
                 {
                     d->slide.reset();
+                    triggerPlayerPhysicsEvent(d, PhysEvent_CrouchSlideStop);
                 }
             }
         }
@@ -631,7 +632,7 @@ namespace physics
                     d->vel.y /= VELOCITY_WATER_DAMP;
                 }
 
-                triggerphysicsevent(d, PHYSEVENT_JUMP, d->inwater);
+                triggerPlayerPhysicsEvent(d, PhysEvent_Jump, true, d->inwater);
             }
             else if (d->crouching < 0 && isinwater)
             {
@@ -775,11 +776,11 @@ namespace physics
         int transition = liquidtransition(d, material, isinwater);
         if (transition == LiquidTransition_In)
         {
-            triggerphysicsevent(d, PHYSEVENT_LIQUID_IN, material & MATF_VOLUME);
+            triggerPlayerPhysicsEvent(d, PhysEvent_LiquidIn, true, material & MATF_VOLUME);
         }
         else if (transition == LiquidTransition_Out)
         {
-            triggerphysicsevent(d, PHYSEVENT_LIQUID_OUT, d->inwater);
+            triggerPlayerPhysicsEvent(d, PhysEvent_LiquidOut, true, d->inwater);
         }
     }
 
@@ -791,19 +792,24 @@ namespace physics
     FVAR(rollfade, 0, 0.9f, 1);
     FVAR(rollonland, 0, 2.5f, ROLL_MAX);
     FVAR(rollslidemultiplier, 0, 2.0f, ROLL_MAX);
+    FVAR(rollslidestop, 0, 10.0f, ROLL_MAX);
 
-    void addroll(gameent* d, float amount)
+    void addroll(gameent* player, float amount)
     {
-        const int rollDelay = 500;
-        if (!rolleffect || !d || (d->lastroll && lastmillis - d->lastroll < rollDelay))
+        if (!rolleffect || !player)
         {
             return;
         }
-        float strafingRollAmount = clamp(d->roll + amount, -ROLL_MAX, ROLL_MAX);
+        const int rollDelay = 500;
+        if (player->lastroll && lastmillis - player->lastroll < rollDelay)
+        {
+            return;
+        }
+        float strafingRollAmount = clamp(player->roll + amount, -ROLL_MAX, ROLL_MAX);
         const float zoomFactor = clamp(2.0f * camera::camera.zoomstate.progress, 1.0f, 2.0f);
         strafingRollAmount *= zoomFactor;
-        d->roll += d->roll > 0 ? -strafingRollAmount : (d->roll < 0 ? strafingRollAmount : (rnd(2) ? amount : -amount));
-        d->lastroll = lastmillis;
+        player->roll += player->roll > 0 ? -strafingRollAmount : (player->roll < 0 ? strafingRollAmount : (rnd(2) ? amount : -amount));
+        player->lastroll = lastmillis;
     }
 
     static void slide(gameent* player)
@@ -846,7 +852,7 @@ namespace physics
         }
         player->vel = vec(player->slide.yaw * RAD, 0.f).mul(velocity);
         player->slide.initiate(lastmillis);
-        triggerphysicsevent(player, PhysEvent_CrouchSlide);
+        triggerPlayerPhysicsEvent(player, PhysEvent_CrouchSlide);
     }
 
     const int SHORT_JUMP_THRESHOLD = 350;
@@ -897,17 +903,34 @@ namespace physics
             detectcollisions(d, moveres, dir);
             if (!d->timeinair && !isinwater) // Player is currently not in air nor swimming.
             {
+                // Slide as soon as we land.
                 slide(d);
-                d->doublejumping = false; // Now that we landed, we can double jump again.
-                if (timeinair > SHORT_JUMP_THRESHOLD && timeinair < LONG_JUMP_THRESHOLD)
+
+                // Now that we landed, we can double jump again.
+                d->doublejumping = false;
+
+                // Make a landing sound.
+                if (!d->zooming)
                 {
-                    triggerphysicsevent(d, PHYSEVENT_LAND_LIGHT, material & MATF_VOLUME); // Short jump.
+                    // Short jump.
+                    if (timeinair > SHORT_JUMP_THRESHOLD && timeinair < LONG_JUMP_THRESHOLD)
+                    {
+                        triggerPlayerPhysicsEvent(d, PhysEvent_LandLight, true, material & MATF_VOLUME);
+                    }
+
+                    // Must be a big jump, heavy landing.
+                    else if (timeinair >= LONG_JUMP_THRESHOLD)
+                    {
+                        triggerPlayerPhysicsEvent(d, PhysEvent_LandHeavy, true, material & MATF_VOLUME);
+                    }
                 }
-                else if (timeinair >= LONG_JUMP_THRESHOLD) // If we land after a long time, it must have been a high jump.
+                else if (timeinair > SHORT_JUMP_THRESHOLD)
                 {
-                    triggerphysicsevent(d, PHYSEVENT_LAND_HEAVY, material & MATF_VOLUME); // Make a heavy landing sound.
+                    // Scoped landing is always heavy.
+                    triggerPlayerPhysicsEvent(d, PhysEvent_LandHeavy, true, material & MATF_VOLUME);
                 }
-                triggerphysicsevent(d, PHYSEVENT_FOOTSTEP, material & MATF_VOLUME);
+
+                triggerPlayerPhysicsEvent(d, PhysEvent_Footstep, true, material & MATF_VOLUME);
             }
         }
 
@@ -998,151 +1021,232 @@ namespace physics
         }
     }
 
-    VARP(footstepssounds, 0, 1, 1);
-    VARP(footstepdelay, 1, 44000, 50000);
-
-    void playfootstepsounds(gameent* d, int sound, bool hascrouchfootsteps = true)
+    static void triggerLiquidEffects(const gameent* player, const int material)
     {
-        if (!footstepssounds || !d->onfloor() || (hascrouchfootsteps && d->crouching) || d->blocked)
+        if (player == nullptr || material == MAT_LAVA)
         {
             return;
         }
-        if (d->move || d->strafe)
+        particle_splash(PART_WATER, 200, 250, player->o, 0xFFFFFF, 0.09f, 800, 1);
+        particle_splash(PART_SPLASH, 10, 100, player->o, 0xFFFFFF, 10.0f, 500, -1);
+    }
+
+    VARP(footstepsounds, 0, 1, 1);
+    VARP(footstepdelay, 2500, 2700, 5000);
+
+    static void playFootstepSounds(gameent* player, const int sound, const bool shouldPlayCrouchFootsteps = true)
+    {
+        // Early exit conditions to reduce unnecessary checks
+        if (!footstepsounds || player == nullptr || !player->onfloor() || (player == self && player->blocked))
         {
-            if (lastmillis - d->lastfootstep < (footstepdelay / fmax(d->vel.magnitude(), 1))) return;
-            sendsound(sound, d);
+            return;
         }
-        d->lastfootstep = lastmillis;
+        const bool isCrouching = player->crouching && player->crouched();
+        const bool isMoving = player->move || player->strafe;
+        if (!isMoving || (!shouldPlayCrouchFootsteps && isCrouching))
+        {
+            return;
+        }
+        const float lowest = min(player->lfoot.z, player->rfoot.z);
+        const float velocity = max(player->vel.magnitude(), 1.0f);
+        const float delay = (footstepdelay / velocity) * (1.0f + fabs(lowest - player->o.z));
+        if (lastmillis - player->lastfootstep < delay)
+        {
+            return;
+        }
+        playsound(sound, player);
+        player->lastfootstep = lastmillis;
     }
 
     struct footstepinfo
     {
         int sound;
-        bool hascrouchfootsteps;
+        bool hasCrouchFootsteps;
     };
 
-    footstepinfo footstepsound(gameent* d)
+    static footstepinfo getFootstepSound(const gameent* player)
     {
+        if (player == nullptr)
+        {
+            return;
+        }
         footstepinfo foot;
-        if ((lookupmaterial(d->feetpos(-1)) & MATF_VOLUME) == MAT_GLASS)
+        if ((lookupmaterial(player->feetpos(-1)) & MATF_VOLUME) == MAT_GLASS)
         {
             foot.sound = S_FOOTSTEP_GLASS;
-            foot.hascrouchfootsteps = false;
+            foot.hasCrouchFootsteps = false;
         }
-        else if ((lookupmaterial(d->feetpos()) & MATF_VOLUME) == MAT_WATER)
+        else if ((lookupmaterial(player->feetpos()) & MATF_VOLUME) == MAT_WATER)
         {
             foot.sound = S_FOOTSTEP_WATER;
-            foot.hascrouchfootsteps = true;
+            foot.hasCrouchFootsteps = true;
         }
         else
         {
-            int texture = lookuptextureeffect(d->feetpos(-1));
+            const int texture = lookuptextureeffect(player->feetpos(-1));
             foot.sound = textureeffects[texture].footstepsound;
-            foot.hascrouchfootsteps = textureeffects[texture].hascrouchfootsteps;
+            foot.hasCrouchFootsteps = textureeffects[texture].hascrouchfootsteps;
         }
         return foot;
     }
 
-    void triggerfootsteps(gameent* d, bool islanding)
+    static void triggerFootsteps(gameent* player, bool islanding)
     {
-        footstepinfo foot = footstepsound(d);
+        const footstepinfo foot = getFootstepSound(player);
         if (islanding)
         {
-            // just send the landing sound effect (single footstep)
-            sendsound(foot.sound, d);
+            // Just send the landing sound effect (single footstep).
+            playsound(foot.sound, player);
         }
         else
         {
-            // manage additional conditions and timing for walking sounds
-            playfootstepsounds(d, foot.sound, foot.hascrouchfootsteps);
+            // Manage additional conditions and timing for walking sounds.
+            playFootstepSounds(player, foot.sound, foot.hasCrouchFootsteps);
         }
     }
 
-    void applyliquideffects(gameent* d)
+    void triggerPlayerPhysicsEvent(physent* pl, const int event, const bool isLocal, const int material, const vec& origin)
     {
-        particle_splash(PART_WATER, 200, 250, d->o, 0xFFFFFF, 0.09f, 800, 1);
-        particle_splash(PART_SPLASH, 10, 100, d->o, 0xFFFFFF, 10.0f, 500, -1);
-    }
-
-    void triggerphysicsevent(physent* pl, int event, int material, vec origin)
-    {
-        gameent* d = (gameent*)pl;
-        if (d->state > CS_DEAD) return;
+        if (pl == nullptr || pl->type != ENT_PLAYER || pl->state > CS_DEAD)
+        {
+            return;
+        }
+        gameent* player = (gameent*)pl;
+        if (player != self && !player->ai && isLocal)
+        {
+            return;
+        }
+        gameent* hudPlayer = followingplayer(self);
         switch (event)
         {
-            case PHYSEVENT_JUMP:
-            {
-                if (material == MAT_WATER || !(d == self || d->type != ENT_PLAYER || d->ai))
+            case PhysEvent_Jump:
+                if (material == MAT_WATER)
                 {
-                    break;
+                    // Return so we do not send this physics event to other clients.
+                    return;
                 }
-                if (!d->timeinair) sendsound(S_JUMP1, d);
-                else sendsound(S_JUMP2, d);
-                sway.addevent(d, SwayEvent_Jump, 380, -1.2f);
-                break;
-            }
-
-            case PHYSEVENT_LAND_LIGHT:
-            case PHYSEVENT_FOOTSTEP:
-            {
-                if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
-                if (event == PHYSEVENT_LAND_LIGHT)
+                playsound(S_JUMP1, player);
+                if (player == hudPlayer)
                 {
-                    sway.addevent(d, SwayEvent_Land, 360, -2.1f);
-                    camera::camera.addevent(d, camera::CameraEvent_Land, 120, -1.0f);
-                    triggerfootsteps(d, true);
+                    sway.addevent(player, SwayEvent_Jump, 380, -1.2f);
+                }
+                break;
+
+            case PhysEvent_LandLight:
+            case PhysEvent_Footstep:
+                if (event == PhysEvent_LandLight)
+                {
+                    triggerFootsteps(player, true);
+                    if (player == hudPlayer)
+                    {
+                        sway.addevent(player, SwayEvent_Land, 360, -2.1f);
+                        camera::camera.addevent(player, camera::CameraEvent_Land, 120, -1.0f);
+                    }
                 }
                 else
                 {
-                    triggerfootsteps(d, false);
+                    triggerFootsteps(player, false);
                 }
-                d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
+                player->lastfootleft = player->lastfootright = vec(-1, -1, -1);
                 break;
-            }
 
-            case PHYSEVENT_LAND_HEAVY:
-            {
-                if (!(d == self || d->type != ENT_PLAYER || d->ai)) break;
-                sendsound(material == MAT_WATER ? S_LAND_WATER : S_LAND, d);
-                sway.addevent(d, SwayEvent_LandHeavy, 380, -2);
-                camera::camera.addevent(d, camera::CameraEvent_Land, 100, -1.5f);
-                addroll(d, rollonland);
-                d->lastfootleft = d->lastfootright = vec(-1, -1, -1);
+            case PhysEvent_LandHeavy:
+                playsound(material == MAT_WATER ? S_LAND_WATER : S_LAND, player);
+                if (player == hudPlayer)
+                {
+                    sway.addevent(player, SwayEvent_LandHeavy, 380, -2);
+                    camera::camera.addevent(player, camera::CameraEvent_Land, 100, -1.5f);
+                    addroll(player, rollonland);
+                }
+                player->lastfootleft = player->lastfootright = vec(-1, -1, -1);
                 break;
-            }
 
-            case PHYSEVENT_SLIDE:
+            case PhysEvent_CrouchIn:
+            case PhysEvent_CrouchOut:
             {
-                if (!(d == self || d->type != ENT_PLAYER || d->ai))
+                if (player->sliding(lastmillis))
                 {
                     break;
                 }
-                sendsound(S_SLIDE, d);
+                static int lastCrouch = 0;
+                const int delay = 200;
+                if (lastmillis - lastCrouch < delay)
+                {
+                    // Return so we do not send this physics event to other clients.
+                    return;
+                }
+                if (event == PhysEvent_CrouchIn)
+                {
+                    sway.addevent(player, SwayEvent_Crouch, 350, -2);
+                    playsound(S_CROUCH, player);
+                }
+                else
+                {
+                    sway.addevent(player, SwayEvent_Crouch, 380, -3);
+                }
+                lastCrouch = lastmillis;
                 break;
             }
 
-            case PHYSEVENT_RAGDOLL_COLLIDE:
+            case PhysEvent_CrouchSlide:
+                playsound(S_SLIDE, player);
+                if (!isLocal)
+                {
+                    player->slide.initiate(lastmillis);
+                }
+                break;
+
+            case PhysEvent_CrouchSlideStop:
             {
-                playsound(S_CORPSE, NULL, origin.iszero() ? (d == self ? NULL : &d->o) : &origin);
+                static int lastStop = 0;
+                if (lastmillis - lastStop < player->slide.slideDuration)
+                {
+                    // Return so we do not send this physics event to other clients.
+                    return;
+                }
+                addroll(player, rollslidestop);
+                playsound(S_IMPACT_MELEE, player);
+                if (!isLocal)
+                {
+                    player->slide.reset();
+                }
                 break;
             }
 
-            case PHYSEVENT_LIQUID_IN:
+            case PhysEvent_RagdollCollide:
             {
-                playsound(material == MAT_LAVA ? S_LAVA_IN : S_WATER_IN, NULL, origin.iszero() ? (d == self ? NULL : &d->o) : &origin);
-                applyliquideffects(d);
-                break;
+                playsound(S_CORPSE, NULL, origin.iszero() ? (player == self ? NULL : &player->o) : &origin);
+
+                /*
+                    Return so we do not send this physics event to other clients.
+                    This to prevent inaccurate ragdoll collision sounds as the ragdoll physics may not be fully deterministic.
+                */
+                return;
             }
 
-            case PHYSEVENT_LIQUID_OUT:
-            {
-                if (material == MAT_LAVA) break;
-                playsound(S_WATER_OUT, NULL, origin.iszero() ? (d == self ? NULL : &d->o) : &origin);
-                applyliquideffects(d);
+            case PhysEvent_LiquidIn:
+                playsound(material == MAT_LAVA ? S_LAVA_IN : S_WATER_IN, NULL, origin.iszero() ? (player == self ? NULL : &player->o) : &origin);
+                triggerLiquidEffects(player, material);
                 break;
-            }
 
-            default: break;
+            case PhysEvent_LiquidOut:
+                if (material == MAT_LAVA)
+                {
+                    // Return so we do not send this physics event to other clients.
+                    return;
+                }
+                playsound(S_WATER_OUT, NULL, origin.iszero() ? (player == self ? NULL : &player->o) : &origin);
+                triggerLiquidEffects(player, material);
+                break;
+
+            default:
+                break;
+        }
+
+        // Send physics event to other clients.
+        if (isLocal)
+        {
+            addmsg(N_PHYSICSEVENT, "rcii", player, event, material);
         }
     }
 
@@ -1269,7 +1373,7 @@ namespace physics
             {
                 self->crouching = abs(self->crouching);
             }
-            sway.addevent(self, SwayEvent_Crouch, 350, -3);
+            triggerPlayerPhysicsEvent(self, PhysEvent_CrouchOut);
         }
         else if (canCrouch())
         {
@@ -1278,13 +1382,16 @@ namespace physics
             // Check for double-taps.
             if (sinceLastPress < 250 && canSlide())
             {
-                self->slide.queued = true; // Mark slide as queued
+                // Mark slide as queued.
+                self->slide.queued = true;
                 self->slide.yaw = self->yaw;
             }
             else
             {
-                self->slide.queued = false; // Reset slide queue if not a double-tap
+                // Reset slide queue if not a double-tap.
+                self->slide.queued = false;
             }
+            lastPress = lastmillis;
 
             if (crouchtoggle)
             {
@@ -1294,8 +1401,7 @@ namespace physics
             {
                 self->crouching = -1;
             }
-            sway.addevent(self, SwayEvent_Crouch, 380, -2);
-            lastPress = lastmillis;
+            triggerPlayerPhysicsEvent(self, PhysEvent_CrouchIn);
         }
     }
     ICOMMAND(crouch, "D", (int* down),
@@ -1433,7 +1539,7 @@ namespace physics
         water = isliquidmaterial(material & MATF_VOLUME);
         if (!pl->inwater && water)
         {
-            triggerphysicsevent(pl, PHYSEVENT_LIQUID_IN, material & MATF_VOLUME, center);
+            triggerPlayerPhysicsEvent(pl, PhysEvent_LiquidIn, true, material & MATF_VOLUME, center);
         }
         else if (pl->inwater && !water)
         {
@@ -1441,7 +1547,7 @@ namespace physics
             water = isliquidmaterial(material & MATF_VOLUME);
             if (!water)
             {
-                triggerphysicsevent(pl, PHYSEVENT_LIQUID_OUT, pl->inwater, center);
+                triggerPlayerPhysicsEvent(pl, PhysEvent_LiquidOut, true, pl->inwater, center);
             }
         }
         pl->inwater = water ? material & MATF_VOLUME : MAT_AIR;

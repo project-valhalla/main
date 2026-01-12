@@ -31,7 +31,7 @@ namespace entities
 // physics
 namespace physics
 {
-    extern void triggerphysicsevent(physent* pl, int event, int material = 0, vec origin = vec(0, 0, 0));
+    extern void triggerPlayerPhysicsEvent(physent* pl, const int event, const bool isLocal = true, const int material = 0, const vec& origin = vec(0, 0, 0));
     extern void collidewithdynamicentity(physent* d, physent* o, const vec& dir);
     extern void updateragdoll(dynent* pl, vec center, float radius, bool& water);
     extern void updateragdollvertex(dynent* pl, vec pos, vec& dpos, float ts);
@@ -75,6 +75,29 @@ static const struct textureeffect
     {"water",   TEXEFFECT_WATER,   false, S_FOOTSTEP_WATER   }
 };
 
+enum
+{
+    TRACK_MUZZLE = 0,
+    TRACK_EJECT,
+    TRACK_HAND
+};
+
+enum
+{
+    PhysEvent_Jump = 0,
+    PhysEvent_LandLight,
+    PhysEvent_LandHeavy,
+    PhysEvent_Footstep,
+    PhysEvent_CrouchIn,
+    PhysEvent_CrouchOut,
+    PhysEvent_CrouchSlide,
+    PhysEvent_CrouchSlideStop,
+    PhysEvent_StopCrouchSlide,
+    PhysEvent_RagdollCollide,
+    PhysEvent_LiquidIn,
+    PhysEvent_LiquidOut
+};
+
 namespace game
 {
     extern void parseoptions(vector<const char *> &args);
@@ -87,7 +110,7 @@ namespace game
     extern void writeclientinfo(stream *f);
     extern void say(char *text);
     extern void changemap(const char *name);
-	extern void loadMainMenuMap(const char* mapName);
+    extern void loadMainMenuMap(const char* mapName);
     extern void forceedit(const char *name);
     extern void loadconfigs();
     extern void updateworld();

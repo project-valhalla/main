@@ -2113,6 +2113,18 @@ namespace game
                 break;
             }
 
+            case N_PHYSICSEVENT:
+            {
+                if (!d)
+                {
+                    return;
+                }
+                const int event = getint(p);
+                const int material = getint(p);
+                physics::triggerPlayerPhysicsEvent(d, event, material, false);
+                break;
+            }
+
             case N_NOTICE:
             {
                 int sound = getint(p);

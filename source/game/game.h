@@ -573,7 +573,7 @@ struct gameent : dynent, gamestate
 
     struct crouchSlide
     {
-        const int SLIDE_DURATION = 450;
+        const int slideDuration = 450;
 
         int startTime = 0;
         int last = 0;
@@ -601,13 +601,13 @@ struct gameent : dynent, gamestate
 
         bool isChained(const int time)
         {
-            const int coolDown = SLIDE_DURATION * 3;
+            const int coolDown = slideDuration * 3;
             return last && time - last <= coolDown;
         }
 
         bool isInProgress(const int time) const
         {
-            return startTime && time - startTime <= SLIDE_DURATION;
+            return startTime && time - startTime <= slideDuration;
         }
     };
     crouchSlide slide;

@@ -9,7 +9,7 @@ namespace physics
     const float SLOPEZ = 0.5f;
     const float WALLZ = 0.2f;
     const float RAMPZ_MIN = 0.5f;
-    const float RAMPZ_MAX = 0.95f;
+    const float RAMPZ_MAX = 0.98f;
 
     void recalculatedirection(gameent* d, const vec& oldvel, vec& dir)
     {

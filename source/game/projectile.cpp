@@ -44,26 +44,7 @@ namespace game
                     }
                 }
             }
-            return NULL;
-        }
-
-        void setmodel(ProjEnt& proj)
-        {
-            if (!projs[proj.projectile].directory)
-            {
-                return;
-            }
-
-            proj.setVariant();
-            if (proj.variant)
-            {
-                defformatstring(variantname, "%s/%02d", projs[proj.projectile].directory, proj.variant);
-                copystring(proj.model, variantname);
-            }
-            else
-            {
-                copystring(proj.model, projs[proj.projectile].directory);
-            }
+            return nullptr;
         }
 
         void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity, const float elasticity)
@@ -85,7 +66,7 @@ namespace game
             proj.gravity = gravity;
             proj.elasticity = elasticity;
 
-            setmodel(proj);
+            proj.setModel();
 
             vec dir(to);
             dir.sub(from).safenormalize();
@@ -140,7 +121,7 @@ namespace game
             {
                 if (validsound(proj->bounceSound))
                 {
-                    playsound(proj->bounceSound, NULL, &proj->o, NULL, 0, 0, 0, -1);
+                    playsound(proj->bounceSound, nullptr, &proj->o, nullptr, 0, 0, 0, -1);
                 }
             }
             switch (proj->projectile)
@@ -332,7 +313,7 @@ namespace game
             }
             particle_fireball(v, maxsize, explosiontype, fade, explosioncolor, minsize);
             adddynlight(v, attacks[attack].exprad * 3, explosionlightcolor, fade, 40);
-            playsound(attacks[attack].impactsound, NULL, &v);
+            playsound(attacks[attack].impactsound, nullptr, &v);
             // Spawn debris Projectiles.
             if (!isInWater) // Debris in water are unnecessary.
             {
@@ -411,7 +392,7 @@ namespace game
         void explode(gameent* owner, const int attack, const vec& position, const vec& velocity)
         {
             addexplosioneffects(owner, attack, position);
-            applyradialeffect(position, velocity, owner, NULL, attack, 0);
+            applyradialeffect(position, velocity, owner, nullptr, attack, 0);
         }
 
         void destroyserverprojectile(gameent* d, const int id, const int attack)
@@ -558,7 +539,7 @@ namespace game
                 }
                 if (validsound(impactsound))
                 {
-                    playsound(impactsound, NULL, &proj.o);
+                    playsound(impactsound, nullptr, &proj.o);
                 }
                 proj.lastPosition = proj.o;
             }
@@ -572,7 +553,7 @@ namespace game
             }
             if (proj->state != CS_DEAD)
             {
-                proj->loopChannel = playsound(proj->loopSound, NULL, &proj->o, NULL, 0, -1, 100, proj->loopChannel);
+                proj->loopChannel = playsound(proj->loopSound, nullptr, &proj->o, nullptr, 0, -1, 100, proj->loopChannel);
             }
             else
             {
@@ -912,21 +893,6 @@ namespace game
             }
         }
 
-        vec manipulatemodel(ProjEnt& proj, float& yaw, float& pitch)
-        {
-            if (!(proj.flags & ProjFlag_Bounce))
-            {
-                const float dist = min(proj.o.dist(proj.to) / 32.0f, 1.0f);
-                const vec pos = vec(proj.o).add(vec(proj.offset).mul(dist * proj.offsetMillis / float(OFFSET_MILLIS)));
-                vec v = dist < 1e-6f ? proj.vel : vec(proj.to).sub(pos).normalize();
-                vectoyawpitch(v, yaw, pitch); // The amount of distance in front of the smoke trail needs to change if the model does.
-                v.mul(3);
-                v.add(pos);
-                return v;
-            }
-            return proj.offsetposition();
-        }
-
         void render()
         {
             float pitch;
@@ -937,7 +903,7 @@ namespace game
                 {
                     continue;
                 }
-                const vec pos = manipulatemodel(proj, proj.yaw, proj.pitch);
+                const vec position = proj.manipulateModel();
                 int cull = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED;
                 float fade = 1.0f;
                 if (proj.lifetime >= 400)
@@ -949,7 +915,7 @@ namespace game
                 {
                     fade = proj.lifetime / 400.0f;
                 }
-                rendermodel(proj.model, ANIM_MAPMODEL | ANIM_LOOP, pos, proj.yaw, proj.pitch, proj.roll, cull, NULL, NULL, 0, 0, fade);
+                rendermodel(proj.model, ANIM_MAPMODEL | ANIM_LOOP, position, proj.yaw, proj.pitch, proj.roll, cull, nullptr, nullptr, 0, 0, fade);
             }
         }
 
@@ -997,7 +963,7 @@ namespace game
             loopv(Projectiles)
             {
                 ProjEnt& proj = *Projectiles[i];
-                obstacles.avoidnear(NULL, proj.o.z + attacks[proj.attack].exprad + 1, proj.o, radius + attacks[proj.attack].exprad);
+                obstacles.avoidnear(nullptr, proj.o.z + attacks[proj.attack].exprad + 1, proj.o, radius + attacks[proj.attack].exprad);
             }
         }
     }

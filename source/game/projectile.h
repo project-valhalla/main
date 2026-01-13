@@ -86,7 +86,7 @@ projs[Projectile_Max] =
         0,
         1.0f,
         50.0f,
-        NULL,
+        nullptr,
     },
     {
         Projectile_Plasma,
@@ -99,7 +99,7 @@ projs[Projectile_Max] =
         0,
         5.0f,
         1000.0f,
-        NULL
+        nullptr
     },
     {
         Projectile_Gib,
@@ -125,7 +125,7 @@ projs[Projectile_Max] =
         0,
         1.8f,
         0,
-        NULL
+        nullptr
     },
     {
         Projectile_Casing,
@@ -177,7 +177,7 @@ projs[Projectile_Max] =
         0.25f,
         0.4f,
         0,
-        NULL
+        nullptr
     }
 };
 inline bool isattackprojectile(const int projectile)
@@ -208,7 +208,7 @@ struct ProjEnt : dynent
         roll = 0;
         model[0] = 0;
         offset = lastPosition = dv = from = to = vec(0, 0, 0);
-        owner = NULL;
+        owner = nullptr;
     }
     ~ProjEnt()
     {
@@ -278,6 +278,25 @@ struct ProjEnt : dynent
         }
     }
 
+    // Set a 3D model for the projectile if necessary.
+    void setModel()
+    {
+        if (projs[projectile].directory == nullptr)
+        {
+            return;
+        }
+        setVariant();
+        if (variant)
+        {
+            defformatstring(variantName, "%s/%02d", projs[projectile].directory, variant);
+            copystring(model, variantName);
+        }
+        else
+        {
+            copystring(model, projs[projectile].directory);
+        }
+    }
+
     void checkliquid()
     {
         const int material = lookupmaterial(o);
@@ -328,5 +347,24 @@ struct ProjEnt : dynent
             pos.add(vec(offset).mul(offsetMillis / float(OFFSET_MILLIS)));
             return pos;
         }
+    }
+
+    // Adjust projectile's model.
+    vec manipulateModel()
+    {
+        if (!(flags & ProjFlag_Bounce))
+        {
+            const float dist = min(o.dist(to) / 32.0f, 1.0f);
+            const vec pos = vec(o).add(vec(offset).mul(dist * offsetMillis / float(OFFSET_MILLIS)));
+            
+            // The amount of distance in front of the smoke trail needs to change if the model does.
+            vec velocity = dist < 1e-6f ? vel : vec(to).sub(pos).normalize();
+            vectoyawpitch(velocity, yaw, pitch);
+            velocity.mul(3);
+            velocity.add(pos);
+
+            return velocity;
+        }
+        return offsetposition();
     }
 };

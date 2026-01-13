@@ -2489,7 +2489,7 @@ namespace game
                     d->stopchannelsound(Chan_PowerUp);
                     conoutf(CON_GAMEINFO, "%s \f2is the berserker!", colorname(d));
                     playsound(S_BERSERKER, d);
-                    particle_flare(d->o, d->o, 500, PART_COMICS, 0xFFFFFF, 0.1f, NULL, 30.0f);
+                    particle_flare(d->o, d->o, 500, PART_COMICS, 0xFFFFFF, 0.1f, 30.0f);
                     // Temporary:
                     camera::thirdperson = 1;
                 }

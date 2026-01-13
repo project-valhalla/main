@@ -64,19 +64,77 @@ namespace game
         }
     }
 
-    void trackparticles(physent *owner, vec &o, vec &d)
+    void trackParticles(physent* owner, vec& o, vec& d, const int trackType)
     {
-        if(owner->type != ENT_PLAYER && owner->type != ENT_AI) return;
-        gameent *pl = (gameent *)owner;
-        if(pl->muzzle.x < 0 || pl->lastattack < 0 || attacks[pl->lastattack].gun != pl->gunselect) return;
-        float dist = o.dist(d);
-        o = pl->muzzle;
-        if(dist <= 0) d = o;
+        if (owner->type != ENT_PLAYER && owner->type != ENT_AI)
+        {
+            return;
+        }
+        gameent* player = (gameent*)owner;
+        switch (trackType)
+        {
+            case TRACK_MUZZLE:
+                if (player->muzzle.x >= 0)
+                {
+                    o = player->muzzle;
+                    break;
+                }
+                return;
+
+            case TRACK_EJECT:
+                if (player->eject.x >= 0)
+                {
+                    o = player->eject;
+                    break;
+                }
+                return;
+
+            case TRACK_HAND:
+                if (player->hand.x >= 0)
+                {
+                    o = player->hand;
+                    break;
+                }
+                return;
+
+            case TRACK_HEAD:
+                if (player->head.x >= 0)
+                {
+                    o = player->head;
+                    break;
+                }
+                return;
+
+            case TRACK_FOOT_RIGHT:
+                if (player->rfoot.x >= 0)
+                {
+                    o = player->rfoot;
+                    break;
+                }
+                return;
+
+            case TRACK_FOOT_LEFT:
+                if (player->lfoot.x >= 0)
+                {
+                    o = player->lfoot;
+                    break;
+                }
+                return;
+
+            default:
+                return;
+        }
+        const float traceDistance = o.dist(d);
+        if (traceDistance > 0)
+        {
+            vec direction;
+            vecfromyawpitch(owner->yaw, owner->pitch, 1, 0, direction);
+            const float hitDistance = raycube(o, direction, traceDistance, RAY_CLIPMAT | RAY_ALPHAPOLY);
+            d = direction.mul(min(hitDistance, traceDistance)).add(o);
+        }
         else
         {
-            vecfromyawpitch(owner->yaw, owner->pitch, 1, 0, d);
-            float newdist = raycube(owner->o, d, dist, RAY_CLIPMAT|RAY_ALPHAPOLY);
-            d.mul(min(newdist, dist)).add(owner->o);
+            d = o;
         }
     }
 
@@ -708,13 +766,13 @@ namespace game
                 {
                     if (atk == ATK_SCATTER2 && d == hud)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH, 0xEFE598, 2.0f, d);
+                        particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH, 0xEFE598, 2.0f, 0, d);
                     }
                     else
                     {
-                        particle_flare(d->muzzle, d->muzzle, 850, PART_MUZZLE_SMOKE, 0x202020, 0.1f, d, 3.0f);
-                        particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0xEFE598, 0.1f, d, 3.0f);
-                        particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH, 0xEFE598, 3.0f, d, 0.1f);
+                        particle_flare(d->muzzle, d->muzzle, 850, PART_MUZZLE_SMOKE, 0x202020, 0.1f, 3.0f, d);
+                        particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0xEFE598, 0.1f, 3.0f, d);
+                        particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH, 0xEFE598, 3.0f, 0.1f, d);
                     }
                     adddynlight(hudgunorigin(atk, d->o, to, d), 200, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                     if (atk == ATK_SCATTER2)
@@ -743,14 +801,14 @@ namespace game
                 {
                     if (atk == ATK_SMG2 && d == hud)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, d, 1.8f);
+                        particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, 1.8f, d);
                         particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 50, PART_TRAIL, 0xFFC864, 1.0f);
                     }
                     else
                     {
-                        particle_flare(d->muzzle, d->muzzle, 300, PART_MUZZLE_SMOKE, 0xFFFFFF, 0.5f, d, 2.0f);
-                        particle_flare(d->muzzle, d->muzzle, 120, PART_SPARKS, 0xEFE898, 0.1f, d, 3.0f);
-                        particle_flare(d->muzzle, d->muzzle, 130, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, d, 1.8f);
+                        particle_flare(d->muzzle, d->muzzle, 300, PART_MUZZLE_SMOKE, 0xFFFFFF, 0.5f, 2.0f, d);
+                        particle_flare(d->muzzle, d->muzzle, 120, PART_SPARKS, 0xEFE898, 0.1f, 3.0f, d);
+                        particle_flare(d->muzzle, d->muzzle, 130, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, 1.8f, d);
                     }
                     adddynlight(hudgunorigin(gun, d->o, to, d), 120, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_EXPAND, 0, vec(0, 0, 0), d);
                 }
@@ -762,7 +820,7 @@ namespace game
             {
                 if (muzzleflash && d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 100, PART_MUZZLE_FLASH2, 0xDD88DD, 2.5f, d);
+                    particle_flare(d->muzzle, d->muzzle, 100, PART_MUZZLE_FLASH2, 0xDD88DD, 2.5f, 0, d);
                 }
                 break;
             }
@@ -772,12 +830,12 @@ namespace game
                 {
                     if (previousaction > 200)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 250, PART_MUZZLE_FLASH5, 0xDD88DD, 0.5f, d, 3.0f);
+                        particle_flare(d->muzzle, d->muzzle, 250, PART_MUZZLE_FLASH5, 0xDD88DD, 0.5f, 3.0f, d);
                     }
-                    else particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH2, 0xDD88DD, 2.0f, d);
+                    else particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH2, 0xDD88DD, 2.0f, 0, d);
                     adddynlight(hudgunorigin(atk, d->o, to, d), 75, vec(1.0f, 0.50f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
-                particle_flare(hudgunorigin(atk, from, to, d), to, 80, PART_LIGHTNING, 0xEE88EE, 1.0f, d);
+                particle_flare(hudgunorigin(atk, from, to, d), to, 80, PART_LIGHTNING, 0xEE88EE, 1.0f, 0, d);
                 particle_fireball(to, 1.0f, PART_EXPLOSION2, 100, 0xDD88DD, 3.0f);
                 if (!local) impacteffects(atk, d, from, to, hit);
                 break;
@@ -787,7 +845,7 @@ namespace game
             {
                 if (muzzleflash && d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 150, PART_MUZZLE_FLASH4, 0xEFE898, 0.1f, d, 3.0f);
+                    particle_flare(d->muzzle, d->muzzle, 150, PART_MUZZLE_FLASH4, 0xEFE898, 0.1f, 3.0f, d);
                 }
                 break;
             }
@@ -799,10 +857,10 @@ namespace game
                 {
                     if (d == hud)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 180, PART_SPARKS, 0x77DD77, 0.1f, d, 3.0f);
-                        particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x202020, 3.0f, d);
+                        particle_flare(d->muzzle, d->muzzle, 180, PART_SPARKS, 0x77DD77, 0.1f, 3.0f, d);
+                        particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x202020, 3.0f, 0, d);
                     }
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 1.75f, d);
+                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 1.75f, 0, d);
                     adddynlight(hudgunorigin(atk, d->o, to, d), 100, vec(0.25f, 1.0f, 0.75f), 80, 75, DL_SHRINK, 0, vec(0, 0, 0), d);
                 }
                 if (atk == ATK_RAIL2) particle_trail(PART_SMOKE, 350, hudgunorigin(atk, from, to, d), to, 0xDEFFDE, 0.3f, 50);
@@ -829,9 +887,9 @@ namespace game
                     {
                         if (d == hud)
                         {
-                            particle_flare(d->muzzle, d->muzzle, 180, PART_SPARKS, 0x00FFFF, 0.1f, d, 3.0f);
+                            particle_flare(d->muzzle, d->muzzle, 180, PART_SPARKS, 0x00FFFF, 0.1f, 3.0f, d);
                         }
-                        particle_flare(d->muzzle, d->muzzle, 120, PART_MUZZLE_FLASH3, 0x00FFFF, 0.1f, d, 2.5f);
+                        particle_flare(d->muzzle, d->muzzle, 120, PART_MUZZLE_FLASH3, 0x00FFFF, 0.1f, 2.5f, d);
                         particle_flare(hudgunorigin(atk, from, to, d), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
                         if (!local)
                         {
@@ -840,7 +898,7 @@ namespace game
                     }
                     else
                     {
-                        particle_flare(d->muzzle, d->muzzle, 280, PART_MUZZLE_FLASH2, 0x00FFFF, 0.1f, d, 3.0f);
+                        particle_flare(d->muzzle, d->muzzle, 280, PART_MUZZLE_FLASH2, 0x00FFFF, 0.1f, 3.0f, d);
                     }
                     adddynlight(hudgunorigin(atk, d->o, to, d), 80, vec(0.25f, 1.0f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
@@ -851,8 +909,8 @@ namespace game
 
                 if (muzzleflash && d->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH, 0x008080, 0.1f, d, 2.75f);
-                    particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x006060, 0.1f, d, 3.0f);
+                    particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH, 0x008080, 0.1f, 2.75f, d);
+                    particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x006060, 0.1f, 3.0f, d);
                     adddynlight(hudgunorigin(atk, d->o, to, d), 80, vec(0.25f, 0.75f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d);
                 }
                 particle_trail(PART_SMOKE, 350, hudgunorigin(atk, from, to, d), to, 0x006060, 0.3f, 50);
@@ -1136,16 +1194,16 @@ namespace game
             }
             if (f->shield)
             {
-                particle_flare(hit, hit, 180, PART_SPARK3, 0xFFFF66, 0.0f, NULL, 15.0f);
+                particle_flare(hit, hit, 180, PART_SPARK3, 0xFFFF66, 0.0f, 15.0f);
             }
             if (blood && color != -1)
             {
-                particle_flare(hit, hit, 300, PART_BLOOD, color, 0.1f, NULL, 13.0f);
+                particle_flare(hit, hit, 300, PART_BLOOD, color, 0.1f, 13.0f);
                 particle_splash(PART_BLOOD2, damage, 100 + rnd(400), hit, color, 2.0f, 200, 5, 0.01f);
             }
             else
             {
-                particle_flare(hit, hit, 350, PART_SPARK3, 0xFFFF66, 0.1f, NULL, 16.0f);
+                particle_flare(hit, hit, 350, PART_SPARK3, 0xFFFF66, 0.1f, 16.0f);
                 particle_splash(PART_SPARK2, damage / 2, 200, hit, 0xFFFF66, 0.5f, 300, 2, 0.001f);
             }
             if (f->health > 0 && lastmillis - f->lastyelp > 600)
@@ -1184,7 +1242,7 @@ namespace game
         }
         else if (d->type == ENT_PROJECTILE)
         {
-            particle_flare(hit, hit, 250, PART_SPARK3, 0xFFFF66, 0.1f, NULL, 15.0f);
+            particle_flare(hit, hit, 250, PART_SPARK3, 0xFFFF66, 0.1f, 15.0f);
             playsound(S_BOUNCE_ROCKET, NULL, &hit);
         }
     }
@@ -1202,7 +1260,7 @@ namespace game
         if (blood)
         {
             const vec from = d->abovehead();
-            particle_flare(from, from, 500, PART_BLOOD, getbloodcolor(d), 0.5f, NULL, 38.0f);
+            particle_flare(from, from, 500, PART_BLOOD, getbloodcolor(d), 0.5f, 38.0f);
             particle_splash(PART_BLOOD2, damage, 300, d->o, getbloodcolor(d), 0.1f, 500, 5, 2.0f);
             addstain(STAIN_BLOOD, d->o, d->vel.neg(), 20, getbloodcolor(d), rnd(4));
         }

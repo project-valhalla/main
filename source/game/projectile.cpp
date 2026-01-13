@@ -263,7 +263,7 @@ namespace game
                     explosiontype = PART_EXPLOSION3;
                     particle_splash(PART_SPARK2, 100, 250, v, 0xFFC864, 0.10f + rndscale(0.50f), 600, 1);
                     particle_splash(PART_SMOKE, 100, 280, v, 0x222222, 1.0f, 250, 200, 20.0f);
-                    particle_flare(v, v, 280, PART_EXPLODE1 + rnd(3), 0xFFC864, 0.0f, NULL, 80.0f);
+                    particle_flare(v, v, 280, PART_EXPLODE1 + rnd(3), 0xFFC864, 0.0f, 80.0f);
                     particle_splash(PART_EXPLODE4, 20, 120, v, explosioncolor, 5.0f, 500, 50, 0.0f);
                     break;
                 }
@@ -275,12 +275,12 @@ namespace game
                     fade = 250;
                     if (isInWater)
                     {
-                        particle_flare(v, v, 300, PART_ELECTRICITY, explosioncolor, 5.0f, NULL, 12.0f);
+                        particle_flare(v, v, 300, PART_ELECTRICITY, explosioncolor, 5.0f, 12.0f);
                         return;
                     }
                     explosiontype = PART_EXPLOSION2;
                     particle_splash(PART_SPARK2, 5 + rnd(20), 200, v, explosioncolor, 0.08f + rndscale(0.35f), 400, 2);
-                    particle_flare(v, v, 250, PART_EXPLODE1 + rnd(2), 0xF1B4F1, 0.5f, NULL, 15.0f);
+                    particle_flare(v, v, 250, PART_EXPLODE1 + rnd(2), 0xF1B4F1, 0.5f, 15.0f);
                     particle_splash(PART_SMOKE, 60, 180, v, 0x222222, 2.5f + rndscale(3.8f), 180, 60);
                     break;
                 }
@@ -313,18 +313,18 @@ namespace game
                     maxsize = 0;
                     if (attack == ATK_PISTOL2 && isInWater)
                     {
-                        particle_flare(v, v, 300, PART_ELECTRICITY, explosioncolor, 5.0f, NULL, 12.0f);
+                        particle_flare(v, v, 300, PART_ELECTRICITY, explosioncolor, 5.0f, 12.0f);
                         return;
                     }
                     particle_fireball(v, 1.0f, PART_EXPLOSION2, attack == ATK_PISTOL2 ? 200 : 500, 0x00FFFF, attacks[attack].exprad);
                     particle_splash(PART_SPARK2, 50, 180, v, 0x00FFFF, 0.18f, 500);
                     if (attack == ATK_PISTOL3)
                     {
-                        particle_flare(v, v, 600, PART_EXPLODE1, explosioncolor, 50.0f, NULL, 40.0f);
+                        particle_flare(v, v, 600, PART_EXPLODE1, explosioncolor, 50.0f, 40.0f);
                     }
                     else
                     {
-                        particle_flare(v, v, 200, PART_RING, explosioncolor, 0.0f, NULL, 18.0f);
+                        particle_flare(v, v, 200, PART_RING, explosioncolor, 0.0f, 18.0f);
                     }
                     break;
                 }

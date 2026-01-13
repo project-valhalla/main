@@ -213,7 +213,7 @@ namespace ai
 
         if (resetthisguy)
         {
-            projectiles::reset(d);
+            projectiles::clear(d);
         }
         if(d->ownernum >= 0 && self->clientnum == d->ownernum)
         {
@@ -1109,7 +1109,7 @@ namespace ai
         bool enemyok = e && targetable(d, e);
         if(!enemyok || d->skill >= 50)
         {
-            gameent *f = (gameent *)intersectclosest(dp, d->ai->target, d);
+            gameent *f = (gameent *)intersectClosest(d, dp, d->ai->target);
             if(f)
             {
                 if(targetable(d, f))

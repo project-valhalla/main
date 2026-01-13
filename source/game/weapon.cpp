@@ -404,7 +404,7 @@ namespace game
         switch (gun)
         {
             case GUN_ROCKET:
-                projectiles::tryDetonate(d, gun);
+                projectiles::detonate(d, gun);
                 break;
 
             // Nothing to do here.

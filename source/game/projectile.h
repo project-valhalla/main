@@ -33,11 +33,12 @@ enum
     ProjFlag_Bounce      = 1 << 2, // Bounces off surfaces.
     ProjFlag_Linear      = 1 << 3, // Follows a linear trajectory.
     ProjFlag_Impact      = 1 << 4, // Detonates on collision with geometry or entities.
-    ProjFlag_Quench      = 1 << 5, // Destroyed upon contact with water.
-    ProjFlag_Eject       = 1 << 6, // Can be ejected as a spent casing by weapons.
-    ProjFlag_Loyal       = 1 << 7, // Only responds to the weapon that fired it.
-    ProjFlag_Invincible  = 1 << 8, // Cannot be destroyed.
-    ProjFlag_AdjustSpeed = 1 << 9  // Adjusts speed based on distance.
+    ProjFlag_Explosive   = 1 << 5, // Let me guess, it triggers an explosion?
+    ProjFlag_Quench      = 1 << 6, // Destroyed upon contact with water.
+    ProjFlag_Eject       = 1 << 7, // Can be ejected as a spent casing by weapons.
+    ProjFlag_Loyal       = 1 << 8, // Only responds to the weapon that fired it.
+    ProjFlag_Invincible  = 1 << 9, // Cannot be destroyed.
+    ProjFlag_AdjustSpeed = 1 << 10 // Adjusts speed based on distance.
 };
 
 static const struct projectileinfo
@@ -51,7 +52,7 @@ projs[Projectile_Max] =
 {
     {
         Projectile_Grenade,
-        ProjFlag_Weapon | ProjFlag_Bounce,
+        ProjFlag_Weapon | ProjFlag_Bounce | ProjFlag_Explosive,
         ATK_GRENADE2,
         S_BOUNCE_ROCKET,
         S_INVALID,
@@ -64,7 +65,7 @@ projs[Projectile_Max] =
     },
     {
         Projectile_Rocket,
-        ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Impact,
+        ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Explosive | ProjFlag_Impact,
         ATK_ROCKET2,
         S_INVALID,
         S_ROCKET_LOOP,
@@ -77,7 +78,7 @@ projs[Projectile_Max] =
     },
     {
         Projectile_Pulse,
-        ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Quench | ProjFlag_Impact | ProjFlag_Invincible,
+        ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Quench | ProjFlag_Impact | ProjFlag_Explosive | ProjFlag_Invincible,
         ATK_INVALID,
         S_INVALID,
         S_PULSE_LOOP,
@@ -90,7 +91,7 @@ projs[Projectile_Max] =
     },
     {
         Projectile_Plasma,
-        ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Quench | ProjFlag_Impact | ProjFlag_Loyal,
+        ProjFlag_Weapon | ProjFlag_Linear | ProjFlag_Quench | ProjFlag_Impact | ProjFlag_Explosive | ProjFlag_Loyal,
         ATK_PISTOL3,
         S_INVALID,
         S_PISTOL_LOOP,
@@ -317,7 +318,7 @@ struct ProjEnt : dynent
         state = CS_DEAD;
     }
 
-    vec offsetposition()
+    vec offsetPosition()
     {
         vec pos(o);
         if (offsetMillis > 0)
@@ -329,6 +330,15 @@ struct ProjEnt : dynent
             }
         }
         return pos;
+    }
+
+    vec getOffset()
+    {
+        if (flags & ProjFlag_Bounce)
+        {
+            return offsetPosition();
+        }
+        return vec(offset).mul(offsetMillis / float(OFFSET_MILLIS)).add(o);
     }
 
     vec updateposition(const int time)
@@ -365,6 +375,6 @@ struct ProjEnt : dynent
 
             return velocity;
         }
-        return offsetposition();
+        return offsetPosition();
     }
 };

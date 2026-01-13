@@ -75,7 +75,7 @@ namespace server
         void process(clientinfo *ci);
     };
 
-    struct explodeevent : timedevent
+    struct destroyevent : timedevent
     {
         int id, attack, flags;
         clientinfo* actor;
@@ -3301,7 +3301,7 @@ namespace server
         return false;
     }
 
-    void explodeevent::process(clientinfo* ci)
+    void destroyevent::process(clientinfo* ci)
     {
         ci->state.projectiles.update(id, attack, flags, actor);
         if (!ci->state.projectiles.remove(id) || !validatk(attack))
@@ -4407,14 +4407,14 @@ namespace server
                 break;
             }
 
-            case N_EXPLODE:
+            case N_DESTROYPROJECTILE:
             {
-                explodeevent* exp = new explodeevent;
+                destroyevent* destroy = new destroyevent;
                 const int millis = getint(p);
-                exp->millis = cq ? cq->geteventmillis(gamemillis, millis) : 0;
-                exp->attack = getint(p);
-                exp->id = getint(p);
-                exp->flags = 0;
+                destroy->millis = cq ? cq->geteventmillis(gamemillis, millis) : 0;
+                destroy->attack = getint(p);
+                destroy->id = getint(p);
+                destroy->flags = 0;
                 const int hits = getint(p);
                 loopk(hits)
                 {
@@ -4422,7 +4422,7 @@ namespace server
                     {
                         break;
                     }
-                    hitinfo& hit = exp->hits.add();
+                    hitinfo& hit = destroy->hits.add();
                     hit.target = getint(p);
                     hit.lifesequence = getint(p);
                     hit.dist = getint(p) / DMF;
@@ -4436,12 +4436,12 @@ namespace server
                 }
                 if (cq)
                 {
-                    exp->actor = cq;
-                    cq->addevent(exp);
+                    destroy->actor = cq;
+                    cq->addevent(destroy);
                 }
                 else
                 {
-                    delete exp;
+                    delete destroy;
                 }
                 break;
             }

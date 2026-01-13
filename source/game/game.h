@@ -127,7 +127,7 @@ enum
 enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
-    N_SHOOT, N_EXPLODE, N_DAMAGEPROJECTILE, N_SUICIDE,
+    N_SHOOT, N_DESTROYPROJECTILE, N_DAMAGEPROJECTILE, N_SUICIDE,
     N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT, N_PHYSICSEVENT,
@@ -158,7 +158,7 @@ enum
 static const int msgsizes[] =               // size inclusive message token, 0 for variable or not-checked sizes
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 3, N_CDIS, 2,
-    N_SHOOT, 0, N_EXPLODE, 0, N_DAMAGEPROJECTILE, 5, N_SUICIDE, 1,
+    N_SHOOT, 0, N_DESTROYPROJECTILE, 0, N_DAMAGEPROJECTILE, 5, N_SUICIDE, 1,
     N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1, N_PHYSICSEVENT, 3,
@@ -1044,23 +1044,21 @@ namespace game
 
         extern void update(const int time);
         extern void updatelights();
-        extern void add(ProjEnt& proj);
-        extern void remove(ProjEnt& proj);
-        extern void reset(gameent* owner = NULL);
+        extern void clear(gameent* owner = nullptr);
         extern void render();
         extern void preload();
         extern void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0);
         extern void spawnbouncer(const vec& from, gameent* d, const int type);
         extern void bounce(physent* d, const vec& surface);
         extern void collidewithentity(physent* bouncer, physent* collideEntity);
-        extern void destroyserverprojectile(gameent* d, const int id, const int attack = ATK_INVALID);
-        extern void tryDetonate(gameent* d, const int gun);
+        extern void destroy(ProjEnt& proj, const vec& position, const bool isLocal = true, const int attack = ATK_INVALID);
+        extern void detonate(gameent* d, const int gun);
         extern void avoid(ai::avoidset& obstacles, const float radius);
-        extern void explode(gameent* owner, const int attack, const vec& position, const vec& velocity);
+        extern void triggerExplosion(gameent* owner, const int attack, const vec& position, const vec& velocity);
         extern void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays);
         extern void damage(ProjEnt* proj, gameent* actor, const int attack);
 
-        ProjEnt* getprojectile(const int id, gameent* owner);
+        ProjEnt* get(const int id, const gameent* owner);
     }
 
     // weapon.cpp

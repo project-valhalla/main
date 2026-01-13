@@ -111,7 +111,7 @@ namespace game
 
     void resetgamestate()
     {
-        projectiles::clear();
+        projectiles::reset();
         clearmonsters();
         entities::resetTriggers();
     }
@@ -1048,7 +1048,7 @@ namespace game
                 }
                 else conoutf(CON_GAMEINFO, "\fs\f2Bot removed:\fr %s", colorname(d));
             }
-            projectiles::clear(d);
+            projectiles::reset(d);
             removetrackedparticles(d);
             removetrackeddynlights(d);
             if(cmode) cmode->removeplayer(d);
@@ -1080,7 +1080,7 @@ namespace game
 
     void cleargame()
     {
-        projectiles::clear();
+        projectiles::reset();
         clearweapons();
         clearmonsters();
         clearragdolls();

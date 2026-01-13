@@ -31,39 +31,20 @@ namespace game
     {
         vector<ProjEnt*> Projectiles, AttackProjectiles;
 
-        ProjEnt* get(const int id, const gameent* owner)
+        ProjEnt* getprojectile(const int id, gameent* owner)
         {
-            if (Projectiles.length() > 0)
+            if (owner)
             {
                 loopv(Projectiles)
                 {
                     ProjEnt* proj = Projectiles[i];
-                    if (proj->id != id || proj->owner != owner)
+                    if (proj->id == id && proj->owner == owner)
                     {
-                        continue;
+                        return proj;
                     }
-                    return proj;
                 }
             }
             return nullptr;
-        }
-
-        static void add(ProjEnt& proj)
-        {
-            if (isattackprojectile(proj.projectile))
-            {
-                AttackProjectiles.add(&proj);
-            }
-        }
-
-        static void remove(ProjEnt& proj)
-        {
-            if (isattackprojectile(proj.projectile))
-            {
-                AttackProjectiles.removeobj(&proj);
-            }
-            Projectiles.removeobj(&proj);
-            delete &proj;
         }
 
         void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity, const float elasticity)
@@ -396,9 +377,9 @@ namespace game
             }
         }
 
-        static void explode(ProjEnt& proj, const vec& v, const bool isLocal)
+        void explodeprojectile(ProjEnt& proj, const vec& v, const bool isLocal)
         {
-            stain(proj.vel, proj.flags & ProjFlag_Linear ? v : proj.offsetPosition(), proj.attack);
+            stain(proj.vel, proj.flags & ProjFlag_Linear ? v : proj.offsetposition(), proj.attack);
             const vec pos = proj.flags & ProjFlag_Linear ? v : proj.o;
             addexplosioneffects(proj.owner, proj.attack, pos);
             if (betweenrounds || !isLocal)
@@ -408,53 +389,56 @@ namespace game
             applyradialeffect(pos, proj.vel, proj.owner, &proj, proj.attack, proj.flags, proj.hitFlags);
         }
 
-        void triggerExplosion(gameent* owner, const int attack, const vec& position, const vec& velocity)
+        void explode(gameent* owner, const int attack, const vec& position, const vec& velocity)
         {
             addexplosioneffects(owner, attack, position);
             applyradialeffect(position, velocity, owner, nullptr, attack, 0);
         }
 
-        void destroy(ProjEnt& proj, const vec& position, const bool isLocal, const int attack)
+        void destroyserverprojectile(gameent* d, const int id, const int attack)
         {
-            // Send destruction request to other clients.
-            if (isLocal)
+            if (!d || !validatk(attack))
             {
-                addmsg
-                (
-                    N_DESTROYPROJECTILE, "rci3iv",
-                    proj.owner, lastmillis - maptime, proj.attack, proj.id,
-                    hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf()
-                );
+                return;
             }
-
-            // Explode projectile.
-            if (proj.flags & ProjFlag_Explosive && isattackprojectile(proj.projectile) && validatk(proj.attack))
+            if (Projectiles.length())
             {
-                // Force attack update.
-                if (validatk(attack) && proj.attack != attack)
+                loopv(Projectiles)
                 {
-                    proj.attack = attack;
+                    ProjEnt& proj = *Projectiles[i];
+                    if (!validatk(proj.attack) || proj.isLocal)
+                    {
+                        continue;
+                    }
+                    if (proj.attack != attack)
+                    {
+                        proj.attack = attack;
+                    }
+                    if (proj.owner == d && proj.id == id)
+                    {
+                        const vec pos = proj.flags & ProjFlag_Bounce ?
+                                        proj.offsetposition() :
+                                        vec(proj.offset).mul(proj.offsetMillis / float(OFFSET_MILLIS)).add(proj.o);
+                        explodeprojectile(proj, pos, proj.isLocal);
+                        remove(proj);
+                        delete Projectiles.remove(i);
+                        break;
+                    }
                 }
-
-                // Explode projectile.
-                explode(proj, position, isLocal);
             }
-
-            // Delete projectile.
-            remove(proj);
         }
 
-        void detonate(gameent* d, const int gun)
+        void tryDetonate(gameent* d, const int gun)
         {
             loopvrev(Projectiles)
             {
                 ProjEnt& proj = *Projectiles[i];
-                if (proj.owner != self || !proj.isLocal || !validatk(proj.attack))
+                if (proj.owner != self)
                 {
                     continue;
                 }
                 const attackinfo attack = attacks[proj.attack];
-                if (proj.flags & ProjFlag_Explosive && attack.gun == gun)
+                if (proj.isLocal && attack.gun == gun)
                 {
                     proj.kill();
                     if (d == self || d->ai)
@@ -774,7 +758,16 @@ namespace game
                 checkloopsound(&proj);
                 if (proj.state == CS_DEAD)
                 {
-                    destroy(proj, pos);
+                    if (isattackprojectile(proj.projectile))
+                    {
+                        explodeprojectile(proj, pos, proj.isLocal);
+                        if (proj.isLocal)
+                        {
+                            addmsg(N_EXPLODE, "rci3iv", proj.owner, lastmillis - maptime, proj.attack, proj.id, hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf());
+                        }
+                    }
+                    remove(proj);
+                    delete Projectiles.remove(i--);
                 }
                 else
                 {
@@ -926,9 +919,30 @@ namespace game
             }
         }
 
-        void clear(gameent* owner)
+        void add(ProjEnt& proj)
         {
-            if (owner != nullptr)
+            if (isattackprojectile(proj.projectile))
+            {
+                AttackProjectiles.add(&proj);
+            }
+        }
+
+        void remove(ProjEnt& proj)
+        {
+            if (isattackprojectile(proj.projectile))
+            {
+                AttackProjectiles.removeobj(&proj);
+            }
+        }
+
+        void reset(gameent* owner)
+        {
+            if (!owner)
+            {
+                AttackProjectiles.setsize(0);
+                Projectiles.deletecontents();
+            }
+            else
             {
                 loopv(Projectiles)
                 {
@@ -938,13 +952,9 @@ namespace game
                         continue;
                     }
                     remove(proj);
+                    delete Projectiles[i];
                     Projectiles.remove(i--);
                 }
-            }
-            else
-            {
-                AttackProjectiles.setsize(0);
-                Projectiles.deletecontents();
             }
         }
 

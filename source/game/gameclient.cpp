@@ -762,7 +762,7 @@ namespace game
         if(state & ROUND_RESET)
         {
             if(m_hunt && hunterchosen) hunterchosen = false;
-            projectiles::clear();
+            projectiles::reset();
         }
         if(state & ROUND_WAIT)
         {
@@ -2011,17 +2011,11 @@ namespace game
 
             case N_EXPLODEFX:
             {
-                const int client = getint(p);
+                const int ownerClient = getint(p);
                 const int id = getint(p);
                 const int attack = getint(p);
-                gameent* owner = getclient(client);
-                ProjEnt* proj = projectiles::get(id, owner);
-                if (proj == nullptr)
-                {
-                    break;
-                }
-                const vec position = proj->getOffset();
-                projectiles::destroy(*proj, position, false, attack);
+                gameent* owner = getclient(ownerClient);
+                projectiles::destroyserverprojectile(owner, id, attack);
                 break;
             }
 
@@ -2085,7 +2079,7 @@ namespace game
                     break;
                 }
                 gameent* owner = getclient(ownerClient);
-                ProjEnt* proj = projectiles::get(id, owner);
+                ProjEnt* proj = projectiles::getprojectile(id, owner);
                 gameent* actor = getclient(actorClient);
                 projectiles::damage(proj, actor, attack);
                 dodamage(0, (gameent*)proj, actor, proj->o, attack, Hit_Projectile, false);

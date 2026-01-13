@@ -229,7 +229,7 @@ namespace game
             {
                 return false;
             }
-            if (isattackprojectile(proj.projectile) && isintersecting(o, proj.o, v, attacks[proj.attack].margin))
+            if (isattackprojectile(proj.projectile) && isIntersectingEntity(o, proj.o, v, attacks[proj.attack].margin))
             {
                 vec dir;
                 calculatedistance(o, dir, v, proj.vel, proj.flags);

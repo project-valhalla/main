@@ -481,16 +481,18 @@ namespace game
 
     int selectcrosshair(vec4& color, const int type)
     {
-        gameent* hud = followingplayer(self);
+        gameent* hudPlayer = followingplayer(self);
         const bool isSpectating = camera::isthirdperson() && self->state == CS_SPECTATOR;
-        if (isSpectating || hud->zooming || hud->state == CS_DEAD || intermission)
+        if (isSpectating || hudPlayer->zooming || hudPlayer->state == CS_DEAD || intermission)
         {
             return Pointer_None;
         }
         int crosshair = Pointer_Default;
+
+        // We're requesting a regular crosshair.
         if (type == Pointer_Crosshair)
         {
-            if (hud->state != CS_ALIVE && hud->state != CS_LAGGED)
+            if (hudPlayer->state != CS_ALIVE && hudPlayer->state != CS_LAGGED)
             {
                 return crosshair;
             }
@@ -502,33 +504,44 @@ namespace game
                 crosshair = Pointer_Scope;
                 color = vec4(1, 0, 0, 1);
             }
-            const dynent* hovered = intersectclosest(hud->o, worldpos, hud);
-            if (!betweenrounds && crosshairally)
+
+            // Detect allies.
+            if (crosshairally && !betweenrounds && !m_hideallies)
             {
-                if (hovered && hovered->type == ENT_PLAYER && isally(((gameent*)hovered), hud) && !m_hideallies)
+                const gameent* pointedPlayer = findPointedPlayer();
+                if (pointedPlayer != nullptr && isally(pointedPlayer, hudPlayer))
                 {
                     crosshair = Pointer_Ally;
-                    color = vec4(vec::hexcolor(teamtextcolor[hud->team]), 1);
+                    color = vec4(vec::hexcolor(teamtextcolor[hudPlayer->team]), 1);
                 }
             }
-            if (hud->delay[hud->gunselect])
+
+            if (hudPlayer->delay[hudPlayer->gunselect])
             {
+                // We are reloading a weapon.
                 color.mul(0.75f);
             }
-            else if (hud->interacting[Interaction::Available] && !isScoped && !hovered)
+            else if (hudPlayer->interacting[Interaction::Available] && !isScoped) // Interaction available.
             {
-                crosshair = Pointer_Interact;
-                color = vec4(1, 1, 1, 1);
+                // Prioritise shooting over "use" crosshair if we're aiming at a target.
+                dynent* intersected = intersectClosest(hudPlayer, hudPlayer->o, worldpos, 1.0f, DYN_PLAYER | DYN_AI | DYN_PROJECTILE);
+                if (intersected == nullptr)
+                {
+                    crosshair = Pointer_Interact;
+                    color = vec4(1, 1, 1, 1);
+                }
             }
-            if (lastmillis - hud->lastAbility[hud->Ability::lastAttempt] <= ABILITY_FEEDBACK_TIME)
+
+            // Ability checks.
+            if (lastmillis - hudPlayer->lastAbility[hudPlayer->Ability::lastAttempt] <= ABILITY_FEEDBACK_TIME)
             {
                 color = vec4(1, 0, 0, 1);
             }
         }
-        else if (type == Pointer_Hit)
+        else if (type == Pointer_Hit) // We're requesting a hit crosshair.
         {
             crosshair = type;
-            if (hud->lastkill && lastmillis - hud->lastkill <= crosshairhit)
+            if (hudPlayer->lastkill && lastmillis - hudPlayer->lastkill <= crosshairhit)
             {
                 color = vec4(1, 0.5f, 0.5f, 1);
             }

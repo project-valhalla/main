@@ -194,10 +194,29 @@ namespace game
         execident("on_spawn");
     }
 
-    gameent *pointatplayer()
+    gameent* findPointedPlayer(const float margin)
     {
-        loopv(players) if(players[i] != self && isintersecting(players[i], self->o, worldpos)) return players[i];
-        return NULL;
+        gameent* hudPlayer = followingplayer(self);
+        if (hudPlayer != nullptr)
+        {
+            for (int i = 0; i < players.length(); i++)
+            {
+                gameent* player = players[i];
+                if (player == nullptr || player == hudPlayer || player->state != CS_ALIVE)
+                {
+                    continue;
+                }
+                const bool isPlayerIntersected = player->type == ENT_PLAYER && isIntersectingEntity(player, hudPlayer->o, worldpos, margin);
+                if (!isPlayerIntersected)
+                {
+                    continue;
+                }
+                return player;
+            }
+        }
+
+        // None found.
+        return nullptr;
     }
 
     gameent *hudplayer()

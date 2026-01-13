@@ -164,91 +164,116 @@ namespace game
         return true;
     }
 
-    void push(gameent* d, const vec& direction, const int amount, const float factor)
+    static void pushAttacker(gameent* player, const vec& direction, const int amount)
     {
-        if (!amount)
+        if (player == nullptr)
         {
             return;
         }
-        const bool isCrouched = d->crouching && d->crouched();
-        if (d->onfloor() || isCrouched)
-        {
-            return;
-        }
-        vec push = vec(direction).mul(amount * factor);
-        d->vel.add(push);
+        const vec push = vec(direction).mul(amount);
+        player->vel.add(push);
     }
 
-    void applyMeleePush(gameent* d, const vec& direction, const int attack)
+    void applyWeaponPush(gameent* player, const vec& direction, const float amount)
     {
-        const int amount = recoils[attack].push;
-        gameent* target = pointatplayer();
-        if (target)
+        if (player == nullptr || player->onfloor() || (player->crouching && player->crouched()))
         {
-            const float distance = d->o.dist(target->o);
-            const int range = attacks[attack].range;
-            const int meleeRangeMultiplier = 3;
-            if (distance > range && distance <= range * meleeRangeMultiplier)
-            {
-                push(d, direction, amount, 2.5f);
-            }
+            /*
+                Do not apply weapon push if player is on ground or crouched,
+                as we want to "destabilise" reckless players only.
+            */
+            return;
         }
-        camera::camera.addevent(d, camera::CameraEvent_Shake, amount);
+
+        // This is not for melee or throw attacks.
+        const int action = attacks[player->lastattack].action;
+        const bool isWeaponAttack = validact(action) && action != ACT_MELEE && action != ACT_THROW;
+        if (!isWeaponAttack)
+        {
+            return;
+        }
+
+        pushAttacker(player, direction, amount);
+    }
+
+    static void applyMeleePush(gameent* player, const vec& direction, const int attack)
+    {
+        const int action = attacks[attack].action;
+        if (action != ACT_MELEE)
+        {
+            return;
+        }
+        const float margin = attacks[attack].margin;
+        dynent* intersected = intersectClosest(player, player->o, worldpos, margin);
+        gameent* target = (gameent*)intersected;
+        if (target == nullptr)
+        {
+            // We stop caring if we have no target to reach.
+            return;
+        }
+        const float distance = player->o.dist(target->o);
+        const float minRange = attacks[attack].range;
+        const float maxRange = minRange * 3;
+        if (distance <= minRange || distance > maxRange)
+        {
+            return;
+        }
+        const int maxPush = recoils[attack].push;
+        const float pushScale = clamp((distance - minRange) / (minRange * 2), 0.0f, 1.0f);
+        const float amount = maxPush * pushScale * 2.5f;
+        pushAttacker(player, direction, amount);
     }
 
     // Apply recoil effects to the player when firing a weapon.
-    void addRecoil(gameent* d, const vec& direction, const int attack)
+    void addRecoil(gameent* player, const vec& direction, const int attack)
     {
         const int recoilAmount = recoils[attack].recoil;
+        const float powerupMultiplier = player->haspowerup(PU_DAMAGE) ? 2.0f : 1.0f;
         if (recoilAmount)
         {
             // Reset recoil index if enough time has passed since the last shot.
             const int recoilTime = attacks[attack].attackdelay + GUN_RECOIL_DELAY;
-            if (lastmillis - d->recoil.time > recoilTime)
+            if (lastmillis - player->recoil.time > recoilTime)
             {
-                d->recoil.index = 0;
+                player->recoil.index = 0;
             }
 
             // Increment shot index, pick pattern entry.
             const int patternSize = sizeof(recoils[attack].recoilPattern) / sizeof(recoils[attack].recoilPattern[0]);
-            d->recoil.index = min(d->recoil.index + 1, patternSize);
-            const int index = max(0, d->recoil.index - 1);
+            player->recoil.index = min(player->recoil.index + 1, patternSize);
+            const int index = max(0, player->recoil.index - 1);
             const vec2& pattern = recoils[attack].recoilPattern[min(index, patternSize - 1)];
 
             // Scale pattern.
-            const float recoilScale = recoilAmount * recoils[attack].recoilScale;
-            const float multiplier = d->crouching && d->crouched() ? 0.75f : 1.0f;
+            const float recoilScale = recoilAmount * recoils[attack].recoilScale * powerupMultiplier;
+            const float multiplier = player->crouching && player->crouched() ? 0.75f : 1.0f;
             float pitchKick = pattern.x * recoilScale * multiplier;
             float yawKick = pattern.y * recoilScale * multiplier;
-            const float random = clamp(d->recoil.index / float(patternSize), 0.f, 1.f);
+            const float random = clamp(player->recoil.index / float(patternSize), 0.f, 1.f);
             yawKick += -0.25f + rndscale(0.25f) * random;
             pitchKick += -0.1f + rndscale(0.1f) * random;
 
             // Add the visual Kick directly for responsiveness.
-            d->recoil.kick.x += pitchKick;
-            d->recoil.kick.y += yawKick;
-            d->pitch += pitchKick;
-            d->yaw += yawKick;
+            player->recoil.kick.x += pitchKick;
+            player->recoil.kick.y += yawKick;
+            player->pitch += pitchKick;
+            player->yaw += yawKick;
         }
-        d->recoil.time = lastmillis;
-        d->recoil.recovery = recoils[attack].recoilRecovery;
+        player->recoil.time = lastmillis;
+        player->recoil.recovery = recoils[attack].recoilRecovery;
 
-        // Apply push and camera shake.
-        int pushAmount = recoils[attack].push;
+        // Push the attacker and shake their camera if relevant.
         int shakeAmount = recoils[attack].shake;
-        if (d->haspowerup(PU_DAMAGE))
-        {
-            const int powerupMultiplier = 2;
-            shakeAmount *= powerupMultiplier;
-            pushAmount *= powerupMultiplier;
-        }
+        int pushAmount = recoils[attack].push;
         if (shakeAmount)
         {
-            camera::camera.addevent(d, camera::CameraEvent_Shake, shakeAmount);
+            const float amount = shakeAmount * powerupMultiplier;
+            camera::camera.addevent(player, camera::CameraEvent_Shake, shakeAmount);
         }
         if (pushAmount)
         {
-            push(d, direction, pushAmount, -2.5f);
+            const float amount = pushAmount * powerupMultiplier * -2.5f;
+            applyWeaponPush(player, direction, amount);
         }
     }
 
@@ -312,14 +337,7 @@ namespace game
     {
         vec from = d->o, to = target, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
-        if (attacks[attack].action == ACT_MELEE)
-        {
-            applyMeleePush(d, dir, attack);
-        }
-        else
-        {
-            addRecoil(d, dir, attack);
-        }
+        addRecoil(d, dir, attack);
         float shorten = attacks[attack].range && dist > attacks[attack].range ? attacks[attack].range : 0,
             barrier = raycube(d->o, dir, dist, RAY_CLIPMAT | RAY_ALPHAPOLY);
         if (barrier > 0 && barrier < dist && (!shorten || barrier < shorten))
@@ -1051,36 +1069,38 @@ namespace game
         return linecylinderintersect(from, to, bottom, top, d->legsradius, dist);
     }
 
-    bool isintersecting(dynent* d, const vec& from, const vec& to, float margin, float& dist)   // if lineseg hits entity bounding box
+    // Checks whether ray hits entity bounding box.
+    bool isIntersectingEntity(dynent* entity, const vec& from, const vec& to, const float margin, float& dist)
     {
-        vec bottom(d->o), top(d->o);
-        bottom.z -= d->eyeheight + margin;
-        top.z += d->aboveeye + margin;
-        return linecylinderintersect(from, to, bottom, top, d->radius + margin, dist);
+        vec bottom(entity->o), top(entity->o);
+        bottom.z -= entity->eyeheight + margin;
+        top.z += entity->aboveeye + margin;
+        return linecylinderintersect(from, to, bottom, top, entity->radius + margin, dist);
     }
 
-    dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin, float& bestdist, const int flags)
+    dynent* intersectClosest(gameent* actor, const vec& from, const vec& to, const float margin, const int flags, float& intersectDistance)
     {
-        dynent* best = NULL;
-        bestdist = 1e16f;
+        dynent* best = nullptr;
+        float bestDistance = 1e16f;
         loopi(numdynents(flags))
         {
-            dynent* o = iterdynents(i, flags);
-            if (o == at || o->state != CS_ALIVE)
+            dynent* entity = iterdynents(i, flags);
+            if (entity == nullptr || entity == actor || entity->state != CS_ALIVE)
             {
                 continue;
             }
-            float dist;
-            if (!isintersecting(o, from, to, margin, dist))
+            float distance = 0;
+            if (!isIntersectingEntity(entity, from, to, margin, distance))
             {
                 continue;
             }
-            if (dist < bestdist)
+            if (distance < bestDistance)
             {
-                best = o;
-                bestdist = dist;
+                best = entity;
+                bestDistance = distance;
             }
         }
+        intersectDistance = bestDistance;
         return best;
     }
 
@@ -1133,7 +1153,7 @@ namespace game
             loopi(attackRays)
             {
                 bool isHit = false;
-                if ((hits[i] = intersectclosest(from, rays[i], d, attacks[atk].margin, dist, scanFlags)))
+                if ((hits[i] = intersectClosest(d, from, rays[i], attacks[atk].margin, scanFlags, dist)))
                 {
                     applyhitflags(hits[i], from, rays[i], atk, dist, hitFlags);
                     shorten(from, rays[i], dist);
@@ -1160,7 +1180,7 @@ namespace game
         else
         {
             bool isHit = false;
-            if ((o = intersectclosest(from, to, d, attacks[atk].margin, dist, scanFlags)))
+            if ((o = intersectClosest(d, from, to, attacks[atk].margin, scanFlags, dist)))
             {
                 applyhitflags(o, from, to, atk, dist, hitFlags);
                 shorten(from, to, dist);

@@ -1001,7 +1001,7 @@ namespace game
 
     extern string clientmap;
 
-    extern gameent* pointatplayer();
+    extern gameent* findPointedPlayer(const float margin = 0);
     extern gameent* hudplayer();
     extern gameent* followingplayer(gameent* fallback = NULL);
     extern gameent* getclient(int cn);
@@ -1129,7 +1129,7 @@ namespace game
 
     extern float intersectdist;
 
-    extern bool isintersecting(dynent *d, const vec &from, const vec &to, float margin = 0, float &dist = intersectdist);
+    extern bool isIntersectingEntity(dynent *entity, const vec &from, const vec &to, const float margin = 0, float &dist = intersectdist);
 
     extern int getweapon(const char* name);
     extern int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags = Hit_Torso);
@@ -1138,7 +1138,7 @@ namespace game
 
     extern vec hudgunorigin(int attack, const vec& from, const vec& to, gameent* d);
 
-    extern dynent* intersectclosest(const vec& from, const vec& to, gameent* at, float margin = 0, float& dist = intersectdist, const int flags = DYN_PLAYER | DYN_AI);
+    extern dynent* intersectClosest(gameent* actor, const vec& from, const vec& to, const float margin = 0, const int flags = DYN_PLAYER | DYN_AI, float& intersectDistance = intersectdist);
 
     extern vector<hitmsg> hits;
 

@@ -77,6 +77,13 @@ static const struct textureeffect
 
 enum
 {
+    TRACK_MUZZLE = 0,
+    TRACK_EJECT,
+    TRACK_HAND
+};
+
+enum
+{
     PhysEvent_Jump = 0,
     PhysEvent_LandLight,
     PhysEvent_LandHeavy,
@@ -122,7 +129,7 @@ namespace game
     extern void findanims(const char *pattern, vector<int> &anims);
     extern void writeGameData(vector<uchar> &extras, bool nolms);
     extern void readGameData(vector<uchar> &extras);
-    extern void trackParticles(physent *owner, vec &o, vec &d, const int trackType);
+    extern void trackparticles(physent *owner, vec &o, vec &d);
     extern void trackdynamiclights(physent *owner, vec &o, vec &hud);
     extern void voicecom(const int sound, char *text, const bool team);
     extern void addgamedynamiclights();

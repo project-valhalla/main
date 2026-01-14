@@ -11,6 +11,15 @@ namespace physics
     const float RAMPZ_MIN = 0.5f;
     const float RAMPZ_MAX = 0.98f;
 
+    bool canmove(gameent* d)
+    {
+        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR)
+        {
+            return true;
+        }
+        return !mainmenu && !intermission && !(d->state == CS_DEAD && d->deathstate == Death_Gib);
+    }
+
     void recalculatedirection(gameent* d, const vec& oldvel, vec& dir)
     {
         float speed = oldvel.magnitude();
@@ -146,89 +155,107 @@ namespace physics
         return false;
     }
 
-    bool retrystepdown(gameent* d, vec& dir, float step, float xy, float z, bool init = false)
+    static bool retryToStepDown(gameent* player, vec& dir, const float step, const float horizontalScale, const float verticalScale, const bool isStepping = false)
     {
-        vec stepdir(dir.x, dir.y, 0);
-        stepdir.z = -stepdir.magnitude2() * z / xy;
-        if (!stepdir.z) return false;
-        stepdir.normalize();
-
-        vec old(d->o);
-        d->o.add(vec(stepdir).mul(STAIRHEIGHT / fabs(stepdir.z))).z -= STAIRHEIGHT;
-        d->zmargin = -STAIRHEIGHT;
-        if (collide(d, vec(0, 0, -1), SLOPEZ))
+        vec stepDirection(dir.x, dir.y, 0);
+        stepDirection.z = -stepDirection.magnitude2() * verticalScale / horizontalScale;
+        if (stepDirection.z == 0)
         {
-            d->o = old;
-            d->o.add(vec(stepdir).mul(step));
-            d->zmargin = 0;
-            if (!collide(d, vec(0, 0, -1)))
+            return false;
+        }
+        stepDirection.normalize();
+        const vec previousPosition = vec(player->o);
+        player->o.add(vec(stepDirection).mul(STAIRHEIGHT / fabs(stepDirection.z))).z -= STAIRHEIGHT;
+        player->zmargin = -STAIRHEIGHT;
+        if (collide(player, vec(0, 0, -1), SLOPEZ))
+        {
+            player->o = previousPosition;
+            player->o.add(vec(stepDirection).mul(step));
+            player->zmargin = 0;
+            if (!collide(player, vec(0, 0, -1)))
             {
-                vec stepfloor(stepdir);
-                stepfloor.mul(-stepfloor.z).z += 1;
-                stepfloor.normalize();
-                if (d->physstate >= PHYS_SLOPE && d->floor != stepfloor)
+                vec stepFloor(stepDirection);
+                stepFloor.mul(-stepFloor.z).z += 1;
+                stepFloor.normalize();
+                if (player->physstate >= PHYS_SLOPE && player->floor != stepFloor)
                 {
                     // Prevent alternating step-down/step-up states if player would keep bumping into the same floor.
-                    vec stepped(d->o);
-                    d->o.z -= 0.5f;
-                    d->zmargin = -0.5f;
-                    if (collide(d, stepdir) && collidewall == d->floor)
+                    const vec stepPosition(player->o);
+                    player->o.z -= 0.5f;
+                    player->zmargin = -0.5f;
+                    if (collide(player, stepDirection) && collidewall == player->floor)
                     {
-                        d->o = old;
-                        if (!init) { d->o.x += dir.x; d->o.y += dir.y; if (dir.z <= 0 || collide(d, dir)) d->o.z += dir.z; }
-                        d->zmargin = 0;
-                        d->physstate = PHYS_STEP_DOWN;
-                        d->timeinair = 0;
+                        player->o = previousPosition;
+                        if (!isStepping)
+                        {
+                            player->o.x += dir.x;
+                            player->o.y += dir.y;
+                            if (dir.z <= 0 || collide(player, dir))
+                            {
+                                player->o.z += dir.z;
+                            }
+                        }
+                        player->zmargin = 0;
+                        player->physstate = PHYS_STEP_DOWN;
                         return true;
                     }
-                    d->o = init ? old : stepped;
-                    d->zmargin = 0;
+                    player->o = isStepping ? previousPosition : stepPosition;
+                    player->zmargin = 0;
                 }
-                else if (init) d->o = old;
-                switchfloor(d, dir, stepfloor);
-                d->floor = stepfloor;
-                d->physstate = PHYS_STEP_DOWN;
-                d->timeinair = 0;
+                else if (isStepping)
+                {
+                    player->o = previousPosition;
+                }
+                switchfloor(player, dir, stepFloor);
+                player->floor = stepFloor;
+                if (isStepping)
+                {
+                    player->physstate = PHYS_STEP_DOWN;
+                    player->timeinair = 0;
+                }
                 return true;
             }
         }
-        d->o = old;
-        d->zmargin = 0;
+        player->o = previousPosition;
+        player->zmargin = 0;
         return false;
     }
 
-    bool canmove(gameent* d)
+    static bool tryToStepDown(gameent* player, vec& dir, const bool isStepping = false)
     {
-        if (d->type != ENT_PLAYER || d->state == CS_SPECTATOR)
+        const vec previousPosition(player->o);
+        player->o.z -= 0.1f;
+        if (collideinside || collide(player, vec(0, 0, -1)))
+        {
+            player->o = previousPosition;
+            return false;
+        }
+        player->o.z -= STAIRHEIGHT;
+        player->zmargin = -STAIRHEIGHT;
+        if (!collide(player, vec(0, 0, -1), SLOPEZ))
+        {
+            player->o = previousPosition;
+            player->zmargin = 0;
+            return false;
+        }
+        player->o = previousPosition;
+        player->zmargin = 0;
+
+        // Stronger check to move down slopes smoothly, even if moving fast.
+        const float step = dir.magnitude();
+        if (retryToStepDown(player, dir, step, 2, 1, isStepping))
         {
             return true;
         }
-        return !mainmenu && !intermission && !(d->state == CS_DEAD && d->deathstate == Death_Gib);
-    }
-
-    bool trystepdown(gameent* d, vec& dir, bool init = false)
-    {
-        if ((!d->move && !d->strafe) || !canmove(d)) return false;
-        vec old(d->o);
-        d->o.z -= STAIRHEIGHT;
-        d->zmargin = -STAIRHEIGHT;
-        if (!collide(d, vec(0, 0, -1), SLOPEZ))
+        if (retryToStepDown(player, dir, step, 1, 1, isStepping))
         {
-            d->o = old;
-            d->zmargin = 0;
-            return false;
+            return true;
         }
-        d->o = old;
-        d->zmargin = 0;
-        float step = dir.magnitude();
-#if 1
-        // Weaker check, just enough to avoid hopping up slopes.
-        if (retrystepdown(d, dir, step, 4, 1, init)) return true;
-#else
-        if (retrystepdown(d, dir, step, 2, 1, init)) return true;
-        if (retrystepdown(d, dir, step, 1, 1, init)) return true;
-        if (retrystepdown(d, dir, step, 1, 2, init)) return true;
-#endif
+        if (retryToStepDown(player, dir, step, 1, 2, isStepping))
+        {
+            return true;
+        }
+
         return false;
     }
 
@@ -246,7 +273,7 @@ namespace physics
             d->physstate = PHYS_SLIDE;
             d->floor = floor;
         }
-        else if (d->physstate < PHYS_SLOPE || dir.dot(d->floor) > 0.01f * dir.magnitude() || (floor.z != 0.0f && floor.z != 1.0f) || !trystepdown(d, dir, true))
+        else if (d->physstate < PHYS_SLOPE || dir.dot(d->floor) > 0.01f * dir.magnitude() || (floor.z != 0.0f && floor.z != 1.0f) || !tryToStepDown(d, dir, true))
         {
             d->physstate = PHYS_FALL;
         }
@@ -432,7 +459,10 @@ namespace physics
         {
             vec moved(d->o);
             d->o = old;
-            if (trystepdown(d, dir)) return true;
+            if (tryToStepDown(d, dir))
+            {
+                return true;
+            }
             d->o = moved;
         }
         vec floor(0, 0, 0);

@@ -8,7 +8,7 @@ struct dynlight
     vec o, hud;
     float radius, initradius, curradius, dist;
     vec color, initcolor, curcolor;
-    int fade, peak, expire, flags;
+    int fade, peak, expire, flags, track;
     physent *owner;
     vec dir;
     int spot;
@@ -52,7 +52,7 @@ struct dynlight
 vector<dynlight> dynlights;
 vector<dynlight *> closedynlights;
 
-void adddynlight(const vec &o, float radius, const vec &color, int fade, int peak, int flags, float initradius, const vec &initcolor, physent *owner, const vec &dir, int spot)
+void adddynlight(const vec &o, float radius, const vec &color, int fade, int peak, int flags, float initradius, const vec &initcolor, physent *owner, int track, const vec &dir, int spot)
 {
     if(!usedynlights) return;
     if(o.dist(camera1->o) > dynlightdist || radius <= 0) return;
@@ -70,6 +70,7 @@ void adddynlight(const vec &o, float radius, const vec &color, int fade, int pea
     d.expire = expire;
     d.flags = flags;
     d.owner = owner;
+    d.track = track;
     d.dir = dir;
     d.spot = spot;
     dynlights.insert(insert, d);
@@ -96,7 +97,7 @@ void updatedynlights()
     loopv(dynlights)
     {
         dynlight &d = dynlights[i];
-        if(d.owner) game::trackdynamiclights(d.owner, d.o, d.hud);
+        if(d.owner) game::trackDynamicLights(d.owner, d.track, d.o, d.hud);
         d.calcradius();
         d.calccolor();
     }

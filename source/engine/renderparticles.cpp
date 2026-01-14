@@ -128,7 +128,7 @@ const char *partnames[] = { "part", "tape", "trail", "text", "textup", "meter", 
 struct particle
 {
     vec o, d;
-    int gravity, fade, millis;
+    int gravity, fade, millis, track;
     bvec color;
     uchar flags;
     float initsize, size, maxsize;
@@ -201,7 +201,7 @@ struct partrenderer
     {
         o = p->o;
         d = p->d;
-        if(type&PT_TRACK && p->owner) game::trackparticles(p->owner, o, d);
+        if(type&PT_TRACK && p->owner) game::trackParticles(p->owner, p->track, o, d);
         if(p->fade <= 5)
         {
             ts = 1;
@@ -1159,10 +1159,12 @@ void particle_meter(const vec &s, float val, int type, int fade, int color, int 
     p->progress = clamp(int(val*100), 0, 100);
 }
 
-void particle_flare(const vec &p, const vec &dest, int fade, int type, int color, float size, physent *owner, float maxsize)
+void particle_flare(const vec &s, const vec &dest, int fade, int type, int color, float size, float maxsize, physent *owner, int track)
 {
     if(!canaddparticles()) return;
-    newparticle(p, dest, fade, type, color, size, 0, maxsize)->owner = owner;
+    particle* p = newparticle(s, dest, fade, type, color, size, 0, maxsize);
+    p->owner = owner;
+    p->track = track;
 }
 
 void particle_fireball(const vec &dest, float maxsize, int type, int fade, int color, float size)

@@ -374,6 +374,99 @@ namespace game
         }
     }
 
+    static vec getTrackingPosition(const gameent* player, const int trackType)
+    {
+        vec position = player->o;
+        switch (trackType)
+        {
+            case TRACK_MUZZLE:
+                if (player->muzzle.x >= 0)
+                {
+                    position = player->muzzle;
+                }
+                break;
+
+            case TRACK_EJECT:
+                if (player->eject.x >= 0)
+                {
+                    position = player->eject;
+                }
+                break;
+
+            case TRACK_HAND_LEFT:
+                if (player->hand.x >= 0)
+                {
+                    position = player->hand;
+                }
+                break;
+
+            case TRACK_HEAD:
+                if (player->head.x >= 0)
+                {
+                    position = player->head;
+                }
+                break;
+
+            case TRACK_FOOT_RIGHT:
+                if (player->rfoot.x >= 0)
+                {
+                    position = player->rfoot;
+                }
+                break;
+
+            case TRACK_FOOT_LEFT:
+                if (player->lfoot.x >= 0)
+                {
+                    position = player->lfoot;
+                }
+                break;
+
+            default:
+                break;
+        }
+        return position;
+    }
+
+    void trackParticles(const physent* owner, const int trackType, vec& o, vec& d)
+    {
+        if (owner->type != ENT_PLAYER && owner->type != ENT_AI)
+        {
+            return;
+        }
+        const gameent* player = (gameent*)owner;
+        o = getTrackingPosition(player, trackType);
+        const float traceDistance = o.dist(d);
+        if (traceDistance > 0)
+        {
+            vec direction;
+            vecfromyawpitch(owner->yaw, owner->pitch, 1, 0, direction);
+            const float hitDistance = raycube(o, direction, traceDistance, RAY_CLIPMAT | RAY_ALPHAPOLY);
+            d = direction.mul(min(hitDistance, traceDistance)).add(o);
+        }
+        else
+        {
+            d = o;
+        }
+    }
+
+    void trackDynamicLights(const physent* owner, const int trackType, vec& o, vec& hud)
+    {
+        if (owner->type != ENT_PLAYER && owner->type != ENT_AI)
+        {
+            return;
+        }
+        const gameent* player = (gameent*)owner;
+        o = getTrackingPosition(player, trackType);
+        if (owner == followingplayer(self))
+        {
+            hud = vec(player->o).add(vec(0, 0, 2));
+        }
+        else
+        {
+            hud = o;
+        }
+    }
+
     void addgamedynamiclights()
     {
         projectiles::updatelights();
@@ -480,8 +573,8 @@ namespace game
         else
         {
             const int color = 0x00e661;
-            particle_flare(d->o, d->o, 350, PART_EXPLODE1, color, 2.0f, NULL, d->radius + 50.0f);
-            particle_flare(d->o, d->o, 280, PART_ELECTRICITY, color, 2.0f, NULL, d->radius + 30.0f);
+            particle_flare(d->o, d->o, 350, PART_EXPLODE1, color, 2.0f, d->radius + 50.0f);
+            particle_flare(d->o, d->o, 280, PART_ELECTRICITY, color, 2.0f, d->radius + 30.0f);
             adddynlight(d->o, 100, vec::hexcolor(color), 350, 100, DL_EXPAND | L_NOSHADOW);
             playsound(S_MONSTER_SPAWN, d);
         }

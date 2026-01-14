@@ -292,7 +292,18 @@ enum
     DL_FLASH  = 1<<10
 };
 
-extern void adddynlight(const vec &o, float radius, const vec &color, int fade = 0, int peak = 0, int flags = 0, float initradius = 0, const vec &initcolor = vec(0, 0, 0), physent *owner = NULL, const vec &dir = vec(0, 0, 0), int spot = 0);
+enum
+{
+    TRACK_ORIGIN = 0,
+    TRACK_MUZZLE,
+    TRACK_EJECT,
+    TRACK_HEAD,
+    TRACK_HAND_LEFT,
+    TRACK_FOOT_LEFT,
+    TRACK_FOOT_RIGHT
+};
+
+extern void adddynlight(const vec &o, float radius, const vec &color, int fade = 0, int peak = 0, int flags = 0, float initradius = 0, const vec &initcolor = vec(0, 0, 0), physent *owner = NULL, int track = TRACK_ORIGIN, const vec &dir = vec(0, 0, 0), int spot = 0);
 extern void removetrackeddynlights(physent *owner = NULL);
 
 // rendergl
@@ -343,7 +354,7 @@ extern void particle_textcopy(const vec &s, const char *t, int type, int fade = 
 extern void particle_icon(const vec &s, int ix, int iy, int type, int fade = 2000, int color = 0xFFFFFF, float size = 2.0f, int gravity = 0);
 extern void particle_hud_mark(const vec &s, int ix, int iy, int type, int fade, int color, float size);
 extern void particle_meter(const vec &s, float val, int type, int fade = 1, int color = 0xFFFFFF, int color2 = 0xFFFFF, float size = 2.0f);
-extern void particle_flare(const vec &p, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 0.28f, physent *owner = NULL, float maxsize = 0);
+extern void particle_flare(const vec &s, const vec &dest, int fade, int type, int color = 0xFFFFFF, float size = 0.28f, float maxsize = 0, physent *owner = NULL, int track = TRACK_ORIGIN);
 extern void particle_fireball(const vec &dest, float max, int type, int fade = -1, int color = 0xFFFFFF, float size = 4.0f);
 extern void removetrackedparticles(physent *owner = NULL);
 

@@ -407,7 +407,7 @@ namespace game
             }
             return;
         }
-        if (!d->haspowerup(PU_AMMO)) d->ammo[gun] -= attacks[attack].use;
+        d->useAmmo(attack);
 
         doAttack(d, targ, attack, previousAction);
 

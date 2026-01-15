@@ -225,11 +225,17 @@ struct gamestate
 
     void useAmmo(const int attack)
     {
+        // If we have a power-up granting us infinite ammo.
         if (haspowerup(PU_AMMO))
         {
             return;
         }
+
         const int weapon = attacks[attack].gun;
+        if (!validgun(weapon))
+        {
+            return;
+        }
         ammo[weapon] = max(ammo[weapon] - attacks[attack].use, 0);
     }
 

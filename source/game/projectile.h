@@ -11,6 +11,7 @@ enum
     Projectile_Rocket,
     Projectile_Pulse,
     Projectile_Plasma,
+    Projectile_Melee,
     Projectile_Gib,
     Projectile_Debris,
     Projectile_Casing,
@@ -28,17 +29,18 @@ inline bool isvalidprojectile(int type)
 
 enum
 {
-    ProjFlag_Weapon      = 1 << 0, // Related to a weapon.
-    ProjFlag_Junk        = 1 << 1, // Lightweight projectiles for cosmetic effects.
-    ProjFlag_Bounce      = 1 << 2, // Bounces off surfaces.
-    ProjFlag_Linear      = 1 << 3, // Follows a linear trajectory.
-    ProjFlag_Impact      = 1 << 4, // Detonates on collision with geometry or entities.
-    ProjFlag_Explosive   = 1 << 5, // Let me guess, it triggers an explosion?
-    ProjFlag_Quench      = 1 << 6, // Destroyed upon contact with water.
-    ProjFlag_Eject       = 1 << 7, // Can be ejected as a spent casing by weapons.
-    ProjFlag_Loyal       = 1 << 8, // Only responds to the weapon that fired it.
-    ProjFlag_Invincible  = 1 << 9, // Cannot be destroyed.
-    ProjFlag_AdjustSpeed = 1 << 10 // Adjusts speed based on distance.
+    ProjFlag_Weapon      = 1 << 0,  // Related to a weapon.
+    ProjFlag_Junk        = 1 << 1,  // Lightweight projectiles for cosmetic effects.
+    ProjFlag_Bounce      = 1 << 2,  // Bounces off surfaces.
+    ProjFlag_Linear      = 1 << 3,  // Follows a linear trajectory.
+    ProjFlag_Track       = 1 << 4,  // Tracks specific body tags.
+    ProjFlag_Impact      = 1 << 5,  // Detonates on collision with geometry or entities.
+    ProjFlag_Explosive   = 1 << 6,  // Let me guess, it triggers an explosion?
+    ProjFlag_Quench      = 1 << 7,  // Destroyed upon contact with water.
+    ProjFlag_Eject       = 1 << 8,  // Can be ejected as a spent casing by weapons.
+    ProjFlag_Loyal       = 1 << 9,  // Only responds to the weapon that fired it.
+    ProjFlag_Invincible  = 1 << 10, // Cannot be destroyed.
+    ProjFlag_AdjustSpeed = 1 << 11  // Adjusts speed based on distance.
 };
 
 static const struct projectileinfo
@@ -100,6 +102,19 @@ projs[Projectile_Max] =
         0,
         5.0f,
         1000.0f,
+        nullptr
+    },
+    {
+        Projectile_Melee,
+        ProjFlag_Weapon | ProjFlag_Track | ProjFlag_Invincible,
+        ATK_INVALID,
+        S_INVALID,
+        S_INVALID,
+        0,
+        0,
+        0,
+        1.25f,
+        0,
         nullptr
     },
     {
@@ -192,7 +207,7 @@ inline bool isejectedprojectile(const int projectile)
 
 struct ProjEnt : dynent
 {
-    int id, attack, projectile, flags, lifetime, health, weight;
+    int id, attack, projectile, flags, lifetime, health, weight, trackType;
     int variant, bounces, offsetMillis;
     int millis, lastBounce, bounceSound, loopChannel, loopSound, hitFlags;
     float lastYaw, gravity, elasticity, offsetHeight, dist;
@@ -339,24 +354,6 @@ struct ProjEnt : dynent
             return offsetPosition();
         }
         return vec(offset).mul(offsetMillis / float(OFFSET_MILLIS)).add(o);
-    }
-
-    vec updateposition(const int time)
-    {
-        if (flags & ProjFlag_Linear)
-        {
-            offsetMillis = max(offsetMillis - time, 0);
-            dist = to.dist(o, dv);
-            dv.mul(time / max(dist * 1000 / speed, float(time)));
-            vec v = vec(o).add(dv);
-            return v;
-        }
-        else
-        {
-            vec pos(o);
-            pos.add(vec(offset).mul(offsetMillis / float(OFFSET_MILLIS)));
-            return pos;
-        }
     }
 
     // Adjust projectile's model.

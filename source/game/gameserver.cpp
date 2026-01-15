@@ -81,6 +81,9 @@ namespace server
         clientinfo* actor;
         vector<hitinfo> hits;
 
+        // Extra.
+        float radius;
+
         bool keepable() const { return true; }
 
         void process(clientinfo* ci);
@@ -203,18 +206,48 @@ namespace server
             return false;
         }
 
-        void update(const int id, int& attack, int& flags, clientinfo*& owner)
+        void updateContext(const int id, int& attack, int& flags, clientinfo*& owner, float &radius)
         {
             Projectile* proj = get(id);
-            if (!proj)
+            if (proj == nullptr)
             {
                 return;
             }
+
+            // Update radius to check whether we are dealing with an explosion.
+            if (validatk(attack))
+            {
+                const float attackRadius = attacks[attack].exprad;
+                if (attackRadius == 0)
+                {
+                    const int projectile = proj->projectile;
+                    if (isvalidprojectile(projectile))
+                    {
+                        const float projectileRadius = projs[projectile].radius;
+                        radius = projectileRadius;
+                    }
+                    else
+                    {
+                        radius = attackRadius;
+                    }
+                }
+                else
+                {
+                    radius = attackRadius;
+                }
+            }
+            else
+            {
+                radius = 0;
+            }
+
+            /*
+                If the projectile has been killed,
+                we need to update its context to reward the actor.
+            */
             if (proj->isDestroyed)
             {
-                /* If the projectile has been killed,
-                 * we need to update its context to reward the actor.
-                 */
+                
                 if (proj->killer != owner)
                 {
                     owner = proj->killer;
@@ -3299,7 +3332,7 @@ namespace server
 
     void destroyevent::process(clientinfo* ci)
     {
-        ci->state.projectiles.update(id, attack, flags, actor);
+        ci->state.projectiles.updateContext(id, attack, flags, actor, radius);
         if (!ci->state.projectiles.remove(id) || !validatk(attack))
         {
             return;
@@ -3308,7 +3341,7 @@ namespace server
         loopv(hits)
         {
             hitinfo& hit = hits[i];
-            if (hit.dist < 0 || hit.dist > attacks[attack].exprad)
+            if (hit.dist < 0 || hit.dist > radius)
             {
                 continue;
             }
@@ -3336,7 +3369,11 @@ namespace server
             }
             else
             {
-                const float damage = attacks[attack].damage * (1 - hit.dist / EXP_DISTSCALE / attacks[attack].exprad);
+                float damage = attacks[attack].damage;
+                if (attacks[attack].exprad != 0)
+                {
+                    damage *= 1 - hit.dist / EXP_DISTSCALE / attacks[attack].exprad;
+                }
                 if (!(hit.flags & flags))
                 {
                     hit.flags |= flags;

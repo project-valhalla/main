@@ -66,7 +66,7 @@ namespace game
             delete &proj;
         }
 
-        void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity, const float elasticity)
+        void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity, const float elasticity, const int trackType)
         {
             ProjEnt& proj = *Projectiles.add(new ProjEnt);
             proj.set(type);
@@ -84,6 +84,7 @@ namespace game
             proj.setSpeed(speed);
             proj.gravity = gravity;
             proj.elasticity = elasticity;
+            proj.trackType = trackType;
 
             proj.setModel();
 
@@ -183,17 +184,18 @@ namespace game
              */
         }
 
-        float calculatedistance(dynent* o, vec& dir, const vec& v, const vec& velocity, const int flags)
+        static float calculateDistance(dynent* o, vec& dir, const vec& v, const vec& velocity, const int flags)
         {
             vec middle = o->o;
             middle.z += (o->aboveeye - o->eyeheight) / 2;
-            if (flags & ProjFlag_Linear)
+            if (flags & ProjFlag_Linear || flags & ProjFlag_Track)
             {
                 dir = vec(middle).sub(v).add(vec(velocity).mul(5)).safenormalize();
                 const float low = min(o->o.z - o->eyeheight + o->radius, middle.z);
                 const float high = max(o->o.z + o->aboveeye - o->radius, middle.z);
                 vec closest(o->o.x, o->o.y, clamp(v.z, low, high));
 
+                // Return.
                 return max(closest.dist(v) - o->radius, 0.0f);
             }
             float distance = middle.dist(v, dir);
@@ -229,10 +231,10 @@ namespace game
             {
                 return false;
             }
-            if (isattackprojectile(proj.projectile) && isIntersectingEntity(o, proj.o, v, attacks[proj.attack].margin))
+            if (isattackprojectile(proj.projectile) && isIntersectingEntity(o, proj.o, v, proj.radius))
             {
                 vec dir;
-                calculatedistance(o, dir, v, proj.vel, proj.flags);
+                calculateDistance(o, dir, v, proj.vel, proj.flags);
                 game::hit(o, proj.owner, o->o, dir, attacks[proj.attack].damage, proj.attack, 0);
                 return true;
             }
@@ -361,12 +363,12 @@ namespace game
 
         void calculatesplashdamage(dynent* o, const vec& position, const vec& velocity, gameent* at, const int attack, const int flags, const int hitFlags)
         {
-            if (o->state != CS_ALIVE && o->state != CS_DEAD)
+            if (o == nullptr || (o->state != CS_ALIVE && o->state != CS_DEAD) || !validatk(attack) || attacks[attack].exprad == 0)
             {
                 return;
             }
             vec direction;
-            const float distance = calculatedistance(o, direction, position, velocity, flags);
+            const float distance = calculateDistance(o, direction, position, velocity, flags);
             const int damage = static_cast<int>(attacks[attack].damage * (1 - distance / EXP_DISTSCALE / attacks[attack].exprad));
             if (distance < attacks[attack].exprad)
             {
@@ -383,6 +385,10 @@ namespace game
 
         void applyradialeffect(const vec& position, const vec& velocity, gameent* owner, dynent* safe, const int attack, const int flags, const int hitFlags = 0)
         {
+            if (attacks[attack].exprad == 0)
+            {
+                return;
+            }
             const int entityFlags = DYN_PLAYER | DYN_AI | DYN_RAGDOLL;
             const int numdyn = numdynents(entityFlags);
             loopi(numdyn)
@@ -699,6 +705,30 @@ namespace game
             }
         }
 
+        static vec updatePosition(ProjEnt& proj, const int time)
+        {
+            vec position = proj.o;
+            if (proj.flags & ProjFlag_Linear)
+            {
+                proj.offsetMillis = max(proj.offsetMillis - time, 0);
+                proj.dist = proj.to.dist(proj.o, proj.dv);
+                proj.dv.mul(time / max(proj.dist * 1000 / proj.speed, float(time)));
+                const vec offset = vec(proj.o).add(proj.dv);
+                position = offset;
+            }
+            else if (proj.flags & ProjFlag_Bounce)
+            {
+                vec offset(proj.o);
+                offset.add(vec(proj.offset).mul(proj.offsetMillis / float(OFFSET_MILLIS)));
+                position = offset;
+            }
+            else if (proj.flags & ProjFlag_Track)
+            {
+                position = getTrackingPosition(proj.owner, proj.trackType);
+            }
+            return position;
+        }
+
         void update(const int time)
         {
             if (Projectiles.empty())
@@ -708,27 +738,24 @@ namespace game
             loopv(Projectiles)
             {
                 ProjEnt& proj = *Projectiles[i];
-                const vec pos = proj.updateposition(time);
+                const vec pos = updatePosition(proj, time);
                 vec old(proj.o);
-                if (proj.flags & ProjFlag_Linear)
+                if (proj.flags & ProjFlag_Linear || proj.flags & ProjFlag_Track)
                 {
                     hits.setsize(0);
-                    if (proj.isLocal)
+                    if (proj.isLocal && !betweenrounds)
                     {
-                        const vec halfdv = vec(proj.dv).mul(0.5f);
-                        const vec bo = vec(proj.o).add(halfdv);
-                        const float br = max(fabs(halfdv.x), fabs(halfdv.y)) + 1 + attacks[proj.attack].margin;
-                        if (!betweenrounds)
+                        loopj(numdynents())
                         {
-                            loopj(numdynents())
+                            dynent* o = iterdynents(j);
+                            if (proj.owner == o || o == &proj || o->o.reject(proj.o, o->radius + proj.radius))
                             {
-                                dynent* o = iterdynents(j);
-                                if (proj.owner == o || o == &proj || o->o.reject(bo, o->radius + br)) continue;
-                                if (hastarget(proj, o, pos))
-                                {
-                                    proj.kill();
-                                    break;
-                                }
+                                continue;
+                            }
+                            if (hastarget(proj, o, pos))
+                            {
+                                proj.kill();
+                                break;
                             }
                         }
                     }
@@ -827,30 +854,24 @@ namespace game
                 switch (proj.projectile)
                 {
                     case Projectile_Pulse:
-                    {
                         lightColor = vec(2.0f, 1.5f, 2.0);
                         break;
-                    }
+
                     case Projectile_Rocket:
-                    {
                         lightColor = vec(1, 0.75f, 0.5f);
                         break;
-                    }
+
                     case Projectile_Grenade:
-                    {
                         lightColor = vec(0.25f, 0.25f, 1);
                         break;
-                    }
+
                     case Projectile_Plasma:
-                    {
                         lightColor = vec(0, 1.50f, 1.50f);
                         break;
-                    }
+
+                    // Nothing to do here.
                     default:
-                    {
-                        lightColor = vec(0.5f, 0.375f, 0.25f);
-                        break;
-                    }
+                        return;
                 }
                 adddynlight(pos, 35, lightColor);
             }

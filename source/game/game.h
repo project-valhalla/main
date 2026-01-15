@@ -1039,6 +1039,8 @@ namespace game
 
     extern string clientmap;
 
+    extern vec getTrackingPosition(const gameent* player, const int trackType);
+
     extern gameent* findPointedPlayer(const float margin = 0);
     extern gameent* hudplayer();
     extern gameent* followingplayer(gameent* fallback = NULL);
@@ -1085,7 +1087,7 @@ namespace game
         extern void clear(gameent* owner = nullptr);
         extern void render();
         extern void preload();
-        extern void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0);
+        extern void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity = 0, const float elasticity = 0, const int trackType = TRACK_ORIGIN);
         extern void spawnbouncer(const vec& from, gameent* d, const int type);
         extern void bounce(physent* d, const vec& surface);
         extern void collidewithentity(physent* bouncer, physent* collideEntity);

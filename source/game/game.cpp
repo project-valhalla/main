@@ -374,7 +374,7 @@ namespace game
         }
     }
 
-    static vec getTrackingPosition(const gameent* player, const int trackType)
+    vec getTrackingPosition(const gameent* player, const int trackType)
     {
         vec position = player->o;
         switch (trackType)

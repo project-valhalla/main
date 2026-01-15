@@ -115,12 +115,17 @@ namespace game
 
     static void applyMeleePush(gameent* player, const vec& direction, const int attack)
     {
+        if (!validatk(attack))
+        {
+            return;
+        }
         const int action = attacks[attack].action;
         if (action != ACT_MELEE)
         {
             return;
         }
-        const float margin = attacks[attack].margin;
+        const int projectile = attacks[attack].projectile;
+        const float margin = projs[projectile].radius;
         dynent* intersected = intersectClosest(player, player->o, worldpos, margin);
         gameent* target = (gameent*)intersected;
         if (target == nullptr)
@@ -129,8 +134,13 @@ namespace game
             return;
         }
         const float distance = player->o.dist(target->o);
-        const float minRange = attacks[attack].range;
-        const float maxRange = minRange * 3;
+        const float range = attacks[attack].range;
+        if (range == 0)
+        {
+            return;
+        }
+        const float maxRange = range;
+        const float minRange = range / 3.0f;
         if (distance <= minRange || distance > maxRange)
         {
             return;
@@ -255,6 +265,10 @@ namespace game
         vec from = d->o, to = target, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
         addRecoil(d, dir, attack);
+        if (attacks[attack].action == ACT_MELEE)
+        {
+            applyMeleePush(d, dir, attack);
+        }
         float shorten = attacks[attack].range && dist > attacks[attack].range ? attacks[attack].range : 0,
             barrier = raycube(d->o, dir, dist, RAY_CLIPMAT | RAY_ALPHAPOLY);
         if (barrier > 0 && barrier < dist && (!shorten || barrier < shorten))
@@ -691,14 +705,13 @@ namespace game
         float dist = from.dist(to);
         const gameent* hudPlayer = followingplayer(self);
         const bool shouldEject = player->eject.x >= 0 && player == hudPlayer;
+        int trackType = TRACK_ORIGIN;
         switch (attack)
         {
             case ATK_MELEE:
             case ATK_ZOMBIE:
-                if (!isLocal)
-                {
-                    impacteffects(attack, player, from, to, isHit);
-                }
+                from = player->hand;
+                trackType = TRACK_HAND_LEFT;
                 break;
 
             case ATK_SCATTER1:
@@ -862,11 +875,11 @@ namespace game
             int attackrays = attacks[attack].rays;
             if (attackrays <= 1)
             {
-                projectiles::make(player, from, to, isLocal, id, attack, projectile, attacks[attack].lifetime, attacks[attack].projspeed, attacks[attack].gravity, attacks[attack].elasticity);
+                projectiles::make(player, from, to, isLocal, id, attack, projectile, attacks[attack].lifetime, attacks[attack].projspeed, attacks[attack].gravity, attacks[attack].elasticity, trackType);
             }
             else loopi(attackrays)
             {
-                projectiles::make(player, from, rays[i], isLocal, id, attack, projectile, attacks[attack].lifetime, attacks[attack].projspeed, attacks[attack].gravity, attacks[attack].elasticity);
+                projectiles::make(player, from, rays[i], isLocal, id, attack, projectile, attacks[attack].lifetime, attacks[attack].projspeed, attacks[attack].gravity, attacks[attack].elasticity, trackType);
             }
         }
         if (validgun(weapon))
@@ -1088,7 +1101,7 @@ namespace game
             loopi(attackRays)
             {
                 bool isHit = false;
-                if ((hits[i] = intersectClosest(d, from, rays[i], attacks[atk].margin, scanFlags, dist)))
+                if ((hits[i] = intersectClosest(d, from, rays[i], 0, scanFlags, dist)))
                 {
                     applyhitflags(hits[i], from, rays[i], atk, dist, hitFlags);
                     shorten(from, rays[i], dist);
@@ -1115,7 +1128,7 @@ namespace game
         else
         {
             bool isHit = false;
-            if ((o = intersectClosest(d, from, to, attacks[atk].margin, scanFlags, dist)))
+            if ((o = intersectClosest(d, from, to, 0, scanFlags, dist)))
             {
                 applyhitflags(o, from, to, atk, dist, hitFlags);
                 shorten(from, to, dist);

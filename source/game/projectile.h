@@ -74,7 +74,7 @@ projs[Projectile_Max] =
         0,
         0,
         0,
-        1.4f,
+        1.0f,
         0,
         "projectile/rocket",
     },

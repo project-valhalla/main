@@ -478,6 +478,31 @@ struct gamestate
         return validgun(gun) && gun != exclude && ammo[gun] > 0;
     }
 
+    bool hasAmmo(const int attack)
+    {
+        if (!validatk(attack))
+        {
+            return false;
+        }
+
+        // Check weapon only if it is associated with the attack.
+        const int gun = attacks[attack].gun;
+        if (validgun(gun))
+        {
+            if (ammo[gun] <= 0)
+            {
+                return false;
+            }
+            const int ammoCost = attacks[attack].use;
+            if (ammoCost > 0 && ammoCost > ammo[gun])
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     bool haspowerup(int powerup)
     {
         return powerupmillis && poweruptype == powerup;

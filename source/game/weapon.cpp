@@ -66,7 +66,7 @@ namespace game
 
     bool canshoot(gameent* d, int atk, int gun, int projectile)
     {
-        if (attacks[atk].action != ACT_MELEE && attacks[atk].action != ACT_THROW && (!d->ammo[gun] || attacks[atk].use > d->ammo[gun]))
+        if (!d->hasAmmo(atk))
         {
             return false;
         }
@@ -399,7 +399,7 @@ namespace game
                 sendsound(S_WEAPON_NOAMMO, d);
                 d->delay[d->gunselect] = GUN_EMPTY_DELAY;
                 d->lastattack = ATK_INVALID;
-                if (autoswitch && !d->ammo[gun])
+                if (autoswitch && d->ammo[gun] <= 0)
                 {
                     weaponswitch(d);
                     d->attacking = ACT_IDLE; // Cancel the attack since we are switching weapons.

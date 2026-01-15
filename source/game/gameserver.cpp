@@ -3364,7 +3364,7 @@ namespace server
             return;
         }
         const bool isInRange = attacks[attack].range && from.dist(to) <= attacks[attack].range + 1;
-        if (!isInRange || (attacks[attack].use && !gs.ammo[gun]))
+        if (!isInRange || !gs.hasAmmo(attack))
         {
             // We return if the shot is not in range or the user doesn't have enough ammo.
             return;

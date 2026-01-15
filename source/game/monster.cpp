@@ -247,7 +247,7 @@ namespace game
                     {
                         ai::findorientation(orient, yaw, pitch, attacktarget);
                         if(attacktarget.dist(o) <= attacks[atk].exprad) goto stopfiring;
-                        lastaction[gunselect] = 0;
+                        lastAction[gunselect] = 0;
                         if (meleerange && attacks[atk].action != ACT_MELEE)
                         {
                             atk = meleeatk;
@@ -660,7 +660,7 @@ namespace game
             if(m->state==CS_ALIVE)
             {
                 m->monsteraction(curtime);
-                if (lastmillis - m->lastaction[m->gunselect] >= m->delay[m->gunselect])
+                if (lastmillis - m->lastAction[m->gunselect] >= m->delay[m->gunselect])
                 {
                     m->delay[m->gunselect] = 0;
                 }
@@ -725,7 +725,7 @@ namespace game
                     if(m.attacking > ACT_MELEE) attackAnimation = ANIM_SHOOT;
                     else attackAnimation = ANIM_MELEE;
                 }
-                rendermonster(&m, monstertypes[m.mtype].mdlname, a, -attackAnimation, 300, m.lastaction[m.gunselect], m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
+                rendermonster(&m, monstertypes[m.mtype].mdlname, a, -attackAnimation, 300, m.lastAction[m.gunselect], m.lastpain, fade, monstertypes[m.mtype].hasragdoll);
             }
         }
     }

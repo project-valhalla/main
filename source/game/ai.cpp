@@ -93,7 +93,9 @@ namespace ai
     {
         if (attackrange(d, atk, e->o.squaredist(d->o)) && targetable(d, e))
         {
-            return !d->ai->becareful && d->hasAmmo(atk) && lastmillis - d->lastaction[d->gunselect] >= d->delay[d->gunselect];
+            const int weapon = d->gunselect;
+            const bool hasWeaponDelay = lastmillis - d->lastAction[weapon] >= d->delay[weapon];
+            return !d->ai->becareful && d->hasAmmo(atk) && hasWeaponDelay;
         }
         return false;
     }

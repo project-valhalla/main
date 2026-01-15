@@ -250,7 +250,7 @@ namespace game
         d->recoil.lastShot = lastmillis;
     }
 
-    void doAttack(gameent* d, const vec& target, const int attack, const int previousAction)
+    static void doAttack(gameent* d, const vec& target, const int attack, const int weapon)
     {
         vec from = d->o, to = target, dir = vec(to).sub(from).safenormalize();
         float dist = to.dist(from);
@@ -278,13 +278,16 @@ namespace game
             scanhit(from, to, d, attack);
         }
         const int id = lastmillis - maptime;
-        shoteffects(attack, from, to, d, true, id, previousAction);
+        applyShotEffects(attack, from, to, d, id, false, true);
         if (d == self || d->ai)
         {
-            addmsg(N_SHOOT, "rci2i6iv", d, id, attack,
+            addmsg
+            (
+                N_SHOOT, "rci9iv", d, id, attack, weapon,
                 static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
                 static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF),
-                hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf());
+                hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf()
+            );
         }
         addSpread(d, attack);
     }
@@ -305,7 +308,8 @@ namespace game
     void throwAttack(gameent* player, const vec& to)
     {
         const int attack = ATK_GRENADE1;
-        doAttack(player, to, attack, player->lastaction[player->gunselect]);
+        const int weapon = player->gunselect;
+        doAttack(player, to, attack, weapon);
         applyDelay(player, attack);
 
         // Reset the timestamp so we can throw again.
@@ -348,10 +352,10 @@ namespace game
             return;
         }
 
-        const int gun = d->gunselect;
+        const int weapon = d->gunselect;
         const int action = d->attacking;
-        const int attack = guns[gun].attacks[action];
-        if (!validact(action) || !validgun(gun))
+        const int attack = guns[weapon].attacks[action];
+        if (!validact(action) || !validgun(weapon))
         {
             return;
         }
@@ -362,19 +366,17 @@ namespace game
         */
         if (!validatk(attack))
         {
-            checkAbility(d, gun);
+            checkAbility(d, weapon);
             return;
         }
 
-        const int previousAction = d->lastaction[gun];
-        const int attackTime = lastmillis - previousAction;
-        if (attackTime < d->delay[d->gunselect])
+        if (!d->canShoot(attack, weapon, lastmillis))
         {
             return;
         }
-        if (d->delay[gun] > 0)
+        if (d->delay[weapon] > 0)
         {
-            d->delay[gun] = 0;
+            d->delay[weapon] = 0;
         }
         d->lastattack = attack;
         d->setLastAction(attack, lastmillis);
@@ -397,14 +399,14 @@ namespace game
         }
 
         const int projectile = attacks[attack].projectile;
-        if (!canshoot(d, attack, gun, projectile))
+        if (!canshoot(d, attack, weapon, projectile))
         {
             if (d == self)
             {
                 sendsound(S_WEAPON_NOAMMO, d);
-                d->delay[d->gunselect] = GUN_EMPTY_DELAY;
+                d->delay[weapon] = GUN_EMPTY_DELAY;
                 d->lastattack = ATK_INVALID;
-                if (autoswitch && d->ammo[gun] <= 0)
+                if (autoswitch && d->ammo[weapon] <= 0)
                 {
                     weaponswitch(d);
                     d->attacking = ACT_IDLE; // Cancel the attack since we are switching weapons.
@@ -414,7 +416,7 @@ namespace game
         }
         d->useAmmo(attack);
 
-        doAttack(d, targ, attack, previousAction);
+        doAttack(d, targ, attack, weapon);
 
         if (!attacks[attack].isfullauto)
         {
@@ -442,7 +444,7 @@ namespace game
             default: return;
         }
         const bool isValidClient = d->clientnum >= 0 && d->state == CS_ALIVE;
-        if(validatk(attack) && d->lastattack == attack && lastmillis - d->lastaction[gun] < attacks[attack].attackdelay + 50 && isValidClient)
+        if(validatk(attack) && d->lastattack == attack && lastmillis - d->lastAction[gun] < attacks[attack].attackdelay + 50 && isValidClient)
         {
             const int channel = Chan_Attack;
             d->chan[channel] = playsound(d->chansound[channel], NULL, local ? NULL : &d->o, NULL, 0, -1, -1, d->chan[channel]);
@@ -680,263 +682,274 @@ namespace game
 
     VARP(muzzleflash, 0, 1, 1);
 
-    void shoteffects(int atk, vec& from, vec& to, gameent* d, bool local, int id, int prevaction, bool hit)     // create visual effect from a shot
+    // Create visual effects from a shot.
+    void applyShotEffects(const int attack, vec& from, vec& to, gameent* player, const int id, const bool isHit, const bool isLocal)
     {
-        int gun = attacks[atk].gun, sound = attacks[atk].sound, previousaction = lastmillis - prevaction;
+        const int weapon = attacks[attack].gun;
+        const int previousAction = validgun(weapon) ? player->lastAction[weapon] : 0;
+        const int sound = attacks[attack].sound;
         float dist = from.dist(to);
-        gameent* hud = followingplayer(self);
-        bool shouldeject = d->eject.x >= 0 && d == hud;
-        vec up = vec(0, 0, 0);
-        switch (atk)
+        const gameent* hudPlayer = followingplayer(self);
+        const bool shouldEject = player->eject.x >= 0 && player == hudPlayer;
+        switch (attack)
         {
             case ATK_MELEE:
             case ATK_ZOMBIE:
-            {
-                if (!local)
+                if (!isLocal)
                 {
-                    impacteffects(atk, d, from, to, hit);
+                    impacteffects(attack, player, from, to, isHit);
                 }
                 break;
-            }
 
             case ATK_SCATTER1:
             case ATK_SCATTER2:
-            {
-                if (d->muzzle.x >= 0 && muzzleflash)
+                if (player->muzzle.x >= 0 && muzzleflash)
                 {
-                    if (atk == ATK_SCATTER2 && d == hud)
+                    if (attack == ATK_SCATTER2 && player ==  hudPlayer)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH, 0xEFE598, 2.0f, 0, d, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 50, PART_MUZZLE_FLASH, 0xEFE598, 2.0f, 0, player, TRACK_MUZZLE);
                     }
                     else
                     {
-                        particle_flare(d->muzzle, d->muzzle, 850, PART_MUZZLE_SMOKE, 0x202020, 0.1f, 3.0f, d, TRACK_MUZZLE);
-                        particle_flare(d->muzzle, d->muzzle, 200, PART_SPARKS, 0xEFE598, 0.1f, 3.0f, d, TRACK_MUZZLE);
-                        particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH, 0xEFE598, 3.0f, 0.1f, d, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 850, PART_MUZZLE_SMOKE, 0x202020, 0.1f, 3.0f, player, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 200, PART_SPARKS, 0xEFE598, 0.1f, 3.0f, player, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 200, PART_MUZZLE_FLASH, 0xEFE598, 3.0f, 0.1f, player, TRACK_MUZZLE);
                     }
-                    adddynlight(hudgunorigin(atk, d->o, to, d), 200, vec(0.5f, 0.375f, 0.25f), 1000, 75, DL_SHRINK, 0, vec(0, 0, 0), d, TRACK_MUZZLE);
-                    if (atk == ATK_SCATTER2)
+                    adddynlight(hudgunorigin(attack, player->o, to, player), 200, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_SHRINK, 0, vec(0, 0, 0), player, TRACK_MUZZLE);
+                    if (attack == ATK_SCATTER2)
                     {
-                        loopi(attacks[atk].rays)
+                        loopi(attacks[attack].rays)
                         {
-                            particle_flare(hudgunorigin(atk, from, rays[i], d), rays[i], 50, PART_TRAIL, 0xFFC864, 1.0f);
+                            particle_flare(hudgunorigin(attack, from, rays[i], player), rays[i], 50, PART_TRAIL, 0xFFC864, 1.0f);
                         }
                     }
                 }
-                if (!local)
+                if (!isLocal)
                 {
-                    loopi(attacks[atk].rays)
+                    loopi(attacks[attack].rays)
                     {
-                        offsetray(from, to, attacks[atk].spread, attacks[atk].range, rays[i], d);
-                        impacteffects(atk, d, from, rays[i], hit);
+                        offsetray(from, to, attacks[attack].spread, attacks[attack].range, rays[i], player);
+                        impacteffects(attack, player, from, rays[i], isHit);
                     }
                 }
                 break;
-            }
 
             case ATK_SMG1:
             case ATK_SMG2:
-            {
-                if (d->muzzle.x >= 0 && muzzleflash)
+                if (player->muzzle.x >= 0 && muzzleflash)
                 {
-                    if (atk == ATK_SMG2 && d == hud)
+                    if (attack == ATK_SMG2 && player ==  hudPlayer)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 50, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, 1.8f, d, TRACK_MUZZLE);
-                        particle_flare(hudgunorigin(attacks[atk].gun, from, to, d), to, 50, PART_TRAIL, 0xFFC864, 1.0f);
+                        particle_flare(player->muzzle, player->muzzle, 50, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, 1.8f, player, TRACK_MUZZLE);
+                        particle_flare(hudgunorigin(weapon, from, to, player), to, 50, PART_TRAIL, 0xFFC864, 1.0f);
                     }
                     else
                     {
-                        particle_flare(d->muzzle, d->muzzle, 300, PART_MUZZLE_SMOKE, 0xFFFFFF, 0.5f, 2.0f, d, TRACK_MUZZLE);
-                        particle_flare(d->muzzle, d->muzzle, 120, PART_SPARKS, 0xEFE898, 0.1f, 3.0f, d, TRACK_MUZZLE);
-                        particle_flare(d->muzzle, d->muzzle, 130, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, 1.8f, d, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 300, PART_MUZZLE_SMOKE, 0xFFFFFF, 0.5f, 2.0f, player, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 120, PART_SPARKS, 0xEFE898, 0.1f, 3.0f, player, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 130, PART_MUZZLE_FLASH3, 0xEFE898, 0.1f, 1.8f, player, TRACK_MUZZLE);
                     }
-                    adddynlight(hudgunorigin(gun, d->o, to, d), 120, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_EXPAND, 0, vec(0, 0, 0), d, TRACK_MUZZLE);
+                    adddynlight(hudgunorigin(attack, player->o, to, player), 120, vec(0.5f, 0.375f, 0.25f), 80, 75, DL_EXPAND, 0, vec(0, 0, 0), player, TRACK_MUZZLE);
                 }
-                if (!local) impacteffects(atk, d, from, to, hit);
+                if (!isLocal)
+                {
+                    impacteffects(attack, player, from, to, isHit);
+                }
                 break;
-            }
 
             case ATK_PULSE1:
-            {
-                if (muzzleflash && d->muzzle.x >= 0)
+                if (muzzleflash && player->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 100, PART_MUZZLE_FLASH2, 0xDD88DD, 2.5f, 0, d, TRACK_MUZZLE);
+                    particle_flare(player->muzzle, player->muzzle, 100, PART_MUZZLE_FLASH2, 0xDD88DD, 2.5f, 0, player, TRACK_MUZZLE);
                 }
                 break;
-            }
+
             case ATK_PULSE2:
-            {
-                if (muzzleflash && d->muzzle.x >= 0)
+                if (muzzleflash && player->muzzle.x >= 0)
                 {
-                    if (previousaction > 200)
+                    if (previousAction > 200)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 250, PART_MUZZLE_FLASH5, 0xDD88DD, 0.5f, 3.0f, d, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 250, PART_MUZZLE_FLASH5, 0xDD88DD, 0.5f, 3.0f, player, TRACK_MUZZLE);
                     }
-                    else particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH2, 0xDD88DD, 2.0f, 0, d, TRACK_MUZZLE);
-                    adddynlight(hudgunorigin(atk, d->o, to, d), 75, vec(1.0f, 0.50f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d, TRACK_MUZZLE);
+                    else particle_flare(player->muzzle, player->muzzle, 80, PART_MUZZLE_FLASH2, 0xDD88DD, 2.0f, 0, player, TRACK_MUZZLE);
+                    adddynlight(hudgunorigin(attack, player->o, to, player), 75, vec(1.0f, 0.50f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), player, TRACK_MUZZLE);
                 }
-                particle_flare(hudgunorigin(atk, from, to, d), to, 80, PART_LIGHTNING, 0xEE88EE, 1.0f, 0, d, TRACK_MUZZLE);
+                particle_flare(hudgunorigin(attack, from, to, player), to, 80, PART_LIGHTNING, 0xEE88EE, 1.0f, 0, player, TRACK_MUZZLE);
                 particle_fireball(to, 1.0f, PART_EXPLOSION2, 100, 0xDD88DD, 3.0f);
-                if (!local) impacteffects(atk, d, from, to, hit);
+                if (!isLocal)
+                {
+                    impacteffects(attack, player, from, to, isHit);
+                }
                 break;
-            }
 
             case ATK_ROCKET1:
-            {
-                if (muzzleflash && d->muzzle.x >= 0)
+                if (muzzleflash && player->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 150, PART_MUZZLE_FLASH4, 0xEFE898, 0.1f, 3.0f, d, TRACK_MUZZLE);
+                    particle_flare(player->muzzle, player->muzzle, 150, PART_MUZZLE_FLASH4, 0xEFE898, 0.1f, 3.0f, player, TRACK_MUZZLE);
                 }
                 break;
-            }
 
             case ATK_RAIL1:
             case ATK_RAIL2:
-            {
-                if (d->muzzle.x >= 0 && muzzleflash)
+                if (player->muzzle.x >= 0 && muzzleflash)
                 {
-                    if (d == hud)
+                    if (player ==  hudPlayer)
                     {
-                        particle_flare(d->muzzle, d->muzzle, 180, PART_SPARKS, 0x77DD77, 0.1f, 3.0f, d, TRACK_MUZZLE);
-                        particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x202020, 3.0f, 0, d, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 180, PART_SPARKS, 0x77DD77, 0.1f, 3.0f, player, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 450, PART_MUZZLE_SMOKE, 0x202020, 3.0f, 0, player, TRACK_MUZZLE);
                     }
-                    particle_flare(d->muzzle, d->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 1.75f, 0, d, TRACK_MUZZLE);
-                    adddynlight(hudgunorigin(atk, d->o, to, d), 100, vec(0.25f, 1.0f, 0.75f), 80, 75, DL_SHRINK, 0, vec(0, 0, 0), d, TRACK_MUZZLE);
+                    particle_flare(player->muzzle, player->muzzle, 80, PART_MUZZLE_FLASH, 0x77DD77, 1.75f, 0, player, TRACK_MUZZLE);
+                    adddynlight(hudgunorigin(attack, player->o, to, player), 100, vec(0.25f, 1.0f, 0.75f), 80, 75, DL_SHRINK, 0, vec(0, 0, 0), player, TRACK_MUZZLE);
                 }
-                if (atk == ATK_RAIL2) particle_trail(PART_SMOKE, 350, hudgunorigin(atk, from, to, d), to, 0xDEFFDE, 0.3f, 50);
-                particle_flare(hudgunorigin(atk, from, to, d), to, 600, PART_TRAIL, 0x55DD55, 0.50f);
-                if (!local) impacteffects(atk, d, from, to, hit);
+                if (attack == ATK_RAIL2) particle_trail(PART_SMOKE, 350, hudgunorigin(attack, from, to, player), to, 0xDEFFDE, 0.3f, 50);
+                particle_flare(hudgunorigin(attack, from, to, player), to, 600, PART_TRAIL, 0x55DD55, 0.50f);
+                if (!isLocal)
+                {
+                    impacteffects(attack, player, from, to, isHit);
+                }
                 break;
-            }
 
             case ATK_GRENADE1:
-            {
                 // Hand is not rendered when fully zoomed in. Use player origin.
-                from = camera::camera.zoomstate.isenabled() ? d->o : d->hand;
+                from = camera::camera.zoomstate.isenabled() ? player->o : player->hand;
 
                 to.addz(dist / 8);
                 break;
-            }
 
             case ATK_PISTOL1:
             case ATK_PISTOL2:
-            {
-                if (muzzleflash && d->muzzle.x >= 0)
+                if (muzzleflash && player->muzzle.x >= 0)
                 {
-                    if (atk == ATK_PISTOL1)
+                    if (attack == ATK_PISTOL1)
                     {
-                        if (d == hud)
+                        if (player ==  hudPlayer)
                         {
-                            particle_flare(d->muzzle, d->muzzle, 180, PART_SPARKS, 0x00FFFF, 0.1f, 3.0f, d, TRACK_MUZZLE);
+                            particle_flare(player->muzzle, player->muzzle, 180, PART_SPARKS, 0x00FFFF, 0.1f, 3.0f, player, TRACK_MUZZLE);
                         }
-                        particle_flare(d->muzzle, d->muzzle, 120, PART_MUZZLE_FLASH3, 0x00FFFF, 0.1f, 2.5f, d, TRACK_MUZZLE);
-                        particle_flare(hudgunorigin(atk, from, to, d), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
-                        if (!local)
+                        particle_flare(player->muzzle, player->muzzle, 120, PART_MUZZLE_FLASH3, 0x00FFFF, 0.1f, 2.5f, player, TRACK_MUZZLE);
+                        particle_flare(hudgunorigin(attack, from, to, player), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
+                        if (!isLocal)
                         {
-                            impacteffects(atk, d, from, to, hit);
+                            impacteffects(attack, player, from, to, isHit);
                         }
                     }
                     else
                     {
-                        particle_flare(d->muzzle, d->muzzle, 280, PART_MUZZLE_FLASH2, 0x00FFFF, 0.1f, 3.0f, d, TRACK_MUZZLE);
+                        particle_flare(player->muzzle, player->muzzle, 280, PART_MUZZLE_FLASH2, 0x00FFFF, 0.1f, 3.0f, player, TRACK_MUZZLE);
                     }
-                    adddynlight(hudgunorigin(atk, d->o, to, d), 80, vec(0.25f, 1.0f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d, TRACK_MUZZLE);
+                    adddynlight(hudgunorigin(attack, player->o, to, player), 80, vec(0.25f, 1.0f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), player, TRACK_MUZZLE);
                 }
                 break;
-            }
 
             case ATK_INSTA:
-
-                if (muzzleflash && d->muzzle.x >= 0)
+                if (muzzleflash && player->muzzle.x >= 0)
                 {
-                    particle_flare(d->muzzle, d->muzzle, 200, PART_MUZZLE_FLASH, 0x008080, 0.1f, 2.75f, d, TRACK_MUZZLE);
-                    particle_flare(d->muzzle, d->muzzle, 450, PART_MUZZLE_SMOKE, 0x006060, 0.1f, 3.0f, d, TRACK_MUZZLE);
-                    adddynlight(hudgunorigin(atk, d->o, to, d), 80, vec(0.25f, 0.75f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), d, TRACK_MUZZLE);
+                    particle_flare(player->muzzle, player->muzzle, 200, PART_MUZZLE_FLASH, 0x008080, 0.1f, 2.75f, player, TRACK_MUZZLE);
+                    particle_flare(player->muzzle, player->muzzle, 450, PART_MUZZLE_SMOKE, 0x006060, 0.1f, 3.0f, player, TRACK_MUZZLE);
+                    adddynlight(hudgunorigin(attack, player->o, to, player), 80, vec(0.25f, 0.75f, 1.0f), 75, 75, DL_FLASH, 0, vec(0, 0, 0), player, TRACK_MUZZLE);
                 }
-                particle_trail(PART_SMOKE, 350, hudgunorigin(atk, from, to, d), to, 0x006060, 0.3f, 50);
-                particle_flare(hudgunorigin(atk, from, to, d), to, 100, PART_LIGHTNING, 0x008080, 1.0f);
-                particle_flare(hudgunorigin(atk, from, to, d), to, 500, PART_TRAIL_PROJECTILE, 0x008080, 1.0f);
+                particle_trail(PART_SMOKE, 350, hudgunorigin(attack, from, to, player), to, 0x006060, 0.3f, 50);
+                particle_flare(hudgunorigin(attack, from, to, player), to, 100, PART_LIGHTNING, 0x008080, 1.0f);
+                particle_flare(hudgunorigin(attack, from, to, player), to, 500, PART_TRAIL_PROJECTILE, 0x008080, 1.0f);
                 break;
 
-            default: break;
+            default:
+                break;
         }
-        const int projectile = attacks[atk].projectile;
+        const int projectile = attacks[attack].projectile;
         if (isvalidprojectile(projectile))
         {
-            int attackrays = attacks[atk].rays;
+            int attackrays = attacks[attack].rays;
             if (attackrays <= 1)
             {
-                projectiles::make(d, from, to, local, id, atk, projectile, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
+                projectiles::make(player, from, to, isLocal, id, attack, projectile, attacks[attack].lifetime, attacks[attack].projspeed, attacks[attack].gravity, attacks[attack].elasticity);
             }
             else loopi(attackrays)
             {
-                projectiles::make(d, from, rays[i], local, id, atk, projectile, attacks[atk].lifetime, attacks[atk].projspeed, attacks[atk].gravity, attacks[atk].elasticity);
+                projectiles::make(player, from, rays[i], isLocal, id, attack, projectile, attacks[attack].lifetime, attacks[attack].projspeed, attacks[attack].gravity, attacks[attack].elasticity);
             }
         }
-        if (validgun(gun))
+        if (validgun(weapon))
         {
-            const int ejectProjectile = guns[gun].ejectprojectile;
-            if (isvalidprojectile(ejectProjectile) && shouldeject)
+            const int ejectProjectile = guns[weapon].ejectprojectile;
+            if (isvalidprojectile(ejectProjectile) && shouldEject)
             {
-                projectiles::spawnbouncer(d->eject, d, ejectProjectile);
+                projectiles::spawnbouncer(player->eject, player, ejectProjectile);
             }
         }
-        bool looped = false;
-        if (validsound(d->chansound[Chan_Attack]) && d->chansound[Chan_Attack] != sound)
+        if (validsound(player->chansound[Chan_Attack]) && player->chansound[Chan_Attack] != sound)
         {
-            d->stopchannelsound(Chan_Attack, 300);
+            player->stopchannelsound(Chan_Attack, 300);
         }
-        if (validsound(d->chansound[Chan_Idle]))
+        if (validsound(player->chansound[Chan_Idle]))
         {
-            d->stopchannelsound(Chan_Idle, 400);
+            player->stopchannelsound(Chan_Idle, 400);
         }
+        bool isLooped = false;
         switch (sound)
         {
             case S_SG_A:
-            {
-                playsound(sound, NULL, d == hudplayer() ? NULL : &d->o);
-                if (d == hud)
+                playsound(sound, nullptr, player == self ? nullptr : &player->o);
+                if (player ==  hudPlayer)
                 {
-                    d->playchannelsound(Chan_Weapon, S_SG_B);
+                    player->playchannelsound(Chan_Weapon, S_SG_B);
                 }
                 break;
-            }
+
             case S_PULSE2_A:
-            {
-                if (validsound(d->chansound[Chan_Attack]))
+                if (validsound(player->chansound[Chan_Attack]))
                 {
-                    looped = true;
+                    isLooped = true;
                 }
-                d->playchannelsound(Chan_Attack, sound, 100, true);
-                if (!looped)
+                player->playchannelsound(Chan_Attack, sound, 100, true);
+                if (!isLooped)
                 {
-                    d->playchannelsound(Chan_Weapon, S_PULSE2_B);
+                    player->playchannelsound(Chan_Weapon, S_PULSE2_B);
                 }
                 break;
-            }
+
             case S_RAIL_A:
-            {
-                playsound(sound, NULL, d == hudplayer() ? NULL : &d->o);
-                if (d == hud)
+                playsound(sound, nullptr, player == self ? nullptr : &player->o);
+                if (player ==  hudPlayer)
                 {
-                    d->playchannelsound(Chan_Weapon, S_RAIL_B);
+                    player->playchannelsound(Chan_Weapon, S_RAIL_B);
                 }
                 break;
-            }
-            default: playsound(sound, NULL, d == hudplayer() ? NULL : &d->o);
+
+            default:
+                playsound(sound, nullptr, player == self ? nullptr : &player->o);
         }
-        if (previousaction > 200 && !looped)
+        if (previousAction > 200 && !isLooped)
         {
-            if (d->role == ROLE_BERSERKER)
+            if (player->role == ROLE_BERSERKER)
             {
-                playsound(S_BERSERKER_ACTION, d);
-                return;
+                playsound(S_BERSERKER_ACTION, player);
             }
-            if (d->haspowerup(PU_DAMAGE) || d->haspowerup(PU_HASTE) || d->haspowerup(PU_AMMO))
+            else if (player->haspowerup(PU_DAMAGE) || player->haspowerup(PU_HASTE) || player->haspowerup(PU_AMMO))
             {
-                playsound(S_ACTION_DAMAGE + d->poweruptype - 1, d);
+                playsound(S_ACTION_DAMAGE + player->poweruptype - 1, player);
             }
         }
+    }
+
+    void updateShotEvent(gameent* player, const int attack)
+    {
+        if (player == nullptr)
+        {
+            return;
+        }
+
+        // Ensure synchronisation between weapon and attack.
+        const int attackWeapon = attacks[attack].gun;
+        if (validgun(attackWeapon) && player->gunselect != attackWeapon)
+        {
+            player->gunselect = attackWeapon;
+        }
+
+        player->applyAttackDelay(attack);
+        player->setLastAction(attack, lastmillis);
+        player->useAmmo(attack);
+        player->lastattack = attack;
     }
 
     int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags)

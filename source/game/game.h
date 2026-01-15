@@ -128,7 +128,7 @@ enum
 {
     N_CONNECT = 0, N_SERVINFO, N_WELCOME, N_INITCLIENT, N_POS, N_TEXT, N_SOUND, N_CDIS,
     N_SHOOT, N_DESTROYPROJECTILE, N_DAMAGEPROJECTILE, N_SUICIDE,
-    N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_REGENERATE,
+    N_DIED, N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_EXPLODEFX, N_REGENERATE,
     N_TRYSPAWN, N_SPAWNSTATE, N_SPAWN, N_FORCEDEATH,
     N_GUNSELECT, N_TAUNT, N_PHYSICSEVENT,
     N_NOTICE, N_ANNOUNCE,
@@ -159,7 +159,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 {
     N_CONNECT, 0, N_SERVINFO, 0, N_WELCOME, 1, N_INITCLIENT, 0, N_POS, 0, N_TEXT, 0, N_SOUND, 3, N_CDIS, 2,
     N_SHOOT, 0, N_DESTROYPROJECTILE, 0, N_DAMAGEPROJECTILE, 5, N_SUICIDE, 1,
-    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 3, N_SHOTFX, 11, N_EXPLODEFX, 4, N_REGENERATE, 2,
+    N_DIED, 7, N_DAMAGE, 11, N_HITPUSH, 7, N_SHOTEVENT, 11, N_EXPLODEFX, 4, N_REGENERATE, 2,
     N_TRYSPAWN, 1, N_SPAWNSTATE, 9, N_SPAWN, 3, N_FORCEDEATH, 2,
     N_GUNSELECT, 2, N_TAUNT, 1, N_PHYSICSEVENT, 3,
     N_NOTICE, 2, N_ANNOUNCE, 1,
@@ -213,14 +213,11 @@ struct gamestate
     int aitype, skill;
     int poweruptype, powerupmillis;
     int role;
-    int ammo[NUMGUNS], delay[NUMGUNS];
+    int ammo[NUMGUNS], lastAction[NUMGUNS], delay[NUMGUNS];
 
     gamestate() : health(100), maxhealth(100), shield(0), gunselect(GUN_PISTOL), aitype(AI_NONE), skill(0), poweruptype(PU_NONE), powerupmillis(0), role(ROLE_NONE)
     {
-        for (int i = 0; i < NUMGUNS; i++)
-        {
-            ammo[i] = delay[i] = 0;
-        }
+        resetWeapons();
     }
 
     void useAmmo(const int attack)
@@ -239,14 +236,35 @@ struct gamestate
         ammo[weapon] = max(ammo[weapon] - attacks[attack].use, 0);
     }
 
+    void resetLastAction(const int time = 0)
+    {
+        for (int i = 0; i < NUMGUNS; i++)
+        {
+            if (time > 0 && time - lastAction[i] < delay[i])
+            {
+                continue;
+            }
+            delay[i] = 0;
+        }
+    }
+
+    void setLastAction(const int attack, const int time)
+    {
+        const int weapon = attacks[attack].gun;
+        if (validgun(weapon))
+        {
+            lastAction[weapon] = time;
+        }
+        else for (int i = 0; i < NUMGUNS; i++)
+        {
+            lastAction[i] = time;
+        }
+    }
+
     void applyAttackDelay(const int attack)
     {
         const int gun = attacks[attack].gun;
         int attackDelay = attacks[attack].attackdelay;
-        if (attacks[attack].action == ACT_THROW)
-        {
-            attackDelay += GUN_THROW_DELAY;
-        }
         if (haspowerup(PU_HASTE) || role == ROLE_BERSERKER)
         {
             attackDelay /= 2;
@@ -259,6 +277,17 @@ struct gamestate
         {
             delay[i] = attackDelay;
         }
+    }
+
+    bool canShoot(const int attack, int weapon, const int time)
+    {
+        const int attackWeapon = attacks[attack].gun;
+        if (validgun(attackWeapon))
+        {
+            weapon = attackWeapon;
+        }
+        const int wait = time - lastAction[weapon];
+        return wait >= delay[weapon];
     }
 
     bool canpickup(int type)
@@ -367,11 +396,13 @@ struct gamestate
         powerupmillis = 0;
     }
 
-    void resetweapons()
+    void resetWeapons()
     {
         for (int i = 0; i < NUMGUNS; i++)
         {
-            ammo[i] = delay[i] = 0;
+            ammo[i] = 0;
+            lastAction[i] = 0;
+            delay[i] = 0;
         }
     }
 
@@ -380,7 +411,7 @@ struct gamestate
         maxhealth = 100;
         health = maxhealth;
         resetitems();
-        resetweapons();
+        resetWeapons();
         gunselect = GUN_PISTOL;
         role = ROLE_NONE;
     }
@@ -392,7 +423,7 @@ struct gamestate
         {
             maxhealth = health = 1000;
             resetitems();
-            resetweapons();
+            resetWeapons();
             ammo[GUN_ZOMBIE] = 1;
             gunselect = GUN_ZOMBIE;
         }
@@ -557,7 +588,6 @@ struct gameent : dynent, gamestate
     int lifesequence;                   // sequence id for each respawn, used in damage test
     int respawned, suicided;
     int lastpain, lasthurt, lastspawn, lastthrow;
-    int lastaction[NUMGUNS];
     int lastattack, lastattacker, lasthit, lastkill;
     int lastWeaponUsed;
     int deathstate;
@@ -763,10 +793,6 @@ struct gameent : dynent, gamestate
         lasthit = lastkill = 0;
         lastWeaponUsed = GUN_INVALID;
         respawnqueued = false;
-        for (int i = 0; i < NUMGUNS; i++)
-        {
-            lastaction[i] = 0;
-        }
         for (int i = 0; i < Ability::Count; i++)
         {
             lastAbility[i] = 0;
@@ -839,26 +865,7 @@ struct gameent : dynent, gamestate
         {
             return;
         }
-        for (int i = 0; i < NUMGUNS; i++)
-        {
-            if (lastmillis - lastaction[i] >= delay[i])
-            {
-                delay[i] = 0;
-            }
-        }
-    }
-
-    void setLastAction(const int attack, const int time)
-    {
-        const int gun = attacks[attack].gun;
-        if (validgun(gun))
-        {
-            lastaction[gun] = time;
-        }
-        else for (int i = 0; i < NUMGUNS; i++)
-        {
-            lastaction[i] = time;
-        }
+        resetLastAction(time);
     }
 
     void prepareThrow(const int time)
@@ -1142,7 +1149,8 @@ namespace game
     extern void shoot(gameent *d, const vec &targ);
     extern void updateRecoil(gameent* d, const int curtime);
     extern void updateThrow(gameent* player);
-    extern void shoteffects(int atk, vec &from, vec &to, gameent *d, bool local, int id, int prevaction, bool hit = false);
+    extern void applyShotEffects(const int attack, vec& from, vec& to, gameent* player, const int id, const bool isHit, const bool isLocal);
+    extern void updateShotEvent(gameent* player, const int attack);
     extern void scanhit(vec& from, vec& to, gameent* d, int atk);
     extern void gibeffect(int damage, const vec &vel, gameent *d);
     extern void updateWeaponDelay(gameent* player);
@@ -1241,7 +1249,7 @@ namespace game
     extern void clearragdolls();
     extern void moveragdolls();
     extern void syncplayer();
-    extern void rendermonster(dynent* d, const char* mdlname, modelattach* attachments, const int attack, const int attackdelay, const int lastaction, const int lastpain, const float fade = 1, const bool ragdoll = false);
+    extern void rendermonster(dynent* d, const char* mdlname, modelattach* attachments, const int attack, const int attackdelay, const int lastAction, const int lastpain, const float fade = 1, const bool ragdoll = false);
 
     extern int getplayercolor(const gameent* d, const int team);
     extern int chooserandomplayermodel(int seed);

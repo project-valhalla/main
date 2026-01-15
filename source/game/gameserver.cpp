@@ -68,7 +68,7 @@ namespace server
 
     struct shotevent : timedevent
     {
-        int id, attack;
+        int id, attack, weapon;
         vec from, to;
         vector<hitinfo> hits;
 
@@ -235,7 +235,6 @@ namespace server
         int lastdeath, deadflush, lastspawn, lifesequence;
         int lastpain, lastdamage, lastregeneration;
         int lastmove, lastattack;
-        int lastshot[NUMGUNS];
         ProjectileState projectiles;
         int frags, flags, deaths, points, teamkills, shotdamage, damage, spree;
         int lasttimeplayed, timeplayed;
@@ -250,7 +249,7 @@ namespace server
 
         bool waitexpired(int gamemillis)
         {
-            return gamemillis - lastshot[gunselect] >= delay[gunselect];
+            return gamemillis - lastAction[gunselect] >= delay[gunselect];
         }
 
         void reset()
@@ -276,10 +275,7 @@ namespace server
             lastspawn = -1;
             role = ROLE_NONE;
             spree = 0;
-            for (int i = 0; i < NUMGUNS; i++)
-            {
-                lastshot[i] = 0;
-            }
+            resetLastAction();
         }
 
         void reassign()
@@ -1821,7 +1817,7 @@ namespace server
 
         uchar operator[](int msg) const { return msg >= 0 && msg < NUMMSG ? msgmask[msg] : 0; }
     } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVMSG,
-                N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_SHOTFX, N_EXPLODEFX, N_DAMAGEPROJECTILE, N_REGENERATE,
+                N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_EXPLODEFX, N_DAMAGEPROJECTILE, N_REGENERATE,
                 N_DIED, N_SPAWNSTATE, N_FORCEDEATH,
                 N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP,
                 N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME,
@@ -3357,9 +3353,7 @@ namespace server
         {
             return;
         }
-        const int gun = attacks[attack].gun;
-        const int wait = millis - gs.lastshot[gun];
-        if (wait < gs.delay[gun] || !validatk(attack))
+        if (!gs.canShoot(weapon, attack, millis) || !validatk(attack))
         {
             return;
         }
@@ -3370,23 +3364,10 @@ namespace server
             return;
         }
         gs.useAmmo(attack);
-        gs.lastshot[gun] = millis;
         gs.lastmove = lastmillis;
         gs.lastattack = attack;
-        int attackDelay = attacks[attack].attackdelay;
-        if (gs.haspowerup(PU_HASTE) || gs.role == ROLE_BERSERKER)
-        {
-            attackDelay /= 2;
-        }
-        if (validgun(gun))
-        {
-            gs.delay[gun] = attackDelay;
-        }
-        else for (int i = 0; i < NUMGUNS; i++)
-        {
-            gs.delay[i] = attackDelay;
-        }
-        sendf(-1, 1, "ri3x", N_SHOTEVENT, ci->clientnum, attack, ci->ownernum);
+        gs.setLastAction(attack, millis);
+        gs.applyAttackDelay(attack);
         gs.shotdamage += attacks[attack].damage * attacks[attack].rays;
         gs.projectiles.add(id, attacks[attack].projectile, attack);
         bool isHit = false;
@@ -3423,7 +3404,15 @@ namespace server
             }
             isHit = true;
         }
-        sendf(-1, 1, "rii9ix", N_SHOTFX, ci->clientnum, attack, id, static_cast<int>(isHit), static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF), static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF), ci->ownernum);
+        sendf
+        (
+            -1, 1, "ri9i2x", N_SHOTEVENT,
+            ci->clientnum, attack, id,
+            static_cast<int>(from.x * DMF), static_cast<int>(from.y * DMF), static_cast<int>(from.z * DMF),
+            static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF),
+            static_cast<int>(isHit),
+            ci->ownernum
+        );
     }
 
     void pickupevent::process(clientinfo *ci)
@@ -4368,6 +4357,7 @@ namespace server
                 shot->id = getint(p);
                 shot->millis = cq ? cq->geteventmillis(gamemillis, shot->id) : 0;
                 shot->attack = getint(p);
+                shot->weapon = getint(p);
                 loopk(3)
                 {
                     shot->from[k] = getint(p) / DMF;

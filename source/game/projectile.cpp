@@ -460,7 +460,7 @@ namespace game
                     if (d == self || d->ai)
                     {
                         d->delay[gun] = attack.attackdelay;
-                        d->lastaction[gun] = lastmillis;
+                        d->lastAction[gun] = lastmillis;
                         d->lastattack = proj.attack;
                         sendsound(guns[gun].abilitySound, d);
                         d->lastAbility[d->Ability::lastUse] = lastmillis;

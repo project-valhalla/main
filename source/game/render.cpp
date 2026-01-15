@@ -287,7 +287,7 @@ namespace game
     void renderplayer(gameent *d, const playermodelinfo &playermodel, int color, int team, float fade, int flags = 0, bool mainpass = true)
     {
         const int gun = d->gunselect;
-        int lastaction = d->lastaction[gun], anim = ANIM_IDLE | ANIM_LOOP, attack = ANIM_SHOOT, delay = 0;
+        int lastaction = d->lastAction[gun], anim = ANIM_IDLE | ANIM_LOOP, attack = ANIM_SHOOT, delay = 0;
         if(d->state==CS_ALIVE)
         {
             if(d->lastattack >= 0)
@@ -295,7 +295,7 @@ namespace game
                 attack = attacks[d->lastattack].anim;
                 delay = attacks[d->lastattack].attackdelay+50;
             }
-            if(d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis - d->lastaction[gun] > delay)
+            if(d->lasttaunt && lastmillis-d->lasttaunt<1000 && lastmillis - d->lastAction[gun] > delay)
             {
                 lastaction = d->lasttaunt;
                 anim = attack = ANIM_TAUNT;
@@ -731,13 +731,13 @@ namespace game
                 shouldAnimate = true;
             }
             const int gun = d->gunselect;
-            if(shouldAnimate && d->lastaction[gun] && lastmillis - d->lastaction[gun] < attacks[d->lastattack].attackdelay)
+            if(shouldAnimate && d->lastAction[gun] && lastmillis - d->lastAction[gun] < attacks[d->lastattack].attackdelay)
             {
                 if (animation >= 0)
                 {
                     animation = attacks[d->lastattack].hudanim;
                 }
-                basetime = d->lastaction[gun];
+                basetime = d->lastAction[gun];
                 d->lastswitch = 0;
             }
         }

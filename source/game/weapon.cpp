@@ -316,12 +316,12 @@ namespace game
         If an invalid attack is triggered via shooting, check if it is a special case.
         Otherwise simply do nothing (and effectively prevent the player from firing).
     */
-    void checkAttack(gameent* d, const int gun)
+    static void checkAbility(gameent* player, const int weapon)
     {
-        switch (gun)
+        switch (weapon)
         {
             case GUN_ROCKET:
-                projectiles::detonate(d, gun);
+                projectiles::detonate(player, weapon);
                 break;
 
             // Nothing to do here.
@@ -329,8 +329,8 @@ namespace game
                 return;
         }
 
-        // If we reach this point, we've just performed an ability.
-        d->attacking = ACT_IDLE;
+        // If we reach this point, we are performing an ability and not firing anymore.
+        player->attacking = ACT_IDLE;
     }
 
     VARP(autoswitch, 0, 1, 1);
@@ -345,7 +345,6 @@ namespace game
         const bool hasThrowDelay = d->lastthrow && lastmillis - d->lastthrow <= GUN_THROW_DELAY;
         if (hasSwitchDelay || hasThrowDelay)
         {
-            
             return;
         }
 
@@ -356,11 +355,17 @@ namespace game
         {
             return;
         }
+
+        /*
+            If the attack we are using is not valid, must be something else.
+            Check if the weapon can perform an ability, otherwise simply return.
+        */
         if (!validatk(attack))
         {
-            checkAttack(d, gun);
+            checkAbility(d, gun);
             return;
         }
+
         const int previousAction = d->lastaction[gun];
         const int attackTime = lastmillis - previousAction;
         if (attackTime < d->delay[d->gunselect])

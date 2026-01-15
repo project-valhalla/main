@@ -50,10 +50,11 @@ namespace game
 
         static void add(ProjEnt& proj)
         {
-            if (isattackprojectile(proj.projectile))
+            if (!isattackprojectile(proj.projectile) || proj.flags & ProjFlag_Invincible)
             {
-                AttackProjectiles.add(&proj);
+                return;
             }
+            AttackProjectiles.add(&proj);
         }
 
         static void remove(ProjEnt& proj)

@@ -1359,20 +1359,37 @@ namespace ai
         d->jumping = false;
     }
 
+    // Avoid projectiles: loop through all projectiles (even indestructible ones).
+    static void avoidProjectiles(avoidset& obstacles, const float radius)
+    {
+        for (int i = 0; i < projectiles::Projectiles.length(); i++)
+        {
+            ProjEnt& proj = *projectiles::Projectiles[i];
+            if (!isattackprojectile(proj.projectile))
+            {
+                continue;
+            }
+            obstacles.avoidnear(nullptr, proj.o.z + attacks[proj.attack].exprad + 1, proj.o, radius + attacks[proj.attack].exprad);
+        }
+    }
+
+    // Guess the radius of players and other critters or objects, relying on the avoid set for now.
     void avoid()
     {
-        // guess as to the radius of ai and other critters relying on the avoid set for now
-        float guessradius = self->radius;
         obstacles.clear();
+        const float guessRadius = self->radius;
         loopv(players)
         {
-            dynent *d = players[i];
-            if(d->state != CS_ALIVE) continue;
-            obstacles.avoidnear(d, d->o.z + d->aboveeye + 1, d->feetpos(), guessradius + d->radius);
+            dynent* entity = players[i];
+            if (entity->state != CS_ALIVE)
+            {
+                continue;
+            }
+            obstacles.avoidnear(entity, entity->o.z + entity->aboveeye + 1, entity->feetpos(), guessRadius + entity->radius);
         }
         extern avoidset wpavoid;
         obstacles.add(wpavoid);
-        projectiles::avoid(obstacles, guessradius);
+        avoidProjectiles(obstacles, guessRadius);
     }
 
     void think(gameent *d, bool run)

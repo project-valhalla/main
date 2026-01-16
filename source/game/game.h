@@ -1093,7 +1093,6 @@ namespace game
         extern void collidewithentity(physent* bouncer, physent* collideEntity);
         extern void destroy(ProjEnt& proj, const vec& position, const bool isLocal = true, const int attack = ATK_INVALID);
         extern void detonate(gameent* d, const int gun);
-        extern void avoid(ai::avoidset& obstacles, const float radius);
         extern void triggerExplosion(gameent* owner, const int attack, const vec& position, const vec& velocity);
         extern void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays);
         extern void damage(ProjEnt* proj, gameent* actor, const int attack);

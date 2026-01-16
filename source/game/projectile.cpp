@@ -969,14 +969,5 @@ namespace game
                 Projectiles.deletecontents();
             }
         }
-
-        void avoid(ai::avoidset& obstacles, const float radius)
-        {
-            loopv(Projectiles)
-            {
-                ProjEnt& proj = *Projectiles[i];
-                obstacles.avoidnear(nullptr, proj.o.z + attacks[proj.attack].exprad + 1, proj.o, radius + attacks[proj.attack].exprad);
-            }
-        }
     }
 };

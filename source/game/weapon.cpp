@@ -344,7 +344,7 @@ namespace game
 
             // Nothing to do here.
             default:
-                return;
+                break;
         }
 
         // If we reach this point, we are performing an ability and not firing anymore.

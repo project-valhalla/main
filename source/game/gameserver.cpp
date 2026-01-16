@@ -1850,7 +1850,7 @@ namespace server
 
         uchar operator[](int msg) const { return msg >= 0 && msg < NUMMSG ? msgmask[msg] : 0; }
     } msgfilter(-1, N_CONNECT, N_SERVINFO, N_INITCLIENT, N_WELCOME, N_MAPCHANGE, N_SERVMSG,
-                N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_EXPLODEFX, N_DAMAGEPROJECTILE, N_REGENERATE,
+                N_DAMAGE, N_HITPUSH, N_SHOTEVENT, N_DESTROYEVENT, N_DAMAGEPROJECTILE, N_REGENERATE,
                 N_DIED, N_SPAWNSTATE, N_FORCEDEATH,
                 N_TEAMINFO, N_ITEMACC, N_ITEMSPAWN, N_TIMEUP,
                 N_CDIS, N_CURRENTMASTER, N_PONG, N_RESUME,
@@ -3337,7 +3337,7 @@ namespace server
         {
             return;
         }
-        sendf(-1, 1, "ri4x", N_EXPLODEFX, ci->clientnum, id, attack, ci->ownernum);
+        sendf(-1, 1, "ri4x", N_DESTROYEVENT, ci->clientnum, id, attack, ci->ownernum);
         loopv(hits)
         {
             hitinfo& hit = hits[i];

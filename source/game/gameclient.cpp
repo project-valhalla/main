@@ -1992,7 +1992,7 @@ namespace game
                 break;
             }
 
-            case N_EXPLODEFX:
+            case N_DESTROYEVENT:
             {
                 const int client = getint(p);
                 const int id = getint(p);

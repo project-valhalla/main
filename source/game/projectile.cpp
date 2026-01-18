@@ -750,7 +750,7 @@ namespace game
                     particle_flare(proj.o, proj.o, 1, PART_EDIT, 0xF69D19, 0.5 + rndscale(2.0f));
                     break;
                 }
-                case Projectile_Bullet:
+                case Projectile_Tracer:
                 {
                     const int gun = attacks[proj.attack].gun;
                     tailColor = gun == GUN_PISTOL ? 0x00FFFF : (gun == GUN_RAIL ? 0x77DD77 : 0xFFC864);

@@ -17,7 +17,7 @@ enum
     Projectile_Casing,
     Projectile_Casing2,
     Projectile_Casing3,
-    Projectile_Bullet,
+    Projectile_Tracer,
     Projectile_Max
 };
 inline bool isvalidprojectile(int type)
@@ -183,7 +183,7 @@ projs[Projectile_Max] =
         "projectile/eject/02"
     },
     {
-        Projectile_Bullet,
+        Projectile_Tracer,
         ProjFlag_Weapon | ProjFlag_Junk | ProjFlag_Linear | ProjFlag_AdjustSpeed,
         ATK_INVALID,
         S_INVALID,

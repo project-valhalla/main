@@ -112,10 +112,10 @@ static const struct attackinfo
     { GUN_INVALID, ACT_MELEE,	     Projectile_Melee,  650,  60,  0,   0,    0,   40,  1,   50,  0,  270, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,     S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist},
     { GUN_MELEE,   ACT_MELEE,      Projectile_Invalid,  420,  25,  0,   0,    0,   16,  1,   50,  0,    0, 0,    0,    0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,     S_MELEE,         S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist      },
     // shotgun
-    { GUN_SCATTER, ACT_PRIMARY,     Projectile_Bullet,  880,   5,  5, 300, 2000, 1024, 20,   60,  0,  500, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
+    { GUN_SCATTER, ACT_PRIMARY,     Projectile_Tracer,  880,   5,  5, 300, 2000, 1024, 20,   60,  0,  500, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
     { GUN_SCATTER, ACT_SECONDARY,  Projectile_Invalid, 1000,   6,  5,  70,    0, 1024, 10,   60,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_SG_A,          S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
     // smg
-    { GUN_SMG,     ACT_PRIMARY,     Projectile_Bullet,  110,  16, 14,  40, 2000, 1024,  1,   60,  0,  500, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
+    { GUN_SMG,     ACT_PRIMARY,     Projectile_Tracer,  110,  16, 14,  40, 2000, 1024,  1,   60,  0,  500, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
     { GUN_SMG,     ACT_SECONDARY,  Projectile_Invalid,  125,  20, 15,  20,    0, 1024,  1,   80,  0,    0, 1,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_SMG,           S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
     // pulse
     { GUN_PULSE,   ACT_PRIMARY,      Projectile_Pulse,  180,  22,  0,   0, 1000, 2048,  1,   80, 18, 3000, 2,    0,    0, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_PULSE1,        S_PULSE_EXPLODE,   S_HIT_WEAPON,  Death_Explosion },
@@ -124,13 +124,13 @@ static const struct attackinfo
     { GUN_ROCKET,  ACT_PRIMARY,     Projectile_Rocket,  920, 110,  0,   0,  300, 2048,  1,  120, 33, 5000, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_ROCKET1,       S_ROCKET_EXPLODE,  S_HIT_WEAPON,  Death_Explosion },
     { GUN_ROCKET,  ACT_IDLE,       Projectile_Invalid,    0, 120,  0,   0,    0, 2048,  1,  140, 38,    0, 0,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_INVALID,       S_ROCKET_EXPLODE,  S_HIT_WEAPON,  Death_Explosion },
     // railgun
-    { GUN_RAIL,    ACT_PRIMARY,     Projectile_Bullet, 1200,  70, 30,   0, 2000, 4096,  1,  100,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN, Death_Default   },
-    { GUN_RAIL,    ACT_SECONDARY,   Projectile_Bullet, 1500, 100, 10,   0, 2000, 4096,  1,  100,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN, Death_Default   },
+    { GUN_RAIL,    ACT_PRIMARY,     Projectile_Tracer, 1200,  70, 30,   0, 2000, 4096,  1,  100,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN, Death_Default   },
+    { GUN_RAIL,    ACT_SECONDARY,   Projectile_Tracer, 1500, 100, 10,   0, 2000, 4096,  1,  100,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_RAIL_A,        S_IMPACT_RAILGUN,  S_HIT_RAILGUN, Death_Default   },
     // grenade launcher
     { GUN_INVALID, ACT_THROW,      Projectile_Grenade, 1000,  90,  0,   0,  200, 2048,  1,  140, 45, 1500, 0, 0.6f, 0.8f, false, ANIM_THROW, ANIM_VWEP_THROW, ANIM_GUN_THROW,     S_THROW,         S_GRENADE_EXPLODE, S_HIT_WEAPON,  Death_Explosion },
     { GUN_INVALID, ACT_IDLE,       Projectile_Invalid,    0, 100,  0,   0,    0, 2048,  1,  160, 50,    0, 0,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_INVALID,       S_GRENADE_EXPLODE, S_HIT_WEAPON,  Death_Explosion },
     // pistol
-    { GUN_PISTOL,  ACT_PRIMARY,     Projectile_Bullet,  300,  18, 17,  10, 1800, 1024,  1,  180,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_PISTOL1,       S_IMPACT_PULSE,    S_HIT_WEAPON,  Death_Default   },
+    { GUN_PISTOL,  ACT_PRIMARY,     Projectile_Tracer,  300,  18, 17,  10, 1800, 1024,  1,  180,  0,  500, 1,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_PISTOL1,       S_IMPACT_PULSE,    S_HIT_WEAPON,  Death_Default   },
     { GUN_PISTOL,  ACT_SECONDARY,   Projectile_Plasma,  600,  15,  0,   0,  400, 2048,  1,  500,  8, 2000, 2,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_PISTOL2,       S_IMPACT_PULSE,    S_HIT_WEAPON,  Death_Explosion },
     { GUN_PISTOL,  ACT_IDLE,       Projectile_Invalid,    0,  80,  0,   0,    0, 2048,  1, -200, 50,    0, 0,    0,    0, false, ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_INVALID,       S_IMPACT_PISTOL,   S_HIT_RAILGUN, Death_Disrupt   },
     // instagib

@@ -151,9 +151,38 @@ namespace game
         pushAttacker(player, direction, amount);
     }
 
-    // Apply recoil effects to the player when firing a weapon.
-    void addRecoil(gameent* player, const vec& direction, const int attack)
+    // Update the spread based on "burst shots", called on recoil addition.
+    static void addBurstShots(gameent* player, const int attack)
     {
+        if (attacks[attack].spread == 0)
+        {
+            return;
+        }
+        const int recoilTime = attacks[attack].attackdelay + GUN_RECOIL_DELAY;
+        if (lastmillis - player->recoil.lastShot > recoilTime)
+        {
+            // Reset shot count if enough time has passed since the last shot.
+            player->recoil.shots = 0;
+        }
+        else
+        {
+            // Increment shot count up to the maximum.
+            player->recoil.shots = min(player->recoil.shots + 1, player->recoil.maxShots);
+        }
+        player->recoil.lastShot = lastmillis;
+    }
+
+    // Apply recoil effects to the player when firing a weapon.
+    static void addRecoil(gameent* player, const vec& direction, const int attack)
+    {
+        if (player == nullptr || !validatk(attack))
+        {
+            return;
+        }
+
+        // First off, update weapon "burst shots".
+        addBurstShots(player, attack);
+
         const int recoilAmount = recoils[attack].recoil;
         const float powerupMultiplier = player->haspowerup(PU_DAMAGE) ? 2.0f : 1.0f;
         if (recoilAmount)
@@ -195,7 +224,7 @@ namespace game
         if (shakeAmount)
         {
             const float amount = shakeAmount * powerupMultiplier;
-            camera::camera.addevent(player, camera::CameraEvent_Shake, shakeAmount);
+            camera::camera.addevent(player, camera::CameraEvent_Shake, amount);
         }
         if (pushAmount)
         {
@@ -237,27 +266,6 @@ namespace game
 
         // Clamp pitch/yaw to valid ranges. 
         camera::fixrange();
-    }
-
-    // Update the spread based on burst shots.
-    void addSpread(gameent* d, const int attack)
-    {
-        if (!attacks[attack].spread)
-        {
-            return;
-        }
-        const int recoilTime = attacks[attack].attackdelay + GUN_RECOIL_DELAY;
-        if (lastmillis - d->recoil.lastShot > recoilTime)
-        {
-            // Reset shot count if enough time has passed since the last shot.
-            d->recoil.shots = 0;
-        }
-        else
-        {
-            // Increment shot count up to the maximum.
-            d->recoil.shots = min(d->recoil.shots + 1, d->recoil.maxShots);
-        }
-        d->recoil.lastShot = lastmillis;
     }
 
     static void doAttack(gameent* d, const vec& target, const int attack, const int weapon)
@@ -303,7 +311,6 @@ namespace game
                 hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf()
             );
         }
-        addSpread(d, attack);
     }
 
     void applyDelay(gameent* d, const int attack)

@@ -186,12 +186,12 @@ namespace game
             ProjEnt* proj = (ProjEnt*)d;
             proj->bounces++;
             const int maxBounces = projs[proj->projectile].maxbounces;
-            if ((maxBounces && proj->bounces > maxBounces) || lastmillis - proj->lastBounce < 100)
+            if ((maxBounces && proj->bounces > maxBounces) || lastmillis - proj->lastImpact < 100)
             {
                 return;
             }
             applybounceeffects(proj, surface);
-            proj->lastBounce = lastmillis;
+            proj->lastImpact = lastmillis;
         }
 
         void collidewithentity(physent* bouncer, physent* collideEntity)
@@ -802,8 +802,8 @@ namespace game
             loopv(Projectiles)
             {
                 ProjEnt& proj = *Projectiles[i];
-                const vec pos = updatePosition(proj, time);
-                vec old(proj.o);
+                const vec oldPosition(proj.o);
+                const vec position = updatePosition(proj, time);
                 if (proj.flags & ProjFlag_Linear || proj.flags & ProjFlag_Track)
                 {
                     hits.setsize(0);
@@ -816,7 +816,7 @@ namespace game
                             {
                                 continue;
                             }
-                            if (hastarget(proj, o, pos))
+                            if (hastarget(proj, o, position))
                             {
                                 proj.kill();
                                 break;
@@ -847,6 +847,27 @@ namespace game
                                 proj.kill();
                             }
                         }
+                        if (proj.flags & ProjFlag_Track)
+                        {
+                            const vec direction = vec(position).sub(oldPosition).normalize();
+                            const float range = proj.vel.magnitude() * (time / 1000.0f);
+                            vec hitPosition = vec(position);
+                            const float ray = raycubepos(oldPosition, direction, hitPosition, range, RAY_CLIPMAT | RAY_ALPHAPOLY);
+                            if (ray < range)
+                            {
+                                // Geometry collision.
+                                if (proj.lastImpact == 0)
+                                {
+                                    // One impact per lifetime.
+                                    applyImpactEffects(proj.attack, proj.owner, proj.o, proj.o);
+                                    proj.lastImpact = lastmillis;
+                                }
+                                if (proj.flags & ProjFlag_Impact)
+                                {
+                                    proj.kill();
+                                }
+                            }
+                        }
                         if (isattackprojectile(proj.projectile))
                         {
                             if (proj.flags & ProjFlag_Bounce)
@@ -860,12 +881,12 @@ namespace game
                             }
                         }
                     }
-                    addeffects(proj, pos);
+                    addeffects(proj, position);
                 }
                 checkloopsound(&proj);
                 if (proj.state == CS_DEAD)
                 {
-                    destroy(proj, pos);
+                    destroy(proj, position);
                 }
                 else
                 {
@@ -873,7 +894,7 @@ namespace game
                     {
                         if (proj.vel.magnitude() >= 25.0f)
                         {
-                            const float displacement = old.sub(proj.o).magnitude() / (4.0f * RAD);
+                            const float displacement = vec(oldPosition).sub(proj.o).magnitude() / (4.0f * RAD);
                             proj.roll += displacement;
                             float pitch = 0;
                             vectoyawpitch(proj.vel, proj.yaw, pitch);
@@ -897,7 +918,7 @@ namespace game
                     }
                     else
                     {
-                        proj.o = pos;
+                        proj.o = position;
                     }
                 }
             }

@@ -1988,7 +1988,7 @@ namespace game
                 }
                 updateShotEvent(player, attack);
                 const bool isHit = hit != 0;
-                applyShotEffects(attack, from, to, player, id, isHit, false);
+                applyShotEffects(attack, player, from, to, id, isHit, false);
                 break;
             }
 

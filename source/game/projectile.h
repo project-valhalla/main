@@ -208,15 +208,15 @@ inline bool isejectedprojectile(const int projectile)
 struct ProjEnt : dynent
 {
     int id, attack, projectile, flags, lifetime, health, weight, trackType;
-    int variant, bounces, offsetMillis;
-    int millis, lastBounce, bounceSound, loopChannel, loopSound, hitFlags;
+    int variant, bounces, offsetMillis, hitFlags;
+    int millis, lastImpact, bounceSound, loopChannel, loopSound;
     float lastYaw, gravity, elasticity, offsetHeight, dist;
     bool isLocal;
     string model;
     vec offset, lastPosition, dv, from, to;
     gameent* owner;
 
-    ProjEnt() : variant(0), bounces(0), millis(0), lastBounce(0), bounceSound(-1), loopChannel(-1), loopSound(-1), hitFlags(0)
+    ProjEnt() : variant(0), bounces(0), hitFlags(0), millis(0), lastImpact(0), bounceSound(-1), loopChannel(-1), loopSound(-1)
     {
         state = CS_ALIVE;
         type = ENT_PROJECTILE;

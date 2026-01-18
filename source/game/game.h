@@ -1151,7 +1151,8 @@ namespace game
     extern void shoot(gameent *d, const vec &targ);
     extern void updateRecoil(gameent* d, const int curtime);
     extern void updateThrow(gameent* player);
-    extern void applyShotEffects(const int attack, vec& from, vec& to, gameent* player, const int id, const bool isHit, const bool isLocal);
+    extern void applyImpactEffects(const int attack, gameent* player, const vec& from, const vec& to, const bool isHit = false);
+    extern void applyShotEffects(const int attack, gameent* player, vec& from, vec& to, const int id, const bool isHit, const bool isLocal);
     extern void updateShotEvent(gameent* player, const int attack);
     extern void scanhit(vec& from, vec& to, gameent* d, int atk);
     extern void gibeffect(int damage, const vec &vel, gameent *d);

@@ -292,7 +292,7 @@ namespace game
             scanhit(from, to, d, attack);
         }
         const int id = lastmillis - maptime;
-        applyShotEffects(attack, from, to, d, id, false, true);
+        applyShotEffects(attack, d, from, to, id, false, true);
         if (d == self || d->ai)
         {
             addmsg
@@ -565,20 +565,24 @@ namespace game
         hits.setsize(0);
     }
 
-    void impacteffects(int atk, gameent* d, const vec& from, const vec& to, bool hit = false)
+    void applyImpactEffects(const int attack, gameent* player, const vec& from, const vec& to, const bool isHit)
     {
-        if (!validatk(atk) || (!hit && isemptycube(to)) || from.dist(to) > attacks[atk].range) return;
+        if (!validatk(attack) || (!isHit && isemptycube(to)) || from.dist(to) > attacks[attack].range) return;
         vec dir = vec(from).sub(to).safenormalize();
         int material = lookupmaterial(to);
         bool iswater = (material & MATF_VOLUME) == MAT_WATER, isglass = (material & MATF_VOLUME) == MAT_GLASS;
-        switch (atk)
+        switch (attack)
         {
+            case ATK_MELEE:
+                particle_flare(to, to, 100, PART_SPARK3, 0xFFFF66, 0.0f, 15.0f, player, TRACK_HAND_LEFT);
+                camera::camera.addevent(player, camera::CameraEvent_Shake, recoils[attack].shake);
+                break;
+
             case ATK_SCATTER1:
             case ATK_SCATTER2:
-            {
                 adddynlight(vec(to).madd(dir, 4), 6, vec(0.5f, 0.375f, 0.25f), 140, 10);
-                if (hit || iswater || isglass) break;
-                if (atk == ATK_SCATTER2)
+                if (isHit || iswater || isglass) break;
+                if (attack == ATK_SCATTER2)
                 {
                     particle_splash(PART_SPARK2, 10, 120, to, 0xFFC864, 0.25f, 250, 2, 0.001f);
                     particle_splash(PART_SMOKE, 10, 250, to, 0x555555, 0.1f, 100, 100, 10.0f);
@@ -590,25 +594,22 @@ namespace game
                 }
                 addstain(STAIN_BULLETHOLE_SMALL, to, vec(from).sub(to).normalize(), 0.50f + rndscale(1.0f), 0xFFFFFF, rnd(4));
                 break;
-            }
 
             case ATK_SMG1:
             case ATK_SMG2:
-            {
                 adddynlight(vec(to).madd(dir, 4), 15, vec(0.5f, 0.375f, 0.25f), 140, 10);
-                if (hit || iswater || isglass) break;
+                if (isHit || iswater || isglass) break;
                 particle_fireball(to, 0.5f, PART_EXPLOSION2, 120, 0xFFC864, 2.0f);
                 particle_splash(PART_EXPLODE4, 50, 40, to, 0xFFC864, 1.0f, 150, 2, 0.1f);
-                particle_splash(PART_SPARK2, 30, atk == ATK_SMG2 ? 100 : 250, to, 0xFFC864, 0.05f + rndscale(0.2f), 250, 2, 0.001f);
+                particle_splash(PART_SPARK2, 30, attack == ATK_SMG2 ? 100 : 250, to, 0xFFC864, 0.05f + rndscale(0.2f), 250, 2, 0.001f);
                 particle_splash(PART_SMOKE, 30, 250, to, 0x555555, 0.2f, 80, 100, 6.0f);
                 addstain(STAIN_BULLETHOLE_SMALL, to, vec(from).sub(to).normalize(), 0.50f + rndscale(1.0f), 0xFFFFFF, rnd(4));
                 break;
-            }
-
+            
             case ATK_PULSE2:
-            {
+
                 adddynlight(vec(to).madd(dir, 4), 80, vec(1.0f, 0.50f, 1.0f), 20);
-                if (hit)
+                if (isHit)
                 {
                     particle_flare(to, to, 120, PART_ELECTRICITY, 0xEE88EE, 1.0f + rndscale(8.0f));
                     break;
@@ -617,17 +618,16 @@ namespace game
                 particle_splash(PART_SPARK2, 10, 300, to, 0xEE88EE, 0.01f + rndscale(0.10f), 350, 2);
                 particle_splash(PART_SMOKE, 20, 300, to, 0x777777, 0.1f, 100, 50, 3.5f + rndscale(4.5f));
                 addstain(STAIN_SCORCH, to, vec(from).sub(to).normalize(), 1.0f + rndscale(1.5f));
-                playsound(attacks[atk].impactsound, NULL, &to);
+                playsound(attacks[attack].impactsound, NULL, &to);
                 break;
-            }
 
             case ATK_RAIL1:
             case ATK_RAIL2:
             case ATK_INSTA:
             {
-                bool isInstagib = attacks[atk].gun == GUN_INSTA;
+                bool isInstagib = attacks[attack].gun == GUN_INSTA;
                 adddynlight(vec(to).madd(dir, 4), 60, !isInstagib ? vec(0.25f, 1.0f, 0.75f) : vec(0.5f, 0.5f, 0.5f), 180, 75, DL_EXPAND);
-                if (hit)
+                if (isHit)
                 {
                     if (isInstagib)
                     {
@@ -645,31 +645,30 @@ namespace game
             }
 
             case ATK_PISTOL1:
-            {
                 adddynlight(vec(to).madd(dir, 4), 30, vec(0.25, 1.0f, 1.0f), 200, 10, DL_SHRINK);
-                if (hit || iswater || isglass) break;
+                if (isHit || iswater || isglass) break;
                 particle_fireball(to, 2.2f, PART_EXPLOSION1, 140, 0x00FFFF, 0.1f);
                 particle_splash(PART_SPARK2, 50, 250, to, 0x00FFFF, 0.08f + rndscale(0.18f), 150, 2, 0.001f);
                 addstain(STAIN_SCORCH, to, vec(from).sub(to).normalize(), 0.80f + rndscale(1.0f));
                 addstain(STAIN_GLOW1, to, dir, 1.50f, 0x00FFFF);
                 break;
-            }
 
-            default: break;
+            default:
+                break;
         }
 
-        if (hit || atk == ATK_PULSE2) return;
+        if (isHit || attack == ATK_PULSE2) return;
 
-        int impactsound = attacks[atk].impactsound;
+        int impactsound = attacks[attack].impactsound;
 
-        bool ismelee = attacks[atk].action == ACT_MELEE;
+        bool ismelee = attacks[attack].action == ACT_MELEE;
         if (iswater)
         {
             if (!ismelee)
             {
                 addstain(STAIN_BULLETHOLE_SMALL, to, vec(from).sub(to).normalize(), 0.80f);
             }
-            if (attacks[atk].rays <= 1) // Temporary measure: avoid sound spam.
+            if (attacks[attack].rays <= 1) // Temporary measure: avoid sound spam.
             {
                 impactsound = S_IMPACT_WATER;
             }
@@ -678,14 +677,14 @@ namespace game
         {
             particle_splash(PART_GLASS, 20, 200, to, 0xFFFFFF, 0.10 + rndscale(0.20f));
             addstain(STAIN_GLASS_HOLE, to, vec(from).sub(to).normalize(), ismelee ? 2.0f : 1.0f + rndscale(2.0f), 0xFFFFFF, rnd(4));
-            if (attacks[atk].rays <= 1) // Temporary measure: avoid sound spam.
+            if (attacks[attack].rays <= 1) // Temporary measure: avoid sound spam.
             {
                 impactsound = S_IMPACT_GLASS;
             }
         }
         else if (ismelee)
         {
-            addstain(STAIN_PUNCH_HOLE, to, vec(from).sub(to).normalize(), 2.0f);
+            
         }
 
         if (validsound(impactsound))
@@ -697,7 +696,7 @@ namespace game
     VARP(muzzleflash, 0, 1, 1);
 
     // Create visual effects from a shot.
-    void applyShotEffects(const int attack, vec& from, vec& to, gameent* player, const int id, const bool isHit, const bool isLocal)
+    void applyShotEffects(const int attack, gameent* player, vec& from, vec& to, const int id, const bool isHit, const bool isLocal)
     {
         const int weapon = attacks[attack].gun;
         const int previousAction = validgun(weapon) ? player->lastAction[weapon] : 0;
@@ -742,7 +741,7 @@ namespace game
                     loopi(attacks[attack].rays)
                     {
                         offsetray(from, to, attacks[attack].spread, attacks[attack].range, rays[i], player);
-                        impacteffects(attack, player, from, rays[i], isHit);
+                        applyImpactEffects(attack, player, from, rays[i], isHit);
                     }
                 }
                 break;
@@ -766,7 +765,7 @@ namespace game
                 }
                 if (!isLocal)
                 {
-                    impacteffects(attack, player, from, to, isHit);
+                    applyImpactEffects(attack, player, from, to, isHit);
                 }
                 break;
 
@@ -791,7 +790,7 @@ namespace game
                 particle_fireball(to, 1.0f, PART_EXPLOSION2, 100, 0xDD88DD, 3.0f);
                 if (!isLocal)
                 {
-                    impacteffects(attack, player, from, to, isHit);
+                    applyImpactEffects(attack, player, from, to, isHit);
                 }
                 break;
 
@@ -818,7 +817,7 @@ namespace game
                 particle_flare(hudgunorigin(attack, from, to, player), to, 600, PART_TRAIL, 0x55DD55, 0.50f);
                 if (!isLocal)
                 {
-                    impacteffects(attack, player, from, to, isHit);
+                    applyImpactEffects(attack, player, from, to, isHit);
                 }
                 break;
 
@@ -843,7 +842,7 @@ namespace game
                         particle_flare(hudgunorigin(attack, from, to, player), to, 80, PART_TRAIL, 0x00FFFF, 2.0f);
                         if (!isLocal)
                         {
-                            impacteffects(attack, player, from, to, isHit);
+                            applyImpactEffects(attack, player, from, to, isHit);
                         }
                     }
                     else
@@ -1107,7 +1106,7 @@ namespace game
                     shorten(from, rays[i], dist);
                     isHit = true;
                 }
-                impacteffects(atk, d, from, rays[i], isHit);
+                applyImpactEffects(atk, d, from, rays[i], isHit);
             }
             loopi(attackRays)
             {
@@ -1135,7 +1134,7 @@ namespace game
                 hit(o, d, to, vec(to).sub(from).safenormalize(), attacks[atk].damage, atk, from.dist(to), 1, hitFlags);
                 isHit = true;
             }
-            impacteffects(atk, d, from, to, isHit);
+            applyImpactEffects(atk, d, from, to, isHit);
         }
     }
 

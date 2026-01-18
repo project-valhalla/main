@@ -22,27 +22,27 @@ namespace game
     vec rays[GUN_MAXRAYS];
 
     // Calculate the current recoil spread based on player state and weapon.
-    const int getSpread(gameent* d, const int attack)
+    static const int getSpread(gameent* player, const int attack)
     {
-        const int shots = d->recoil.shots;
+        const int shots = player->recoil.shots;
         int spread = attacks[attack].spread;
         if (spread)
         {
             if (shots)
             {
-                const float progress = float(shots) / d->recoil.maxShots;
+                const float progress = static_cast<float>(shots) / player->recoil.maxShots;
                 const float newSpread = spread + int(recoils[attack].maxSpread * progress);
                 spread = newSpread;
             }
-            if (!d->onfloor())
+            if (!player->onfloor())
             {
                 // Accuracy decreases while in air.
-                spread = int(spread * 1.25f);
+                spread = static_cast<int>(spread * 1.25f);
             }
-            else if (d->crouching && d->crouched())
+            else if (player->crouching && player->crouched() && !player->sliding(lastmillis))
             {
                 // Accuracy increases while crouched.
-                spread = int(spread * 0.75f);
+                spread = static_cast<int>(spread * 0.75f);
             }
         }
         return spread;

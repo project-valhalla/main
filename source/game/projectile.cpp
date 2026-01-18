@@ -31,6 +31,7 @@ namespace game
     {
         vector<ProjEnt*> Projectiles, AttackProjectiles;
 
+        // Get projectile by id.
         ProjEnt* get(const int id, const gameent* owner)
         {
             if (Projectiles.length() > 0)
@@ -46,6 +47,22 @@ namespace game
                 }
             }
             return nullptr;
+        }
+
+        // Filter projectiles by owner.
+        static vector<ProjEnt*> filterOwned(const gameent* owner)
+        {
+            vector<ProjEnt*> owned;
+            for (int i = 0; i < Projectiles.length(); i++)
+            {
+                ProjEnt& proj = *Projectiles[i];
+                if (proj.owner != owner)
+                {
+                    continue;
+                }
+                owned.add(&proj);
+            }
+            return owned;
         }
 
         static void add(ProjEnt& proj)
@@ -421,6 +438,45 @@ namespace game
             applyradialeffect(position, velocity, owner, nullptr, attack, 0);
         }
 
+        /*
+            Destroy tracking projectiles owned by a player on death,
+            as we don't want to track body parts of a dead player.
+        */
+        static void removeTrackingProjectiles(vector<ProjEnt*>& owned)
+        {
+            if (owned.empty())
+            {
+                return;
+            }
+            for (int i = 0; i < owned.length(); i++)
+            {
+                ProjEnt& proj = *owned[i];
+                if (proj.owner != self || proj.state != CS_ALIVE)
+                {
+                    continue;
+                }
+                if (proj.flags & ProjFlag_Track)
+                {
+                    // Kill (not remove or clear), as we need to remove the server version of this projectile too.
+                    proj.kill();
+                }
+            }
+        }
+
+        // Check projectiles owned by a player.
+        void checkOwned(const gameent* owner)
+        {
+            if (owner == nullptr)
+            {
+                return;
+            }
+            vector<ProjEnt*> owned = filterOwned(owner);
+            if (owner->state == CS_DEAD)
+            {
+                removeTrackingProjectiles(owned);
+            }
+        }
+
         void destroy(ProjEnt& proj, const vec& position, const bool isLocal, const int attack)
         {
             // Explode projectile.
@@ -451,35 +507,42 @@ namespace game
             remove(proj);
         }
 
-        void detonate(gameent* d, const int gun)
+        void detonate(gameent* owner, const int gun)
         {
-            loopvrev(Projectiles)
+            vector<ProjEnt*> owned = filterOwned(owner);
+
+            // Reverse loop.
+            for (int i = owned.length(); i-- > 0;)
             {
-                ProjEnt& proj = *Projectiles[i];
-                if (proj.owner != self || !proj.isLocal || !validatk(proj.attack))
+                ProjEnt& proj = *owned[i];
+                if (!proj.isLocal || proj.state != CS_ALIVE || !validatk(proj.attack))
                 {
                     continue;
                 }
-                const attackinfo attack = attacks[proj.attack];
-                if (proj.flags & ProjFlag_Explosive && attack.gun == gun)
+                if (proj.flags & ProjFlag_Explosive)
                 {
-                    proj.kill();
-                    if (d == self || d->ai)
+                    const attackinfo attack = attacks[proj.attack];
+                    if (attack.gun != gun)
                     {
-                        d->delay[gun] = attack.attackdelay;
-                        d->lastAction[gun] = lastmillis;
-                        d->lastattack = proj.attack;
-                        sendsound(guns[gun].abilitySound, d);
-                        d->lastAbility[d->Ability::lastUse] = lastmillis;
+                        continue;
+                    }
+                    proj.kill();
+                    if (owner == self || owner->ai)
+                    {
+                        owner->delay[gun] = attack.attackdelay;
+                        owner->lastAction[gun] = lastmillis;
+                        owner->lastattack = proj.attack;
+                        sendsound(guns[gun].abilitySound, owner);
+                        owner->lastAbility[owner->Ability::lastUse] = lastmillis;
                         return;
                     }
                 }
             }
 
             // We didn't detonate anything.
-            sendsound(guns[gun].abilityFailSound, d);
-            d->delay[d->gunselect] = GUN_EMPTY_DELAY;
-            d->lastAbility[d->Ability::lastAttempt] = lastmillis;
+            sendsound(guns[gun].abilityFailSound, owner);
+            owner->delay[owner->gunselect] = GUN_EMPTY_DELAY;
+            owner->lastAbility[owner->Ability::lastAttempt] = lastmillis;
         }
 
         void damage(ProjEnt* proj, gameent* actor, const int attack)
@@ -952,15 +1015,19 @@ namespace game
         {
             if (owner != nullptr)
             {
-                loopv(Projectiles)
+                vector<ProjEnt*> owned = filterOwned(owner);
+                if (owned.empty())
                 {
-                    ProjEnt& proj = *Projectiles[i];
+                    return;
+                }
+                for (int i = 0; i < owned.length(); i++)
+                {
+                    ProjEnt& proj = *owned[i];
                     if (proj.owner != owner)
                     {
                         continue;
                     }
                     remove(proj);
-                    Projectiles.remove(i--);
                 }
             }
             else

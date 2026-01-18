@@ -1044,6 +1044,7 @@ namespace game
         d->deathstate = getdeathstate(d, atk, flags);
         setdeathstate(d);
         ai::kill(d, actor);
+        projectiles::checkOwned(d);
         // Write obituary (console messages, kill feed) and manage announcements.
         writeobituary(d, actor, atk, flags);
         announcer::parseannouncements(d, actor, flags);

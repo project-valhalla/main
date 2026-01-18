@@ -2437,6 +2437,7 @@ namespace game
                     {
                         camera::restore();
                     }
+                    projectiles::checkOwned(d);
                 }
                 else if(s->state == CS_SPECTATOR)
                 {

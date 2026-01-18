@@ -1091,8 +1091,9 @@ namespace game
         extern void spawnbouncer(const vec& from, gameent* d, const int type);
         extern void bounce(physent* d, const vec& surface);
         extern void collidewithentity(physent* bouncer, physent* collideEntity);
+        extern void checkOwned(const gameent* owned);
         extern void destroy(ProjEnt& proj, const vec& position, const bool isLocal = true, const int attack = ATK_INVALID);
-        extern void detonate(gameent* d, const int gun);
+        extern void detonate(gameent* owner, const int gun);
         extern void triggerExplosion(gameent* owner, const int attack, const vec& position, const vec& velocity);
         extern void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays);
         extern void damage(ProjEnt* proj, gameent* actor, const int attack);

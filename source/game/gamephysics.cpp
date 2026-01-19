@@ -370,44 +370,66 @@ namespace physics
         return found;
     }
 
-    const int CROUCH_TIME = 180;
+    FVAR(crouchsmooth, 0, 0.1f, 1);
+    FVAR(crouchsmoothfall, 0, 0.5f, 1);
 
-    void crouchplayer(gameent* d, int moveres, bool local)
+    void crouch(gameent* player, const int steps)
     {
-        if (!curtime) return;
-        float minheight = d->maxheight * CROUCH_HEIGHT, speed = (d->maxheight - minheight) * curtime / float(CROUCH_TIME);
-        if (d->crouching < 0 || d->sliding(lastmillis))
+        if (curtime == 0)
         {
-            if (d->eyeheight > minheight)
+            return;
+        }
+
+        // Different smoothing for falling players, so we know we're crouch-jumping.
+        const float smoothing = player->physstate == PHYS_FALL ? crouchsmoothfall : crouchsmooth;
+
+        if (player->crouching < 0) // Crouching in.
+        {
+            const float minimumHeight = player->maxheight * CROUCH_HEIGHT;
+            if (player->eyeheight > minimumHeight)
             {
-                float diff = min(d->eyeheight - minheight, speed);
-                d->eyeheight -= diff;
-                if (d->physstate >= PHYS_FALL)
+                const float smoothDifference = (player->eyeheight - minimumHeight) * smoothing;
+                player->eyeheight -= smoothDifference;
+
+                // Update our position while airborne only if we are crouching in (crouch-jumps).
+                if (player->physstate >= PHYS_FALL)
                 {
-                    d->o.z -= diff;
-                    d->newpos.z -= diff;
+                    player->o.z -= smoothDifference;
+                    player->newpos.z -= smoothDifference;
                 }
             }
         }
-        else if (d->eyeheight < d->maxheight)
+        else if (player->eyeheight < player->maxheight) // Standing up.
         {
-            float diff = min(d->maxheight - d->eyeheight, speed), step = diff / moveres;
-            d->eyeheight += diff;
-            if (d->physstate >= PHYS_FALL)
+            const float smoothDifference = (player->maxheight - player->eyeheight) * smoothing;
+            player->eyeheight += smoothDifference;
+
+            /*
+                Avoid jerks while airborne (we are already moving vertically),
+                We are updating our vertical position once we land.
+            */
+            if (player->physstate > PHYS_FALL)
             {
-                d->o.z += diff;
-                d->newpos.z += diff;
+                player->o.z += smoothDifference;
+                player->newpos.z += smoothDifference;
             }
-            d->crouching = 0;
-            loopi(moveres)
+
+            player->crouching = 0;
+            const float smoothSteps = smoothDifference / steps;
+            loopi(steps)
             {
-                if (!collide(d, vec(0, 0, d->physstate < PHYS_FALL ? -1 : 1), 0, true)) break;
-                d->crouching = 1;
-                d->eyeheight -= step;
-                if (d->physstate >= PHYS_FALL)
+                const bool isColliding = collide(player, vec(0, 0, player->physstate <= PHYS_FALL ? -1 : 1), 0, true);
+                if (!isColliding)
                 {
-                    d->o.z -= step;
-                    d->newpos.z -= step;
+                    // We are under an obstacle, can't stand up.
+                    break;
+                }
+                player->crouching = 1;
+                player->eyeheight -= smoothSteps;
+                if (player->physstate > PHYS_FALL)
+                {
+                    player->o.z -= smoothSteps;
+                    player->newpos.z -= smoothSteps;
                 }
             }
         }

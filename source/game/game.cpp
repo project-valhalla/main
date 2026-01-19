@@ -275,7 +275,7 @@ namespace game
             }
             if (d->state == CS_ALIVE || d->state == CS_EDITING)
             {
-                physics::crouchplayer(d, 10, false);
+                physics::crouch(d, 10);
                 if (smoothmove && d->smoothmillis > 0) predictplayer(d, true);
                 else physics::moveplayer(d, 1, false);
             }
@@ -356,7 +356,7 @@ namespace game
             else if (!intermission)
             {
                 if(self->ragdoll) cleanragdoll(self);
-                physics::crouchplayer(self, 10, true);
+                physics::crouch(self, 10);
                 physics::moveplayer(self, 10, true);
                 entities::checkItems(self);
                 if(cmode) cmode->checkitems(self);

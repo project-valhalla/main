@@ -943,7 +943,7 @@ namespace entities
 namespace physics
 {
     extern void moveplayer(gameent* pl, int moveres, bool local);
-    extern void crouchplayer(gameent* pl, int moveres, bool local);
+    extern void crouch(gameent* player, const int steps);
     extern void physicsframe();
     extern void updatephysstate(gameent* d);
     extern void addroll(gameent* d, float amount);

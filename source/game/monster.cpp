@@ -333,7 +333,7 @@ namespace game
                 stacked = NULL;
             }
             physics::moveplayer(this, 1, true); // use physics to move monster
-            physics::crouchplayer(this, 1, true);
+            physics::crouch(this, 1);
         }
     }
 

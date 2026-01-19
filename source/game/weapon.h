@@ -423,7 +423,7 @@ static const struct RecoilInfo
         100,
         8,
         5.5f,
-        0.090f,
+        0.09f,
         {
             { 1.25f,  0.10f },
             { 1.40f,  0.18f },
@@ -439,7 +439,7 @@ static const struct RecoilInfo
         30,
         3,
         80,
-        5,
+        7,
         4.5f,
         0.05f,
         {

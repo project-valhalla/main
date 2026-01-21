@@ -251,7 +251,7 @@ namespace game
         }
 
         // Conditions to confirm a valid target.
-        static bool validateTarget(dynent* target, ProjEnt& proj, const vec& position)
+        static bool isValidTarget(dynent* target, ProjEnt& proj, const vec& position)
         {
             if (target == nullptr || target->state != CS_ALIVE)
             {
@@ -299,7 +299,7 @@ namespace game
                     continue;
                 }
                 const bool isRejected = target->o.reject(proj.o, target->radius + proj.radius);
-                if (isRejected || !validateTarget(target, proj, position))
+                if (isRejected || !isValidTarget(target, proj, position))
                 {
                     continue;
                 }

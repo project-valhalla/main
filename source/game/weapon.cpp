@@ -1352,7 +1352,7 @@ namespace game
             hit.dist = int(dist * DMF);
             hit.rays = rays;
             hit.flags = flags;
-            hit.id = 0;
+            hit.id = -1;
             if (target == actor)
             {
                 hit.dir = ivec(0, 0, 0);
@@ -1364,24 +1364,25 @@ namespace game
         }
     }
 
-    void hit(dynent* target, gameent* actor, const vec& hitPosition, const vec& velocity, int damage, const int attack, const float dist, const int rays, const int flags)
+    void hit(dynent* target, gameent* actor, const vec& hitPosition, const vec& velocity, int damage, const int attack, const float dist, const int rays, const int flags, const int id, const bool shouldSend)
     {
-        if (!target)
+        gameent* player = (gameent*)target;
+        if (player == nullptr || actor == nullptr)
         {
             return;
         }
-        gameent* f = (gameent*)target;
-        damage = calculatedamage(damage, f, actor, attack, flags);
+        damage = calculatedamage(damage, player, actor, attack, flags);
         switch (target->type)
         {
             case ENT_PLAYER:
             {
-                registerhit(f, actor, hitPosition, velocity, damage, attack, dist, rays, flags);
+                registerhit(player, actor, hitPosition, velocity, damage, attack, dist, rays, flags);
                 break;
             }
             case ENT_AI:
             {
-                hitmonster(damage, (monster*)f, actor, attack, velocity, flags);
+                monster* npc = (monster*)player;
+                hitmonster(damage, npc, actor, attack, velocity, flags);
                 break;
             }
             case ENT_PROJECTILE:
@@ -1394,11 +1395,15 @@ namespace game
                 break;
             }
         }
-        // Apply hit effects like blood, shakes, etc.
-        if (target)
+
+        // Send hit message to server after registering it, if requested.
+        if (shouldSend)
         {
-            applyhiteffects(damage, f, actor, hitPosition, attack, flags, true);
+            addmsg(N_HIT, "rci2iv", actor, id, attack, hits.length(), hits.length() * sizeof(hitmsg) / sizeof(int), hits.getbuf());
         }
+
+        // Apply hit effects like blood, shakes, etc.
+        applyhiteffects(damage, player, actor, hitPosition, attack, flags, true);
     }
 
     void gunselect(int gun, gameent* d)

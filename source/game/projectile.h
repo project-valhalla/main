@@ -40,7 +40,8 @@ enum
     ProjFlag_Eject       = 1 << 8,  // Can be ejected as a spent casing by weapons.
     ProjFlag_Loyal       = 1 << 9,  // Only responds to the weapon that fired it.
     ProjFlag_Invincible  = 1 << 10, // Cannot be destroyed.
-    ProjFlag_AdjustSpeed = 1 << 11  // Adjusts speed based on distance.
+    ProjFlag_AdjustSpeed = 1 << 11, // Adjusts speed based on distance.
+    ProjFlag_MultiHit	 = 1 << 12  // Hits multiple targets directly during lifetime.
 };
 
 static const struct projectileinfo
@@ -106,7 +107,7 @@ projs[Projectile_Max] =
     },
     {
         Projectile_Melee,
-        ProjFlag_Weapon | ProjFlag_Track | ProjFlag_Invincible,
+        ProjFlag_Weapon | ProjFlag_Track | ProjFlag_MultiHit | ProjFlag_Invincible,
         ATK_INVALID,
         S_INVALID,
         S_INVALID,
@@ -216,6 +217,8 @@ struct ProjEnt : dynent
     vec offset, lastPosition, dv, from, to;
     gameent* owner;
 
+    vector<dynent*> targets;
+
     ProjEnt() : variant(0), bounces(0), hitFlags(0), millis(0), lastImpact(0), bounceSound(-1), loopChannel(-1), loopSound(-1)
     {
         state = CS_ALIVE;
@@ -225,9 +228,11 @@ struct ProjEnt : dynent
         model[0] = 0;
         offset = lastPosition = dv = from = to = vec(0, 0, 0);
         owner = nullptr;
+        targets.setsize(0);
     }
     ~ProjEnt()
     {
+        targets.shrink(0);
         if (loopChannel >= 0)
         {
             stopsound(loopSound, loopChannel);
@@ -331,6 +336,21 @@ struct ProjEnt : dynent
             hitFlags |= Hit_Projectile;
         }
         state = CS_DEAD;
+    }
+
+    /*
+        Check if target has been already hit by projectile (duplicate direct hits).
+        If the target hasn't already been hit by this projectile, keep track.
+        The target entity can be player, NPC and projectile actors.
+    */
+    bool registerTarget(dynent* target)
+    {
+        if (targets.find(target) < 0)
+        {
+            targets.add(target);
+            return true;
+        }
+        return false;
     }
 
     vec offsetPosition()

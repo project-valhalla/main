@@ -202,27 +202,34 @@ namespace game
              */
         }
 
-        static float calculateDistance(dynent* o, vec& dir, const vec& v, const vec& velocity, const int flags)
+        static float calculateDistance(dynent* target, vec& direction, const vec& position, const vec& velocity, const int flags)
         {
-            vec middle = o->o;
-            middle.z += (o->aboveeye - o->eyeheight) / 2;
+            vec middle = target->o;
+            middle.z += (target->aboveeye - target->eyeheight) / 2;
             if (flags & ProjFlag_Linear || flags & ProjFlag_Track)
             {
-                dir = vec(middle).sub(v).add(vec(velocity).mul(5)).safenormalize();
-                const float low = min(o->o.z - o->eyeheight + o->radius, middle.z);
-                const float high = max(o->o.z + o->aboveeye - o->radius, middle.z);
-                vec closest(o->o.x, o->o.y, clamp(v.z, low, high));
+                direction = vec(middle).sub(position).add(vec(velocity).mul(5)).safenormalize();
+                const float low = min(target->o.z - target->eyeheight + target->radius, middle.z);
+                const float high = max(target->o.z + target->aboveeye - target->radius, middle.z);
+                const vec closest(target->o.x, target->o.y, clamp(position.z, low, high));
 
                 // Return.
-                return max(closest.dist(v) - o->radius, 0.0f);
+                return max(closest.dist(position) - target->radius, 0.0f);
             }
-            float distance = middle.dist(v, dir);
-            dir.div(distance);
+            float distance = middle.dist(position, direction);
+            direction.div(distance);
             if (distance < 0)
             {
                 distance = 0;
             }
             return distance;
+        }
+
+        static vec calculateDirection(dynent* target, const vec& position, const vec& velocity, const int flags)
+        {
+            vec direction;
+            calculateDistance(target, direction, position, velocity, flags);
+            return direction;
         }
 
         void stain(vec dir, const vec& pos, const int attack)
@@ -243,20 +250,70 @@ namespace game
             }
         }
 
-        bool hastarget(ProjEnt& proj, dynent* o, const vec& v)
+        // Conditions to confirm a valid target.
+        static bool validateTarget(dynent* target, ProjEnt& proj, const vec& position)
         {
-            if (betweenrounds || o->state != CS_ALIVE)
+            if (target == nullptr || target->state != CS_ALIVE)
             {
                 return false;
             }
-            if (isattackprojectile(proj.projectile) && isIntersectingEntity(o, proj.o, v, proj.radius))
+            if (proj.flags & ProjFlag_MultiHit && !proj.registerTarget(target))
             {
-                vec dir;
-                calculateDistance(o, dir, v, proj.vel, proj.flags);
-                game::hit(o, proj.owner, o->o, dir, attacks[proj.attack].damage, proj.attack, 0);
-                return true;
+                return false;
             }
-            return false;
+            return isIntersectingEntity(target, proj.o, position, proj.radius);
+        }
+
+        // Check if we hit a valid target with a direct shot.
+        static void processDirectHit(dynent* target, ProjEnt& proj, const vec& position)
+        {
+            if (!isattackprojectile(proj.projectile))
+            {
+                return;
+            }
+            const vec direction = calculateDirection(target, position, proj.vel, proj.flags);
+
+            // Send hit information separately for "multi-hit" projectiles.
+            const bool shouldSend = proj.flags & ProjFlag_MultiHit;
+
+            game::hit(target, proj.owner, target->o, direction, attacks[proj.attack].damage, proj.attack, 0, 1, proj.hitFlags, proj.id, shouldSend);
+        }
+
+        static void detectTargets(ProjEnt& proj, const vec& position)
+        {
+            if (!(proj.flags & ProjFlag_Linear) && !(proj.flags & ProjFlag_Track))
+            {
+                return;
+            }
+            hits.setsize(0);
+            if (game::betweenrounds || !proj.isLocal)
+            {
+                return;
+            }
+            for (int i = 0; i < numdynents(); i++)
+            {
+                dynent* target = iterdynents(i);
+                const bool isSelf = proj.owner == target || target == &proj;
+                if (target == nullptr || isSelf)
+                {
+                    continue;
+                }
+                const bool isRejected = target->o.reject(proj.o, target->radius + proj.radius);
+                if (isRejected || !validateTarget(target, proj, position))
+                {
+                    continue;
+                }
+
+                // Projectile hit a target directly.
+                processDirectHit(target, proj, position);
+
+                // "Multi-hit" projectiles hit multiple targets, do not destroy after a hit.
+                if (!(proj.flags & ProjFlag_MultiHit))
+                {
+                    proj.kill();
+                }
+                break;
+            }
         }
 
         VARP(maxdebris, 10, 30, 1000);
@@ -392,7 +449,7 @@ namespace game
             {
                 if (o->state == CS_ALIVE)
                 {
-                    game::hit(o, at, o->o, direction, damage, attack, distance, 1, hitFlags);
+                    game::hit(o, at, o->o, direction, damage, attack, distance, 0, hitFlags);
                 }
                 else
                 {
@@ -804,26 +861,7 @@ namespace game
                 ProjEnt& proj = *Projectiles[i];
                 const vec oldPosition(proj.o);
                 const vec position = updatePosition(proj, time);
-                if (proj.flags & ProjFlag_Linear || proj.flags & ProjFlag_Track)
-                {
-                    hits.setsize(0);
-                    if (proj.isLocal && !betweenrounds)
-                    {
-                        loopj(numdynents())
-                        {
-                            dynent* o = iterdynents(j);
-                            if (proj.owner == o || o == &proj || o->o.reject(proj.o, o->radius + proj.radius))
-                            {
-                                continue;
-                            }
-                            if (hastarget(proj, o, position))
-                            {
-                                proj.kill();
-                                break;
-                            }
-                        }
-                    }
-                }
+                detectTargets(proj, position);
                 if (proj.state != CS_DEAD)
                 {
                     checklifetime(proj, time);

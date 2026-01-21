@@ -90,9 +90,10 @@ namespace server
         } mode;
 
         void process(clientinfo* client);
-        void validate(clientinfo* client, const attackinfo& context, const int flags);
+        void validate(clientinfo* client, clientinfo* attacker, const attackinfo& context, const int flags);
         void applyHit(HitInfo& hit, const attackinfo& context, clientinfo* attacker, clientinfo* target, const int flags);
 
+        bool registerTarget(const HitInfo& hit, const attackinfo& context, clientinfo* owner);
         bool isValidTarget(const HitInfo& hit, const clientinfo* target);
 
         bool isInRange(const HitInfo& hit, const attackinfo& context) const
@@ -166,7 +167,7 @@ namespace server
                 }
             }
             return isDuplicate;
-        }	
+        }
     };
 
     struct ShotEvent : TimedGameEvent
@@ -213,11 +214,16 @@ namespace server
         int flags;
         bool isDestroyed;
 
+        vector<int> hitPlayers;
+        vector<int> hitProjectiles;
+
         clientinfo* killer = nullptr;
 
         Projectile(const int id, const int type, const int attack) : id(id), type(type), attack(attack)
         {
             set();
+            hitPlayers.setsize(0);
+            hitProjectiles.setsize(0);
         }
         ~Projectile()
         {
@@ -3562,8 +3568,36 @@ namespace server
         const int damage = calculateDamage(context, hit, target, attacker);
         damagePlayer(target, attacker, damage, attack, hit.flags, hit.direction);
     }
+
+    /*
+        If we can hit multiple targets directly with the same projectile,
+        check if we already hit this one (player or projectile).
+    */
+    bool HitEvent::registerTarget(const HitInfo& hit, const attackinfo& context, clientinfo* owner)
+    {
+        Projectile* projectile = owner->state.projectiles.get(id);
+        if (projectile == nullptr)
+        {
+            return true;
+        }
+        if ((projectile->flags & ProjFlag_MultiHit) == 0)
+        {
+            return true;
+        }
+        if (hit.id > 0 && projectile->hitProjectiles.find(hit.id) < 0)
+        {
+            projectile->hitProjectiles.add(hit.id);
+            return true;
+        }
+        else if (projectile->hitPlayers.find(hit.target) < 0)
+        {
+            projectile->hitPlayers.add(hit.target);
+            return true;
+        }
+        return false;
+    }
     
-    void HitEvent::validate(clientinfo* attacker, const attackinfo& context, const int flags)
+    void HitEvent::validate(clientinfo* owner, clientinfo* attacker, const attackinfo& context, const int flags)
     {
         if (attacker == nullptr)
         {
@@ -3585,12 +3619,21 @@ namespace server
                 continue;
             }
 
+            // Check on the owner's projectile to register targets.
+            if (!registerTarget(hit, context, owner))
+            {
+                continue;
+            }
+
             if (isDuplicateHit(hit, context, i) || !isValidHit(hit, context, totalRays))
             {
                 continue;
             }
 
-            // We successfully validated the hit.
+            /*
+                We successfully validated the hit, now deal damage on attacker's behalf.
+                The attacker is either the owner of the event or the player who destroyed a potential projectile.
+            */
             applyHit(hit, context, attacker, target, flags);
         }
     }
@@ -3615,17 +3658,13 @@ namespace server
 
         // Update context if the projectile was destroyed by someone else.
         int flags = 0;
+        clientinfo* attacker = client;
         if (mode == Radius)
         {
-            clientinfo* owner = client;
-            client->state.projectiles.updateContext(id, attack, flags, owner);
-            if (owner != nullptr && client != owner)
-            {
-                client = owner;
-            }
+            client->state.projectiles.updateContext(id, attack, flags, attacker);
         }
         
-        validate(client, context, flags);
+        validate(client, attacker, context, flags);
     }
 
     void PickupEvent::process(clientinfo* client)
@@ -4716,6 +4755,47 @@ namespace server
                 event->id = id;
                 event->flags = 0;
 
+                if (cq != nullptr)
+                {
+                    cq->addevent(event);
+                }
+                else
+                {
+                    delete event;
+                }
+                break;
+            }
+
+            case N_HIT:
+            {
+                const int id = getint(p);
+                const int attack = getint(p);
+                const int hitCount = getint(p);
+                const int eventTime = cq ? cq->geteventmillis(gamemillis, id) : 0;
+
+                // Create "hit" game event.
+                HitEvent* event = new HitEvent;
+                event->id = id;
+                event->time = eventTime;
+                event->attack = attack;
+                event->mode = HitEvent::Radius;
+                for (int i = 0; i < hitCount; i++)
+                {
+                    if (p.overread())
+                    {
+                        break;
+                    }
+                    HitInfo& hit = event->hits.add();
+                    hit.target = getint(p);
+                    hit.lifeSequence = getint(p);
+                    hit.distance = getint(p) / DMF;
+                    hit.rays = getint(p);
+                    hit.flags = getint(p);
+                    hit.id = getint(p);
+                    hit.direction.x = getint(p) / DNF;
+                    hit.direction.y = getint(p) / DNF;
+                    hit.direction.z = getint(p) / DNF;
+                }
                 if (cq != nullptr)
                 {
                     cq->addevent(event);

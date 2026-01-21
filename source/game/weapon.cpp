@@ -119,14 +119,14 @@ namespace game
         {
             return;
         }
-        const int action = attacks[attack].action;
-        if (action != ACT_MELEE)
+        const attackinfo& context = attacks[attack];
+        if (context.action != ACT_MELEE)
         {
             return;
         }
-        const int projectile = attacks[attack].projectile;
-        const float margin = projs[projectile].radius;
-        dynent* intersected = intersectClosest(player, player->o, worldpos, margin);
+        const int projectileType = context.projectile;
+        const float radius = projs[projectileType].radius;
+        dynent* intersected = intersectClosest(player, player->o, worldpos, radius);
         gameent* target = (gameent*)intersected;
         if (target == nullptr)
         {
@@ -139,8 +139,8 @@ namespace game
         {
             return;
         }
-        const float maxRange = range;
-        const float minRange = range / 3.0f;
+        const float maxRange = context.range;
+        const float minRange = radius;
         if (distance <= minRange || distance > maxRange)
         {
             return;

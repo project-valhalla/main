@@ -114,7 +114,7 @@ projs[Projectile_Max] =
         0,
         0,
         0,
-        1.25f,
+        1.3f,
         0,
         nullptr
     },

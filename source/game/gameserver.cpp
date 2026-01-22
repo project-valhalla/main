@@ -3650,7 +3650,7 @@ namespace server
             Certain attacks ("hitscan", tracking attacks like e.g. a punch) are
             to always be ignored if the attacker is dead.
         */
-        const bool shouldBeAlive = (mode == Ray) || ((projs[context.projectile].flags & ProjFlag_Track) != 0);
+        const bool shouldBeAlive = (mode == Ray) || ((projs[context.projectile].flags & ProjFlag_DieWithOwner) != 0);
         if (shouldBeAlive && !client->state.isalive(gamemillis))
         {
             return;

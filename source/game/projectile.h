@@ -29,19 +29,20 @@ inline bool isvalidprojectile(int type)
 
 enum
 {
-    ProjFlag_Weapon      = 1 << 0,  // Related to a weapon.
-    ProjFlag_Junk        = 1 << 1,  // Lightweight projectiles for cosmetic effects.
-    ProjFlag_Bounce      = 1 << 2,  // Bounces off surfaces.
-    ProjFlag_Linear      = 1 << 3,  // Follows a linear trajectory.
-    ProjFlag_Track       = 1 << 4,  // Tracks specific body tags.
-    ProjFlag_Impact      = 1 << 5,  // Detonates on collision with geometry or entities.
-    ProjFlag_Explosive   = 1 << 6,  // Let me guess, it triggers an explosion?
-    ProjFlag_Quench      = 1 << 7,  // Destroyed upon contact with water.
-    ProjFlag_Eject       = 1 << 8,  // Can be ejected as a spent casing by weapons.
-    ProjFlag_Loyal       = 1 << 9,  // Only responds to the weapon that fired it.
-    ProjFlag_Invincible  = 1 << 10, // Cannot be destroyed.
-    ProjFlag_AdjustSpeed = 1 << 11, // Adjusts speed based on distance.
-    ProjFlag_MultiHit	 = 1 << 12  // Hits multiple targets directly during lifetime.
+    ProjFlag_Weapon       = 1 << 0,  // Related to a weapon.
+    ProjFlag_Junk         = 1 << 1,  // Lightweight projectiles for cosmetic effects.
+    ProjFlag_Bounce       = 1 << 2,  // Bounces off surfaces.
+    ProjFlag_Linear       = 1 << 3,  // Follows a linear trajectory.
+    ProjFlag_Track        = 1 << 4,  // Tracks specific body tags.
+    ProjFlag_Impact       = 1 << 5,  // Detonates on collision with geometry or entities.
+    ProjFlag_Explosive    = 1 << 6,  // Let me guess, it triggers an explosion?
+    ProjFlag_Quench       = 1 << 7,  // Destroyed upon contact with water.
+    ProjFlag_Eject        = 1 << 8,  // Can be ejected as a spent casing by weapons.
+    ProjFlag_Loyal        = 1 << 9,  // Only responds to the weapon that fired it.
+    ProjFlag_Invincible   = 1 << 10, // Cannot be destroyed.
+    ProjFlag_AdjustSpeed  = 1 << 11, // Adjusts speed based on distance.
+    ProjFlag_MultiHit	  = 1 << 12, // Hits multiple targets directly during lifetime.
+    ProjFlag_DieWithOwner = 1 << 13  // Until death do us part?
 };
 
 static const struct projectileinfo
@@ -107,7 +108,7 @@ projs[Projectile_Max] =
     },
     {
         Projectile_Melee,
-        ProjFlag_Weapon | ProjFlag_Track | ProjFlag_MultiHit | ProjFlag_Invincible,
+        ProjFlag_Weapon | ProjFlag_Track | ProjFlag_MultiHit | ProjFlag_Invincible | ProjFlag_DieWithOwner,
         ATK_INVALID,
         S_INVALID,
         S_INVALID,

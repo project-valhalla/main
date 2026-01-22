@@ -496,15 +496,11 @@ namespace game
         }
 
         /*
-            Destroy tracking projectiles owned by a player on death,
-            as we don't want to track body parts of a dead player.
+            Kill owned projectiles on death if necessary.
+            Do not destroy or remove the projectile, kill it (we also need to request the removal to the server).
         */
-        static void removeTrackingProjectiles(vector<ProjEnt*>& owned)
+        static void killOwned(vector<ProjEnt*>& owned)
         {
-            if (owned.empty())
-            {
-                return;
-            }
             for (int i = 0; i < owned.length(); i++)
             {
                 ProjEnt& proj = *owned[i];
@@ -512,9 +508,8 @@ namespace game
                 {
                     continue;
                 }
-                if (proj.flags & ProjFlag_Track)
+                if (proj.flags & ProjFlag_DieWithOwner)
                 {
-                    // Kill (not remove or clear), as we need to remove the server version of this projectile too.
                     proj.kill();
                 }
             }
@@ -528,9 +523,13 @@ namespace game
                 return;
             }
             vector<ProjEnt*> owned = filterOwned(owner);
+            if (owned.empty())
+            {
+                return;
+            }
             if (owner->state == CS_DEAD)
             {
-                removeTrackingProjectiles(owned);
+                killOwned(owned);
             }
         }
 

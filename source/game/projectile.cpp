@@ -1046,8 +1046,7 @@ namespace game
 
         void render()
         {
-            float pitch;
-            loopv(Projectiles)
+            for (int i = 0; i < Projectiles.length(); i++)
             {
                 ProjEnt& proj = *Projectiles[i];
                 if (!proj.model[0])
@@ -1059,7 +1058,8 @@ namespace game
                 float fade = 1.0f;
                 if (proj.lifetime >= 400)
                 {
-                    const float progress = clamp(static_cast<float>(lastmillis - proj.millis) / fade, 0.0f, 1.0f);
+                    const float fadeTime = projs[proj.projectile].fade;
+                    const float progress = clamp(static_cast<float>(lastmillis - proj.millis) / fadeTime, 0.0f, 1.0f);
                     fade *= progress;
                 }
                 else if (proj.flags & ProjFlag_Junk)

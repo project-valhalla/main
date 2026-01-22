@@ -339,6 +339,13 @@ struct ProjEnt : dynent
         state = CS_DEAD;
     }
 
+    void detach()
+    {
+        flags &= ~(ProjFlag_Track);
+        flags |= ProjFlag_Bounce;
+        resetinterp();
+    }
+
     /*
         Check if target has been already hit by projectile (duplicate direct hits).
         If the target hasn't already been hit by this projectile, keep track.

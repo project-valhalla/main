@@ -495,22 +495,41 @@ namespace game
             applyradialeffect(position, velocity, owner, nullptr, attack, 0);
         }
 
+        // Detach owned projectiles on death if necessary.
+        static void detachOwned(vector<ProjEnt*>& owned)
+        {
+            for (int i = 0; i < owned.length(); i++)
+            {
+                ProjEnt* proj = owned[i];
+                if (proj == nullptr || proj->state != CS_ALIVE)
+                {
+                    continue;
+                }
+                if (proj->flags & ProjFlag_Track)
+                {
+                    proj->detach();
+                }
+            }
+        }
+
         /*
             Kill owned projectiles on death if necessary.
             Do not destroy or remove the projectile, kill it (we also need to request the removal to the server).
         */
         static void killOwned(vector<ProjEnt*>& owned)
         {
-            for (int i = 0; i < owned.length(); i++)
+            // Reverse loop as we're gonna remove some indexes.
+            for (int i = owned.length(); i-- > 0;)
             {
-                ProjEnt& proj = *owned[i];
-                if (proj.owner != self || proj.state != CS_ALIVE)
+                ProjEnt* proj = owned[i];
+                if (proj == nullptr || proj->state != CS_ALIVE)
                 {
                     continue;
                 }
-                if (proj.flags & ProjFlag_DieWithOwner)
+                if (proj->flags & ProjFlag_DieWithOwner)
                 {
-                    proj.kill();
+                    proj->kill();
+                    owned.remove(i);
                 }
             }
         }
@@ -529,7 +548,11 @@ namespace game
             }
             if (owner->state == CS_DEAD)
             {
-                killOwned(owned);
+                if (owner == self)
+                {
+                    killOwned(owned);
+                }
+                detachOwned(owned);
             }
         }
 

@@ -1,0 +1,58 @@
+name: MinGW
+permissions:
+  contents: read
+  
+on:
+  push:
+    # Always trigger CI on push
+  pull_request:
+    branches: [ $default-branch ]
+
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+        buildtype: [Debug, Release]
+    env:
+      BUILD_TYPE: ${{ matrix.buildtype }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    # So we can skip the `data` submodule.
+      #with:
+        #submodules: 'recursive'
+    # Same as above, but skip the `data` submodule.
+    - name: Checkout submodules
+      run: git -c submodule."data".update=none submodule update --init --recursive
+
+    - name: Set up MinGW
+      uses: egor-tensin/setup-mingw@v3
+      with:
+        platform: x64
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{runner.workspace}}/build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DENABLE_LTO=FALSE
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{runner.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{env.BUILD_TYPE}}-mingw-x64-artifact${{github.sha}}
+        path: |
+          bin/bin64
+          !bin/bin64/*.dll
+
+    - name: Test
+      working-directory: ${{runner.workspace}}/build
+      # Execute tests defined by the CMake configuration.  
+      # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
+      run: ctest -C ${{env.BUILD_TYPE}}
+      

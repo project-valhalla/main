@@ -33,7 +33,10 @@
     #include <dbghelp.h>
     #include <intrin.h>
   #endif
-  #define ZLIB_DLL
+  // So we don't get undefined references when we want to link statically
+  #ifndef ZLIB_STATIC
+    #define ZLIB_DLL
+  #endif
 #endif
 
 #ifndef STANDALONE

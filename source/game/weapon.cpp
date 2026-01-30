@@ -39,7 +39,7 @@ namespace game
                 // Accuracy decreases while in air.
                 spread = static_cast<int>(spread * 1.25f);
             }
-            else if (player->crouching && player->crouched() && !player->sliding(lastmillis))
+            else if (player->crouching && player->crouched() && !player->slide.isSliding())
             {
                 // Accuracy increases while crouched.
                 spread = static_cast<int>(spread * 0.75f);
@@ -1798,7 +1798,7 @@ namespace game
 
     void swayinfo::update(gameent* owner, vec& position)
     {
-        if (owner->onfloor())
+        if (owner->onfloor() && !owner->slide.isSliding())
         {
             speed = min(sqrtf(owner->vel.x * owner->vel.x + owner->vel.y * owner->vel.y), owner->speed);
             dist += speed * curtime / 1000.0f;

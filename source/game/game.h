@@ -583,6 +583,103 @@ enum Interaction
     Count
 };
 
+namespace physics
+{
+    struct SlideInfo
+    {
+        enum State
+        {
+            Idle = 0,
+            Queued,
+            Sliding
+        };
+
+        static constexpr int duration = 450;
+        static constexpr int cooldown = 230;
+        static constexpr int reductionWindow = 1200;
+        static constexpr float minimumVelocity = 30.0f;
+        static constexpr float stopVelocity = 80.0f;
+
+        State state = Idle;
+        int startTime = 0;
+        int endTime = 0;
+        float reduction = 1.0f;
+        float progress = 0;
+
+        void start(gameent* player, const int time);
+        void stop(gameent* player, const int time);
+
+        void reset() noexcept
+        {
+            state = Idle;
+            startTime = 0;
+            endTime = 0;
+            progress = 0;
+            resetReduction();
+        }
+
+        void queue(gameent* player, const int time) noexcept
+        {
+            if (!canQueue(player, time))
+            {
+                return;
+            }
+            state = Queued;
+            startTime = 0;
+        }
+
+        void dequeue() noexcept
+        {
+            state = Idle;
+            startTime = 0;
+        }
+
+        void resetReduction()
+        {
+            reduction = 1.0f;
+        }
+
+        // Apply reduction for consecutive slides.
+        void applyReduction(const int time) noexcept
+        {
+            reduction = clamp(reduction - 0.25f, 0.0f, 1.0f);
+        }
+
+        void checkReduction(const int time) noexcept
+        {
+            if (hasDelay(time, reductionWindow))
+            {
+                return;
+            }
+            resetReduction();
+        }
+
+        bool evaluate(gameent* player, const int time);
+        bool canQueue(gameent* player, const int time);
+        bool canStart(gameent* player, const int time);
+
+        bool isIdle() const noexcept
+        {
+            return state == Idle;
+        }
+
+        bool isQueued() const noexcept
+        {
+            return state == Queued;
+        }
+
+        bool isSliding() const noexcept
+        {
+            return state == Sliding;
+        }
+
+        bool hasDelay(const int time, const int delay) const noexcept
+        {
+            return endTime > 0 && time - endTime <= delay;
+        }
+    };
+}
+
 struct gameent : dynent, gamestate
 {
     int weight;                         // affects the effectiveness of hitpush
@@ -604,10 +701,10 @@ struct gameent : dynent, gamestate
 
     int chan[Chan_Num], chansound[Chan_Num];
 
-    struct Recoil
+    struct RecoilInfo
     {
         // Maximum number of shots to apply recoil for (available patterns).
-        const int maxShots = 8;
+        static constexpr int maxShots = 8;
 
         int amount = 0;
         int index = 0;
@@ -632,58 +729,9 @@ struct gameent : dynent, gamestate
             kick = vec2(0, 0);
         }
     };
-    Recoil recoil;
+    RecoilInfo recoil;
 
-    struct crouchSlide
-    {
-        const int slideDuration = 450;
-
-        int startTime = 0;
-        int last = 0;
-        float reduction = 0;
-        float yaw = 0;
-        bool queued = false;
-
-        void initiate(const int time)
-        {
-            startTime = time;
-            queued = false;
-        }
-
-        void reset()
-        {
-            startTime = last = 0;
-            reduction = yaw = 0;
-            queued = false;
-        }
-
-        void cancel()
-        {
-            startTime = last = 0;
-        }
-
-        bool isChained(const int time)
-        {
-            const int coolDown = slideDuration * 3;
-            return last && time - last <= coolDown;
-        }
-
-        bool isInProgress(const int time) const
-        {
-            return startTime && time - startTime <= slideDuration;
-        }
-    };
-    crouchSlide slide;
-
-    bool shouldKeepSliding() const
-    {
-        return slide.startTime > 0 && physstate == PHYS_RAMP;
-    }
-
-    bool sliding(const int time) const
-    {
-        return state == CS_ALIVE && crouching && !blocked && onfloor() && (shouldKeepSliding() || slide.isInProgress(time));
-    }
+    physics::SlideInfo slide;
 
     float transparency;
 
@@ -805,7 +853,6 @@ struct gameent : dynent, gamestate
         }
         resetInteractions();
         recoil.reset();
-        slide.reset();
     }
 
     void halt()
@@ -813,6 +860,7 @@ struct gameent : dynent, gamestate
         move = strafe = 0;
         resetinterp();
         smoothmillis = 0;
+        slide.reset();
     }
 
     void playchannelsound(int type, int sound, int fade = 0, bool isloop = false)
@@ -1299,7 +1347,8 @@ namespace game
         struct camerainfo
         {
             bool isdetached;
-            float yaw, pitch, roll, fov;
+            float yaw, pitch, roll;
+            float fovAdd, fovMultiply, fovAvatarAdd, fovAvatarMultiply;
             float bobfade, bobspeed, bobdist;
             vec direction;
             vec2 velocity;
@@ -1342,7 +1391,7 @@ namespace game
             };
             zoominfo zoomstate;
 
-            camerainfo() : isdetached(false), yaw(0), pitch(0), roll(0), fov(1), bobfade(0), bobspeed(0), bobdist(0), direction(0, 0, 0), velocity(0, 0), parallax(0, 0), parallaxVelocity(0, 0)
+            camerainfo() : isdetached(false), yaw(0), pitch(0), roll(0), fovAdd(0), fovMultiply(1), fovAvatarAdd(0), fovAvatarMultiply(1), bobfade(0), bobspeed(0), bobdist(0), direction(0, 0, 0), velocity(0, 0), parallax(0, 0), parallaxVelocity(0, 0)
             {
             }
             ~camerainfo()

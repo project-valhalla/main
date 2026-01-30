@@ -381,12 +381,13 @@ namespace game
                 anim = attack;
                 basetime = lastaction;
             }
-            bool canMove = physics::canmove(d);
+            const bool canMove = physics::canmove(d);
+            const bool isSliding = (d == self && d->slide.isQueued()) || d->slide.isSliding();
             if (d->inwater && d->physstate <= PHYS_FALL)
             {
                 anim |= (ANIM_SWIM | ANIM_LOOP) << ANIM_SECONDARY;
             }
-            else if (d->sliding(lastmillis) || d->slide.queued)
+            else if (isSliding)
             {
                 anim |= (ANIM_SLIDE | ANIM_LOOP) << ANIM_SECONDARY;
             }
@@ -431,14 +432,14 @@ namespace game
         else flags |= MDL_CULL_DIST;
         if(!mainpass) flags &= ~(MDL_FULLBRIGHT | MDL_CULL_VFC | MDL_CULL_OCCLUDED | MDL_CULL_QUERY | MDL_CULL_DIST);
         d->transparency = updatetransparency(d, fade);
-        rendermodel(playermodel.directory, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), d->transparency));
         if (firstpersonlegs && d == followingplayer(self) && !camera::isthirdperson())
         {
             const vec legsPosition = vec(o).addz(1.0f);
             defformatstring(legsDirectory, "%s/leg", playermodel.directory);
             rendermodel(legsDirectory, anim, legsPosition, yaw, 0, 0, MDL_NOSHADOW, d, NULL, basetime, 0, 1, vec4(vec::hexcolor(color), d->transparency));
         }
-}
+        rendermodel(playermodel.directory, anim, o, yaw, pitch, 0, flags, d, a[0].tag ? a : NULL, basetime, 0, fade, vec4(vec::hexcolor(color), d->transparency));
+    }
 
     void rendermonster(dynent *d, const char *mdlname, modelattach *attachments, const int attack, const int attackdelay, const int lastaction, const int lastpain, const float fade, const bool ragdoll)
     {
@@ -513,15 +514,16 @@ namespace game
         renderplayer(d, getplayermodelinfo(d), getplayercolor(d, team), team, fade, flags);
     }
 
-    void booteffect(gameent *d)
+    void updateMovementEffects(gameent* player)
     {
-        if(d == followingplayer(self) && !camera::isthirdperson()) return;
-        if(d->timeinair > 650 && (d->haspowerup(PU_AGILITY) || d->role == ROLE_BERSERKER || d->role == ROLE_ZOMBIE))
+        if (player->slide.isSliding())
         {
-            if(d->lastfootright.z >= 0) particle_flare(d->lastfootright, d->rfoot, 220, PART_TRAIL_STRAIGHT, getplayercolor(d, d->team), 0.3f);
-            if(d->lastfootleft.z >= 0) particle_flare(d->lastfootleft, d->lfoot, 220, PART_TRAIL_STRAIGHT, getplayercolor(d, d->team), 0.3f);
-            d->lastfootright = d->rfoot;
-            d->lastfootleft = d->lfoot;
+            regular_particle_splash(PART_SMOKE, 4, 225, player->feetpos(2), 0x606060, 1, 100, 50, 1, 10);
+            player->playchannelsound(Chan_Slide, S_SLIDE_LOOP, 200, true);
+        }
+        else if (validsound(player->chan[Chan_Slide]))
+        {
+            player->stopchannelsound(Chan_Slide, 280);
         }
     }
 
@@ -604,7 +606,7 @@ namespace game
             int team = m_teammode && validteam(d->team) ? d->team : 0;
             particle_text(position, d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
         }
-        booteffect(d);
+        updateMovementEffects(d);
     }
 
     void rendergame()
@@ -650,7 +652,7 @@ namespace game
             renderplayer(self, fade, isthirdPerson ? 0 : MDL_ONLYSHADOW);
         }
             
-        booteffect(self);
+        updateMovementEffects(self);
         entities::render();
         projectiles::render();
         rendermonsters();

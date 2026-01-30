@@ -536,7 +536,6 @@ namespace entities
                 player->o = ents[destinationId]->o;
                 const int yaw = ents[destinationId]->attr1;
                 player->yaw = yaw;
-                player->slide.yaw = yaw;
                 if (ents[destinationId]->attr3 > 0)
                 {
                     vec direction;

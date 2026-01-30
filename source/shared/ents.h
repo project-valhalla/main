@@ -102,7 +102,7 @@ enum
     DYN_RAGDOLL    = 1<<3
 };
 
-const float CROUCH_HEIGHT = 0.75f;
+const float CROUCH_HEIGHT = 0.68f;
 
 struct physent // base entity type, can be affected by physics
 {

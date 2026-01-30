@@ -447,8 +447,8 @@ namespace game
             if (!zoom)
             {
                 progress = 0;
-                curfov = camerafov * camera.fov;
-                curavatarfov = avatarfov * camera.fov;
+                curfov = (camerafov + camera.fovAdd) * camera.fovMultiply;
+                curavatarfov = (avatarfov + camera.fovAvatarAdd) * camera.fovAvatarMultiply;
                 return;
             }
             if (zoom > 0)
@@ -470,8 +470,8 @@ namespace game
                     shaders::toggleZoomEffects(zoom);
                 }
             }
-            curfov = (zoomfov * progress + camerafov * (1 - progress)) * camera.fov;
-            curavatarfov = (avatarzoomfov * progress + avatarfov * (1 - progress)) * camera.fov;
+            curfov = ((zoomfov * progress + camerafov * (1 - progress))) * camera.fovMultiply;
+            curavatarfov = ((avatarzoomfov * progress + avatarfov * (1 - progress))) * camera.fovAvatarMultiply;
         }
 
         void camerainfo::zoominfo::disable()
@@ -487,25 +487,28 @@ namespace game
             return progress >= 1 && zoom >= 1;
         }
 
-        VARP(fovslideinvel, 10, 80, 500);
-        VARP(fovslideoutvel, 10, 100, 500);
-        VARP(fovslide, -10, 8, 10);
+        VARP(camerafovslidein, 10, 150, 500);
+        VARP(camerafovslideout, 10, 180, 500);
+        VARP(camerafovslide, -10, 8, 10);
 
         void camerainfo::updateMovementFov()
         {
-			return;
             gameent* hudPlayer = followingplayer(self);
-            static float slideFovProgress = 0.0f;
-            if (hudPlayer->sliding(lastmillis))
+            if (camerafovslide > 0)
             {
-                slideFovProgress = fovslideinvel > 0 ? min(slideFovProgress + float(elapsedtime) / fovslideinvel, 1.0f) : 1.0f;
+                static float slideProgress = 0;
+                if (hudPlayer->slide.isSliding())
+                {
+                    slideProgress = camerafovslidein > 0 ? min(slideProgress + float(elapsedtime) / camerafovslidein, 1.0f) : 1.0f;
+                }
+                else
+                {
+                    slideProgress = camerafovslideout > 0 ? max(slideProgress - float(elapsedtime) / camerafovslideout, 0.0f) : 0.0f;
+                }
+                fovAdd = camerafovslide * slideProgress;
+                fovAvatarAdd = -camerafovslide * slideProgress * 0.33f;
             }
-            else
-            {
-                slideFovProgress = fovslideoutvel > 0 ? max(slideFovProgress - float(elapsedtime) / fovslideoutvel, 0.0f) : 0.0f;
-            }
-            camera.fov += fovslide * slideFovProgress;
-        }
+        }	
 
         void camerainfo::updateFov()
         {
@@ -557,7 +560,7 @@ namespace game
             const gameent* hud = followingplayer(self);
             if (camerabob)
             {
-                if (hud->onfloor() && !hud->sliding(lastmillis) && hud->vel.magnitude() > 5.0f)
+                if (hud->onfloor() && !hud->slide.isSliding() && hud->vel.magnitude() > 5.0f)
                 {
                     bobspeed = min(sqrtf(hud->vel.x * hud->vel.x + hud->vel.y * hud->vel.y), hud->speed);
                     bobdist += bobspeed * curtime / 1000.0f;
@@ -689,7 +692,9 @@ namespace game
                         case CameraEvent_Teleport:
                         {
                             const float progress = min((lastmillis - event.millis) / static_cast<float>(event.duration), 1.0f);
-                            fov = ease::outback(progress);
+                            const float ease = ease::outback(progress);
+                            fovMultiply = ease;
+                            fovAvatarMultiply = ease;
                             break;
                         }
                     }

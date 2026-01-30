@@ -383,7 +383,7 @@ namespace physics
         // Different smoothing for falling players, so we know we're crouch-jumping.
         const float smoothing = player->physstate == PHYS_FALL ? crouchsmoothfall : crouchsmooth;
 
-        if (player->crouching < 0) // Crouching in.
+        if (player->crouching < 0 || player->slide.isSliding()) // Crouching in.
         {
             const float minimumHeight = player->maxheight * CROUCH_HEIGHT;
             if (player->eyeheight > minimumHeight)
@@ -433,6 +433,230 @@ namespace physics
                 }
             }
         }
+    }
+
+    namespace physics
+    {
+        struct SlideInfo
+        {
+            enum State
+            {
+                Idle = 0,
+                Queued,
+                Sliding
+            };
+
+            static constexpr int duration = 450;
+            static constexpr int cooldown = 230;
+            static constexpr int reductionWindow = 1200;
+            static constexpr float minimumVelocity = 30.0f;
+            static constexpr float stopVelocity = 80.0f;
+
+            State state = Idle;
+            int startTime = 0;
+            int endTime = 0;
+            float reduction = 1.0f;
+            float progress = 0;
+
+            void start(gameent* player, const int time);
+            void stop(gameent* player, const int time);
+
+            void reset() noexcept
+            {
+                state = Idle;
+                startTime = 0;
+                endTime = 0;
+                progress = 0;
+                resetReduction();
+            }
+
+            void queue(gameent* player, const int time) noexcept
+            {
+                if (!canQueue(player, time))
+                {
+                    return;
+                }
+                state = Queued;
+                startTime = 0;
+            }
+
+            void dequeue() noexcept
+            {
+                state = Idle;
+                startTime = 0;
+            }
+
+            void resetReduction()
+            {
+                reduction = 1.0f;
+            }
+
+            // Apply reduction for consecutive slides.
+            void applyReduction(const int time) noexcept
+            {
+                reduction = clamp(reduction - 0.25f, 0.0f, 1.0f);
+                conoutf(CON_GAMEINFO, "reduction: %.2f", reduction);
+            }
+
+            void checkReduction(const int time) noexcept
+            {
+                if (hasDelay(time, reductionWindow))
+                {
+                    return;
+                }
+                resetReduction();
+            }
+
+            bool evaluate(gameent* player, const int time);
+            bool canQueue(gameent* player, const int time);
+            bool canStart(gameent* player, const int time);
+
+            bool isIdle() const noexcept
+            {
+                return state == Idle;
+            }
+
+            bool isQueued() const noexcept
+            {
+                return state == Queued;
+            }
+
+            bool isSliding() const noexcept
+            {
+                return state == Sliding;
+            }
+
+            bool hasDelay(const int time, const int delay) const noexcept
+            {
+                return endTime > 0 && time - endTime <= delay;
+            }
+        };
+    }
+
+    bool SlideInfo::canQueue(gameent* player, const int time)
+    {
+        if (hasDelay(time, cooldown) || state == Sliding || state == Queued || reduction <= 0)
+        {
+            return false;
+        }
+
+        // Check what the player is doing before queueing.
+        if (player->zooming || player->blocked || player->inwater || player->climbing)
+        {
+            return false;
+        }
+
+        // Check the minimum velocity to start sliding.
+        if (player->move <= 0 || player->vel.magnitude() <= minimumVelocity)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    bool SlideInfo::canStart(gameent* player, const int time)
+    {
+        if (hasDelay(time, cooldown) || state == Sliding || !player->onfloor())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    void SlideInfo::start(gameent* player, const int time)
+    {
+        if (hasDelay(time, cooldown))
+        {
+            return;
+        }
+        state = Sliding;
+        startTime = time;
+
+        // Player crouches when starting a slide.
+        player->crouching = -1;
+
+        const float slideVelocity = 100.0f * reduction;
+        if (slideVelocity <= 0)
+        {
+            stop(player, time);
+            return;
+        }
+
+        // Apply velocity boost.
+        float velocity = player->vel.magnitude() + slideVelocity;
+        if (velocity <= slideVelocity)
+        {
+            velocity *= 1.5f;
+        }
+        vec direction(player->vel.x, player->vel.y, 0);
+        vec floorNormal = player->floor;
+        direction.sub(floorNormal.mul(direction.dot(floorNormal)));
+        if (direction.magnitude() > 0)
+        {
+            direction.normalize();
+            player->vel = direction.mul(velocity);
+        }
+
+        // Physics event.
+        triggerPlayerPhysicsEvent(player, PhysEvent_CrouchSlide);
+    }
+
+    void SlideInfo::stop(gameent* player, const int time)
+    {
+        state = Idle;
+        endTime = time;
+        startTime = 0;
+
+        // Player stands up after a slide.
+        player->crouching = abs(player->crouching);
+
+        // Velocity reduction for consecutive slides.
+        applyReduction(time);
+
+        // Physics event.
+        triggerPlayerPhysicsEvent(player, PhysEvent_CrouchSlideStop);
+    }
+
+    // Called each physics frame to update sliding state.
+    bool SlideInfo::evaluate(gameent* player, const int time)
+    {
+        if (state == Queued && canStart(player, time))
+        {
+            // If slide is queued and ready to start.
+            start(player, time);
+            return true;
+        }
+        else if (state == Sliding) // Stop sliding if player no longer meets certain conditions.
+        {
+            if (!player->onfloor() || player->inwater || player->blocked)
+            {
+                stop(player, time);
+                return false;
+            }
+
+            // Stop if too slow!
+            if (player->vel.magnitude() <= stopVelocity)
+            {
+                stop(player, time);
+                return false;
+            }
+
+            // If the velocity is enough, keep sliding on ramps, otherwise stop when the slide is usually finished.
+            const bool isEncouraged = player->physstate == PHYS_RAMP || player->physstate == PHYS_STEP_UP || player->physstate == PHYS_STEP_DOWN;
+            const bool isStarted = startTime > 0;
+            const bool shouldKeepSliding = isEncouraged && isStarted;
+            if (!shouldKeepSliding && time - startTime > duration)
+            {
+                stop(player, time);
+                return false;
+            }
+
+            // Continue sliding.
+            return true;
+        }
+        checkReduction(time);
+        return false;
     }
 
     bool ismoving(gameent* d, vec& dir)
@@ -496,11 +720,6 @@ namespace physics
             if (!d->climbing)
             {
                 d->blocked = true;
-                if (d->onfloor() && d->slide.isInProgress(lastmillis))
-                {
-                    d->slide.reset();
-                    triggerPlayerPhysicsEvent(d, PhysEvent_CrouchSlideStop);
-                }
             }
         }
         if (found) land(d, dir, floor, collided);
@@ -514,7 +733,7 @@ namespace physics
         loopv(players)
         {
             gameent* player = players[i];
-            if (player->sliding(lastmillis))
+            if (player->slide.isSliding())
             {
                 player->playchannelsound(Chan_Slide, S_SLIDE_LOOP, 200, true);
             }
@@ -523,7 +742,6 @@ namespace physics
                 player->stopchannelsound(Chan_Slide, 280);
             }
         }
-        
     }
 
 #define PHYSFRAMETIME 8
@@ -628,12 +846,18 @@ namespace physics
                ((d->haspowerup(PU_AGILITY) || d->role == ROLE_ZOMBIE || d->role == ROLE_BERSERKER) && !d->doublejumping);
     }
 
-    const float VELOCITY_JUMP = 135.0f;
-    const float VELOCITY_CROUCH = 0.4f;
-    const float VELOCITY_ZOOM = 0.5f;
-    const float VELOCITY_CLIMB = 0.7f;
-    const float VELOCITY_SLIDE = 100.0f;
-    const float VELOCITY_WATER_DAMP = 8.0f;
+    namespace
+    {
+        constexpr float VELOCITY_JUMP = 135.0f;
+        constexpr float VELOCITY_CROUCH = 0.4f;
+        constexpr float VELOCITY_ZOOM = 0.5f;
+        constexpr float VELOCITY_CLIMB = 0.7f;
+        constexpr float VELOCITY_SLIDE = 100.0f;
+        constexpr float VELOCITY_WATER_DAMP = 8.0f;
+        constexpr float VELOCITY_SPRINT = 1.2f;
+        constexpr float VELOCITY_WALK = 0.9f;
+        constexpr float VELOCITY_JUMP_STRAFE = 1.1f;
+    }
 
     VAR(floatspeed, 1, 100, 10000);
 
@@ -742,7 +966,10 @@ namespace physics
             }
             else if (!isinwater)
             {
-                dir.mul((d->move && !d->strafe ? 1.25f : 0.95f) * (!d->onfloor() ? 1.25f : 0.95f));
+                const float airVelocity = d->strafe == 0 ? VELOCITY_SPRINT : VELOCITY_JUMP_STRAFE;
+                const float multiplier = d->onfloor() ? VELOCITY_WALK : airVelocity;
+                const bool isSprinting = d->move > 0;
+                dir.mul((isSprinting ? VELOCITY_SPRINT : VELOCITY_WALK) * multiplier);
             }
         }
         // Calculate and apply friction.
@@ -753,9 +980,9 @@ namespace physics
         }
         else if (d->onfloor() || isfloating)
         {
-            friction = d->sliding(lastmillis) ? 23.0f : 4.0f;
+            friction = d->slide.isSliding() ? 23.0f : 4.0f;
         }
-        if (!d->shouldKeepSliding())
+        if (!(d->physstate == PHYS_RAMP && d->slide.isSliding()))
         {
             d->vel.lerp(dir, d->vel, pow(1 - 1 / friction, curtime / 20.0f));
         }
@@ -843,9 +1070,9 @@ namespace physics
     FVAR(rollstrafemax, 0, 1, ROLL_MAX);
     FVAR(rollstrafe, 0, 0.018f, 90);
     FVAR(rollfade, 0, 0.9f, 1);
-    FVAR(rollonland, 0, 2.5f, ROLL_MAX);
-    FVAR(rollslidemultiplier, 0, 2.0f, ROLL_MAX);
-    FVAR(rollslidestop, 0, 10.0f, ROLL_MAX);
+    FVAR(rollonland, -ROLL_MAX, 2.5f, ROLL_MAX);
+    FVARP(rollslide, -10, 2, 10);
+    VARP(rollslidefade, 1, 400, 1000);
 
     void addroll(gameent* player, float amount)
     {
@@ -865,47 +1092,43 @@ namespace physics
         player->lastroll = lastmillis;
     }
 
-    static void slide(gameent* player)
+    // Automatically apply smooth roll when strafing or sliding.
+    void updateRoll(gameent* player)
     {
-        if (!player->slide.queued || player->sliding(lastmillis))
+        if (rolleffect == 0)
         {
+            if (player->roll > 0)
+            {
+                player->roll = 0;
+            }
             return;
         }
-
-        // Ensure the player is not stuck or strafing/moving backwards.
-        const bool isMovingBackwards = player->move < 0;
-        if (player->strafe != 0 || isMovingBackwards || player->blocked)
+        if ((player->strafe && rollstrafemax || player->slide.isSliding()) && !player->floating())
         {
-            player->slide.reset();
+            const float zoomFactor = 2.0f * camera::camera.zoomstate.progress;
+            float baseRoll = rollstrafemax * clamp(zoomFactor, 1.0f, 2.0f);
+            if (rollslide > 0)
+            {
+                float& slideProgress = player->slide.progress;
+                if (player->slide.isSliding())
+                {
+                    slideProgress = min(slideProgress + float(curtime) / rollslidefade, 1.0f);
+                }
+                else
+                {
+                    slideProgress = max(slideProgress - float(curtime) / rollslidefade, 0.0f);
+                }
+                baseRoll += rollslide * slideProgress;
+            }
+            baseRoll = clamp(baseRoll, -ROLL_MAX, ROLL_MAX);
+            const float time = curtime * rollstrafe;
+            const float finalRoll = player->roll - pow(clamp(1.0f + player->strafe * player->roll / baseRoll, 0.0f, 1.0f), 0.33f) * (player->strafe ? player->strafe : 1) * time;
+            player->roll = clamp(finalRoll, -baseRoll, baseRoll);
+
+            // Done.
             return;
         }
-
-        // Check if the slide occurs within a certain time window.
-        if (!player->slide.isChained(lastmillis))
-        {
-            player->slide.reduction = 1.0f;
-        }
-        else
-        {
-            // Apply reduction for consecutive slides.
-            player->slide.reduction = clamp(player->slide.reduction - 0.25f, 0.0f, 1.0f);
-        }
-        player->slide.last = lastmillis;
-
-        const float slideVelocity = VELOCITY_SLIDE * player->slide.reduction;
-        if (slideVelocity <= 0)
-        {
-            player->slide.queued = false;
-            return;
-        }
-        float velocity = player->vel.magnitude() + slideVelocity;
-        if (velocity <= slideVelocity)
-        {
-            velocity *= 1.5f;
-        }
-        player->vel = vec(player->slide.yaw * RAD, 0.f).mul(velocity);
-        player->slide.initiate(lastmillis);
-        triggerPlayerPhysicsEvent(player, PhysEvent_CrouchSlide);
+        player->roll *= curtime == PHYSFRAMETIME ? rollfade : pow(rollfade, curtime / float(PHYSFRAMETIME));
     }
 
     const int SHORT_JUMP_THRESHOLD = 350;
@@ -956,8 +1179,7 @@ namespace physics
             detectcollisions(d, moveres, dir);
             if (!d->timeinair && !isinwater) // Player is currently not in air nor swimming.
             {
-                // Slide as soon as we land.
-                slide(d);
+                d->slide.evaluate(d, lastmillis);
 
                 // Now that we landed, we can double jump again.
                 d->doublejumping = false;
@@ -987,32 +1209,7 @@ namespace physics
             }
         }
 
-        if (rolleffect)
-        {
-            // Automatically apply smooth roll when strafing.
-            const bool isSliding = d->slide.queued || d->sliding(lastmillis);
-            if ((d->strafe && rollstrafemax && !d->floating()) || isSliding)
-            {
-                const float zoomFactor = 2.0f * camera::camera.zoomstate.progress;
-                const float baseRollAmount = rollstrafemax * clamp(zoomFactor, 1.0f, 2.0f);
-                float finalRollAmount = baseRollAmount;
-                if (d->sliding(lastmillis))
-                {
-                    const float slideRollAmount = rollstrafemax * rollslidemultiplier;
-                    finalRollAmount += slideRollAmount;
-                }
-                finalRollAmount = clamp(finalRollAmount, -ROLL_MAX, ROLL_MAX);
-                d->roll = clamp(d->roll - pow(clamp(1.0f + d->strafe * d->roll / finalRollAmount, 0.0f, 1.0f), 0.33f) * (d->strafe ? d->strafe : 1) * curtime * rollstrafe, -finalRollAmount, finalRollAmount);
-            }
-            else
-            {
-                d->roll *= curtime == PHYSFRAMETIME ? rollfade : pow(rollfade, curtime / float(PHYSFRAMETIME));
-            }
-        }
-        else if (d->roll)
-        {
-            d->roll = 0;
-        }
+        updateRoll(d);
 
         if (d->state == CS_ALIVE) updatedynentcache(d);
 
@@ -1091,7 +1288,7 @@ namespace physics
     static void playFootstepSounds(gameent* player, const int sound, const bool shouldPlayCrouchFootsteps = true)
     {
         // Conditions to reduce unnecessary checks.
-        if (!footstepsounds || player == nullptr || !player->onfloor() || (player == self && player->blocked))
+        if (!footstepsounds || player == nullptr || !player->onfloor() || player->slide.isSliding() || (player == self && player->blocked))
         {
             return;
         }
@@ -1218,7 +1415,7 @@ namespace physics
                 playsound(material == MAT_WATER ? S_LAND_WATER : S_LAND, player);
                 if (player == hudPlayer)
                 {
-                    sway.addevent(player, SwayEvent_LandHeavy, 380, -2);
+                    sway.addevent(player, SwayEvent_LandHeavy, 380, -2 * (player->slide.isQueued() ? 0.5f : 1.0f));
                     camera::camera.addevent(player, camera::CameraEvent_Land, 100, -1.5f);
                     addroll(player, rollonland);
                 }
@@ -1228,7 +1425,7 @@ namespace physics
             case PhysEvent_CrouchIn:
             case PhysEvent_CrouchOut:
             {
-                if (player->sliding(lastmillis))
+                if (player->slide.isSliding())
                 {
                     break;
                 }
@@ -1253,23 +1450,16 @@ namespace physics
             }
 
             case PhysEvent_CrouchSlide:
+                sway.addevent(player, SwayEvent_Crouch, player->slide.duration, -1.75f);
                 playsound(S_SLIDE, player);
                 if (!isLocal)
                 {
-                    player->slide.initiate(lastmillis);
+                    player->slide.start(player, lastmillis);
                 }
                 break;
 
             case PhysEvent_CrouchSlideStop:
             {
-                static int lastStop = 0;
-                if (lastmillis - lastStop < player->slide.slideDuration)
-                {
-                    // Return so we do not send this physics event to other clients.
-                    return;
-                }
-                addroll(player, rollslidestop);
-                playsound(S_IMPACT_MELEE, player);
                 if (!isLocal)
                 {
                     player->slide.reset();
@@ -1332,33 +1522,8 @@ namespace physics
         moveBackward(*down);
     });
 
-    static bool canSlide()
-    {
-        return !self->zooming && !validact(self->attacking);
-    }
-
-    // Option for double-tap forward to slide.
-    VARP(slideforward, 0, 0, 1);
-
     static void moveForward(int down)
     {
-        static int lastPress = 0;
-        if (slideforward && down)
-        {
-            const int sinceLastPress = lastmillis - lastPress;
-
-            // Check for double-taps.
-            if (sinceLastPress < 250 && canSlide())
-            {
-                self->slide.queued = true; // Mark slide as queued
-                self->slide.yaw = self->yaw;
-            }
-            else
-            {
-                self->slide.queued = false; // Reset slide queue if not a double-tap
-            }
-            lastPress = lastmillis;
-        }
         self->k_up = down != 0;
         self->move = self->k_up ? 1 : (self->k_down ? -1 : 0);
     }
@@ -1401,7 +1566,7 @@ namespace physics
     {
         if (!down || canJump())
         {
-            if (self->physstate > PHYS_FLOAT && self->crouched() && !self->sliding(lastmillis))
+            if (self->physstate > PHYS_FLOAT && self->crouched() && !self->slide.isSliding())
             {
                 self->crouching = 0;
             }
@@ -1425,52 +1590,58 @@ namespace physics
         return self->state != CS_DEAD;
     }
 
+    static bool canSlide()
+    {
+        return !self->zooming && !validact(self->attacking);
+    }
+
     VARP(crouchtoggle, 0, 0, 1);
 
-    static void doCrouch(int down)
+    static void doCrouch(const bool isPressed)
     {
         static int lastPress = 0;
-        if (!down)
+        if (!isPressed)
         {
             // Reset the crouching state when the button is released.
-            if (!crouchtoggle && !self->slide.queued)
+            if (!crouchtoggle && !self->slide.isQueued())
             {
                 self->crouching = abs(self->crouching);
             }
-            triggerPlayerPhysicsEvent(self, PhysEvent_CrouchOut);
         }
         else if (canCrouch())
         {
             const int sinceLastPress = lastmillis - lastPress;
 
             // Check for double-taps.
-            if (sinceLastPress < 250 && canSlide())
+            const bool isDoubleTap = sinceLastPress < 250;
+            if (isDoubleTap && canSlide())
             {
                 // Mark slide as queued.
-                self->slide.queued = true;
-                self->slide.yaw = self->yaw;
+                self->slide.queue(self, lastmillis);
             }
             else
             {
                 // Reset slide queue if not a double-tap.
-                self->slide.queued = false;
+                self->slide.dequeue();
             }
             lastPress = lastmillis;
 
-            if (crouchtoggle)
+            if (!isDoubleTap)
             {
-                self->crouching = (self->crouching < 0) ? abs(self->crouching) : -1;
+                if (crouchtoggle)
+                {
+                    self->crouching = (self->crouching < 0) ? abs(self->crouching) : -1;
+                }
+                else
+                {
+                    self->crouching = -1;
+                }
             }
-            else
-            {
-                self->crouching = -1;
-            }
-            triggerPlayerPhysicsEvent(self, PhysEvent_CrouchIn);
         }
     }
     ICOMMAND(crouch, "D", (int* down),
     {
-        doCrouch(*down);
+        doCrouch(*down != 0);
     });
 
     /*

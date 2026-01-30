@@ -1285,20 +1285,24 @@ namespace physics
     VARP(footstepsounds, 0, 1, 1);
     VARP(footstepdelay, 2500, 2700, 5000);
 
-    static void playFootstepSounds(gameent* player, const int sound, const bool shouldPlayCrouchFootsteps = true)
+    static void playFootstepSounds(gameent* player, const int sound, const bool shouldPlayCrouchFootsteps)
     {
         // Conditions to reduce unnecessary checks.
-        if (!footstepsounds || player == nullptr || !player->onfloor() || player->slide.isSliding() || (player == self && player->blocked))
+        if (!footstepsounds || player == nullptr || !player->onfloor() || player->slide.isSliding())
+        {
+            return;
+        }
+        const gameent* hudPlayer = followingplayer(self);
+        if (player == hudPlayer && player->blocked)
         {
             return;
         }
         const bool isCrouching = player->crouching && player->crouched();
         const bool isMoving = player->move || player->strafe;
-        if (!isMoving || (!shouldPlayCrouchFootsteps && isCrouching))
+        if (!isMoving || (isCrouching && !shouldPlayCrouchFootsteps))
         {
             return;
         }
-
         const float lowest = min(player->lfoot.z, player->rfoot.z);
         const float velocity = max(player->vel.magnitude(), 1.0f);
         const float delay = (footstepdelay / velocity) * (1.0f + fabs(lowest - player->o.z));
@@ -1318,10 +1322,10 @@ namespace physics
 
     static FootstepInfo getFootstepSound(const gameent* player)
     {
-        const FootstepInfo default = { S_FOOTSTEP, false };
+        const FootstepInfo defaultInfo = { S_FOOTSTEP, false };
         if (player == nullptr)
         {
-            return default;
+            return defaultInfo;
         }
         vec footPosition = player->feetpos();
         int material = lookupmaterial(footPosition);

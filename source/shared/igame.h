@@ -63,16 +63,16 @@ static const struct textureeffect
     int footstepsound;
 } textureeffects[] =
 {
-    {"generic", TEXEFFECT_GENERIC, true,  S_FOOTSTEP         },
-    {"dirt",    TEXEFFECT_DIRT,    true,  S_FOOTSTEP_DIRT    },
-    {"metal",   TEXEFFECT_METAL,   true,  S_FOOTSTEP_METAL   },
-    {"wood",    TEXEFFECT_WOOD,    true,  S_FOOTSTEP_WOOD    },
-    {"duct",    TEXEFFECT_DUCT,    false, S_FOOTSTEP_DUCT    },
-    {"silky",   TEXEFFECT_SILKY,   true,  S_FOOTSTEP_SILKY   },
-    {"snow",    TEXEFFECT_SNOW,    true,  S_FOOTSTEP_SNOW    },
-    {"organic", TEXEFFECT_ORGANIC, true,  S_FOOTSTEP_ORGANIC },
-    {"glass",   TEXEFFECT_GLASS,   true,  S_FOOTSTEP_GLASS   },
-    {"water",   TEXEFFECT_WATER,   false, S_FOOTSTEP_WATER   }
+    {"generic", TEXEFFECT_GENERIC, false, S_FOOTSTEP         },
+    {"dirt",    TEXEFFECT_DIRT,    false, S_FOOTSTEP_DIRT    },
+    {"metal",   TEXEFFECT_METAL,   false, S_FOOTSTEP_METAL   },
+    {"wood",    TEXEFFECT_WOOD,    false, S_FOOTSTEP_WOOD    },
+    {"duct",    TEXEFFECT_DUCT,    true,  S_FOOTSTEP_DUCT    },
+    {"silky",   TEXEFFECT_SILKY,   false, S_FOOTSTEP_SILKY   },
+    {"snow",    TEXEFFECT_SNOW,    false, S_FOOTSTEP_SNOW    },
+    {"organic", TEXEFFECT_ORGANIC, false, S_FOOTSTEP_ORGANIC },
+    {"glass",   TEXEFFECT_GLASS,   false, S_FOOTSTEP_GLASS   },
+    {"water",   TEXEFFECT_WATER,   true,  S_FOOTSTEP_WATER   }
 };
 
 enum

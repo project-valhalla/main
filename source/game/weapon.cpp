@@ -710,7 +710,6 @@ namespace game
         const int sound = attacks[attack].sound;
         float dist = from.dist(to);
         const gameent* hudPlayer = followingplayer(self);
-        const bool shouldEject = player->eject.x >= 0 && player == hudPlayer;
         int trackType = TRACK_ORIGIN;
         switch (attack)
         {
@@ -878,19 +877,20 @@ namespace game
         const int projectile = attacks[attack].projectile;
         if (isvalidprojectile(projectile))
         {
-            int attackrays = attacks[attack].rays;
-            if (attackrays <= 1)
+            const int attackRays = attacks[attack].rays;
+            if (attackRays <= 1)
             {
-                projectiles::make(player, from, to, isLocal, id, attack, projectile, attacks[attack].lifetime, attacks[attack].projspeed, attacks[attack].gravity, attacks[attack].elasticity, trackType);
+                projectiles::make(player, from, to, isLocal, id, attack, projectile, trackType);
             }
-            else loopi(attackrays)
+            else for (int i = 0; i < attackRays; i++)
             {
-                projectiles::make(player, from, rays[i], isLocal, id, attack, projectile, attacks[attack].lifetime, attacks[attack].projspeed, attacks[attack].gravity, attacks[attack].elasticity, trackType);
+                projectiles::make(player, from, rays[i], isLocal, id, attack, projectile, trackType);
             }
         }
         if (validgun(weapon))
         {
             const int ejectProjectile = guns[weapon].ejectprojectile;
+            const bool shouldEject = player->eject.x >= 0 && player == hudPlayer;
             if (isvalidprojectile(ejectProjectile) && shouldEject)
             {
                 projectiles::spawnbouncer(player->eject, player, ejectProjectile);

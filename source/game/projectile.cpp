@@ -84,7 +84,7 @@ namespace game
             delete &proj;
         }
 
-        void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int lifetime, const int speed, const float gravity, const float elasticity, const int trackType)
+        void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int trackType)
         {
             ProjEnt& proj = *Projectiles.add(new ProjEnt);
             proj.set(type);
@@ -94,24 +94,17 @@ namespace game
             proj.o = from;
             proj.from = from;
             proj.to = to;
-            proj.setradius();
             proj.isLocal = isLocal;
             proj.id = id;
             proj.attack = attack;
-            proj.lifetime = lifetime;
-            proj.setSpeed(speed);
-            proj.gravity = gravity;
-            proj.elasticity = elasticity;
             proj.trackType = trackType;
-
-            proj.setModel();
 
             vec dir(to);
             dir.sub(from).safenormalize();
             proj.vel = dir;
             if (proj.flags & ProjFlag_Bounce)
             {
-                proj.vel.mul(speed);
+                proj.vel.mul(proj.speed);
             }
 
             avoidcollision(&proj, dir, owner, 0.1f);
@@ -145,7 +138,6 @@ namespace game
             proj.lastPosition = owner->o;
 
             proj.checkliquid();
-            proj.setsounds();
             proj.millis = lastmillis;
         }
 
@@ -185,7 +177,7 @@ namespace game
             }
             ProjEnt* proj = (ProjEnt*)d;
             proj->bounces++;
-            const int maxBounces = projs[proj->projectile].maxbounces;
+            const int maxBounces = projs[proj->projectile].maxBounces;
             if ((maxBounces && proj->bounces > maxBounces) || lastmillis - proj->lastImpact < 100)
             {
                 return;
@@ -769,7 +761,7 @@ namespace game
             {
                 case Projectile_Grenade:
                 {
-                    if (proj.lifetime < attacks[proj.attack].lifetime - 100)
+                    if (proj.lifetime < projs[proj.projectile].lifeTime - 100)
                     {
                         particle_flare(proj.lastPosition, position, 500, PART_TRAIL_STRAIGHT, 0x74BCF9, 0.4f);
                     }
@@ -780,7 +772,7 @@ namespace game
                 {
                     tailColor = 0xFFC864;
                     tailMinLength = 90.0f;
-                    if (proj.lifetime <= attacks[proj.attack].lifetime / 2)
+                    if (proj.lifetime <= projs[proj.projectile].lifeTime / 2)
                     {
                         tailSize *= 2;
                     }
@@ -933,7 +925,7 @@ namespace game
                             if (proj.flags & ProjFlag_Bounce)
                             {
                                 const bool isBouncing = physics::isbouncing(&proj, proj.elasticity, 0.5f, proj.gravity);
-                                const bool hasBounced = projs[proj.projectile].maxbounces && proj.bounces >= projs[proj.projectile].maxbounces;
+                                const bool hasBounced = projs[proj.projectile].maxBounces > 0 && proj.bounces >= projs[proj.projectile].maxBounces;
                                 if (!isBouncing || hasBounced)
                                 {
                                     proj.kill();
@@ -1025,20 +1017,21 @@ namespace game
         void spawnbouncer(const vec& from, gameent* d, const int type)
         {
             vec to(rnd(100) - 50, rnd(100) - 50, type == Projectile_Gib ? 50 + rnd(100) : rnd(100) - 50);
-            float elasticity = 0.6f;
-            if (isejectedprojectile(type))
+
+            // Tweak direction for ejected gun shells.
+            if (projs[type].flags & ProjFlag_Eject)
             {
                 to = vec(-50, 1, rnd(30) - 15);
                 to.rotate_around_z(d->yaw * RAD);
-                elasticity = 0.4f;
             }
+
             if (to.iszero())
             {
-                to.z += 1;
+                to.z += 1.0f;
             }
             to.normalize();
             to.add(from);
-            make(d, from, to, true, 0, -1, type, 1000 + rnd(1000), rnd(100) + 20, 0.3f + rndscale(0.8f), elasticity);
+            make(d, from, to, true, -1, ATK_INVALID, type);
         }
 
         void preload()

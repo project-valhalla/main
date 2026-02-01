@@ -111,16 +111,35 @@ namespace ai
         return false;
     }
 
+    // Add margins of error.
     bool hastarget(gameent *d, int atk, aistate &b, gameent *e, float yaw, float pitch, float dist)
-    { // add margins of error
+    {
         if(attackrange(d, atk, dist) || (d->skill <= 100 && !rnd(d->skill)))
         {
-            if(melee(d)) return true;
-            float skew = clamp(float(lastmillis-d->ai->enemymillis)/float((d->skill*attacks[atk].attackdelay/200.f)), 0.f, attacks[atk].projspeed ? 0.25f : 1e16f),
-                offy = yaw-d->yaw, offp = pitch-d->pitch;
-            if(offy > 180) offy -= 360;
-            else if(offy < -180) offy += 360;
-            if(fabs(offy) <= d->ai->views[0]*skew && fabs(offp) <= d->ai->views[1]*skew) return true;
+            if (melee(d))
+            {
+                return true;
+            }
+            const attackinfo& attackInfo = attacks[atk];
+            const projectileinfo& projectileInfo = projs[attackInfo.projectile];
+            const float delay = static_cast<float>(d->skill * attackInfo.attackdelay / 200.0f);
+            const float skewProgress = static_cast<float>(lastmillis - d->ai->enemymillis) / delay;
+            const float speed = projectileInfo.speed ? 0.25f : 1e16f;
+            const float skew = clamp(skewProgress, 0.0f, speed);
+            const float pitchOffset = pitch - d->pitch;
+            float yawOffset = yaw - d->yaw;
+            if (yawOffset > 180)
+            {
+                yawOffset -= 360;
+            }
+            else if (yawOffset < -180)
+            {
+                yawOffset += 360;
+            }
+            if (fabs(yawOffset) <= d->ai->views[0] * skew && fabs(pitchOffset) <= d->ai->views[1] * skew)
+            {
+                return true;
+            }
         }
         return false;
     }
@@ -128,8 +147,18 @@ namespace ai
     vec getaimpos(gameent *d, int atk, gameent *e)
     {
         vec o = e->o;
-        if(attacks[atk].projspeed) o.z += (e->aboveeye*0.2f)-(0.8f*d->eyeheight);
-        else if(!attacks[atk].gravity) o.z += (e->aboveeye-e->eyeheight)*0.5f; // it's probably a grenade
+        const attackinfo& attackInfo = attacks[atk];
+        const projectileinfo& projectileInfo = projs[attackInfo.projectile];
+        if ((projectileInfo.flags & ProjFlag_Linear) != 0)
+        {
+            // Tweaking aim to hit target with a linear projectile (e.g. a rocket).
+            o.z += (e->aboveeye * 0.2f) - (0.8f * d->eyeheight);
+        }
+        else if ((projectileInfo.flags & ProjFlag_Bounce) == 0) // Not a grenade.
+        {
+            // Tweak aim for "hitscan" attacks.
+            o.z += (e->aboveeye - e->eyeheight) * 0.5f;
+        }
         if(d->skill <= 100)
         {
             if(lastmillis >= d->ai->lastaimrnd)

@@ -1117,22 +1117,88 @@ namespace game
 
     VARP(chatmentions, 0, 1, 1);
 
+    static const char *lowerstr(const char *s)
+    {
+        char *ret = newstring(s);
+        for(char *p = ret; *p; ++p) *p = (*p == ' ') ? '_' : cubelower(*p);
+        return ret;
+    }
+    static inline void lowername(gameent *pl, char *buf)
+    {
+        int i;
+        for(i = 0; pl->name[i]; ++i) buf[i] = (pl->name[i] == ' ') ? '_' : cubelower(pl->name[i]);
+        buf[i] = '\0';
+    }
+    static bool comparenames(gameent *a, gameent *b)
+    {
+        static char lower_a[MAXNAMELEN+1], lower_b[MAXNAMELEN+1];
+
+        lowername(a, lower_a);
+        lowername(b, lower_b);
+
+        const int val = strcmp(lower_a, lower_b);
+        if(val < 0) return true;
+        if(val > 0) return false;
+        return a < b;
+    }
+    const char *completename(const char *start, int len, const char *last, const char *next)
+    {
+        vector<gameent *> sorted_players = players;
+        sorted_players.sort(comparenames);
+
+        const char *start_lower = lowerstr(start);
+        const char *last_lower = last ? lowerstr(last) : NULL;
+        const char *next_lower = next ? lowerstr(next) : NULL;
+
+        loopv(sorted_players)
+        {
+            gameent *pl = sorted_players[i];
+            char name_lower[MAXNAMELEN+1];
+            lowername(pl, name_lower);
+            if(strncmp(name_lower, start_lower, len) == 0 &&
+                (!last || strcmp(name_lower, last_lower) > 0) && (!next || strcmp(name_lower, next_lower) < 0)
+            )
+            {
+                delete[] start_lower; delete[] last_lower; delete[] next_lower;
+                return pl->name;
+            }
+        }
+
+        delete[] start_lower; delete[] last_lower; delete[] next_lower;
+        return NULL;
+    }
+
     bool ischatmention(const char* text)
     {
         if (!chatmentions)
         {
             return false;
         }
-        const char* mention = strstr(text, self->name);
-        if (mention && mention > text && *(mention - 1) == '@')
+
+        // convert name and text to lowercase and remove spaces from name
+        static char lowername[MAXNAMELEN+1];
+        int i;
+        for(i = 0; self->name[i+1]; ++i)
+        {
+            lowername[i] = isspace(self->name[i]) ? '_' : cubelower(self->name[i]);
+        }
+        lowername[i] = '\0';
+        char *lowertext = newstring(text);
+        for(const char *p = text; *p; ++p) lowertext[p - text] = cubelower(*p);
+
+        // check against the lowercased name
+        const char* mention = strstr(lowertext, lowername);
+        if (mention && mention > lowertext && *(mention - 1) == '@')
         {
             // Checking if a chat message mentions our user name.
             const char next = *(mention + strlen(self->name));
             if (next == '\0' || isspace(next))
             {
+                delete[] lowertext;
                 return true;
             }
         }
+        delete[] lowertext;
         return false;
     }
 

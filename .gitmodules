@@ -1,3 +1,21 @@
 [submodule "data"]
 	path = data
 	url = https://github.com/project-valhalla/data.git
+[submodule "external/SDL2"]
+	path = external/SDL2
+	url = https://github.com/libsdl-org/SDL.git
+	branch = SDL2
+[submodule "external/SDL_image"]
+	path = external/SDL_image
+	url = https://github.com/libsdl-org/SDL_image.git
+	branch = SDL2
+[submodule "external/SDL_mixer"]
+	path = external/SDL_mixer
+	url = https://github.com/libsdl-org/SDL_mixer.git
+	branch = SDL2
+[submodule "external/doctest"]
+	path = external/doctest
+	url = https://github.com/onqtam/doctest.git
+[submodule "external/libmaxminddb"]
+	path = external/libmaxminddb
+	url = https://github.com/maxmind/libmaxminddb.git

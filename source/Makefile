@@ -5,6 +5,8 @@ PLATFORM= $(shell uname -s | tr '[:lower:]' '[:upper:]')
 PLATFORM_ARCH= $(shell uname -m)
 PLATFORM_PREFIX= native
 
+PKG_CONFIG ?= pkg-config
+
 INCLUDES= -Ishared -Iengine -Igame -Ienet/include
 
 STRIP=
@@ -56,8 +58,8 @@ CLIENT_LIBS= -F../bin/valhalla.app/Contents/Frameworks/ -framework SDL2 -framewo
 CLIENT_LIBS+= -framework SDL2_mixer -framework CoreAudio -framework AudioToolbox
 CLIENT_LIBS+= -framework AudioUnit -framework OpenGL -framework Cocoa -lz -Lenet -lenet
 else
-CLIENT_INCLUDES= $(INCLUDES) -I/usr/X11R6/include `sdl2-config --cflags`
-CLIENT_LIBS= -Lenet -lenet -L/usr/X11R6/lib -lX11 `sdl2-config --libs` -lSDL2_image -lSDL2_mixer -lz -lGL
+CLIENT_INCLUDES= $(INCLUDES) `$(PKG_CONFIG) --cflags x11 sdl2 SDL2_image SDL2_mixer zlib gl`
+CLIENT_LIBS= -Lenet -lenet `$(PKG_CONFIG) --libs x11 sdl2 SDL2_image SDL2_mixer zlib gl`
 endif
 endif
 ifeq ($(PLATFORM),LINUX)
@@ -139,10 +141,10 @@ SERVER_INCLUDES+= -Iinclude
 SERVER_LIBS= -mwindows $(STD_LIBS) -L$(WINBIN) -L$(WINLIB) -lzlib1 -lenet -lws2_32 -lwinmm
 MASTER_LIBS= $(STD_LIBS) -L$(WINBIN) -L$(WINLIB) -lzlib1 -lenet -lws2_32 -lwinmm
 else
-SERVER_LIBS= -Lenet -lenet -lz
+SERVER_LIBS= -Lenet -lenet `$(PKG_CONFIG) --libs zlib`
 MASTER_LIBS= $(SERVER_LIBS)
 MAXMINDDB_SUPPORT:= $(shell ./geoip/geoip_check.sh $(CXX) $(CXXFLAGS) $(SERVER_INCLUDES))
-SERVER_INCLUDES+= $(MAXMINDDB_SUPPORT)
+SERVER_INCLUDES+= $(MAXMINDDB_SUPPORT) `$(PKG_CONFIG) --cflags zlib`
 ifneq (,$(findstring HAVE_MAXMINDDB,$(MAXMINDDB_SUPPORT)))
 SERVER_LIBS+= -lmaxminddb
 endif
@@ -217,22 +219,22 @@ master: $(MASTER_OBJS)
 install: all
 else
 client:	libenet $(CLIENT_OBJS)
-	$(CXX) $(CXXFLAGS) -o valhalla_client $(CLIENT_OBJS) $(CLIENT_LIBS)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o valhalla_client $(CLIENT_OBJS) $(CLIENT_LIBS)
 ifneq (,$(findstring DARWIN,$(PLATFORM)))
 	install_name_tool -add_rpath @executable_path/../Frameworks valhalla_client
 endif
 
 server:	libenet $(SERVER_OBJS)
-	$(CXX) $(CXXFLAGS) -o valhalla_server $(SERVER_OBJS) $(SERVER_LIBS)  
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o valhalla_server $(SERVER_OBJS) $(SERVER_LIBS)  
 	
 master: libenet $(MASTER_OBJS)
-	$(CXX) $(CXXFLAGS) -o valhalla_master $(MASTER_OBJS) $(MASTER_LIBS)  
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o valhalla_master $(MASTER_OBJS) $(MASTER_LIBS)  
 
 shared/tessfont.o: shared/tessfont.c
 	$(CXX) $(CXXFLAGS) -c -o $@ $< `freetype-config --cflags`
 
 tessfont: shared/tessfont.o
-	$(CXX) $(CXXFLAGS) -o tessfont shared/tessfont.o `freetype-config --libs` -lz
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o tessfont shared/tessfont.o `freetype-config --libs` -lz
 
 ifneq (,$(findstring DARWIN,$(PLATFORM)))
 install: client

@@ -989,6 +989,7 @@ namespace game
     }
 
     VARP(killsound, 0, 1, 1);
+    VARP(killshake, 0, 1, 1);
 
     void kill(gameent *d, gameent *actor, int atk, int flags)
     {
@@ -1000,9 +1001,18 @@ namespace game
             if(d!=self) d->resetinterp();
             return;
         }
-        else if((d->state!=CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING) || intermission) return;
+        else if (intermission || (d->state != CS_ALIVE && d->state != CS_LAGGED && d->state != CS_SPAWNING))
+        {
+            return;
+        }
         if (actor == followingplayer(self))
         {
+            if (killshake)
+            {
+                constexpr int defaultKillShake = 60;
+                const int shake = max(attacks[atk].damage, defaultKillShake);
+                camera::camera.addevent(actor, camera::CameraEvent_Shake, shake);
+            }
             if (actor->role == ROLE_BERSERKER)
             {
                 playsound(S_BERSERKER);

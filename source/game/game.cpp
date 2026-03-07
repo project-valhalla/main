@@ -690,42 +690,59 @@ namespace game
     }
 
     VARP(deathscream, 0, 1, 1);
+    FVAR(deathupwardvelocityboost, 0, 40, 100);
+    VAR(deathlowvelocitythreshold, 0, 120, 200);
 
-    void managedeatheffects(gameent* d)
+    void manageDeathEffects(gameent* player)
     {
-        if (!d)
+        if (player == nullptr)
         {
             return;
         }
-
-        if (d->deathstate == Death_Gib)
+        if (player->deathstate == Death_Gib)
         {
-            gibeffect(max(-d->health, 0), d->vel, d);
+            gibeffect(max(-player->health, 0), player->vel, player);
         }
-        if (deathscream && d->type == ENT_PLAYER)
+        if (deathscream && player->type == ENT_PLAYER)
         {
-            bool isfirstperson = d == self && camera::isfirstpersondeath();
-            if (!isfirstperson)
+            const bool isFirstPerson = player == self && camera::isfirstpersondeath();
+            if (!isFirstPerson)
             {
-                int diesound = getplayermodelinfo(d).diesound[d->deathstate];
-                if (validsound(diesound))
+                const int deathSound = getplayermodelinfo(player).diesound[player->deathstate];
+                if (validsound(deathSound))
                 {
-                    playsound(diesound, d);
+                    playsound(deathSound, player);
                 }
             }
         }
-        // Fiddle around with velocity to produce funny results.
-        if (d->deathstate == Death_Headshot)
+
+        // Fiddle around with velocity for funny death effects.
+        if (player->deathstate == Death_Headshot)
         {
-            d->vel.x = d->vel.y = 0;
-            const float velocity = d->vel.z;
-            d->vel.z = -velocity;
+            if (player->onfloor())
+            {
+                player->vel.x = player->vel.y = 0;
+                const float velocity = player->vel.z;
+                player->vel.z = -velocity;
+            }
+            else
+            {
+                player->vel = vec(0, 0, 0);
+            }
         }
-        else if (d->deathstate == Death_Shock)
+        else if (player->deathstate == Death_Shock)
         {
-            static const float GUN_PULSE_SHOCK_IMPULSE = 95.0f; // Funny upward velocity applied to targets dying of electrocution.
-            d->vel.z = max(d->vel.z, GUN_PULSE_SHOCK_IMPULSE);
-            particle_flare(d->o, d->o, 100, PART_ELECTRICITY, 0xDD88DD, 12.0f);
+            constexpr float GunPulseShockImpulse = 95.0f; // Upward velocity for electrocution deaths.
+            player->vel.z = max(player->vel.z, GunPulseShockImpulse);
+            particle_flare(player->o, player->o, 100, PART_ELECTRICITY, 0xDD88DD, 12.0f);
+        }
+        else if (player->deathstate == Death_Default)
+        {
+            // Apply upward boost if velocity is low, avoid boring deaths.
+            if (deathupwardvelocityboost > 0 && player->vel.magnitude() <= deathlowvelocitythreshold)
+            {
+                player->vel.z = max(player->vel.z, deathupwardvelocityboost);
+            }
         }
     }
 
@@ -738,7 +755,7 @@ namespace game
                 Trigger death sounds and other effects only if it's a "new" death,
                 meaning we're not restoring a previous state (e.g. when switching to edit mode and back).
             */
-            managedeatheffects(player);
+            manageDeathEffects(player);
         }
         if(player == self)
         {

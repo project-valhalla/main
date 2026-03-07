@@ -383,7 +383,7 @@ namespace game
             deathstate = Death_Gib;
         }
         const bool isnoisy = deathstate != Death_Fist && deathstate != Death_Gib && deathstate != Death_Headshot && deathstate != Death_Disrupt;
-        managedeatheffects(this);
+        manageDeathEffects(this);
         if (deathstate == Death_Gib)
         {
             gibeffect(max(-health, 0), vel, this);

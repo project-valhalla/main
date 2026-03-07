@@ -1064,7 +1064,7 @@ namespace game
     extern void doaction(int act);
     extern void hurt(gameent* d);
     extern void suicide(gameent* d);
-    extern void managedeatheffects(gameent* d);
+    extern void manageDeathEffects(gameent* player);
 
     extern bool clientoption(const char* arg);
     extern bool gamewaiting, betweenrounds, hunterchosen;

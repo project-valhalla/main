@@ -758,10 +758,7 @@ namespace game
                 camera::thirdperson = 0;
             }
         }
-        else
-        {
-            player->halt();
-        }
+        player->halt();
     }
 
     struct Killfeed
@@ -1060,13 +1057,22 @@ namespace game
             intermission = true;
             self->attacking = ACT_IDLE;
             self->pitch = self->roll = 0;
-            if(cmode) cmode->gameover();
+            self->halt();
+            if (cmode)
+            {
+                cmode->gameover();
+            }
             conoutf(CON_GAMEINFO, "\f2Intermission: game has ended!");
             bestteams.shrink(0);
             bestplayers.shrink(0);
-            if(m_teammode) getbestteams(bestteams);
-            else getbestplayers(bestplayers);
-
+            if (m_teammode)
+            {
+                getbestteams(bestteams);
+            }
+            else
+            {
+                getbestplayers(bestplayers);
+            }
             if(validteam(self->team) ? bestteams.htfind(self->team) >= 0 : bestplayers.find(self) >= 0)
             {
                 playsound(S_INTERMISSION_WIN);

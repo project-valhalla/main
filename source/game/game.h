@@ -642,7 +642,7 @@ namespace physics
         // Apply reduction for consecutive slides.
         void applyReduction(const int time) noexcept
         {
-            reduction = clamp(reduction - 0.25f, 0.0f, 1.0f);
+            reduction = clamp(reduction - 0.25f, 0.25f, 1.0f);
         }
 
         void checkReduction(const int time) noexcept

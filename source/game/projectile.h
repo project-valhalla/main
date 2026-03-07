@@ -375,11 +375,11 @@ struct ProjEnt : dynent
         if (variants > 0)
         {
             variant = rnd(variants);
-            defformatstring(variantName, "%s/%02d", projs[projectile].directory, variant);
+            defformatstring(variantName, "%s/%02d", context.directory, variant);
             copystring(model, variantName);
             return;
         }
-        copystring(model, projs[projectile].directory);
+        copystring(model, context.directory);
     }
 
     void set(const int type)

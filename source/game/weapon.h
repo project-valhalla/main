@@ -111,8 +111,8 @@ static const struct attackinfo
     { GUN_INVALID, ACT_MELEE,	     Projectile_Melee,  650,  60,  0,   0,   28,  1,   50,  0,  0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,     S_MELEE,    S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist      },
     { GUN_MELEE,   ACT_MELEE,      Projectile_Invalid,  420,  25,  0,   0,   16,  1,   50,  0,  0, false, ANIM_MELEE, ANIM_VWEP_MELEE, ANIM_GUN_MELEE,     S_MELEE,    S_IMPACT_MELEE,    S_HIT_MELEE,   Death_Fist      },
     // shotgun
-    { GUN_SCATTER, ACT_PRIMARY,     Projectile_Tracer,  880,   5,  5, 300, 1024, 20,   60,  0,  1, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SG_A,     S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
-    { GUN_SCATTER, ACT_SECONDARY,  Projectile_Invalid, 1000,   6,  5,  70, 1024, 10,   60,  0,  1, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_SG_A,     S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
+    { GUN_SCATTER, ACT_PRIMARY,     Projectile_Tracer,  880,   6,  6, 300, 1024, 20,   60,  0,  1, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SG_A,     S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
+    { GUN_SCATTER, ACT_SECONDARY,  Projectile_Invalid, 1000,   7,  6,  70, 1024, 10,   60,  0,  1, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_SG_A,     S_IMPACT_SG,       S_HIT_WEAPON,  Death_Default   },
     // smg
     { GUN_SMG,     ACT_PRIMARY,     Projectile_Tracer,  110,  16, 14,  40, 1024,  1,   60,  0,  1, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_PRIMARY,   S_SMG,      S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },
     { GUN_SMG,     ACT_SECONDARY,  Projectile_Invalid,  125,  20, 15,  20, 1024,  1,   80,  0,  1, true,  ANIM_SHOOT, ANIM_VWEP_SHOOT, ANIM_GUN_SECONDARY, S_SMG,      S_IMPACT_SMG,      S_HIT_WEAPON,  Death_Default   },

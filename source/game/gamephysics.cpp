@@ -1310,7 +1310,7 @@ namespace physics
         {
             return;
         }
-        playsound(sound, player);
+        sendsound(sound, player);
         player->lastfootstep = lastmillis;
     }
 
@@ -1361,7 +1361,7 @@ namespace physics
         if (islanding)
         {
             // Just send the landing sound effect (single footstep).
-            playsound(foot.sound, player);
+            sendsound(foot.sound, player);
         }
         else
         {
@@ -1376,6 +1376,7 @@ namespace physics
         {
             return;
         }
+        bool shouldSend = true;
         gameent* player = (gameent*)pl;
         if (player != self && !player->ai && isLocal)
         {
@@ -1413,6 +1414,7 @@ namespace physics
                     triggerFootsteps(player, false);
                 }
                 player->lastfootleft = player->lastfootright = vec(-1, -1, -1);
+                shouldSend = false;
                 break;
 
             case PhysEvent_LandHeavy:
@@ -1479,7 +1481,8 @@ namespace physics
                     Return so we do not send this physics event to other clients.
                     This to prevent inaccurate ragdoll collision sounds as the ragdoll physics may not be fully deterministic.
                 */
-                return;
+                shouldSend = false;
+                break;;
             }
 
             case PhysEvent_LiquidIn:
@@ -1502,7 +1505,7 @@ namespace physics
         }
 
         // Send physics event to other clients.
-        if (isLocal)
+        if (isLocal && shouldSend)
         {
             addmsg(N_PHYSICSEVENT, "rcii", player, event, material);
         }

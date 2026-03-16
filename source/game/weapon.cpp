@@ -31,8 +31,7 @@ namespace game
             if (shots)
             {
                 const float progress = static_cast<float>(shots) / player->recoil.maxShots;
-                const float newSpread = spread + int(recoils[attack].maxSpread * progress);
-                spread = newSpread;
+                spread += static_cast<int>(round(recoils[attack].maxSpread * progress));
             }
             if (!player->onfloor())
             {

@@ -1686,10 +1686,12 @@ namespace game
             return;
         }
         itemstat& is = itemstats[type - I_AMMO_SG];
-        if (d->gunselect != is.info && !d->ammo[is.info])
+        const int weapon = is.info;
+        if (!validgun(weapon) || d->gunselect == weapon || d->ammo[weapon])
         {
-            gunselect(is.info, self);
+            return;
         }
+        gunselect(is.info, self);
     }
 
     int checkweaponzoom()

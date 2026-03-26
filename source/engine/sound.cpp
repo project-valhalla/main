@@ -372,7 +372,7 @@ bool soundsample::load(const char *dir, bool msg)
         if(chunk) return true;
     }
 
-    conoutf(CON_ERROR, "failed to load sample: data/audio/%s%s", dir, name);
+    if(msg) conoutf(CON_ERROR, "failed to load sample: data/audio/%s%s", dir, name);
     return false;
 }
 

@@ -1691,7 +1691,7 @@ namespace game
         {
             return;
         }
-        gunselect(is.info, self);
+        gunselect(weapon, self);
     }
 
     int checkweaponzoom()

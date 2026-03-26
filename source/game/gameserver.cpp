@@ -358,7 +358,7 @@ namespace server
     struct ServerState : gamestate
     {
         vec o, oldpos;
-        int state, editstate;
+        int state, editstate, physstate;
         int lastdeath, deadflush, lastspawn, lifesequence;
         int lastpain, lastdamage, lastregeneration;
         int lastmove, lastattack;
@@ -3200,11 +3200,67 @@ namespace server
         return (m_teammode && sameteam(a->team, b->team)) || (m_role && a->state.role == b->state.role);
     }
 
+    int getKillFlags(clientinfo* attacker, clientinfo* target, const int attack, const int hitFlags)
+    {
+        int flags = 0;
+        if (target != attacker && !isally(target, attacker))
+        {
+            if (hitFlags & Hit_Head)
+            {
+                flags |= KILL_HEADSHOT;
+            }
+            if (hitFlags & Hit_Projectile)
+            {
+                flags |= KILL_EXPLOSION;
+            }
+            if (!firstblood)
+            {
+                firstblood = true;
+                flags |= KILL_FIRST;
+            }
+            if (attacker->state.spree > 0)
+            {
+                switch (attacker->state.spree)
+                {
+                    case 5:
+                        flags |= KILL_SPREE;
+                        break;
+
+                    case 10:
+                        flags |= KILL_SAVAGE;
+                        break;
+
+                    case 15:
+                        flags |= KILL_UNSTOPPABLE;
+                        break;
+
+                    case 20:
+                    case 25:
+                    case 30:
+                    case 35:
+                    case 40:
+                    case 45:
+                    case 50:
+                        flags |= KILL_LEGENDARY;
+                        if (attacker->state.spree >= 50)
+                        {
+                            attacker->state.spree = 0; // Reset the spree.
+                        }
+                        break;
+                }
+                if (target->state.physstate == PHYS_FALL || attacker->state.physstate == PHYS_FALL)
+                {
+                    flags |= KILL_MIDAIR;
+                }
+            }
+        }
+        return flags;
+    }
+
     void died(clientinfo *target, clientinfo *actor, int atk, int damage, int flags = 0)
     {
         ServerState&  ts = target->state;
         ts.deaths++;
-        ts.spree = 0;
         int value = (m_berserker && target->state.role == ROLE_BERSERKER) ? 5 : 1,
             fragvalue = smode ? smode->fragvalue(target, actor) : (target==actor || isally(target, actor) ? -1 : value);
         actor->state.frags += fragvalue;
@@ -3222,48 +3278,14 @@ namespace server
         }
         teaminfo *t = m_teammode && validteam(actor->team) ? &teaminfos[actor->team-1] : NULL;
         if(t) t->frags += fragvalue;
-        int kflags = 0; // flags = hit flags, kflags = kill flags
-        if(!firstblood && target != actor && !isally(target, actor))
-        {
-            firstblood = true;
-            kflags |= KILL_FIRST;
-        }
-        if (actor->state.spree > 0) switch (actor->state.spree)
-        {
-            case 5: kflags |= KILL_SPREE; break;
-            case 10: kflags |= KILL_SAVAGE; break;
-            case 15: kflags |= KILL_UNSTOPPABLE; break;
-            case 20:
-            case 25:
-            case 30:
-            case 35:
-            case 40:
-            case 45:
-            case 50:
-            {
-                kflags |= KILL_LEGENDARY;
-                if (actor->state.spree >= 50)
-                {
-                    actor->state.spree = 0; // Reset the spree.
-                }
-                break;
-            }
-        }
-        if (flags & Hit_Head)
-        {
-            kflags |= KILL_HEADSHOT;
-        }
-        if (flags & Hit_Projectile)
-        {
-            kflags |= KILL_EXPLOSION;
-        }
+        int killFlags = getKillFlags(actor, target, atk, flags);
         if(m_berserker)
         {
             checkberserker(target);
             if(target!=actor && (isberserkerdead || target->state.role == ROLE_BERSERKER))
             {
                 makeberserker(actor);
-                kflags |= KILL_BERSERKER;
+                killFlags |= KILL_BERSERKER;
             }
             if(m_berserker && !m_vampire(mutators) && actor->state.role == ROLE_BERSERKER)
             {
@@ -3275,10 +3297,10 @@ namespace server
         if(hidekillinfo)
         {
             kflags |= KILL_TRAITOR;
-            sendf(actor->clientnum, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, 0, atk, kflags); // send only to actor
-            sendf(-1, 1, "ri7x", N_DIED, target->clientnum, target->clientnum, 0, 0, atk, kflags, actor->clientnum); // send to other players excluding actor
+            sendf(actor->clientnum, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, 0, atk, killFlags); // send only to actor
+            sendf(-1, 1, "ri7x", N_DIED, target->clientnum, target->clientnum, 0, 0, atk, killFlags, actor->clientnum); // send to other players excluding actor
         }
-        else sendf(-1, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, atk, kflags);
+        else sendf(-1, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, t ? t->frags : 0, atk, killFlags);
         target->position.setsize(0);
         if(smode) smode->died(target, actor);
         ts.state = CS_DEAD;
@@ -4438,7 +4460,7 @@ namespace server
             case N_POS:
             {
                 int pcn = getuint(p);
-                p.get();
+                uchar physicsState = p.get();
                 uint flags = getuint(p);
                 clientinfo *cp = getinfo(pcn);
                 if(cp && pcn != sender && cp->ownernum != sender) cp = NULL;
@@ -4470,6 +4492,7 @@ namespace server
                     cp->state.o = pos;
                     if(cp->state.oldpos != cp->state.o) cp->state.lastmove = lastmillis;
                     cp->damagemat = (flags&0x80)!=0;
+                    cp->state.physstate = physicsState & 0x7;
                 }
                 break;
             }

@@ -26,7 +26,8 @@ enum
     KILL_HEADSHOT    = 1 << 5,
     KILL_BERSERKER   = 1 << 6,
     KILL_TRAITOR     = 1 << 7,
-    KILL_EXPLOSION   = 1 << 8
+    KILL_EXPLOSION   = 1 << 8,
+    KILL_MIDAIR      = 1 << 9
 };
 
 // Death states: information on the logic to apply for each death.

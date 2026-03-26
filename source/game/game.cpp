@@ -793,7 +793,8 @@ namespace game
         {
             ZOOM        = 1 << 0,
             HEADSHOT    = 1 << 1,
-            EXPLOSION   = 1 << 2
+            EXPLOSION   = 1 << 2,
+            MIDAIR      = 1 << 3
         };
 
         enum Weapon
@@ -813,6 +814,18 @@ namespace game
         void setCrit(const int flags, const int atk)
         {
             crit = 0;
+            if (validatk(atk))
+            {
+                const int gun = attacks[atk].gun;
+                if (validgun(gun))
+                {
+                    const bool isZoom = attacks[atk].action == ACT_SECONDARY && guns[gun].zoom != Zoom_None;
+                    if (isZoom)
+                    {
+                        crit |= Crit::ZOOM;
+                    }
+                }
+            }
             if (flags & KILL_HEADSHOT)
             {
                 crit |= Crit::HEADSHOT;
@@ -821,11 +834,9 @@ namespace game
             {
                 crit |= Crit::EXPLOSION;
             }
-            const int gun = attacks[atk].gun;
-            const bool isZoom = attacks[atk].action == ACT_SECONDARY && guns[gun].zoom != Zoom_None;
-            if (isZoom)
+            if (flags & KILL_MIDAIR)
             {
-                crit |= Crit::ZOOM;
+                crit |= Crit::MIDAIR;
             }
         }
 

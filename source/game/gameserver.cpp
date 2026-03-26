@@ -447,6 +447,8 @@ namespace server
         }
     };
 
+    VAR(disablepushtimer, 0, 0, 1);
+
     extern int gamemillis, nextexceeded;
 
     struct clientinfo
@@ -516,7 +518,14 @@ namespace server
 
         void setexceeded()
         {
-            if(state.state==CS_ALIVE && !exceeded && !checkpushed(gamemillis, calcpushrange())) exceeded = gamemillis;
+            if (disablepushtimer > 0)
+            {
+                return;
+            }
+            if (state.state == CS_ALIVE && !exceeded && !checkpushed(gamemillis, calcpushrange()))
+            {
+                exceeded = gamemillis;
+            }
             scheduleexceeded();
         }
 

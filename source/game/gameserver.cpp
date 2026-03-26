@@ -514,18 +514,9 @@ namespace server
             if(!nextexceeded || exceeded + range < nextexceeded) nextexceeded = exceeded + range;
         }
 
-        VAR(disablepushtimer, 0, 0, 1);
-
         void setexceeded()
         {
-            if (disablepushtimer)
-            {
-                return;
-            }
-            if (state.state == CS_ALIVE && !exceeded && !checkpushed(gamemillis, calcpushrange()))
-            {
-                exceeded = gamemillis;
-            }
+            if(state.state==CS_ALIVE && !exceeded && !checkpushed(gamemillis, calcpushrange())) exceeded = gamemillis;
             scheduleexceeded();
         }
 

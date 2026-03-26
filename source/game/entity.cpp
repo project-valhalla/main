@@ -338,15 +338,10 @@ namespace entities
                 }
                 const float progress = clamp((lastmillis - entity.lastspawn) / 1000.0f, 0.0f, 1.0f);
                 const float size = ease::outelastic(progress);
-                int renderFlags = MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED;
-                if (entity.hovered && holo)
-                {
-                    renderFlags |= MDL_FULLBRIGHT | MDL_NOSHADOW;
-                }
                 rendermodel
                 (
                     modelName, ANIM_MAPMODEL | ANIM_LOOP, position, lastmillis / static_cast<float>(revolutions),
-                    0, 0, renderFlags, nullptr, nullptr, 0, 0, size, vec4(1, 1, 1, trans)
+                    0, 0, MDL_CULL_VFC | MDL_CULL_DIST | MDL_CULL_OCCLUDED, nullptr, nullptr, 0, 0, size, vec4(1, 1, 1, trans)
                 );
             }
         }
@@ -761,12 +756,12 @@ namespace entities
         if (ents.inrange(id))
         {
             extentity* entity = ents[id];
-            if (entity == nullptr)
+            if (!entity)
             {
                 hover.reset();
                 return;
             }
-            if (validitem(entity->type) && canSpawnItem(entity->type))
+            if (!m_noitems(mutators) && validitem(entity->type))
             {
                 const bool isClose = itemhoverdistance && camera1->o.dist(entity->o) <= itemhoverdistance;
                 if (isClose)

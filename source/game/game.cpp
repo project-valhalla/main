@@ -826,15 +826,15 @@ namespace game
                     }
                 }
             }
-            if (flags & KILL_HEADSHOT)
+            if (flags & Kill::HeadShot)
             {
                 crit |= Crit::HEADSHOT;
             }
-            if (flags & KILL_EXPLOSION)
+            if (flags & Kill::Explosion)
             {
                 crit |= Crit::EXPLOSION;
             }
-            if (flags & KILL_MIDAIR)
+            if (flags & Kill::Midair)
             {
                 crit |= Crit::MIDAIR;
             }
@@ -888,7 +888,7 @@ namespace game
         }
         else
         {
-            if (flags & KILL_TRAITOR)
+            if (flags & Kill::Traitor)
             {
                 act = "assassinated";
                 conoutf(CON_FRAGINFO, "%s \fs\f2was %s\fr", colorname(d), act);
@@ -1004,7 +1004,7 @@ namespace game
         }
         if (flags)
         {
-            if (flags & KILL_HEADSHOT)
+            if (flags & Kill::HeadShot)
             {
                 return Death_Headshot;
             }
@@ -1448,7 +1448,7 @@ namespace game
         if (lastmillis - d->lasthurt >= DAMAGE_ENVIRONMENT_DELAY)
         {
             // If the delay has elapsed, apply environmental damage to the entity.
-            dodamage(DAMAGE_ENVIRONMENT, d, d, d->o, -1, Hit_Environment, true);
+            dodamage(DAMAGE_ENVIRONMENT, d, d, d->o, -1, Hit::Environment, true);
             d->lasthurt = lastmillis;
         }
     }

@@ -6,28 +6,29 @@ struct hitmsg
 };
 
 // Hit flags: information on how the player has been damaged.
-enum
+enum Hit
 {
-    Hit_Torso       = 1 << 0,
-    Hit_Head        = 1 << 1,
-    Hit_Legs        = 1 << 2,
-    Hit_Projectile  = 1 << 3,
-    Hit_Environment = 1 << 4
+    Torso       = 1 << 0,
+    Head        = 1 << 1,
+    Legs        = 1 << 2,
+    Projectile  = 1 << 3,
+    Environment = 1 << 4
 };
 
-// Kill flags: information on how the player has been killed.
-enum
+// Kill context.
+enum Kill
 {
-    KILL_FIRST       = 1 << 0,
-    KILL_SPREE       = 1 << 1,
-    KILL_SAVAGE      = 1 << 2,
-    KILL_UNSTOPPABLE = 1 << 3,
-    KILL_LEGENDARY   = 1 << 4,
-    KILL_HEADSHOT    = 1 << 5,
-    KILL_BERSERKER   = 1 << 6,
-    KILL_TRAITOR     = 1 << 7,
-    KILL_EXPLOSION   = 1 << 8,
-    KILL_MIDAIR      = 1 << 9
+    FirstBlood        = 1 << 0,
+    StreakSpree       = 1 << 1,
+    StreakSavage      = 1 << 2,
+    StreakUnstoppable = 1 << 3,
+    StreakLegendary   = 1 << 4,
+    HeadShot          = 1 << 5,
+    Berserker         = 1 << 6,
+    Traitor           = 1 << 7,
+    Explosion         = 1 << 8,
+    Midair            = 1 << 9,
+    DirectShot        = 1 << 10
 };
 
 // Death states: information on the logic to apply for each death.

@@ -123,7 +123,7 @@ namespace game
             if (announcement > Announcements::INVALID && shouldPrint)
             {
                 // Avoid confusing players in certain circumstances by triggering console messages.
-                if (announcements[announcement].type == AnnouncementTypes::STREAK || announcements[announcement].announcement == Announcements::FIRST)
+                if (announcements[announcement].type == AnnouncementTypes::Streak || announcements[announcement].announcement == Announcements::FirstBlood)
                 {
                     printkillfeedannouncement(announcement, actor);
                 }
@@ -154,9 +154,15 @@ namespace game
                 taunt(actor);
             }
 
-            if (flags & KILL_HEADSHOT)
+            if (flags & Kill::HeadShot)
             {
-                checkannouncement(Announcements::HEADSHOT, false, actor);
+                checkannouncement(Announcements::HeadShot, false, actor);
+
+                // Mid-air headshot.
+                if (flags & Kill::Midair)
+                {
+                    checkannouncement(Announcements::Deadeye, false, actor);
+                }
             }
 
             if (d->type == ENT_AI)
@@ -167,27 +173,33 @@ namespace game
                 return;
             }
 
-            const bool shouldPrint = !(flags & KILL_TRAITOR);
+            // Check for a mid-air rockets.
+            if (flags & Kill::Midair && flags & Kill::DirectShot)
+            {
+                checkannouncement(Announcements::AirShot, false, actor);
+            }
+
+            const bool shouldPrint = !(flags & Kill::Traitor);
             int announcement = Announcements::INVALID;
-            if (flags & KILL_FIRST)
+            if (flags & Kill::FirstBlood)
             {
-                announcement = Announcements::FIRST;
+                announcement = Announcements::FirstBlood;
             }
-            else if (flags & KILL_SPREE)
+            else if (flags & Kill::StreakSpree)
             {
-                announcement = Announcements::SPREE;
+                announcement = Announcements::StreakSpree;
             }
-            else if (flags & KILL_SAVAGE)
+            else if (flags & Kill::StreakSavage)
             {
-                announcement = Announcements::SAVAGE;
+                announcement = Announcements::StreakSavage;
             }
-            else if (flags & KILL_UNSTOPPABLE)
+            else if (flags & Kill::StreakUnstoppable)
             {
-                announcement = Announcements::UNSTOPPABLE;
+                announcement = Announcements::StreakUnstoppable;
             }
-            else if (flags & KILL_LEGENDARY)
+            else if (flags & Kill::StreakLegendary)
             {
-                announcement = Announcements::LEGENDARY;
+                announcement = Announcements::StreakLegendary;
             }
             if (announcement > Announcements::INVALID)
             {

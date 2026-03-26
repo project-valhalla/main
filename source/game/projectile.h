@@ -413,7 +413,7 @@ struct ProjEnt : dynent
         }
         if (isDestroyed)
         {
-            hitFlags |= Hit_Projectile;
+            hitFlags |= Hit::Projectile;
         }
         state = CS_DEAD;
     }

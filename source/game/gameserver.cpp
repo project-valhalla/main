@@ -350,7 +350,7 @@ namespace server
                     attack = ATK_INVALID;
                 }
 
-                flags = Hit_Projectile;
+                flags = Hit::Projectile;
             }
         }
     };
@@ -2573,7 +2573,7 @@ namespace server
             }
         }
         if(!tied) return false;
-        sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::OVERTIME);
+        sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::Overtime);
         if (!m_round && timeisup)
         {
             updatetimelimit(overtime, false, TimeUpdate_Overtime);
@@ -2650,19 +2650,19 @@ namespace server
             {
                 case 1:
                 {
-                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::ONE_KILL);
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::OneKill);
                     break;
                 }
 
                 case 5:
                 {
-                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::FIVE_KILLS);
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::FiveKills);
                     break;
                 }
 
                 case 10:
                 {
-                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::TEN_KILLS);
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::TenKills);
                     break;
                 }
 
@@ -3200,38 +3200,38 @@ namespace server
         return (m_teammode && sameteam(a->team, b->team)) || (m_role && a->state.role == b->state.role);
     }
 
-    int getKillFlags(clientinfo* attacker, clientinfo* target, const int attack, const int hitFlags)
+    int getKillFlags(clientinfo* attacker, clientinfo* target, const int attack, HitInfo& hit)
     {
         int flags = 0;
         if (target != attacker && !isally(target, attacker))
         {
-            if (hitFlags & Hit_Head)
+            if (hit.flags & Hit::Head)
             {
-                flags |= KILL_HEADSHOT;
+                flags |= Kill::HeadShot;
             }
-            if (hitFlags & Hit_Projectile)
+            if (hit.flags & Hit::Projectile)
             {
-                flags |= KILL_EXPLOSION;
+                flags |= Kill::Explosion;
             }
             if (!firstblood)
             {
                 firstblood = true;
-                flags |= KILL_FIRST;
+                flags |= Kill::FirstBlood;
             }
             if (attacker->state.spree > 0)
             {
                 switch (attacker->state.spree)
                 {
                     case 5:
-                        flags |= KILL_SPREE;
+                        flags |= Kill::StreakSpree;
                         break;
 
                     case 10:
-                        flags |= KILL_SAVAGE;
+                        flags |= Kill::StreakSavage;
                         break;
 
                     case 15:
-                        flags |= KILL_UNSTOPPABLE;
+                        flags |= Kill::StreakUnstoppable;
                         break;
 
                     case 20:
@@ -3241,23 +3241,32 @@ namespace server
                     case 40:
                     case 45:
                     case 50:
-                        flags |= KILL_LEGENDARY;
+                        flags |= Kill::StreakLegendary;
                         if (attacker->state.spree >= 50)
                         {
                             attacker->state.spree = 0; // Reset the spree.
                         }
                         break;
                 }
+                const bool isDirectProjectileHit = isattackprojectile(attacks[attack].projectile) && hit.distance <= 0;
+                if (isDirectProjectileHit)
+                {
+                    flags |= Kill::DirectShot;
+                }
                 if (target->state.physstate == PHYS_FALL || attacker->state.physstate == PHYS_FALL)
                 {
-                    flags |= KILL_MIDAIR;
+                    const bool isHitscan = !isattackprojectile(attacks[attack].projectile);
+                    if (isHitscan || isDirectProjectileHit)
+                    {
+                        flags |= Kill::Midair;
+                    }
                 }
             }
         }
         return flags;
     }
 
-    void died(clientinfo *target, clientinfo *actor, int atk, int damage, int flags = 0)
+    void died(clientinfo *target, clientinfo *actor, int atk, int damage, HitInfo& hit)
     {
         ServerState&  ts = target->state;
         ts.deaths++;
@@ -3278,14 +3287,14 @@ namespace server
         }
         teaminfo *t = m_teammode && validteam(actor->team) ? &teaminfos[actor->team-1] : NULL;
         if(t) t->frags += fragvalue;
-        int killFlags = getKillFlags(actor, target, atk, flags);
+        int killFlags = getKillFlags(actor, target, atk, hit);
         if(m_berserker)
         {
             checkberserker(target);
             if(target!=actor && (isberserkerdead || target->state.role == ROLE_BERSERKER))
             {
                 makeberserker(actor);
-                killFlags |= KILL_BERSERKER;
+                killFlags |= Kill::Berserker;
             }
             if(m_berserker && !m_vampire(mutators) && actor->state.role == ROLE_BERSERKER)
             {
@@ -3296,7 +3305,7 @@ namespace server
         bool hidekillinfo = m_betrayal && actor->state.role == ROLE_TRAITOR; // cover up traitor's kills and display them as suicides in the obituary
         if(hidekillinfo)
         {
-            kflags |= KILL_TRAITOR;
+            killFlags |= Kill::Traitor;
             sendf(actor->clientnum, 1, "ri7", N_DIED, target->clientnum, actor->clientnum, actor->state.frags, 0, atk, killFlags); // send only to actor
             sendf(-1, 1, "ri7x", N_DIED, target->clientnum, target->clientnum, 0, 0, atk, killFlags, actor->clientnum); // send to other players excluding actor
         }
@@ -3379,13 +3388,13 @@ namespace server
         }
     }
 
-    void damagePlayer(clientinfo* target, clientinfo* actor, int damage, int atk, int flags = 0, const vec& hitpush = vec(0, 0, 0), const vec to = vec(0, 0, 0))
+    void damagePlayer(clientinfo* target, clientinfo* actor, int damage, int atk, HitInfo& hit, const vec& to = vec(0, 0, 0))
     {
         if ((target == actor && !selfdamage) || (isally(target, actor) && !teamdamage) || (m_round && betweenrounds)) return;
         ServerState&  ts = target->state;
-        ts.dodamage(damage, flags & Hit_Environment);
+        ts.dodamage(damage, hit.flags & Hit::Environment);
         target->state.lastpain = lastmillis;
-        sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, flags, ts.health, ts.shield, static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF));
+        sendf(-1, 1, "rii9i", N_DAMAGE, target->clientnum, actor->clientnum, atk, damage, hit.flags, ts.health, ts.shield, static_cast<int>(to.x * DMF), static_cast<int>(to.y * DMF), static_cast<int>(to.z * DMF));
         if (target != actor && damage > 0)
         {
             if (!isally(target, actor))
@@ -3400,13 +3409,13 @@ namespace server
             else if (!m_teammode && !m_betrayal)
             {
                 // Damage the attacker in contexts where players could benefit from attacking allies.
-                damagePlayer(actor, actor, damage, atk, flags);
+                damagePlayer(actor, actor, damage, atk, hit);
             }
         }
         if (target == actor) target->setpushed();
-        else if (!hitpush.iszero())
+        else if (!hit.direction.iszero())
         {
-            ivec v(vec(hitpush).rescale(DNF));
+            ivec v(vec(hit.direction).rescale(DNF));
             sendf(ts.health <= 0 ? -1 : target->ownernum, 1, "ri7", N_HITPUSH, target->clientnum, atk, damage, v.x, v.y, v.z);
             target->setpushed();
         }
@@ -3418,14 +3427,17 @@ namespace server
             }
             if (m_infection)
             {
-                if (target == actor || target->state.role == ROLE_ZOMBIE) died(target, actor, atk, damage, flags);
+                if (target == actor || target->state.role == ROLE_ZOMBIE)
+                {
+                    died(target, actor, atk, damage, hit);
+                }
                 else
                 {
                     infect(target, actor);
                     addscore(actor);
                 }
             }
-            else died(target, actor, atk, damage, flags);
+            else died(target, actor, atk, damage, hit);
             shouldcheckround();
         }
     }
@@ -3453,7 +3465,7 @@ namespace server
                     return 0;
                 }
             }
-            if ((hit.flags & Hit_Environment) == 0)
+            if ((hit.flags & Hit::Environment) == 0)
             {
                 if (damage < 0)
                 {
@@ -3464,7 +3476,7 @@ namespace server
                 // Weapons deal locational damage only if headshot damage is specified.
                 if (context.headshotdamage)
                 {
-                    if (hit.flags & Hit_Head)
+                    if (hit.flags & Hit::Head)
                     {
                         if (m_mayhem(mutators)) // Force death if it's a blow to the head when the Mayhem mutator is enabled.
                         {
@@ -3473,7 +3485,7 @@ namespace server
                         }
                         else damage += context.headshotdamage;
                     }
-                    if (hit.flags & Hit_Legs)
+                    if (hit.flags & Hit::Legs)
                     {
                         damage /= 2;
                     }
@@ -3597,7 +3609,7 @@ namespace server
         }
 
         const int damage = calculateDamage(context, hit, target, attacker);
-        damagePlayer(target, attacker, damage, attack, hit.flags, hit.direction);
+        damagePlayer(target, attacker, damage, attack, hit);
     }
 
     /*
@@ -3802,7 +3814,7 @@ namespace server
                 {
                     if(lastmillis-ci->state.lastdamage >= DAMAGE_ENVIRONMENT_DELAY && !ci->state.haspowerup(PU_INVULNERABILITY))
                     {
-                        damagePlayer(ci, ci, DAMAGE_ENVIRONMENT, ATK_INVALID, Hit_Environment);
+                        //damagePlayer(ci, ci, DAMAGE_ENVIRONMENT, ATK_INVALID, Hit::Environment);
                         ci->state.lastdamage = lastmillis;
                     }
                 }
@@ -3857,11 +3869,11 @@ namespace server
             {
                 if(remainingminutes(1, oldgamemillis)) // One minute.
                 {
-                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::ONE_MINUTE);
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::OneMinute);
                 }
                 else if(remainingminutes(5, oldgamemillis)) // Five minutes.
                 {
-                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::FIVE_MINUTES);
+                    sendf(-1, 1, "ri2", N_ANNOUNCE, game::announcer::Announcements::FiveMinutes);
                 }
             }
             if(m_demo) readdemo();

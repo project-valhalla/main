@@ -5,27 +5,28 @@ namespace game
         enum Announcements
         {
             INVALID = -1,
-            HEADSHOT,
-            FIRST,
-            SPREE,
-            SAVAGE,
-            UNSTOPPABLE,
-            LEGENDARY,
-            ONE_MINUTE,
-            FIVE_MINUTES,
-            ONE_KILL,
-            FIVE_KILLS,
-            TEN_KILLS,
-            OVERTIME,
-            COUNT
+            HeadShot,
+            FirstBlood,
+            AirShot,
+            Deadeye,
+            StreakSpree,
+            StreakSavage,
+            StreakUnstoppable,
+            StreakLegendary,
+            OneMinute,
+            FiveMinutes,
+            OneKill,
+            FiveKills,
+            TenKills,
+            Overtime,
+            Count
         };
 
         enum AnnouncementTypes
         {
-            GAME = 0,
-            SPECIAL,
-            MULTIKILL,
-            STREAK
+            Match = 0,
+            Special,
+            Streak
         };
 
         struct announcementType
@@ -35,20 +36,22 @@ namespace game
             int sound;
             const char* message;
         };
-        static const announcementType announcements[Announcements::COUNT] =
+        static const announcementType announcements[Announcements::Count] =
         {
-            { Announcements::HEADSHOT,     AnnouncementTypes::SPECIAL, S_ANNOUNCER_HEADSHOT,      "\f2scored a headshot"                   },
-            { Announcements::FIRST,        AnnouncementTypes::SPECIAL, S_ANNOUNCER_FIRST_BLOOD,   "\f2drew first blood!"                   },
-            { Announcements::SPREE,        AnnouncementTypes::STREAK,  S_ANNOUNCER_KILLING_SPREE, "\f2is on a killing spree!"              },
-            { Announcements::SAVAGE,       AnnouncementTypes::STREAK,  S_ANNOUNCER_SAVAGE,        "\f2is on a savage killing spree!"       },
-            { Announcements::UNSTOPPABLE,  AnnouncementTypes::STREAK,  S_ANNOUNCER_UNSTOPPABLE,   "\f2is on an unstoppable killing spree!" },
-            { Announcements::LEGENDARY,    AnnouncementTypes::STREAK,  S_ANNOUNCER_LEGENDARY,     "\f2is on a legendary killing spree!"    },
-            { Announcements::ONE_MINUTE,   AnnouncementTypes::GAME,    S_ANNOUNCER_1_MINUTE,      "\f2One minute remaining"                },
-            { Announcements::FIVE_MINUTES, AnnouncementTypes::GAME,    S_ANNOUNCER_5_MINUTES,     "\f2Five minutes remaining"              },
-            { Announcements::ONE_KILL,     AnnouncementTypes::GAME,    S_ANNOUNCER_1_KILL,        "\f2One kill remaining"                  },
-            { Announcements::FIVE_KILLS,   AnnouncementTypes::GAME,    S_ANNOUNCER_5_KILLS,       "\f2Five kills remaining"                },
-            { Announcements::TEN_KILLS,    AnnouncementTypes::GAME,    S_ANNOUNCER_10_KILLS,      "\f2Ten kills remaining"                 },
-            { Announcements::OVERTIME,     AnnouncementTypes::GAME,    S_ANNOUNCER_OVERTIME,      "\f2Overtime: scores are tied"           }
+            { Announcements::HeadShot,          AnnouncementTypes::Special, S_ANNOUNCER_HEADSHOT,      "\f2scored a headshot"                   },
+            { Announcements::FirstBlood,        AnnouncementTypes::Special, S_ANNOUNCER_FIRST_BLOOD,   "\f2drew first blood!"                   },
+            { Announcements::AirShot,           AnnouncementTypes::Special, S_ANNOUNCER_AIRSHOT,       nullptr                                  },
+            { Announcements::Deadeye,           AnnouncementTypes::Special, S_ANNOUNCER_DEADEYE,       nullptr                                  },
+            { Announcements::StreakSpree,       AnnouncementTypes::Streak,  S_ANNOUNCER_KILLING_SPREE, "\f2is on a killing spree!"              },
+            { Announcements::StreakSavage,      AnnouncementTypes::Streak,  S_ANNOUNCER_SAVAGE,        "\f2is on a savage killing spree!"       },
+            { Announcements::StreakUnstoppable, AnnouncementTypes::Streak,  S_ANNOUNCER_UNSTOPPABLE,   "\f2is on an unstoppable killing spree!" },
+            { Announcements::StreakLegendary,   AnnouncementTypes::Streak,  S_ANNOUNCER_LEGENDARY,     "\f2is on a legendary killing spree!"    },
+            { Announcements::OneMinute,         AnnouncementTypes::Match,   S_ANNOUNCER_1_MINUTE,      "\f2One minute remaining"                },
+            { Announcements::FiveMinutes,       AnnouncementTypes::Match,   S_ANNOUNCER_5_MINUTES,     "\f2Five minutes remaining"              },
+            { Announcements::OneKill,           AnnouncementTypes::Match,   S_ANNOUNCER_1_KILL,        "\f2One kill remaining"                  },
+            { Announcements::FiveKills,         AnnouncementTypes::Match,   S_ANNOUNCER_5_KILLS,       "\f2Five kills remaining"                },
+            { Announcements::TenKills,          AnnouncementTypes::Match,   S_ANNOUNCER_10_KILLS,      "\f2Ten kills remaining"                 },
+            { Announcements::Overtime,          AnnouncementTypes::Match,   S_ANNOUNCER_OVERTIME,      "\f2Overtime: scores are tied"           }
         };
     }
 }

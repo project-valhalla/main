@@ -655,7 +655,7 @@ namespace game
             hit.lifesequence = -1;
             hit.dist = int(dist * DMF);
             hit.rays = rays;
-            hit.flags = Hit_Projectile;
+            hit.flags = Hit::Projectile;
             hit.id = proj->id;
             hit.dir = ivec(0, 0, 0);
         }

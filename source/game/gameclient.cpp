@@ -2071,7 +2071,7 @@ namespace game
                 ProjEnt* proj = projectiles::get(id, owner);
                 gameent* actor = getclient(actorClient);
                 projectiles::damage(proj, actor, attack);
-                dodamage(0, (gameent*)proj, actor, proj->o, attack, Hit_Projectile, false);
+                dodamage(0, (gameent*)proj, actor, proj->o, attack, Hit::Projectile, false);
                 break;
             }
 

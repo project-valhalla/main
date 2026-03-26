@@ -976,7 +976,7 @@ namespace game
         {
             return 0;
         }
-        if (!(flags & Hit_Environment))
+        if (!(flags & Hit::Environment))
         {
             if (attacks[atk].damage < 0 || (m_insta(mutators) && actor->type == ENT_AI && target->type == ENT_PLAYER))
             {
@@ -986,7 +986,7 @@ namespace game
             if (attacks[atk].headshotdamage)
             {
                 // Weapons deal locational damage only if headshot damage is specified.
-                if (flags & Hit_Head)
+                if (flags & Hit::Head)
                 {
                     if (m_mayhem(mutators))
                     {
@@ -995,7 +995,7 @@ namespace game
                     }
                     else damage += attacks[atk].headshotdamage;
                 }
-                if (flags & Hit_Legs) damage /= 2;
+                if (flags & Hit::Legs) damage /= 2;
             }
             if (actor->haspowerup(PU_DAMAGE) || actor->role == ROLE_BERSERKER) damage *= 2;
             if (isally(target, actor) || target == actor) damage /= DAMAGE_ALLYDIV;
@@ -1074,17 +1074,17 @@ namespace game
                  */
                 if (isheadhitbox(target, from, to, dist))
                 {
-                    flags = Hit_Head;
+                    flags = Hit::Head;
                 }
                 if (islegshitbox(target, from, to, dist))
                 {
-                    flags = Hit_Legs;
+                    flags = Hit::Legs;
                 }
             }
         }
         else if (target->type == ENT_PROJECTILE)
         {
-            flags = Hit_Projectile;
+            flags = Hit::Projectile;
         }
     }
 
@@ -1098,7 +1098,7 @@ namespace game
         dynent* o;
         float dist;
         const int scanFlags = DYN_PLAYER | DYN_AI | DYN_PROJECTILE;
-        int hitFlags = Hit_Torso;
+        int hitFlags = Hit::Torso;
         if (attacks[atk].rays > 1)
         {
             const int attackRays = attacks[atk].rays;
@@ -1256,7 +1256,7 @@ namespace game
         }
         if (local)
         {
-            damage = d->dodamage(damage, flags & Hit_Environment);
+            damage = d->dodamage(damage, flags & Hit::Environment);
         }
         else if (actor == self)
         {
@@ -1273,7 +1273,7 @@ namespace game
 
     void applyhiteffects(int damage, gameent* target, gameent* actor, const vec& position, int atk, int flags, bool local)
     {
-        if (!target || (!local && actor == self && !(flags & Hit_Environment)))
+        if (!target || (!local && actor == self && !(flags & Hit::Environment)))
         {
             return;
         }
@@ -1317,7 +1317,7 @@ namespace game
             camera::camera.addevent(target, camera::CameraEvent_Shake, shake);
             camera::camera.addevent(actor, camera::CameraEvent_Shake, shake);
         }
-        damageeffect(damage, target, position, atk, flags & Hit_Head);
+        damageeffect(damage, target, position, atk, flags & Hit::Head);
     }
 
     void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal)

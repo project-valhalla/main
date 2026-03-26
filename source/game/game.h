@@ -1215,14 +1215,14 @@ namespace game
     extern void weaponswitch(gameent* d);
     extern void autoswitchweapon(gameent* d, int type);
     extern void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal);
-    extern void hit(dynent* target, gameent* actor, const vec& hitPosition, const vec& velocity, int damage, const int attack, const float dist, const int rays = 1, const int flags = Hit_Torso, const int id = -1, const bool shouldSend = false);
+    extern void hit(dynent* target, gameent* actor, const vec& hitPosition, const vec& velocity, int damage, const int attack, const float dist, const int rays = 1, const int flags = Hit::Torso, const int id = -1, const bool shouldSend = false);
 
     extern float intersectdist;
 
     extern bool isIntersectingEntity(dynent *entity, const vec &from, const vec &to, const float margin = 0, float &dist = intersectdist);
 
     extern int getweapon(const char* name);
-    extern int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags = Hit_Torso);
+    extern int calculatedamage(int damage, gameent* target, gameent* actor, int atk, int flags = Hit::Torso);
     extern int checkweaponzoom();
     extern int blood;
 

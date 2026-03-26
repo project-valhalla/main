@@ -31,6 +31,8 @@ autoexec.cfg
 master.cfg
 master.log
 *.mmdb
+config/server/*
+!config/server/example/**
 
 
 # Created by https://www.gitignore.io/api/c,c++,intellij+all

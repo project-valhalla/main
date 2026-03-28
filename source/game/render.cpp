@@ -137,17 +137,94 @@ namespace game
         return *mdl;
     }
 
-    int getplayercolor(int team, int color)
+    VARP(teamcolors, 0, 0, 1);
+    
+    bool isTeamBlue(int team)
     {
-        #define GETPLAYERCOLOR(playercolors) \
-            return playercolors[color%(sizeof(playercolors)/sizeof(playercolors[0]))];
-        switch(team)
+        switch(teamcolors)
         {
-            case 1: GETPLAYERCOLOR(playercolorsblue)
-            case 2: GETPLAYERCOLOR(playercolorsred)
-            default: GETPLAYERCOLOR(playercolors)
+            case TeamColors::EnemyRed:
+                return validteam(team) && self->team == team;
+            case TeamColors::Default: default:
+                return team == 1;
         }
     }
+    ICOMMAND(isteamblue, "i", (int *team), intret(isTeamBlue(*team) ? 1 : 0));
+    ICOMMAND(isteamred , "i", (int *team), intret((isTeamBlue(*team) || !validteam(*team)) ? 0 : 1));
+
+    static const char * const teamtextcode[1+MAXTEAMS] = { "\ff", "\f1", "\f3" };
+    static const char * const teamblipcolor[1+MAXTEAMS] = { "_neutral", "_blue", "_red" };
+    static const int teamtextcolor[1+MAXTEAMS] = { 0xFFFFFF, 0x6496FF, 0xFF4B19 };
+    static const int teamscoreboardcolor[1+MAXTEAMS] = { 0, 0x3030C0, 0xC03030 };
+    static const int teameffectcolor[1+MAXTEAMS] = { 0xFFFFFF, 0x2020FF, 0xFF2020 };
+
+    const char *getTeamTextCode(int team)
+    {
+        switch(team)
+        {
+            case 1: // fall through
+            case 2:
+                return teamtextcode[isTeamBlue(team) ? 1 : 2];
+            default: return teamtextcode[0];
+        }
+    }
+    const char *getTeamBlipColor(int team)
+    {
+        switch(team)
+        {
+            case 1: // fall through
+            case 2:
+                return teamblipcolor[isTeamBlue(team) ? 1 : 2];
+            default: return teamblipcolor[0];
+        }
+    }
+    int getTeamTextColorRGB(int team)
+    {
+        switch(team)
+        {
+            case 1: // fall through
+            case 2:
+                return teamtextcolor[isTeamBlue(team) ? 1 : 2];
+            default: return teamtextcolor[0];
+        }
+    }
+    int getTeamScoreboardColorRGB(int team)
+    {
+        switch(team)
+        {
+            case 1: // fall through
+            case 2:
+                return teamscoreboardcolor[isTeamBlue(team) ? 1 : 2];
+            default: return teamscoreboardcolor[0];
+        }
+    }
+    int getTeamEffectColorRGB(int team)
+    {
+        switch(team)
+        {
+            case 1: // fall through
+            case 2:
+                return teameffectcolor[isTeamBlue(team) ? 1 : 2];
+            default: return teameffectcolor[0];
+        }
+    }
+
+    #define GETPLAYERCOLOR(playercolors) \
+        return playercolors[color%(sizeof(playercolors)/sizeof(playercolors[0]))];
+    int getplayercolor(int team, int color)
+    {
+        switch(team)
+        {
+            case 1: // fall through
+            case 2:
+            {
+                const int (&teamcolors)[4] = isTeamBlue(team) ? playercolorsblue : playercolorsred;
+                GETPLAYERCOLOR(teamcolors);
+            }
+            default: GETPLAYERCOLOR(playercolors);
+        }
+    }
+    #undef GETPLAYERCOLOR
 
     ICOMMAND(getplayercolor, "ii", (int *color, int *team), intret(getplayercolor(*team, *color)));
 
@@ -155,8 +232,9 @@ namespace game
     {
         if(d==self) switch(team)
         {
-            case 1: return getplayercolor(1, playercolorblue);
-            case 2: return getplayercolor(2, playercolorred);
+            case 1: // fall through
+            case 2:
+                return getplayercolor(team, isTeamBlue(team) ? playercolorblue : playercolorred);
             default: return getplayercolor(0, playercolor);
         }
         else return getplayercolor(team, (d->playercolor>>(5*team))&0x1F);
@@ -604,7 +682,7 @@ namespace game
         else if (d->state == CS_ALIVE && !hidenames())
         {
             int team = m_teammode && validteam(d->team) ? d->team : 0;
-            particle_text(position, d->info, PART_TEXT, 1, teamtextcolor[team], 2.0f);
+            particle_text(position, d->info, PART_TEXT, 1, getTeamTextColorRGB(team), 2.0f);
         }
         updateMovementEffects(d);
     }

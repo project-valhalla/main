@@ -58,18 +58,18 @@ namespace game
     void printteam()
     {
         if((self->clientnum >= 0 && !m_teammode) || !validteam(self->team)) conoutf(CON_ECHO, "\fs\f1You are not in a team\fr");
-        else conoutf("\fs\f1Your team is:\fr \fs%s%s\fr", teamtextcode[self->team], teamnames[self->team]);
+        else conoutf("\fs\f1Your team is:\fr \fs%s%s\fr", getTeamTextCode(self->team), teamnames[self->team]);
     }
     ICOMMAND(team, "sN", (char *s, int *numargs),
     {
         if(*numargs > 0) switchteam(s);
         else if(!*numargs) printteam();
-        else if((self->clientnum < 0 || m_teammode) && validteam(self->team)) result(tempformatstring("\fs%s%s\fr", teamtextcode[self->team], teamnames[self->team]));
+        else if((self->clientnum < 0 || m_teammode) && validteam(self->team)) result(tempformatstring("\fs%s%s\fr", getTeamTextCode(self->team), teamnames[self->team]));
     });
     ICOMMAND(getteam, "", (), intret((self->clientnum < 0 || m_teammode) && validteam(self->team) ? self->team : 0));
     ICOMMAND(getteamname, "i", (int *num), result(teamname(*num)));
-    ICOMMAND(getteamcolor, "", (), intret(teamtextcolor[m_teammode ? self->team : 0]));
-    ICOMMAND(getteamtextcode, "", (), result(teamtextcode[m_teammode ? self->team : 0]));
+    ICOMMAND(getteamcolor, "", (), intret(getTeamTextColorRGB(m_teammode ? self->team : 0)));
+    ICOMMAND(getteamtextcode, "", (), result(getTeamTextCode(m_teammode ? self->team : 0)));
 
     struct authkey
     {
@@ -1176,9 +1176,9 @@ namespace game
         }
         else
         {
-            textColor = teamtextcode[team];
+            textColor = getTeamTextCode(team);
         }
-        conoutf(CON_CHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", d->name, teamtextcode[team], textColor, text);
+        conoutf(CON_CHAT, "%s \fs%s(team)\fr: \fs%s%s\fr", d->name, getTeamTextCode(team), textColor, text);
         playchatsound(d, isMention);
     }
 
@@ -2459,7 +2459,7 @@ namespace game
                 w->team = validteam(team) ? team : 0;
                 static const char * const fmt[2] = { "%s \fs\f0switched to team\fr %s%s", "%s \fs\f0forced to team\fr %s%s"};
                 if(reason >= 0 && size_t(reason) < sizeof(fmt)/sizeof(fmt[0]))
-                    conoutf(fmt[reason], colorname(w), teamtextcode[w->team], teamnames[w->team]);
+                    conoutf(fmt[reason], colorname(w), getTeamTextCode(w->team), teamnames[w->team]);
                 break;
             }
 

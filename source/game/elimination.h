@@ -69,13 +69,19 @@ struct eliminationclientmode : clientmode
         {
             if(checkovertime()) return;
             startintermission();
-            defformatstring(win, "%s%s \fs\f2team reached the score limit\fr", teamtextcode[winner], teamnames[winner]);
-            sendf(-1, 1, "ri2s", N_NOTICE, S_INVALID, win);
+            loopvj(clients) if(clients[j]->state.aitype == AI_NONE)
+            {
+                defformatstring(win, "%s%s \fs\f2team reached the score limit\fr", getTeamTextCode(clients[j], winner), teamnames[winner]);
+                sendf(clients[j]->clientnum, 1, "ri2s", N_NOTICE, S_INVALID, win);
+            }
         }
         else
         {
-            defformatstring(win, "%s%s \f2team won the round", teamtextcode[winner], teamnames[winner]);
-            sendf(-1, 1, "ri2s", N_NOTICE, S_ROUND, win);
+            loopvj(clients) if(clients[j]->state.aitype == AI_NONE)
+            {
+                defformatstring(win, "%s%s \f2team won the round", getTeamTextCode(clients[j], winner), teamnames[winner]);
+                sendf(clients[j]->clientnum, 1, "ri2s", N_NOTICE, S_ROUND, win);
+            }
         }
     }
 

@@ -1424,13 +1424,13 @@ namespace game
     const char *teamcolorname(gameent *d, const char *alt)
     {
         const int team = teamcolortext && m_teammode && validteam(d->team) ? d->team : 0;
-        return colorname(d, NULL, alt, teamtextcode[team]);
+        return colorname(d, NULL, alt, getTeamTextCode(team));
     }
 
     const char *teamcolor(const char *prefix, const char *suffix, int team, const char *alt)
     {
         if(!teamcolortext || !m_teammode || !validteam(team)) return alt;
-        return tempformatstring("\fs%s%s%s%s\fr", teamtextcode[team], prefix, teamnames[team], suffix);
+        return tempformatstring("\fs%s%s%s%s\fr", getTeamTextCode(team), prefix, teamnames[team], suffix);
     }
 
     void hurt(gameent* d)

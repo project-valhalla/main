@@ -1148,6 +1148,29 @@ namespace server
         virtual bool extinfoteam(int team, ucharbuf &p) { return false; }
     };
 
+    // TODO: share team color settings with the server
+    bool isTeamBlue(clientinfo *ci, int team)
+    {
+        const int X = TeamColors::Default;
+        switch(X)
+        {
+            case TeamColors::EnemyRed:
+                return validteam(team) && ci->team == team;
+            case TeamColors::Default: default:
+                return team == 1;
+        }
+    }
+    const char *getTeamTextCode(clientinfo *ci, int team)
+    {
+        switch(team)
+        {
+            case 1: // fall through
+            case 2:
+                return isTeamBlue(ci, team) ? "\f1" : "\f3";
+            default: return "\f7";
+        }
+    }
+
     #define SERVMODE 1
     #include "ctf.h"
     #include "elimination.h"
@@ -2676,8 +2699,11 @@ namespace server
         {
             if(checkovertime()) return;
             startintermission();
-            defformatstring(winner, "%s%s \fs\f2reached the score limit\fr", team ? teamtextcode[ci->team] : "", team ? teamnames[ci->team] : colorname(ci));
-            sendf(-1, 1, "ri2s", N_NOTICE, S_INVALID, winner);
+            loopvj(clients) if(clients[j]->state.aitype == AI_NONE)
+            {
+                defformatstring(winner, "%s%s \fs\f2reached the score limit\fr", team ? getTeamTextCode(clients[j], ci->team) : "", team ? teamnames[ci->team] : colorname(ci));
+                sendf(clients[j]->clientnum, 1, "ri2s", N_NOTICE, S_INVALID, winner);
+            }
         }
     }
 

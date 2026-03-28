@@ -258,7 +258,10 @@ struct ctfclientmode : clientmode
         {
             if(checkovertime()) return;
             startintermission();
-            sendservmsgf("%s%s \fs\f2team reached the score limit\fr", teamtextcode[team], teamnames[team]);
+            loopvj(clients) if(clients[j]->state.aitype == AI_NONE)
+            {
+                sendf(clients[j]->clientnum, 1, "ris", N_SERVMSG, tempformatstring("%s%s \fs\f2team reached the score limit\fr", getTeamTextCode(clients[j], team), teamnames[team]));
+            }
         }
     }
 
@@ -428,12 +431,12 @@ struct ctfclientmode : clientmode
                 }
             }
             if(!f.owner && f.droptime && f.droploc.x < 0) continue;
-            const char *flagname = f.team==1 ? "item/flag/azul" : "item/flag/rojo";
+            const char *flagname = isTeamBlue(f.team) ? "item/flag/azul" : "item/flag/rojo";
             float angle;
             vec pos = interpflagpos(f, angle);
             rendermodel(flagname, ANIM_MAPMODEL|ANIM_LOOP, pos, angle, 0, 0, MDL_CULL_VFC | MDL_CULL_OCCLUDED);
 
-            vec lightcolor = vec::hexcolor(teameffectcolor[f.team]);
+            vec lightcolor = vec::hexcolor(getTeamEffectColorRGB(f.team));
             addgamelight(pos, lightcolor.mul(255.f * (0.625f - 0.375f * cos(2 * PI * lastmillis / 1000.f))), 32);
             if (self && self->state != CS_EDITING)
             {
@@ -449,14 +452,14 @@ struct ctfclientmode : clientmode
             if(hud->holdingflag && f.team == hud->team)
             {
                 vec base = f.spawnloc;
-                particle_hud_mark(base, 2, 1, PART_GAME_ICONS, 1, teamtextcolor[hud->team], 4.0f);
+                particle_hud_mark(base, 2, 1, PART_GAME_ICONS, 1, getTeamTextColorRGB(hud->team), 4.0f);
             }
             else if(f.owner)
             {
                 if(lastmillis%1000 >= 500) continue;
             }
             else if(f.droptime && (f.droploc.x < 0 || lastmillis%300 >= 150)) continue;
-            particle_hud_mark(pos, f.team == 1 ? 1 : 0, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
+            particle_hud_mark(pos, isTeamBlue(f.team) ? 1 : 0, 0, PART_GAME_ICONS, 1, 0xFFFFFF, 2.0f);
         }
     }
 
@@ -552,7 +555,7 @@ struct ctfclientmode : clientmode
 
     void flagexplosion(int i, int team, const vec &loc)
     {
-        int fcolor = teameffectcolor[team];
+        int fcolor = getTeamEffectColorRGB(team);
         particle_fireball(loc, 30, PART_EXPLOSION1, -1, fcolor, 4.8f);
         particle_splash(PART_SPARK, 150, 300, loc, fcolor, 0.24f);
         vec lightcolor = vec::hexcolor(fcolor);

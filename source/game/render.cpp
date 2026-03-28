@@ -137,8 +137,8 @@ namespace game
         return *mdl;
     }
 
-    VARP(teamcolors, 0, 0, 1);
-    
+    VARFP(teamcolors, 0, 0, 1, addmsg(N_SWITCHTEAMCOLORS, "ri", teamcolors));
+
     bool isTeamBlue(int team)
     {
         switch(teamcolors)

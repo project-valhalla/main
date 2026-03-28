@@ -1427,6 +1427,7 @@ namespace game
         sendstring(self->name, p);
         putint(p, self->playermodel);
         putint(p, self->playercolor);
+        putint(p, teamcolors);
         sendstring(self->preferred_flag, p);
         string hash = "";
         if(connectpass[0])

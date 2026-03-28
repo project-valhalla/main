@@ -149,7 +149,7 @@ enum
     N_PAUSEGAME, N_GAMESPEED,
     N_ADDBOT, N_DELBOT, N_INITAI, N_FROMAI, N_BOTLIMIT, N_BOTBALANCE,
     N_MAPCRC, N_CHECKMAPS,
-    N_SWITCHNAME, N_SWITCHMODEL, N_SWITCHCOLOR, N_SWITCHTEAM,
+    N_SWITCHNAME, N_SWITCHMODEL, N_SWITCHCOLOR, N_SWITCHTEAM, N_SWITCHTEAMCOLORS,
     N_SERVCMD,
     N_DEMOPACKET,
     N_COUNTRY,
@@ -181,7 +181,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
     N_PAUSEGAME, 0, N_GAMESPEED, 0,
     N_ADDBOT, 2, N_DELBOT, 1, N_INITAI, 0, N_FROMAI, 2, N_BOTLIMIT, 2, N_BOTBALANCE, 2,
     N_MAPCRC, 0, N_CHECKMAPS, 1,
-    N_SWITCHNAME, 0, N_SWITCHMODEL, 2, N_SWITCHCOLOR, 2,  N_SWITCHTEAM, 2,
+    N_SWITCHNAME, 0, N_SWITCHMODEL, 2, N_SWITCHCOLOR, 2,  N_SWITCHTEAM, 2, N_SWITCHTEAMCOLORS, 2,
     N_SERVCMD, 0,
     N_DEMOPACKET, 0,
     N_COUNTRY, 0,
@@ -191,7 +191,7 @@ static const int msgsizes[] =               // size inclusive message token, 0 f
 #define VALHALLA_SERVER_PORT 21217
 #define VALHALLA_LANINFO_PORT 21216
 #define VALHALLA_MASTER_PORT 21215
-#define PROTOCOL_VERSION 3 // bump when protocol changes
+#define PROTOCOL_VERSION 4 // bump when protocol changes
 #define DEMO_VERSION 1  // bump when demo format changes
 #define DEMO_MAGIC "VALHALLA_DEMO\0\0"
 
@@ -1312,6 +1312,7 @@ namespace game
     extern const playermodelinfo &getplayermodelinfo(gameent *d);
 
     #ifndef STANDALONE
+    extern int teamcolors;
     extern bool isTeamBlue(int team);
     extern const char *getTeamTextCode(int team);
     extern const char *getTeamBlipColor(int team);

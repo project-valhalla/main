@@ -455,7 +455,7 @@ namespace server
     {
         int clientnum, ownernum, connectmillis, sessionid, overflow;
         string name, mapvote;
-        int team, playermodel, playercolor;
+        int team, playermodel, playercolor, teamcolors;
         int modevote, mutsvote;
         int privilege;
         bool connected, local, timesync, ghost, mute;
@@ -591,6 +591,7 @@ namespace server
             team = 0;
             playermodel = -1;
             playercolor = 0;
+            teamcolors = TeamColors::Default;
             privilege = PRIV_NONE;
             connected = local = ghost = false;
             connectauth = 0;
@@ -1148,11 +1149,9 @@ namespace server
         virtual bool extinfoteam(int team, ucharbuf &p) { return false; }
     };
 
-    // TODO: share team color settings with the server
     bool isTeamBlue(clientinfo *ci, int team)
     {
-        const int X = TeamColors::Default;
-        switch(X)
+        switch(ci->teamcolors)
         {
             case TeamColors::EnemyRed:
                 return validteam(team) && ci->team == team;
@@ -4428,6 +4427,7 @@ namespace server
                     copystring(ci->name, text, MAXNAMELEN+1);
                     ci->playermodel = getint(p);
                     ci->playercolor = getint(p);
+                    ci->teamcolors = getint(p);
                     getstring(text, p);
                     filtertext(ci->preferred_flag, text, false, false, false, false, MAXCOUNTRYCODELEN);
 
@@ -5011,6 +5011,12 @@ namespace server
                     aimanager::changeteam(ci);
                     sendf(-1, 1, "riiii", N_SETTEAM, sender, ci->team, ci->state.state==CS_SPECTATOR ? -1 : 0);
                 }
+                break;
+            }
+
+            case N_SWITCHTEAMCOLORS:
+            {
+                ci->teamcolors = getint(p);
                 break;
             }
 

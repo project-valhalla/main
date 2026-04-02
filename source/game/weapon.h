@@ -167,9 +167,9 @@ static const struct guninfo
         Zoom_Sight,
         Projectile_Casing3,
         {
-            -1.6,
-            -1.2f,
-            -1.3f
+            -3.500f,
+             0.080f,
+            -1.080f
         }
     },
     {
@@ -185,8 +185,8 @@ static const struct guninfo
         Zoom_Sight,
         Projectile_Casing,
         {
-            -2.500,
-            0,
+            -2.500f,
+             0,
             -1.608f
         }
     },
@@ -240,7 +240,7 @@ static const struct guninfo
         Projectile_Casing2,
         {
             -1.000f,
-            0,
+             0,
             -1.380f
         }
     },
@@ -294,7 +294,7 @@ static const struct guninfo
         Projectile_Invalid,
         {
             -1.000f,
-            0,
+             0,
             -1.380f
         }
     },

@@ -435,103 +435,6 @@ namespace physics
         }
     }
 
-    namespace physics
-    {
-        struct SlideInfo
-        {
-            enum State
-            {
-                Idle = 0,
-                Queued,
-                Sliding
-            };
-
-            static constexpr int duration = 450;
-            static constexpr int cooldown = 230;
-            static constexpr int reductionWindow = 1200;
-            static constexpr float minimumVelocity = 30.0f;
-            static constexpr float stopVelocity = 80.0f;
-
-            State state = Idle;
-            int startTime = 0;
-            int endTime = 0;
-            float reduction = 1.0f;
-            float progress = 0;
-
-            void start(gameent* player, const int time);
-            void stop(gameent* player, const int time);
-
-            void reset() noexcept
-            {
-                state = Idle;
-                startTime = 0;
-                endTime = 0;
-                progress = 0;
-                resetReduction();
-            }
-
-            void queue(gameent* player, const int time) noexcept
-            {
-                if (!canQueue(player, time))
-                {
-                    return;
-                }
-                state = Queued;
-                startTime = 0;
-            }
-
-            void dequeue() noexcept
-            {
-                state = Idle;
-                startTime = 0;
-            }
-
-            void resetReduction()
-            {
-                reduction = 1.0f;
-            }
-
-            // Apply reduction for consecutive slides.
-            void applyReduction(const int time) noexcept
-            {
-                reduction = clamp(reduction - 0.25f, 0.0f, 1.0f);
-                conoutf(CON_GAMEINFO, "reduction: %.2f", reduction);
-            }
-
-            void checkReduction(const int time) noexcept
-            {
-                if (hasDelay(time, reductionWindow))
-                {
-                    return;
-                }
-                resetReduction();
-            }
-
-            bool evaluate(gameent* player, const int time);
-            bool canQueue(gameent* player, const int time);
-            bool canStart(gameent* player, const int time);
-
-            bool isIdle() const noexcept
-            {
-                return state == Idle;
-            }
-
-            bool isQueued() const noexcept
-            {
-                return state == Queued;
-            }
-
-            bool isSliding() const noexcept
-            {
-                return state == Sliding;
-            }
-
-            bool hasDelay(const int time, const int delay) const noexcept
-            {
-                return endTime > 0 && time - endTime <= delay;
-            }
-        };
-    }
 
     bool SlideInfo::canQueue(gameent* player, const int time)
     {
@@ -629,6 +532,7 @@ namespace physics
         }
         else if (state == Sliding) // Stop sliding if player no longer meets certain conditions.
         {
+			// Stop based on what the player is doing.
             if (!player->onfloor() || player->inwater || player->blocked)
             {
                 stop(player, time);

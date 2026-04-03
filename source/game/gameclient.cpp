@@ -169,6 +169,10 @@ namespace game
         }
         camera::camera.zoomstate.disable();
         self->suicided = self->respawned = -2;
+        if (on)
+        {
+            self->halt();
+        }
         checkfollow();
     }
 

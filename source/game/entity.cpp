@@ -675,6 +675,8 @@ namespace entities
                 player->physstate = PHYS_FALL;
                 player->timeinair = 1;
                 player->vel = vec(ents[id]->attr3 * 10.0f, ents[id]->attr2 * 10.0f, ents[id]->attr1 * 12.5f);
+                player->slide.stop(player, lastmillis);
+                player->slide.resetReduction();
                 break;
             }
 

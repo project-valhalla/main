@@ -780,22 +780,32 @@ namespace game
 
     int needclipboard = -1;
 
-    void sendclipboard()
+    void sendClipboard()
     {
-        uchar *outbuf = NULL;
+        uchar *outbuf = nullptr;
         int inlen = 0, outlen = 0;
         if(!packeditinfo(localedit, inlen, outbuf, outlen))
         {
-            outbuf = NULL;
+            outbuf = nullptr;
             inlen = outlen = 0;
         }
         packetbuf p(16 + outlen, ENET_PACKET_FLAG_RELIABLE);
         putint(p, N_CLIPBOARD);
         putint(p, inlen);
         putint(p, outlen);
-        if(outlen > 0) p.put(outbuf, outlen);
+        if (outlen > 0)
+        {
+            p.put(outbuf, outlen);
+        }
         sendclientpacket(p.finalize(), 1);
         needclipboard = -1;
+        if (outbuf != nullptr)
+        {
+            delete[] outbuf;
+
+            // Set the pointer to null after deleting to avoid dangling pointers in the future.
+            outbuf = nullptr;
+        }
     }
 
     void edittrigger(const selinfo &sel, int op, int arg1, int arg2, int arg3, const VSlot *vs)
@@ -814,7 +824,7 @@ namespace game
                         if(needclipboard > 0)
                         {
                             c2sinfo(true);
-                            sendclipboard();
+                            sendClipboard();
                         }
                         break;
                 }

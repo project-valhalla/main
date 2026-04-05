@@ -1000,8 +1000,8 @@ namespace physics
     extern void pushRagdoll(dynent* d, const vec& position, const int damage);
 
     extern bool canmove(gameent* d);
-    extern bool hasbounced(ProjEnt* proj, float secs, float elasticity, float waterfric, float gravity);
-    extern bool isbouncing(ProjEnt* proj, float elasticity, float waterfric, float gravity);
+    extern bool hasbounced(ProjEnt& proj, float secs, float elasticity, float waterfric, float gravity);
+    extern bool isbouncing(ProjEnt& proj, float elasticity, float waterfric, float gravity);
     extern bool allowVerticalMovement(gameent* player);
 
     extern int physsteps;
@@ -1139,7 +1139,7 @@ namespace game
         extern void preload();
         extern void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int trackType = TRACK_ORIGIN);
         extern void spawnbouncer(const vec& from, gameent* d, const int type);
-        extern void bounce(physent* d, const vec& surface);
+        extern void bounce(ProjEnt& proj, const vec& surface);
         extern void collidewithentity(physent* bouncer, physent* collideEntity);
         extern void checkOwned(const gameent* owned);
         extern void destroy(ProjEnt& proj, const vec& position, const bool isLocal = true, const int attack = ATK_INVALID);

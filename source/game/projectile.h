@@ -283,7 +283,8 @@ struct ProjEnt : dynent
         {
             stopsound(loopSound, loopChannel);
         }
-        loopSound = loopChannel = -1;
+        loopSound = S_INVALID;
+        loopChannel = -1;
     }
 
     void limitOffset()

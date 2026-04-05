@@ -1322,7 +1322,7 @@ namespace game
 
     void dodamage(const int damage, gameent* target, gameent* actor, const vec& position, const int atk, const int flags, const bool isLocal)
     {
-        if (!target)
+        if (target == nullptr)
         {
             return;
         }

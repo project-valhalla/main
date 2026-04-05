@@ -532,7 +532,7 @@ namespace physics
         }
         else if (state == Sliding) // Stop sliding if player no longer meets certain conditions.
         {
-			// Stop based on what the player is doing.
+            // Stop based on what the player is doing.
             if (!player->onfloor() || player->inwater || player->blocked)
             {
                 stop(player, time);
@@ -1558,18 +1558,18 @@ namespace physics
     /*
      * Simulates projectile physics, including the effects of gravity and friction.
      */
-    void modifyprojectilevelocity(ProjEnt* proj, const float secs, float waterFriction, const float gravity)
+    void modifyprojectilevelocity(ProjEnt& proj, const float secs, float waterFriction, const float gravity)
     {
-        const int material = lookupmaterial(vec(proj->o.x, proj->o.y, proj->o.z + (proj->aboveeye - proj->eyeheight) / 2));
+        const int material = lookupmaterial(vec(proj.o.x, proj.o.y, proj.o.z + (proj.aboveeye - proj.eyeheight) / 2));
         const bool isInWater = isliquidmaterial(material & MATF_VOLUME);
         if (isInWater)
         {
-            proj->vel.z -= gravity * mapgravity / 16 * secs;
-            proj->vel.mul(max(1.0f - secs / waterFriction, 0.0f));
+            proj.vel.z -= gravity * mapgravity / 16 * secs;
+            proj.vel.mul(max(1.0f - secs / waterFriction, 0.0f));
         }
         else
         {
-            proj->vel.z -= gravity * mapgravity * secs;
+            proj.vel.z -= gravity * mapgravity * secs;
         }
     }
 
@@ -1578,27 +1578,27 @@ namespace physics
      * Returns true when a collision occurs, which typically triggers detonation
      * or other projectile-specific actions.
      */
-    bool hasbounced(ProjEnt* proj, const float secs, const float elasticity, float waterFriction, const float gravity)
+    bool hasbounced(ProjEnt& proj, const float secs, const float elasticity, float waterFriction, const float gravity)
     {
-        if (proj->physstate != PHYS_BOUNCE && collide(proj, vec(0, 0, 0), 0, false))
+        if (proj.physstate != PHYS_BOUNCE && collide(&proj, vec(0, 0, 0), 0, false))
         {
             return true;
         }
         modifyprojectilevelocity(proj, secs, waterFriction, gravity);
-        const vec old(proj->o);
-        const bool isDetonatingOnImpact = proj->flags & ProjFlag_Impact;
+        const vec old(proj.o);
+        const bool isDetonatingOnImpact = proj.flags & ProjFlag_Impact;
         loopi(2)
         {
-            vec dir(proj->vel);
+            vec dir(proj.vel);
             dir.mul(secs);
-            proj->o.add(dir);
-            if (!collide(proj, dir, 0, true, true))
+            proj.o.add(dir);
+            if (!collide(&proj, dir, 0, true, true))
             {
                 if (collideinside)
                 {
                     // Projectile is rejected in case it enters solid geometry.
-                    proj->o = old;
-                    proj->vel.mul(-elasticity);
+                    proj.o = old;
+                    proj.vel.mul(-elasticity);
                     if (isDetonatingOnImpact)
                     {
                         // Detonates on impact.
@@ -1612,7 +1612,7 @@ namespace physics
                 /* Projectile collided with a living entity,
                  * may it be a player, NPC or another projectile.
                  */
-                projectiles::collidewithentity(proj, collideplayer);
+                projectiles::collidewithentity(&proj, collideplayer);
                 break;
             }
             if (isDetonatingOnImpact)
@@ -1623,24 +1623,24 @@ namespace physics
             else
             {
                 // Projectile bounces off geometry or entities.
-                proj->o = old;
+                proj.o = old;
                 projectiles::bounce(proj, collidewall);
-                const float c = collidewall.dot(proj->vel);
-                const float k = 1.0f + (1.0f - elasticity) * c / proj->vel.magnitude();
-                proj->vel.mul(k);
-                proj->vel.sub(vec(collidewall).mul(elasticity * 2.0f * c));
+                const float normalVelocity = collidewall.dot(proj.vel);
+                const float dampeningFactor = 1.0f + (1.0f - elasticity) * normalVelocity / proj.vel.magnitude();
+                proj.vel.mul(dampeningFactor);
+                proj.vel.sub(vec(collidewall).mul(elasticity * 2.0f * normalVelocity));
             }
         }
-        if (proj->physstate != PHYS_BOUNCE)
+        if (proj.physstate != PHYS_BOUNCE)
         {
             // Make sure bouncing projectiles don't spawn inside geometry!
-            if (proj->o == old)
+            if (proj.o == old)
             {
                 return !collideplayer;
             }
-            proj->physstate = PHYS_BOUNCE;
+            proj.physstate = PHYS_BOUNCE;
         }
-        return collideplayer != NULL && collideplayer != proj;
+        return collideplayer != nullptr && collideplayer != &proj;
     }
 
     /*
@@ -1651,14 +1651,14 @@ namespace physics
      * If the projectile impacts geometry or a living entity and should detonate, it returns false.
      * Otherwise, it returns true, meaning the projectile will continue.
      */
-    bool isbouncing(ProjEnt* proj, const float elasticity, const float waterFriction, const float gravity)
+    bool isbouncing(ProjEnt& proj, const float elasticity, const float waterFriction, const float gravity)
     {
         if (physsteps <= 0)
         {
-            interpolateposition(proj);
+            interpolateposition(&proj);
             return true;
         }
-        proj->o = proj->newpos;
+        proj.o = proj.newpos;
         bool hitplayer = false;
         loopi(physsteps - 1)
         {
@@ -1668,14 +1668,14 @@ namespace physics
                 hitplayer = true;
             }
         }
-        proj->deltapos = proj->o;
+        proj.deltapos = proj.o;
         if (hasbounced(proj, physframetime / 1000.0f, elasticity, waterFriction, gravity))
         {
             hitplayer = true;
         }
-        proj->newpos = proj->o;
-        proj->deltapos.sub(proj->newpos);
-        interpolateposition(proj);
+        proj.newpos = proj.o;
+        proj.deltapos.sub(proj.newpos);
+        interpolateposition(&proj);
         return !hitplayer;
     }
 

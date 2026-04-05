@@ -74,14 +74,14 @@ namespace game
             AttackProjectiles.add(&proj);
         }
 
-        static void remove(ProjEnt& proj)
+        static void remove(ProjEnt* proj)
         {
-            if (isattackprojectile(proj.projectile))
+            if (isattackprojectile(proj->projectile))
             {
-                AttackProjectiles.removeobj(&proj);
+                AttackProjectiles.removeobj(proj);
             }
-            Projectiles.removeobj(&proj);
-            delete &proj;
+            Projectiles.removeobj(proj);
+            delete proj;
         }
 
         void make(gameent* owner, const vec& from, const vec& to, const bool isLocal, const int id, const int attack, const int type, const int trackType)
@@ -141,26 +141,26 @@ namespace game
             proj.millis = lastmillis;
         }
 
-        void applybounceeffects(ProjEnt* proj, const vec& surface)
+        void applybounceeffects(ProjEnt& proj, const vec& surface)
         {
-            if (proj->inwater)
+            if (proj.inwater)
             {
                 return;
             }
-            if (proj->vel.magnitude() > 5.0f)
+            if (proj.vel.magnitude() > 5.0f)
             {
-                if (validsound(proj->bounceSound))
+                if (validsound(proj.bounceSound))
                 {
-                    playsound(proj->bounceSound, nullptr, &proj->o, nullptr, 0, 0, 0, -1);
+                    playsound(proj.bounceSound, nullptr, &proj.o, nullptr, 0, 0, 0, -1);
                 }
             }
-            switch (proj->projectile)
+            switch (proj.projectile)
             {
                 case Projectile_Gib:
                 {
                     if (blood)
                     {
-                        addstain(STAIN_BLOOD, vec(proj->o).sub(vec(surface).mul(proj->radius)), surface, 2.96f / proj->bounces, getbloodcolor(proj->owner), rnd(4));
+                        addstain(STAIN_BLOOD, vec(proj.o).sub(vec(surface).mul(proj.radius)), surface, 2.96f / proj.bounces, getbloodcolor(proj.owner), rnd(4));
                     }
                     break;
                 }
@@ -169,21 +169,16 @@ namespace game
 
         }
 
-        void bounce(physent* d, const vec& surface)
+        void bounce(ProjEnt& proj, const vec& surface)
         {
-            if (d->type != ENT_PROJECTILE)
-            {
-                return;
-            }
-            ProjEnt* proj = (ProjEnt*)d;
-            proj->bounces++;
-            const int maxBounces = projs[proj->projectile].maxBounces;
-            if ((maxBounces && proj->bounces > maxBounces) || lastmillis - proj->lastImpact < 100)
+            proj.bounces++;
+            const int maxBounces = projs[proj.projectile].maxBounces;
+            if ((maxBounces && proj.bounces > maxBounces) || lastmillis - proj.lastImpact < 100)
             {
                 return;
             }
             applybounceeffects(proj, surface);
-            proj->lastImpact = lastmillis;
+            proj.lastImpact = lastmillis;
         }
 
         void collidewithentity(physent* bouncer, physent* collideEntity)
@@ -575,7 +570,7 @@ namespace game
             }
 
             // Delete projectile.
-            remove(proj);
+            remove(&proj);
         }
 
         void detonate(gameent* owner, const int gun)
@@ -618,7 +613,7 @@ namespace game
 
         void damage(ProjEnt* proj, gameent* actor, const int attack)
         {
-            if (!proj || proj->flags & ProjFlag_Invincible)
+            if (proj == nullptr || proj->flags & ProjFlag_Invincible)
             {
                 return;
             }
@@ -640,7 +635,7 @@ namespace game
         void registerhit(dynent* target, gameent* actor, const int attack, const float dist, const int rays)
         {
             ProjEnt* proj = (ProjEnt*)target;
-            if (!proj)
+            if (proj == nullptr)
             {
                 return;
             }
@@ -702,19 +697,19 @@ namespace game
             }
         }
 
-        void checkloopsound(ProjEnt* proj)
+        void checkloopsound(ProjEnt& proj)
         {
-            if (!validsound(proj->loopSound))
+            if (!validsound(proj.loopSound))
             {
                 return;
             }
-            if (proj->state != CS_DEAD)
+            if (proj.state != CS_DEAD)
             {
-                proj->loopChannel = playsound(proj->loopSound, nullptr, &proj->o, nullptr, 0, -1, 100, proj->loopChannel);
+                proj.loopChannel = playsound(proj.loopSound, nullptr, &proj.o, nullptr, 0, -1, 100, proj.loopChannel);
             }
             else
             {
-                stopsound(proj->loopSound, proj->loopChannel);
+                stopsound(proj.loopSound, proj.loopChannel);
             }
         }
 
@@ -734,7 +729,7 @@ namespace game
                 {
                     int qtime = min(80, rtime);
                     rtime -= qtime;
-                    if ((proj.lifetime -= qtime) < 0 || (proj.flags & ProjFlag_Bounce && physics::hasbounced(&proj, qtime / 1000.0f, 0.5f, 0.4f, 0.7f)))
+                    if ((proj.lifetime -= qtime) < 0 || (proj.flags & ProjFlag_Bounce && physics::hasbounced(proj, qtime / 1000.0f, 0.5f, 0.4f, 0.7f)))
                     {
                         proj.kill();
                     }
@@ -924,7 +919,7 @@ namespace game
                         {
                             if (proj.flags & ProjFlag_Bounce)
                             {
-                                const bool isBouncing = physics::isbouncing(&proj, proj.elasticity, 0.5f, proj.gravity);
+                                const bool isBouncing = physics::isbouncing(proj, proj.elasticity, 0.5f, proj.gravity);
                                 const bool hasBounced = projs[proj.projectile].maxBounces > 0 && proj.bounces >= projs[proj.projectile].maxBounces;
                                 if (!isBouncing || hasBounced)
                                 {
@@ -935,7 +930,7 @@ namespace game
                     }
                     addeffects(proj, position);
                 }
-                checkloopsound(&proj);
+                checkloopsound(proj);
                 if (proj.state == CS_DEAD)
                 {
                     destroy(proj, position);
@@ -1101,7 +1096,7 @@ namespace game
                     {
                         continue;
                     }
-                    remove(proj);
+                    remove(&proj);
                 }
             }
             else

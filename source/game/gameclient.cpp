@@ -732,6 +732,7 @@ namespace game
 
     void loadMainMenuMap(const char* mapName)
     {
+        self->respawned = -2;
         const int storyMode = -2;
         changemap(mapName, storyMode, 0);
     }

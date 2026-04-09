@@ -117,11 +117,11 @@ void clearmainmenu(const char* mapname)
     {
         if(!mapname || game::editing() || strcmp(mapname, mainmenumap))
         {
-            mainmenu = 0;
+            mainmenu = MENU_NONE;
         }
         else
         {
-            mainmenu = 2;
+            mainmenu = MENU_MAP;
         }
         UI::hideui(NULL);
     }

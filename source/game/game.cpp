@@ -1455,26 +1455,34 @@ namespace game
 
     void suicide(gameent *d)
     {
-        if(d==self || (d->type==ENT_PLAYER && ((gameent *)d)->ai))
+        if(d->type == ENT_PLAYER && (d == self || d->ai != nullptr))
         {
-            if(d->state!=CS_ALIVE) return;
+            if (d->state != CS_ALIVE || mainmenu > MENU_NONE)
+            {
+                return;
+            }
             if (!m_mp(gamemode))
             {
-                kill(d, d, -1);
+                kill(d, d, ATK_INVALID);
             }
             else
             {
-                int seq = (d->lifesequence<<16) | ((lastmillis / 1000) & 0xFFFF);
-                if(d->suicided!=seq)
+                const int sequence = (d->lifesequence << 16) | ((lastmillis / 1000) & 0xFFFF);
+                if(d->suicided != sequence)
                 { 
                     addmsg(N_SUICIDE, "rc", d);
-                    d->suicided = seq;
+                    d->suicided = sequence;
                 }
             }
         }
-        else if(d->type == ENT_AI) suicidemonster((monster *)d);
+        if (d->type != ENT_AI)
+        {
+            return;
+        }
+        monster* npc = (monster*)d;
+        suicidemonster(npc);
     }
-    ICOMMAND(suicide, "", (), suicide(self));
+    ICOMMAND(kill, "", (), suicide(self));
 
     int maxsoundradius(int n)
     {

@@ -26,6 +26,8 @@ source/vcpp/x86/
 .vscode/
 Debug*/
 Release*/
+.*-Debug/
+.*-Release/
 Profile*/
 autoexec.cfg
 master.cfg

@@ -512,7 +512,7 @@ namespace game
                 if (pointedPlayer != nullptr && isally(pointedPlayer, hudPlayer))
                 {
                     crosshair = Pointer_Ally;
-                    color = vec4(vec::hexcolor(teamtextcolor[hudPlayer->team]), 1);
+                    color = vec4(vec::hexcolor(getTeamTextColorRGB(hudPlayer->team)), 1);
                 }
             }
 
@@ -746,7 +746,7 @@ namespace game
 
     void setbliptex(const int team, const char* type)
     {
-        defformatstring(blipname, "data/interface/radar/blip%s%s.png", teamblipcolor[validteam(team) ? team : 0], type);
+        defformatstring(blipname, "data/interface/radar/blip%s%s.png", getTeamBlipColor(validteam(team) ? team : 0), type);
         settexture(blipname, 3);
     }
 
